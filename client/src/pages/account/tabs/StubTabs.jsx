@@ -4,45 +4,52 @@
  */
 
 import React from 'react'
-import Button from '../../../components/shared/Button'
+import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidBadge } from '@/components/ui/LiquidUI'
+import { Palette, Globe, Building2, Upload, CreditCard, FileText, Landmark, HelpCircle, Book, MessageCircle, Activity } from 'lucide-react'
 
 // Preferences Tab
 export const PreferencesTab = ({ user, onStatusChange }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">Theme</h3>
+            <LiquidCard glow="purple" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
+                    <Palette className="w-5 h-5" />
+                    Thème
+                </h3>
                 <div className="grid grid-cols-3 gap-4">
-                    {['Light', 'Dark', 'System'].map(theme => (
+                    {[{ key: 'light', label: 'Clair' }, { key: 'dark', label: 'Sombre' }, { key: 'system', label: 'Système' }].map(theme => (
                         <button
-                            key={theme}
-                            className={`p-4 rounded-lg border-2 text-center font-medium ${user?.theme === theme.toLowerCase()
-                                    ? 'border-primary bg-primary/5'
-                                    : 'border-border hover:border-primary'
+                            key={theme.key}
+                            className={`p-4 rounded-xl border text-center font-medium transition-all ${user?.theme === theme.key
+                                ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-500/20'
+                                : 'border-white/10 text-white/60 hover:border-white/30 hover:bg-white/5'
                                 }`}
                         >
-                            {theme}
+                            {theme.label}
                         </button>
                     ))}
                 </div>
-            </div>
+            </LiquidCard>
 
-            <div className="border-t border-border pt-6">
-                <h3 className="text-lg font-semibold mb-4">Language</h3>
-                <select
-                    defaultValue={user?.language || 'en'}
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                >
-                    <option value="en">English</option>
-                    <option value="fr">Français</option>
-                    <option value="es">Español</option>
-                    <option value="de">Deutsch</option>
-                </select>
-            </div>
+            <LiquidCard glow="cyan" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
+                    <Globe className="w-5 h-5" />
+                    Langue
+                </h3>
+                <LiquidSelect
+                    value={user?.language || 'fr'}
+                    options={[
+                        { value: 'fr', label: 'Français' },
+                        { value: 'en', label: 'English' },
+                        { value: 'es', label: 'Español' },
+                        { value: 'de', label: 'Deutsch' }
+                    ]}
+                />
+            </LiquidCard>
 
-            <div className="border-t border-border pt-6">
-                <Button className="w-full">Save Preferences</Button>
-            </div>
+            <LiquidButton glow="green" className="w-full">
+                Sauvegarder les préférences
+            </LiquidButton>
         </div>
     )
 }
@@ -51,31 +58,33 @@ export const PreferencesTab = ({ user, onStatusChange }) => {
 export const CompanyTab = ({ user }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">Company Information</h3>
-                <p className="text-muted-foreground mb-4">
-                    Manage your company details for invoicing and verification
+            <LiquidCard glow="amber" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+                    <Building2 className="w-5 h-5" />
+                    Informations Entreprise
+                </h3>
+                <p className="text-white/50 text-sm mb-6">
+                    Gérez les informations de votre entreprise pour la facturation et la vérification
                 </p>
-            </div>
 
-            <div className="space-y-4">
-                <input
-                    type="text"
-                    placeholder="Company Name"
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                />
-                <input
-                    type="text"
-                    placeholder="Registration Number (SIRET)"
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                />
-                <input
-                    type="text"
-                    placeholder="Business Type"
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                />
-                <Button className="w-full">Save Company Info</Button>
-            </div>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Nom de l'entreprise</label>
+                        <LiquidInput placeholder="Nom de votre entreprise" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Numéro SIRET</label>
+                        <LiquidInput placeholder="123 456 789 00012" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Type d'activité</label>
+                        <LiquidInput placeholder="Production, Distribution..." />
+                    </div>
+                    <LiquidButton glow="green" className="w-full">
+                        Sauvegarder
+                    </LiquidButton>
+                </div>
+            </LiquidCard>
         </div>
     )
 }
@@ -84,20 +93,29 @@ export const CompanyTab = ({ user }) => {
 export const KYCTab = ({ user }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">KYC Verification</h3>
-                <p className="text-muted-foreground mb-4">
-                    Complete your KYC verification to unlock Producteur features
+            <LiquidCard glow="cyan" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+                    <Upload className="w-5 h-5" />
+                    Vérification KYC
+                </h3>
+                <p className="text-white/50 text-sm mb-6">
+                    Complétez votre vérification KYC pour débloquer les fonctionnalités Producteur
                 </p>
-            </div>
 
-            <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <p className="text-sm text-yellow-800">
-                    <strong>Status:</strong> {user?.kycStatus === 'verified' ? '✓ Verified' : 'Pending'}
-                </p>
-            </div>
+                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mb-4">
+                    <p className="text-sm text-amber-400 flex items-center gap-2">
+                        <span className="font-semibold">Statut:</span>
+                        <LiquidBadge variant={user?.kycStatus === 'verified' ? 'success' : 'warning'}>
+                            {user?.kycStatus === 'verified' ? '✓ Vérifié' : 'En attente'}
+                        </LiquidBadge>
+                    </p>
+                </div>
 
-            <Button className="w-full">Upload Documents</Button>
+                <LiquidButton glow="purple" className="w-full">
+                    <Upload className="w-4 h-4 mr-2" />
+                    Télécharger les documents
+                </LiquidButton>
+            </LiquidCard>
         </div>
     )
 }
@@ -106,18 +124,24 @@ export const KYCTab = ({ user }) => {
 export const PaymentTab = ({ user }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">Payment Methods</h3>
-                <p className="text-muted-foreground mb-4">
-                    Add or manage your payment methods
+            <LiquidCard glow="blue" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+                    <CreditCard className="w-5 h-5" />
+                    Moyens de Paiement
+                </h3>
+                <p className="text-white/50 text-sm mb-6">
+                    Ajoutez ou gérez vos moyens de paiement
                 </p>
-            </div>
 
-            <div className="text-center py-8 text-muted-foreground">
-                <p>No payment methods yet</p>
-            </div>
+                <div className="text-center py-8 text-white/40 bg-white/5 rounded-xl border border-white/10">
+                    <CreditCard className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Aucun moyen de paiement enregistré</p>
+                </div>
 
-            <Button className="w-full">Add Payment Method</Button>
+                <LiquidButton glow="purple" className="w-full mt-4">
+                    Ajouter un moyen de paiement
+                </LiquidButton>
+            </LiquidCard>
         </div>
     )
 }
@@ -126,16 +150,20 @@ export const PaymentTab = ({ user }) => {
 export const InvoicesTab = ({ user }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">Invoices</h3>
-                <p className="text-muted-foreground mb-4">
-                    View and download your invoices
+            <LiquidCard glow="green" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+                    <FileText className="w-5 h-5" />
+                    Factures
+                </h3>
+                <p className="text-white/50 text-sm mb-6">
+                    Consultez et téléchargez vos factures
                 </p>
-            </div>
 
-            <div className="text-center py-8 text-muted-foreground">
-                <p>No invoices yet</p>
-            </div>
+                <div className="text-center py-8 text-white/40 bg-white/5 rounded-xl border border-white/10">
+                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>Aucune facture disponible</p>
+                </div>
+            </LiquidCard>
         </div>
     )
 }
@@ -144,31 +172,33 @@ export const InvoicesTab = ({ user }) => {
 export const BankTab = ({ user }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">Bank Account</h3>
-                <p className="text-muted-foreground mb-4">
-                    Add your bank account for invoice generation and payments
+            <LiquidCard glow="amber" padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+                    <Landmark className="w-5 h-5" />
+                    Compte Bancaire
+                </h3>
+                <p className="text-white/50 text-sm mb-6">
+                    Ajoutez votre compte bancaire pour la génération de factures et les paiements
                 </p>
-            </div>
 
-            <div className="space-y-4">
-                <input
-                    type="text"
-                    placeholder="Account Holder Name"
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                />
-                <input
-                    type="text"
-                    placeholder="IBAN"
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                />
-                <input
-                    type="text"
-                    placeholder="SWIFT/BIC"
-                    className="w-full px-4 py-2 border border-border rounded-lg"
-                />
-                <Button className="w-full">Save Bank Account</Button>
-            </div>
+                <div className="space-y-4">
+                    <div className="space-y-2">
+                        <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Titulaire du compte</label>
+                        <LiquidInput placeholder="Nom complet" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">IBAN</label>
+                        <LiquidInput placeholder="FR76 XXXX XXXX XXXX XXXX XXXX XXX" />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">SWIFT/BIC</label>
+                        <LiquidInput placeholder="BNPAFRPP" />
+                    </div>
+                    <LiquidButton glow="green" className="w-full">
+                        Sauvegarder le compte bancaire
+                    </LiquidButton>
+                </div>
+            </LiquidCard>
         </div>
     )
 }
@@ -177,48 +207,55 @@ export const BankTab = ({ user }) => {
 export const SupportTab = ({ user }) => {
     return (
         <div className="space-y-6">
-            <div>
-                <h3 className="text-lg font-semibold mb-4">Help & Support</h3>
-                <p className="text-muted-foreground">
-                    Get help with your account and explore resources
+            <LiquidCard padding="lg">
+                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
+                    <HelpCircle className="w-5 h-5" />
+                    Aide & Support
+                </h3>
+                <p className="text-white/50 text-sm mb-6">
+                    Obtenez de l'aide et explorez les ressources disponibles
                 </p>
-            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <a
-                    href="/docs"
-                    className="p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition"
-                >
-                    <h4 className="font-semibold mb-2">Documentation</h4>
-                    <p className="text-sm text-muted-foreground">
-                        Learn how to use Reviews-Maker
-                    </p>
-                </a>
-                <a
-                    href="/faq"
-                    className="p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition"
-                >
-                    <h4 className="font-semibold mb-2">FAQ</h4>
-                    <p className="text-sm text-muted-foreground">
-                        Answers to common questions
-                    </p>
-                </a>
-                <a
-                    href="/contact"
-                    className="p-4 border border-border rounded-lg hover:border-primary hover:bg-primary/5 transition"
-                >
-                    <h4 className="font-semibold mb-2">Contact Support</h4>
-                    <p className="text-sm text-muted-foreground">
-                        Get in touch with our team
-                    </p>
-                </a>
-                <div className="p-4 border border-border rounded-lg">
-                    <h4 className="font-semibold mb-2">Status Page</h4>
-                    <p className="text-sm text-muted-foreground">
-                        Check system status
-                    </p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a
+                        href="/docs"
+                        className="p-4 bg-white/5 border border-white/10 rounded-xl hover:border-purple-500/50 hover:bg-purple-500/10 transition-all group"
+                    >
+                        <Book className="w-6 h-6 text-purple-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <h4 className="font-semibold text-white mb-1">Documentation</h4>
+                        <p className="text-sm text-white/50">
+                            Apprenez à utiliser Reviews-Maker
+                        </p>
+                    </a>
+                    <a
+                        href="/faq"
+                        className="p-4 bg-white/5 border border-white/10 rounded-xl hover:border-cyan-500/50 hover:bg-cyan-500/10 transition-all group"
+                    >
+                        <HelpCircle className="w-6 h-6 text-cyan-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <h4 className="font-semibold text-white mb-1">FAQ</h4>
+                        <p className="text-sm text-white/50">
+                            Réponses aux questions fréquentes
+                        </p>
+                    </a>
+                    <a
+                        href="/contact"
+                        className="p-4 bg-white/5 border border-white/10 rounded-xl hover:border-green-500/50 hover:bg-green-500/10 transition-all group"
+                    >
+                        <MessageCircle className="w-6 h-6 text-green-400 mb-2 group-hover:scale-110 transition-transform" />
+                        <h4 className="font-semibold text-white mb-1">Contacter le support</h4>
+                        <p className="text-sm text-white/50">
+                            Entrez en contact avec notre équipe
+                        </p>
+                    </a>
+                    <div className="p-4 bg-white/5 border border-white/10 rounded-xl">
+                        <Activity className="w-6 h-6 text-amber-400 mb-2" />
+                        <h4 className="font-semibold text-white mb-1">Statut du système</h4>
+                        <p className="text-sm text-white/50">
+                            Vérifiez l'état des services
+                        </p>
+                    </div>
                 </div>
-            </div>
+            </LiquidCard>
         </div>
     )
 }

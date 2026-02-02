@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { LiquidCard, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI';
+import { Mail, KeyRound, ArrowLeft, Check, AlertTriangle, Clock } from 'lucide-react';
 
 const emailSchema = z.object({
     email: z.string().email('Email invalide')
@@ -9,6 +11,7 @@ const emailSchema = z.object({
 
 export default function ForgotPasswordPage() {
     const { t } = useTranslation();
+    const navigate = useNavigate();
     const [email, setEmail] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -53,123 +56,101 @@ export default function ForgotPasswordPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
-                <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-                    {/* Success Icon */}
-                    <div className="text-center mb-6">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-                            <svg
-                                className="w-8 h-8 text-green-600 dark:text-green-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] px-4">
+                <div className="max-w-md w-full">
+                    <LiquidCard glow="green" padding="lg">
+                        {/* Success Icon */}
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 mb-4">
+                                <Check className="w-10 h-10 text-green-400" />
+                            </div>
+                            <h1 className="text-2xl font-bold text-white mb-2">
+                                Email envoyé !
+                            </h1>
+                            <p className="text-white/60">
+                                Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de passe.
+                            </p>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Email envoyé !
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Vérifiez votre boîte mail et suivez les instructions pour réinitialiser votre mot de passe.
-                        </p>
-                    </div>
 
-                    {/* Info Box */}
-                    <div className="dark: border dark: rounded-lg p-4 mb-6">
-                        <p className="text-sm dark:">
-                            <strong>Note :</strong> Le lien de réinitialisation expire dans 1 heure.
-                        </p>
-                    </div>
+                        {/* Info Box */}
+                        <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 mb-6">
+                            <Clock className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-sm text-amber-200">
+                                <strong>Note :</strong> Le lien de réinitialisation expire dans 1 heure.
+                            </p>
+                        </div>
 
-                    {/* Back to Login */}
-                    <Link
-                        to="/login"
-                        className="block w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200 text-center"
-                    >
-                        Retour à la connexion
-                    </Link>
+                        {/* Back to Login */}
+                        <LiquidButton
+                            variant="primary"
+                            size="lg"
+                            className="w-full"
+                            onClick={() => navigate('/login')}
+                        >
+                            Retour à la connexion
+                        </LiquidButton>
+                    </LiquidCard>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
-            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] px-4">
+            <div className="max-w-md w-full">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-                        <svg
-                            className="w-8 h-8 text-green-600 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                            />
-                        </svg>
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 backdrop-blur-xl mb-4">
+                        <KeyRound className="w-10 h-10 text-purple-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                         Mot de passe oublié ?
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-white/50">
                         Entrez votre email pour recevoir un lien de réinitialisation
                     </p>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Email */}
-                    <div>
-                        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Email
-                        </label>
-                        <input
+                <LiquidCard glow="purple" padding="lg">
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <LiquidInput
+                            label="Email"
                             type="email"
-                            id="email"
                             value={email}
                             onChange={(e) => {
                                 setEmail(e.target.value);
                                 setError('');
                             }}
-                            className={`w-full px-4 py-2 rounded-lg border ${error ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="votre@email.com"
+                            icon={Mail}
+                            error={error}
                             required
                         />
-                        {error && (
-                            <p className="mt-1 text-sm text-red-500">{error}</p>
-                        )}
+
+                        {/* Submit Button */}
+                        <LiquidButton
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            loading={isLoading}
+                            className="w-full"
+                        >
+                            {isLoading ? 'Envoi...' : 'Envoyer le lien'}
+                        </LiquidButton>
+                    </form>
+
+                    {/* Back to Login */}
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white/80 transition-colors"
+                        >
+                            <ArrowLeft size={16} />
+                            Retour à la connexion
+                        </button>
                     </div>
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-                    >
-                        {isLoading ? 'Envoi...' : 'Envoyer le lien'}
-                    </button>
-                </form>
-
-                {/* Back to Login */}
-                <div className="mt-6 text-center">
-                    <Link
-                        to="/login"
-                        className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                    >
-                        ← Retour à la connexion
-                    </Link>
-                </div>
+                </LiquidCard>
             </div>
         </div>
     );

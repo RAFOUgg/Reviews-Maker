@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { EXPERIENCE_VALUES } from '../../data/formValues'
+import { LiquidCard, LiquidChip, LiquidSelect, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Beaker, Zap, Clock, Target, AlertTriangle, Lightbulb } from 'lucide-react'
 
 /**
  * ExperienceUtilisation - Section pour documenter les tests de consommation
  * Correspond à la section "Expérience d'utilisation durant les tests" du cahier des charges
+ * Liquid Glass UI Design System
  */
 export default function ExperienceUtilisation({ formData = {}, handleChange = () => { } }) {
     const data = formData.experience || {};
@@ -45,40 +48,43 @@ export default function ExperienceUtilisation({ formData = {}, handleChange = ()
     })
 
     return (
-        <div className="space-y-8">
+        <LiquidCard glow="cyan" padding="lg" className="space-y-8">
             {/* En-tête */}
-            <div className="bg-gradient-to-r p-6 rounded-2xl border-2 border-indigo-200">
-                <h3 className="text-xl font-bold mb-2 flex items-center gap-2">
-                    <span>🧪</span> Expérience d'utilisation durant les tests
-                </h3>
-                <p className="text-sm">
-                    Documentez vos tests de consommation pour aider la communauté
-                </p>
+            <div className="flex items-center gap-3 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <Beaker className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-white">🧪 Expérience d'utilisation</h3>
+                    <p className="text-sm text-white/50">Documentez vos tests de consommation</p>
+                </div>
             </div>
 
+            <LiquidDivider />
+
             {/* Méthode de consommation */}
-            <div>
-                <label className="text-lg font-semibold text-gray-800 mb-3 block flex items-center gap-2">
-                    <span className="text-2xl">💨</span>
-                    Méthode de consommation <span className="text-red-600">*</span>
+            <div className="space-y-3">
+                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                    <span className="text-lg">💨</span>
+                    Méthode de consommation <span className="text-red-400">*</span>
                 </label>
                 <select
                     value={data.methodeConsommation || ''}
                     onChange={(e) => onChange('methodeConsommation', e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent outline-none transition-all text-lg"
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all"
                 >
-                    <option value="">à sélectionner une méthode...</option>
+                    <option value="" className="bg-gray-900">Sélectionner une méthode...</option>
                     {EXPERIENCE_VALUES.methodeConsommation.map(m => (
-                        <option key={m.value} value={m.value}>{m.label}</option>
+                        <option key={m.value} value={m.value} className="bg-gray-900">{m.label}</option>
                     ))}
                 </select>
             </div>
 
             {/* Dosage & Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label className="text-lg font-semibold text-gray-800 mb-3 block flex items-center gap-2">
-                        <span className="text-2xl">⚖️</span>
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <span className="text-lg">⚖️</span>
                         Dosage utilisé
                     </label>
                     <div className="flex gap-3">
@@ -89,25 +95,25 @@ export default function ExperienceUtilisation({ formData = {}, handleChange = ()
                             value={data.dosageUtilise || ''}
                             onChange={(e) => onChange('dosageUtilise', e.target.value)}
                             placeholder="0.5"
-                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-lg"
+                            className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 outline-none transition-all"
                         />
                         <select
                             value={data.dosageUnite || 'g'}
                             onChange={(e) => onChange('dosageUnite', e.target.value)}
-                            className="px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all"
+                            className="px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
                         >
-                            <option value="g">grammes (g)</option>
-                            <option value="mg">milligrammes (mg)</option>
+                            <option value="g" className="bg-gray-900">grammes (g)</option>
+                            <option value="mg" className="bg-gray-900">milligrammes (mg)</option>
                         </select>
                     </div>
                 </div>
 
-                <div>
-                    <label className="text-lg font-semibold text-gray-800 mb-3 block flex items-center gap-2">
-                        <span className="text-2xl">⏱️</span>
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-cyan-400" />
                         Durée des effets
                     </label>
-                    <div className="flex gap-3">
+                    <div className="flex gap-3 items-center">
                         <input
                             type="number"
                             min="0"
@@ -115,9 +121,9 @@ export default function ExperienceUtilisation({ formData = {}, handleChange = ()
                             value={data.dureeEffetsHeures || ''}
                             onChange={(e) => onChange('dureeEffetsHeures', e.target.value)}
                             placeholder="2"
-                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
+                            className="w-20 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:ring-2 focus:ring-green-500/50 outline-none transition-all text-center"
                         />
-                        <span className="flex items-center text-2xl font-bold text-gray-600 dark:text-gray-400">:</span>
+                        <span className="text-2xl font-bold text-white/40">:</span>
                         <input
                             type="number"
                             min="0"
@@ -125,150 +131,167 @@ export default function ExperienceUtilisation({ formData = {}, handleChange = ()
                             value={data.dureeEffetsMinutes || ''}
                             onChange={(e) => onChange('dureeEffetsMinutes', e.target.value)}
                             placeholder="30"
-                            className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none transition-all text-lg text-center"
+                            className="w-20 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:ring-2 focus:ring-green-500/50 outline-none transition-all text-center"
                         />
-                        <span className="flex items-center text-sm text-gray-600 dark:text-gray-400 font-medium">HH:MM</span>
+                        <span className="text-sm text-white/40 font-medium">HH:MM</span>
                     </div>
                 </div>
             </div>
 
             {/* Début & Durée des effets (catégorie) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label className="text-lg font-semibold text-gray-800 mb-3 block flex items-center gap-2">
-                        <span className="text-2xl">🚀</span>
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <Zap className="w-4 h-4 text-yellow-400" />
                         Début des effets
                     </label>
                     <select
                         value={data.debutEffets || ''}
                         onChange={(e) => onChange('debutEffets', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
                     >
-                        <option value="">Sélectionner...</option>
+                        <option value="" className="bg-gray-900">Sélectionner...</option>
                         {EXPERIENCE_VALUES.debutEffets.map(d => (
-                            <option key={d.value} value={d.value}>{d.label}</option>
+                            <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
                         ))}
                     </select>
                 </div>
 
-                <div>
-                    <label className="text-lg font-semibold text-gray-800 mb-3 block flex items-center gap-2">
-                        <span className="text-2xl">⏳</span>
+                <div className="space-y-3">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <Clock className="w-4 h-4 text-orange-400" />
                         Durée globale
                     </label>
                     <select
                         value={data.dureeEffetsCategorie || ''}
                         onChange={(e) => onChange('dureeEffetsCategorie', e.target.value)}
-                        className="w-full px-4 py-3 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none transition-all text-lg"
+                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-orange-500/50 outline-none transition-all"
                     >
-                        <option value="">Sélectionner...</option>
+                        <option value="" className="bg-gray-900">Sélectionner...</option>
                         {EXPERIENCE_VALUES.dureeEffets.map(d => (
-                            <option key={d.value} value={d.value}>{d.label}</option>
+                            <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
                         ))}
                     </select>
                 </div>
             </div>
 
+            <LiquidDivider />
+
             {/* Profils d'effets ressentis */}
-            <div>
-                <label className="text-lg font-semibold text-gray-800 mb-4 block flex items-center gap-2">
-                    <span className="text-2xl">🎯</span>
-                    Profils d'effets ressentis (max 8) <span className="font-bold">{selectedProfils.length}/8</span>
-                </label>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <Target className="w-4 h-4 text-cyan-400" />
+                        Profils d'effets ressentis
+                    </label>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedProfils.length >= 8 ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
+                        {selectedProfils.length}/8
+                    </span>
+                </div>
 
                 {/* Filtres par type */}
-                <div className="flex gap-2 mb-4 flex-wrap">
+                <div className="flex gap-2 flex-wrap">
                     {['tous', 'positif', 'neutre', 'negatif'].map(f => (
-                        <button
+                        <LiquidChip
                             key={f}
-                            type="button"
+                            active={filter === f}
+                            color={f === 'positif' ? 'green' : f === 'negatif' ? 'pink' : 'cyan'}
                             onClick={() => setFilter(f)}
-                            className={`px-4 py-2 rounded-lg font-medium transition-all ${filter === f ? ' text-white shadow-lg' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
                         >
                             {f === 'tous' ? '🌐 Tous' :
                                 f === 'positif' ? '✅ Positifs' :
                                     f === 'neutre' ? '➖ Neutres' : '❌ Négatifs'}
-                        </button>
+                        </LiquidChip>
                     ))}
                 </div>
 
                 {/* Grille de sélection */}
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 max-h-96 overflow-y-auto p-4 bg-gray-800/30 dark:bg-gray-800/50 rounded-xl border-2 border-gray-600/50 dark:border-gray-700">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-72 overflow-y-auto p-3 bg-white/5 rounded-xl border border-white/10">
                     {profilsFiltres.map(profil => {
                         const isSelected = selectedProfils.includes(profil.value)
-                        const bgColor = isSelected ? (
-                            profil.type === 'positif' ? 'bg-green-600 text-white' :
-                                profil.type === 'neutre' ? 'bg-gray-600 text-white' :
-                                    'bg-red-600 text-white'
-                        ) : 'bg-gray-700/50 dark:bg-gray-800 border-2 border-gray-600 dark:border-gray-600 text-gray-200 dark:text-gray-300 hover:border-indigo-400'
+                        const chipColor = profil.type === 'positif' ? 'green' : profil.type === 'negatif' ? 'pink' : 'purple'
 
                         return (
-                            <button
+                            <LiquidChip
                                 key={profil.value}
-                                type="button"
+                                active={isSelected}
+                                color={chipColor}
                                 onClick={() => toggleMultiSelect('profilsEffets', profil.value)}
-                                className={`px-4 py-3 rounded-lg text-sm font-medium transition-all shadow-sm hover:shadow-md ${bgColor} ${isSelected ? 'scale-105' : ''}`}
+                                size="sm"
                             >
-                                <div className="flex items-center justify-between gap-2">
+                                <div className="flex flex-col items-start">
                                     <span>{profil.label}</span>
-                                    {isSelected && <span>✓</span>}
+                                    <span className="text-[10px] opacity-60">{profil.categorie}</span>
                                 </div>
-                                <span className="text-xs opacity-75 block mt-1">{profil.categorie}</span>
-                            </button>
+                            </LiquidChip>
                         )
                     })}
                 </div>
             </div>
 
-            {/* Effets secondaires */}
-            <div>
-                <label className="text-lg font-semibold text-gray-800 mb-4 block flex items-center gap-2">
-                    <span className="text-2xl">⚠️</span>
-                    Effets secondaires ressentis (max 10) <span className="text-orange-600 font-bold">{selectedSecondaires.length}/10</span>
-                </label>
+            <LiquidDivider />
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {/* Effets secondaires */}
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <AlertTriangle className="w-4 h-4 text-orange-400" />
+                        Effets secondaires ressentis
+                    </label>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedSecondaires.length >= 10 ? 'bg-red-500/20 text-red-400' : 'bg-orange-500/20 text-orange-400'}`}>
+                        {selectedSecondaires.length}/10
+                    </span>
+                </div>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                     {EXPERIENCE_VALUES.effetsSecondaires.map(effet => (
-                        <button
+                        <LiquidChip
                             key={effet.value}
-                            type="button"
+                            active={selectedSecondaires.includes(effet.value)}
+                            color="amber"
                             onClick={() => toggleMultiSelect('effetsSecondaires', effet.value)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedSecondaires.includes(effet.value) ? 'bg-orange-600 text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:border-orange-400'}`}
+                            size="sm"
                         >
                             {effet.label}
-                        </button>
+                        </LiquidChip>
                     ))}
                 </div>
             </div>
 
             {/* Usages préférés */}
-            <div>
-                <label className="text-lg font-semibold text-gray-800 mb-4 block flex items-center gap-2">
-                    <span className="text-2xl">💡</span>
-                    Usage préféré / Contexte idéal (max 10) <span className="font-bold">{selectedUsages.length}/10</span>
-                </label>
+            <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <Lightbulb className="w-4 h-4 text-purple-400" />
+                        Usage préféré / Contexte idéal
+                    </label>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedUsages.length >= 10 ? 'bg-red-500/20 text-red-400' : 'bg-purple-500/20 text-purple-400'}`}>
+                        {selectedUsages.length}/10
+                    </span>
+                </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {EXPERIENCE_VALUES.usagesPreferes.map(usage => (
-                        <button
+                        <LiquidChip
                             key={usage.value}
-                            type="button"
+                            active={selectedUsages.includes(usage.value)}
+                            color="purple"
                             onClick={() => toggleMultiSelect('usagesPreferes', usage.value)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${selectedUsages.includes(usage.value) ? ' text-white shadow-lg scale-105' : 'bg-white border-2 border-gray-200 text-gray-700 hover:'}`}
+                            size="sm"
                         >
                             {usage.label}
-                        </button>
+                        </LiquidChip>
                     ))}
                 </div>
             </div>
 
             {/* Note informative */}
-            <div className="border-l-4 p-4 rounded-r-xl">
-                <p className="text-sm">
-                    <span className="font-semibold">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
+            <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
+                <p className="text-sm text-white/60">
+                    <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
                 </p>
             </div>
-        </div>
+        </LiquidCard>
     )
 }
 

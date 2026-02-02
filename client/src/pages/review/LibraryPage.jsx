@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
-import LiquidButton from '../../components/ui/LiquidButton'
-import LiquidCard from '../../components/ui/LiquidCard'
+import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import FilterBar from '../../components/shared/ui-helpers/FilterBar'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, Eye, EyeOff, ExternalLink, Edit, Trash2, Clock } from 'lucide-react'
+import { Plus, Eye, EyeOff, ExternalLink, Edit, Trash2, Clock, Library } from 'lucide-react'
 
 export default function LibraryPage() {
     const navigate = useNavigate()
@@ -101,37 +100,42 @@ export default function LibraryPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2"></div>
+            <div className="min-h-screen bg-[#07070f] flex items-center justify-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-transparent relative pb-20 pt-8 px-4 md:px-8 no-panel-bg">
-            <div className="absolute inset-0 bg-gradient-to-br /20 /20 /20 pointer-events-none"></div>
+        <div className="min-h-screen bg-[#07070f] relative pb-20 pt-8 px-4 md:px-8">
             <div className="relative max-w-7xl mx-auto space-y-8">
 
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r drop-shadow-sm">
-                            Ma Bibliothèque
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-300 mt-1">
-                            Gérez vos reviews et exports ({reviews.length})
-                        </p>
+                    <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                            <Library className="w-6 h-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-3xl font-bold text-white">
+                                Ma Bibliothèque
+                            </h1>
+                            <p className="text-white/50 mt-1">
+                                Gérez vos reviews et exports ({reviews.length})
+                            </p>
+                        </div>
                     </div>
 
-                    <div className="flex bg-white/50 dark:bg-black/20 p-1 rounded-xl backdrop-blur-md border border-white/20 shadow-sm">
+                    <div className="flex bg-white/5 p-1 rounded-xl border border-white/10">
                         {['all', 'public', 'private'].map((f) => (
-                            <button
+                            <LiquidChip
                                 key={f}
+                                active={filter === f}
                                 onClick={() => setFilter(f)}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${filter === f ? 'bg-white shadow-md scale-105' : 'text-gray-500 hover:text-gray-700 hover:bg-white/30'}`}
+                                color="purple"
                             >
                                 {f === 'all' ? 'Toutes' : f === 'public' ? 'Publiques' : 'Privées'}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>
@@ -144,26 +148,29 @@ export default function LibraryPage() {
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="text-center py-16 bg-white/40 dark:bg-black/20 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl"
                     >
-                        <div className="max-w-sm mx-auto px-6">
-                            <div className="w-20 h-20 mx-auto dark:bg-gray-700/40 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                </svg>
+                        <LiquidCard glow="purple" padding="lg">
+                            <div className="text-center py-16">
+                                <div className="max-w-sm mx-auto px-6">
+                                    <div className="w-20 h-20 mx-auto bg-white/5 rounded-full flex items-center justify-center mb-6 border border-white/10">
+                                        <svg className="w-10 h-10 text-white/30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                        </svg>
+                                    </div>
+                                    <h3 className="text-xl font-bold text-white mb-4">
+                                        Aucune review pour le moment
+                                    </h3>
+                                    <LiquidButton
+                                        onClick={() => navigate('/create')}
+                                        variant="primary"
+                                        size="lg"
+                                        leftIcon={<Plus className="w-5 h-5" />}
+                                    >
+                                        Créer ma première review
+                                    </LiquidButton>
+                                </div>
                             </div>
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                                Aucune review pour le moment
-                            </h3>
-                            <LiquidButton
-                                onClick={() => navigate('/create')}
-                                variant="primary"
-                                size="lg"
-                                leftIcon={<Plus className="w-5 h-5" />}
-                            >
-                                Créer ma première review
-                            </LiquidButton>
-                        </div>
+                        </LiquidCard>
                     </motion.div>
                 ) : (
                     <motion.div
@@ -178,68 +185,70 @@ export default function LibraryPage() {
                                     animate={{ opacity: 1, y: 0 }}
                                     exit={{ opacity: 0, scale: 0.95 }}
                                     transition={{ delay: index * 0.05 }}
-                                    className="group relative bg-white/60 dark:bg-gray-800/40 backdrop-blur-xl rounded-2xl p-6 shadow-sm border border-white/20 hover:shadow-xl hover:bg-white/80 transition-all hover:-translate-y-1"
+                                    className="group relative"
                                 >
-                                    <div className="flex items-start justify-between">
-                                        <div className="flex-1">
-                                            <div className="flex items-center gap-3 mb-2">
-                                                <h3 className="text-lg font-bold text-gray-900 dark:text-white group-hover:text-blue-600 transition-colors">
-                                                    {review.holderName}
-                                                </h3>
-                                                <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic ? 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-gray-700/50 dark:text-gray-300'}`}>
-                                                    {review.isPublic ? 'Publique' : 'Privée'}
-                                                </span>
-                                                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400">
-                                                    {review.type}
-                                                </span>
+                                    <LiquidCard glow="none" padding="md" className="hover:border-purple-500/30 transition-all">
+                                        <div className="flex items-start justify-between">
+                                            <div className="flex-1">
+                                                <div className="flex items-center gap-3 mb-2">
+                                                    <h3 className="text-lg font-bold text-white group-hover:text-purple-400 transition-colors">
+                                                        {review.holderName}
+                                                    </h3>
+                                                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold border ${review.isPublic ? 'bg-green-500/20 text-green-400 border-green-500/30' : 'bg-white/10 text-white/60 border-white/20'}`}>
+                                                        {review.isPublic ? 'Publique' : 'Privée'}
+                                                    </span>
+                                                    <span className="px-2.5 py-0.5 rounded-full text-xs font-bold border bg-purple-500/20 text-purple-400 border-purple-500/30">
+                                                        {review.type}
+                                                    </span>
+                                                </div>
+
+                                                <div className="flex items-center gap-4 text-sm text-white/50 font-medium">
+                                                    <span className="flex items-center gap-1.5">
+                                                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                                        </svg>
+                                                        {review.views || 0} vues
+                                                    </span>
+                                                    <span className="flex items-center gap-1.5">
+                                                        <Clock className="w-4 h-4" />
+                                                        {new Date(review.createdAt).toLocaleDateString('fr-FR')}
+                                                    </span>
+                                                </div>
                                             </div>
 
-                                            <div className="flex items-center gap-4 text-sm text-gray-500 dark:text-gray-400 font-medium">
-                                                <span className="flex items-center gap-1.5">
-                                                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                                    </svg>
-                                                    {review.views || 0} vues
-                                                </span>
-                                                <span className="flex items-center gap-1.5">
-                                                    <Clock className="w-4 h-4" />
-                                                    {new Date(review.createdAt).toLocaleDateString('fr-FR')}
-                                                </span>
+                                            <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                <button
+                                                    onClick={() => toggleVisibility(review.id, review.isPublic)}
+                                                    className="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 hover:text-white transition-colors border border-white/10"
+                                                    title={review.isPublic ? 'Rendre privée' : 'Rendre publique'}
+                                                >
+                                                    {review.isPublic ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/review/${review.id}`)}
+                                                    className="p-2 rounded-xl bg-white/5 hover:bg-purple-500/20 text-white/60 hover:text-purple-400 transition-colors border border-white/10"
+                                                    title="Voir"
+                                                >
+                                                    <ExternalLink className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => navigate(`/edit/${review.type.toLowerCase()}/${review.id}`)}
+                                                    className="p-2 rounded-xl bg-white/5 hover:bg-amber-500/20 text-white/60 hover:text-amber-400 transition-colors border border-white/10"
+                                                    title="Modifier"
+                                                >
+                                                    <Edit className="w-5 h-5" />
+                                                </button>
+                                                <button
+                                                    onClick={() => deleteReview(review.id)}
+                                                    className="p-2 rounded-xl bg-white/5 hover:bg-red-500/20 text-white/60 hover:text-red-400 transition-colors border border-white/10"
+                                                    title="Supprimer"
+                                                >
+                                                    <Trash2 className="w-5 h-5" />
+                                                </button>
                                             </div>
                                         </div>
-
-                                        <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                            <button
-                                                onClick={() => toggleVisibility(review.id, review.isPublic)}
-                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover: transition-colors"
-                                                title={review.isPublic ? 'Rendre privée' : 'Rendre publique'}
-                                            >
-                                                {review.isPublic ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                            </button>
-                                            <button
-                                                onClick={() => navigate(`/review/${review.id}`)}
-                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover: transition-colors"
-                                                title="Voir"
-                                            >
-                                                <ExternalLink className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => navigate(`/edit/${review.type.toLowerCase()}/${review.id}`)}
-                                                className="p-2 rounded-xl hover:bg-white/50 text-gray-500 hover:text-orange-600 transition-colors"
-                                                title="Modifier"
-                                            >
-                                                <Edit className="w-5 h-5" />
-                                            </button>
-                                            <button
-                                                onClick={() => deleteReview(review.id)}
-                                                className="p-2 rounded-xl hover:bg-red-50 text-gray-500 hover:text-red-600 transition-colors"
-                                                title="Supprimer"
-                                            >
-                                                <Trash2 className="w-5 h-5" />
-                                            </button>
-                                        </div>
-                                    </div>
+                                    </LiquidCard>
                                 </motion.div>
                             ))}
                         </AnimatePresence>

@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
+import { ArrowLeft, Check } from 'lucide-react';
 
 const ACCOUNT_TYPES = {
     'influencer': {
@@ -74,117 +76,121 @@ export default function PaymentPage() {
     if (!accountInfo) return null;
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4 py-12">
-            <div className="max-w-7xl w-full">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] px-4 py-12">
+            {/* Ambient glow effects */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/8 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="max-w-7xl w-full relative z-10">
                 <div className="text-center mb-8">
-                    <Link
-                        to="/choose-account"
-                        className="inline-flex items-center text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 mb-4"
+                    <LiquidButton
+                        variant="ghost"
+                        onClick={() => navigate('/choose-account')}
+                        className="mb-4"
                     >
-                        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                        </svg>
+                        <ArrowLeft className="w-5 h-5 mr-2" />
                         Retour au choix de compte
-                    </Link>
-                    <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
+                    </LiquidButton>
+                    <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent mb-2">
                         Paiement
                     </h1>
-                    <p className="text-lg text-gray-600 dark:text-gray-400">
+                    <p className="text-lg text-white/50">
                         Finalisez votre abonnement {accountInfo.name}
                     </p>
                 </div>
 
                 <div className="grid md:grid-cols-2 gap-8">
                     {/* Résumé de la commande */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                    <LiquidCard glow="purple" padding="lg">
+                        <h2 className="text-2xl font-bold text-white mb-6">
                             Résumé
                         </h2>
 
-                        <div className="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-green-50 dark:from-gray-700 dark:to-gray-700 rounded-lg">
+                        <div className="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl border border-purple-500/20">
                             <div className="text-5xl">{accountInfo.icon}</div>
                             <div>
-                                <h3 className="text-xl font-bold text-gray-900 dark:text-white">
+                                <h3 className="text-xl font-bold text-white">
                                     {accountInfo.name}
                                 </h3>
-                                <p className="text-3xl font-bold text-green-600 dark:text-green-400">
-                                    {accountInfo.price}€<span className="text-sm">/mois</span>
+                                <p className="text-3xl font-bold text-purple-400">
+                                    {accountInfo.price}€<span className="text-sm text-white/50">/mois</span>
                                 </p>
                             </div>
                         </div>
 
                         <div className="space-y-3 mb-6">
-                            <h4 className="font-semibold text-gray-900 dark:text-white">
+                            <h4 className="font-semibold text-white">
                                 Fonctionnalités incluses :
                             </h4>
                             {accountInfo.features.map((feature, index) => (
                                 <div key={index} className="flex items-start gap-2">
-                                    <svg className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                    </svg>
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">{feature}</span>
+                                    <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                                    <span className="text-sm text-white/70">{feature}</span>
                                 </div>
                             ))}
                         </div>
 
-                        <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-                            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                        <div className="border-t border-white/10 pt-4 space-y-2">
+                            <div className="flex justify-between text-sm text-white/50">
                                 <span>Abonnement mensuel</span>
                                 <span>{accountInfo.price}€</span>
                             </div>
-                            <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            <div className="flex justify-between text-sm text-white/50">
                                 <span>TVA (20%)</span>
                                 <span>{(accountInfo.price * 0.2).toFixed(2)}€</span>
                             </div>
-                            <div className="flex justify-between text-lg font-bold text-gray-900 dark:text-white mt-4">
+                            <div className="flex justify-between text-lg font-bold text-white mt-4 pt-2 border-t border-white/10">
                                 <span>Total</span>
-                                <span>{(accountInfo.price * 1.2).toFixed(2)}€</span>
+                                <span className="text-purple-400">{(accountInfo.price * 1.2).toFixed(2)}€</span>
                             </div>
                         </div>
-                    </div>
+                    </LiquidCard>
 
                     {/* Formulaire de paiement */}
-                    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-                        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+                    <LiquidCard glow="default" padding="lg">
+                        <h2 className="text-2xl font-bold text-white mb-6">
                             Méthode de paiement
                         </h2>
 
                         {/* Méthode PayPal (uniquement) */}
                         <div className="mb-6">
-                            <div className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-[#0070BA] bg-gradient-to-r from-[#0070BA]/10 to-[#003087]/10">
+                            <div className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-[#0070BA]/50 bg-gradient-to-r from-[#0070BA]/10 to-[#003087]/10">
                                 <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
                                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72A.75.75 0 0 1 5.682 3h6.063c2.838 0 4.544 1.447 4.544 3.86 0 2.683-1.875 4.353-5.007 4.353H8.61l-1.116 6.615a.641.641 0 0 1-.633.533l.215-.024z" fill="#003087" />
                                     <path d="M18.868 3.72L15.762 21.097a.641.641 0 0 1-.633.533h-4.606a.641.641 0 0 1-.633-.74L12.997 3.72A.75.75 0 0 1 13.735 3h4.395c.346 0 .638.254.698.59l.04.13z" fill="#0070BA" />
                                 </svg>
                                 <div className="flex-1">
-                                    <h3 className="text-lg font-bold text-gray-900 dark:text-white">PayPal</h3>
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">Paiement sécurisé avec PayPal</p>
+                                    <h3 className="text-lg font-bold text-white">PayPal</h3>
+                                    <p className="text-sm text-white/50">Paiement sécurisé avec PayPal</p>
                                 </div>
-                                <div className="px-4 py-2 bg-[#0070BA] text-white rounded-lg text-sm font-semibold">
-                                    Sélectionné
-                                </div>
+                                <LiquidBadge variant="info" size="sm">Sélectionné</LiquidBadge>
                             </div>
                         </div>
 
                         {/* Placeholder formulaire */}
-                        <div className="dark: border dark: rounded-lg p-4 mb-6">
-                            <p className="text-sm dark:">
+                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
+                            <p className="text-sm text-amber-300">
                                 <strong>Note :</strong> Le système de paiement sera intégré prochainement (Stripe/PayPal).
                             </p>
                         </div>
 
                         {/* Error */}
                         {error && (
-                            <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                                <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
+                            <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
+                                <p className="text-sm text-red-400">{error}</p>
                             </div>
                         )}
 
                         {/* Bouton paiement */}
-                        <button
+                        <LiquidButton
                             onClick={handlePayment}
                             disabled={isLoading}
-                            className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-4 rounded-lg transition-colors duration-200 text-lg"
+                            variant="primary"
+                            glow="green"
+                            fullWidth
+                            size="lg"
                         >
                             {isLoading ? (
                                 <span className="flex items-center justify-center gap-2">
@@ -197,19 +203,19 @@ export default function PaymentPage() {
                             ) : (
                                 `Payer ${(accountInfo.price * 1.2).toFixed(2)}€`
                             )}
-                        </button>
+                        </LiquidButton>
 
-                        <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-4">
+                        <p className="text-xs text-white/40 text-center mt-4">
                             En continuant, vous acceptez nos{' '}
-                            <Link to="/legal/terms" className="text-green-600 hover:underline">
+                            <Link to="/legal/terms" className="text-purple-400 hover:underline">
                                 Conditions Générales
                             </Link>
                             {' '}et notre{' '}
-                            <Link to="/legal/privacy" className="text-green-600 hover:underline">
+                            <Link to="/legal/privacy" className="text-purple-400 hover:underline">
                                 Politique de confidentialité
                             </Link>
                         </p>
-                    </div>
+                    </LiquidCard>
                 </div>
             </div>
         </div>

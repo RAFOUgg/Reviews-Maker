@@ -1,19 +1,13 @@
+/**
+ * PipelineCellModal - Modal d'édition d'une cellule de pipeline
+ * Liquid Glass UI Design System
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Copy } from 'lucide-react';
-import LiquidButton from '../../ui/LiquidButton';
+import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea } from '@/components/ui/LiquidUI';
 import { CULTURE_VALUES } from '../../../data/formValues';
-
-/**
- * PipelineCellModal - Modal contextuel d'édition d'une case
- * 
- * Fonctionnalités:
- * ✅ Formulaires adaptés au type de contenu
- * ✅ Sauvegarde instantanée
- * ✅ Suppression de contenu
- * ✅ Copier vers d'autres cases
- * ✅ Prévisualisation des données
- */
 
 const PipelineCellModal = ({
     isOpen,
@@ -24,7 +18,7 @@ const PipelineCellModal = ({
     contentSchema = [],
     onSave,
     pipelineType = 'culture',
-    droppedItem = null // Ajout du prop pour l'item droppé
+    droppedItem = null
 }) => {
     const [localData, setLocalData] = useState({ ...cellData });
     const [activeTab, setActiveTab] = useState(0);
@@ -33,7 +27,6 @@ const PipelineCellModal = ({
         setLocalData({ ...cellData });
     }, [cellData, cellIndex]);
 
-    // Obtenir le label de la case
     const getCellLabel = () => {
         if (!config) return `Étape ${cellIndex + 1}`;
 
@@ -60,7 +53,6 @@ const PipelineCellModal = ({
         return `Étape ${cellIndex + 1}`;
     };
 
-    // Handler: Ajouter un nouveau contenu
     const handleAddContent = (content) => {
         const newContents = [...(localData.contents || [])];
         const exists = newContents.find(c => c.type === content.type);
@@ -72,17 +64,14 @@ const PipelineCellModal = ({
                 label: content.label,
                 data: {}
             });
-
             setLocalData({ ...localData, contents: newContents });
             setActiveTab(newContents.length - 1);
         } else {
-            // Passer à l'onglet existant
             const index = newContents.findIndex(c => c.type === content.type);
             setActiveTab(index);
         }
     };
 
-    // Handler: Modifier données d'un contenu
     const handleUpdateContent = (contentIndex, field, value) => {
         const newContents = [...(localData.contents || [])];
         if (!newContents[contentIndex].data) {
@@ -92,7 +81,6 @@ const PipelineCellModal = ({
         setLocalData({ ...localData, contents: newContents });
     };
 
-    // Handler: Supprimer un contenu
     const handleRemoveContent = (contentIndex) => {
         const newContents = localData.contents.filter((_, idx) => idx !== contentIndex);
         setLocalData({ ...localData, contents: newContents });
@@ -101,12 +89,10 @@ const PipelineCellModal = ({
         }
     };
 
-    // Handler: Sauvegarde
     const handleSave = () => {
         onSave(cellIndex, localData);
     };
 
-    // Rendu du formulaire selon le type de contenu
     const renderContentForm = (content, contentIndex) => {
         const data = content.data || {};
 
@@ -115,75 +101,54 @@ const PipelineCellModal = ({
             return (
                 <div className="space-y-4">
                     {content.type === 'temperature' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                🌡️ Température (°C)
-                            </label>
-                            <input
-                                type="number"
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
-                                step="0.1"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                placeholder="Ex: 24.5"
-                            />
-                        </div>
+                        <LiquidInput
+                            label="🌡️ Température (°C)"
+                            type="number"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
+                            step="0.1"
+                            placeholder="Ex: 24.5"
+                        />
                     )}
 
                     {content.type === 'humidity' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                💧 Humidité relative (%)
-                            </label>
-                            <input
-                                type="number"
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
-                                min="0"
-                                max="100"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                placeholder="Ex: 65"
-                            />
-                        </div>
+                        <LiquidInput
+                            label="💧 Humidité relative (%)"
+                            type="number"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
+                            min="0"
+                            max="100"
+                            placeholder="Ex: 65"
+                        />
                     )}
 
                     {content.type === 'co2' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                🫧 CO2 (ppm)
-                            </label>
-                            <input
-                                type="number"
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', parseInt(e.target.value))}
-                                min="0"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                placeholder="Ex: 1200"
-                            />
-                        </div>
+                        <LiquidInput
+                            label="🫧 CO2 (ppm)"
+                            type="number"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', parseInt(e.target.value))}
+                            min="0"
+                            placeholder="Ex: 1200"
+                        />
                     )}
 
                     {content.type === 'ventilation' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                🌀 Type de ventilation
-                            </label>
-                            <select
+                        <div className="space-y-3">
+                            <LiquidSelect
+                                label="🌀 Type de ventilation"
                                 value={data.type || ''}
                                 onChange={(e) => handleUpdateContent(contentIndex, 'type', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            >
-                                <option value="">Sélectionner...</option>
-                                {(CULTURE_VALUES.typeVentilation || ['Extracteur', 'Brasseur', 'Mixte']).map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                            <input
-                                type="text"
+                                options={[
+                                    { value: '', label: 'Sélectionner...' },
+                                    ...(CULTURE_VALUES.typeVentilation || ['Extracteur', 'Brasseur', 'Mixte']).map(opt => ({ value: opt, label: opt }))
+                                ]}
+                            />
+                            <LiquidInput
                                 value={data.frequency || ''}
                                 onChange={(e) => handleUpdateContent(contentIndex, 'frequency', e.target.value)}
                                 placeholder="Fréquence (ex: 24/7, 15min/h)"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white mt-2"
                             />
                         </div>
                     )}
@@ -196,55 +161,39 @@ const PipelineCellModal = ({
             return (
                 <div className="space-y-4">
                     {content.type === 'lightType' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                💡 Type de lampe
-                            </label>
-                            <select
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            >
-                                <option value="">Sélectionner...</option>
-                                {['LED', 'HPS', 'CFL', 'CMH', 'Naturel', 'Mixte'].map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <LiquidSelect
+                            label="💡 Type de lampe"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
+                            options={[
+                                { value: '', label: 'Sélectionner...' },
+                                ...['LED', 'HPS', 'CFL', 'CMH', 'Naturel', 'Mixte'].map(opt => ({ value: opt, label: opt }))
+                            ]}
+                        />
                     )}
 
                     {content.type === 'power' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                ⚡ Puissance totale (W)
-                            </label>
-                            <input
-                                type="number"
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', parseInt(e.target.value))}
-                                min="0"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                placeholder="Ex: 600"
-                            />
-                        </div>
+                        <LiquidInput
+                            label="⚡ Puissance totale (W)"
+                            type="number"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', parseInt(e.target.value))}
+                            min="0"
+                            placeholder="Ex: 600"
+                        />
                     )}
 
                     {content.type === 'photoperiod' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                ⏱️ Durée d'éclairage (h/jour)
-                            </label>
-                            <input
-                                type="number"
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
-                                min="0"
-                                max="24"
-                                step="0.5"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                placeholder="Ex: 18"
-                            />
-                        </div>
+                        <LiquidInput
+                            label="⏱️ Durée d'éclairage (h/jour)"
+                            type="number"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
+                            min="0"
+                            max="24"
+                            step="0.5"
+                            placeholder="Ex: 18"
+                        />
                     )}
                 </div>
             );
@@ -255,38 +204,27 @@ const PipelineCellModal = ({
             return (
                 <div className="space-y-4">
                     {content.type === 'irrigationType' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                💧 Système d'irrigation
-                            </label>
-                            <select
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                            >
-                                <option value="">Sélectionner...</option>
-                                {['Manuel', 'Goutte à goutte', 'Inondation', 'Aspersion', 'Automatique'].map(opt => (
-                                    <option key={opt} value={opt}>{opt}</option>
-                                ))}
-                            </select>
-                        </div>
+                        <LiquidSelect
+                            label="💧 Système d'irrigation"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
+                            options={[
+                                { value: '', label: 'Sélectionner...' },
+                                ...['Manuel', 'Goutte à goutte', 'Inondation', 'Aspersion', 'Automatique'].map(opt => ({ value: opt, label: opt }))
+                            ]}
+                        />
                     )}
 
                     {content.type === 'waterVolume' && (
-                        <div>
-                            <label className="block text-sm font-medium text-gray-300 mb-2">
-                                🪣 Volume d'eau par arrosage (L)
-                            </label>
-                            <input
-                                type="number"
-                                value={data.value || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
-                                min="0"
-                                step="0.1"
-                                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                                placeholder="Ex: 2.5"
-                            />
-                        </div>
+                        <LiquidInput
+                            label="🪣 Volume d'eau par arrosage (L)"
+                            type="number"
+                            value={data.value || ''}
+                            onChange={(e) => handleUpdateContent(contentIndex, 'value', parseFloat(e.target.value))}
+                            min="0"
+                            step="0.1"
+                            placeholder="Ex: 2.5"
+                        />
                     )}
                 </div>
             );
@@ -295,147 +233,97 @@ const PipelineCellModal = ({
         // Formulaire générique
         return (
             <div className="space-y-4">
-                <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                        {content.icon} {content.label}
-                    </label>
-                    <input
-                        type="text"
-                        value={data.value || ''}
-                        onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                        placeholder="Saisir une valeur..."
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                        📝 Notes
-                    </label>
-                    <textarea
-                        value={data.notes || ''}
-                        onChange={(e) => handleUpdateContent(contentIndex, 'notes', e.target.value)}
-                        rows="3"
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white resize-none"
-                        placeholder="Notes ou observations..."
-                    />
-                </div>
+                <LiquidInput
+                    label={`${content.icon || '📍'} ${content.label}`}
+                    value={data.value || ''}
+                    onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
+                    placeholder="Saisir une valeur..."
+                />
+                <LiquidTextarea
+                    label="📝 Notes"
+                    value={data.notes || ''}
+                    onChange={(e) => handleUpdateContent(contentIndex, 'notes', e.target.value)}
+                    rows={3}
+                    placeholder="Notes ou observations..."
+                />
             </div>
         );
     };
 
-    if (!isOpen) return null;
-
     const contents = localData.contents || [];
 
     return (
-        <AnimatePresence>
-            <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                onClick={onClose}
-            >
-                <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    exit={{ scale: 0.9, opacity: 0 }}
-                    onClick={(e) => e.stopPropagation()}
-                    className="bg-gray-900 rounded-2xl border border-gray-700 max-w-3xl w-full max-h-[90vh] overflow-hidden shadow-2xl"
-                >
-                    {/* En-tête */}
-                    <div className="flex items-center justify-between p-4 border-b border-gray-700">
-                        <div>
-                            <h2 className="text-xl font-bold text-white">
-                                📝 Édition: {getCellLabel()}
-                            </h2>
-                            <p className="text-sm text-gray-400 mt-1">
-                                {contents.length} contenu(s) assigné(s)
-                            </p>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
-                        >
-                            <X className="w-5 h-5 text-gray-400" />
-                        </button>
-                    </div>
-
-                    {/* Contenu */}
-                    <div className="p-4 overflow-y-auto max-h-[calc(90vh-180px)]">
-                        {contents.length === 0 ? (
-                            <div className="text-center py-12 text-gray-400">
-                                <p className="text-lg mb-2">Aucun contenu assigné</p>
-                                <p className="text-sm">Glissez-déposez des éléments depuis le volet latéral</p>
-                            </div>
-                        ) : (
-                            <>
-                                {/* Onglets */}
-                                <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
-                                    {contents.map((content, idx) => (
-                                        <button
-                                            key={idx}
-                                            onClick={() => setActiveTab(idx)}
-                                            className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-colors ${activeTab === idx ? ' text-white' : 'bg-gray-800 text-gray-300 hover:bg-gray-700'}`}
-                                        >
-                                            <span>{content.icon || '📍'}</span>
-                                            <span className="text-sm font-medium">{content.label}</span>
-                                        </button>
-                                    ))}
-                                </div>
-
-                                {/* Formulaire du contenu actif */}
-                                {contents[activeTab] && (
-                                    <div className="bg-gray-800/50 rounded-xl p-4">
-                                        {renderContentForm(contents[activeTab], activeTab)}
-
-                                        {/* Bouton supprimer */}
-                                        <button
-                                            onClick={() => handleRemoveContent(activeTab)}
-                                            className="mt-4 flex items-center gap-2 text-red-400 hover:text-red-300 text-sm"
-                                        >
-                                            <Trash2 className="w-4 h-4" />
-                                            Retirer ce contenu de cette case
-                                        </button>
-                                    </div>
-                                )}
-                            </>
-                        )}
-                    </div>
-
-                    {/* Footer */}
-                    <div className="flex items-center justify-between p-4 border-t border-gray-700">
+        <LiquidModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={`📝 Édition: ${getCellLabel()}`}
+            subtitle={`${contents.length} contenu(s) assigné(s)`}
+            size="lg"
+            glowColor="green"
+            footer={
+                <div className="flex items-center justify-between w-full">
+                    <LiquidButton variant="ghost" onClick={onClose}>
+                        Annuler
+                    </LiquidButton>
+                    <div className="flex gap-2">
                         <LiquidButton
                             variant="ghost"
-                            onClick={onClose}
+                            onClick={() => console.log('Copier vers...')}
                         >
-                            Annuler
+                            <Copy className="w-4 h-4 mr-2" />
+                            Copier vers...
                         </LiquidButton>
-
-                        <div className="flex gap-2">
-                            <LiquidButton
-                                variant="ghost"
-                                onClick={() => {
-                                    // TODO: Copier vers d'autres cases
-                                    console.log('Copier vers...');
-                                }}
-                            >
-                                <Copy className="w-4 h-4 mr-2" />
-                                Copier vers...
-                            </LiquidButton>
-
-                            <LiquidButton
-                                onClick={handleSave}
-                            >
-                                <Save className="w-4 h-4 mr-2" />
-                                Enregistrer
-                            </LiquidButton>
-                        </div>
+                        <LiquidButton onClick={handleSave}>
+                            <Save className="w-4 h-4 mr-2" />
+                            Enregistrer
+                        </LiquidButton>
                     </div>
-                </motion.div>
-            </motion.div>
-        </AnimatePresence>
+                </div>
+            }
+        >
+            {contents.length === 0 ? (
+                <div className="text-center py-12">
+                    <p className="text-lg text-white/60 mb-2">Aucun contenu assigné</p>
+                    <p className="text-sm text-white/40">Glissez-déposez des éléments depuis le volet latéral</p>
+                </div>
+            ) : (
+                <>
+                    {/* Onglets */}
+                    <div className="flex gap-2 mb-4 overflow-x-auto pb-2">
+                        {contents.map((content, idx) => (
+                            <motion.button
+                                key={idx}
+                                onClick={() => setActiveTab(idx)}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all border ${activeTab === idx
+                                        ? 'bg-green-500/20 border-green-500/50 text-white shadow-lg shadow-green-500/20'
+                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    }`}
+                            >
+                                <span>{content.icon || '📍'}</span>
+                                <span className="text-sm font-medium">{content.label}</span>
+                            </motion.button>
+                        ))}
+                    </div>
+
+                    {/* Formulaire du contenu actif */}
+                    {contents[activeTab] && (
+                        <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                            {renderContentForm(contents[activeTab], activeTab)}
+
+                            <button
+                                onClick={() => handleRemoveContent(activeTab)}
+                                className="mt-4 flex items-center gap-2 text-red-400 hover:text-red-300 text-sm transition-colors"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Retirer ce contenu de cette case
+                            </button>
+                        </div>
+                    )}
+                </>
+            )}
+        </LiquidModal>
     );
 };
 

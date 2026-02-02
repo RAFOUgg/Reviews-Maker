@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import LiquidCard from '../../components/ui/LiquidCard';
+import { LiquidCard, LiquidChip, LiquidInput } from '@/components/ui/LiquidUI';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -58,35 +58,35 @@ const ReviewCard = ({ review, onLike, onView }) => {
       onClick={() => onView?.(review.id)}
       className="cursor-pointer group"
     >
-      <LiquidCard className="overflow-hidden">
-        <div className="relative aspect-square overflow-hidden">
+      <LiquidCard glow="purple" padding="none">
+        <div className="relative aspect-square overflow-hidden rounded-t-2xl">
           <img
             src={review.imageUrl || '/placeholder-review.jpg'}
             alt={review.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
 
-          <div className="absolute top-3 left-3 px-3 py-1 bg-panel/60 backdrop-blur-md rounded-full text-title text-sm font-medium flex items-center gap-1">
+          <div className="absolute top-3 left-3 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-white text-sm font-medium flex items-center gap-1">
             <span>{getTypeIcon(review.type)}</span>
             {review.typeName || 'Produit'}
           </div>
 
-          <div className="absolute top-3 right-3 w-12 h-12 rounded-full bg-card flex items-center justify-center text-title font-bold text-lg shadow-lg">
+          <div className="absolute top-3 right-3 w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
             {review.rating?.toFixed(1) || '-'}
           </div>
 
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
             <div className="absolute bottom-4 left-4 right-4">
-              <button className="w-full py-2 btn-primary">Voir la review</button>
+              <button className="w-full py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity">Voir la review</button>
             </div>
           </div>
         </div>
 
         <div className="p-4">
-          <h3 className="font-semibold text-title truncate mb-1">{review.name || 'Sans nom'}</h3>
-          <p className="text-sm text-subtitle truncate mb-3">par @{review.author?.username || 'anonyme'}</p>
+          <h3 className="font-semibold text-white truncate mb-1">{review.name || 'Sans nom'}</h3>
+          <p className="text-sm text-white/50 truncate mb-3">par @{review.author?.username || 'anonyme'}</p>
 
-          <div className="flex items-center justify-between text-sm text-subtitle">
+          <div className="flex items-center justify-between text-sm text-white/60">
             <button onClick={handleLike} className={`flex items-center gap-1 transition-colors ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}>
               <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
               {(review.likes || 0) + (isLiked ? 1 : 0)}
@@ -165,54 +165,54 @@ export default function GalleryPage() {
   const handleLike = (id, liked) => console.log('Like:', id, liked);
 
   return (
-    <div className="min-h-screen bg-transparent relative">
-      <div className="container-glass mx-auto px-4 py-8 relative z-10">
+    <div className="min-h-screen relative">
+      <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">
             🌿 Galerie Publique
           </h1>
-          <p className="text-xl text-white/80">
+          <p className="text-xl text-white/60">
             Découvrez les meilleures reviews de la communauté
           </p>
         </div>
 
-        <LiquidCard padding="md" className="mb-6">
+        <LiquidCard glow="purple" padding="md" className="mb-6">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Rechercher une review..."
-                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/50 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/5 border border-white/10 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
               />
             </div>
             <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
               {PRODUCT_TYPES.map((type) => (
-                <button
+                <LiquidChip
                   key={type.id}
+                  active={selectedType === type.id}
                   onClick={() => setSelectedType(type.id)}
-                  className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${selectedType === type.id ? 'bg-white/5 text-white' : 'bg-white/10 text-white hover:bg-white/20'
-                    }`}
+                  color="purple"
                 >
                   {type.icon} {type.name}
-                </button>
+                </LiquidChip>
               ))}
             </div>
             <div className="flex gap-2">
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-4 py-2 rounded-xl bg-transparent border border-white/10 text-white focus:outline-none"
+                className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all"
               >
                 {SORT_OPTIONS.map((opt) => (
-                  <option key={opt.id} value={opt.id} className="bg-gray-800">{opt.name}</option>
+                  <option key={opt.id} value={opt.id} className="bg-[#1a1a2e]">{opt.name}</option>
                 ))}
               </select>
               <button
                 onClick={() => setViewMode(viewMode === 'grid' ? 'list' : 'grid')}
-                className="p-2 rounded-xl bg-white/10 text-white hover:bg-white/20"
+                className="p-2 rounded-xl bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-white/10 transition-all"
               >
                 {viewMode === 'grid' ? <List className="w-5 h-5" /> : <Grid className="w-5 h-5" />}
               </button>
@@ -221,9 +221,9 @@ export default function GalleryPage() {
         </LiquidCard>
 
         {loading ? (
-          <div className="text-center text-subtitle">Chargement...</div>
+          <div className="text-center text-white/50 py-16">Chargement...</div>
         ) : filteredReviews.length === 0 ? (
-          <div className="text-center py-16 text-subtitle">Aucune review trouvée</div>
+          <div className="text-center py-16 text-white/50">Aucune review trouvée</div>
         ) : (
           <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
             {filteredReviews.map((review) => (

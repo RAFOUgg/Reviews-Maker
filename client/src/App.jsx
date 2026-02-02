@@ -109,7 +109,7 @@ function App() {
         <I18nextProvider i18n={i18n}>
             <ErrorBoundary>
                 <LegalConsentGate>
-                    <div className="min-h-screen bg-transparent text-dark-text relative overflow-hidden">
+                    <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white relative overflow-hidden">
                         <AnimatedMeshGradient />
                         <RDRBanner />
                         <DisclaimerRDRModal />

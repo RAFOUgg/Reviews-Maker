@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { EFFECTS_CATEGORIES, getAllEffects, getEffectsByFilter, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../data/effectsCategories';
 import { EXPERIENCE_VALUES } from '../../data/formValues';
 import { Zap, Sparkles, Clock, Filter, Plus, X, Beaker, ChevronDown } from 'lucide-react';
-import WhiteSlider from '../ui/WhiteSlider';
+import { LiquidCard, LiquidRating, LiquidChip, LiquidDivider, LiquidButton } from '@/components/ui/LiquidUI';
 
 /**
  * Section Effets Ressentis + Expérience d'Utilisation (FUSIONNÉE)
@@ -117,153 +117,169 @@ export default function EffectsSection({ productType, data: directData, onChange
     };
 
     return (
-        <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+        <LiquidCard glow="cyan" padding="lg" className="space-y-8">
 
             {/* En-tête */}
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="p-3 bg-gradient-to-br rounded-xl">
-                    <Zap className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-3 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <Zap className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">💥 Effets Ressentis</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Profil d'effets complet</p>
+                    <h3 className="text-xl font-bold text-white">💥 Effets Ressentis</h3>
+                    <p className="text-sm text-white/50">Profil d'effets complet</p>
                 </div>
             </div>
 
+            <LiquidDivider />
+
             {/* Montée, Intensité, Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Montée (rapidité)"
+                        value={onset}
+                        max={10}
+                        color="cyan"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={onset}
-                        onChange={setOnset}
-                        unit="/10"
-                        helperText={ONSET_LEVELS[onset - 1]?.label}
+                        onChange={(e) => setOnset(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-cyan-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">{ONSET_LEVELS[onset - 1]?.label}</p>
                 </div>
 
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Intensité"
+                        value={intensity}
+                        max={10}
+                        color="cyan"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={intensity}
-                        onChange={setIntensity}
-                        unit="/10"
-                        helperText={INTENSITY_LEVELS[intensity - 1]?.label}
+                        onChange={(e) => setIntensity(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-cyan-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">{INTENSITY_LEVELS[intensity - 1]?.label}</p>
                 </div>
             </div>
 
             {/* Durée des effets */}
             <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-orange-500" />
+                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                    <Clock className="w-4 h-4 text-cyan-400" />
                     Durée des effets
                 </label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                     {DURATION_OPTIONS.map(option => (
-                        <button
+                        <LiquidChip
                             key={option.id}
+                            active={duration === option.id}
+                            color="cyan"
                             onClick={() => setDuration(option.id)}
-                            className={`px-4 py-3 rounded-lg text-sm font-medium transition-all ${duration === option.id ? 'bg-gradient-to-br from-orange-500 to-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                         >
                             {option.label}
-                        </button>
+                        </LiquidChip>
                     ))}
                 </div>
             </div>
 
             {/* Filtres */}
             <div className="space-y-3">
-                <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                    <Filter className="w-4 h-4" />
+                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                    <Filter className="w-4 h-4 text-cyan-400" />
                     Filtres
                 </label>
 
                 {/* Filtre par catégorie */}
                 <div className="flex flex-wrap gap-2">
-                    <button
+                    <LiquidChip
+                        active={categoryFilter === null}
+                        color="cyan"
                         onClick={() => setCategoryFilter(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${categoryFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         Toutes catégories
-                    </button>
+                    </LiquidChip>
                     {Object.values(EFFECTS_CATEGORIES).map(category => (
-                        <button
+                        <LiquidChip
                             key={category.id}
+                            active={categoryFilter === category.id}
+                            color="cyan"
                             onClick={() => setCategoryFilter(category.id)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${categoryFilter === category.id ? 'text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                            style={categoryFilter === category.id ? { background: category.color } : {}}
                         >
-                            <span>{category.icon}</span>
-                            <span>{category.label}</span>
-                        </button>
+                            {category.icon} {category.label}
+                        </LiquidChip>
                     ))}
                 </div>
 
                 {/* Filtre par sentiment */}
                 <div className="flex flex-wrap gap-2">
-                    <button
+                    <LiquidChip
+                        active={sentimentFilter === null}
+                        color="cyan"
                         onClick={() => setSentimentFilter(null)}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === null ? 'bg-gradient-to-br text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         Tous
-                    </button>
-                    <button
+                    </LiquidChip>
+                    <LiquidChip
+                        active={sentimentFilter === 'positive'}
+                        color="green"
                         onClick={() => setSentimentFilter('positive')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'positive' ? 'bg-green-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         ✅ Positifs
-                    </button>
-                    <button
+                    </LiquidChip>
+                    <LiquidChip
+                        active={sentimentFilter === 'negative'}
+                        color="pink"
                         onClick={() => setSentimentFilter('negative')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'negative' ? 'bg-red-500 text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         ⚠️ Négatifs
-                    </button>
-                    <button
+                    </LiquidChip>
+                    <LiquidChip
+                        active={sentimentFilter === 'neutral'}
+                        color="purple"
                         onClick={() => setSentimentFilter('neutral')}
-                        className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${sentimentFilter === 'neutral' ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                     >
                         ⚕️ Thérapeutiques
-                    </button>
+                    </LiquidChip>
                 </div>
             </div>
 
             {/* Effets sélectionnés (max 8) */}
             <div className="space-y-3">
                 <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
+                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-cyan-400" />
                         Effets sélectionnés
                     </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8 ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400' : ' dark: dark:'}`}>
+                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8 ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
                         {selectedEffects.length}/8
                     </span>
                 </div>
 
                 {/* Badges sélectionnés */}
                 {selectedEffects.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-3 dark: rounded-lg">
+                    <div className="flex flex-wrap gap-2 p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
                         {selectedEffects.map(effectId => {
                             const effect = getAllEffects().find(e => e.id === effectId);
                             if (!effect) return null;
                             return (
-                                <button
+                                <LiquidChip
                                     key={effectId}
+                                    active
+                                    color="cyan"
                                     onClick={() => toggleEffect(effectId)}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all bg-gradient-to-br text-white hover:shadow-lg`}
-                                    style={{
-                                        backgroundImage: `linear-gradient(to bottom right, var(--tw-gradient-stops))`
-                                    }}
+                                    onRemove={() => toggleEffect(effectId)}
                                 >
-                                    <span>{getCategoryIcon(effect.category)}</span>
-                                    <span>{effect.name}</span>
-                                    <X className="w-3 h-3" />
-                                </button>
+                                    {getCategoryIcon(effect.category)} {effect.name}
+                                </LiquidChip>
                             );
                         })}
                     </div>
@@ -272,83 +288,80 @@ export default function EffectsSection({ productType, data: directData, onChange
 
             {/* Grille d'effets */}
             <div className="space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto p-2 bg-white/5 rounded-xl border border-white/10">
                     {filteredEffects.map(effect => {
                         const isSelected = selectedEffects.includes(effect.id);
                         const isDisabled = !isSelected && selectedEffects.length >= 8;
-                        const badgeColor = getEffectBadgeColor(effect);
 
                         return (
-                            <button
+                            <LiquidChip
                                 key={effect.id}
+                                active={isSelected}
+                                color="cyan"
                                 onClick={() => !isDisabled && toggleEffect(effect.id)}
-                                disabled={isDisabled}
-                                className={`p-3 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${isSelected ? `}bg-gradient-to-br ${badgeColor} text-white shadow-lg transform scale-105`
-                                    : isDisabled
-                                        ? 'bg-gray-200 dark:bg-gray-700 text-gray-400 cursor-not-allowed opacity-50'
-                                        : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:shadow-md border border-gray-200 dark:border-gray-700'
-                                    }`}
+                                size="sm"
                             >
-                                <span>{getCategoryIcon(effect.category)}</span>
-                                <span className="truncate">{effect.name}</span>
-                                {isSelected && <Plus className="w-3 h-3 fill-current" />}
-                            </button>
+                                {getCategoryIcon(effect.category)} {effect.name}
+                            </LiquidChip>
                         );
                     })}
                 </div>
             </div>
 
             {/* Résumé */}
-            <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl space-y-2">
-                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
+            <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-xl border border-cyan-500/20 space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-cyan-400" />
                     Résumé des effets
                 </h4>
-                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p><span className="font-semibold">Montée :</span> {ONSET_LEVELS[onset - 1]?.label || `${onset}/10`} ({ONSET_LEVELS[onset - 1]?.time || ''})</p>
-                    <p><span className="font-semibold">Intensité :</span> {INTENSITY_LEVELS[intensity - 1]?.label || `${intensity}/10`}</p>
-                    <p><span className="font-semibold">Durée :</span> {DURATION_OPTIONS.find(d => d.id === duration)?.label || duration}</p>
-                    <p><span className="font-semibold">Effets :</span> {selectedEffects.length} sélectionné(s)</p>
+                <div className="text-sm text-white/60 space-y-1">
+                    <p><span className="font-semibold text-white/80">Montée :</span> {ONSET_LEVELS[onset - 1]?.label || `${onset}/10`} ({ONSET_LEVELS[onset - 1]?.time || ''})</p>
+                    <p><span className="font-semibold text-white/80">Intensité :</span> {INTENSITY_LEVELS[intensity - 1]?.label || `${intensity}/10`}</p>
+                    <p><span className="font-semibold text-white/80">Durée :</span> {DURATION_OPTIONS.find(d => d.id === duration)?.label || duration}</p>
+                    <p><span className="font-semibold text-white/80">Effets :</span> {selectedEffects.length} sélectionné(s)</p>
                 </div>
             </div>
 
+            <LiquidDivider />
+
             {/* EXPÉRIENCE D'UTILISATION */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-8">
+            <div className="pt-4">
                 <button
+                    type="button"
                     onClick={() => setExpandExperience(!expandExperience)}
-                    className="w-full flex items-center justify-between p-4 bg-blue-50 dark:bg-blue-900/20 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/30 transition-colors"
+                    className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
                 >
                     <div className="flex items-center gap-3">
-                        <Beaker className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                        <Beaker className="w-5 h-5 text-cyan-400" />
                         <div className="text-left">
-                            <h3 className="text-lg font-semibold text-gray-900 dark:text-white">🧪 Expérience d'utilisation</h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400">Documentez vos tests de consommation</p>
+                            <h3 className="text-lg font-semibold text-white">🧪 Expérience d'utilisation</h3>
+                            <p className="text-sm text-white/50">Documentez vos tests de consommation</p>
                         </div>
                     </div>
-                    <ChevronDown className={`w-5 h-5 text-blue-600 dark:text-blue-400 transition-transform ${expandExperience ? 'rotate-180' : ''}`} />
+                    <ChevronDown className={`w-5 h-5 text-cyan-400 transition-transform ${expandExperience ? 'rotate-180' : ''}`} />
                 </button>
 
                 {expandExperience && (
-                    <div className="mt-4 space-y-6 p-4 bg-gray-50 dark:bg-gray-800/30 rounded-xl">
+                    <div className="mt-4 space-y-6 p-4 bg-white/5 rounded-xl border border-white/10">
                         {/* Méthode de consommation */}
-                        <div>
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">💨 Méthode de consommation *</label>
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-white/80 flex items-center gap-2">💨 Méthode de consommation *</label>
                             <select
                                 value={methodeConsommation}
                                 onChange={(e) => setMethodeConsommation(e.target.value)}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
                             >
-                                <option value="">Sélectionner une méthode...</option>
+                                <option value="" className="bg-gray-900">Sélectionner une méthode...</option>
                                 {EXPERIENCE_VALUES.methodeConsommation.map(m => (
-                                    <option key={m.value} value={m.value}>{m.label}</option>
+                                    <option key={m.value} value={m.value} className="bg-gray-900">{m.label}</option>
                                 ))}
                             </select>
                         </div>
 
                         {/* Dosage & Durée */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">⚖️ Dosage</label>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white/80">⚖️ Dosage</label>
                                 <div className="flex gap-2">
                                     <input
                                         type="number"
@@ -357,91 +370,114 @@ export default function EffectsSection({ productType, data: directData, onChange
                                         value={dosageUtilise}
                                         onChange={(e) => setDosageUtilise(e.target.value)}
                                         placeholder="0.0"
-                                        className="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
                                     />
                                     <select
                                         value={dosageUnite}
                                         onChange={(e) => setDosageUnite(e.target.value)}
-                                        className="px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none"
+                                        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
                                     >
-                                        <option value="g">g</option>
-                                        <option value="mg">mg</option>
-                                        <option value="ml">ml</option>
+                                        <option value="g" className="bg-gray-900">g</option>
+                                        <option value="mg" className="bg-gray-900">mg</option>
+                                        <option value="ml" className="bg-gray-900">ml</option>
                                     </select>
                                 </div>
                             </div>
 
-                            <div>
-                                <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">⏱️ Durée des effets</label>
-                                <div className="flex gap-2">
-                                    <input type="number" min="0" max="23" value={dureeEffetsHeures} onChange={(e) => setDureeEffetsHeures(e.target.value)} placeholder="HH" className="w-16 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none" />
-                                    <span className="text-gray-600 dark:text-gray-400 py-2">:</span>
-                                    <input type="number" min="0" max="59" value={dureeEffetsMinutes} onChange={(e) => setDureeEffetsMinutes(e.target.value)} placeholder="MM" className="w-16 px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none" />
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white/80">⏱️ Durée des effets</label>
+                                <div className="flex gap-2 items-center">
+                                    <input type="number" min="0" max="23" value={dureeEffetsHeures} onChange={(e) => setDureeEffetsHeures(e.target.value)} placeholder="HH" className="w-16 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none text-center" />
+                                    <span className="text-white/40 py-2">:</span>
+                                    <input type="number" min="0" max="59" value={dureeEffetsMinutes} onChange={(e) => setDureeEffetsMinutes(e.target.value)} placeholder="MM" className="w-16 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none text-center" />
                                 </div>
                             </div>
                         </div>
 
                         {/* Début & Durée catégorie */}
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div>
-                                <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">🚀 Début des effets</label>
-                                <select value={debutEffets} onChange={(e) => setDebutEffets(e.target.value)} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none">
-                                    <option value="">Sélectionner...</option>
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white/80">🚀 Début des effets</label>
+                                <select value={debutEffets} onChange={(e) => setDebutEffets(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
+                                    <option value="" className="bg-gray-900">Sélectionner...</option>
                                     {EXPERIENCE_VALUES.debutEffets.map(d => (
-                                        <option key={d.value} value={d.value}>{d.label}</option>
+                                        <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
                                     ))}
                                 </select>
                             </div>
 
-                            <div>
-                                <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">⏰ Catégorie durée</label>
-                                <select value={dureeEffetsCategorie} onChange={(e) => setDureeEffetsCategorie(e.target.value)} className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 outline-none">
+                            <div className="space-y-2">
+                                <label className="text-sm font-medium text-white/80">⏰ Catégorie durée</label>
+                                <select value={dureeEffetsCategorie} onChange={(e) => setDureeEffetsCategorie(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
                                     {EXPERIENCE_VALUES.dureeEffets.map(d => (
-                                        <option key={d.value} value={d.value}>{d.label}</option>
+                                        <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
                                     ))}
                                 </select>
                             </div>
                         </div>
 
                         {/* Profils d'effets */}
-                        <div>
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">Profils d'effets ressentis (max 8)</label>
-                            <div className="flex gap-2 mb-3">
+                        <div className="space-y-3">
+                            <label className="text-sm font-medium text-white/80">Profils d'effets ressentis (max 8)</label>
+                            <div className="flex gap-2 flex-wrap">
                                 {['tous', 'positif', 'negatif', 'neutre'].map(t => (
-                                    <button key={t} onClick={() => setFilterProfils(t)} className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${filterProfils === t ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
+                                    <LiquidChip
+                                        key={t}
+                                        active={filterProfils === t}
+                                        color={t === 'positif' ? 'green' : t === 'negatif' ? 'pink' : 'cyan'}
+                                        onClick={() => setFilterProfils(t)}
+                                    >
                                         {t === 'tous' ? 'Tous' : t === 'positif' ? '✅ Positif' : t === 'negatif' ? '⚠️ Négatif' : '⚕️ Neutre'}
-                                    </button>
+                                    </LiquidChip>
                                 ))}
                             </div>
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-2 p-3 bg-white/5 rounded-xl border border-white/10 max-h-48 overflow-y-auto">
                                 {profilsFiltres.map(p => (
-                                    <button key={p.value} onClick={() => toggleMultiSelect('profilsEffets', p.value)} className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${profilsEffets.includes(p.value) ? 'bg-green-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
-                                        {p.label} {profilsEffets.includes(p.value) && '✓'}
-                                    </button>
+                                    <LiquidChip
+                                        key={p.value}
+                                        active={profilsEffets.includes(p.value)}
+                                        color={p.type === 'positif' ? 'green' : p.type === 'negatif' ? 'pink' : 'purple'}
+                                        onClick={() => toggleMultiSelect('profilsEffets', p.value)}
+                                        size="sm"
+                                    >
+                                        {p.label}
+                                    </LiquidChip>
                                 ))}
                             </div>
                         </div>
 
                         {/* Effets secondaires */}
-                        <div>
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">Effets secondaires (max 10)</label>
+                        <div className="space-y-3">
+                            <label className="text-sm font-medium text-white/80">Effets secondaires (max 10)</label>
                             <div className="flex flex-wrap gap-2">
                                 {EXPERIENCE_VALUES.effetsSecondaires.map(e => (
-                                    <button key={e.value} onClick={() => toggleMultiSelect('effetsSecondaires', e.value)} className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${effetsSecondaires.includes(e.value) ? 'bg-orange-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
-                                        {e.label} {effetsSecondaires.includes(e.value) && '✓'}
-                                    </button>
+                                    <LiquidChip
+                                        key={e.value}
+                                        active={effetsSecondaires.includes(e.value)}
+                                        color="amber"
+                                        onClick={() => toggleMultiSelect('effetsSecondaires', e.value)}
+                                        size="sm"
+                                    >
+                                        {e.label}
+                                    </LiquidChip>
                                 ))}
                             </div>
                         </div>
 
                         {/* Usages préférés */}
-                        <div>
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-300 mb-2 block">Usages préférés (max 10)</label>
+                        <div className="space-y-3">
+                            <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
                             <div className="flex flex-wrap gap-2">
                                 {EXPERIENCE_VALUES.usagesPreferes.map(u => (
-                                    <button key={u.value} onClick={() => toggleMultiSelect('usagesPreferes', u.value)} className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${usagesPreferes.includes(u.value) ? 'bg-purple-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-300'}`}>
-                                        {u.label} {usagesPreferes.includes(u.value) && '✓'}
-                                    </button>
+                                    <LiquidChip
+                                        key={u.value}
+                                        active={usagesPreferes.includes(u.value)}
+                                        color="purple"
+                                        onClick={() => toggleMultiSelect('usagesPreferes', u.value)}
+                                        size="sm"
+                                    >
+                                        {u.label}
+                                    </LiquidChip>
                                 ))}
                             </div>
                         </div>
@@ -449,7 +485,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                 )}
             </div>
 
-        </div>
+        </LiquidCard>
     );
 }
 

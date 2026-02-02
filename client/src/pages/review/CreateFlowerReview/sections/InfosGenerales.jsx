@@ -1,7 +1,6 @@
 import React from 'react'
-import { Camera, X } from 'lucide-react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
-import LiquidButton from '../../../../components/ui/LiquidButton'
+import { Camera, X, Info } from 'lucide-react'
+import { LiquidCard, LiquidInput, LiquidDivider, LiquidChip, LiquidButton } from '@/components/ui/LiquidUI'
 import MultiSelectPills from '../../../../components/shared/ui-helpers/MultiSelectPills'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
@@ -25,34 +24,38 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
 
     return (
         <div className="space-y-6">
-            <LiquidCard title="📋 Informations générales" bordered>
-                <div className="space-y-4">
+            <LiquidCard glow="purple" padding="lg">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <Info className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">📋 Informations générales</h3>
+                        <p className="text-sm text-white/50">Identité et photos du produit</p>
+                    </div>
+                </div>
+
+                <LiquidDivider />
+
+                <div className="space-y-4 mt-6">
                     {/* Nom commercial */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Nom commercial *
-                            <span className="ml-2 text-xs dark:">
-                                (Seul champ texte libre obligatoire)
-                            </span>
-                        </label>
-                        <input
-                            type="text"
+                        <LiquidInput
+                            label="Nom commercial *"
                             value={formData.nomCommercial || ''}
                             onChange={(e) => handleChange('nomCommercial', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                             placeholder="Ex: Marque – Cultivar – Batch #"
                             maxLength={100}
                         />
+                        <p className="text-xs text-white/40 mt-1">(Seul champ texte libre obligatoire)</p>
                     </div>
 
                     {/* Cultivar(s) - Multi-select pills CDC conforme */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <label className="block text-sm font-medium text-white mb-2">
                             Cultivar(s)
-                            <span className="ml-2 text-xs dark:">
-                                (Multi-sélection depuis bibliothèque, drag & drop pour réorganiser)
-                            </span>
                         </label>
+                        <p className="text-xs text-white/40 mb-2">(Multi-sélection depuis bibliothèque)</p>
                         <MultiSelectPills
                             value={formData.cultivars || []}
                             onChange={(cultivars) => handleChange('cultivars', cultivars)}
@@ -65,36 +68,28 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
 
                     {/* Farm */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Farm / Producteur
-                            <span className="ml-2 text-xs text-gray-500">
-                                (Auto-complete depuis base de données)
-                            </span>
-                        </label>
-                        <input
-                            type="text"
+                        <LiquidInput
+                            label="Farm / Producteur"
                             value={formData.farm || ''}
                             onChange={(e) => handleChange('farm', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
                             placeholder="Nom du producteur"
                         />
+                        <p className="text-xs text-white/40 mt-1">(Auto-complete depuis base de données)</p>
                     </div>
 
                     {/* Photos avec système de tags CDC conforme */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Photos du produit (1-4) *
-                            <span className="ml-2 text-xs dark:">
-                                (Taguez chaque photo pour mieux organiser votre galerie)
-                            </span>
+                        <label className="block text-sm font-medium text-white mb-2">
+                            📷 Photos du produit (1-4) *
                         </label>
+                        <p className="text-xs text-white/40 mb-3">(Taguez chaque photo pour mieux organiser votre galerie)</p>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                             {photos.map((photo, index) => (
                                 <div key={index} className="relative group">
                                     <img
                                         src={photo.preview || photo.url}
                                         alt={`Photo ${index + 1}`}
-                                        className="w-full h-32 object-cover rounded-lg shadow-md"
+                                        className="w-full h-32 object-cover rounded-lg border border-white/10 shadow-md"
                                     />
                                     <button
                                         type="button"

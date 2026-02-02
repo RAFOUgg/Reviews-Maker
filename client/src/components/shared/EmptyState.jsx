@@ -2,7 +2,7 @@
  * Composant EmptyState réutilisable
  * Affiche un message quand aucune donnée n'est disponible
  */
-import Button from '../ui/Button'
+import { LiquidButton, LiquidCard } from '@/components/ui/LiquidUI'
 
 export default function EmptyState({
     icon = '📭',
@@ -13,22 +13,22 @@ export default function EmptyState({
     className = ''
 }) {
     return (
-        <div className={`flex flex-col items-center justify-center text-center p-12 ${className}`}>
+        <LiquidCard className={`flex flex-col items-center justify-center text-center p-12 ${className}`}>
             <div className="text-6xl mb-4 opacity-50">
                 {icon}
             </div>
-            <h3 className="text-xl font-bold text-dark-text mb-2">
+            <h3 className="text-xl font-bold text-white mb-2">
                 {title}
             </h3>
-            <p className="text-dark-muted max-w-md mb-6">
+            <p className="text-white/60 max-w-md mb-6">
                 {message}
             </p>
             {actionLabel && onAction && (
-                <Button onClick={onAction} variant="primary">
+                <LiquidButton onClick={onAction} variant="primary">
                     {actionLabel}
-                </Button>
+                </LiquidButton>
             )}
-        </div>
+        </LiquidCard>
     )
 }
 

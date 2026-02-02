@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { Scale, Droplet, Scissors, TrendingUp, Award } from 'lucide-react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { Scale, Droplet, Scissors, TrendingUp, Award, Wheat } from 'lucide-react'
+import { LiquidCard, LiquidDivider, LiquidChip, LiquidRating } from '@/components/ui/LiquidUI'
 import SegmentedControl from '../../../../components/shared/ui-helpers/SegmentedControl'
 
 /**
@@ -36,7 +36,7 @@ export default function Recolte({ formData, handleChange }) {
         if (rendementM2 < 200) return { label: 'Faible', color: 'bg-red-500' }
         if (rendementM2 < 400) return { label: 'Moyen', color: 'bg-yellow-500' }
         if (rendementM2 < 600) return { label: 'Élevé', color: 'bg-green-500' }
-        return { label: 'Exceptionnel', color: '' }
+        return { label: 'Exceptionnel', color: 'bg-purple-500' }
     }
 
     const rendementM2 = parseFloat(calculerRendementM2())
@@ -51,12 +51,24 @@ export default function Recolte({ formData, handleChange }) {
 
     return (
         <div className="space-y-6">
-            <LiquidCard title="🌾 Récolte & Post-Récolte" bordered>
-                <div className="space-y-6">
+            <LiquidCard glow="amber" padding="lg">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                        <Wheat className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">🌾 Récolte & Post-Récolte</h3>
+                        <p className="text-sm text-white/50">Données de récolte et rendements</p>
+                    </div>
+                </div>
+
+                <LiquidDivider />
+
+                <div className="space-y-6 mt-6">
 
                     {/* 1. Fenêtre de récolte */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <label className="block text-sm font-medium text-white mb-3">
                             <Award className="w-4 h-4 inline mr-2" />
                             Fenêtre de récolte
                         </label>
@@ -70,14 +82,14 @@ export default function Recolte({ formData, handleChange }) {
                             onChange={(value) => handleRecolteChange('fenetreRecolte', value)}
                             fullWidth
                         />
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-xs text-white/40 mt-2">
                             💡 Optimal = ratio THC/effets max selon votre préférence
                         </p>
                     </div>
 
                     {/* 2. Couleur des trichomes (sliders verrouillés 100%) */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <label className="block text-sm font-medium text-white mb-3">
                             <Droplet className="w-4 h-4 inline mr-2" />
                             Couleur des trichomes au moment de la récolte
                         </label>
@@ -86,8 +98,8 @@ export default function Recolte({ formData, handleChange }) {
                             {/* Translucides */}
                             <div>
                                 <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-gray-600 dark:text-gray-400">⚪ Translucides</span>
-                                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                    <span className="text-white/60">⚪ Translucides</span>
+                                    <span className="font-semibold text-white">
                                         {recolteData.trichomesTranslucides || 0}%
                                     </span>
                                 </div>
@@ -98,15 +110,15 @@ export default function Recolte({ formData, handleChange }) {
                                     step="5"
                                     value={recolteData.trichomesTranslucides || 0}
                                     onChange={(e) => handleRecolteChange('trichomesTranslucides', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-400"
                                 />
                             </div>
 
                             {/* Laiteux */}
                             <div>
                                 <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-gray-600 dark:text-gray-400">🥛 Laiteux</span>
-                                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                    <span className="text-white/60">🥛 Laiteux</span>
+                                    <span className="font-semibold text-white">
                                         {recolteData.trichomesLaiteux || 0}%
                                     </span>
                                 </div>
@@ -117,15 +129,15 @@ export default function Recolte({ formData, handleChange }) {
                                     step="5"
                                     value={recolteData.trichomesLaiteux || 0}
                                     onChange={(e) => handleRecolteChange('trichomesLaiteux', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-white"
+                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
                                 />
                             </div>
 
                             {/* Ambrés */}
                             <div>
                                 <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-gray-600 dark:text-gray-400">🟠 Ambrés</span>
-                                    <span className="font-semibold text-gray-900 dark:text-gray-100">
+                                    <span className="text-white/60">🟠 Ambrés</span>
+                                    <span className="font-semibold text-white">
                                         {recolteData.trichomesAmbres || 0}%
                                     </span>
                                 </div>
@@ -136,21 +148,21 @@ export default function Recolte({ formData, handleChange }) {
                                     step="5"
                                     value={recolteData.trichomesAmbres || 0}
                                     onChange={(e) => handleRecolteChange('trichomesAmbres', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
                                 />
                             </div>
 
                             {/* Validation somme = 100% */}
-                            <div className={`px-4 py-3 rounded-lg flex items-center justify-between ${trichomesValid ? 'bg-green-50 dark:bg-green-900/20 border-2 border-green-500' : 'bg-red-50 dark:bg-red-900/20 border-2 border-red-500'}`}>
-                                <span className="text-sm font-medium">
+                            <div className={`px-4 py-3 rounded-lg flex items-center justify-between ${trichomesValid ? 'bg-green-500/20 border-2 border-green-500/50' : 'bg-red-500/20 border-2 border-red-500/50'}`}>
+                                <span className="text-sm font-medium text-white">
                                     {trichomesValid ? '✅ Total' : '⚠️ Total'}
                                 </span>
-                                <span className={`text-lg font-bold ${trichomesValid ? 'text-green-600' : 'text-red-600'}`}>
+                                <span className={`text-lg font-bold ${trichomesValid ? 'text-green-400' : 'text-red-400'}`}>
                                     {sommeTrichomes.toFixed(0)}%
                                 </span>
                             </div>
                             {!trichomesValid && (
-                                <p className="text-xs text-red-600 dark:text-red-400">
+                                <p className="text-xs text-red-400">
                                     ⚠️ La somme doit être égale à 100%
                                 </p>
                             )}
@@ -158,15 +170,15 @@ export default function Recolte({ formData, handleChange }) {
                     </div>
 
                     {/* 3. Mode de récolte */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <label className="block text-sm font-medium text-white mb-3">
                             <Scissors className="w-4 h-4 inline mr-2" />
                             Mode de récolte
                         </label>
                         <select
                             value={recolteData.modeRecolte || 'branches'}
                             onChange={(e) => handleRecolteChange('modeRecolte', e.target.value)}
-                            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                            className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                         >
                             <option value="plante-entiere">Plante entière</option>
                             <option value="branches">Branches</option>
@@ -178,10 +190,10 @@ export default function Recolte({ formData, handleChange }) {
                     </div>
 
                     {/* 4. Poids & Rendements */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {/* Poids brut humide */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                            <label className="block text-sm font-medium text-white mb-2">
                                 <Scale className="w-4 h-4 inline mr-2" />
                                 Poids brut humide (g)
                             </label>
@@ -192,15 +204,15 @@ export default function Recolte({ formData, handleChange }) {
                                 step="10"
                                 value={recolteData.poidsBrut || ''}
                                 onChange={(e) => handleRecolteChange('poidsBrut', parseFloat(e.target.value))}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                                 placeholder="Ex: 800"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Poids juste après coupe</p>
+                            <p className="text-xs text-white/40 mt-1">Poids juste après coupe</p>
                         </div>
 
                         {/* Poids net après manucure */}
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                        <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                            <label className="block text-sm font-medium text-white mb-2">
                                 <Scale className="w-4 h-4 inline mr-2" />
                                 Poids net après 1ère manucure (g)
                             </label>
@@ -211,19 +223,19 @@ export default function Recolte({ formData, handleChange }) {
                                 step="10"
                                 value={recolteData.poidsNet || ''}
                                 onChange={(e) => handleRecolteChange('poidsNet', parseFloat(e.target.value))}
-                                className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:"
+                                className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                                 placeholder="Ex: 150"
                             />
-                            <p className="text-xs text-gray-500 mt-1">Poids après trim + séchage initial</p>
+                            <p className="text-xs text-white/40 mt-1">Poids après trim + séchage initial</p>
                         </div>
                     </div>
 
                     {/* 5. Rendements calculés */}
-                    <LiquidCard className="bg-gradient-to-br from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-300 dark:border-green-700">
+                    <div className="p-5 bg-gradient-to-br from-green-500/10 to-emerald-500/10 rounded-xl border-2 border-green-500/30">
                         <div className="space-y-4">
                             <div className="flex items-center justify-between">
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
-                                    <TrendingUp className="w-5 h-5 text-green-600" />
+                                <h4 className="text-sm font-semibold text-white flex items-center gap-2">
+                                    <TrendingUp className="w-5 h-5 text-green-400" />
                                     Rendements calculés
                                 </h4>
                                 <span className={`px-3 py-1 rounded-full text-xs font-bold text-white ${badge.color}`}>
@@ -233,29 +245,29 @@ export default function Recolte({ formData, handleChange }) {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {/* Rendement par plante */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-green-200 dark:border-green-700">
-                                    <p className="text-xs text-gray-500 mb-1">Rendement / plante</p>
-                                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                                <div className="bg-white/5 rounded-xl p-4 border border-green-500/20">
+                                    <p className="text-xs text-white/50 mb-1">Rendement / plante</p>
+                                    <p className="text-3xl font-bold text-green-400">
                                         {calculerRendementPlante()}
                                         <span className="text-lg ml-1">g</span>
                                     </p>
                                 </div>
 
                                 {/* Rendement au m² */}
-                                <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-green-200 dark:border-green-700">
-                                    <p className="text-xs text-gray-500 mb-1">Rendement / m²</p>
-                                    <p className="text-3xl font-bold text-green-600 dark:text-green-400">
+                                <div className="bg-white/5 rounded-xl p-4 border border-green-500/20">
+                                    <p className="text-xs text-white/50 mb-1">Rendement / m²</p>
+                                    <p className="text-3xl font-bold text-green-400">
                                         {rendementM2}
                                         <span className="text-lg ml-1">g/m²</span>
                                     </p>
                                 </div>
                             </div>
 
-                            <p className="text-xs text-gray-600 dark:text-gray-400">
+                            <p className="text-xs text-white/50">
                                 💡 Calculs basés sur : {formData.culture?.nombrePlantes || 0} plante(s) • {formData.culture?.surfaceSol || 0} m²
                             </p>
                         </div>
-                    </LiquidCard>
+                    </div>
 
                 </div>
             </LiquidCard>

@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Search, ChevronDown } from 'lucide-react'
+import { Search, Dna, Loader2 } from 'lucide-react'
+import { LiquidCard, LiquidDivider, LiquidInput, LiquidTextarea } from '@/components/ui/LiquidUI'
 
 /**
  * Section 2: Génétiques
@@ -10,6 +11,8 @@ import { Search, ChevronDown } from 'lucide-react'
  * - indicaRatio (slider 0-100%)
  * - parentage (optional)
  * - phenotype (optional)
+ * 
+ * Liquid Glass Design - glow="cyan"
  */
 export default function Genetiques({ data, onChange, errors = {} }) {
     const { t } = useTranslation()
@@ -87,158 +90,201 @@ export default function Genetiques({ data, onChange, errors = {} }) {
     }, [])
 
     return (
-        <div className="space-y-6">
-            {/* Breeder */}
-            <div>
-                <label htmlFor="breeder" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.breeder')}
-                </label>
-                <input
-                    type="text"
-                    id="breeder"
-                    value={data.breeder || ''}
-                    onChange={(e) => handleInputChange('breeder', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                    placeholder={t('flower.breederPlaceholder')}
-                />
+        <LiquidCard glow="cyan" padding="lg">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+                <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/30">
+                    <Dna className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-white">
+                        {t('flower.genetics.title', 'Génétiques')}
+                    </h3>
+                    <p className="text-sm text-white/50">
+                        {t('flower.genetics.subtitle', 'Informations sur la variété et lignée')}
+                    </p>
+                </div>
             </div>
 
-            {/* Variety (autocomplete) */}
-            <div className="relative" ref={suggestionsRef}>
-                <label htmlFor="variety" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.variety')}
-                </label>
-                <div className="relative">
+            <LiquidDivider className="mb-6" />
+
+            <div className="space-y-6">
+                {/* Breeder */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <label htmlFor="breeder" className="block text-sm font-medium text-white/80 mb-2">
+                        {t('flower.breeder')}
+                    </label>
                     <input
                         type="text"
-                        id="variety"
-                        value={data.variety || ''}
-                        onChange={(e) => handleVarietyChange(e.target.value)}
-                        onFocus={() => setShowSuggestions(true)}
-                        className="w-full px-4 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                        placeholder={t('flower.varietyPlaceholder')}
-                        autoComplete="off"
+                        id="breeder"
+                        value={data.breeder || ''}
+                        onChange={(e) => handleInputChange('breeder', e.target.value)}
+                        className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                        placeholder={t('flower.breederPlaceholder')}
                     />
-                    <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                 </div>
 
-                {/* Suggestions dropdown */}
-                {showSuggestions && (varietySuggestions.length > 0 || loadingSuggestions) && (
-                    <div className="absolute z-10 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                        {loadingSuggestions ? (
-                            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
-                                {t('common.loading')}...
-                            </div>
-                        ) : (
-                            varietySuggestions.map((cultivar) => (
-                                <button
-                                    key={cultivar.id}
-                                    type="button"
-                                    onClick={() => selectVariety(cultivar)}
-                                    className="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700 border-b border-gray-200 dark:border-gray-700 last:border-0"
-                                >
-                                    <div className="font-medium text-gray-900 dark:text-white">
-                                        {cultivar.name}
+                {/* Variety (autocomplete) */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <div className="relative" ref={suggestionsRef}>
+                        <label htmlFor="variety" className="block text-sm font-medium text-white/80 mb-2">
+                            {t('flower.variety')}
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                id="variety"
+                                value={data.variety || ''}
+                                onChange={(e) => handleVarietyChange(e.target.value)}
+                                onFocus={() => setShowSuggestions(true)}
+                                className="w-full px-4 py-3 pr-12 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                                placeholder={t('flower.varietyPlaceholder')}
+                                autoComplete="off"
+                            />
+                            {loadingSuggestions ? (
+                                <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-cyan-400 animate-spin" />
+                            ) : (
+                                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/40" />
+                            )}
+                        </div>
+
+                        {/* Suggestions dropdown */}
+                        {showSuggestions && (varietySuggestions.length > 0 || loadingSuggestions) && (
+                            <div className="absolute z-20 w-full mt-2 bg-[#1a1a2e] border border-white/20 rounded-xl shadow-xl shadow-black/30 max-h-60 overflow-y-auto">
+                                {loadingSuggestions ? (
+                                    <div className="px-4 py-3 text-sm text-white/50 flex items-center gap-2">
+                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                        {t('common.loading')}...
                                     </div>
-                                    {cultivar.breeder && (
-                                        <div className="text-sm text-gray-600 dark:text-gray-400">
-                                            {t('flower.by')} {cultivar.breeder}
-                                        </div>
-                                    )}
-                                    {cultivar.type && (
-                                        <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                            {cultivar.type} {cultivar.indicaRatio !== null && `(${cultivar.indicaRatio}% Indica)`}
-                                        </div>
-                                    )}
-                                </button>
-                            ))
+                                ) : (
+                                    varietySuggestions.map((cultivar) => (
+                                        <button
+                                            key={cultivar.id}
+                                            type="button"
+                                            onClick={() => selectVariety(cultivar)}
+                                            className="w-full px-4 py-3 text-left hover:bg-white/10 border-b border-white/5 last:border-0 transition-colors"
+                                        >
+                                            <div className="font-medium text-white">
+                                                {cultivar.name}
+                                            </div>
+                                            {cultivar.breeder && (
+                                                <div className="text-sm text-white/50">
+                                                    {t('flower.by')} {cultivar.breeder}
+                                                </div>
+                                            )}
+                                            {cultivar.type && (
+                                                <div className="text-xs text-cyan-400/70 mt-1">
+                                                    {cultivar.type} {cultivar.indicaRatio !== null && `(${cultivar.indicaRatio}% Indica)`}
+                                                </div>
+                                            )}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
                         )}
                     </div>
-                )}
-            </div>
+                </div>
 
-            {/* Type */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.type')}
-                </label>
-                <select
-                    value={data.type || ''}
-                    onChange={(e) => handleInputChange('type', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white appearance-none bg-no-repeat bg-right pr-10"
-                    style={{
-                        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='currentColor'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
-                        backgroundSize: '1.5em',
-                        backgroundPosition: 'right 0.5rem center'
-                    }}
-                >
-                    <option value="">{t('flower.selectType')}</option>
-                    <option value="indica">{t('flower.type.indica')}</option>
-                    <option value="sativa">{t('flower.type.sativa')}</option>
-                    <option value="hybride">{t('flower.type.hybride')}</option>
-                </select>
-            </div>
-
-            {/* Indica/Sativa Ratio Slider */}
-            <div>
-                <label htmlFor="indicaRatio" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.indicaRatio')}: {data.indicaRatio || 50}% Indica / {100 - (data.indicaRatio || 50)}% Sativa
-                </label>
-                <div className="flex items-center gap-4">
-                    <span className="text-xs text-gray-600 dark:text-gray-400">Sativa</span>
-                    <input
-                        type="range"
-                        id="indicaRatio"
-                        min="0"
-                        max="100"
-                        step="5"
-                        value={data.indicaRatio || 50}
-                        onChange={(e) => handleInputChange('indicaRatio', parseInt(e.target.value))}
-                        className="flex-1 h-2 bg-gradient-to-r from-green-400 via-yellow-400 rounded-lg appearance-none cursor-pointer"
+                {/* Type */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <label className="block text-sm font-medium text-white/80 mb-2">
+                        {t('flower.type')}
+                    </label>
+                    <select
+                        value={data.type || ''}
+                        onChange={(e) => handleInputChange('type', e.target.value)}
+                        className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all appearance-none cursor-pointer"
                         style={{
-                            background: `linear-gradient(to right, #10b981 0%, #10b981 ${100 - (data.indicaRatio || 50)}%, #a855f7 ${100 - (data.indicaRatio || 50)}%, #a855f7 100%)`
+                            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.5)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E")`,
+                            backgroundSize: '1.5em',
+                            backgroundPosition: 'right 0.75rem center',
+                            backgroundRepeat: 'no-repeat'
                         }}
+                    >
+                        <option value="" className="bg-[#1a1a2e]">{t('flower.selectType')}</option>
+                        <option value="indica" className="bg-[#1a1a2e]">{t('flower.type.indica')}</option>
+                        <option value="sativa" className="bg-[#1a1a2e]">{t('flower.type.sativa')}</option>
+                        <option value="hybride" className="bg-[#1a1a2e]">{t('flower.type.hybride')}</option>
+                    </select>
+                </div>
+
+                {/* Indica/Sativa Ratio Slider */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <label htmlFor="indicaRatio" className="block text-sm font-medium text-white/80 mb-3">
+                        {t('flower.indicaRatio')}:
+                        <span className="ml-2 text-purple-400">{data.indicaRatio || 50}% Indica</span>
+                        <span className="text-white/40"> / </span>
+                        <span className="text-green-400">{100 - (data.indicaRatio || 50)}% Sativa</span>
+                    </label>
+                    <div className="flex items-center gap-4">
+                        <span className="text-xs text-green-400 font-medium">Sativa</span>
+                        <div className="flex-1 relative">
+                            <input
+                                type="range"
+                                id="indicaRatio"
+                                min="0"
+                                max="100"
+                                step="5"
+                                value={data.indicaRatio || 50}
+                                onChange={(e) => handleInputChange('indicaRatio', parseInt(e.target.value))}
+                                className="w-full h-3 rounded-lg appearance-none cursor-pointer"
+                                style={{
+                                    background: `linear-gradient(to right, #10b981 0%, #10b981 ${100 - (data.indicaRatio || 50)}%, #a855f7 ${100 - (data.indicaRatio || 50)}%, #a855f7 100%)`
+                                }}
+                            />
+                        </div>
+                        <span className="text-xs text-purple-400 font-medium">Indica</span>
+                    </div>
+                    {/* Visual indicator */}
+                    <div className="mt-3 flex gap-2">
+                        <div
+                            className="h-2 rounded-l-full bg-green-500 transition-all"
+                            style={{ width: `${100 - (data.indicaRatio || 50)}%` }}
+                        />
+                        <div
+                            className="h-2 rounded-r-full bg-purple-500 transition-all"
+                            style={{ width: `${data.indicaRatio || 50}%` }}
+                        />
+                    </div>
+                </div>
+
+                {/* Parentage */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <label htmlFor="parentage" className="block text-sm font-medium text-white/80 mb-2">
+                        {t('flower.parentage')}
+                    </label>
+                    <textarea
+                        id="parentage"
+                        value={data.genetics || ''}
+                        onChange={(e) => handleInputChange('genetics', e.target.value)}
+                        rows="3"
+                        className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all resize-none"
+                        placeholder={t('flower.parentagePlaceholder')}
                     />
-                    <span className="text-xs text-gray-600 dark:text-gray-400">Indica</span>
+                    <p className="mt-2 text-xs text-white/40">
+                        {t('flower.parentageHelper')}
+                    </p>
+                </div>
+
+                {/* Phenotype */}
+                <div className="bg-white/5 rounded-xl p-4 border border-white/10">
+                    <label htmlFor="phenotype" className="block text-sm font-medium text-white/80 mb-2">
+                        {t('flower.phenotype')}
+                    </label>
+                    <input
+                        type="text"
+                        id="phenotype"
+                        value={data.phenotype || ''}
+                        onChange={(e) => handleInputChange('phenotype', e.target.value)}
+                        className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                        placeholder={t('flower.phenotypePlaceholder')}
+                    />
+                    <p className="mt-2 text-xs text-white/40">
+                        {t('flower.phenotypeHelper')}
+                    </p>
                 </div>
             </div>
-
-            {/* Parentage */}
-            <div>
-                <label htmlFor="parentage" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.parentage')}
-                </label>
-                <textarea
-                    id="parentage"
-                    value={data.genetics || ''}
-                    onChange={(e) => handleInputChange('genetics', e.target.value)}
-                    rows="3"
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                    placeholder={t('flower.parentagePlaceholder')}
-                />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {t('flower.parentageHelper')}
-                </p>
-            </div>
-
-            {/* Phenotype */}
-            <div>
-                <label htmlFor="phenotype" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.phenotype')}
-                </label>
-                <input
-                    type="text"
-                    id="phenotype"
-                    value={data.phenotype || ''}
-                    onChange={(e) => handleInputChange('phenotype', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
-                    placeholder={t('flower.phenotypePlaceholder')}
-                />
-                <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    {t('flower.phenotypeHelper')}
-                </p>
-            </div>
-        </div>
+        </LiquidCard>
     )
 }
 

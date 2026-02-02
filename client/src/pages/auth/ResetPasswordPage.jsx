@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { z } from 'zod';
 import { useTranslation } from 'react-i18next';
+import { LiquidCard, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI';
+import { Lock, ShieldCheck, ArrowLeft, Check, AlertTriangle } from 'lucide-react';
 
 const passwordSchema = z.object({
     password: z.string().min(8, 'Minimum 8 caractères'),
@@ -43,7 +45,7 @@ export default function ResetPasswordPage() {
     };
 
     const getPasswordStrength = (password) => {
-        if (password.length === 0) return { strength: 0, label: '', color: '' };
+        if (password.length === 0) return { strength: 0, label: '', color: 'bg-white/10' };
         if (password.length < 8) return { strength: 1, label: 'Faible', color: 'bg-red-500' };
 
         let strength = 1;
@@ -113,161 +115,133 @@ export default function ResetPasswordPage() {
 
     if (success) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
-                <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
-                    {/* Success Icon */}
-                    <div className="text-center mb-6">
-                        <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-                            <svg
-                                className="w-8 h-8 text-green-600 dark:text-green-400"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M5 13l4 4L19 7"
-                                />
-                            </svg>
+            <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] px-4">
+                <div className="max-w-md w-full">
+                    <LiquidCard glow="green" padding="lg">
+                        {/* Success Icon */}
+                        <div className="text-center mb-6">
+                            <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30 mb-4">
+                                <Check className="w-10 h-10 text-green-400" />
+                            </div>
+                            <h1 className="text-2xl font-bold text-white mb-2">
+                                Mot de passe réinitialisé !
+                            </h1>
+                            <p className="text-white/60">
+                                Votre mot de passe a été modifié avec succès
+                            </p>
                         </div>
-                        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-                            Mot de passe réinitialisé !
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Votre mot de passe a été modifié avec succès
-                        </p>
-                    </div>
 
-                    {/* Login Button */}
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-                    >
-                        Se connecter
-                    </button>
+                        {/* Login Button */}
+                        <LiquidButton
+                            variant="primary"
+                            size="lg"
+                            className="w-full"
+                            onClick={() => navigate('/login')}
+                        >
+                            Se connecter
+                        </LiquidButton>
+                    </LiquidCard>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
-            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] px-4">
+            <div className="max-w-md w-full">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-                        <svg
-                            className="w-8 h-8 text-green-600 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                            />
-                        </svg>
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 backdrop-blur-xl mb-4">
+                        <ShieldCheck className="w-10 h-10 text-purple-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                         Nouveau mot de passe
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-white/50">
                         Choisissez un mot de passe sécurisé
                     </p>
                 </div>
 
-                {/* Form */}
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Password */}
-                    <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Nouveau mot de passe
-                        </label>
-                        <input
-                            type="password"
-                            id="password"
-                            name="password"
-                            value={formData.password}
-                            onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${errors.password ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
-                            placeholder="••••••••"
-                            required
-                        />
-                        {errors.password && (
-                            <p className="mt-1 text-sm text-red-500">{errors.password}</p>
-                        )}
+                <LiquidCard glow="purple" padding="lg">
+                    {/* Form */}
+                    <form onSubmit={handleSubmit} className="space-y-5">
+                        <div>
+                            <LiquidInput
+                                label="Nouveau mot de passe"
+                                type="password"
+                                name="password"
+                                value={formData.password}
+                                onChange={handleChange}
+                                placeholder="••••••••"
+                                icon={Lock}
+                                error={errors.password}
+                                required
+                            />
 
-                        {/* Password Strength */}
-                        {formData.password && (
-                            <div className="mt-2">
-                                <div className="flex items-center gap-2 mb-1">
-                                    <div className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                                        <div
-                                            className={`h-full ${passwordStrength.color} transition-all duration-300`}
-                                            style={{ width: `${(passwordStrength.strength / 3) * 100}%` }}
-                                        />
+                            {/* Password Strength */}
+                            {formData.password && (
+                                <div className="mt-3">
+                                    <div className="flex items-center gap-2 mb-1">
+                                        <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
+                                            <div
+                                                className={`h-full ${passwordStrength.color} transition-all duration-300`}
+                                                style={{ width: `${(passwordStrength.strength / 3) * 100}%` }}
+                                            />
+                                        </div>
+                                        <span className="text-xs font-medium text-white/60">
+                                            {passwordStrength.label}
+                                        </span>
                                     </div>
-                                    <span className="text-xs font-medium text-gray-600 dark:text-gray-400">
-                                        {passwordStrength.label}
-                                    </span>
+                                    <p className="text-xs text-white/40">
+                                        Minimum 8 caractères. Utilisez des majuscules, chiffres et symboles.
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                    Minimum 8 caractères. Utilisez des majuscules, chiffres et symboles.
-                                </p>
-                            </div>
-                        )}
-                    </div>
+                            )}
+                        </div>
 
-                    {/* Confirm Password */}
-                    <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                            Confirmer le mot de passe
-                        </label>
-                        <input
+                        <LiquidInput
+                            label="Confirmer le mot de passe"
                             type="password"
-                            id="confirmPassword"
                             name="confirmPassword"
                             value={formData.confirmPassword}
                             onChange={handleChange}
-                            className={`w-full px-4 py-2 rounded-lg border ${errors.confirmPassword ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 dark:border-gray-600 focus:ring-green-500' } focus:ring-2 focus:outline-none dark:bg-gray-700 dark:text-white`}
                             placeholder="••••••••"
+                            icon={Lock}
+                            error={errors.confirmPassword}
                             required
                         />
-                        {errors.confirmPassword && (
-                            <p className="mt-1 text-sm text-red-500">{errors.confirmPassword}</p>
+
+                        {/* API Error */}
+                        {apiError && (
+                            <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+                                <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                                <span className="text-red-400 text-sm">{apiError}</span>
+                            </div>
                         )}
+
+                        {/* Submit Button */}
+                        <LiquidButton
+                            type="submit"
+                            variant="primary"
+                            size="lg"
+                            loading={isLoading}
+                            className="w-full"
+                        >
+                            {isLoading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
+                        </LiquidButton>
+                    </form>
+
+                    {/* Back to Login */}
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white/80 transition-colors"
+                        >
+                            <ArrowLeft size={16} />
+                            Retour à la connexion
+                        </button>
                     </div>
-
-                    {/* API Error */}
-                    {apiError && (
-                        <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                            <p className="text-sm text-red-600 dark:text-red-400">{apiError}</p>
-                        </div>
-                    )}
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={isLoading}
-                        className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors duration-200"
-                    >
-                        {isLoading ? 'Réinitialisation...' : 'Réinitialiser le mot de passe'}
-                    </button>
-                </form>
-
-                {/* Back to Login */}
-                <div className="mt-6 text-center">
-                    <Link
-                        to="/login"
-                        className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                    >
-                        ← Retour à la connexion
-                    </Link>
-                </div>
+                </LiquidCard>
             </div>
         </div>
     );

@@ -1,10 +1,14 @@
-import React, { useState } from 'react';
-import { X, CheckSquare, Square, AlertCircle, Copy } from 'lucide-react';
-
 /**
+ * MassAssignModal Component
  * Modal pour attribution en masse de données aux cellules sélectionnées
  * Permet de choisir quels champs copier depuis la cellule source
+ * Liquid Glass UI Design System
  */
+
+import React, { useState } from 'react';
+import { LiquidModal, LiquidButton, LiquidCard, LiquidChip } from '@/components/ui/LiquidUI';
+import { X, CheckSquare, Square, AlertCircle, Copy, Check } from 'lucide-react';
+
 const MassAssignModal = ({
     isOpen,
     onClose,
@@ -18,12 +22,21 @@ const MassAssignModal = ({
 
     if (!isOpen) return null;
 
+    const formatValue = (value) => {
+        if (Array.isArray(value)) {
+            return value.join(', ');
+        }
+        if (typeof value === 'object' && value !== null) {
+            return JSON.stringify(value);
+        }
+        return String(value);
+    };
+
     // Extraire tous les champs disponibles depuis sourceCellData
     const availableFields = [];
     if (sourceCellData && sourceCellData.data) {
         Object.entries(sourceCellData.data).forEach(([key, value]) => {
             if (value !== '' && value !== null && value !== undefined) {
-                // Trouver le label du champ dans les sections
                 let fieldLabel = key;
                 let sectionLabel = '';
 
@@ -45,16 +58,6 @@ const MassAssignModal = ({
             }
         });
     }
-
-    const formatValue = (value) => {
-        if (Array.isArray(value)) {
-            return value.join(', ');
-        }
-        if (typeof value === 'object' && value !== null) {
-            return JSON.stringify(value);
-        }
-        return String(value);
-    };
 
     const handleToggleField = (key) => {
         setSelectedFields(prev => ({
@@ -84,7 +87,6 @@ const MassAssignModal = ({
             return;
         }
 
-        // Confirmation
         const confirmed = window.confirm(
             `Appliquer ${fieldsToApply.length} champ(s) à ${selectedCellsCount} cellule(s) ?\n\nCette action écrasera les données existantes dans ces cellules.`
         );
@@ -107,124 +109,122 @@ const MassAssignModal = ({
     });
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-md">
-            <div className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden border border-gray-200/50 dark:border-gray-700/50">
-                {/* Header */}
-                <div className="px-6 py-4 border-b bg-transparent text-white">
-                    <div className="flex items-center justify-between">
-                        <div>
-                            <h2 className="text-xl font-bold flex items-center gap-2">
-                                <Copy className="w-5 h-5" />
-                                Attribution en masse
-                            </h2>
-                            <p className="text-sm text-gray-200 mt-1">
-                                {selectedCellsCount} cellule{selectedCellsCount > 1 ? 's' : ''} sélectionnée{selectedCellsCount > 1 ? 's' : ''}
-                            </p>
-                        </div>
-                        <button
-                            onClick={onClose}
-                            className="p-2 hover:bg-white/20 rounded-lg transition-colors"
-                        >
-                            <X className="w-5 h-5" />
-                        </button>
+        <LiquidModal
+            isOpen={true}
+            onClose={onClose}
+            title={
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-xl bg-blue-500/20 border border-blue-500/30">
+                        <Copy className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                        <span className="text-lg font-bold text-white">Attribution en masse</span>
+                        <p className="text-sm text-white/60">
+                            {selectedCellsCount} cellule{selectedCellsCount > 1 ? 's' : ''} sélectionnée{selectedCellsCount > 1 ? 's' : ''}
+                        </p>
                     </div>
                 </div>
-
+            }
+            size="lg"
+            glowColor="blue"
+            footer={
+                <div className="flex items-center justify-between w-full">
+                    <span className="text-sm text-white/60">
+                        {selectedCount} champ{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}
+                    </span>
+                    <div className="flex gap-3">
+                        <LiquidButton variant="ghost" onClick={onClose}>
+                            Annuler
+                        </LiquidButton>
+                        <LiquidButton
+                            variant="primary"
+                            onClick={handleApply}
+                            disabled={selectedCount === 0}
+                            icon={Copy}
+                        >
+                            Appliquer à {selectedCellsCount} cellule{selectedCellsCount > 1 ? 's' : ''}
+                        </LiquidButton>
+                    </div>
+                </div>
+            }
+        >
+            <div className="space-y-4">
                 {/* Info */}
-                <div className="px-6 py-3 dark: border-b dark:">
-                    <div className="flex items-start gap-2 text-sm dark:">
+                <LiquidCard className="p-3" style={{
+                    background: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgba(59, 130, 246, 0.3)'
+                }}>
+                    <div className="flex items-start gap-2 text-sm text-blue-300">
                         <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
                         <p>
                             Sélectionnez les champs à copier depuis la cellule source vers toutes les cellules sélectionnées.
                             Les données existantes seront écrasées.
                         </p>
                     </div>
-                </div>
+                </LiquidCard>
 
                 {/* Select All */}
-                <div className="px-6 py-3 border-b bg-gray-50 dark:bg-gray-800/50">
-                    <label className="flex items-center gap-3 cursor-pointer">
-                        <div
-                            onClick={handleSelectAll}
-                            className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectAll ? 'bg-white/5 border-white/10' : 'border-gray-300 dark:border-gray-600' }`}
-                        >
-                            {selectAll && <CheckSquare className="w-4 h-4 text-white" />}
-                        </div>
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                            Tout sélectionner ({availableFields.length} champs)
-                        </span>
-                    </label>
-                </div>
+                <label
+                    className="flex items-center gap-3 cursor-pointer p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors"
+                    onClick={handleSelectAll}
+                >
+                    <div className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-all ${selectAll
+                            ? 'bg-blue-500/30 border-blue-500'
+                            : 'border-white/30 bg-white/5'
+                        }`}>
+                        {selectAll && <Check className="w-3 h-3 text-blue-400" />}
+                    </div>
+                    <span className="font-semibold text-white">
+                        Tout sélectionner ({availableFields.length} champs)
+                    </span>
+                </label>
 
                 {/* Fields list */}
-                <div className="flex-1 overflow-y-auto p-6">
+                <div className="max-h-[400px] overflow-y-auto space-y-4 pr-2">
                     {availableFields.length === 0 ? (
-                        <div className="text-center text-gray-500 py-12">
+                        <div className="text-center text-white/50 py-12">
+                            <Copy className="w-10 h-10 mx-auto mb-3 opacity-50" />
                             <p>Aucune donnée dans la cellule source</p>
                             <p className="text-sm mt-2">Veuillez d'abord remplir une cellule</p>
                         </div>
                     ) : (
-                        <div className="space-y-6">
-                            {Object.entries(fieldsBySection).map(([section, fields]) => (
-                                <div key={section}>
-                                    <h3 className="text-sm font-bold text-gray-700 dark:text-gray-300 mb-3 pb-2 border-b">
-                                        {section || 'Autres'}
-                                    </h3>
-                                    <div className="space-y-2">
-                                        {fields.map(field => (
-                                            <label
-                                                key={field.key}
-                                                className="flex items-start gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer transition-colors"
-                                            >
-                                                <div
-                                                    onClick={() => handleToggleField(field.key)}
-                                                    className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedFields[field.key] ? 'bg-white/5 border-white/10' : 'border-gray-300 dark:border-gray-600' }`}
-                                                >
-                                                    {selectedFields[field.key] && (
-                                                        <CheckSquare className="w-4 h-4 text-white" />
-                                                    )}
+                        Object.entries(fieldsBySection).map(([section, fields]) => (
+                            <div key={section}>
+                                <h3 className="text-sm font-bold text-white/60 mb-3 pb-2 border-b border-white/10">
+                                    {section || 'Autres'}
+                                </h3>
+                                <div className="space-y-2">
+                                    {fields.map(field => (
+                                        <label
+                                            key={field.key}
+                                            className="flex items-start gap-3 p-3 rounded-xl border border-white/10 hover:bg-white/5 cursor-pointer transition-colors"
+                                            onClick={() => handleToggleField(field.key)}
+                                        >
+                                            <div className={`w-5 h-5 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${selectedFields[field.key]
+                                                    ? 'bg-blue-500/30 border-blue-500'
+                                                    : 'border-white/30 bg-white/5'
+                                                }`}>
+                                                {selectedFields[field.key] && (
+                                                    <Check className="w-3 h-3 text-blue-400" />
+                                                )}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-medium text-white">
+                                                    {field.label}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-medium text-gray-900 dark:text-white">
-                                                        {field.label}
-                                                    </div>
-                                                    <div className="text-sm text-gray-600 dark:text-gray-400 truncate mt-0.5">
-                                                        {field.value}
-                                                    </div>
+                                                <div className="text-sm text-white/50 truncate mt-0.5">
+                                                    {field.value}
                                                 </div>
-                                            </label>
-                                        ))}
-                                    </div>
+                                            </div>
+                                        </label>
+                                    ))}
                                 </div>
-                            ))}
-                        </div>
+                            </div>
+                        ))
                     )}
                 </div>
-
-                {/* Footer */}
-                <div className="px-6 py-4 border-t bg-gray-50 dark:bg-gray-800/50 flex items-center justify-between">
-                    <div className="text-sm text-gray-600 dark:text-gray-400">
-                        {selectedCount} champ{selectedCount > 1 ? 's' : ''} sélectionné{selectedCount > 1 ? 's' : ''}
-                    </div>
-                    <div className="flex gap-3">
-                        <button
-                            onClick={onClose}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            onClick={handleApply}
-                            disabled={selectedCount === 0}
-                            className={`px-6 py-2 rounded-lg font-semibold flex items-center gap-2 transition-all ${selectedCount === 0 ? 'bg-gray-300 text-gray-500 cursor-not-allowed' : 'liquid-btn liquid-btn--primary' }`}
-                        >
-                            <Copy className="w-4 h-4" />
-                            Appliquer à {selectedCellsCount} cellule{selectedCellsCount > 1 ? 's' : ''}
-                        </button>
-                    </div>
-                </div>
             </div>
-        </div>
+        </LiquidModal>
     );
 };
 

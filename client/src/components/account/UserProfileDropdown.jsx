@@ -1,8 +1,11 @@
 import { useState, useRef, useLayoutEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { Link } from 'react-router-dom'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../../store/useStore'
 import { usePermissions } from '../../hooks/usePermissions'
+import { LiquidAvatar } from '@/components/ui/LiquidUI'
+import { User, Library, BarChart3, Dna, LogOut, ChevronDown, Settings } from 'lucide-react'
 
 export default function UserProfileDropdown() {
     const [isOpen, setIsOpen] = useState(false)
@@ -25,93 +28,115 @@ export default function UserProfileDropdown() {
 
     if (!user) return null
 
+    const menuItems = [
+        { to: '/account', icon: User, label: 'Mon Compte', sublabel: 'Profil & Paramètres', color: 'violet' },
+        { to: '/library', icon: Library, label: 'Ma bibliothèque', sublabel: 'Gérer mes reviews', color: 'violet' },
+        { to: '/stats', icon: BarChart3, label: 'Mes statistiques', sublabel: 'Voir mes stats détaillées', color: 'cyan' },
+    ]
+
+    if (hasFeature('phenohunt')) {
+        menuItems.push({ to: '/genetics', icon: Dna, label: 'Mes génétiques', sublabel: 'Bibliothèque généalogique', color: 'green' })
+    }
+
     const dropdownContent = isOpen && (
-        <>
-            <div
-                className="fixed inset-0 z-[9998]"
-                onClick={() => setIsOpen(false)}
-            />
-            <div
-                className="fixed w-64 bg-theme-input backdrop-blur-xl rounded-xl shadow-2xl border border-theme z-[9999] overflow-hidden"
-                style={{
-                    top: `${position.top}px`,
-                    right: `${position.right}px`
-                }}
-            >
-                <div className="p-4 border-b border-theme bg-gradient-to-br from-[rgb(var(--color-primary))] to-[rgb(var(--color-accent))]">
-                    <div className="flex items-center gap-3">
-                        <img
-                            src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=6366f1&color=fff`}
-                            alt={user.username}
-                            className="w-12 h-12 rounded-full border-2 border-white"
-                        />
-                        <div>
-                            <p className="font-semibold text-white">{user.username}</p>
-                            <p className="text-sm text-white opacity-90">{user.email}</p>
+        <AnimatePresence>
+            <>
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="fixed inset-0 z-[9998]"
+                    onClick={() => setIsOpen(false)}
+                />
+                <motion.div
+                    initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                    transition={{ duration: 0.2, ease: 'easeOut' }}
+                    className="fixed w-72 bg-[#0a0a1a]/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/10 z-[9999] overflow-hidden"
+                    style={{
+                        top: `${position.top}px`,
+                        right: `${position.right}px`,
+                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(139, 92, 246, 0.1)'
+                    }}
+                >
+                    {/* Header with user info */}
+                    <div
+                        className="p-4 border-b border-white/10"
+                        style={{
+                            background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.1))'
+                        }}
+                    >
+                        <div className="flex items-center gap-3">
+                            <LiquidAvatar
+                                src={user.avatar}
+                                name={user.username}
+                                size="lg"
+                                glow="purple"
+                            />
+                            <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-white truncate">{user.username}</p>
+                                <p className="text-sm text-white/60 truncate">{user.email}</p>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div className="py-2">
-                    <Link to="/account" className="flex items-center gap-3 px-4 py-3 hover:bg-theme-secondary transition-colors" onClick={() => setIsOpen(false)}>
-                        <svg className="w-5 h-5 text-[rgb(var(--color-primary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                        </svg>
-                        <div>
-                            <p className="font-medium text-[rgb(var(--text-primary))]">Mon Compte</p>
-                            <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Profil & Paramètres</p>
-                        </div>
-                    </Link>
-                    <Link to="/library" className="flex items-center gap-3 px-4 py-3 hover:bg-theme-secondary transition-colors" onClick={() => setIsOpen(false)}>
-                        <svg className="w-5 h-5 text-[rgb(var(--color-primary))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-                        </svg>
-                        <div>
-                            <p className="font-medium text-[rgb(var(--text-primary))]">Ma bibliothèque</p>
-                            <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Gérer mes reviews</p>
-                        </div>
-                    </Link>
-                    <Link to="/stats" className="flex items-center gap-3 px-4 py-3 hover:bg-theme-secondary transition-colors" onClick={() => setIsOpen(false)}>
-                        <svg className="w-5 h-5 text-[rgb(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                        </svg>
-                        <div>
-                            <p className="font-medium text-[rgb(var(--text-primary))]">Mes statistiques</p>
-                            <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Voir mes stats détaillées</p>
-                        </div>
-                    </Link>
-                    {/* Mes génétiques - Producer only */}
-                    {hasFeature('phenohunt') && (
-                        <Link to="/genetics" className="flex items-center gap-3 px-4 py-3 hover:bg-theme-secondary transition-colors" onClick={() => setIsOpen(false)}>
-                            <svg className="w-5 h-5 text-[rgb(var(--color-accent))]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
-                            </svg>
-                            <div>
-                                <p className="font-medium text-[rgb(var(--text-primary))]">Mes génétiques</p>
-                                <p className="text-xs text-[rgb(var(--text-secondary))] opacity-80">Gérer ma bibliothèque généalogique</p>
+
+                    {/* Menu items */}
+                    <div className="py-2">
+                        {menuItems.map((item) => (
+                            <Link
+                                key={item.to}
+                                to={item.to}
+                                className="flex items-center gap-3 px-4 py-3 hover:bg-white/5 transition-all duration-200 group"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <div className={`p-2 rounded-xl bg-${item.color}-500/10 group-hover:bg-${item.color}-500/20 transition-colors`}>
+                                    <item.icon className={`w-4 h-4 text-${item.color}-400`} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-white/90 group-hover:text-white transition-colors">{item.label}</p>
+                                    <p className="text-xs text-white/40 truncate">{item.sublabel}</p>
+                                </div>
+                            </Link>
+                        ))}
+                    </div>
+
+                    {/* Logout button */}
+                    <div className="border-t border-white/10 p-2">
+                        <button
+                            onClick={() => { logout(); setIsOpen(false); }}
+                            className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-all duration-200 group"
+                        >
+                            <div className="p-2 rounded-xl bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
+                                <LogOut className="w-4 h-4 text-red-400" />
                             </div>
-                        </Link>
-                    )}
-                </div>
-                <div className="border-t border-theme py-2">
-                    <button onClick={() => { logout(); setIsOpen(false); }} className="w-full flex items-center gap-3 px-4 py-3 bg-[rgba(220,38,38,0.15)] hover:bg-[rgba(220,38,38,0.3)] transition-colors text-[rgb(220,38,38)] font-medium border-t border-[rgba(220,38,38,0.2)]">
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                        </svg>
-                        <p className="font-medium">Déconnexion</p>
-                    </button>
-                </div>
-            </div>
-        </>
+                            <span className="font-medium text-red-400 group-hover:text-red-300 transition-colors">
+                                Déconnexion
+                            </span>
+                        </button>
+                    </div>
+                </motion.div>
+            </>
+        </AnimatePresence>
     )
 
     return (
         <>
-            <button ref={buttonRef} onClick={() => setIsOpen(!isOpen)} className="flex items-center gap-2 p-2 rounded-lg hover:bg-theme-secondary transition-colors">
-                <img src={user.avatar || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.username)}&background=6366f1&color=fff`} alt={user.username} className="w-10 h-10 rounded-full border-2 border-[rgb(var(--color-primary))]" />
-                <span className="hidden md:block font-medium text-[rgb(var(--text-primary))]">{user.username}</span>
-                <svg className={`w-4 h-4 text-[rgb(var(--text-secondary))] transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
+            <button
+                ref={buttonRef}
+                onClick={() => setIsOpen(!isOpen)}
+                className="flex items-center gap-2 p-1.5 pr-3 rounded-full bg-white/5 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all duration-300 group"
+            >
+                <LiquidAvatar
+                    src={user.avatar}
+                    name={user.username}
+                    size="sm"
+                    glow={isOpen ? 'purple' : 'none'}
+                />
+                <span className="hidden md:block font-medium text-white/80 group-hover:text-white transition-colors">
+                    {user.username}
+                </span>
+                <ChevronDown className={`w-4 h-4 text-white/50 transition-transform duration-300 ${isOpen ? 'rotate-180' : ''}`} />
             </button>
             {dropdownContent && createPortal(dropdownContent, document.body)}
         </>

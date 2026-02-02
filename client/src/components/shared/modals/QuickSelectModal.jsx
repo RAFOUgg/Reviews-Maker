@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { LiquidModal, LiquidButton, LiquidInput, LiquidChip } from '@/components/ui/LiquidUI'
 
 export default function QuickSelectModal({ open, onClose, items = [], onApply, multiple = true, title = 'Sélection rapide', initialSelected = [] }) {
     const [query, setQuery] = useState('')
@@ -15,8 +16,6 @@ export default function QuickSelectModal({ open, onClose, items = [], onApply, m
         setSelected(initialSelected || [])
     }, [initialSelected])
 
-    if (!open) return null
-
     const toggleSelect = (item) => {
         if (!multiple) return onApply([item])
         setSelected(prev => {
@@ -32,36 +31,49 @@ export default function QuickSelectModal({ open, onClose, items = [], onApply, m
     }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60" onClick={onClose}></div>
-            <div className="relative bg-gray-900 rounded-xl w-full max-w-2xl p-4 border border-gray-700">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold text-white">{title}</h3>
-                    <button onClick={onClose} className="text-gray-400 hover:text-white">✕</button>
+        <LiquidModal
+            isOpen={open}
+            onClose={onClose}
+            title={title}
+            size="lg"
+            glowColor="violet"
+            footer={
+                <div className="flex items-center justify-end gap-3">
+                    <LiquidButton variant="ghost" onClick={onClose}>
+                        Annuler
+                    </LiquidButton>
+                    <LiquidButton variant="primary" onClick={apply}>
+                        Appliquer ({selected.length})
+                    </LiquidButton>
                 </div>
+            }
+        >
+            <div className="space-y-4">
+                <LiquidInput
+                    value={query}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder="Rechercher..."
+                    icon="🔍"
+                />
 
-                <div className="mb-3">
-                    <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Rechercher..." className="w-full px-3 py-2 rounded-md bg-gray-800 border border-gray-700 text-white" />
-                </div>
-
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-auto mb-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-64 overflow-auto">
                     {filtered.map(item => {
                         const active = selected.find(s => s.id === item.id)
                         return (
-                            <button key={item.id} onClick={() => toggleSelect(item)} className={`text-left p-2 rounded-md border ${active ? 'bg-transparent text-white border-white/40 glow-text-subtle' : 'bg-transparent text-white/70 border-white/20'} transition-colors`}>
+                            <LiquidChip
+                                key={item.id}
+                                selected={!!active}
+                                onClick={() => toggleSelect(item)}
+                                className="text-left p-3"
+                            >
                                 <div className="font-semibold text-sm">{item.label}</div>
-                                {item.category && <div className="text-xs text-gray-400">{item.category}</div>}
-                            </button>
+                                {item.category && <div className="text-xs text-white/50">{item.category}</div>}
+                            </LiquidChip>
                         )
                     })}
                 </div>
-
-                <div className="flex items-center justify-end gap-2">
-                    <button onClick={onClose} className="px-4 py-2 rounded-md bg-gray-800 text-gray-300">Annuler</button>
-                    <button onClick={apply} className="px-4 py-2 rounded-md bg-transparent border border-white/40 text-white glow-container-subtle hover:glow-text">Appliquer ({selected.length})</button>
-                </div>
             </div>
-        </div>
+        </LiquidModal>
     )
 }
 

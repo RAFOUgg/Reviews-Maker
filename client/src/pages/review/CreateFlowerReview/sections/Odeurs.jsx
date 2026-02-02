@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { LiquidCard, LiquidChip, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Wind } from 'lucide-react'
 
 export default function Odeurs({ formData, handleChange }) {
     const [aromas, setAromas] = useState([])
@@ -31,66 +32,74 @@ export default function Odeurs({ formData, handleChange }) {
     }
 
     return (
-        <LiquidCard title="👃 Odeurs" bordered>
-            <div className="space-y-6">
-                {/* Intensité aromatique */}
+        <LiquidCard glow="green" padding="lg">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+                    <Wind className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Intensité aromatique
-                        </label>
-                        <span className="text-sm font-bold dark:">
-                            {formData.intensiteOdeur || 0}/10
-                        </span>
-                    </div>
+                    <h3 className="text-xl font-bold text-white">👃 Odeurs</h3>
+                    <p className="text-sm text-white/50">Profil aromatique et intensité</p>
+                </div>
+            </div>
+
+            <LiquidDivider />
+
+            <div className="space-y-6 mt-6">
+                {/* Intensité aromatique */}
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <LiquidRating
+                        label="Intensité aromatique"
+                        value={formData.intensiteOdeur || 0}
+                        max={10}
+                        color="green"
+                    />
                     <input
                         type="range"
                         min="0"
                         max="10"
                         value={formData.intensiteOdeur || 0}
                         onChange={(e) => handleChange('intensiteOdeur', parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                        className="w-full mt-2 accent-emerald-500"
                     />
                 </div>
 
                 {/* Notes dominantes */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Notes dominantes (max 7) : {selectedDominant.length}/7
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        🌸 Notes dominantes ({selectedDominant.length}/7)
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {aromas.map(aroma => (
-                            <button
+                            <LiquidChip
                                 key={aroma}
-                                type="button"
+                                active={selectedDominant.includes(aroma)}
                                 onClick={() => toggleAroma(aroma, 'dominant')}
-                                aria-pressed={selectedDominant.includes(aroma)}
-                                className={`tag-tile ${selectedDominant.includes(aroma) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
+                                color="green"
                                 disabled={!selectedDominant.includes(aroma) && selectedDominant.length >= 7}
                             >
                                 {aroma}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>
 
                 {/* Notes secondaires */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Notes secondaires (max 7) : {selectedSecondary.length}/7
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        🌿 Notes secondaires ({selectedSecondary.length}/7)
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {aromas.map(aroma => (
-                            <button
+                            <LiquidChip
                                 key={aroma}
-                                type="button"
+                                active={selectedSecondary.includes(aroma)}
                                 onClick={() => toggleAroma(aroma, 'secondary')}
-                                aria-pressed={selectedSecondary.includes(aroma)}
-                                className={`tag-tile ${selectedSecondary.includes(aroma) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
+                                color="green"
                                 disabled={!selectedSecondary.includes(aroma) && selectedSecondary.length >= 7}
                             >
                                 {aroma}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>

@@ -6,8 +6,8 @@
 import React, { useState, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { api } from '../../../services/api'
-import Button from '../../../components/shared/Button'
-import Input from '../../../components/shared/Input'
+import { LiquidCard, LiquidButton, LiquidInput, LiquidTextarea, LiquidAvatar, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Camera, Upload } from 'lucide-react'
 
 const ProfileTab = ({ user, onStatusChange }) => {
     const fileInputRef = useRef(null)
@@ -165,37 +165,29 @@ const ProfileTab = ({ user, onStatusChange }) => {
     return (
         <div className="space-y-8">
             {/* Avatar Upload */}
-            <section>
-                <h3 className="text-lg font-semibold mb-4">Profile Picture</h3>
+            <LiquidCard glow="purple" padding="lg">
+                <h3 className="text-lg font-semibold text-white mb-4">Profile Picture</h3>
                 <div className="flex items-center gap-4">
                     <div className="relative">
-                        {user?.avatar ? (
-                            <img
-                                src={user.avatar}
-                                alt="Profile"
-                                className="w-24 h-24 rounded-full border-4 border-primary/20 object-cover"
-                            />
-                        ) : (
-                            <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center text-3xl font-bold text-primary">
-                                {user?.firstName?.[0] || '?'}
-                            </div>
-                        )}
+                        <LiquidAvatar
+                            size="xl"
+                            src={user?.avatar}
+                            fallback={user?.firstName?.[0] || '?'}
+                            glow="purple"
+                        />
                         <button
                             onClick={() => fileInputRef.current?.click()}
                             disabled={uploadAvatarMutation.isPending}
-                            className="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full hover:bg-primary/90 disabled:opacity-50"
+                            className="absolute bottom-0 right-0 bg-purple-500 text-white p-2 rounded-full hover:bg-purple-600 disabled:opacity-50 transition-colors shadow-lg"
                         >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                            </svg>
+                            <Camera className="w-4 h-4" />
                         </button>
                     </div>
                     <div>
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-sm text-white/60">
                             Recommended: Square image, at least 400x400px
                         </p>
-                        <p className="text-xs text-muted-foreground mt-1">
+                        <p className="text-xs text-white/40 mt-1">
                             Max file size: 5MB (JPEG, PNG, WebP)
                         </p>
                     </div>
@@ -207,107 +199,106 @@ const ProfileTab = ({ user, onStatusChange }) => {
                     onChange={handleAvatarUpload}
                     className="hidden"
                 />
-            </section>
-
-            {/* Divider */}
-            <div className="border-t border-border"></div>
+            </LiquidCard>
 
             {/* Profile Form */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {/* First Name */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">First Name</label>
-                        <Input
-                            type="text"
-                            name="firstName"
-                            value={formData.firstName}
-                            onChange={handleInputChange}
-                            placeholder="John"
-                            error={errors.firstName}
-                        />
+            <LiquidCard glow="blue" padding="lg">
+                <h3 className="text-lg font-semibold text-white mb-6">Personal Information</h3>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        {/* First Name */}
+                        <div className="space-y-2">
+                            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">First Name</label>
+                            <LiquidInput
+                                name="firstName"
+                                value={formData.firstName}
+                                onChange={handleInputChange}
+                                placeholder="John"
+                            />
+                            {errors.firstName && <p className="text-xs text-red-400">{errors.firstName}</p>}
+                        </div>
+
+                        {/* Last Name */}
+                        <div className="space-y-2">
+                            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Last Name</label>
+                            <LiquidInput
+                                name="lastName"
+                                value={formData.lastName}
+                                onChange={handleInputChange}
+                                placeholder="Doe"
+                            />
+                            {errors.lastName && <p className="text-xs text-red-400">{errors.lastName}</p>}
+                        </div>
+
+                        {/* Email (Read-only) */}
+                        <div className="space-y-2">
+                            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Email</label>
+                            <LiquidInput
+                                type="email"
+                                value={formData.email}
+                                disabled
+                                className="opacity-60"
+                            />
+                            <p className="text-xs text-white/40">
+                                Contact support to change email
+                            </p>
+                        </div>
+
+                        {/* Phone Number */}
+                        <div className="space-y-2">
+                            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Phone Number</label>
+                            <LiquidInput
+                                type="tel"
+                                name="phoneNumber"
+                                value={formData.phoneNumber}
+                                onChange={handleInputChange}
+                                placeholder="+1 (555) 000-0000"
+                            />
+                            {errors.phoneNumber && <p className="text-xs text-red-400">{errors.phoneNumber}</p>}
+                        </div>
+
+                        {/* Website */}
+                        <div className="md:col-span-2 space-y-2">
+                            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Website</label>
+                            <LiquidInput
+                                type="url"
+                                name="website"
+                                value={formData.website}
+                                onChange={handleInputChange}
+                                placeholder="https://example.com"
+                            />
+                            {errors.website && <p className="text-xs text-red-400">{errors.website}</p>}
+                        </div>
+
+                        {/* Bio */}
+                        <div className="md:col-span-2 space-y-2">
+                            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">Bio</label>
+                            <LiquidTextarea
+                                name="bio"
+                                value={formData.bio}
+                                onChange={handleInputChange}
+                                placeholder="Tell us about yourself..."
+                                maxLength="2000"
+                                rows="4"
+                            />
+                            <p className="text-xs text-white/40">
+                                {formData.bio.length}/2000 characters
+                            </p>
+                        </div>
                     </div>
 
-                    {/* Last Name */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Last Name</label>
-                        <Input
-                            type="text"
-                            name="lastName"
-                            value={formData.lastName}
-                            onChange={handleInputChange}
-                            placeholder="Doe"
-                            error={errors.lastName}
-                        />
-                    </div>
-
-                    {/* Email (Read-only) */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Email</label>
-                        <Input
-                            type="email"
-                            value={formData.email}
-                            disabled
-                            className="bg-muted"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            Contact support to change email
-                        </p>
-                    </div>
-
-                    {/* Phone Number */}
-                    <div>
-                        <label className="block text-sm font-medium mb-2">Phone Number</label>
-                        <Input
-                            type="tel"
-                            name="phoneNumber"
-                            value={formData.phoneNumber}
-                            onChange={handleInputChange}
-                            placeholder="+1 (555) 000-0000"
-                            error={errors.phoneNumber}
-                        />
-                    </div>
-
-                    {/* Website */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-2">Website</label>
-                        <Input
-                            type="url"
-                            name="website"
-                            value={formData.website}
-                            onChange={handleInputChange}
-                            placeholder="https://example.com"
-                            error={errors.website}
-                        />
-                    </div>
-
-                    {/* Bio */}
-                    <div className="md:col-span-2">
-                        <label className="block text-sm font-medium mb-2">Bio</label>
-                        <textarea
-                            name="bio"
-                            value={formData.bio}
-                            onChange={handleInputChange}
-                            placeholder="Tell us about yourself..."
-                            maxLength="2000"
-                            rows="4"
-                            className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-                        />
-                        <p className="text-xs text-muted-foreground mt-1">
-                            {formData.bio.length}/2000 characters
-                        </p>
-                    </div>
-                </div>
-
-                {/* Submit Button */}
-                <Button
-                    type="submit"
-                    disabled={updateProfileMutation.isPending}
-                    className="w-full"
-                >
-                    {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
-                </Button>
-            </form>
+                    {/* Submit Button */}
+                    <LiquidButton
+                        type="submit"
+                        disabled={updateProfileMutation.isPending}
+                        variant="primary"
+                        glow="purple"
+                        className="w-full"
+                    >
+                        {updateProfileMutation.isPending ? 'Saving...' : 'Save Changes'}
+                    </LiquidButton>
+                </form>
+            </LiquidCard>
         </div>
     )
 }

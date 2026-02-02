@@ -31,7 +31,7 @@ export function LiquidCard({
     const [smoothPosition, setSmoothPosition] = useState({ x: 50, y: 50 })
     const [shimmerIntensity, setShimmerIntensity] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
-    
+
     // Use refs for animation state to avoid re-render loops
     const mousePositionRef = useRef({ x: 50, y: 50 })
     const velocityRef = useRef({ x: 0, y: 0 })
@@ -49,41 +49,41 @@ export function LiquidCard({
     // Smooth spring-like animation for cursor following
     useEffect(() => {
         if (!liquidEffect) return
-        
+
         const animateFrame = () => {
             const targetX = mousePositionRef.current.x
             const targetY = mousePositionRef.current.y
-            
+
             setSmoothPosition(prev => {
                 const dx = targetX - prev.x
                 const dy = targetY - prev.y
                 const spring = 0.18 // Spring tension (higher = faster response)
                 const damping = 0.82 // Damping (higher = more smooth)
-                
+
                 let newVx = (velocityRef.current.x + dx * spring) * damping
                 let newVy = (velocityRef.current.y + dy * spring) * damping
-                
+
                 // Stop animation when nearly stationary and not hovered
                 if (!isHoveredRef.current && Math.abs(newVx) < 0.01 && Math.abs(newVy) < 0.01) {
                     newVx = 0
                     newVy = 0
                 }
-                
+
                 velocityRef.current = { x: newVx, y: newVy }
-                
+
                 // Calculate shimmer intensity based on velocity
                 const speed = Math.sqrt(newVx * newVx + newVy * newVy)
                 setShimmerIntensity(Math.min(speed * 2.5, 1))
-                
+
                 return {
                     x: prev.x + newVx,
                     y: prev.y + newVy
                 }
             })
-            
+
             animationFrame.current = requestAnimationFrame(animateFrame)
         }
-        
+
         animationFrame.current = requestAnimationFrame(animateFrame)
         return () => {
             if (animationFrame.current) {
@@ -154,7 +154,7 @@ export function LiquidCard({
                     }}
                 />
             )}
-            
+
             {/* Subtle white highlight spot */}
             {liquidEffect && (
                 <div
@@ -171,7 +171,7 @@ export function LiquidCard({
                     }}
                 />
             )}
-            
+
             <div className="liquid-card-content relative z-10">
                 {children}
             </div>
@@ -231,7 +231,7 @@ export function LiquidButton({
             {...props}
         >
             {/* Interactive shimmer layer */}
-            <div 
+            <div
                 className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none"
                 style={{
                     opacity: isHovered ? 1 : 0,

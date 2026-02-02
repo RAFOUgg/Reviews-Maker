@@ -4,7 +4,7 @@ import { motion, AnimatePresence, useInView } from 'framer-motion'
 import { useStore } from '../../store/useStore'
 import { usePermissions } from '../../hooks/usePermissions'
 import { useToast } from '../../components/shared/ToastContainer'
-import LiquidButton from '../../components/ui/LiquidButton'
+import { LiquidButton, LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI'
 import FilterBar from '../../components/shared/ui-helpers/FilterBar'
 import HeroSection from '../../components/shared/ui-helpers/HeroSection'
 import ProductTypeCards from '../../components/shared/ui-helpers/ProductTypeCards'
@@ -12,6 +12,7 @@ import HomeReviewCard from '../../components/gallery/HomeReviewCard'
 import AuthorStatsModal from '../../components/account/AuthorStatsModal'
 import LoadingSpinner from '../../components/shared/LoadingSpinner'
 import EmptyState from '../../components/shared/EmptyState'
+import { ChevronDown, ChevronUp, Dna } from 'lucide-react'
 
 export default function HomePage() {
     const navigate = useNavigate()
@@ -83,37 +84,39 @@ export default function HomePage() {
     };
 
     return (
-        <div className="min-h-screen bg-black bg-gradient-to-br from-black via-purple-900 to-black relative no-panel-bg">
-            <div className="relative max-w-7xl mx-auto px-4 py-12 space-y-12">
+        <div className="min-h-screen relative">
+            <div className="relative max-w-7xl mx-auto px-4 py-8 space-y-10">
                 {/* Hero Section */}
-                <div className="glass liquid-glass--card">
+                <LiquidCard glow="purple" padding="lg" className="overflow-hidden">
                     <HeroSection user={user} isAuthenticated={isAuthenticated} title="Terpologie" />
-                </div>
+                </LiquidCard>
 
                 {/* Create Review Section */}
-                <div className="glass liquid-glass--card">
+                <LiquidCard glow="cyan" padding="md">
                     <ProductTypeCards
                         isAuthenticated={isAuthenticated}
                         onCreateReview={handleCreateReview}
                     />
-                </div>
+                </LiquidCard>
 
-                {/* Divider */}
-                <div className="relative py-8">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-theme-accent"></div>
-                    </div>
-                    <div className="relative flex justify-center">
-                        <span className="bg-theme-tertiary backdrop-blur-md px-6 py-2 text-[rgb(var(--color-accent))] font-semibold text-lg rounded-full border border-theme-accent shadow-[0_0_20px_rgba(var(--color-accent),0.3)]">
+                {/* Divider - Galerie Publique */}
+                <div className="relative py-6">
+                    <LiquidDivider />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                        <motion.span
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            className="px-6 py-2 bg-[#0a0a1a]/90 backdrop-blur-xl text-violet-300 font-semibold text-lg rounded-full border border-violet-500/30 shadow-[0_0_20px_rgba(139,92,246,0.2)]"
+                        >
                             🎯 Galerie Publique
-                        </span>
+                        </motion.span>
                     </div>
                 </div>
 
                 {/* FilterBar */}
-                <div className="glass p-4">
+                <LiquidCard glow="none" padding="sm">
                     <FilterBar reviews={reviews} onFilteredChange={setFilteredReviews} />
-                </div>
+                </LiquidCard>
 
                 {/* Reviews Grid */}
                 {loading ? (
@@ -158,14 +161,14 @@ export default function HomePage() {
                                         visible: { opacity: 1, y: 0 }
                                     }}
                                 >
-                                    <div className="glass p-3">
+                                    <LiquidCard glow="none" padding="sm" className="h-full">
                                         <HomeReviewCard
                                             review={review}
                                             onLike={handleLike}
                                             onDislike={handleDislike}
                                             onAuthorClick={setSelectedAuthor}
                                         />
-                                    </div>
+                                    </LiquidCard>
                                 </motion.div>
                             ))}
                         </motion.div>
@@ -177,11 +180,8 @@ export default function HomePage() {
                                     onClick={() => setShowAll(!showAll)}
                                     variant="primary"
                                     size="lg"
-                                    leftIcon={
-                                        <svg className={`w-6 h-6 transition-transform duration-500 ${showAll ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    }
+                                    glow="purple"
+                                    icon={showAll ? ChevronUp : ChevronDown}
                                 >
                                     {showAll ? 'Afficher moins' : `Afficher plus (${filteredReviews.length - 8} restantes)`}
                                 </LiquidButton>
@@ -204,30 +204,14 @@ export default function HomePage() {
                             onClick={handleNavigateToPhenoHunt}
                             variant="secondary"
                             size="lg"
+                            glow="cyan"
+                            icon={Dna}
                         >
                             Accéder à PhénoHunt
                         </LiquidButton>
                     </div>
                 )}
             </div>
-
-            {/* Animations CSS */}
-            <style>{`
-                @keyframes fade-in {
-                    from { opacity: 0; transform: translateY(-20px); }
-                    to { opacity: 1; transform: translateY(0); }
-                }
-                @keyframes scale-in {
-                    from { transform: scale(0.9); opacity: 0; }
-                    to { transform: scale(1); opacity: 1; }
-                }
-                .animate-fade-in {
-                    animation: fade-in 0.6s ease-out;
-                }
-                .animate-scale-in {
-                    animation: scale-in 0.3s ease-out;
-                }
-            `}</style>
         </div>
     )
 }

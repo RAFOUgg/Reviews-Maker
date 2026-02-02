@@ -1,10 +1,12 @@
 import React, { useState } from 'react'
 import { Calendar, MapPin, AlertCircle, CheckCircle2 } from 'lucide-react'
+import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidCard } from '@/components/ui/LiquidUI'
 
 /**
  * Modal de vérification d'âge conforme au cahier des charges
  * Collecte date de naissance + pays/région
  * Affiche disclaimer RDR adapté
+ * Liquid Glass UI Design System
  */
 export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
     const [step, setStep] = useState(1) // 1: birthdate, 2: country, 3: disclaimer, 4: success
@@ -124,176 +126,194 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
         }
     }
 
-    if (!isOpen) return null
+    const getStepTitle = () => {
+        if (step === 4) return 'Vérification réussie'
+        return 'Vérification d\'âge requise'
+    }
+
+    const getStepSubtitle = () => {
+        if (step === 1) return 'Confirmez votre date de naissance'
+        if (step === 2) return 'Indiquez votre pays de résidence'
+        if (step === 3) return 'Prenez connaissance du disclaimer RDR'
+        if (step === 4) return 'Votre compte est maintenant vérifié'
+    }
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in px-4">
-            <div className="glass rounded-3xl shadow-2xl w-full max-w-2xl overflow-hidden">
-                {/* Header */}
-                <div className="bg-gradient-to-r p-6 text-white">
-                    <h2 className="text-3xl font-black flex items-center gap-3">
-                        {step < 4 && <AlertCircle className="w-8 h-8" />}
-                        {step === 4 && <CheckCircle2 className="w-8 h-8 text-green-400" />}
-                        {step < 4 ? 'Vérification d\'âge requise' : 'Vérification réussie'}
-                    </h2>
-                    <p className="text-white/90 mt-2">
-                        {step === 1 && 'Confirmez votre date de naissance'}
-                        {step === 2 && 'Indiquez votre pays de résidence'}
-                        {step === 3 && 'Prenez connaissance du disclaimer RDR'}
-                        {step === 4 && 'Votre compte est maintenant vérifié'}
-                    </p>
+        <LiquidModal
+            isOpen={isOpen}
+            onClose={step < 4 ? undefined : onClose}
+            title={
+                <div className="flex items-center gap-3">
+                    {step < 4 ? (
+                        <AlertCircle className="w-6 h-6 text-amber-400" />
+                    ) : (
+                        <CheckCircle2 className="w-6 h-6 text-green-400" />
+                    )}
+                    <span>{getStepTitle()}</span>
                 </div>
+            }
+            size="lg"
+            glowColor={step === 4 ? 'green' : 'amber'}
+        >
+            <div className="space-y-6">
+                <p className="text-white/60">{getStepSubtitle()}</p>
 
-                {/* Body */}
-                <div className="p-8 space-y-6 bg-white">
-                    {/* Étape 1 : Date de naissance */}
-                    {step === 1 && (
-                        <div className="space-y-4 animate-fade-in">
-                            <div className="flex items-center gap-3">
-                                <Calendar className="w-6 h-6" />
-                                <h3 className="text-xl font-bold">Date de naissance</h3>
-                            </div>
-                            <p className="text-gray-700 text-sm">
-                                Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays) pour accéder à cette plateforme.
-                            </p>
-                            <input
-                                type="date"
-                                value={birthdate}
-                                onChange={(e) => setBirthdate(e.target.value)}
-                                max={new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-3 rounded-xl border-2 focus: focus:ring-2 focus: transition-all"
+                {/* Étape 1 : Date de naissance */}
+                {step === 1 && (
+                    <div className="space-y-4 animate-fade-in">
+                        <div className="flex items-center gap-3 text-white">
+                            <Calendar className="w-5 h-5 text-violet-400" />
+                            <h3 className="text-lg font-semibold">Date de naissance</h3>
+                        </div>
+                        <p className="text-white/60 text-sm">
+                            Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays) pour accéder à cette plateforme.
+                        </p>
+                        <LiquidInput
+                            type="date"
+                            value={birthdate}
+                            onChange={(e) => setBirthdate(e.target.value)}
+                            max={new Date().toISOString().split('T')[0]}
+                        />
+                    </div>
+                )}
+
+                {/* Étape 2 : Pays et région */}
+                {step === 2 && (
+                    <div className="space-y-4 animate-fade-in">
+                        <div className="flex items-center gap-3 text-white">
+                            <MapPin className="w-5 h-5 text-violet-400" />
+                            <h3 className="text-lg font-semibold">Pays de résidence</h3>
+                        </div>
+
+                        <LiquidSelect
+                            label="Pays *"
+                            value={country}
+                            onChange={(e) => {
+                                setCountry(e.target.value)
+                                setRegion('')
+                            }}
+                            options={[
+                                { value: '', label: '-- Sélectionnez --' },
+                                ...countries.map(c => ({
+                                    value: c.code,
+                                    label: `${c.name} (âge minimum : ${c.minAge} ans)`
+                                }))
+                            ]}
+                        />
+
+                        {selectedCountry?.regions?.length > 0 && (
+                            <LiquidSelect
+                                label="État / Province *"
+                                value={region}
+                                onChange={(e) => setRegion(e.target.value)}
+                                options={[
+                                    { value: '', label: '-- Sélectionnez --' },
+                                    ...selectedCountry.regions.map(r => ({ value: r, label: r }))
+                                ]}
                             />
+                        )}
+                    </div>
+                )}
+
+                {/* Étape 3 : Disclaimer RDR */}
+                {step === 3 && (
+                    <div className="space-y-4 animate-fade-in">
+                        <div className="flex items-center gap-3 text-white">
+                            <AlertCircle className="w-5 h-5 text-amber-400" />
+                            <h3 className="text-lg font-semibold">Disclaimer RDR (Réduction Des Risques)</h3>
                         </div>
-                    )}
 
-                    {/* Étape 2 : Pays et région */}
-                    {step === 2 && (
-                        <div className="space-y-4 animate-fade-in">
-                            <div className="flex items-center gap-3">
-                                <MapPin className="w-6 h-6" />
-                                <h3 className="text-xl font-bold">Pays de résidence</h3>
-                            </div>
-
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Pays *
-                                </label>
-                                <select
-                                    value={country}
-                                    onChange={(e) => {
-                                        setCountry(e.target.value)
-                                        setRegion('')
-                                    }}
-                                    className="w-full px-4 py-3 rounded-xl border-2 focus: focus:ring-2 focus: transition-all"
-                                >
-                                    <option value="">-- Sélectionnez --</option>
-                                    {countries.map(c => (
-                                        <option key={c.code} value={c.code}>
-                                            {c.name} (âge minimum : {c.minAge} ans)
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            {selectedCountry?.regions?.length > 0 && (
-                                <div>
-                                    <label className="block text-sm font-semibold text-gray-700 mb-2">
-                                        État / Province *
-                                    </label>
-                                    <select
-                                        value={region}
-                                        onChange={(e) => setRegion(e.target.value)}
-                                        className="w-full px-4 py-3 rounded-xl border-2 focus: focus:ring-2 focus: transition-all"
-                                    >
-                                        <option value="">-- Sélectionnez --</option>
-                                        {selectedCountry.regions.map(r => (
-                                            <option key={r} value={r}>{r}</option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-                        </div>
-                    )}
-
-                    {/* Étape 3 : Disclaimer RDR */}
-                    {step === 3 && (
-                        <div className="space-y-4 animate-fade-in">
-                            <div className="flex items-center gap-3">
-                                <AlertCircle className="w-6 h-6" />
-                                <h3 className="text-xl font-bold">Disclaimer RDR (Réduction Des Risques)</h3>
-                            </div>
-
-                            <div className="bg-yellow-50 border-2 border-yellow-300 rounded-xl p-6 text-gray-800 leading-relaxed">
-                                <p className="font-semibold text-lg mb-3">⚠️ Avertissement Important</p>
-                                <p className="mb-4">
-                                    {disclaimers[country] || disclaimers.default}
-                                </p>
-                                <ul className="space-y-2 text-sm list-disc list-inside">
-                                    <li>L'usage de cannabis peut affecter la mémoire, la concentration et les réflexes</li>
-                                    <li>Ne consommez pas avant de conduire ou d'utiliser des machines</li>
-                                    <li>Consultez un professionnel de santé en cas de questions</li>
-                                    <li>Respectez la législation en vigueur dans votre pays</li>
-                                </ul>
-                            </div>
-
-                            <label className="flex items-start gap-3 cursor-pointer group">
-                                <input
-                                    type="checkbox"
-                                    checked={consentRDR}
-                                    onChange={(e) => setConsentRDR(e.target.checked)}
-                                    className="w-6 h-6 rounded border-2 focus:ring-2 focus: transition-all mt-1"
-                                />
-                                <span className="text-gray-800 text-sm group-hover: transition-colors">
-                                    J'ai lu et compris ce disclaimer. Je confirme avoir l'âge légal requis dans mon pays et je m'engage à respecter la législation en vigueur.
-                                </span>
-                            </label>
-                        </div>
-                    )}
-
-                    {/* Étape 4 : Succès */}
-                    {step === 4 && (
-                        <div className="text-center space-y-4 animate-fade-in py-8">
-                            <div className="inline-flex items-center justify-center w-20 h-20 bg-green-100 rounded-full">
-                                <CheckCircle2 className="w-12 h-12 text-green-600" />
-                            </div>
-                            <h3 className="text-2xl font-bold text-gray-900">Vérification réussie !</h3>
-                            <p className="text-gray-600">
-                                Votre âge et votre pays ont été vérifiés. Vous allez être redirigé...
+                        <LiquidCard
+                            className="p-6"
+                            style={{
+                                background: 'rgba(251, 191, 36, 0.1)',
+                                borderColor: 'rgba(251, 191, 36, 0.3)',
+                                boxShadow: '0 0 30px rgba(251, 191, 36, 0.15)'
+                            }}
+                        >
+                            <p className="font-semibold text-amber-300 mb-3">⚠️ Avertissement Important</p>
+                            <p className="text-white/80 mb-4">
+                                {disclaimers[country] || disclaimers.default}
                             </p>
-                        </div>
-                    )}
+                            <ul className="space-y-2 text-sm text-white/70 list-disc list-inside">
+                                <li>L'usage de cannabis peut affecter la mémoire, la concentration et les réflexes</li>
+                                <li>Ne consommez pas avant de conduire ou d'utiliser des machines</li>
+                                <li>Consultez un professionnel de santé en cas de questions</li>
+                                <li>Respectez la législation en vigueur dans votre pays</li>
+                            </ul>
+                        </LiquidCard>
 
-                    {/* Erreurs */}
-                    {error && (
-                        <div className="bg-red-50 border-2 border-red-300 rounded-xl p-4 text-red-800 text-sm">
-                            <p className="font-semibold">❌ {error}</p>
-                        </div>
-                    )}
+                        <label className="flex items-start gap-3 cursor-pointer group p-3 rounded-xl border border-white/10 hover:border-violet-500/50 transition-colors">
+                            <input
+                                type="checkbox"
+                                checked={consentRDR}
+                                onChange={(e) => setConsentRDR(e.target.checked)}
+                                className="w-5 h-5 rounded border-white/30 bg-white/5 mt-0.5 accent-violet-500"
+                            />
+                            <span className="text-white/80 text-sm group-hover:text-white transition-colors">
+                                J'ai lu et compris ce disclaimer. Je confirme avoir l'âge légal requis dans mon pays et je m'engage à respecter la législation en vigueur.
+                            </span>
+                        </label>
+                    </div>
+                )}
 
-                    {/* Actions */}
-                    {step < 4 && (
-                        <div className="flex gap-3 pt-4">
-                            {step > 1 && (
-                                <button
-                                    onClick={() => setStep(step - 1)}
-                                    disabled={loading}
-                                    className="px-6 py-3 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-50 transition-all disabled:opacity-50"
-                                >
-                                    Retour
-                                </button>
-                            )}
-                            <button
-                                onClick={handleNextStep}
+                {/* Étape 4 : Succès */}
+                {step === 4 && (
+                    <div className="text-center space-y-4 animate-fade-in py-8">
+                        <div
+                            className="inline-flex items-center justify-center w-20 h-20 rounded-full"
+                            style={{
+                                background: 'rgba(34, 197, 94, 0.2)',
+                                boxShadow: '0 0 40px rgba(34, 197, 94, 0.3)'
+                            }}
+                        >
+                            <CheckCircle2 className="w-12 h-12 text-green-400" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-white">Vérification réussie !</h3>
+                        <p className="text-white/60">
+                            Votre âge et votre pays ont été vérifiés. Vous allez être redirigé...
+                        </p>
+                    </div>
+                )}
+
+                {/* Erreurs */}
+                {error && (
+                    <LiquidCard
+                        className="p-4"
+                        style={{
+                            background: 'rgba(239, 68, 68, 0.1)',
+                            borderColor: 'rgba(239, 68, 68, 0.3)'
+                        }}
+                    >
+                        <p className="text-red-400 text-sm font-semibold">❌ {error}</p>
+                    </LiquidCard>
+                )}
+
+                {/* Actions */}
+                {step < 4 && (
+                    <div className="flex gap-3 pt-4">
+                        {step > 1 && (
+                            <LiquidButton
+                                onClick={() => setStep(step - 1)}
                                 disabled={loading}
-                                className="flex-1 px-6 py-3 rounded-xl bg-gradient-to-r text-white font-bold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                variant="ghost"
                             >
-                                {loading ? 'Vérification...' : step === 3 ? 'Vérifier mon âge' : 'Continuer'}
-                            </button>
-                        </div>
-                    )}
-                </div>
+                                Retour
+                            </LiquidButton>
+                        )}
+                        <LiquidButton
+                            onClick={handleNextStep}
+                            disabled={loading}
+                            variant="primary"
+                            className="flex-1"
+                            loading={loading}
+                        >
+                            {loading ? 'Vérification...' : step === 3 ? 'Vérifier mon âge' : 'Continuer'}
+                        </LiquidButton>
+                    </div>
+                )}
             </div>
-        </div>
+        </LiquidModal>
     )
 }
 

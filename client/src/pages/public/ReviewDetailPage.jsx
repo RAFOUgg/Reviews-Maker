@@ -7,7 +7,8 @@ import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 import ExportMaker from '../../components/export/ExportMaker'
 import { templatesService } from '../../services/apiService'
-import { Download } from 'lucide-react'
+import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2 } from 'lucide-react'
+import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
 
 export default function ReviewDetailPage() {
     const { id } = useParams()
@@ -99,8 +100,11 @@ export default function ReviewDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-app flex items-center justify-center">
-                <div className="text-subtitle text-xl">Chargement...</div>
+            <div className="min-h-screen bg-[#07070f] flex items-center justify-center">
+                <div className="flex items-center gap-3 text-white/60">
+                    <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
+                    <span className="text-lg">Chargement...</span>
+                </div>
             </div>
         )
     }
@@ -108,68 +112,66 @@ export default function ReviewDetailPage() {
     if (!review) return null
 
     return (
-        <div className="min-h-screen bg-app py-12 px-4">
-            <div className="container-glass mx-auto">
+        <div className="min-h-screen bg-[#07070f] py-8 px-4 sm:px-6 lg:px-8">
+            <div className="max-w-6xl mx-auto">
                 {/* Header with Back & Edit Buttons */}
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <button
                         onClick={() => navigate('/')}
-                        className="text-subtitle hover:text-title transition-colors flex items-center gap-2"
+                        className="flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
                     >
-                        <span>←</span>
+                        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
                         <span>Retour à la galerie</span>
                     </button>
 
-                    <div className="flex items-center gap-2">
-                        <button
+                    <div className="flex items-center gap-3">
+                        <LiquidButton
                             onClick={() => setShowExportModal(true)}
-                            className="flex items-center gap-2 btn-primary"
+                            variant="primary"
+                            size="sm"
                         >
-                            <Download className="w-5 h-5" />
+                            <Download className="w-4 h-4" />
                             <span>Exporter</span>
-                        </button>
+                        </LiquidButton>
 
                         {isAuthenticated && user?.id === review?.authorId && (
-                            <button
+                            <LiquidButton
                                 onClick={() => navigate(`/edit/${id}`)}
-                                className="flex items-center gap-2 btn-primary"
+                                variant="secondary"
+                                size="sm"
                             >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                                </svg>
+                                <Edit3 className="w-4 h-4" />
                                 <span>Éditer</span>
-                            </button>
+                            </LiquidButton>
                         )}
                     </div>
                 </div>
 
                 {/* View Mode Switcher - Only show if Orchard config exists */}
                 {review.orchardConfig && (
-                    <div className="mb-4 flex gap-2">
-                        <button
+                    <div className="mb-6 flex gap-2">
+                        <LiquidChip
+                            active={viewMode === 'full'}
                             onClick={() => setViewMode('full')}
-                            className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'full'
-                                ? 'bg-panel text-title'
-                                : 'bg-card text-subtitle hover:bg-card/80'
-                                }`}
+                            color="purple"
                         >
-                            📋 Vue Détaillée
-                        </button>
-                        <button
+                            <FileText className="w-4 h-4" />
+                            <span>Vue Détaillée</span>
+                        </LiquidChip>
+                        <LiquidChip
+                            active={viewMode === 'orchard'}
                             onClick={() => setViewMode('orchard')}
-                            className={`px-4 py-2 rounded-xl font-medium transition-all ${viewMode === 'orchard'
-                                ? 'bg-panel text-title'
-                                : 'bg-card text-subtitle hover:bg-card/80'
-                                }`}
+                            color="cyan"
                         >
-                            🎨 Aperçu Orchard
-                        </button>
+                            <Layout className="w-4 h-4" />
+                            <span>Aperçu Orchard</span>
+                        </LiquidChip>
                     </div>
                 )}
 
                 {/* Orchard Template Preview */}
                 {viewMode === 'orchard' && review.orchardConfig ? (
-                    <div className="glass liquid-glass--card p-6 bg-panel rounded-2xl border border-white/5">
+                    <LiquidCard glow="cyan" padding="lg">
                         <TemplateRenderer
                             config={typeof review.orchardConfig === 'string' ? (() => {
                                 try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
@@ -198,7 +200,7 @@ export default function ReviewDetailPage() {
                                 farm: review.farm
                             }}
                         />
-                    </div>
+                    </LiquidCard>
                 ) : (
                     /* Full Review Display - Always show by default or if no Orchard config */
                     <ReviewFullDisplay review={review} />

@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { Edit2, Save, X, Upload, Mail, User, Globe, FileText, Link as LinkIcon, Building2, MapPin, CreditCard } from 'lucide-react'
 import { useProfileData } from '../../../hooks/useProfileData'
 import { useStore } from '../../../store/useStore'
+import { LiquidCard, LiquidButton, LiquidInput, LiquidTextarea, LiquidSelect, LiquidToggle, LiquidAvatar, LiquidBadge } from '@/components/ui/LiquidUI'
 
 /**
  * ProfileSection - Gestion des informations personnelles
@@ -72,31 +73,33 @@ export default function ProfileSection() {
         </h2>
         <div className="flex gap-2">
           {!isEditing ? (
-            <button
+            <LiquidButton
               onClick={() => setIsEditing(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors font-medium"
+              variant="primary"
+              glow="blue"
             >
-              <Edit2 className="w-4 h-4" />
+              <Edit2 className="w-4 h-4 mr-2" />
               Modifier
-            </button>
+            </LiquidButton>
           ) : (
             <>
-              <button
+              <LiquidButton
                 onClick={cancelEdit}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
+                variant="ghost"
               >
-                <X className="w-4 h-4" />
+                <X className="w-4 h-4 mr-2" />
                 Annuler
-              </button>
-              <button
+              </LiquidButton>
+              <LiquidButton
                 onClick={saveProfile}
                 disabled={isSaving}
-                className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors font-medium disabled:opacity-50"
+                variant="primary"
+                glow="green"
               >
-                <Save className="w-4 h-4" />
+                <Save className="w-4 h-4 mr-2" />
                 {isSaving ? 'Sauvegarde...' : 'Sauvegarder'}
-              </button>
+              </LiquidButton>
             </>
           )}
         </div>
@@ -104,37 +107,30 @@ export default function ProfileSection() {
 
       {/* Message de statut */}
       {saveMessage && (
-        <div className={`p-4 rounded-lg text-sm font-medium ${saveMessage.includes('✅')
-            ? 'bg-green-500/10 border border-green-500/30 text-green-400'
-            : 'bg-red-500/10 border border-red-500/30 text-red-400'
+        <div className={`p-4 rounded-xl text-sm font-medium ${saveMessage.includes('✅')
+          ? 'bg-green-500/10 border border-green-500/30 text-green-400'
+          : 'bg-red-500/10 border border-red-500/30 text-red-400'
           }`}>
           {saveMessage}
         </div>
       )}
 
       {/* Card Avatar */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50">
+      <LiquidCard glow="purple" padding="lg">
         <div className="text-center space-y-4">
           <div className="relative inline-block">
-            <div
+            <LiquidAvatar
+              size="xl"
+              src={profileData.avatar}
+              fallback={profileData.username?.charAt(0)?.toUpperCase() || 'U'}
+              glow="purple"
               onClick={handleAvatarClick}
-              className={`w-32 h-32 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-5xl font-bold text-white ${isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''
-                }`}
-            >
-              {profileData.avatar ? (
-                <img
-                  src={profileData.avatar}
-                  alt="Avatar"
-                  className="w-full h-full rounded-full object-cover"
-                />
-              ) : (
-                profileData.username?.charAt(0)?.toUpperCase() || 'U'
-              )}
-            </div>
+              className={isEditing ? 'cursor-pointer hover:opacity-80 transition-opacity' : ''}
+            />
             {isEditing && (
               <div
                 onClick={handleAvatarClick}
-                className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 p-2 rounded-full cursor-pointer transition-colors"
+                className="absolute bottom-0 right-0 bg-blue-600 hover:bg-blue-700 p-2 rounded-full cursor-pointer transition-colors shadow-lg"
               >
                 <Upload className="w-5 h-5 text-white" />
               </div>
@@ -148,15 +144,15 @@ export default function ProfileSection() {
             />
           </div>
           <div>
-            <p className="text-gray-400 text-sm">Avatar</p>
+            <p className="text-white/40 text-sm">Avatar</p>
             <p className="text-white font-semibold">{profileData.username}</p>
           </div>
         </div>
-      </div>
+      </LiquidCard>
 
       {/* Card Infos de base */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50 space-y-4">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+      <LiquidCard glow="blue" padding="lg">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
           <Mail className="w-5 h-5" />
           Infos de Base
         </h3>
@@ -164,266 +160,212 @@ export default function ProfileSection() {
         <div className="grid md:grid-cols-2 gap-4">
           {/* Username (read-only) */}
           <div className="space-y-2">
-            <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
               Nom d'utilisateur
             </label>
-            <input
-              type="text"
+            <LiquidInput
               value={profileData.username}
               disabled
-              className="w-full px-4 py-3 bg-gray-700/50 text-gray-400 rounded-lg border border-gray-600/50 disabled:opacity-60 cursor-not-allowed"
+              className="opacity-60"
             />
-            <p className="text-xs text-gray-500">Non modifiable</p>
+            <p className="text-xs text-white/40">Non modifiable</p>
           </div>
 
           {/* Email (read-only) */}
           <div className="space-y-2">
-            <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
               Email
             </label>
-            <input
+            <LiquidInput
               type="email"
               value={profileData.email}
               disabled
-              className="w-full px-4 py-3 bg-gray-700/50 text-gray-400 rounded-lg border border-gray-600/50 disabled:opacity-60 cursor-not-allowed"
+              className="opacity-60"
             />
-            <p className="text-xs text-gray-500">Changez-le dans les paramètres de sécurité</p>
+            <p className="text-xs text-white/40">Changez-le dans les paramètres de sécurité</p>
           </div>
 
           {/* Prénom */}
           <div className="space-y-2">
-            <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
               Prénom
             </label>
-            <input
-              type="text"
+            <LiquidInput
               value={profileData.firstName}
               onChange={(e) => updateField('firstName', e.target.value)}
               disabled={!isEditing}
               placeholder="Optionnel"
-              className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                  ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                  : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
             />
           </div>
 
           {/* Nom */}
           <div className="space-y-2">
-            <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
               Nom
             </label>
-            <input
-              type="text"
+            <LiquidInput
               value={profileData.lastName}
               onChange={(e) => updateField('lastName', e.target.value)}
               disabled={!isEditing}
               placeholder="Optionnel"
-              className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                  ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                  : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
             />
           </div>
 
           {/* Pays */}
           <div className="space-y-2 md:col-span-2">
-            <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+            <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
               Pays
             </label>
-            <select
+            <LiquidSelect
               value={profileData.country}
               onChange={(e) => updateField('country', e.target.value)}
               disabled={!isEditing}
-              className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                  ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                  : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                }`}
-            >
-              <option value="">Sélectionnez un pays</option>
-              {COUNTRIES.map((country) => (
-                <option key={country.code} value={country.code}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
+              options={[
+                { value: '', label: 'Sélectionnez un pays' },
+                ...COUNTRIES.map((country) => ({
+                  value: country.code,
+                  label: country.name
+                }))
+              ]}
+            />
           </div>
         </div>
-      </div>
+      </LiquidCard>
 
       {/* Card Profil public */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50 space-y-4">
-        <h3 className="text-lg font-bold text-white flex items-center gap-2">
+      <LiquidCard glow="cyan" padding="lg">
+        <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
           <Globe className="w-5 h-5" />
           Profil Public
         </h3>
 
         {/* Bio */}
-        <div className="space-y-2">
-          <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+        <div className="space-y-2 mb-4">
+          <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
             Bio (max 500 caractères)
           </label>
-          <textarea
+          <LiquidTextarea
             value={profileData.bio}
             onChange={(e) => updateField('bio', e.target.value.slice(0, 500))}
             disabled={!isEditing}
             placeholder="Décrivez-vous en quelques mots..."
             rows={4}
-            className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${isEditing
-                ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-              }`}
           />
-          <p className="text-xs text-gray-500">{profileData.bio.length}/500</p>
+          <p className="text-xs text-white/40">{profileData.bio.length}/500</p>
         </div>
 
         {/* Website */}
-        <div className="space-y-2">
-          <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+        <div className="space-y-2 mb-4">
+          <label className="text-xs text-white/50 uppercase tracking-wider font-semibold flex items-center gap-2">
             <LinkIcon className="w-4 h-4" />
             Site Web (optionnel)
           </label>
-          <input
+          <LiquidInput
             type="url"
             value={profileData.website}
             onChange={(e) => updateField('website', e.target.value)}
             disabled={!isEditing}
             placeholder="https://example.com"
-            className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-              }`}
           />
         </div>
 
         {/* Profil public toggle */}
-        <div className="flex items-center justify-between p-4 bg-gray-700/30 rounded-lg border border-gray-600/30">
+        <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/10">
           <div className="space-y-1">
             <p className="text-white font-medium">Rendre le profil public</p>
-            <p className="text-xs text-gray-400">Votre profil sera visible dans la galerie publique</p>
+            <p className="text-xs text-white/50">Votre profil sera visible dans la galerie publique</p>
           </div>
-          <label className="relative inline-block w-12 h-6">
-            <input
-              type="checkbox"
-              checked={profileData.publicProfile}
-              onChange={(e) => updateField('publicProfile', e.target.checked)}
-              disabled={!isEditing}
-              className="sr-only peer"
-            />
-            <div className={`absolute inset-0 rounded-full transition-colors ${profileData.publicProfile
-                ? 'bg-purple-600'
-                : 'bg-gray-600'
-              } ${!isEditing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-            />
-            <div className={`absolute left-0 top-0 w-6 h-6 bg-white rounded-full transition-transform ${profileData.publicProfile ? 'translate-x-6' : ''
-              }`}
-            />
-          </label>
+          <LiquidToggle
+            checked={profileData.publicProfile}
+            onChange={(e) => updateField('publicProfile', e.target.checked)}
+            disabled={!isEditing}
+          />
         </div>
-      </div>
+      </LiquidCard>
 
       {/* Card Données Entreprise (Producteurs et Influenceurs uniquement) */}
       {isPaidAccount && (
-        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50 space-y-4">
-          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+        <LiquidCard glow="amber" padding="lg">
+          <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-2">
             <Building2 className="w-5 h-5" />
             Données Entreprise
-            <span className="text-xs bg-purple-600/30 text-purple-400 px-2 py-0.5 rounded-full ml-2">
+            <LiquidBadge variant="premium" size="sm">
               {accountType === 'producteur' ? '🌾 Producteur' : '⭐ Influenceur'}
-            </span>
+            </LiquidBadge>
           </h3>
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-white/50 mb-4">
             Ces informations sont utilisées pour la facturation et les documents légaux.
           </p>
 
           <div className="grid md:grid-cols-2 gap-4">
             {/* Nom d'entreprise */}
             <div className="space-y-2">
-              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+              <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
                 Nom de l'entreprise
               </label>
-              <input
-                type="text"
+              <LiquidInput
                 value={profileData.companyName || ''}
                 onChange={(e) => updateField('companyName', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Votre entreprise"
-                className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                  }`}
               />
             </div>
 
             {/* SIRET / Registre commerce */}
             <div className="space-y-2">
-              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+              <label className="text-xs text-white/50 uppercase tracking-wider font-semibold flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
                 SIRET / Registre Commerce
               </label>
-              <input
-                type="text"
+              <LiquidInput
                 value={profileData.siret || ''}
                 onChange={(e) => updateField('siret', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Ex: 123 456 789 00012"
-                className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                  }`}
               />
             </div>
 
             {/* Adresse de facturation */}
             <div className="space-y-2 md:col-span-2">
-              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold flex items-center gap-2">
+              <label className="text-xs text-white/50 uppercase tracking-wider font-semibold flex items-center gap-2">
                 <MapPin className="w-4 h-4" />
                 Adresse de facturation
               </label>
-              <textarea
+              <LiquidTextarea
                 value={profileData.billingAddress || ''}
                 onChange={(e) => updateField('billingAddress', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Adresse complète (rue, code postal, ville, pays)"
                 rows={3}
-                className={`w-full px-4 py-3 rounded-lg border transition-colors resize-none ${isEditing
-                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                  }`}
               />
             </div>
 
             {/* TVA si applicable */}
             <div className="space-y-2">
-              <label className="text-xs text-gray-400 uppercase tracking-wider font-semibold">
+              <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
                 N° TVA Intracommunautaire (optionnel)
               </label>
-              <input
-                type="text"
+              <LiquidInput
                 value={profileData.vatNumber || ''}
                 onChange={(e) => updateField('vatNumber', e.target.value)}
                 disabled={!isEditing}
                 placeholder="Ex: FR12345678901"
-                className={`w-full px-4 py-3 rounded-lg border transition-colors ${isEditing
-                    ? 'bg-gray-700 border-purple-500/50 text-white focus:border-purple-500 outline-none'
-                    : 'bg-gray-700/50 border-gray-600/50 text-gray-300 cursor-not-allowed'
-                  }`}
               />
             </div>
           </div>
-        </div>
+        </LiquidCard>
       )}
 
       {/* Infos supplémentaires */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-6 md:p-8 border border-gray-700/50 space-y-3">
-        <p className="text-xs text-gray-500 text-center">
+      <LiquidCard padding="md" className="text-center">
+        <p className="text-xs text-white/40">
           Compte créé le {new Date(new Date().toISOString()).toLocaleDateString('fr-FR', {
             year: 'numeric',
             month: 'long',
             day: 'numeric'
           })}
         </p>
-      </div>
+      </LiquidCard>
     </div>
   )
 }

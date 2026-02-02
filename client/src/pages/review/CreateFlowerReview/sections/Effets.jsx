@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { LiquidCard, LiquidChip, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Zap } from 'lucide-react'
 
 export default function Effets({ formData, handleChange }) {
     const [effects, setEffects] = useState([])
@@ -32,79 +33,91 @@ export default function Effets({ formData, handleChange }) {
     })
 
     return (
-        <LiquidCard title="💥 Effets ressentis" bordered>
-            <div className="space-y-6">
-                {/* Montée rapidité */}
+        <LiquidCard glow="cyan" padding="lg">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                    <Zap className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Montée (rapidité)
-                        </label>
-                        <span className="text-sm font-bold dark:">
-                            {formData.montee || 0}/10
-                        </span>
-                    </div>
+                    <h3 className="text-xl font-bold text-white">💥 Effets ressentis</h3>
+                    <p className="text-sm text-white/50">Effets et expérience</p>
+                </div>
+            </div>
+
+            <LiquidDivider />
+
+            <div className="space-y-6 mt-6">
+                {/* Montée rapidité */}
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <LiquidRating
+                        label="Montée (rapidité)"
+                        value={formData.montee || 0}
+                        max={10}
+                        color="cyan"
+                    />
                     <input
                         type="range"
                         min="0"
                         max="10"
                         value={formData.montee || 0}
                         onChange={(e) => handleChange('montee', parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                        className="w-full mt-2 accent-cyan-500"
                     />
                 </div>
 
                 {/* Intensité */}
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Intensité
-                        </label>
-                        <span className="text-sm font-bold dark:">
-                            {formData.intensiteEffet || 0}/10
-                        </span>
-                    </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <LiquidRating
+                        label="Intensité"
+                        value={formData.intensiteEffet || 0}
+                        max={10}
+                        color="cyan"
+                    />
                     <input
                         type="range"
                         min="0"
                         max="10"
                         value={formData.intensiteEffet || 0}
                         onChange={(e) => handleChange('intensiteEffet', parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                        className="w-full mt-2 accent-cyan-500"
                     />
                 </div>
 
                 {/* Filtres par type */}
-                <div className="flex gap-2 mb-4">
-                    {['tous', 'mental', 'physique', 'therapeutique', 'positif', 'negatif'].map(type => (
-                        <button
-                            key={type}
-                            type="button"
-                            onClick={() => setFilter(type)}
-                            className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filter === type ? ' text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' }`}
-                        >
-                            {type.charAt(0).toUpperCase() + type.slice(1)}
-                        </button>
-                    ))}
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        🎯 Filtrer par type
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                        {['tous', 'mental', 'physique', 'therapeutique', 'positif', 'negatif'].map(type => (
+                            <LiquidChip
+                                key={type}
+                                active={filter === type}
+                                onClick={() => setFilter(type)}
+                                color="cyan"
+                            >
+                                {type.charAt(0).toUpperCase() + type.slice(1)}
+                            </LiquidChip>
+                        ))}
+                    </div>
                 </div>
 
                 {/* Sélection des effets */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Sélection des effets (max 8) : {selectedEffects.length}/8
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        ⚡ Sélection des effets ({selectedEffects.length}/8)
                     </label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 max-h-64 overflow-y-auto">
                         {filteredEffects.map(effect => (
-                            <button
+                            <LiquidChip
                                 key={effect.name}
-                                type="button"
+                                active={selectedEffects.includes(effect.name)}
                                 onClick={() => toggleEffect(effect.name)}
-                                aria-pressed={selectedEffects.includes(effect.name)}
-                                className={`effect-tile ${selectedEffects.includes(effect.name) ? 'effect-tile--selected px-5 py-3 font-semibold' : ''}`}
+                                color="cyan"
                                 disabled={!selectedEffects.includes(effect.name) && selectedEffects.length >= 8}
                             >
                                 {effect.name}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>

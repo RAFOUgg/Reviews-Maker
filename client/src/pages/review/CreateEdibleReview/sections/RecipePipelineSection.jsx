@@ -7,7 +7,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, Plus, X, ChevronDown, Cannabis } from 'lucide-react';
-import LiquidCard from '../../../../components/ui/LiquidCard';
+import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 
 const UNITS = ['g', 'kg', 'ml', 'L', 'c. à soupe', 'c. à café', 'pincée', 'pcs', 'autre'];
 const PREPARATION_ACTIONS = [
@@ -94,18 +94,25 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
     return (
         <div className="space-y-6">
             {/* Ingrédients */}
-            <LiquidCard className="p-6">
+            <LiquidCard glow="amber" padding="lg">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <ChefHat className="w-5 h-5 text-orange-500" />
-                        Ingrédients
-                    </h3>
-                    <button onClick={() => setShowIngredients(!showIngredients)} className="p-2 rounded-lg hover:bg-white/10">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+                            <ChefHat className="w-5 h-5 text-white" />
+                        </div>
+                        <div>
+                            <h3 className="text-xl font-bold text-white">🥘 Ingrédients</h3>
+                            <p className="text-sm text-white/50">Cannabiniques et standards</p>
+                        </div>
+                    </div>
+                    <button onClick={() => setShowIngredients(!showIngredients)} className="p-2 rounded-lg hover:bg-white/10 border border-white/10">
                         <motion.div animate={{ rotate: showIngredients ? 180 : 0 }}>
-                            <ChevronDown className="w-5 h-5" />
+                            <ChevronDown className="w-5 h-5 text-white" />
                         </motion.div>
                     </button>
                 </div>
+
+                <LiquidDivider />
 
                 <AnimatePresence>
                     {showIngredients && (
@@ -113,12 +120,12 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="space-y-6 overflow-hidden"
+                            className="space-y-6 overflow-hidden mt-6"
                         >
                             {/* Ingrédients cannabiniques */}
                             <div>
-                                <h4 className="text-sm font-semibold mb-3 flex items-center gap-2">
-                                    <Cannabis className="w-4 h-4 text-green-500" />
+                                <h4 className="text-sm font-semibold text-white mb-3 flex items-center gap-2">
+                                    <Cannabis className="w-4 h-4 text-green-400" />
                                     Ingrédients cannabiniques
                                 </h4>
                                 {cannabinicIngredients.length === 0 ? (
@@ -126,11 +133,11 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                 ) : (
                                     <div className="space-y-2 mb-3">
                                         {cannabinicIngredients.map((ing) => (
-                                            <div key={ing.id} className="p-3 bg-green-500/10 border border-green-500/30 rounded-lg grid grid-cols-12 gap-2">
+                                            <div key={ing.id} className="p-3 bg-green-500/10 border border-green-500/30 rounded-xl grid grid-cols-12 gap-2">
                                                 <select
                                                     value={ing.cannabinoidType || 'fleur'}
                                                     onChange={(e) => updateIngredient(ing.id, 'cannabinoidType', e.target.value)}
-                                                    className="col-span-3 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-3 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white"
                                                 >
                                                     <option value="fleur">Fleur</option>
                                                     <option value="hash">Hash</option>
@@ -143,25 +150,25 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     placeholder="Nom..."
                                                     value={ing.name}
                                                     onChange={(e) => updateIngredient(ing.id, 'name', e.target.value)}
-                                                    className="col-span-4 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-4 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white placeholder-white/30"
                                                 />
                                                 <input
                                                     type="number"
                                                     placeholder="Qté"
                                                     value={ing.quantity}
                                                     onChange={(e) => updateIngredient(ing.id, 'quantity', e.target.value)}
-                                                    className="col-span-2 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-2 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white placeholder-white/30"
                                                 />
                                                 <select
                                                     value={ing.unit}
                                                     onChange={(e) => updateIngredient(ing.id, 'unit', e.target.value)}
-                                                    className="col-span-2 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-2 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white"
                                                 >
                                                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                                                 </select>
                                                 <button
                                                     onClick={() => removeIngredient(ing.id)}
-                                                    className="col-span-1 p-1 hover:bg-red-500/20 rounded"
+                                                    className="col-span-1 p-1 hover:bg-red-500/20 rounded-lg border border-white/10"
                                                 >
                                                     <X className="w-4 h-4 text-red-400" />
                                                 </button>
@@ -180,37 +187,37 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
 
                             {/* Ingrédients standards */}
                             <div>
-                                <h4 className="text-sm font-semibold mb-3">Ingrédients standards</h4>
+                                <h4 className="text-sm font-semibold text-white mb-3">Ingrédients standards</h4>
                                 {standardIngredients.length === 0 ? (
                                     <p className="text-sm text-white/60 mb-3">Aucun ingrédient standard</p>
                                 ) : (
                                     <div className="space-y-2 mb-3">
                                         {standardIngredients.map((ing) => (
-                                            <div key={ing.id} className="p-3 bg-white/5 border border-white/10 rounded-lg grid grid-cols-12 gap-2">
+                                            <div key={ing.id} className="p-3 bg-white/5 border border-white/10 rounded-xl grid grid-cols-12 gap-2">
                                                 <input
                                                     type="text"
                                                     placeholder="Nom ingrédient..."
                                                     value={ing.name}
                                                     onChange={(e) => updateIngredient(ing.id, 'name', e.target.value)}
-                                                    className="col-span-7 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-7 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white placeholder-white/30"
                                                 />
                                                 <input
                                                     type="number"
                                                     placeholder="Qté"
                                                     value={ing.quantity}
                                                     onChange={(e) => updateIngredient(ing.id, 'quantity', e.target.value)}
-                                                    className="col-span-2 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-2 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white placeholder-white/30"
                                                 />
                                                 <select
                                                     value={ing.unit}
                                                     onChange={(e) => updateIngredient(ing.id, 'unit', e.target.value)}
-                                                    className="col-span-2 px-2 py-1 bg-white/5 border border-white/20 rounded text-sm"
+                                                    className="col-span-2 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white"
                                                 >
                                                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                                                 </select>
                                                 <button
                                                     onClick={() => removeIngredient(ing.id)}
-                                                    className="col-span-1 p-1 hover:bg-red-500/20 rounded"
+                                                    className="col-span-1 p-1 hover:bg-red-500/20 rounded-lg border border-white/10"
                                                 >
                                                     <X className="w-4 h-4 text-red-400" />
                                                 </button>
@@ -232,15 +239,17 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
             </LiquidCard>
 
             {/* Étapes de préparation */}
-            <LiquidCard className="p-6">
+            <LiquidCard glow="amber" padding="lg">
                 <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold">Étapes de préparation</h3>
-                    <button onClick={() => setShowSteps(!showSteps)} className="p-2 rounded-lg hover:bg-white/10">
+                    <h3 className="text-xl font-bold text-white">📝 Étapes de préparation</h3>
+                    <button onClick={() => setShowSteps(!showSteps)} className="p-2 rounded-lg hover:bg-white/10 border border-white/10">
                         <motion.div animate={{ rotate: showSteps ? 180 : 0 }}>
-                            <ChevronDown className="w-5 h-5" />
+                            <ChevronDown className="w-5 h-5 text-white" />
                         </motion.div>
                     </button>
                 </div>
+
+                <LiquidDivider />
 
                 <AnimatePresence>
                     {showSteps && (
@@ -248,7 +257,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: 'auto', opacity: 1 }}
                             exit={{ height: 0, opacity: 0 }}
-                            className="space-y-4 overflow-hidden"
+                            className="space-y-4 overflow-hidden mt-6"
                         >
                             {config.steps.length === 0 ? (
                                 <p className="text-sm text-white/60 text-center py-4">
@@ -257,12 +266,12 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                             ) : (
                                 <div className="space-y-3">
                                     {config.steps.map((step, index) => (
-                                        <div key={step.id} className="p-4 bg-white/5 border border-white/10 rounded-lg">
+                                        <div key={step.id} className="p-4 bg-white/5 border border-white/10 rounded-xl">
                                             <div className="flex items-center justify-between mb-3">
-                                                <span className="text-sm font-semibold">Étape {index + 1}</span>
+                                                <span className="text-sm font-semibold text-white">Étape {index + 1}</span>
                                                 <button
                                                     onClick={() => removeStep(step.id)}
-                                                    className="p-1 hover:bg-red-500/20 rounded"
+                                                    className="p-1 hover:bg-red-500/20 rounded-lg border border-white/10"
                                                 >
                                                     <X className="w-4 h-4 text-red-400" />
                                                 </button>
@@ -271,7 +280,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                 <select
                                                     value={step.action}
                                                     onChange={(e) => updateStep(step.id, 'action', e.target.value)}
-                                                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm"
+                                                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/20 rounded-xl text-sm text-white"
                                                 >
                                                     {PREPARATION_ACTIONS.map(a => (
                                                         <option key={a} value={a}>{a}</option>
@@ -281,7 +290,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     placeholder="Description détaillée..."
                                                     value={step.description}
                                                     onChange={(e) => updateStep(step.id, 'description', e.target.value)}
-                                                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm"
+                                                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/20 rounded-xl text-sm text-white placeholder-white/30"
                                                     rows={2}
                                                 />
                                                 <input
@@ -289,7 +298,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     placeholder="Durée (ex: 10 min, 2h...)"
                                                     value={step.duration}
                                                     onChange={(e) => updateStep(step.id, 'duration', e.target.value)}
-                                                    className="w-full px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm"
+                                                    className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/20 rounded-xl text-sm text-white placeholder-white/30"
                                                 />
                                             </div>
                                         </div>
@@ -299,7 +308,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
 
                             <button
                                 onClick={addStep}
-                                className="w-full py-3 border-2 border-dashed border-white/30 rounded-lg hover:border-orange-500 hover:bg-orange-500/10 transition-all flex items-center justify-center gap-2"
+                                className="w-full py-3 border-2 border-dashed border-white/30 rounded-xl hover:border-orange-500 hover:bg-orange-500/10 transition-all flex items-center justify-center gap-2 text-white"
                             >
                                 <Plus className="w-5 h-5" />
                                 Ajouter étape
@@ -310,14 +319,14 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
             </LiquidCard>
 
             {/* Résumé */}
-            <LiquidCard className="p-6 bg-gradient-to-br from-orange-500/10 to-yellow-500/10 border-orange-500/30">
-                <h4 className="text-sm font-bold mb-3">📋 Résumé recette</h4>
-                <div className="space-y-2 text-sm">
-                    <p><strong>Ingrédients cannabiniques:</strong> {cannabinicIngredients.length}</p>
-                    <p><strong>Ingrédients standards:</strong> {standardIngredients.length}</p>
-                    <p><strong>Étapes de préparation:</strong> {config.steps.length}</p>
+            <div className="p-5 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-xl border-2 border-orange-500/30">
+                <h4 className="text-sm font-bold text-white mb-3">📋 Résumé recette</h4>
+                <div className="space-y-2 text-sm text-white/70">
+                    <p><strong className="text-white">Ingrédients cannabiniques:</strong> {cannabinicIngredients.length}</p>
+                    <p><strong className="text-white">Ingrédients standards:</strong> {standardIngredients.length}</p>
+                    <p><strong className="text-white">Étapes de préparation:</strong> {config.steps.length}</p>
                 </div>
-            </LiquidCard>
+            </div>
         </div>
     );
 };

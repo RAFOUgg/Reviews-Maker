@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { LiquidCard, LiquidChip, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Utensils } from 'lucide-react'
 
 export default function Gouts({ formData, handleChange }) {
     const [tastes, setTastes] = useState([])
@@ -35,107 +36,112 @@ export default function Gouts({ formData, handleChange }) {
     }
 
     return (
-        <LiquidCard title="😋 Goûts" bordered>
-            <div className="space-y-6">
-                {/* Intensité */}
+        <LiquidCard glow="amber" padding="lg">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                    <Utensils className="w-5 h-5 text-white" />
+                </div>
                 <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Intensité
-                        </label>
-                        <span className="text-sm font-bold dark:">
-                            {formData.intensiteGout || 0}/10
-                        </span>
-                    </div>
+                    <h3 className="text-xl font-bold text-white">😋 Goûts</h3>
+                    <p className="text-sm text-white/50">Profil gustatif et saveurs</p>
+                </div>
+            </div>
+
+            <LiquidDivider />
+
+            <div className="space-y-6 mt-6">
+                {/* Intensité */}
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <LiquidRating
+                        label="Intensité"
+                        value={formData.intensiteGout || 0}
+                        max={10}
+                        color="amber"
+                    />
                     <input
                         type="range"
                         min="0"
                         max="10"
                         value={formData.intensiteGout || 0}
                         onChange={(e) => handleChange('intensiteGout', parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                        className="w-full mt-2 accent-amber-500"
                     />
                 </div>
 
                 {/* Agressivité/piquant */}
-                <div>
-                    <div className="flex justify-between items-center mb-2">
-                        <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Agressivité/piquant
-                        </label>
-                        <span className="text-sm font-bold dark:">
-                            {formData.agressivite || 0}/10
-                        </span>
-                    </div>
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <LiquidRating
+                        label="Agressivité/piquant"
+                        value={formData.agressivite || 0}
+                        max={10}
+                        color="amber"
+                    />
                     <input
                         type="range"
                         min="0"
                         max="10"
                         value={formData.agressivite || 0}
                         onChange={(e) => handleChange('agressivite', parseInt(e.target.value))}
-                        className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                        className="w-full mt-2 accent-amber-500"
                     />
                 </div>
 
                 {/* Dry puff */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Dry puff / tirage à sec (max 7) : {selectedDryPuff.length}/7
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        💨 Dry puff / tirage à sec ({selectedDryPuff.length}/7)
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {tastes.map(taste => (
-                            <button
+                            <LiquidChip
                                 key={taste}
-                                type="button"
+                                active={selectedDryPuff.includes(taste)}
                                 onClick={() => toggleTaste(taste, 'dryPuff')}
-                                aria-pressed={selectedDryPuff.includes(taste)}
-                                className={`tag-tile ${selectedDryPuff.includes(taste) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
+                                color="amber"
                                 disabled={!selectedDryPuff.includes(taste) && selectedDryPuff.length >= 7}
                             >
                                 {taste}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>
 
                 {/* Inhalation */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Inhalation (max 7) : {selectedInhalation.length}/7
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        🌬️ Inhalation ({selectedInhalation.length}/7)
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {tastes.map(taste => (
-                            <button
+                            <LiquidChip
                                 key={taste}
-                                type="button"
+                                active={selectedInhalation.includes(taste)}
                                 onClick={() => toggleTaste(taste, 'inhalation')}
-                                aria-pressed={selectedInhalation.includes(taste)}
-                                className={`tag-tile ${selectedInhalation.includes(taste) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
+                                color="amber"
                                 disabled={!selectedInhalation.includes(taste) && selectedInhalation.length >= 7}
                             >
                                 {taste}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>
 
                 {/* Expiration/arrière-goût */}
-                <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                        Expiration / arrière-goût (max 7) : {selectedExpiration.length}/7
+                <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                    <label className="block text-sm font-medium text-white mb-3">
+                        💨 Expiration / arrière-goût ({selectedExpiration.length}/7)
                     </label>
                     <div className="flex flex-wrap gap-2">
                         {tastes.map(taste => (
-                            <button
+                            <LiquidChip
                                 key={taste}
-                                type="button"
+                                active={selectedExpiration.includes(taste)}
                                 onClick={() => toggleTaste(taste, 'expiration')}
-                                aria-pressed={selectedExpiration.includes(taste)}
-                                className={`tag-tile ${selectedExpiration.includes(taste) ? 'tag-tile--selected px-5 py-3 font-semibold' : ''}`}
+                                color="amber"
                                 disabled={!selectedExpiration.includes(taste) && selectedExpiration.length >= 7}
                             >
                                 {taste}
-                            </button>
+                            </LiquidChip>
                         ))}
                     </div>
                 </div>

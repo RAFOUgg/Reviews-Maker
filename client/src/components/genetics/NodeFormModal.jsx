@@ -1,11 +1,13 @@
 /**
  * NodeFormModal Component
- * 
  * Modale pour créer/éditer un nœud (cultivar)
+ * Liquid Glass UI Design System
  */
 
 import React, { useState } from 'react';
+import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
+import { Save, X } from 'lucide-react';
 
 const NodeFormModal = ({ isEdit, onClose }) => {
     const store = useGeneticsStore();
@@ -49,128 +51,122 @@ const NodeFormModal = ({ isEdit, onClose }) => {
     };
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h2>{isEdit ? '✏️ Éditer cultivar' : '➕ Ajouter cultivar'}</h2>
-                    <button className="modal-close" onClick={onClose}>✕</button>
+        <LiquidModal
+            isOpen={true}
+            onClose={onClose}
+            title={
+                <div className="flex items-center gap-2">
+                    <span>{isEdit ? '✏️' : '➕'}</span>
+                    <span>{isEdit ? 'Éditer cultivar' : 'Ajouter cultivar'}</span>
+                </div>
+            }
+            size="md"
+            glowColor="green"
+            footer={
+                <div className="flex gap-3">
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                        Annuler
+                    </LiquidButton>
+                    <LiquidButton
+                        variant="primary"
+                        onClick={handleSubmit}
+                        disabled={loading || !formData.cultivarName}
+                        loading={loading}
+                        icon={Save}
+                    >
+                        {isEdit ? 'Mettre à jour' : 'Ajouter'}
+                    </LiquidButton>
+                </div>
+            }
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                    <LiquidCard className="p-3" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                        <p className="text-red-400 text-sm">{error}</p>
+                    </LiquidCard>
+                )}
+
+                {/* Cultivar Name */}
+                <LiquidInput
+                    label="Nom du cultivar *"
+                    value={formData.cultivarName || ''}
+                    onChange={(e) => handleChange('cultivarName', e.target.value)}
+                    placeholder="ex: Gorilla Glue #4"
+                    required
+                    maxLength={200}
+                    helperText={`${(formData.cultivarName || '').length}/200`}
+                />
+
+                {/* Color Picker */}
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-white">Couleur du nœud</label>
+                    <div className="flex items-center gap-3">
+                        <input
+                            type="color"
+                            value={formData.color || '#FF6B9D'}
+                            onChange={(e) => handleColorChange(e.target.value)}
+                            className="w-12 h-12 rounded-xl border border-white/20 cursor-pointer bg-transparent"
+                        />
+                        <div
+                            className="w-8 h-8 rounded-full border-2 border-white/30"
+                            style={{ backgroundColor: formData.color || '#FF6B9D' }}
+                        />
+                    </div>
                 </div>
 
-                <form onSubmit={handleSubmit} className="node-form">
-                    {error && <div className="form-error">{error}</div>}
+                {/* Genetics Section */}
+                <LiquidCard className="p-4 space-y-4">
+                    <h4 className="text-sm font-semibold text-white">Informations génétiques (optionnel)</h4>
 
-                    {/* Cultivar Name */}
-                    <div className="form-group">
-                        <label>Nom du cultivar *</label>
-                        <input
-                            type="text"
-                            value={formData.cultivarName || ''}
-                            onChange={(e) => handleChange('cultivarName', e.target.value)}
-                            placeholder="ex: Gorilla Glue #4"
-                            required
-                            maxLength={200}
-                        />
-                        <small>{(formData.cultivarName || '').length}/200</small>
-                    </div>
+                    <LiquidSelect
+                        label="Type"
+                        value={formData.genetics?.type || ''}
+                        onChange={(e) => handleGeneticsChange('type', e.target.value)}
+                        options={[
+                            { value: '', label: 'Sélectionner...' },
+                            { value: 'Indica', label: 'Indica' },
+                            { value: 'Sativa', label: 'Sativa' },
+                            { value: 'Hybride', label: 'Hybride' },
+                            { value: 'CBD', label: 'CBD' }
+                        ]}
+                    />
 
-                    {/* Color Picker */}
-                    <div className="form-group">
-                        <label>Couleur du nœud</label>
-                        <div className="color-picker">
-                            <input
-                                type="color"
-                                value={formData.color || '#FF6B9D'}
-                                onChange={(e) => handleColorChange(e.target.value)}
-                            />
-                            <span className="color-preview" style={{
-                                backgroundColor: formData.color || '#FF6B9D'
-                            }}></span>
-                        </div>
-                    </div>
+                    <LiquidInput
+                        label="Breeder"
+                        value={formData.genetics?.breeder || ''}
+                        onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
+                        placeholder="ex: Exotic Genetix"
+                    />
 
-                    {/* Genetics Section */}
-                    <fieldset className="genetics-section">
-                        <legend>Informations génétiques (optionnel)</legend>
+                    <LiquidInput
+                        label="Ratio Indica/Sativa"
+                        value={formData.genetics?.ratio || ''}
+                        onChange={(e) => handleGeneticsChange('ratio', e.target.value)}
+                        placeholder="ex: 70/30"
+                    />
 
-                        <div className="form-group">
-                            <label>Type</label>
-                            <select
-                                value={formData.genetics?.type || ''}
-                                onChange={(e) => handleGeneticsChange('type', e.target.value)}
-                            >
-                                <option value="">Sélectionner...</option>
-                                <option value="Indica">Indica</option>
-                                <option value="Sativa">Sativa</option>
-                                <option value="Hybride">Hybride</option>
-                                <option value="CBD">CBD</option>
-                            </select>
-                        </div>
+                    <LiquidTextarea
+                        label="Autres notes génétiques"
+                        value={formData.genetics?.notes || ''}
+                        onChange={(e) => handleGeneticsChange('notes', e.target.value)}
+                        placeholder="Autres informations..."
+                        maxLength={200}
+                        rows={2}
+                    />
+                </LiquidCard>
 
-                        <div className="form-group">
-                            <label>Breeder</label>
-                            <input
-                                type="text"
-                                value={formData.genetics?.breeder || ''}
-                                onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
-                                placeholder="ex: Exotic Genetix"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Ratio Indica/Sativa</label>
-                            <input
-                                type="text"
-                                value={formData.genetics?.ratio || ''}
-                                onChange={(e) => handleGeneticsChange('ratio', e.target.value)}
-                                placeholder="ex: 70/30"
-                            />
-                        </div>
-
-                        <div className="form-group">
-                            <label>Autres notes génétiques</label>
-                            <textarea
-                                value={formData.genetics?.notes || ''}
-                                onChange={(e) => handleGeneticsChange('notes', e.target.value)}
-                                placeholder="Autres informations..."
-                                maxLength={200}
-                            />
-                        </div>
-                    </fieldset>
-
-                    {/* Notes */}
-                    <div className="form-group">
-                        <label>Notes personnelles</label>
-                        <textarea
-                            value={formData.notes || ''}
-                            onChange={(e) => handleChange('notes', e.target.value)}
-                            placeholder="Observations, caractéristiques, etc..."
-                            maxLength={500}
-                            rows={3}
-                        />
-                        <small>{(formData.notes || '').length}/500</small>
-                    </div>
-
-                    {/* Form Actions */}
-                    <div className="form-actions">
-                        <button
-                            type="button"
-                            className="btn-secondary"
-                            onClick={onClose}
-                            disabled={loading}
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn-primary"
-                            disabled={loading || !formData.cultivarName}
-                        >
-                            {loading ? '⏳ Enregistrement...' : isEdit ? '💾 Mettre à jour' : '➕ Ajouter'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                {/* Notes */}
+                <LiquidTextarea
+                    label="Notes personnelles"
+                    value={formData.notes || ''}
+                    onChange={(e) => handleChange('notes', e.target.value)}
+                    placeholder="Observations, caractéristiques, etc..."
+                    maxLength={500}
+                    rows={3}
+                    helperText={`${(formData.notes || '').length}/500`}
+                />
+            </form>
+        </LiquidModal>
     );
 };
 

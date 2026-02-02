@@ -1,11 +1,13 @@
 /**
  * EdgeFormModal Component
- * 
  * Modale pour créer/éditer une arête (relation parent-enfant)
+ * Liquid Glass UI Design System
  */
 
 import React, { useState } from 'react';
+import { LiquidModal, LiquidButton, LiquidSelect, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
+import { Save, X, ArrowDown } from 'lucide-react';
 
 const EdgeFormModal = ({ onClose }) => {
     const store = useGeneticsStore();
@@ -59,144 +61,121 @@ const EdgeFormModal = ({ onClose }) => {
     const childNode = store.nodes.find(n => n.id === formData.childNodeId);
 
     return (
-        <div className="modal-overlay" onClick={onClose}>
-            <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <div className="modal-header">
-                    <h2>➕ Créer une relation</h2>
-                    <button className="modal-close" onClick={onClose}>✕</button>
+        <LiquidModal
+            isOpen={true}
+            onClose={onClose}
+            title={
+                <div className="flex items-center gap-2">
+                    <span>➕</span>
+                    <span>Créer une relation</span>
                 </div>
+            }
+            size="md"
+            glowColor="blue"
+            footer={
+                <div className="flex gap-3">
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                        Annuler
+                    </LiquidButton>
+                    <LiquidButton
+                        variant="primary"
+                        onClick={handleSubmit}
+                        disabled={loading || !formData.parentNodeId || !formData.childNodeId}
+                        loading={loading}
+                        icon={Save}
+                    >
+                        Créer la relation
+                    </LiquidButton>
+                </div>
+            }
+        >
+            <form onSubmit={handleSubmit} className="space-y-4">
+                {error && (
+                    <LiquidCard className="p-3" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
+                        <p className="text-red-400 text-sm">{error}</p>
+                    </LiquidCard>
+                )}
 
-                <form onSubmit={handleSubmit} className="edge-form">
-                    {error && <div className="form-error">{error}</div>}
-
-                    {/* Parent Selection */}
-                    <div className="form-group">
-                        <label>Cultivar parent *</label>
-                        <select
-                            value={formData.parentNodeId || ''}
-                            onChange={(e) => handleChange('parentNodeId', e.target.value)}
-                            required
-                        >
-                            <option value="">Sélectionner un parent...</option>
-                            {store.nodes.map(node => (
-                                <option key={node.id} value={node.id}>
-                                    {node.cultivarName}
-                                </option>
-                            ))}
-                        </select>
-                        {parentNode && (
-                            <div className="node-preview">
-                                <div
-                                    className="node-color"
-                                    style={{ backgroundColor: parentNode.color }}
-                                ></div>
-                                <span>{parentNode.cultivarName}</span>
-                            </div>
-                        )}
+                {/* Parent Selection */}
+                <LiquidSelect
+                    label="Cultivar parent *"
+                    value={formData.parentNodeId || ''}
+                    onChange={(e) => handleChange('parentNodeId', e.target.value)}
+                    options={[
+                        { value: '', label: 'Sélectionner un parent...' },
+                        ...store.nodes.map(node => ({
+                            value: node.id,
+                            label: node.cultivarName
+                        }))
+                    ]}
+                />
+                {parentNode && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: parentNode.color }} />
+                        <span className="text-sm text-white">{parentNode.cultivarName}</span>
                     </div>
+                )}
 
-                    {/* Relationship Type */}
-                    <div className="form-group">
-                        <label>Type de relation *</label>
-                        <select
-                            value={formData.relationshipType || 'parent'}
-                            onChange={(e) => handleChange('relationshipType', e.target.value)}
-                        >
-                            {relationshipTypes.map(type => (
-                                <option key={type.value} value={type.value}>
-                                    {type.label}
-                                </option>
-                            ))}
-                        </select>
+                {/* Relationship Type */}
+                <LiquidSelect
+                    label="Type de relation *"
+                    value={formData.relationshipType || 'parent'}
+                    onChange={(e) => handleChange('relationshipType', e.target.value)}
+                    options={relationshipTypes}
+                />
+
+                {/* Child Selection */}
+                <LiquidSelect
+                    label="Cultivar enfant *"
+                    value={formData.childNodeId || ''}
+                    onChange={(e) => handleChange('childNodeId', e.target.value)}
+                    options={[
+                        { value: '', label: 'Sélectionner un enfant...' },
+                        ...store.nodes
+                            .filter(n => n.id !== formData.parentNodeId)
+                            .map(node => ({
+                                value: node.id,
+                                label: node.cultivarName
+                            }))
+                    ]}
+                />
+                {childNode && (
+                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
+                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: childNode.color }} />
+                        <span className="text-sm text-white">{childNode.cultivarName}</span>
                     </div>
+                )}
 
-                    {/* Child Selection */}
-                    <div className="form-group">
-                        <label>Cultivar enfant *</label>
-                        <select
-                            value={formData.childNodeId || ''}
-                            onChange={(e) => handleChange('childNodeId', e.target.value)}
-                            required
-                        >
-                            <option value="">Sélectionner un enfant...</option>
-                            {store.nodes.map(node => (
-                                <option
-                                    key={node.id}
-                                    value={node.id}
-                                    disabled={node.id === formData.parentNodeId}
-                                >
-                                    {node.cultivarName}
-                                </option>
-                            ))}
-                        </select>
-                        {childNode && (
-                            <div className="node-preview">
-                                <div
-                                    className="node-color"
-                                    style={{ backgroundColor: childNode.color }}
-                                ></div>
-                                <span>{childNode.cultivarName}</span>
+                {/* Relationship Preview */}
+                {parentNode && childNode && (
+                    <LiquidCard className="p-4">
+                        <p className="text-xs text-white/40 mb-2">Aperçu de la relation</p>
+                        <div className="flex flex-col items-center gap-2">
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: parentNode.color }} />
+                                <span className="text-sm text-white">{parentNode.cultivarName}</span>
                             </div>
-                        )}
-                    </div>
-
-                    {/* Relationship Preview */}
-                    {parentNode && childNode && (
-                        <div className="relationship-preview">
-                            <div className="preview-item">
-                                <div className="item-color" style={{ backgroundColor: parentNode.color }}></div>
-                                <span>{parentNode.cultivarName}</span>
-                            </div>
-                            <div className="arrow">
-                                {relationshipTypes.find(t => t.value === formData.relationshipType)?.label || '→'}
-                            </div>
-                            <div className="preview-item">
-                                <div className="item-color" style={{ backgroundColor: childNode.color }}></div>
-                                <span>{childNode.cultivarName}</span>
+                            <ArrowDown className="w-4 h-4 text-blue-400" />
+                            <div className="flex items-center gap-2">
+                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: childNode.color }} />
+                                <span className="text-sm text-white">{childNode.cultivarName}</span>
                             </div>
                         </div>
-                    )}
+                    </LiquidCard>
+                )}
 
-                    {/* Notes */}
-                    <div className="form-group">
-                        <label>Notes supplémentaires</label>
-                        <textarea
-                            value={formData.notes || ''}
-                            onChange={(e) => handleChange('notes', e.target.value)}
-                            placeholder="ex: F1, sélection spécifique, etc..."
-                            maxLength={500}
-                            rows={2}
-                        />
-                        <small>{(formData.notes || '').length}/500</small>
-                    </div>
-
-                    {/* Form Actions */}
-                    <div className="form-actions">
-                        <button
-                            type="button"
-                            className="btn-secondary"
-                            onClick={onClose}
-                            disabled={loading}
-                        >
-                            Annuler
-                        </button>
-                        <button
-                            type="submit"
-                            className="btn-primary"
-                            disabled={loading || !formData.parentNodeId || !formData.childNodeId}
-                        >
-                            {loading ? '⏳ Création...' : '➕ Créer la relation'}
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
+                {/* Notes */}
+                <LiquidTextarea
+                    label="Notes sur cette relation (optionnel)"
+                    value={formData.notes || ''}
+                    onChange={(e) => handleChange('notes', e.target.value)}
+                    placeholder="ex: Croisement effectué en mai 2024..."
+                    maxLength={500}
+                    rows={2}
+                />
+            </form>
+        </LiquidModal>
     );
 };
 
 export default EdgeFormModal;
-
-
-
-
-

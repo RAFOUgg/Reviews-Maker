@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Calendar, MapPin, AlertTriangle } from 'lucide-react'
+import { Calendar, MapPin, AlertTriangle, Shield } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 import { usersService } from '../../services/apiService'
+import { LiquidCard, LiquidButton, LiquidSelect } from '@/components/ui/LiquidUI'
 
 /**
  * Page de vérification d'âge légal - Conforme CDC
@@ -61,6 +62,18 @@ export default function AgeVerificationPage() {
         return LEGAL_AGE_CONFIG[country]?.minAge || 18
     }
 
+    // Convert country config to select options
+    const countryOptions = Object.entries(LEGAL_AGE_CONFIG).map(([code, config]) => ({
+        value: code,
+        label: `${config.name} (âge min: ${config.minAge} ans)`
+    }))
+
+    // Convert regions to select options
+    const regionOptions = LEGAL_AGE_CONFIG[country]?.regions?.map(r => ({
+        value: r,
+        label: r
+    })) || []
+
     /**
      * Vérifie si l'utilisateur a l'âge légal
      */
@@ -105,81 +118,59 @@ export default function AgeVerificationPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br via-white dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center p-4">
+        <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] flex items-center justify-center p-4">
             <div className="max-w-md w-full">
-                {/* Card principale */}
-                <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-xl rounded-3xl shadow-2xl p-8">
-                    {/* Icône et titre */}
-                    <div className="text-center mb-8">
-                        <div className="w-20 h-20 bg-gradient-to-br rounded-full flex items-center justify-center mx-auto mb-4">
-                            <Calendar className="w-10 h-10 text-white" />
-                        </div>
-                        <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-                            Vérification d'âge
-                        </h1>
-                        <p className="text-gray-600 dark:text-gray-400">
-                            Vous devez avoir l'âge légal pour accéder à Reviews-Maker
-                        </p>
+                {/* Header */}
+                <div className="text-center mb-8">
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 backdrop-blur-xl mb-4">
+                        <Shield className="w-10 h-10 text-purple-400" />
                     </div>
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
+                        Vérification d'âge
+                    </h1>
+                    <p className="text-white/50">
+                        Vous devez avoir l'âge légal pour accéder à Reviews-Maker
+                    </p>
+                </div>
 
+                <LiquidCard glow="purple" padding="lg">
                     {/* Avertissement */}
-                    <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-xl p-4 mb-6">
-                        <div className="flex gap-3">
-                            <AlertTriangle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
-                            <p className="text-sm text-amber-800 dark:text-amber-200">
-                                L'accès à cette plateforme est strictement réservé aux personnes majeures selon la législation de votre pays
-                            </p>
-                        </div>
+                    <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 mb-6">
+                        <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0 mt-0.5" />
+                        <p className="text-sm text-amber-200">
+                            L'accès à cette plateforme est strictement réservé aux personnes majeures selon la législation de votre pays
+                        </p>
                     </div>
 
                     {/* Formulaire */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* Pays */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                <MapPin className="w-4 h-4 inline mr-2" />
-                                Pays de résidence
-                            </label>
-                            <select
-                                value={country}
-                                onChange={(e) => {
-                                    setCountry(e.target.value)
-                                    setRegion('') // Reset région
-                                }}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500 transition"
-                                required
-                            >
-                                {Object.entries(LEGAL_AGE_CONFIG).map(([code, config]) => (
-                                    <option key={code} value={code}>
-                                        {config.name} (âge min: {config.minAge} ans)
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        <LiquidSelect
+                            label="Pays de résidence"
+                            options={countryOptions}
+                            value={country}
+                            onChange={(val) => {
+                                setCountry(val)
+                                setRegion('') // Reset région
+                            }}
+                            placeholder="Sélectionnez un pays"
+                        />
 
                         {/* Région (si applicable) */}
                         {LEGAL_AGE_CONFIG[country]?.regions && (
-                            <div>
-                                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                    État/Province
-                                </label>
-                                <select
-                                    value={region}
-                                    onChange={(e) => setRegion(e.target.value)}
-                                    className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500 transition"
-                                >
-                                    <option value="">Sélectionnez...</option>
-                                    {LEGAL_AGE_CONFIG[country].regions.map(r => (
-                                        <option key={r} value={r}>{r}</option>
-                                    ))}
-                                </select>
-                            </div>
+                            <LiquidSelect
+                                label="État/Province"
+                                options={regionOptions}
+                                value={region}
+                                onChange={setRegion}
+                                placeholder="Sélectionnez..."
+                            />
                         )}
 
                         {/* Date de naissance */}
-                        <div>
-                            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2">
-                                <Calendar className="w-4 h-4 inline mr-2" />
+                        <div className="flex flex-col gap-2">
+                            <label className="text-[13px] font-medium text-white/60 ml-1 flex items-center gap-2">
+                                <Calendar size={14} />
                                 Date de naissance
                             </label>
                             <input
@@ -187,31 +178,34 @@ export default function AgeVerificationPage() {
                                 value={birthdate}
                                 onChange={(e) => setBirthdate(e.target.value)}
                                 max={new Date().toISOString().split('T')[0]}
-                                className="w-full px-4 py-3 rounded-xl border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-violet-500 transition"
+                                className="liquid-input w-full"
                                 required
                             />
                         </div>
 
                         {/* Affichage âge minimum */}
-                        <div className="text-center text-sm text-gray-600 dark:text-gray-400">
-                            Âge minimum requis: <strong className="dark:">{getMinAge()} ans</strong>
+                        <div className="text-center py-3 px-4 rounded-xl bg-white/5 border border-white/10">
+                            <span className="text-sm text-white/50">Âge minimum requis : </span>
+                            <span className="text-lg font-bold text-purple-400">{getMinAge()} ans</span>
                         </div>
 
                         {/* Bouton validation */}
-                        <button
+                        <LiquidButton
                             type="submit"
-                            disabled={loading}
-                            className="w-full py-4 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            variant="primary"
+                            size="lg"
+                            loading={loading}
+                            className="w-full"
                         >
                             {loading ? 'Vérification...' : 'Vérifier mon âge'}
-                        </button>
+                        </LiquidButton>
                     </form>
 
                     {/* Note légale */}
-                    <p className="mt-6 text-xs text-center text-gray-500 dark:text-gray-400">
+                    <p className="mt-6 text-xs text-center text-white/40">
                         En continuant, vous confirmez avoir l'âge légal requis dans votre juridiction
                     </p>
-                </div>
+                </LiquidCard>
             </div>
         </div>
     )

@@ -1,6 +1,7 @@
 /**
  * Composant LoadingSpinner réutilisable
  * Affiche un spinner de chargement avec message optionnel
+ * Style Liquid Glass UI
  */
 
 export default function LoadingSpinner({ size = 'md', message, className = '' }) {
@@ -16,12 +17,15 @@ export default function LoadingSpinner({ size = 'md', message, className = '' })
     return (
         <div className={`flex flex-col items-center justify-center gap-3 ${className}`}>
             <div
-                className={`${spinnerSize} border-primary-500/30 border-t-primary-500 rounded-full animate-spin`}
+                className={`${spinnerSize} border-white/20 border-t-violet-500 rounded-full animate-spin`}
+                style={{
+                    boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)'
+                }}
                 role="status"
                 aria-label="Chargement"
             />
             {message && (
-                <p className="text-sm text-dark-muted animate-pulse">
+                <p className="text-sm text-white/60 animate-pulse">
                     {message}
                 </p>
             )}

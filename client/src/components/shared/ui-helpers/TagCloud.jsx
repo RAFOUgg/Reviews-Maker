@@ -1,49 +1,47 @@
 /**
  * TagCloud - Nuage de tags stylisé
  * Affichage professionnel des tags avec plusieurs variantes
+ * Liquid Glass UI Design System
  */
 
 import { motion } from 'framer-motion';
 
-// Couleurs pour les tags (cycle)
+// Couleurs Liquid Glass pour les tags
 const TAG_COLORS = [
-    { bg: ' dark:', text: ' dark:', border: ' dark:' },
-    { bg: ' dark:', text: ' dark:', border: ' dark:' },
-    { bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-700 dark:text-green-300', border: 'border-green-200 dark:border-green-800' },
-    { bg: ' dark:', text: ' dark:', border: 'border-pink-200 dark:border-pink-800' },
-    { bg: 'bg-yellow-100 dark:bg-yellow-900/30', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-800' },
-    { bg: ' dark:', text: ' dark:', border: 'border-cyan-200 dark:border-cyan-800' },
-    { bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
-    { bg: ' dark:', text: ' dark:', border: 'border-rose-200 dark:border-rose-800' },
+    { bg: 'bg-violet-500/20', text: 'text-violet-300', border: 'border-violet-500/30' },
+    { bg: 'bg-blue-500/20', text: 'text-blue-300', border: 'border-blue-500/30' },
+    { bg: 'bg-green-500/20', text: 'text-green-300', border: 'border-green-500/30' },
+    { bg: 'bg-rose-500/20', text: 'text-rose-300', border: 'border-rose-500/30' },
+    { bg: 'bg-amber-500/20', text: 'text-amber-300', border: 'border-amber-500/30' },
+    { bg: 'bg-cyan-500/20', text: 'text-cyan-300', border: 'border-cyan-500/30' },
+    { bg: 'bg-orange-500/20', text: 'text-orange-300', border: 'border-orange-500/30' },
+    { bg: 'bg-pink-500/20', text: 'text-pink-300', border: 'border-pink-500/30' },
 ];
 
-// Gradients pour variante gradient
+// Gradients Liquid Glass
 const GRADIENT_COLORS = [
-    ' ',
-    ' ',
-    'from-green-500 to-emerald-500',
-    'from-orange-500 to-yellow-500',
-    ' to-rose-500',
-    ' ',
-    'from-teal-500 to-green-500',
-    'from-amber-500 to-orange-500',
+    'from-violet-500/40 to-purple-500/40',
+    'from-blue-500/40 to-cyan-500/40',
+    'from-green-500/40 to-emerald-500/40',
+    'from-orange-500/40 to-amber-500/40',
+    'from-rose-500/40 to-pink-500/40',
+    'from-indigo-500/40 to-blue-500/40',
+    'from-teal-500/40 to-green-500/40',
+    'from-amber-500/40 to-orange-500/40',
 ];
 
 // Parser les tags
 function parseTags(data) {
     if (!data) return [];
 
-    // String
     if (typeof data === 'string') {
         try {
             data = JSON.parse(data);
         } catch {
-            // Liste séparée par virgules
             return data.split(',').map(t => t.trim()).filter(Boolean);
         }
     }
 
-    // Array
     if (Array.isArray(data)) {
         return data.map(item => {
             if (typeof item === 'string') return item;
@@ -57,12 +55,12 @@ function parseTags(data) {
 export default function TagCloud({
     tags,
     variant = 'pills', // 'pills' | 'gradient' | 'outline' | 'minimal' | 'hashtags'
-    size = 'md', // 'sm' | 'md' | 'lg'
+    size = 'md',
     maxTags = 20,
     animated = true,
     wrap = true,
     colorful = true,
-    icon = null // emoji à mettre devant chaque tag
+    icon = null
 }) {
     const parsedTags = parseTags(tags).slice(0, maxTags);
 
@@ -77,9 +75,7 @@ export default function TagCloud({
     };
     const s = sizes[size] || sizes.md;
 
-    // ═══════════════════════════════════════════════════════════════
-    // VARIANT: PILLS - Pilules colorées
-    // ═══════════════════════════════════════════════════════════════
+    // VARIANT: PILLS - Pilules colorées Liquid Glass
     if (variant === 'pills') {
         return (
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
@@ -92,7 +88,7 @@ export default function TagCloud({
                             initial={animated ? { opacity: 0, scale: 0.8 } : false}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.03 }}
-                            className={`inline-flex items-center rounded-full font-medium ${s} ${color.bg} ${color.text}`}
+                            className={`inline-flex items-center rounded-full font-medium backdrop-blur-sm border ${s} ${color.bg} ${color.text} ${color.border}`}
                         >
                             {icon && <span className="mr-1">{icon}</span>}
                             {tag}
@@ -103,9 +99,7 @@ export default function TagCloud({
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // VARIANT: GRADIENT - Dégradés colorés
-    // ═══════════════════════════════════════════════════════════════
+    // VARIANT: GRADIENT - Gradient Liquid Glass
     if (variant === 'gradient') {
         return (
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
@@ -117,8 +111,8 @@ export default function TagCloud({
                             key={index}
                             initial={animated ? { opacity: 0, y: 10 } : false}
                             animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: index * 0.05 }}
-                            className={`inline-flex items-center rounded-full font-medium text-white shadow-sm bg-gradient-to-r ${gradient} ${s}`}
+                            transition={{ delay: index * 0.03 }}
+                            className={`inline-flex items-center rounded-full font-semibold text-white bg-gradient-to-r ${gradient} backdrop-blur-sm border border-white/20 ${s}`}
                         >
                             {icon && <span className="mr-1">{icon}</span>}
                             {tag}
@@ -129,9 +123,7 @@ export default function TagCloud({
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // VARIANT: OUTLINE - Bordures uniquement
-    // ═══════════════════════════════════════════════════════════════
+    // VARIANT: OUTLINE - Bordure Liquid Glass
     if (variant === 'outline') {
         return (
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
@@ -144,7 +136,7 @@ export default function TagCloud({
                             initial={animated ? { opacity: 0, scale: 0.9 } : false}
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: index * 0.03 }}
-                            className={`inline-flex items-center rounded-full font-medium border-2 ${s} ${color.text} ${color.border} bg-transparent`}
+                            className={`inline-flex items-center rounded-full font-medium bg-transparent border-2 ${s} ${color.text} ${color.border}`}
                         >
                             {icon && <span className="mr-1">{icon}</span>}
                             {tag}
@@ -155,9 +147,7 @@ export default function TagCloud({
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // VARIANT: MINIMAL - Version très simple
-    // ═══════════════════════════════════════════════════════════════
+    // VARIANT: MINIMAL - Style minimaliste
     if (variant === 'minimal') {
         return (
             <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
@@ -167,7 +157,7 @@ export default function TagCloud({
                         initial={animated ? { opacity: 0 } : false}
                         animate={{ opacity: 1 }}
                         transition={{ delay: index * 0.02 }}
-                        className={`inline-flex items-center rounded font-medium ${s} bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300`}
+                        className={`inline-flex items-center text-white/60 hover:text-white transition-colors ${sizes[size]}`}
                     >
                         {icon && <span className="mr-1">{icon}</span>}
                         {tag}
@@ -177,12 +167,10 @@ export default function TagCloud({
         );
     }
 
-    // ═══════════════════════════════════════════════════════════════
-    // VARIANT: HASHTAGS - Style hashtag social media
-    // ═══════════════════════════════════════════════════════════════
+    // VARIANT: HASHTAGS - Style hashtag
     if (variant === 'hashtags') {
         return (
-            <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-x-3 gap-y-1`}>
+            <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
                 {parsedTags.map((tag, index) => {
                     const color = colorful ? TAG_COLORS[index % TAG_COLORS.length] : TAG_COLORS[0];
 
@@ -191,11 +179,11 @@ export default function TagCloud({
                             key={index}
                             initial={animated ? { opacity: 0, x: -5 } : false}
                             animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: index * 0.04 }}
-                            className={`inline-flex items-center font-semibold ${color.text} ${sizes[size]?.split(' ')[0] || 'text-sm'}`}
+                            transition={{ delay: index * 0.03 }}
+                            className={`inline-flex items-center font-medium ${sizes[size]} ${color.text}`}
                         >
-                            <span className="opacity-70">#</span>
-                            {tag.replace(/\s+/g, '')}
+                            <span className="opacity-60">#</span>
+                            {tag.toLowerCase().replace(/\s+/g, '')}
                         </motion.span>
                     );
                 })}
@@ -203,10 +191,20 @@ export default function TagCloud({
         );
     }
 
-    return null;
+    // Default fallback to pills
+    return (
+        <div className={`flex ${wrap ? 'flex-wrap' : 'overflow-x-auto'} gap-2`}>
+            {parsedTags.map((tag, index) => (
+                <span
+                    key={index}
+                    className={`inline-flex items-center rounded-full font-medium bg-white/10 text-white/80 border border-white/20 ${s}`}
+                >
+                    {icon && <span className="mr-1">{icon}</span>}
+                    {tag}
+                </span>
+            ))}
+        </div>
+    );
 }
-
-// Export des couleurs pour réutilisation
-export { TAG_COLORS, GRADIENT_COLORS };
 
 

@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
-import LiquidModal from '../../ui/LiquidModal';
-import LiquidButton from '../../ui/LiquidButton';
-import LiquidInput from '../../ui/LiquidInput';
+import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea } from '@/components/ui/LiquidUI';
 import { Save, X } from 'lucide-react';
 
 /**
  * REVIEWS-MAKER MVP - Pipeline Step Modal
  * Modal pour saisir/modifier données d'une étape de pipeline
+ * Liquid Glass UI Design System
  */
 
 const PipelineStepModal = ({
@@ -84,37 +83,32 @@ const PipelineStepModal = ({
       onClose={onClose}
       title={`${stepData ? 'Modifier' : 'Ajouter'} - ${stepName}`}
       size="lg"
+      glowColor="green"
       footer={
-        <>
+        <div className="flex gap-3">
           <LiquidButton variant="ghost" onClick={onClose} icon={X}>
             Annuler
           </LiquidButton>
           <LiquidButton variant="primary" onClick={handleSave} icon={Save}>
             Enregistrer
           </LiquidButton>
-        </>
+        </div>
       }
     >
-      <div className="space-y-4 max-h-[60vh] overflow-y-auto">
+      <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
         {/* Formulaire dynamique */}
         {fields.map((field) => (
           <div key={field.key}>
             {field.type === 'select' ? (
-              <div>
-                <label className="block text-sm font-medium mb-2">{field.label}</label>
-                <select
-                  value={formData[field.key] || ''}
-                  onChange={(e) => handleChange(field.key, e.target.value)}
-                  className="liquid-glass w-full px-4 py-3 rounded-xl border border-[var(--border-primary)] focus:border-[var(--accent-primary)] outline-none transition-smooth"
-                >
-                  <option value="">-- Sélectionner --</option>
-                  {field.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <LiquidSelect
+                label={field.label}
+                value={formData[field.key] || ''}
+                onChange={(e) => handleChange(field.key, e.target.value)}
+                options={[
+                  { value: '', label: '-- Sélectionner --' },
+                  ...field.options.map(opt => ({ value: opt, label: opt }))
+                ]}
+              />
             ) : (
               <LiquidInput
                 label={field.label}
@@ -128,20 +122,15 @@ const PipelineStepModal = ({
         ))}
 
         {/* Notes */}
-        <div>
-          <label className="block text-sm font-medium mb-2">Notes (optionnel, max 500 car.)</label>
-          <textarea
-            value={notes}
-            onChange={(e) => setNotes(e.target.value.slice(0, 500))}
-            placeholder="Ajouter des notes sur cette étape..."
-            maxLength={500}
-            rows={4}
-            className="liquid-glass w-full px-4 py-3 rounded-xl border border-[var(--border-primary)] focus:border-[var(--accent-primary)] outline-none transition-smooth resize-none"
-          />
-          <p className="text-xs text-[var(--text-tertiary)] mt-1">
-            {notes.length}/500 caractères
-          </p>
-        </div>
+        <LiquidTextarea
+          label="Notes (optionnel, max 500 car.)"
+          value={notes}
+          onChange={(e) => setNotes(e.target.value.slice(0, 500))}
+          placeholder="Ajouter des notes sur cette étape..."
+          maxLength={500}
+          rows={4}
+          helperText={`${notes.length}/500 caractères`}
+        />
       </div>
     </LiquidModal>
   );

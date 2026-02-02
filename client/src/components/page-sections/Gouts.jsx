@@ -1,7 +1,8 @@
 import React, { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { GOUTS_NOTES } from '../../data/flowerData'
-import { Search, X } from 'lucide-react'
+import { Search, X, Utensils } from 'lucide-react'
+import { LiquidCard, LiquidDivider, LiquidChip, LiquidRating } from '@/components/ui/LiquidUI'
 
 /**
  * Section 8: Goûts
@@ -51,9 +52,9 @@ export default function Gouts({ data, onChange, errors = {} }) {
         const filteredTastes = filterTastes(searchTerm)
 
         return (
-            <div className="space-y-3">
+            <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-3">
                 <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <label className="text-sm font-medium text-white">
                         {label} ({selected.length}/{max})
                     </label>
                 </div>
@@ -64,15 +65,14 @@ export default function Gouts({ data, onChange, errors = {} }) {
                         {selected.map(tasteId => {
                             const taste = getTasteById(tasteId)
                             return (
-                                <button
+                                <LiquidChip
                                     key={tasteId}
-                                    type="button"
-                                    onClick={() => toggleTaste(field, tasteId)}
-                                    className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200 rounded-full text-sm hover:bg-orange-200 dark:hover:bg-orange-800 transition-colors"
+                                    active
+                                    color="amber"
+                                    onRemove={() => toggleTaste(field, tasteId)}
                                 >
                                     {taste?.label}
-                                    <X className="w-3 h-3" />
-                                </button>
+                                </LiquidChip>
                             )
                         })}
                     </div>
@@ -80,43 +80,40 @@ export default function Gouts({ data, onChange, errors = {} }) {
 
                 {/* Search */}
                 <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                     <input
                         type="text"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         placeholder={t('flower.searchTastes')}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:text-white"
+                        className="w-full pl-10 pr-4 py-2 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
                     />
                 </div>
 
                 {/* Tastes grid */}
-                <div className="max-h-48 overflow-y-auto border border-gray-300 dark:border-gray-700 rounded-lg p-3 bg-gray-50 dark:bg-gray-800">
+                <div className="max-h-48 overflow-y-auto border border-white/10 rounded-xl p-3 bg-white/5">
                     {Object.entries(groupedTastes).map(([category, tastes]) => {
                         const visibleTastes = tastes.filter(t => filteredTastes.includes(t))
                         if (visibleTastes.length === 0) return null
 
                         return (
                             <div key={category} className="mb-4 last:mb-0">
-                                <h4 className="text-xs font-semibold text-gray-600 dark:text-gray-400 uppercase mb-2">
+                                <h4 className="text-xs font-semibold text-white/50 uppercase mb-2">
                                     {category}
                                 </h4>
                                 <div className="flex flex-wrap gap-2">
                                     {visibleTastes.map(taste => {
                                         const isSelected = selected.includes(taste.id)
                                         return (
-                                            <button
+                                            <LiquidChip
                                                 key={taste.id}
-                                                type="button"
+                                                active={isSelected}
+                                                color="amber"
                                                 onClick={() => toggleTaste(field, taste.id)}
                                                 disabled={!isSelected && selected.length >= max}
-                                                className={`px-3 py-1 text-sm rounded-lg transition-colors ${isSelected
-                                                    ? 'bg-orange-500 text-white'
-                                                    : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-600'
-                                                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                                             >
                                                 {taste.label}
-                                            </button>
+                                            </LiquidChip>
                                         )
                                     })}
                                 </div>
@@ -130,85 +127,103 @@ export default function Gouts({ data, onChange, errors = {} }) {
 
     return (
         <div className="space-y-6">
-            {/* Intensity slider */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t('flower.gouts.intensite')}
-                    </label>
-                    <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                        {data.goutsIntensiteScore || 0}/10
-                    </span>
+            <LiquidCard glow="amber" padding="lg">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                        <Utensils className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">😋 Goûts</h3>
+                        <p className="text-sm text-white/50">Profil gustatif</p>
+                    </div>
                 </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-xs text-gray-600 dark:text-gray-400 w-6">0</span>
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        step="0.5"
-                        value={data.goutsIntensiteScore || 0}
-                        onChange={(e) => handleInputChange('goutsIntensiteScore', parseFloat(e.target.value))}
-                        className="flex-1 h-3 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                            background: `linear-gradient(to right, #f59e0b 0%, #ef4444 100%)`
-                        }}
+
+                <LiquidDivider />
+
+                <div className="space-y-6 mt-6">
+                    {/* Intensity slider */}
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-white">
+                                {t('flower.gouts.intensite')}
+                            </label>
+                            <span className="text-2xl font-bold text-amber-400">
+                                {data.goutsIntensiteScore || 0}/10
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs text-white/50 w-6">0</span>
+                            <input
+                                type="range"
+                                min="0"
+                                max="10"
+                                step="0.5"
+                                value={data.goutsIntensiteScore || 0}
+                                onChange={(e) => handleInputChange('goutsIntensiteScore', parseFloat(e.target.value))}
+                                className="flex-1 h-3 rounded-lg appearance-none cursor-pointer"
+                                style={{
+                                    background: `linear-gradient(to right, rgba(255,255,255,0.1) 0%, #f59e0b 100%)`
+                                }}
+                            />
+                            <span className="text-xs text-white/50 w-6">10</span>
+                        </div>
+                        <LiquidRating value={data.goutsIntensiteScore || 0} max={10} color="amber" />
+                    </div>
+
+                    {/* Aggressivity slider */}
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                            <label className="text-sm font-medium text-white">
+                                {t('flower.gouts.agressivite')}
+                            </label>
+                            <span className="text-2xl font-bold text-red-400">
+                                {data.goutsAgressiviteScore || 0}/10
+                            </span>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <span className="text-xs text-white/50 w-6">0</span>
+                            <input
+                                type="range"
+                                min="0"
+                                max="10"
+                                step="0.5"
+                                value={data.goutsAgressiviteScore || 0}
+                                onChange={(e) => handleInputChange('goutsAgressiviteScore', parseFloat(e.target.value))}
+                                className="flex-1 h-3 rounded-lg appearance-none cursor-pointer"
+                                style={{
+                                    background: `linear-gradient(to right, rgba(255,255,255,0.1) 0%, #ef4444 100%)`
+                                }}
+                            />
+                            <span className="text-xs text-white/50 w-6">10</span>
+                        </div>
+                        <LiquidRating value={data.goutsAgressiviteScore || 0} max={10} color="red" />
+                    </div>
+
+                    {/* Dry Puff */}
+                    <TasteSection
+                        field="goutsDryPuff"
+                        label={t('flower.gouts.dryPuff')}
+                        searchTerm={searchDryPuff}
+                        setSearchTerm={setSearchDryPuff}
                     />
-                    <span className="text-xs text-gray-600 dark:text-gray-400 w-6">10</span>
-                </div>
-            </div>
 
-            {/* Aggressivity slider */}
-            <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {t('flower.gouts.agressivite')}
-                    </label>
-                    <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                        {data.goutsAgressiviteScore || 0}/10
-                    </span>
-                </div>
-                <div className="flex items-center gap-4">
-                    <span className="text-xs text-gray-600 dark:text-gray-400 w-6">0</span>
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        step="0.5"
-                        value={data.goutsAgressiviteScore || 0}
-                        onChange={(e) => handleInputChange('goutsAgressiviteScore', parseFloat(e.target.value))}
-                        className="flex-1 h-3 rounded-lg appearance-none cursor-pointer"
-                        style={{
-                            background: `linear-gradient(to right, #10b981 0%, #ef4444 100%)`
-                        }}
+                    {/* Inhalation */}
+                    <TasteSection
+                        field="goutsInhalation"
+                        label={t('flower.gouts.inhalation')}
+                        searchTerm={searchInhalation}
+                        setSearchTerm={setSearchInhalation}
                     />
-                    <span className="text-xs text-gray-600 dark:text-gray-400 w-6">10</span>
+
+                    {/* Expiration */}
+                    <TasteSection
+                        field="goutsExpiration"
+                        label={t('flower.gouts.expiration')}
+                        searchTerm={searchExpiration}
+                        setSearchTerm={setSearchExpiration}
+                    />
                 </div>
-            </div>
-
-            {/* Dry Puff */}
-            <TasteSection
-                field="goutsDryPuff"
-                label={t('flower.gouts.dryPuff')}
-                searchTerm={searchDryPuff}
-                setSearchTerm={setSearchDryPuff}
-            />
-
-            {/* Inhalation */}
-            <TasteSection
-                field="goutsInhalation"
-                label={t('flower.gouts.inhalation')}
-                searchTerm={searchInhalation}
-                setSearchTerm={setSearchInhalation}
-            />
-
-            {/* Expiration */}
-            <TasteSection
-                field="goutsExpiration"
-                label={t('flower.gouts.expiration')}
-                searchTerm={searchExpiration}
-                setSearchTerm={setSearchExpiration}
-            />
+            </LiquidCard>
         </div>
     )
 }

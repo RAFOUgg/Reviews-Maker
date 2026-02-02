@@ -1,7 +1,8 @@
 /**
  * Composant ErrorMessage réutilisable
- * Affiche un message d'erreur formaté
+ * Affiche un message d'erreur formaté - Liquid Glass UI style
  */
+import { LiquidButton, LiquidCard } from '@/components/ui/LiquidUI'
 
 export default function ErrorMessage({ error, onRetry, className = '' }) {
     if (!error) return null
@@ -11,8 +12,14 @@ export default function ErrorMessage({ error, onRetry, className = '' }) {
         : error?.message || 'Une erreur est survenue'
 
     return (
-        <div className={`bg-red-500/10 border border-red-500/30 rounded-xl p-4 ${className}`}>
-            <div className="flex items-start gap-3">
+        <LiquidCard
+            className={`border-red-500/30 ${className}`}
+            style={{
+                background: 'rgba(239, 68, 68, 0.1)',
+                boxShadow: '0 0 30px rgba(239, 68, 68, 0.15), inset 0 0 20px rgba(239, 68, 68, 0.05)'
+            }}
+        >
+            <div className="flex items-start gap-3 p-4">
                 <div className="text-2xl">❌</div>
                 <div className="flex-1">
                     <h3 className="text-red-400 font-semibold mb-1">
@@ -22,16 +29,18 @@ export default function ErrorMessage({ error, onRetry, className = '' }) {
                         {errorMessage}
                     </p>
                     {onRetry && (
-                        <button
+                        <LiquidButton
                             onClick={onRetry}
-                            className="mt-3 text-sm text-red-400 hover:text-red-300 underline"
+                            variant="ghost"
+                            size="sm"
+                            className="mt-3 text-red-400 hover:text-red-300"
                         >
                             Réessayer
-                        </button>
+                        </LiquidButton>
                     )}
                 </div>
             </div>
-        </div>
+        </LiquidCard>
     )
 }
 

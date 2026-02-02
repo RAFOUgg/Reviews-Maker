@@ -3,7 +3,7 @@
  * Affiche une modal de confirmation avec actions personnalisables
  */
 import { useEffect } from 'react'
-import Button from './Button'
+import { LiquidModal, LiquidButton } from '@/components/ui/LiquidUI'
 
 export default function ConfirmDialog({
     isOpen,
@@ -27,73 +27,59 @@ export default function ConfirmDialog({
         return () => document.removeEventListener('keydown', handleEscape)
     }, [isOpen, onClose])
 
-    if (!isOpen) return null
-
     const variantStyles = {
         danger: {
             icon: '🗑️',
-            color: 'text-red-400',
-            buttonClass: 'bg-red-600 hover:bg-red-700'
+            glowColor: 'red'
         },
         warning: {
             icon: '⚠️',
-            color: 'text-amber-400',
-            buttonClass: 'bg-amber-600 hover:bg-amber-700'
+            glowColor: 'amber'
         },
         info: {
             icon: 'ℹ️',
-            color: '',
-            buttonClass: ' hover:'
+            glowColor: 'blue'
         }
     }
 
     const style = variantStyles[variant] || variantStyles.info
 
     return (
-        <div
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
-            onClick={onClose}
-        >
-            <div
-                className="bg-dark-surface rounded-2xl p-6 max-w-md w-full border border-dark-border shadow-2xl"
-                onClick={(e) => e.stopPropagation()}
-            >
-                {/* Icône et titre */}
-                <div className="flex items-start gap-4 mb-4">
-                    <div className={`text-4xl ${style.color}`}>
-                        {style.icon}
-                    </div>
-                    <div className="flex-1">
-                        <h3 className="text-xl font-bold text-dark-text mb-2">
-                            {title}
-                        </h3>
-                        <p className="text-dark-muted">
-                            {message}
-                        </p>
-                    </div>
+        <LiquidModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title={
+                <div className="flex items-center gap-3">
+                    <span className="text-2xl">{style.icon}</span>
+                    <span>{title}</span>
                 </div>
-
-                {/* Actions */}
-                <div className="flex gap-3 mt-6">
-                    <Button
+            }
+            size="sm"
+            glowColor={style.glowColor}
+            footer={
+                <div className="flex gap-3 w-full">
+                    <LiquidButton
                         onClick={onClose}
-                        variant="secondary"
+                        variant="ghost"
                         className="flex-1"
                     >
                         {cancelText}
-                    </Button>
-                    <Button
+                    </LiquidButton>
+                    <LiquidButton
                         onClick={() => {
                             onConfirm()
                             onClose()
                         }}
-                        className={`flex-1 ${style.buttonClass}`}
+                        variant={variant === 'danger' ? 'danger' : 'primary'}
+                        className="flex-1"
                     >
                         {confirmText}
-                    </Button>
+                    </LiquidButton>
                 </div>
-            </div>
-        </div>
+            }
+        >
+            <p className="text-white/70">{message}</p>
+        </LiquidModal>
     )
 }
 

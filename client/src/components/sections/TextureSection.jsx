@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
-import WhiteSlider from '../ui/WhiteSlider';
+import { LiquidCard, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI';
 
 /**
  * Niveaux de qualité pour les sliders de texture
@@ -124,114 +124,158 @@ export default function TextureSection({ productType, data: directData, onChange
     }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
 
     return (
-        <div className="space-y-8 p-6 bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50">
+        <LiquidCard glow="purple" padding="lg" className="space-y-8">
 
             {/* En-tête */}
-            <div className="flex items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="p-3 bg-gradient-to-br rounded-xl">
-                    <Hand className="w-6 h-6 text-white" />
+            <div className="flex items-center gap-3 pb-4">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                    <Hand className="w-5 h-5 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-gray-900 dark:text-white">🤚 Texture</h3>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Propriétés tactiles et physiques</p>
+                    <h3 className="text-xl font-bold text-white">🤚 Texture</h3>
+                    <p className="text-sm text-white/50">Propriétés tactiles et physiques</p>
                 </div>
             </div>
 
+            <LiquidDivider />
+
             {/* Champs communs (tous types) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Dureté"
+                        value={hardness}
+                        max={10}
+                        color="purple"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={hardness}
-                        onChange={setHardness}
-                        unit="/10"
-                        helperText={TEXTURE_LABELS.hardness[hardness]}
+                        onChange={(e) => setHardness(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-pink-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.hardness[hardness]}</p>
                 </div>
 
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Densité tactile"
+                        value={density}
+                        max={10}
+                        color="purple"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={density}
-                        onChange={setDensity}
-                        unit="/10"
-                        helperText={TEXTURE_LABELS.density[density]}
+                        onChange={(e) => setDensity(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-pink-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.density[density]}</p>
                 </div>
 
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Collant"
+                        value={stickiness}
+                        max={10}
+                        color="purple"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={stickiness}
-                        onChange={setStickiness}
-                        unit="/10"
-                        helperText={TEXTURE_LABELS.stickiness[stickiness]}
+                        onChange={(e) => setStickiness(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-pink-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.stickiness[stickiness]}</p>
                 </div>
 
                 {/* Élasticité (Fleurs uniquement) */}
-                {productType === 'Fleurs' && (
-                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                        <WhiteSlider
+                {(productType === 'Fleurs' || productType === 'Fleur') && (
+                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                        <LiquidRating
                             label="Élasticité"
+                            value={elasticity}
+                            max={10}
+                            color="purple"
+                        />
+                        <input
+                            type="range"
                             min={1}
                             max={10}
                             value={elasticity}
-                            onChange={setElasticity}
-                            unit="/10"
-                            helperText={TEXTURE_LABELS.elasticity[elasticity]}
+                            onChange={(e) => setElasticity(parseInt(e.target.value))}
+                            className="w-full mt-3 accent-pink-500"
                         />
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.elasticity[elasticity]}</p>
                     </div>
                 )}
 
                 {/* Malléabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
-                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                        <WhiteSlider
+                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                        <LiquidRating
                             label="Malléabilité"
+                            value={malleability}
+                            max={10}
+                            color="purple"
+                        />
+                        <input
+                            type="range"
                             min={1}
                             max={10}
                             value={malleability}
-                            onChange={setMalleability}
-                            unit="/10"
-                            helperText={TEXTURE_LABELS.malleability[malleability]}
+                            onChange={(e) => setMalleability(parseInt(e.target.value))}
+                            className="w-full mt-3 accent-pink-500"
                         />
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.malleability[malleability]}</p>
                     </div>
                 )}
 
                 {/* Friabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
-                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                        <WhiteSlider
+                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                        <LiquidRating
                             label="Friabilité"
+                            value={friability}
+                            max={10}
+                            color="purple"
+                        />
+                        <input
+                            type="range"
                             min={1}
                             max={10}
                             value={friability}
-                            onChange={setFriability}
-                            unit="/10"
-                            helperText={TEXTURE_LABELS.friability[friability]}
+                            onChange={(e) => setFriability(parseInt(e.target.value))}
+                            className="w-full mt-3 accent-pink-500"
                         />
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.friability[friability]}</p>
                     </div>
                 )}
 
                 {/* Viscosité (Concentrés uniquement) */}
                 {productType === 'Concentré' && (
-                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                        <WhiteSlider
+                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                        <LiquidRating
                             label="Viscosité"
+                            value={viscosity}
+                            max={10}
+                            color="purple"
+                        />
+                        <input
+                            type="range"
                             min={1}
                             max={10}
                             value={viscosity}
-                            onChange={setViscosity}
-                            unit="/10"
-                            helperText={TEXTURE_LABELS.viscosity[viscosity]}
+                            onChange={(e) => setViscosity(parseInt(e.target.value))}
+                            className="w-full mt-3 accent-pink-500"
                         />
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.viscosity[viscosity]}</p>
                     </div>
                 )}
             </div>
@@ -239,78 +283,90 @@ export default function TextureSection({ productType, data: directData, onChange
             {/* Melting & Résidus (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
                 <div className="space-y-6">
-                    <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4" />
+                    <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Sparkles className="w-4 h-4 text-pink-400" />
                         Propriétés de fonte
                     </h4>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                            <WhiteSlider
+                        <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                            <LiquidRating
                                 label="Melting (10 = Full Melt)"
+                                value={melting}
+                                max={10}
+                                color="amber"
+                            />
+                            <input
+                                type="range"
                                 min={1}
                                 max={10}
                                 value={melting}
-                                onChange={setMelting}
-                                unit="/10"
-                                helperText={TEXTURE_LABELS.melting[melting]}
+                                onChange={(e) => setMelting(parseInt(e.target.value))}
+                                className="w-full mt-3 accent-amber-500"
                             />
+                            <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.melting[melting]}</p>
                         </div>
 
-                        <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                            <WhiteSlider
+                        <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                            <LiquidRating
                                 label="Résidus (10 = aucun)"
+                                value={residue}
+                                max={10}
+                                color="green"
+                            />
+                            <input
+                                type="range"
                                 min={1}
                                 max={10}
                                 value={residue}
-                                onChange={setResidue}
-                                unit="/10"
-                                helperText={TEXTURE_LABELS.residue[residue]}
+                                onChange={(e) => setResidue(parseInt(e.target.value))}
+                                className="w-full mt-3 accent-emerald-500"
                             />
+                            <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.residue[residue]}</p>
                         </div>
                     </div>
                 </div>
             )}
 
             {/* Résumé */}
-            <div className="p-4 bg-gradient-to-br dark:/20 dark:/20 rounded-xl space-y-2">
-                <h4 className="text-sm font-bold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4" />
+            <div className="p-4 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-xl border border-pink-500/20 space-y-2">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-pink-400" />
                     Résumé texture
                 </h4>
-                <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
-                    <p><span className="font-semibold">Dureté :</span> {TEXTURE_LABELS.hardness[hardness]} ({hardness}/10)</p>
-                    <p><span className="font-semibold">Densité :</span> {TEXTURE_LABELS.density[density]} ({density}/10)</p>
-                    <p><span className="font-semibold">Collant :</span> {TEXTURE_LABELS.stickiness[stickiness]} ({stickiness}/10)</p>
+                <div className="text-sm text-white/60 space-y-1">
+                    <p><span className="font-semibold text-white/80">Dureté :</span> {TEXTURE_LABELS.hardness[hardness]} ({hardness}/10)</p>
+                    <p><span className="font-semibold text-white/80">Densité :</span> {TEXTURE_LABELS.density[density]} ({density}/10)</p>
+                    <p><span className="font-semibold text-white/80">Collant :</span> {TEXTURE_LABELS.stickiness[stickiness]} ({stickiness}/10)</p>
 
-                    {productType === 'Fleurs' && (
-                        <p><span className="font-semibold">Élasticité :</span> {TEXTURE_LABELS.elasticity[elasticity]} ({elasticity}/10)</p>
+                    {(productType === 'Fleurs' || productType === 'Fleur') && (
+                        <p><span className="font-semibold text-white/80">Élasticité :</span> {TEXTURE_LABELS.elasticity[elasticity]} ({elasticity}/10)</p>
                     )}
 
                     {productType === 'Hash' && (
                         <>
-                            <p><span className="font-semibold">Malléabilité :</span> {TEXTURE_LABELS.malleability[malleability]} ({malleability}/10)</p>
-                            <p><span className="font-semibold">Friabilité :</span> {TEXTURE_LABELS.friability[friability]} ({friability}/10)</p>
+                            <p><span className="font-semibold text-white/80">Malléabilité :</span> {TEXTURE_LABELS.malleability[malleability]} ({malleability}/10)</p>
+                            <p><span className="font-semibold text-white/80">Friabilité :</span> {TEXTURE_LABELS.friability[friability]} ({friability}/10)</p>
                         </>
                     )}
 
                     {productType === 'Concentré' && (
-                        <p><span className="font-semibold">Viscosité :</span> {TEXTURE_LABELS.viscosity[viscosity]} ({viscosity}/10)</p>
+                        <p><span className="font-semibold text-white/80">Viscosité :</span> {TEXTURE_LABELS.viscosity[viscosity]} ({viscosity}/10)</p>
                     )}
 
                     {(productType === 'Hash' || productType === 'Concentré') && purityScore && (
                         <>
-                            <p><span className="font-semibold">Melting :</span> {TEXTURE_LABELS.melting[melting]} ({melting}/10)</p>
-                            <p><span className="font-semibold">Résidus :</span> {TEXTURE_LABELS.residue[residue]} ({residue}/10)</p>
-                            <p className="pt-2 border-t border-gray-300 dark:border-gray-600">
-                                <span className="font-semibold dark:">Score de pureté :</span> {purityScore}/10
+                            <p><span className="font-semibold text-white/80">Melting :</span> {TEXTURE_LABELS.melting[melting]} ({melting}/10)</p>
+                            <p><span className="font-semibold text-white/80">Résidus :</span> {TEXTURE_LABELS.residue[residue]} ({residue}/10)</p>
+                            <p className="pt-2 border-t border-white/10">
+                                <span className="font-semibold text-amber-400">Score de pureté :</span> {purityScore}/10
                             </p>
                         </>
                     )}
                 </div>
             </div>
 
-        </div>
+        </LiquidCard>
     );
 }
 

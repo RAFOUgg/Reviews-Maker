@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle } from 'lucide-react'
+import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle, Dna } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { LiquidCard, LiquidChip, LiquidButton, LiquidDivider, LiquidModal } from '@/components/ui/LiquidUI'
 import PhenoCodeGenerator from '../../../../components/forms/helpers/PhenoCodeGenerator'
 import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneticsCanvas'
 import useGeneticsStore from '../../../../store/useGeneticsStore'
@@ -195,7 +195,19 @@ export default function Genetiques({ formData, handleChange }) {
     }
 
     return (
-        <LiquidCard title="🧬 Génétiques & Arbre Généalogique" bordered>
+        <LiquidCard glow="purple" padding="lg">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <Dna className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-white">🧬 Génétiques & Arbre Généalogique</h3>
+                    <p className="text-sm text-white/50">Lignée et généalogie des cultivars</p>
+                </div>
+            </div>
+
+            <LiquidDivider />
+
             {/* MODAL INITIAL DE CHOIX */}
             <AnimatePresence>
                 {showInitialModal && (
@@ -203,7 +215,7 @@ export default function Genetiques({ formData, handleChange }) {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50"
+                        className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50"
                         onClick={() => trees.length > 0 && setShowInitialModal(false)}
                     >
                         <motion.div
@@ -211,13 +223,13 @@ export default function Genetiques({ formData, handleChange }) {
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6 max-w-md w-full mx-4"
+                            className="bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4"
                         >
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                                <FolderTree className="w-6 h-6 text-purple-600" />
+                            <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                                <FolderTree className="w-6 h-6 text-purple-400" />
                                 Gestion de l'Arbre Généalogique
                             </h3>
-                            <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                            <p className="text-sm text-white/60 mb-6">
                                 Comment souhaitez-vous procéder avec cette fiche technique ?
                             </p>
 
@@ -225,15 +237,15 @@ export default function Genetiques({ formData, handleChange }) {
                                 <button
                                     onClick={handleCreateEmptyTree}
                                     disabled={creatingTree}
-                                    className="w-full p-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border-2 border-purple-200 dark:border-purple-700 rounded-lg hover:border-purple-400 transition-all text-left group disabled:opacity-50"
+                                    className="w-full p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl hover:border-purple-400 transition-all text-left group disabled:opacity-50"
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className="p-2 bg-purple-600 text-white rounded-lg group-hover:scale-110 transition-transform">
                                             {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Créer un arbre vide</p>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            <p className="font-semibold text-white">Créer un arbre vide</p>
+                                            <p className="text-xs text-white/50 mt-1">
                                                 Commencez un nouvel arbre généalogique depuis zéro
                                             </p>
                                         </div>
@@ -243,15 +255,15 @@ export default function Genetiques({ formData, handleChange }) {
                                 <button
                                     onClick={handleCreateTreeFromCurrentFlower}
                                     disabled={creatingTree}
-                                    className="w-full p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border-2 border-blue-200 dark:border-blue-700 rounded-lg hover:border-blue-400 transition-all text-left group disabled:opacity-50"
+                                    className="w-full p-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl hover:border-blue-400 transition-all text-left group disabled:opacity-50"
                                 >
                                     <div className="flex items-start gap-3">
                                         <div className="p-2 bg-blue-600 text-white rounded-lg group-hover:scale-110 transition-transform">
                                             {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Leaf className="w-5 h-5" />}
                                         </div>
                                         <div>
-                                            <p className="font-semibold text-gray-900 dark:text-gray-100">Créer un arbre à partir de cette fleur</p>
-                                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                            <p className="font-semibold text-white">Créer un arbre à partir de cette fleur</p>
+                                            <p className="text-xs text-white/50 mt-1">
                                                 Utilisez cette fiche comme point de départ de l'arbre
                                             </p>
                                         </div>
@@ -262,15 +274,15 @@ export default function Genetiques({ formData, handleChange }) {
                                     <button
                                         onClick={handleImportToExistingTree}
                                         disabled={creatingTree}
-                                        className="w-full p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 border-2 border-green-200 dark:border-green-700 rounded-lg hover:border-green-400 transition-all text-left group disabled:opacity-50"
+                                        className="w-full p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl hover:border-green-400 transition-all text-left group disabled:opacity-50"
                                     >
                                         <div className="flex items-start gap-3">
                                             <div className="p-2 bg-green-600 text-white rounded-lg group-hover:scale-110 transition-transform">
                                                 <Upload className="w-5 h-5" />
                                             </div>
                                             <div>
-                                                <p className="font-semibold text-gray-900 dark:text-gray-100">Importer cette fleur à un arbre</p>
-                                                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                                                <p className="font-semibold text-white">Importer cette fleur à un arbre</p>
+                                                <p className="text-xs text-white/50 mt-1">
                                                     Ajoutez cette fiche à un arbre existant ({trees.length} arbre{trees.length > 1 ? 's' : ''})
                                                 </p>
                                             </div>
@@ -282,7 +294,7 @@ export default function Genetiques({ formData, handleChange }) {
                             {trees.length > 0 && (
                                 <button
                                     onClick={() => setShowInitialModal(false)}
-                                    className="w-full mt-4 px-4 py-2 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 transition-colors"
+                                    className="w-full mt-4 px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
                                 >
                                     Annuler
                                 </button>
@@ -292,16 +304,16 @@ export default function Genetiques({ formData, handleChange }) {
                 )}
             </AnimatePresence>
 
-            <div className="flex gap-4 h-[700px]">
+            <div className="flex gap-4 h-[700px] mt-6">
                 {/* SIDEBAR GAUCHE */}
-                <div className="w-80 flex-shrink-0 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/50 dark:to-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden flex flex-col">
+                <div className="w-80 flex-shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
                     {/* Onglets Cultivars / Projets */}
-                    <div className="flex border-b border-gray-300 dark:border-gray-600 bg-white/50 dark:bg-black/20">
+                    <div className="flex border-b border-white/10 bg-white/5">
                         <button
                             onClick={() => setActiveTab('cultivars')}
                             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'cultivars'
-                                ? 'bg-purple-600 text-white border-b-2 border-purple-600'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ? 'bg-purple-600 text-white border-b-2 border-purple-500'
+                                : 'text-white/60 hover:bg-white/10'
                                 }`}
                         >
                             Cultivars
@@ -309,8 +321,8 @@ export default function Genetiques({ formData, handleChange }) {
                         <button
                             onClick={() => setActiveTab('projets')}
                             className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'projets'
-                                ? 'bg-purple-600 text-white border-b-2 border-purple-600'
-                                : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                ? 'bg-purple-600 text-white border-b-2 border-purple-500'
+                                : 'text-white/60 hover:bg-white/10'
                                 }`}
                         >
                             Projets
@@ -330,16 +342,16 @@ export default function Genetiques({ formData, handleChange }) {
                                 >
                                     {loadingReviews ? (
                                         <div className="text-center py-8">
-                                            <RefreshCw className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">Chargement...</p>
+                                            <RefreshCw className="w-8 h-8 animate-spin text-purple-400 mx-auto" />
+                                            <p className="text-sm text-white/50 mt-3">Chargement...</p>
                                         </div>
                                     ) : userReviews.length === 0 ? (
                                         <div className="text-center py-8">
-                                            <FileText className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <FileText className="w-12 h-12 mx-auto text-white/30 mb-3" />
+                                            <p className="text-sm text-white/50">
                                                 Aucune fiche technique fleur
                                             </p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                            <p className="text-xs text-white/30 mt-1">
                                                 Créez une fiche pour la voir ici
                                             </p>
                                         </div>
@@ -349,9 +361,9 @@ export default function Genetiques({ formData, handleChange }) {
                                                 key={review.id}
                                                 draggable
                                                 onDragStart={(e) => handleDragStart(e, review)}
-                                                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-400 dark:hover:border-purple-600 transition-all"
+                                                className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-500/50 transition-all"
                                             >
-                                                <div className="w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 dark:from-purple-900/30 dark:to-pink-900/30 rounded-lg flex items-center justify-center overflow-hidden">
+                                                <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center overflow-hidden">
                                                     {(review.generalInfo?.photos?.[0] || review.photos?.[0]) ? (
                                                         <img
                                                             src={review.generalInfo?.photos?.[0] || review.photos?.[0]}
@@ -359,18 +371,18 @@ export default function Genetiques({ formData, handleChange }) {
                                                             className="w-full h-full object-cover"
                                                         />
                                                     ) : (
-                                                        <Leaf className="w-8 h-8 text-purple-600" />
+                                                        <Leaf className="w-8 h-8 text-purple-400" />
                                                     )}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
-                                                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                                                    <p className="text-sm font-semibold text-white truncate">
                                                         {review.generalInfo?.commercialName || review.commercialName || 'Sans nom'}
                                                     </p>
-                                                    <p className="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                                    <p className="text-xs text-white/50 truncate">
                                                         {review.genetics?.variety || review.cultivars || 'Variété non définie'}
                                                     </p>
                                                     {(review.genetics?.breeder || review.farm) && (
-                                                        <p className="text-xs text-gray-500 dark:text-gray-500 truncate">
+                                                        <p className="text-xs text-white/30 truncate">
                                                             {review.genetics?.breeder || review.farm}
                                                         </p>
                                                     )}
@@ -381,9 +393,9 @@ export default function Genetiques({ formData, handleChange }) {
                                                             e.stopPropagation()
                                                             // TODO: Open review edit
                                                         }}
-                                                        className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-700 rounded transition-colors"
+                                                        className="p-1.5 hover:bg-white/10 rounded transition-colors"
                                                     >
-                                                        <Edit2 className="w-3.5 h-3.5 text-blue-600" />
+                                                        <Edit2 className="w-3.5 h-3.5 text-blue-400" />
                                                     </button>
                                                 </div>
                                             </div>
@@ -402,13 +414,13 @@ export default function Genetiques({ formData, handleChange }) {
                                 >
                                     {treeLoading ? (
                                         <div className="text-center py-8">
-                                            <RefreshCw className="w-8 h-8 animate-spin text-purple-600 mx-auto" />
-                                            <p className="text-sm text-gray-600 dark:text-gray-400 mt-3">Chargement des arbres...</p>
+                                            <RefreshCw className="w-8 h-8 animate-spin text-purple-400 mx-auto" />
+                                            <p className="text-sm text-white/50 mt-3">Chargement des arbres...</p>
                                         </div>
                                     ) : trees.length === 0 ? (
                                         <div className="text-center py-8">
-                                            <FolderTree className="w-12 h-12 mx-auto text-gray-400 mb-3" />
-                                            <p className="text-sm text-gray-600 dark:text-gray-400">
+                                            <FolderTree className="w-12 h-12 mx-auto text-white/30 mb-3" />
+                                            <p className="text-sm text-white/50">
                                                 Aucun projet PhenoHunt
                                             </p>
                                             <button
@@ -423,26 +435,26 @@ export default function Genetiques({ formData, handleChange }) {
                                             <div
                                                 key={tree.id}
                                                 onClick={() => handleSelectTree(tree.id)}
-                                                className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedTreeId === tree.id
-                                                    ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/30'
-                                                    : 'border-gray-200 dark:border-gray-700 hover:border-purple-300 bg-white dark:bg-gray-800'
+                                                className={`p-3 rounded-lg border cursor-pointer transition-all ${selectedTreeId === tree.id
+                                                    ? 'border-purple-500 bg-purple-500/20'
+                                                    : 'border-white/10 hover:border-purple-500/50 bg-white/5'
                                                     }`}
                                             >
                                                 <div className="flex items-center justify-between">
                                                     <div>
-                                                        <p className="font-semibold text-sm text-gray-900 dark:text-white">
+                                                        <p className="font-semibold text-sm text-white">
                                                             {tree.name}
                                                         </p>
-                                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                        <p className="text-xs text-white/50">
                                                             {tree._count?.nodes || 0} nœuds • {tree._count?.edges || 0} liens
                                                         </p>
                                                     </div>
                                                     {trees.length > 1 && (
                                                         <button
                                                             onClick={(e) => deleteTree(tree.id, e)}
-                                                            className="p-1.5 hover:bg-red-100 dark:hover:bg-red-900/30 rounded-lg transition-colors"
+                                                            className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors"
                                                         >
-                                                            <Trash2 className="w-4 h-4 text-red-500" />
+                                                            <Trash2 className="w-4 h-4 text-red-400" />
                                                         </button>
                                                     )}
                                                 </div>
@@ -456,15 +468,15 @@ export default function Genetiques({ formData, handleChange }) {
                 </div>
 
                 {/* CANVAS PRINCIPAL */}
-                <div className="flex-1 flex flex-col border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden bg-white dark:bg-gray-900">
+                <div className="flex-1 flex flex-col border border-white/10 rounded-xl overflow-hidden bg-[#0a0a14]">
                     {/* Onglets des arbres */}
-                    <div className="flex items-center gap-2 bg-gradient-to-r from-gray-800 to-gray-900 dark:from-gray-950 dark:to-black px-4 border-b border-gray-700">
+                    <div className="flex items-center gap-2 bg-white/5 px-4 border-b border-white/10">
                         {trees.map((tree) => (
                             <div
                                 key={tree.id}
                                 className={`group flex items-center gap-2 px-4 py-3 cursor-pointer transition-all ${selectedTreeId === tree.id
-                                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white border-t-2 border-purple-500'
-                                    : 'text-gray-400 hover:text-white hover:bg-gray-700'
+                                    ? 'bg-purple-600/30 text-white border-t-2 border-purple-500'
+                                    : 'text-white/50 hover:text-white hover:bg-white/10'
                                     }`}
                                 onClick={() => handleSelectTree(tree.id)}
                             >
@@ -472,9 +484,9 @@ export default function Genetiques({ formData, handleChange }) {
                                 {trees.length > 1 && (
                                     <button
                                         onClick={(e) => deleteTree(tree.id, e)}
-                                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-500 rounded transition-all"
+                                        className="opacity-0 group-hover:opacity-100 p-0.5 hover:bg-red-500/30 rounded transition-all"
                                     >
-                                        <Trash2 className="w-3 h-3" />
+                                        <Trash2 className="w-3 h-3 text-red-400" />
                                     </button>
                                 )}
                             </div>
@@ -483,7 +495,7 @@ export default function Genetiques({ formData, handleChange }) {
                         <button
                             onClick={addNewTree}
                             disabled={creatingTree}
-                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-all disabled:opacity-50"
+                            className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded transition-all disabled:opacity-50"
                             title="Ajouter un nouvel arbre"
                         >
                             {creatingTree ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
@@ -491,7 +503,7 @@ export default function Genetiques({ formData, handleChange }) {
 
                         {/* Link icon à droite */}
                         <div className="ml-auto">
-                            <button className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded transition-all">
+                            <button className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded transition-all">
                                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
                                 </svg>
@@ -500,7 +512,7 @@ export default function Genetiques({ formData, handleChange }) {
                     </div>
 
                     {/* Canvas Area */}
-                    <div className="flex-1 relative bg-gradient-to-br from-slate-900 to-slate-800 dark:from-black dark:to-gray-950">
+                    <div className="flex-1 relative bg-gradient-to-br from-[#0a0a14] to-[#121228]">
                         {/* Erreur */}
                         {treeError && (
                             <div className="absolute top-4 left-4 right-4 z-20 bg-red-500/90 text-white px-4 py-2 rounded-lg flex items-center gap-2">
@@ -527,7 +539,7 @@ export default function Genetiques({ formData, handleChange }) {
                             <div className="absolute inset-0 flex items-center justify-center">
                                 <div className="text-center space-y-3">
                                     <Leaf className="w-16 h-16 mx-auto text-purple-400 opacity-50" />
-                                    <p className="text-white text-sm opacity-50">
+                                    <p className="text-white/50 text-sm">
                                         {treeLoading ? 'Chargement...' : 'Sélectionnez ou créez un arbre'}
                                     </p>
                                     {!treeLoading && trees.length === 0 && (

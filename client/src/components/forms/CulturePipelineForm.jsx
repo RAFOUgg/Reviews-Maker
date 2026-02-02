@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { usePipelineStore } from '../../store/pipelineStore';
 import TimelineGrid from './TimelineGrid';
 import PipelineStepModal from './PipelineStepModal';
-import LiquidCard from '../../ui/LiquidCard';
-import LiquidButton from '../../ui/LiquidButton';
-import LiquidInput from '../../ui/LiquidInput';
+import { LiquidCard, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI';
 import { Calendar, Settings } from 'lucide-react';
 
 /**

@@ -61,14 +61,15 @@ const TabNavigation = ({ tabs, activeTab, onTabChange }) => {
                 <button
                     key={tab.id}
                     onClick={() => onTabChange(tab.id)}
-                    className={cn(
-                        'w-full flex items-center gap-3 px-4 py-3 rounded-lg text-left text-sm font-medium transition-all',
-                        activeTab === tab.id
-                            ? 'bg-primary/10 text-primary border-l-2 border-primary'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                    )}
+                    className={`
+                        w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-sm font-medium transition-all duration-300
+                        ${activeTab === tab.id
+                            ? 'bg-purple-500/20 text-white border-l-2 border-purple-500 shadow-lg shadow-purple-500/10'
+                            : 'text-white/60 hover:bg-white/5 hover:text-white border-l-2 border-transparent'
+                        }
+                    `}
                 >
-                    <span className={activeTab === tab.id ? 'text-primary' : 'text-muted-foreground'}>
+                    <span className={`transition-colors duration-300 ${activeTab === tab.id ? 'text-purple-400' : 'text-white/50'}`}>
                         {icons[tab.icon] || icons.user}
                     </span>
                     {tab.label}

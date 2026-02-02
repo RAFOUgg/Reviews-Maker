@@ -6,7 +6,8 @@ import {
     INVERTED_LABELS,
     TRANSPARENCY_LEVELS
 } from '../../data/visualOptions';
-import WhiteSlider from '../ui/WhiteSlider';
+import { LiquidCard, LiquidRating, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
+import { Eye, X, Check } from 'lucide-react';
 
 /**
  * Section Visuel & Technique
@@ -66,19 +67,18 @@ export default function VisualSection({ productType, formData = {}, handleChange
     const totalPercentage = selectedColors.reduce((sum, c) => sum + (c.percentage || 0), 0);
 
     return (
-        <div className="space-y-6 bg-gray-900/90 dark:bg-gray-900/95 backdrop-blur-xl rounded-2xl p-6 shadow-2xl border border-gray-700/50">
+        <LiquidCard glow="purple" padding="lg" className="space-y-6">
             <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                    </svg>
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <Eye className="w-5 h-5 text-white" />
                 </div>
                 <div>
                     <h3 className="text-xl font-bold text-white">👁️ Visuel & Technique</h3>
-                    <p className="text-sm text-gray-400">Caractéristiques visuelles et qualité</p>
+                    <p className="text-sm text-white/50">Caractéristiques visuelles et qualité</p>
                 </div>
             </div>
+
+            <LiquidDivider />
 
             {/* Nuancier Couleurs */}
             <div className="space-y-4">
@@ -173,108 +173,138 @@ export default function VisualSection({ productType, formData = {}, handleChange
 
             {/* Transparence (Hash/Concentrés uniquement) */}
             {isHashOrConcentrate && (
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Transparence"
+                        value={transparency}
+                        max={10}
+                        color="purple"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={transparency}
-                        onChange={(val) => setTransparency(val)}
-                        unit="/10"
-                        helperText={TRANSPARENCY_LEVELS[transparency - 1]?.example}
+                        onChange={(e) => setTransparency(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-violet-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">{TRANSPARENCY_LEVELS[transparency - 1]?.example}</p>
                 </div>
             )}
 
             {/* Sliders de qualité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Densité */}
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Densité"
+                        value={density}
+                        max={10}
+                        color="purple"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={density}
-                        onChange={(val) => setDensity(val)}
-                        unit="/10"
+                        onChange={(e) => setDensity(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-violet-500"
                     />
                 </div>
 
                 {/* Trichomes (Fleurs uniquement) */}
                 {productType === 'Fleur' && (
-                    <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                        <WhiteSlider
+                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                        <LiquidRating
                             label="Trichomes"
+                            value={trichomes}
+                            max={10}
+                            color="purple"
+                        />
+                        <input
+                            type="range"
                             min={1}
                             max={10}
                             value={trichomes}
-                            onChange={(val) => setTrichomes(val)}
-                            unit="/10"
-                            helperText="Quantité et qualité des cristaux"
+                            onChange={(e) => setTrichomes(parseInt(e.target.value))}
+                            className="w-full mt-3 accent-violet-500"
                         />
+                        <p className="text-xs text-white/40 mt-2">Quantité et qualité des cristaux</p>
                     </div>
                 )}
 
                 {/* Moisissures (inversé) */}
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Moisissures (10 = aucune)"
+                        value={mold}
+                        max={10}
+                        color="green"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={mold}
-                        onChange={(val) => setMold(val)}
-                        unit="/10"
-                        helperText="10 = aucune moisissure"
+                        onChange={(e) => setMold(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-emerald-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">10 = aucune moisissure</p>
                 </div>
 
                 {/* Graines (inversé) */}
-                <div className="p-4 bg-gray-800/30 backdrop-blur-sm rounded-xl">
-                    <WhiteSlider
+                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <LiquidRating
                         label="Graines (10 = aucune)"
+                        value={seeds}
+                        max={10}
+                        color="green"
+                    />
+                    <input
+                        type="range"
                         min={1}
                         max={10}
                         value={seeds}
-                        onChange={(val) => setSeeds(val)}
-                        unit="/10"
-                        helperText="10 = aucune graine"
+                        onChange={(e) => setSeeds(parseInt(e.target.value))}
+                        className="w-full mt-3 accent-emerald-500"
                     />
+                    <p className="text-xs text-white/40 mt-2">10 = aucune graine</p>
                 </div>
             </div>
 
             {/* Résumé visuel */}
             <div className="mt-6 p-4 bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-xl border border-violet-500/30">
-                <h4 className="text-sm font-semibold mb-3 text-white">📊 Résumé Visuel</h4>
+                <h4 className="text-sm font-semibold mb-3 text-white flex items-center gap-2">📊 Résumé Visuel</h4>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                     {selectedColors.length > 0 && (
                         <div>
-                            <span className="text-gray-400">Couleurs :</span>
+                            <span className="text-white/50">Couleurs :</span>
                             <span className="ml-2 font-bold text-white">{selectedColors.length}</span>
                         </div>
                     )}
                     <div>
-                        <span className="text-gray-400">Densité :</span>
+                        <span className="text-white/50">Densité :</span>
                         <span className="ml-2 font-bold text-white">{density}/10</span>
                     </div>
                     {productType === 'Fleur' && (
                         <div>
-                            <span className="text-gray-400">Trichomes :</span>
+                            <span className="text-white/50">Trichomes :</span>
                             <span className="ml-2 font-bold text-white">{trichomes}/10</span>
                         </div>
                     )}
                     {isHashOrConcentrate && (
                         <div>
-                            <span className="text-gray-400">Transparence :</span>
+                            <span className="text-white/50">Transparence :</span>
                             <span className="ml-2 font-bold text-white">{transparency}/10</span>
                         </div>
                     )}
                     <div>
-                        <span className="text-gray-400">Pureté :</span>
+                        <span className="text-white/50">Pureté :</span>
                         <span className="ml-2 font-bold text-green-400">{Math.round((mold + seeds) / 2)}/10</span>
                     </div>
                 </div>
             </div>
-        </div>
+        </LiquidCard>
     );
 }
 

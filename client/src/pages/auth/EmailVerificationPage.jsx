@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI';
+import { Mail, ArrowLeft, AlertTriangle, RefreshCw } from 'lucide-react';
 
 export default function EmailVerificationPage() {
     const { t } = useTranslation();
@@ -161,104 +163,103 @@ export default function EmailVerificationPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-50 dark:from-gray-900 dark:to-gray-800 px-4">
-            <div className="max-w-md w-full bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-8">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] px-4">
+            <div className="max-w-md w-full">
                 {/* Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full mb-4">
-                        <svg
-                            className="w-8 h-8 text-green-600 dark:text-green-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                        >
-                            <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                        </svg>
+                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-cyan-500/20 border border-white/10 backdrop-blur-xl mb-4">
+                        <Mail className="w-10 h-10 text-purple-400" />
                     </div>
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+                    <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">
                         Vérification Email
                     </h1>
-                    <p className="text-gray-600 dark:text-gray-400">
-                        Nous avons envoyé un code à <br />
-                        <span className="font-semibold text-gray-900 dark:text-white">
-                            {email}
-                        </span>
+                    <p className="text-white/50">
+                        Nous avons envoyé un code à
+                    </p>
+                    <p className="text-purple-400 font-semibold mt-1">
+                        {email}
                     </p>
                 </div>
 
-                {/* Code Input */}
-                <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-3 text-center">
-                        Entrez le code à 6 caractères
-                    </label>
-                    <div className="flex gap-2 justify-center">
-                        {code.map((digit, index) => (
-                            <input
-                                key={index}
-                                ref={(el) => (inputRefs.current[index] = el)}
-                                type="text"
-                                maxLength={1}
-                                value={digit}
-                                onChange={(e) => handleCodeChange(index, e.target.value)}
-                                onKeyDown={(e) => handleKeyDown(index, e)}
-                                onPaste={index === 0 ? handlePaste : undefined}
-                                className="w-12 h-14 text-center text-2xl font-bold border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-500 focus:outline-none dark:bg-gray-700 dark:text-white transition-all"
-                                disabled={isLoading}
-                                autoFocus={index === 0}
-                            />
-                        ))}
+                <LiquidCard glow="purple" padding="lg">
+                    {/* Code Input */}
+                    <div className="mb-6">
+                        <label className="block text-sm font-medium text-white/60 mb-4 text-center">
+                            Entrez le code à 6 caractères
+                        </label>
+                        <div className="flex gap-2 justify-center">
+                            {code.map((digit, index) => (
+                                <input
+                                    key={index}
+                                    ref={(el) => (inputRefs.current[index] = el)}
+                                    type="text"
+                                    maxLength={1}
+                                    value={digit}
+                                    onChange={(e) => handleCodeChange(index, e.target.value)}
+                                    onKeyDown={(e) => handleKeyDown(index, e)}
+                                    onPaste={index === 0 ? handlePaste : undefined}
+                                    className="w-12 h-14 text-center text-2xl font-bold bg-white/5 border-2 border-white/10 rounded-xl text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/30 focus:outline-none transition-all"
+                                    disabled={isLoading}
+                                    autoFocus={index === 0}
+                                />
+                            ))}
+                        </div>
+                        <p className="text-xs text-white/40 text-center mt-3">
+                            Tentatives restantes: <span className="text-purple-400">{attemptsLeft}/5</span>
+                        </p>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-2">
-                        Tentatives restantes: {attemptsLeft}/5
-                    </p>
-                </div>
 
-                {/* Error */}
-                {error && (
-                    <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-                        <p className="text-sm text-red-600 dark:text-red-400 text-center">{error}</p>
+                    {/* Error */}
+                    {error && (
+                        <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30 mb-4">
+                            <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                            <span className="text-red-400 text-sm">{error}</span>
+                        </div>
+                    )}
+
+                    {/* Verify Button */}
+                    <LiquidButton
+                        onClick={() => handleVerify()}
+                        disabled={isLoading || code.some(c => !c)}
+                        variant="primary"
+                        size="lg"
+                        loading={isLoading}
+                        className="w-full mb-6"
+                    >
+                        {isLoading ? 'Vérification...' : 'Vérifier'}
+                    </LiquidButton>
+
+                    {/* Resend */}
+                    <div className="text-center border-t border-white/10 pt-6">
+                        <p className="text-sm text-white/50 mb-3">
+                            Vous n'avez pas reçu le code ?
+                        </p>
+                        <button
+                            onClick={handleResend}
+                            disabled={!canResend || isLoading}
+                            className={`inline-flex items-center gap-2 text-sm font-medium transition-colors ${canResend
+                                    ? 'text-purple-400 hover:text-purple-300'
+                                    : 'text-white/30 cursor-not-allowed'
+                                }`}
+                        >
+                            <RefreshCw size={16} className={isLoading && canResend ? 'animate-spin' : ''} />
+                            {canResend
+                                ? 'Renvoyer le code'
+                                : `Renvoyer dans ${resendCooldown}s`}
+                        </button>
                     </div>
-                )}
 
-                {/* Verify Button */}
-                <button
-                    onClick={() => handleVerify()}
-                    disabled={isLoading || code.some(c => !c)}
-                    className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-semibold py-3 rounded-lg transition-colors duration-200 mb-4"
-                >
-                    {isLoading ? 'Vérification...' : 'Vérifier'}
-                </button>
-
-                {/* Resend */}
-                <div className="text-center">
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                        Vous n'avez pas reçu le code ?
-                    </p>
-                    <button
-                        onClick={handleResend}
-                        disabled={!canResend || isLoading}
-                        className="text-green-600 hover:text-green-700 dark:text-green-400 disabled:text-gray-400 font-medium text-sm"
-                    >
-                        {canResend
-                            ? 'Renvoyer le code'
-                            : `Renvoyer dans ${resendCooldown}s`}
-                    </button>
-                </div>
-
-                {/* Back to login */}
-                <div className="mt-6 text-center">
-                    <button
-                        onClick={() => navigate('/login')}
-                        className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300"
-                    >
-                        ← Retour à la connexion
-                    </button>
-                </div>
+                    {/* Back to login */}
+                    <div className="mt-6 text-center">
+                        <button
+                            onClick={() => navigate('/login')}
+                            className="inline-flex items-center gap-2 text-sm text-white/50 hover:text-white/80 transition-colors"
+                        >
+                            <ArrowLeft size={16} />
+                            Retour à la connexion
+                        </button>
+                    </div>
+                </LiquidCard>
             </div>
         </div>
     );

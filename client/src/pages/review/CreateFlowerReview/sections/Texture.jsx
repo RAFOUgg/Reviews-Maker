@@ -1,5 +1,6 @@
 import React from 'react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { LiquidCard, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Hand } from 'lucide-react'
 
 const TEXTURE_FIELDS = [
     { key: 'durete', label: 'Dureté', max: 10 },
@@ -10,25 +11,35 @@ const TEXTURE_FIELDS = [
 
 export default function Texture({ formData, handleChange }) {
     return (
-        <LiquidCard title="🤚 Texture" bordered>
-            <div className="space-y-6">
+        <LiquidCard glow="pink" padding="lg">
+            <div className="flex items-center gap-3 mb-6">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                    <Hand className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                    <h3 className="text-xl font-bold text-white">🤚 Texture</h3>
+                    <p className="text-sm text-white/50">Propriétés tactiles</p>
+                </div>
+            </div>
+
+            <LiquidDivider />
+
+            <div className="space-y-4 mt-6">
                 {TEXTURE_FIELDS.map(field => (
-                    <div key={field.key}>
-                        <div className="flex justify-between items-center mb-2">
-                            <label className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                                {field.label}
-                            </label>
-                            <span className="text-sm font-bold dark:">
-                                {formData[field.key] || 0}/{field.max}
-                            </span>
-                        </div>
+                    <div key={field.key} className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <LiquidRating
+                            label={field.label}
+                            value={formData[field.key] || 0}
+                            max={field.max}
+                            color="pink"
+                        />
                         <input
                             type="range"
                             min="0"
                             max={field.max}
                             value={formData[field.key] || 0}
                             onChange={(e) => handleChange(field.key, parseInt(e.target.value))}
-                            className="w-full h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
+                            className="w-full mt-2 accent-pink-500"
                         />
                     </div>
                 ))}

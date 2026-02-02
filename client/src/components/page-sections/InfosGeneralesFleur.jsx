@@ -1,6 +1,7 @@
 import React, { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Upload, X, Image as ImageIcon } from 'lucide-react'
+import { LiquidCard, LiquidInput, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI'
 
 /**
  * Section 1: Informations Générales Fleur
@@ -81,80 +82,60 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
     const photos = data.photos || []
 
     return (
-        <div className="space-y-6">
+        <LiquidCard glow="purple" padding="lg" className="space-y-6">
             {/* Nom commercial* */}
             <div>
-                <label htmlFor="nomCommercial" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.nomCommercial')} <span className="text-red-500">*</span>
-                </label>
-                <input
-                    type="text"
-                    id="nomCommercial"
+                <LiquidInput
+                    label={`${t('flower.nomCommercial')} *`}
                     value={data.nomCommercial || ''}
                     onChange={(e) => handleInputChange('nomCommercial', e.target.value)}
-                    className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white ${errors.nomCommercial ? 'border-red-500' : 'border-gray-300'
-                        }`}
                     placeholder={t('flower.nomCommercialPlaceholder')}
-                    required
+                    error={errors.nomCommercial}
                 />
-                {errors.nomCommercial && (
-                    <p className="mt-1 text-sm text-red-500">{errors.nomCommercial}</p>
-                )}
             </div>
 
             {/* Farm */}
             <div>
-                <label htmlFor="farm" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.farm')}
-                </label>
-                <input
-                    type="text"
-                    id="farm"
+                <LiquidInput
+                    label={t('flower.farm')}
                     value={data.farm || ''}
                     onChange={(e) => handleInputChange('farm', e.target.value)}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary-500 dark:bg-gray-800 dark:border-gray-700 dark:text-white"
                     placeholder={t('flower.farmPlaceholder')}
                 />
             </div>
 
             {/* Variety Type */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.varietyType')} <span className="text-red-500">*</span>
+                <label className="block text-[13px] font-medium text-white/60 ml-1 mb-2">
+                    {t('flower.varietyType')} <span className="text-red-400">*</span>
                 </label>
-                <div className="flex gap-4">
-                    <label className="flex items-center cursor-pointer">
-                        <input
-                            type="radio"
-                            name="varietyType"
-                            value="souche"
-                            checked={data.varietyType === 'souche'}
-                            onChange={(e) => handleInputChange('varietyType', e.target.value)}
-                            className="mr-2"
-                        />
-                        <span className="text-gray-700 dark:text-gray-300">{t('flower.varietyType.souche')}</span>
-                    </label>
-                    <label className="flex items-center cursor-pointer">
-                        <input
-                            type="radio"
-                            name="varietyType"
-                            value="hybride"
-                            checked={data.varietyType === 'hybride'}
-                            onChange={(e) => handleInputChange('varietyType', e.target.value)}
-                            className="mr-2"
-                        />
-                        <span className="text-gray-700 dark:text-gray-300">{t('flower.varietyType.hybride')}</span>
-                    </label>
+                <div className="flex gap-3">
+                    <LiquidChip
+                        active={data.varietyType === 'souche'}
+                        color="purple"
+                        onClick={() => handleInputChange('varietyType', 'souche')}
+                    >
+                        {t('flower.varietyType.souche')}
+                    </LiquidChip>
+                    <LiquidChip
+                        active={data.varietyType === 'hybride'}
+                        color="purple"
+                        onClick={() => handleInputChange('varietyType', 'hybride')}
+                    >
+                        {t('flower.varietyType.hybride')}
+                    </LiquidChip>
                 </div>
                 {errors.varietyType && (
-                    <p className="mt-1 text-sm text-red-500">{errors.varietyType}</p>
+                    <p className="mt-1 text-sm text-red-400">{errors.varietyType}</p>
                 )}
             </div>
 
+            <LiquidDivider />
+
             {/* Photos Upload (max 4) */}
             <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    {t('flower.photos')} ({photos.length}/4) <span className="text-red-500">*</span>
+                <label className="block text-[13px] font-medium text-white/60 ml-1 mb-2">
+                    {t('flower.photos')} ({photos.length}/4) <span className="text-red-400">*</span>
                 </label>
 
                 {/* Preview Grid */}
@@ -163,7 +144,7 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
                         {photos.map((photo, index) => (
                             <div
                                 key={index}
-                                className="relative group aspect-square bg-gray-100 dark:bg-gray-800 rounded-lg overflow-hidden border-2 border-gray-300 dark:border-gray-700"
+                                className="relative group aspect-square bg-white/5 rounded-xl overflow-hidden border border-white/10"
                                 draggable
                                 onDragStart={(e) => e.dataTransfer.setData('photoIndex', index)}
                                 onDragOver={(e) => e.preventDefault()}
@@ -181,19 +162,19 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
                                     className="w-full h-full object-cover"
                                 />
                                 {/* Photo number badge */}
-                                <div className="absolute top-2 left-2 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded">
+                                <div className="absolute top-2 left-2 bg-black/60 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-lg">
                                     #{index + 1}
                                 </div>
                                 {/* Remove button */}
                                 <button
                                     type="button"
                                     onClick={() => removePhoto(index)}
-                                    className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                                    className="absolute top-2 right-2 bg-red-500/80 backdrop-blur-sm text-white p-1.5 rounded-lg opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
                                 >
                                     <X className="w-4 h-4" />
                                 </button>
                                 {/* Drag indicator */}
-                                <div className="absolute bottom-2 left-2 right-2 text-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black bg-opacity-60 rounded py-1">
+                                <div className="absolute bottom-2 left-2 right-2 text-center text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity bg-black/60 backdrop-blur-sm rounded-lg py-1">
                                     {t('flower.dragToReorder')}
                                 </div>
                             </div>
@@ -204,9 +185,9 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
                 {/* Upload Zone */}
                 {photos.length < 4 && (
                     <div
-                        className={`relative border-2 border-dashed rounded-lg p-8 text-center transition-colors ${dragActive
-                                ? 'border-primary-500 bg-primary-50 dark:bg-primary-900/20'
-                                : 'border-gray-300 dark:border-gray-700'
+                        className={`relative border-2 border-dashed rounded-xl p-8 text-center transition-all ${dragActive
+                            ? 'border-violet-500 bg-violet-500/10'
+                            : 'border-white/20 hover:border-white/40'
                             }`}
                         onDragEnter={handleDrag}
                         onDragLeave={handleDrag}
@@ -224,18 +205,18 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
                         <div className="space-y-2">
                             <div className="flex justify-center">
                                 {dragActive ? (
-                                    <Upload className="w-12 h-12 text-primary-500" />
+                                    <Upload className="w-12 h-12 text-violet-400" />
                                 ) : (
-                                    <ImageIcon className="w-12 h-12 text-gray-400" />
+                                    <ImageIcon className="w-12 h-12 text-white/30" />
                                 )}
                             </div>
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
-                                <p className="font-medium">
+                            <div className="text-sm text-white/60">
+                                <p className="font-medium text-white/80">
                                     {dragActive
                                         ? t('flower.dropPhotosHere')
                                         : t('flower.clickOrDragPhotos')}
                                 </p>
-                                <p className="text-xs mt-1">
+                                <p className="text-xs mt-1 text-white/40">
                                     {t('flower.maxPhotos', { max: 4, remaining: 4 - photos.length })}
                                 </p>
                             </div>
@@ -244,15 +225,15 @@ export default function InfosGeneralesFleur({ data, onChange, errors = {} }) {
                 )}
 
                 {errors.photos && (
-                    <p className="mt-2 text-sm text-red-500">{errors.photos}</p>
+                    <p className="mt-2 text-sm text-red-400">{errors.photos}</p>
                 )}
 
                 {/* Helper text */}
-                <p className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <p className="mt-2 text-xs text-white/40">
                     {t('flower.photosHelper')}
                 </p>
             </div>
-        </div>
+        </LiquidCard>
     )
 }
 

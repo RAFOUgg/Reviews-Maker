@@ -1,64 +1,60 @@
 import React from 'react'
-import { Camera } from 'lucide-react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { Camera, Info } from 'lucide-react'
+import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
     return (
         <div className="space-y-6">
-            <LiquidCard title="📋 Informations générales" bordered>
-                <div className="space-y-4">
-                    {/* Nom commercial */}
+            <LiquidCard glow="amber" padding="lg">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                        <Info className="w-5 h-5 text-white" />
+                    </div>
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Nom commercial *
-                        </label>
-                        <input
-                            type="text"
+                        <h3 className="text-xl font-bold text-white">📋 Informations générales</h3>
+                        <p className="text-sm text-white/50">Identité et origine du hash</p>
+                    </div>
+                </div>
+
+                <LiquidDivider />
+
+                <div className="space-y-4 mt-6">
+                    {/* Nom commercial */}
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <LiquidInput
+                            label="Nom commercial *"
                             value={formData.nomCommercial || ''}
                             onChange={(e) => handleChange('nomCommercial', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Nom du produit"
                         />
                     </div>
 
                     {/* Hashmaker */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Hashmaker
-                        </label>
-                        <input
-                            type="text"
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <LiquidInput
+                            label="Hashmaker"
                             value={formData.hashmaker || ''}
                             onChange={(e) => handleChange('hashmaker', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Nom du hashmaker"
                         />
                     </div>
 
                     {/* Laboratoire */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Laboratoire de production
-                        </label>
-                        <input
-                            type="text"
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <LiquidInput
+                            label="Laboratoire de production"
                             value={formData.laboratoire || ''}
                             onChange={(e) => handleChange('laboratoire', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Nom du laboratoire"
                         />
                     </div>
 
                     {/* Cultivars utilisés */}
-                    <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Cultivar(s) utilisés
-                        </label>
-                        <input
-                            type="text"
+                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
+                        <LiquidInput
+                            label="Cultivar(s) utilisés"
                             value={formData.cultivars || ''}
                             onChange={(e) => handleChange('cultivars', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
                             placeholder="Cultivars utilisés"
                         />
                     </div>
@@ -66,9 +62,9 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
             </LiquidCard>
 
             {/* Photos */}
-            <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                    Photos du produit (1-4) *
+            <LiquidCard glow="amber" padding="lg">
+                <label className="block text-sm font-medium text-white/80 mb-3">
+                    📷 Photos du produit (1-4) *
                 </label>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                     {photos.map((photo, index) => (
@@ -76,7 +72,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             <img
                                 src={photo.preview || photo.url}
                                 alt={`Photo ${index + 1}`}
-                                className="w-full h-32 object-cover rounded-lg"
+                                className="w-full h-32 object-cover rounded-lg border border-white/10"
                             />
                             <button
                                 type="button"
@@ -90,9 +86,9 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                 </div>
                 {photos.length < 4 && (
                     <label className="cursor-pointer">
-                        <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg p-6 text-center hover:border-cyan-500 transition-colors">
-                            <Camera className="mx-auto mb-2 text-gray-400" size={32} />
-                            <span className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-amber-500/50 bg-white/5 transition-colors">
+                            <Camera className="mx-auto mb-2 text-white/40" size={32} />
+                            <span className="text-sm text-white/50">
                                 Ajouter des photos ({photos.length}/4)
                             </span>
                         </div>
@@ -105,7 +101,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         />
                     </label>
                 )}
-            </div>
+            </LiquidCard>
         </div>
     )
 }

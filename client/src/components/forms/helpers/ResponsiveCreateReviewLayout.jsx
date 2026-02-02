@@ -141,15 +141,15 @@ export const ResponsiveCreateReviewLayout = ({
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative flex flex-col">
+        <div className="min-h-screen bg-[#07070f] relative flex flex-col">
             {/* Background decorative - hidden on mobile for performance */}
             {!layout.isMobile && (
-                <div className="fixed inset-0 bg-gradient-radial from-purple-500/10 via-transparent to-transparent pointer-events-none" />
+                <div className="fixed inset-0 bg-gradient-radial from-purple-500/5 via-transparent to-transparent pointer-events-none" />
             )}
 
             <div className="relative z-10 flex flex-col flex-1">
                 {/* Header - Responsive Padding & Safe Area */}
-                <div className={`sticky top-0 z-40 bg-gray-900/95 backdrop-blur-xl border-b border-gray-700/50 ${layout.isMobile
+                <div className={`sticky top-0 z-40 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
                     ? 'px-3 py-3 safe-area-inset-top'
                     : 'px-6 md:px-8 py-6'
                     }`}>
@@ -158,13 +158,13 @@ export const ResponsiveCreateReviewLayout = ({
                         {(title || subtitle) && (
                             <div className={layout.isMobile ? 'mb-3' : 'mb-4'}>
                                 {title && (
-                                    <h1 className={`font-bold text-gray-100 ${layout.isMobile ? 'text-lg' : 'text-3xl'
+                                    <h1 className={`font-bold text-white ${layout.isMobile ? 'text-lg' : 'text-3xl'
                                         }`}>
                                         {title}
                                     </h1>
                                 )}
                                 {subtitle && (
-                                    <p className={`text-gray-400 mt-0.5 ${layout.isMobile ? 'text-xs' : 'text-sm'
+                                    <p className={`text-white/50 mt-0.5 ${layout.isMobile ? 'text-xs' : 'text-sm'
                                         }`}>
                                         {subtitle}
                                     </p>
@@ -192,10 +192,10 @@ export const ResponsiveCreateReviewLayout = ({
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
                                                 {/* Gradient fade left - plus prononcé */}
-                                                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-gray-900 via-gray-900/70 to-transparent z-10 pointer-events-none" />
+                                                <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#07070f] via-[#07070f]/70 to-transparent z-10 pointer-events-none" />
 
                                                 {/* Gradient fade right - plus prononcé */}
-                                                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-gray-900 via-gray-900/70 to-transparent z-10 pointer-events-none" />
+                                                <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#07070f] via-[#07070f]/70 to-transparent z-10 pointer-events-none" />
 
                                                 <div className="flex items-center justify-center gap-2" style={{
                                                     transform: `translateX(-${scrollPosition + dragOffset}px)`,
@@ -245,7 +245,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                                     onClick={() => onSectionChange(index)}
                                                                     className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
                                                                         ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-purple-300 shadow-lg shadow-purple-500/50'
-                                                                        : 'bg-gray-700/40 hover:bg-gray-700/60'
+                                                                        : 'bg-white/10 hover:bg-white/20'
                                                                         }`}
                                                                     style={{
                                                                         filter: isCenter
@@ -270,7 +270,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                         onClick={() => onSectionChange(idx)}
                                                         className={`px-4 py-2 rounded-lg transition-all ${idx === currentSection
                                                             ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
-                                                            : 'bg-gray-700/50 hover:bg-gray-700'
+                                                            : 'bg-white/10 hover:bg-white/20'
                                                             }`}
                                                     >
                                                         <span className="text-lg">{emoji}</span>
@@ -293,7 +293,7 @@ export const ResponsiveCreateReviewLayout = ({
                                     ) : (
                                         // Desktop: Counter + Progress Bar
                                         <div className="flex justify-between items-center">
-                                            <span className="text-sm text-gray-400">
+                                            <span className="text-sm text-white/50">
                                                 Étape {currentSection + 1} sur {totalSections}
                                             </span>
                                             <span className="text-sm text-purple-400 font-medium">
@@ -303,7 +303,7 @@ export const ResponsiveCreateReviewLayout = ({
                                     )}
 
                                     {/* Progress Bar */}
-                                    <div className="w-full h-1.5 bg-gray-800 rounded-full overflow-hidden">
+                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
                                         <motion.div
                                             className="h-full bg-gradient-to-r from-purple-500 to-purple-400"
                                             initial={{ width: 0 }}
@@ -328,7 +328,7 @@ export const ResponsiveCreateReviewLayout = ({
                 </main>
 
                 {/* Navigation Footer - Fixed at bottom, always visible */}
-                <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-t from-gray-900 via-gray-900 to-transparent border-t border-gray-700/50 backdrop-blur-xl z-50 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
+                <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#07070f] via-[#07070f] to-transparent border-t border-white/10 backdrop-blur-xl z-50 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
                     }`}>
                     <div className={layout.isMobile ? 'px-3 py-2' : 'px-6 md:px-8 py-4'}>
                         <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
@@ -337,9 +337,9 @@ export const ResponsiveCreateReviewLayout = ({
                                 <button
                                     onClick={handlePrevious}
                                     disabled={currentSection === 0}
-                                    className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 ${layout.isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-base'} gap-2 ${currentSection === 0
-                                        ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
-                                        : 'bg-gray-800 hover:bg-gray-700 text-white active:scale-95'
+                                    className={`flex items-center justify-center rounded-xl font-medium transition-all flex-shrink-0 ${layout.isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-base'} gap-2 ${currentSection === 0
+                                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
+                                        : 'bg-white/10 hover:bg-white/20 text-white active:scale-95'
                                         }`}
                                 >
                                     ←
@@ -347,7 +347,7 @@ export const ResponsiveCreateReviewLayout = ({
 
                                 {/* Section Indicator */}
                                 <div className="text-center flex-1">
-                                    <div className={`font-medium ${layout.isMobile ? 'text-xs text-gray-400' : 'text-sm text-gray-400'
+                                    <div className={`font-medium ${layout.isMobile ? 'text-xs text-white/50' : 'text-sm text-white/50'
                                         }`}>
                                         {currentSection + 1}/{totalSections}
                                     </div>
@@ -357,8 +357,8 @@ export const ResponsiveCreateReviewLayout = ({
                                 <button
                                     onClick={handleNext}
                                     disabled={currentSection === totalSections - 1}
-                                    className={`flex items-center justify-center rounded-lg font-medium transition-all flex-shrink-0 ${layout.isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-base'} gap-2 ${currentSection === totalSections - 1
-                                        ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
+                                    className={`flex items-center justify-center rounded-xl font-medium transition-all flex-shrink-0 ${layout.isMobile ? 'px-3 py-2 text-sm' : 'px-4 py-2.5 text-base'} gap-2 ${currentSection === totalSections - 1
+                                        ? 'bg-white/5 text-white/30 cursor-not-allowed'
                                         : 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
                                         }`}
                                 >

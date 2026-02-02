@@ -1,55 +1,88 @@
 /**
  * HeroSection Component
  * Section hero de la page d'accueil avec titre animé et message de bienvenue
+ * Liquid Glass UI Design System
  */
 
-import PropTypes from 'prop-types'
-import { Link } from 'react-router-dom'
+import PropTypes from 'prop-types';
+import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { LogIn, UserPlus } from 'lucide-react';
+import { LiquidButton } from '@/components/ui/LiquidUI';
 
 export default function HeroSection({ user, isAuthenticated }) {
     return (
-        <div className="text-center space-y-3 md:space-y-6 animate-fade-in px-3 md:px-0">
-            <div className="relative inline-block">
+        <div className="text-center space-y-6 md:space-y-8 px-3 md:px-0">
+            {/* Titre principal avec glow effect */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="relative inline-block"
+            >
                 <h1 className="text-4xl md:text-6xl lg:text-7xl font-black text-white drop-shadow-2xl leading-tight">
                     Terpologie
                 </h1>
-                <div className="absolute -inset-4 bg-white/10 blur-3xl -z-10"></div>
-            </div>
-            <p className="text-sm md:text-lg lg:text-xl text-white/80 font-light px-2">
+                {/* Glow background */}
+                <div
+                    className="absolute -inset-8 -z-10 blur-3xl opacity-50"
+                    style={{
+                        background: 'radial-gradient(ellipse, rgba(139, 92, 246, 0.4), rgba(59, 130, 246, 0.2), transparent 70%)'
+                    }}
+                />
+            </motion.div>
+
+            {/* Sous-titre */}
+            <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                className="text-sm md:text-lg lg:text-xl text-white/70 font-light px-2"
+            >
                 Créez et partagez vos avis sur les produits cannabis
-            </p>
-            {isAuthenticated && user ? (
-                <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
-                    <span className="text-white/90">Bienvenue</span>
-                    <span className="font-bold text-white">{user.username}</span>
-                    <span className="text-2xl">👋</span>
-                </div>
-            ) : (
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-                    <Link
-                        to="/login"
-                        className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white font-semibold shadow-lg hover:bg-white/20 hover:shadow-xl transition-all"
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
-                            <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4" />
-                            <path d="M10 17l5-5-5-5" />
-                            <path d="M15 12H3" />
-                        </svg>
-                        Se connecter
-                    </Link>
-                    <Link
-                        to="/choose-account"
-                        className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white text-gray-900 font-semibold shadow-lg hover:shadow-xl transition-shadow"
-                    >
-                        <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                            <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4Zm0 2c-3.31 0-6 2.02-6 4.5 0 .28.22.5.5.5h11c.28 0 .5-.22.5-.5C18 16.02 15.31 14 12 14Z" />
-                        </svg>
-                        Créer un compte
-                    </Link>
-                </div>
-            )}
+            </motion.p>
+
+            {/* Welcome message / Auth buttons */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+            >
+                {isAuthenticated && user ? (
+                    <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-white/5 border border-white/20 backdrop-blur-md">
+                        <span className="text-white/80">Bienvenue</span>
+                        <span className="font-bold text-white">{user.username}</span>
+                        <span className="text-2xl">👋</span>
+                    </div>
+                ) : (
+                    <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+                        <Link to="/login">
+                            <LiquidButton
+                                variant="ghost"
+                                icon={LogIn}
+                                className="min-w-[160px]"
+                            >
+                                Se connecter
+                            </LiquidButton>
+                        </Link>
+                        <Link to="/choose-account">
+                            <LiquidButton
+                                variant="primary"
+                                icon={UserPlus}
+                                className="min-w-[160px]"
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(59, 130, 246, 0.3))',
+                                    borderColor: 'rgba(139, 92, 246, 0.5)'
+                                }}
+                            >
+                                Créer un compte
+                            </LiquidButton>
+                        </Link>
+                    </div>
+                )}
+            </motion.div>
         </div>
-    )
+    );
 }
 
 HeroSection.propTypes = {
@@ -57,6 +90,6 @@ HeroSection.propTypes = {
         username: PropTypes.string
     }),
     isAuthenticated: PropTypes.bool.isRequired
-}
+};
 
 

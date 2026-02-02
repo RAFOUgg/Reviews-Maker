@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { X, Check } from 'lucide-react';
+import { LiquidModal, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI';
 
 const MultiContentAssignModal = ({ isOpen, onClose, contents = [], targetCells = [], preConfigured = {}, onApply }) => {
     const [values, setValues] = useState({});
@@ -30,46 +31,55 @@ const MultiContentAssignModal = ({ isOpen, onClose, contents = [], targetCells =
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-60 flex items-center justify-center backdrop-blur-sm" onClick={onClose}>
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-2xl w-full mx-4 p-6" onClick={(e) => e.stopPropagation()}>
-                <div className="flex items-center justify-between mb-4">
-                    <div>
-                        <h3 className="text-lg font-bold">Attribuer plusieurs contenus</h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-400">Appliquer les valeurs renseignées à {targetCells.length} case(s)</p>
-                    </div>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"><X className="w-4 h-4"/></button>
+        <LiquidModal
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Attribuer plusieurs contenus"
+            size="lg"
+            glowColor="blue"
+            footer={
+                <div className="flex gap-3 w-full">
+                    <LiquidButton variant="ghost" onClick={onClose} className="flex-1">
+                        Annuler
+                    </LiquidButton>
+                    <LiquidButton variant="primary" onClick={handleSubmit} className="flex-1" icon={Check}>
+                        Appliquer
+                    </LiquidButton>
                 </div>
+            }
+        >
+            <div className="space-y-4">
+                <p className="text-sm text-white/60">
+                    Appliquer les valeurs renseignées à {targetCells.length} case(s)
+                </p>
 
-                <div className="space-y-3 max-h-[60vh] overflow-auto mb-4">
+                <div className="space-y-3 max-h-[60vh] overflow-auto">
                     {contents.map((c) => {
                         const key = c.key ?? c.name ?? c.value;
                         return (
-                            <div key={key} className="flex items-center gap-3 p-2 border rounded-lg">
-                                <div className="w-8 text-center">{c.icon || '🧩'}</div>
+                            <div
+                                key={key}
+                                className="flex items-center gap-3 p-3 rounded-xl border border-white/10 bg-white/5"
+                            >
+                                <div className="w-8 text-center text-xl">{c.icon || '🧩'}</div>
                                 <div className="flex-1">
-                                    <div className="font-medium text-sm">{c.label || c.name || key}</div>
-                                    {c.unit && <div className="text-xs text-gray-500">Unité: {c.unit}</div>}
+                                    <div className="font-medium text-sm text-white">{c.label || c.name || key}</div>
+                                    {c.unit && <div className="text-xs text-white/40">Unité: {c.unit}</div>}
                                 </div>
-                                <input
+                                <LiquidInput
                                     value={values[key] ?? ''}
                                     onChange={(e) => handleChange(key, e.target.value)}
                                     placeholder={c.placeholder || ''}
-                                    className="px-3 py-2 border rounded-lg w-48 text-sm bg-white dark:bg-gray-800"
+                                    className="w-48"
+                                    size="sm"
                                 />
                             </div>
                         );
                     })}
                 </div>
-
-                <div className="flex gap-3">
-                    <button onClick={onClose} className="flex-1 px-4 py-2 border rounded-lg">Annuler</button>
-                    <button onClick={handleSubmit} className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center justify-center gap-2"><Check className="w-4 h-4"/>Appliquer</button>
-                </div>
             </div>
-        </div>
+        </LiquidModal>
     );
 };
 
