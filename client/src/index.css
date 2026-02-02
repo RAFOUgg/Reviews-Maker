@@ -2,6 +2,7 @@
 @import './assets/themes-v2.css';
 @import './assets/orchard.css';
 @import './assets/liquid-glass.css';
+@import './assets/apple-liquid-glass.css';
 @import './assets/theme-tokens.css';
 
 @tailwind base;
