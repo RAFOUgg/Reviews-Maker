@@ -177,27 +177,50 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8 no-panel-bg">
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center">
-            <User size={24} />
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold">⚙️ {t('account.title') || 'Mon Compte'}</h1>
-        </div>
-        <p className="text-gray-400">{t('account.subtitle') || 'Gérez votre profil, vos préférences et vos données'}</p>
+    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8 relative overflow-hidden">
+      {/* Background ambient glow effects - Apple style */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/8 rounded-full blur-[120px] animate-pulse" style={{animationDuration: '8s'}} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/6 rounded-full blur-[100px] animate-pulse" style={{animationDuration: '10s', animationDelay: '2s'}} />
+        <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-violet-500/5 rounded-full blur-[80px] animate-pulse" style={{animationDuration: '12s', animationDelay: '4s'}} />
       </div>
 
-      {/* Tabbed Navigation Container */}
-      <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl overflow-hidden border border-gray-700/50">
-        {/* Tab Navigation */}
-        <div className="grid grid-cols-2 md:grid-cols-7 gap-0">
-          {getTabSections(accountType).map((tab) => {
-            const Icon = typeof tab.icon === 'string' ? null : tab.icon
-            return (
-              <button
-                key={tab.id}
+      <div className="relative z-10 max-w-5xl mx-auto">
+        {/* Header - Apple style with avatar */}
+        <div className="mb-8 flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 p-[2px] shadow-lg shadow-purple-500/20">
+            <div className="w-full h-full rounded-2xl bg-[#1a1a2e] flex items-center justify-center">
+              <User size={28} className="text-white/90" />
+            </div>
+          </div>
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+              {t('account.title') || 'Mon Compte'}
+            </h1>
+            <p className="text-white/40 text-sm mt-1">{t('account.subtitle') || 'Gérez votre profil, vos préférences et vos données'}</p>
+          </div>
+        </div>
+
+        {/* Main Container - Liquid Glass Card */}
+        <div className="relative rounded-3xl overflow-hidden">
+          {/* Glass background layer */}
+          <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl" />
+          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02]" />
+          <div className="absolute inset-[1px] rounded-3xl border border-white/[0.08]" />
+          
+          {/* Inner glow */}
+          <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+
+          {/* Content */}
+          <div className="relative z-10">
+            {/* Tab Navigation - Frosted glass pills */}
+            <div className="flex gap-1 p-2 m-4 mb-0 rounded-2xl bg-white/[0.03] backdrop-blur-sm border border-white/[0.05]">
+              {getTabSections(accountType).map((tab) => {
+                const Icon = typeof tab.icon === 'string' ? null : tab.icon
+                const isActive = activeTab === tab.id
+                return (
+                  <button
+                    key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`px-3 md:px-4 py-4 text-sm md:text-base font-medium transition-all border-b-2 ${activeTab === tab.id
                   ? 'border-blue-500 bg-gray-700/30 text-white'
