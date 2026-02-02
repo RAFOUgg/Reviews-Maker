@@ -9,20 +9,17 @@ import { useAuth } from '../../hooks/useAuth.js';
 import { usePermissions } from '../../hooks/usePermissions';
 import UserProfileDropdown from '../account/UserProfileDropdown';
 import { LiquidButton, LiquidAvatar, LiquidModal } from '@/components/ui/LiquidUI';
-import { Home, Library, BarChart3, Menu, X, Dna, Image } from 'lucide-react';
+import { Home, Menu, X, Image } from 'lucide-react';
 
 export default function Layout() {
     const { user, isAuthenticated } = useAuth();
     const { hasFeature } = usePermissions();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-    // Navigation items
+    // Navigation items - Only public pages in navbar (user links are in profile dropdown)
     const navItems = [
         { to: '/', label: 'Accueil', icon: Home, show: true },
-        { to: '/library', label: 'Bibliothèque', icon: Library, show: isAuthenticated },
         { to: '/gallery', label: 'Galerie', icon: Image, show: true },
-        { to: '/stats', label: 'Statistiques', icon: BarChart3, show: isAuthenticated },
-        { to: '/genetics', label: 'Génétiques', icon: Dna, show: isAuthenticated && hasFeature('phenohunt') },
     ];
 
     const visibleNavItems = navItems.filter(item => item.show);
