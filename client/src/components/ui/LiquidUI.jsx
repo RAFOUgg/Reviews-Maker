@@ -5,141 +5,16 @@
  * Import and use these components throughout the application
  * 
  * Usage:
- * import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidModal, LiquidCursorGlow, ... } from '@/components/ui/LiquidUI'
+ * import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidModal, ... } from '@/components/ui/LiquidUI'
  */
 
-import { useState, useRef, useEffect, createContext, useContext, useCallback } from 'react'
-import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion'
+import { useState, useRef, useEffect, createContext, useContext } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronDown, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
 
 // ============================================
-// LIQUID CURSOR GLOW (Water/Liquid Effect following cursor)
-// ============================================
-
-export function LiquidCursorGlow({
-    color = 'purple', // purple | cyan | amber | green | pink | white
-    size = 300,
-    intensity = 0.4,
-    blur = 80,
-    enabled = true
-}) {
-    const cursorX = useMotionValue(-1000)
-    const cursorY = useMotionValue(-1000)
-    
-    // Spring physics for smooth, liquid-like following
-    const springConfig = { damping: 25, stiffness: 200, mass: 0.5 }
-    const smoothX = useSpring(cursorX, springConfig)
-    const smoothY = useSpring(cursorY, springConfig)
-    
-    // Ripple state for click effects
-    const [ripples, setRipples] = useState([])
-    
-    const colorMap = {
-        purple: 'rgba(139, 92, 246, VAR)',
-        cyan: 'rgba(6, 182, 212, VAR)',
-        amber: 'rgba(245, 158, 11, VAR)',
-        green: 'rgba(16, 185, 129, VAR)',
-        pink: 'rgba(236, 72, 153, VAR)',
-        white: 'rgba(255, 255, 255, VAR)'
-    }
-    
-    const glowColor = colorMap[color]?.replace('VAR', intensity.toString()) || colorMap.purple.replace('VAR', intensity.toString())
-    const glowColorStrong = colorMap[color]?.replace('VAR', (intensity * 1.5).toString()) || colorMap.purple.replace('VAR', (intensity * 1.5).toString())
-    
-    useEffect(() => {
-        if (!enabled) return
-        
-        const handleMouseMove = (e) => {
-            cursorX.set(e.clientX)
-            cursorY.set(e.clientY)
-        }
-        
-        const handleClick = (e) => {
-            const id = Date.now()
-            setRipples(prev => [...prev, { id, x: e.clientX, y: e.clientY }])
-            // Remove ripple after animation
-            setTimeout(() => {
-                setRipples(prev => prev.filter(r => r.id !== id))
-            }, 800)
-        }
-        
-        window.addEventListener('mousemove', handleMouseMove)
-        window.addEventListener('click', handleClick)
-        
-        return () => {
-            window.removeEventListener('mousemove', handleMouseMove)
-            window.removeEventListener('click', handleClick)
-        }
-    }, [enabled, cursorX, cursorY])
-    
-    if (!enabled) return null
-    
-    return createPortal(
-        <>
-            {/* Main cursor glow */}
-            <motion.div
-                className="fixed pointer-events-none z-[9998]"
-                style={{
-                    x: smoothX,
-                    y: smoothY,
-                    width: size,
-                    height: size,
-                    marginLeft: -size / 2,
-                    marginTop: -size / 2,
-                    background: `radial-gradient(circle, ${glowColor} 0%, ${glowColor.replace(intensity.toString(), '0.1')} 40%, transparent 70%)`,
-                    filter: `blur(${blur}px)`,
-                    mixBlendMode: 'screen'
-                }}
-            />
-            
-            {/* Secondary smaller glow for more definition */}
-            <motion.div
-                className="fixed pointer-events-none z-[9998]"
-                style={{
-                    x: smoothX,
-                    y: smoothY,
-                    width: size * 0.4,
-                    height: size * 0.4,
-                    marginLeft: -size * 0.2,
-                    marginTop: -size * 0.2,
-                    background: `radial-gradient(circle, ${glowColorStrong} 0%, transparent 70%)`,
-                    filter: `blur(${blur * 0.5}px)`,
-                    mixBlendMode: 'screen'
-                }}
-            />
-            
-            {/* Click ripples */}
-            <AnimatePresence>
-                {ripples.map(ripple => (
-                    <motion.div
-                        key={ripple.id}
-                        className="fixed pointer-events-none z-[9997]"
-                        style={{
-                            left: ripple.x,
-                            top: ripple.y,
-                            marginLeft: -75,
-                            marginTop: -75,
-                            width: 150,
-                            height: 150,
-                            borderRadius: '50%',
-                            border: `2px solid ${glowColor}`,
-                            background: `radial-gradient(circle, ${glowColor.replace(intensity.toString(), '0.3')} 0%, transparent 70%)`
-                        }}
-                        initial={{ scale: 0, opacity: 1 }}
-                        animate={{ scale: 3, opacity: 0 }}
-                        exit={{ opacity: 0 }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                    />
-                ))}
-            </AnimatePresence>
-        </>,
-        document.body
-    )
-}
-
-// ============================================
-// LIQUID CARD
+// LIQUID CARD - with cursor tracking effect
 // ============================================
 
 export function LiquidCard({
@@ -149,8 +24,13 @@ export function LiquidCard({
     animate = true,
     padding = 'md', // none | sm | md | lg
     onClick,
-    as: Component = 'div'
+    as: Component = 'div',
+    liquidEffect = true // enable/disable cursor tracking
 }) {
+    const cardRef = useRef(null)
+    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+    const [isHovered, setIsHovered] = useState(false)
+
     const glowClass = glow !== 'none' ? `glow-${glow}` : ''
     const paddingClasses = {
         none: '',
@@ -159,8 +39,17 @@ export function LiquidCard({
         lg: 'p-8'
     }
 
+    const handleMouseMove = (e) => {
+        if (!cardRef.current || !liquidEffect) return
+        const rect = cardRef.current.getBoundingClientRect()
+        const x = ((e.clientX - rect.left) / rect.width) * 100
+        const y = ((e.clientY - rect.top) / rect.height) * 100
+        setMousePosition({ x, y })
+    }
+
     return (
         <motion.div
+            ref={cardRef}
             as={Component}
             className={`liquid-card ${glowClass} ${paddingClasses[padding]} ${className}`}
             initial={animate ? { opacity: 0, y: 20, scale: 0.95 } : false}
@@ -168,7 +57,41 @@ export function LiquidCard({
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
             whileHover={onClick ? { scale: 1.01 } : {}}
             onClick={onClick}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+                '--mouse-x': `${mousePosition.x}%`,
+                '--mouse-y': `${mousePosition.y}%`
+            }}
         >
+            {/* Liquid cursor-tracking effect */}
+            {liquidEffect && (
+                <div 
+                    className="liquid-cursor-glow"
+                    style={{
+                        opacity: isHovered ? 1 : 0,
+                        background: `radial-gradient(600px circle at ${mousePosition.x}% ${mousePosition.y}%, 
+                            rgba(139, 92, 246, 0.15), 
+                            rgba(6, 182, 212, 0.08) 40%,
+                            transparent 70%)`,
+                        transition: 'opacity 0.3s ease'
+                    }}
+                />
+            )}
+            {/* Liquid ripple highlight */}
+            {liquidEffect && (
+                <div 
+                    className="liquid-highlight"
+                    style={{
+                        opacity: isHovered ? 1 : 0,
+                        background: `radial-gradient(300px circle at ${mousePosition.x}% ${mousePosition.y}%, 
+                            rgba(255, 255, 255, 0.12), 
+                            transparent 60%)`,
+                        transition: 'opacity 0.2s ease'
+                    }}
+                />
+            )}
             <div className="liquid-card-shimmer" />
             <div className="liquid-card-content relative z-10">
                 {children}
@@ -228,7 +151,7 @@ export function LiquidButton({
 }
 
 // ============================================
-// LIQUID INPUT (with animated icon)
+// LIQUID INPUT
 // ============================================
 
 export function LiquidInput({
@@ -238,57 +161,28 @@ export function LiquidInput({
     icon: Icon,
     className = '',
     wrapperClassName = '',
-    value,
-    onChange,
     ...props
 }) {
-    const [isFocused, setIsFocused] = useState(false)
-    const [internalValue, setInternalValue] = useState(value || '')
-    
-    // Sync with external value
-    useEffect(() => {
-        if (value !== undefined) setInternalValue(value)
-    }, [value])
-    
-    const hasValue = internalValue && internalValue.toString().length > 0
-    const showIconFloating = isFocused || hasValue
-    
-    const handleChange = (e) => {
-        setInternalValue(e.target.value)
-        onChange?.(e)
-    }
-    
     return (
-        <div className={`liquid-input-wrapper ${wrapperClassName}`}>
-            {label && <label className="liquid-input-label">{label}</label>}
-            <div className="relative">
+        <div className={`flex flex-col gap-1.5 ${wrapperClassName}`}>
+            {label && (
+                <label className="text-[13px] font-medium text-white/60 ml-1 block">
+                    {label}
+                </label>
+            )}
+            <div className="relative w-full">
                 {Icon && (
-                    <motion.div 
-                        className="absolute top-1/2 text-white/40 pointer-events-none z-10"
-                        initial={false}
-                        animate={{
-                            left: showIconFloating ? 14 : 16,
-                            y: '-50%',
-                            scale: showIconFloating ? 0.85 : 1,
-                            opacity: showIconFloating ? 0.6 : 0.4,
-                            x: showIconFloating ? -2 : 0
-                        }}
-                        transition={{ duration: 0.2, ease: 'easeOut' }}
-                    >
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none z-10">
                         <Icon size={18} />
-                    </motion.div>
+                    </div>
                 )}
                 <input
-                    className={`liquid-input ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
-                    value={internalValue}
-                    onChange={handleChange}
-                    onFocus={() => setIsFocused(true)}
-                    onBlur={() => setIsFocused(false)}
+                    className={`liquid-input w-full ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
                     {...props}
                 />
             </div>
-            {error && <p className="text-red-400 text-xs mt-1 ml-1">{error}</p>}
-            {hint && !error && <p className="text-white/40 text-xs mt-1 ml-1">{hint}</p>}
+            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
+            {hint && !error && <p className="text-white/40 text-xs ml-1">{hint}</p>}
         </div>
     )
 }
@@ -307,15 +201,19 @@ export function LiquidTextarea({
     ...props
 }) {
     return (
-        <div className={`liquid-input-wrapper ${wrapperClassName}`}>
-            {label && <label className="liquid-input-label">{label}</label>}
+        <div className={`flex flex-col gap-1.5 ${wrapperClassName}`}>
+            {label && (
+                <label className="text-[13px] font-medium text-white/60 ml-1 block">
+                    {label}
+                </label>
+            )}
             <textarea
-                className={`liquid-input resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
+                className={`liquid-input w-full resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
                 rows={rows}
                 {...props}
             />
-            {error && <p className="text-red-400 text-xs mt-1 ml-1">{error}</p>}
-            {hint && !error && <p className="text-white/40 text-xs mt-1 ml-1">{hint}</p>}
+            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
+            {hint && !error && <p className="text-white/40 text-xs ml-1">{hint}</p>}
         </div>
     )
 }

@@ -187,6 +187,47 @@
     animation: shimmer 1.5s ease-in-out;
 }
 
+/* === LIQUID CURSOR TRACKING EFFECTS === */
+.liquid-cursor-glow {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    border-radius: inherit;
+    transition: opacity 0.4s ease;
+}
+
+.liquid-highlight {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 2;
+    border-radius: inherit;
+    mix-blend-mode: overlay;
+    transition: opacity 0.25s ease;
+}
+
+/* Subtle border glow that follows cursor */
+.liquid-card::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    background: radial-gradient(
+        400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+        rgba(255, 255, 255, 0.1),
+        transparent 50%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: 0;
+}
+
+.liquid-card:hover::after {
+    opacity: 1;
+}
+
 /* === CARD GLOW VARIANTS === */
 .liquid-card.glow-purple {
     box-shadow:

@@ -52,8 +52,7 @@ import {
     LiquidBadge,
     LiquidTabs,
     LiquidSkeleton,
-    LiquidAvatar,
-    LiquidCursorGlow
+    LiquidAvatar
 } from '../../components/ui/LiquidUI'
 
 // ============================================
@@ -111,9 +110,6 @@ export default function LiquidPreview() {
 
     return (
         <div className="min-h-screen bg-[#050508] text-white relative overflow-x-hidden liquid-scrollbar">
-            
-            {/* === LIQUID CURSOR GLOW - Water effect following mouse === */}
-            <LiquidCursorGlow color="purple" size={350} intensity={0.35} blur={100} />
 
             {/* === ANIMATED BACKGROUND === */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
