@@ -61,7 +61,7 @@ export default function Effets({ formData, handleChange }) {
                         max="10"
                         value={formData.montee || 0}
                         onChange={(e) => handleChange('montee', parseInt(e.target.value))}
-                        className="w-full mt-2 accent-cyan-500"
+                        className="liquid-range cyan w-full mt-2"
                     />
                 </div>
 
@@ -79,7 +79,7 @@ export default function Effets({ formData, handleChange }) {
                         max="10"
                         value={formData.intensiteEffet || 0}
                         onChange={(e) => handleChange('intensiteEffet', parseInt(e.target.value))}
-                        className="w-full mt-2 accent-cyan-500"
+                        className="liquid-range cyan w-full mt-2"
                     />
                 </div>
 

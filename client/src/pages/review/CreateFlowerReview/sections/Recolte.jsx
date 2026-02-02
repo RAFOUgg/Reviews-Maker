@@ -110,7 +110,7 @@ export default function Recolte({ formData, handleChange }) {
                                     step="5"
                                     value={recolteData.trichomesTranslucides || 0}
                                     onChange={(e) => handleRecolteChange('trichomesTranslucides', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-blue-400"
+                                    className="liquid-range cyan w-full"
                                 />
                             </div>
 
@@ -129,7 +129,7 @@ export default function Recolte({ formData, handleChange }) {
                                     step="5"
                                     value={recolteData.trichomesLaiteux || 0}
                                     onChange={(e) => handleRecolteChange('trichomesLaiteux', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-white"
+                                    className="liquid-range w-full"
                                 />
                             </div>
 
@@ -148,7 +148,7 @@ export default function Recolte({ formData, handleChange }) {
                                     step="5"
                                     value={recolteData.trichomesAmbres || 0}
                                     onChange={(e) => handleRecolteChange('trichomesAmbres', parseFloat(e.target.value))}
-                                    className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-orange-500"
+                                    className="liquid-range amber w-full"
                                 />
                             </div>
 
@@ -178,7 +178,7 @@ export default function Recolte({ formData, handleChange }) {
                         <select
                             value={recolteData.modeRecolte || 'branches'}
                             onChange={(e) => handleRecolteChange('modeRecolte', e.target.value)}
-                            className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                            className="liquid-input liquid-select w-full"
                         >
                             <option value="plante-entiere">Plante entière</option>
                             <option value="branches">Branches</option>
@@ -204,7 +204,7 @@ export default function Recolte({ formData, handleChange }) {
                                 step="10"
                                 value={recolteData.poidsBrut || ''}
                                 onChange={(e) => handleRecolteChange('poidsBrut', parseFloat(e.target.value))}
-                                className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                                className="liquid-input w-full"
                                 placeholder="Ex: 800"
                             />
                             <p className="text-xs text-white/40 mt-1">Poids juste après coupe</p>
@@ -223,7 +223,7 @@ export default function Recolte({ formData, handleChange }) {
                                 step="10"
                                 value={recolteData.poidsNet || ''}
                                 onChange={(e) => handleRecolteChange('poidsNet', parseFloat(e.target.value))}
-                                className="w-full px-4 py-3 bg-[#1a1a2e] border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-amber-500/50"
+                                className="liquid-input w-full"
                                 placeholder="Ex: 150"
                             />
                             <p className="text-xs text-white/40 mt-1">Poids après trim + séchage initial</p>

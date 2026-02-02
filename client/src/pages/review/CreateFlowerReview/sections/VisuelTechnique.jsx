@@ -69,7 +69,7 @@ export default function VisuelTechnique({ formData = {}, handleChange = () => { 
                                         handleChange(field.key, parseInt(e.target.value))
                                     }
                                 }}
-                                className="w-full mt-2 accent-violet-500"
+                                className="liquid-range w-full mt-2"
                             />
                         </div>
                     ))}

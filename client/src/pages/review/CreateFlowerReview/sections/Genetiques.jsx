@@ -590,7 +590,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 <input
                                     type="text"
                                     defaultValue={selectedNode.genetics?.breeder || selectedNode.data?.breeder || ''}
-                                    className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 text-white placeholder:text-white/40 focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50"
+                                    className="liquid-input w-full text-sm"
                                     placeholder="DNA Genetics..."
                                 />
                             </div>
@@ -599,7 +599,7 @@ export default function Genetiques({ formData, handleChange }) {
                                 <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Type</label>
                                 <select
                                     defaultValue={selectedNode.genetics?.type || selectedNode.data?.type || ''}
-                                    className="w-full px-3 py-2 text-sm border border-white/10 rounded-xl bg-white/5 text-white focus:ring-2 focus:ring-violet-500/20 focus:border-violet-500/50"
+                                    className="liquid-input liquid-select w-full text-sm"
                                 >
                                     <option value="" className="bg-[#12121a] text-white">Sélectionner...</option>
                                     <option value="indica" className="bg-[#12121a] text-white">🌙 Indica</option>

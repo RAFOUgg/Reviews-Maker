@@ -60,7 +60,7 @@ export default function Odeurs({ formData, handleChange }) {
                         max="10"
                         value={formData.intensiteOdeur || 0}
                         onChange={(e) => handleChange('intensiteOdeur', parseInt(e.target.value))}
-                        className="w-full mt-2 accent-emerald-500"
+                        className="liquid-range green w-full mt-2"
                     />
                 </div>
 

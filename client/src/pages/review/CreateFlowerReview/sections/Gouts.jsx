@@ -64,7 +64,7 @@ export default function Gouts({ formData, handleChange }) {
                         max="10"
                         value={formData.intensiteGout || 0}
                         onChange={(e) => handleChange('intensiteGout', parseInt(e.target.value))}
-                        className="w-full mt-2 accent-amber-500"
+                        className="liquid-range amber w-full mt-2"
                     />
                 </div>
 
@@ -82,7 +82,7 @@ export default function Gouts({ formData, handleChange }) {
                         max="10"
                         value={formData.agressivite || 0}
                         onChange={(e) => handleChange('agressivite', parseInt(e.target.value))}
-                        className="w-full mt-2 accent-amber-500"
+                        className="liquid-range amber w-full mt-2"
                     />
                 </div>
 

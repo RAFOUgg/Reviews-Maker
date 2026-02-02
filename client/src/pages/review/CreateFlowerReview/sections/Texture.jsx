@@ -39,7 +39,7 @@ export default function Texture({ formData, handleChange }) {
                             max={field.max}
                             value={formData[field.key] || 0}
                             onChange={(e) => handleChange(field.key, parseInt(e.target.value))}
-                            className="w-full mt-2 accent-pink-500"
+                            className="liquid-range w-full mt-2"
                         />
                     </div>
                 ))}

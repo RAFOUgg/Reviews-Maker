@@ -94,7 +94,7 @@ export default function Experience({ formData, handleChange }) {
                     <textarea
                         value={formData.effetsSecondaires || ''}
                         onChange={(e) => handleChange('effetsSecondaires', e.target.value)}
-                        className="w-full px-4 py-3 border border-white/10 rounded-xl bg-white/5 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 transition-all"
+                        className="liquid-input w-full resize-none"
                         placeholder="Ex: Yeux secs, faim, etc."
                         rows={3}
                     />
