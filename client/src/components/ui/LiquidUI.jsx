@@ -161,41 +161,28 @@ export function LiquidInput({
     icon: Icon,
     className = '',
     wrapperClassName = '',
-    labelWidth = '120px',
     ...props
 }) {
     return (
-        <div className={`flex flex-col gap-1 ${wrapperClassName}`}>
-            <div className="flex items-center gap-4">
-                {label && (
-                    <label
-                        className="text-[13px] font-medium text-white/60 shrink-0"
-                        style={{ width: labelWidth }}
-                    >
-                        {label}
-                    </label>
-                )}
-                <div className={`relative ${label ? 'flex-1' : 'w-full'}`}>
-                    {Icon && (
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none z-10">
-                            <Icon size={18} />
-                        </div>
-                    )}
-                    <input
-                        className={`liquid-input w-full ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
-                        {...props}
-                    />
-                </div>
-            </div>
-            {(error || hint) && (
-                <div className="flex">
-                    {label && <div style={{ width: labelWidth }} className="shrink-0" />}
-                    <div className="flex-1 pl-4">
-                        {error && <p className="text-red-400 text-xs">{error}</p>}
-                        {hint && !error && <p className="text-white/40 text-xs">{hint}</p>}
-                    </div>
-                </div>
+        <div className={`flex flex-col gap-2 ${wrapperClassName}`}>
+            {label && (
+                <label className="text-[13px] font-medium text-white/60 ml-1">
+                    {label}
+                </label>
             )}
+            <div className="relative w-full">
+                {Icon && (
+                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40 pointer-events-none">
+                        <Icon size={18} />
+                    </div>
+                )}
+                <input
+                    className={`liquid-input w-full ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
+                    {...props}
+                />
+            </div>
+            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
+            {hint && !error && <p className="text-white/40 text-xs ml-1">{hint}</p>}
         </div>
     )
 }
@@ -211,35 +198,22 @@ export function LiquidTextarea({
     className = '',
     wrapperClassName = '',
     rows = 4,
-    labelWidth = '120px',
     ...props
 }) {
     return (
-        <div className={`flex flex-col gap-1 ${wrapperClassName}`}>
-            <div className="flex gap-4">
-                {label && (
-                    <label
-                        className="text-[13px] font-medium text-white/60 shrink-0 pt-3"
-                        style={{ width: labelWidth }}
-                    >
-                        {label}
-                    </label>
-                )}
-                <textarea
-                    className={`liquid-input flex-1 resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
-                    rows={rows}
-                    {...props}
-                />
-            </div>
-            {(error || hint) && (
-                <div className="flex">
-                    {label && <div style={{ width: labelWidth }} className="shrink-0" />}
-                    <div className="flex-1 pl-4">
-                        {error && <p className="text-red-400 text-xs">{error}</p>}
-                        {hint && !error && <p className="text-white/40 text-xs">{hint}</p>}
-                    </div>
-                </div>
+        <div className={`flex flex-col gap-2 ${wrapperClassName}`}>
+            {label && (
+                <label className="text-[13px] font-medium text-white/60 ml-1">
+                    {label}
+                </label>
             )}
+            <textarea
+                className={`liquid-input w-full resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
+                rows={rows}
+                {...props}
+            />
+            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
+            {hint && !error && <p className="text-white/40 text-xs ml-1">{hint}</p>}
         </div>
     )
 }
@@ -258,8 +232,7 @@ export function LiquidSelect({
     disabled = false,
     searchable = false,
     className = '',
-    wrapperClassName = '',
-    labelWidth = '120px'
+    wrapperClassName = ''
 }) {
     const [isOpen, setIsOpen] = useState(false)
     const [search, setSearch] = useState('')
@@ -301,32 +274,28 @@ export function LiquidSelect({
     }
 
     return (
-        <div className={`flex flex-col gap-1 ${wrapperClassName}`} ref={containerRef}>
-            <div className="flex items-center gap-4">
-                {label && (
-                    <label
-                        className="text-[13px] font-medium text-white/60 shrink-0"
-                        style={{ width: labelWidth || '120px' }}
-                    >
-                        {label}
-                    </label>
-                )}
+        <div className={`flex flex-col gap-2 ${wrapperClassName}`} ref={containerRef}>
+            {label && (
+                <label className="text-[13px] font-medium text-white/60 ml-1">
+                    {label}
+                </label>
+            )}
 
-                {/* Trigger */}
-                <button
-                    type="button"
-                    className={`liquid-select-trigger ${isOpen ? 'open' : ''} ${error ? 'border-red-500/50' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
-                    onClick={() => !disabled && setIsOpen(!isOpen)}
-                    disabled={disabled}
+            {/* Trigger */}
+            <button
+                type="button"
+                className={`liquid-select-trigger ${isOpen ? 'open' : ''} ${error ? 'border-red-500/50' : ''} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+                onClick={() => !disabled && setIsOpen(!isOpen)}
+                disabled={disabled}
+            >
+                <span className={selectedOption ? 'text-white' : 'text-white/40'}>
+                    {selectedOption?.label || placeholder}
+                </span>
+                <motion.div
+                    animate={{ rotate: isOpen ? 180 : 0 }}
+                    transition={{ duration: 0.2 }}
                 >
-                    <span className={selectedOption ? 'text-white' : 'text-white/40'}>
-                        {selectedOption?.label || placeholder}
-                    </span>
-                    <motion.div
-                        animate={{ rotate: isOpen ? 180 : 0 }}
-                        transition={{ duration: 0.2 }}
-                    >
-                        <ChevronDown size={18} className="text-white/50" />
+                    <ChevronDown size={18} className="text-white/50" />
                     </motion.div>
                 </button>
 
@@ -380,13 +349,7 @@ export function LiquidSelect({
                         </motion.div>
                     )}
                 </AnimatePresence>
-            </div>
-            {error && (
-                <div className="flex">
-                    {label && <div style={{ width: labelWidth }} className="shrink-0" />}
-                    <p className="text-red-400 text-xs pl-4">{error}</p>
-                </div>
-            )}
+            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
         </div>
     )
 }
