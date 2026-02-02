@@ -27,16 +27,16 @@ const GlassCard = ({ children, className = '', hover = true, glow = false, glowC
             {/* Glass layers */}
             <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl" />
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02]" />
-            
+
             {/* Border with gradient */}
             <div className="absolute inset-0 rounded-3xl border border-white/[0.08] group-hover:border-white/[0.15] transition-colors duration-500" />
-            
+
             {/* Top highlight line */}
             <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-60" />
-            
+
             {/* Inner glow on hover */}
             {glow && <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${glowColors[glowColor]}`} />}
-            
+
             {/* Sheen effect */}
             <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-white/[0.08] to-transparent rotate-12 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
 
@@ -239,7 +239,7 @@ export default function LiquidPreview() {
 
             {/* === MAIN CONTENT === */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
-                
+
                 {/* === HEADER === */}
                 <div className="flex items-center justify-between mb-10">
                     <div className="flex items-center gap-4">
@@ -262,7 +262,7 @@ export default function LiquidPreview() {
 
                 {/* === MAIN GRID === */}
                 <div className="grid grid-cols-12 gap-6">
-                    
+
                     {/* === LEFT PANEL - Main Form === */}
                     <GlassCard className="col-span-12 lg:col-span-8" padding="lg" glow glowColor="purple">
                         <div className="space-y-6">
@@ -281,10 +281,10 @@ export default function LiquidPreview() {
                             <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <GlassInput 
-                                    value={name} 
-                                    onChange={(e) => setName(e.target.value)} 
-                                    placeholder="Ex: Purple Haze" 
+                                <GlassInput
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Ex: Purple Haze"
                                     label="Nom du produit"
                                 />
                                 <GlassSelect
@@ -360,9 +360,9 @@ export default function LiquidPreview() {
                         <p className="text-white/40 text-sm mb-3">Sélectionnez les arômes dominants</p>
                         <div className="flex gap-2 flex-wrap">
                             {['Agrumes', 'Épicé', 'Sucré', 'Terreux', 'Floral'].map(chip => (
-                                <GlassChip 
-                                    key={chip} 
-                                    active={selectedChips.includes(chip)} 
+                                <GlassChip
+                                    key={chip}
+                                    active={selectedChips.includes(chip)}
                                     onClick={() => toggleChip(chip)}
                                     color="green"
                                 >
@@ -436,7 +436,7 @@ export default function LiquidPreview() {
                                                 <p className="text-white/40 text-sm">Review prête à être sauvegardée</p>
                                             </div>
                                         </div>
-                                        
+
                                         <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/[0.06]">
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-white/50">Produit</span>

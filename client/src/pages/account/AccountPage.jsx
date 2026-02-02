@@ -115,13 +115,13 @@ const AccountPage = () => {
           <div className="absolute top-[-20%] left-[-15%] w-[60%] h-[60%] bg-amber-500/10 rounded-full blur-[120px]" />
           <div className="absolute bottom-[-20%] right-[-15%] w-[50%] h-[50%] bg-red-500/8 rounded-full blur-[100px]" />
         </div>
-        
+
         <div className="relative z-10 max-w-md w-full">
           <div className="relative rounded-3xl overflow-hidden p-8">
             <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl" />
             <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02]" />
             <div className="absolute inset-[1px] rounded-3xl border border-white/[0.08]" />
-            
+
             <div className="relative z-10 text-center">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30">
                 <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -170,9 +170,9 @@ const AccountPage = () => {
     <div className="min-h-screen bg-[#07070f] text-white p-4 md:p-8 relative overflow-hidden">
       {/* Background ambient glow effects - Apple style */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/8 rounded-full blur-[120px] animate-pulse" style={{animationDuration: '8s'}} />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/6 rounded-full blur-[100px] animate-pulse" style={{animationDuration: '10s', animationDelay: '2s'}} />
-        <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-violet-500/5 rounded-full blur-[80px] animate-pulse" style={{animationDuration: '12s', animationDelay: '4s'}} />
+        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/8 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />
+        <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/6 rounded-full blur-[100px] animate-pulse" style={{ animationDuration: '10s', animationDelay: '2s' }} />
+        <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-violet-500/5 rounded-full blur-[80px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
       </div>
 
       <div className="relative z-10 max-w-5xl mx-auto">
@@ -197,7 +197,7 @@ const AccountPage = () => {
           <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl" />
           <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02]" />
           <div className="absolute inset-[1px] rounded-3xl border border-white/[0.08]" />
-          
+
           {/* Inner glow */}
           <div className="absolute top-0 left-1/4 right-1/4 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
 
@@ -212,11 +212,10 @@ const AccountPage = () => {
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
-                      isActive 
-                        ? 'bg-white/[0.1] text-white shadow-lg' 
+                    className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${isActive
+                        ? 'bg-white/[0.1] text-white shadow-lg'
                         : 'text-white/50 hover:text-white/70 hover:bg-white/[0.04]'
-                    }`}
+                      }`}
                     title={tab.label}
                   >
                     {Icon && <Icon size={18} />}
