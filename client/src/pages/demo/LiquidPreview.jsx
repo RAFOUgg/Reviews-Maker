@@ -1,167 +1,156 @@
-import React, { useState, useRef, useEffect } from 'react'
+/**
+ * Liquid Preview - Apple/iPhone 18 Liquid Glass Design System
+ * 
+ * This page is a design sandbox to create and test the perfect UI
+ * before applying it to the entire application.
+ * 
+ * Features:
+ * - True liquid glass effects with refraction and sheen
+ * - Glassmorphism with visible blur and reflections
+ * - Animated glowing borders
+ * - Water droplet-style cards
+ * - Apple-like smooth animations
+ */
+
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Plus, Search, Settings, Download, Star, Sparkles, Leaf, Flame, Droplets, ChevronDown, X, Check, Moon, Sun } from 'lucide-react'
+import { 
+    Sparkles, 
+    Leaf, 
+    Flame, 
+    Droplets, 
+    Search, 
+    Plus, 
+    Check, 
+    X,
+    Star,
+    Settings,
+    Download,
+    Eye,
+    Moon,
+    Sun,
+    ChevronDown,
+    Palette,
+    Zap,
+    Heart,
+    Coffee
+} from 'lucide-react'
 
-/* =============================================================================
-   LIQUID GLASS DESIGN SYSTEM - iPhone 18 / Apple Style
-   Reviews-Maker V2 Preview Page
-============================================================================= */
+// Import the Apple Liquid Glass CSS
+import '../../assets/apple-liquid-glass.css'
 
-// === LIQUID GLASS CARD COMPONENT ===
-const GlassCard = ({ children, className = '', hover = true, glow = false, glowColor = 'purple', padding = 'md', onClick }) => {
-    const paddings = { none: '', sm: 'p-3', md: 'p-5', lg: 'p-7' }
-    const glowColors = {
-        purple: 'group-hover:shadow-[0_0_60px_-10px_rgba(139,92,246,0.4)]',
-        cyan: 'group-hover:shadow-[0_0_60px_-10px_rgba(6,182,212,0.4)]',
-        green: 'group-hover:shadow-[0_0_60px_-10px_rgba(34,197,94,0.4)]',
-        amber: 'group-hover:shadow-[0_0_60px_-10px_rgba(245,158,11,0.4)]',
-    }
+// ============================================
+// LIQUID GLASS COMPONENTS
+// ============================================
 
+/**
+ * LiquidCard - A glass card with liquid water droplet effect
+ */
+function LiquidCard({ 
+    children, 
+    className = '', 
+    glow = 'purple', // purple | cyan | amber | green | pink | none
+    animate = true,
+    onClick 
+}) {
+    const glowClass = glow !== 'none' ? `glow-${glow}` : ''
+    
     return (
         <motion.div
-            className={`group relative rounded-3xl overflow-hidden ${paddings[padding]} ${className}`}
+            className={`liquid-card ${glowClass} ${animate ? 'liquid-card-animate' : ''} ${className}`}
+            initial={animate ? { opacity: 0, y: 20, scale: 0.95 } : false}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            whileHover={{ scale: 1.01, transition: { duration: 0.2 } }}
             onClick={onClick}
-            whileHover={hover ? { y: -4, scale: 1.01 } : {}}
-            transition={{ type: 'spring', stiffness: 400, damping: 25 }}
         >
-            {/* Glass layers */}
-            <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl" />
-            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02]" />
-
-            {/* Border with gradient */}
-            <div className="absolute inset-0 rounded-3xl border border-white/[0.08] group-hover:border-white/[0.15] transition-colors duration-500" />
-
-            {/* Top highlight line */}
-            <div className="absolute top-0 left-[15%] right-[15%] h-[1px] bg-gradient-to-r from-transparent via-white/30 to-transparent opacity-60" />
-
-            {/* Inner glow on hover */}
-            {glow && <div className={`absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 ${glowColors[glowColor]}`} />}
-
-            {/* Sheen effect */}
-            <div className="absolute -top-1/2 -left-1/2 w-full h-full bg-gradient-to-br from-white/[0.08] to-transparent rotate-12 opacity-0 group-hover:opacity-100 transition-opacity duration-700 pointer-events-none" />
-
-            {/* Content */}
-            <div className="relative z-10">{children}</div>
+            {/* Shimmer effect on hover */}
+            <div className="liquid-card-shimmer" />
+            
+            {/* Card content */}
+            <div className="liquid-card-content relative z-10">
+                {children}
+            </div>
         </motion.div>
     )
 }
 
-// === LIQUID GLASS BUTTON COMPONENT ===
-const GlassButton = ({ children, variant = 'primary', size = 'md', icon: Icon, className = '', onClick, disabled = false }) => {
-    const variants = {
-        primary: 'bg-gradient-to-r from-violet-600 to-purple-600 text-white shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40 hover:from-violet-500 hover:to-purple-500',
-        secondary: 'bg-white/[0.06] hover:bg-white/[0.12] text-white/90 border border-white/[0.08] hover:border-white/[0.15]',
-        ghost: 'hover:bg-white/[0.06] text-white/70 hover:text-white/90',
-        outline: 'border border-white/[0.15] hover:border-white/[0.25] hover:bg-white/[0.04] text-white/80',
-        danger: 'bg-gradient-to-r from-red-600 to-rose-600 text-white shadow-lg shadow-red-500/20 hover:shadow-red-500/35',
-        success: 'bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/35',
+/**
+ * LiquidButton - A glass button with liquid effect
+ */
+function LiquidButton({ 
+    children, 
+    variant = 'default', // default | primary | success | danger | ghost
+    size = 'md', // sm | md | lg
+    icon: Icon,
+    className = '',
+    ...props 
+}) {
+    const sizeClasses = {
+        sm: 'px-3 py-2 text-xs',
+        md: 'px-5 py-3 text-sm',
+        lg: 'px-7 py-4 text-base'
     }
-    const sizes = {
-        sm: 'px-3 py-1.5 text-sm rounded-xl gap-1.5',
-        md: 'px-4 py-2.5 text-sm rounded-xl gap-2',
-        lg: 'px-6 py-3 text-base rounded-2xl gap-2.5',
-    }
-
+    
     return (
         <motion.button
-            className={`inline-flex items-center justify-center font-medium transition-all duration-300 ${variants[variant]} ${sizes[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'} ${className}`}
-            onClick={disabled ? undefined : onClick}
-            whileHover={disabled ? {} : { scale: 1.02 }}
-            whileTap={disabled ? {} : { scale: 0.98 }}
+            className={`liquid-button ${variant} ${sizeClasses[size]} ${className}`}
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            {...props}
         >
-            {Icon && <Icon size={size === 'sm' ? 14 : size === 'lg' ? 20 : 16} />}
-            {children}
+            <span className="relative z-10 flex items-center gap-2">
+                {Icon && <Icon size={size === 'sm' ? 14 : size === 'lg' ? 20 : 16} />}
+                {children}
+            </span>
         </motion.button>
     )
 }
 
-// === LIQUID GLASS INPUT COMPONENT ===
-const GlassInput = ({ value, onChange, placeholder, label, type = 'text', icon: Icon }) => (
-    <div className="space-y-2">
-        {label && <label className="text-white/50 text-sm font-medium">{label}</label>}
-        <div className="relative group">
-            {Icon && <Icon size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30 group-focus-within:text-white/50 transition-colors" />}
-            <input
-                type={type}
-                value={value}
-                onChange={onChange}
-                placeholder={placeholder}
-                className={`w-full bg-white/[0.04] hover:bg-white/[0.06] focus:bg-white/[0.08] border border-white/[0.08] focus:border-white/[0.15] rounded-xl px-4 py-3 text-white placeholder-white/30 outline-none transition-all duration-300 backdrop-blur-sm ${Icon ? 'pl-10' : ''}`}
-            />
-            {/* Focus glow */}
-            <div className="absolute inset-0 rounded-xl opacity-0 group-focus-within:opacity-100 transition-opacity duration-300 pointer-events-none shadow-[0_0_20px_-5px_rgba(139,92,246,0.3)]" />
-        </div>
-    </div>
-)
-
-// === LIQUID GLASS SELECT COMPONENT ===
-const GlassSelect = ({ options = [], value, onChange, placeholder = 'Sélectionner', label }) => {
-    const [open, setOpen] = useState(false)
-    const ref = useRef()
-    const selected = options.find((o) => o.value === value)
-
-    useEffect(() => {
-        const handler = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false)
-        document.addEventListener('click', handler)
-        return () => document.removeEventListener('click', handler)
-    }, [])
-
+/**
+ * LiquidInput - A glass input field
+ */
+function LiquidInput({ label, className = '', ...props }) {
     return (
-        <div className="space-y-2" ref={ref}>
-            {label && <label className="text-white/50 text-sm font-medium">{label}</label>}
-            <div className="relative">
-                <button
-                    onClick={() => setOpen(!open)}
-                    className="w-full flex items-center justify-between bg-white/[0.04] hover:bg-white/[0.06] border border-white/[0.08] hover:border-white/[0.12] rounded-xl px-4 py-3 text-left transition-all duration-300"
-                >
-                    <span className={selected ? 'text-white' : 'text-white/30'}>{selected?.label ?? placeholder}</span>
-                    <ChevronDown size={18} className={`text-white/40 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
-                </button>
-
-                <AnimatePresence>
-                    {open && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                            animate={{ opacity: 1, y: 0, scale: 1 }}
-                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                            transition={{ duration: 0.2 }}
-                            className="absolute z-50 mt-2 w-full rounded-2xl overflow-hidden"
-                        >
-                            <div className="bg-[#1a1a2e]/95 backdrop-blur-2xl border border-white/[0.1] rounded-2xl p-1.5 shadow-2xl shadow-black/50">
-                                {options.map((opt) => (
-                                    <div
-                                        key={opt.value}
-                                        onClick={() => { onChange(opt.value); setOpen(false) }}
-                                        className={`px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 flex items-center gap-2 ${value === opt.value ? 'bg-violet-600/20 text-violet-300' : 'text-white/70 hover:bg-white/[0.06] hover:text-white'}`}
-                                    >
-                                        {value === opt.value && <Check size={16} className="text-violet-400" />}
-                                        <span className={value === opt.value ? '' : 'ml-6'}>{opt.label}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+        <div className={`liquid-input-wrapper ${className}`}>
+            {label && <label className="liquid-input-label">{label}</label>}
+            <input className="liquid-input" {...props} />
         </div>
     )
 }
 
-// === LIQUID GLASS CHIP/TAG COMPONENT ===
-const GlassChip = ({ children, active = false, onClick, icon: Icon, color = 'default' }) => {
-    const colors = {
-        default: active ? 'bg-white/[0.12] border-white/[0.2] text-white' : 'bg-white/[0.04] border-white/[0.08] text-white/60 hover:bg-white/[0.08] hover:text-white/80',
-        purple: active ? 'bg-violet-500/20 border-violet-400/30 text-violet-300' : 'bg-violet-500/5 border-violet-400/10 text-violet-300/60 hover:bg-violet-500/10',
-        green: active ? 'bg-emerald-500/20 border-emerald-400/30 text-emerald-300' : 'bg-emerald-500/5 border-emerald-400/10 text-emerald-300/60 hover:bg-emerald-500/10',
-        amber: active ? 'bg-amber-500/20 border-amber-400/30 text-amber-300' : 'bg-amber-500/5 border-amber-400/10 text-amber-300/60 hover:bg-amber-500/10',
-    }
+/**
+ * LiquidSelect - A glass select dropdown
+ */
+function LiquidSelect({ label, options, className = '', ...props }) {
+    return (
+        <div className={`liquid-input-wrapper ${className}`}>
+            {label && <label className="liquid-input-label">{label}</label>}
+            <select className="liquid-input liquid-select" {...props}>
+                {options.map(opt => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                ))}
+            </select>
+        </div>
+    )
+}
 
+/**
+ * LiquidChip - A glass chip/tag
+ */
+function LiquidChip({ 
+    children, 
+    active = false, 
+    color = 'purple', // purple | green | cyan | amber
+    icon: Icon,
+    onClick 
+}) {
     return (
         <motion.button
+            className={`liquid-chip ${active ? `active ${color}` : ''}`}
             onClick={onClick}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium border transition-all duration-300 ${colors[color]}`}
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
         >
             {Icon && <Icon size={14} />}
             {children}
@@ -169,296 +158,584 @@ const GlassChip = ({ children, active = false, onClick, icon: Icon, color = 'def
     )
 }
 
-// === LIQUID GLASS TOGGLE COMPONENT ===
-const GlassToggle = ({ checked, onChange, label }) => (
-    <label className="flex items-center gap-3 cursor-pointer group">
-        <div className="relative">
-            <input type="checkbox" checked={checked} onChange={onChange} className="sr-only" />
-            <div className={`w-12 h-7 rounded-full transition-all duration-300 ${checked ? 'bg-violet-600' : 'bg-white/[0.08]'}`}>
-                <motion.div
-                    className="absolute top-1 w-5 h-5 bg-white rounded-full shadow-lg"
-                    animate={{ left: checked ? '26px' : '4px' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-            </div>
-        </div>
-        {label && <span className="text-white/70 group-hover:text-white/90 transition-colors">{label}</span>}
-    </label>
-)
-
-// === LIQUID GLASS SLIDER/RATING COMPONENT ===
-const GlassRating = ({ value = 0, max = 10, label, onChange }) => {
-    const percentage = (value / max) * 100
-
+/**
+ * LiquidToggle - A glass toggle switch
+ */
+function LiquidToggle({ checked, onChange }) {
     return (
-        <div className="space-y-2">
-            <div className="flex items-center justify-between">
-                {label && <span className="text-white/50 text-sm">{label}</span>}
-                <span className="text-white font-semibold">{value}/{max}</span>
+        <motion.button
+            className={`liquid-toggle ${checked ? 'active' : ''}`}
+            onClick={() => onChange?.(!checked)}
+            whileTap={{ scale: 0.95 }}
+        >
+            <motion.div 
+                className="liquid-toggle-knob"
+                layout
+                transition={{ type: 'spring', stiffness: 500, damping: 30 }}
+            />
+        </motion.button>
+    )
+}
+
+/**
+ * LiquidRating - A glass rating bar
+ */
+function LiquidRating({ value, max = 10, label, color = 'purple' }) {
+    const percentage = (value / max) * 100
+    
+    return (
+        <div className="liquid-rating">
+            <div className="liquid-rating-header">
+                <span className="liquid-rating-label">{label}</span>
+                <span className="liquid-rating-value">{value}/{max}</span>
             </div>
-            <div className="relative h-2 bg-white/[0.06] rounded-full overflow-hidden">
-                <motion.div
-                    className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500 to-purple-500 rounded-full"
+            <div className="liquid-rating-track">
+                <motion.div 
+                    className={`liquid-rating-fill ${color}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.5, ease: 'easeOut' }}
+                    transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
                 />
-                {/* Glow effect */}
-                <div className="absolute inset-y-0 left-0 bg-gradient-to-r from-violet-500/50 to-purple-500/50 rounded-full blur-sm" style={{ width: `${percentage}%` }} />
             </div>
         </div>
     )
 }
 
-// === MAIN PREVIEW PAGE ===
-export default function LiquidPreview() {
-    const [type, setType] = useState('Fleur')
-    const [name, setName] = useState('')
-    const [modalOpen, setModalOpen] = useState(false)
-    const [darkMode, setDarkMode] = useState(true)
-    const [selectedChips, setSelectedChips] = useState(['Agrumes'])
-    const [rating, setRating] = useState(7)
+/**
+ * LiquidDivider - A glass divider line
+ */
+function LiquidDivider() {
+    return <div className="liquid-divider my-6" />
+}
 
-    const toggleChip = (chip) => {
-        setSelectedChips(prev => prev.includes(chip) ? prev.filter(c => c !== chip) : [...prev, chip])
+// ============================================
+// MAIN PREVIEW PAGE
+// ============================================
+
+export default function LiquidPreview() {
+    const [productName, setProductName] = useState('')
+    const [productType, setProductType] = useState('flower')
+    const [darkMode, setDarkMode] = useState(true)
+    const [modalOpen, setModalOpen] = useState(false)
+    const [selectedAromas, setSelectedAromas] = useState(['Agrumes', 'Pin'])
+    const [selectedEffects, setSelectedEffects] = useState(['Relaxant'])
+    
+    const toggleAroma = (aroma) => {
+        setSelectedAromas(prev => 
+            prev.includes(aroma) 
+                ? prev.filter(a => a !== aroma) 
+                : [...prev, aroma]
+        )
+    }
+    
+    const toggleEffect = (effect) => {
+        setSelectedEffects(prev => 
+            prev.includes(effect) 
+                ? prev.filter(e => e !== effect) 
+                : [...prev, effect]
+        )
     }
 
     return (
-        <div className="min-h-screen bg-[#07070f] text-white relative overflow-hidden">
-            {/* === AMBIENT BACKGROUND EFFECTS === */}
-            <div className="fixed inset-0 pointer-events-none">
-                {/* Primary glow - top left */}
-                <div className="absolute top-[-20%] left-[-15%] w-[70%] h-[70%] bg-violet-600/10 rounded-full blur-[150px]" />
-                {/* Secondary glow - bottom right */}
-                <div className="absolute bottom-[-30%] right-[-20%] w-[60%] h-[60%] bg-cyan-500/8 rounded-full blur-[130px]" />
-                {/* Accent glow - center */}
-                <div className="absolute top-[40%] left-[50%] -translate-x-1/2 w-[40%] h-[40%] bg-purple-500/5 rounded-full blur-[100px]" />
-                {/* Subtle grid pattern */}
-                <div className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.01)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.01)_1px,transparent_1px)] bg-[size:60px_60px] opacity-50" />
+        <div className="min-h-screen bg-[#050508] text-white relative overflow-x-hidden liquid-scrollbar">
+            
+            {/* === ANIMATED BACKGROUND === */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                {/* Large ambient blobs */}
+                <div 
+                    className="liquid-blob purple"
+                    style={{ 
+                        width: '60vw', 
+                        height: '60vw', 
+                        top: '-20%', 
+                        left: '-15%' 
+                    }}
+                />
+                <div 
+                    className="liquid-blob cyan"
+                    style={{ 
+                        width: '50vw', 
+                        height: '50vw', 
+                        bottom: '-25%', 
+                        right: '-15%' 
+                    }}
+                />
+                <div 
+                    className="liquid-blob pink"
+                    style={{ 
+                        width: '35vw', 
+                        height: '35vw', 
+                        top: '50%', 
+                        left: '40%',
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                />
+                
+                {/* Subtle grid */}
+                <div 
+                    className="absolute inset-0 opacity-30"
+                    style={{
+                        backgroundImage: `
+                            linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
+                            linear-gradient(90deg, rgba(255,255,255,0.02) 1px, transparent 1px)
+                        `,
+                        backgroundSize: '80px 80px'
+                    }}
+                />
+                
+                {/* Noise texture overlay */}
+                <div 
+                    className="absolute inset-0 opacity-[0.015]"
+                    style={{
+                        backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`
+                    }}
+                />
             </div>
 
             {/* === MAIN CONTENT === */}
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
 
                 {/* === HEADER === */}
-                <div className="flex items-center justify-between mb-10">
-                    <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                            <Sparkles size={24} className="text-white" />
-                        </div>
+                <motion.header 
+                    className="flex items-center justify-between mb-12"
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6 }}
+                >
+                    <div className="flex items-center gap-5">
+                        {/* Logo */}
+                        <motion.div 
+                            className="relative w-14 h-14"
+                            whileHover={{ rotate: 5, scale: 1.05 }}
+                        >
+                            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 blur-lg opacity-60" />
+                            <div className="relative w-full h-full rounded-2xl bg-gradient-to-br from-violet-500 via-purple-500 to-fuchsia-500 flex items-center justify-center shadow-2xl">
+                                <Sparkles size={26} className="text-white" />
+                            </div>
+                        </motion.div>
+                        
                         <div>
-                            <h1 className="text-3xl font-bold bg-gradient-to-r from-white via-white to-white/50 bg-clip-text text-transparent">
+                            <h1 className="text-3xl font-bold liquid-text-gradient">
                                 Liquid Glass UI
                             </h1>
-                            <p className="text-white/40 text-sm">Apple-like Design System • iPhone 18 Style</p>
+                            <p className="liquid-text-muted text-sm mt-0.5">
+                                Apple Design System • iPhone 18 Style
+                            </p>
                         </div>
                     </div>
-                    <div className="flex items-center gap-3">
-                        <GlassToggle checked={darkMode} onChange={(e) => setDarkMode(e.target.checked)} />
-                        <GlassButton variant="secondary" size="md" icon={Search}>Recherche</GlassButton>
-                        <GlassButton variant="primary" size="md" icon={Plus}>Créer</GlassButton>
+                    
+                    <div className="flex items-center gap-4">
+                        <div className="flex items-center gap-2 mr-2">
+                            <Sun size={16} className="liquid-text-muted" />
+                            <LiquidToggle checked={darkMode} onChange={setDarkMode} />
+                            <Moon size={16} className={darkMode ? 'text-violet-400' : 'liquid-text-muted'} />
+                        </div>
+                        <LiquidButton variant="default" icon={Search}>
+                            Rechercher
+                        </LiquidButton>
+                        <LiquidButton variant="primary" icon={Plus}>
+                            Créer
+                        </LiquidButton>
                     </div>
-                </div>
+                </motion.header>
 
                 {/* === MAIN GRID === */}
                 <div className="grid grid-cols-12 gap-6">
 
-                    {/* === LEFT PANEL - Main Form === */}
-                    <GlassCard className="col-span-12 lg:col-span-8" padding="lg" glow glowColor="purple">
-                        <div className="space-y-6">
-                            <div className="flex items-center justify-between">
-                                <div>
-                                    <h2 className="text-2xl font-semibold text-white">Nouvelle Review</h2>
-                                    <p className="text-white/40 mt-1">Créez votre fiche technique détaillée</p>
+                    {/* === LEFT COLUMN - Main Form === */}
+                    <div className="col-span-12 lg:col-span-8 space-y-6">
+                        
+                        {/* Form Card */}
+                        <LiquidCard glow="purple" className="p-8">
+                            <div className="space-y-8">
+                                {/* Header */}
+                                <div className="flex items-start justify-between">
+                                    <div>
+                                        <h2 className="text-2xl font-semibold liquid-text-gradient">
+                                            Nouvelle Review
+                                        </h2>
+                                        <p className="liquid-text-muted mt-2">
+                                            Créez votre fiche technique avec le style Liquid Glass
+                                        </p>
+                                    </div>
+                                    
+                                    {/* Type chips */}
+                                    <div className="flex gap-2">
+                                        <LiquidChip 
+                                            icon={Leaf} 
+                                            active={productType === 'flower'} 
+                                            color="green"
+                                            onClick={() => setProductType('flower')}
+                                        >
+                                            Fleur
+                                        </LiquidChip>
+                                        <LiquidChip 
+                                            icon={Flame} 
+                                            active={productType === 'hash'} 
+                                            color="amber"
+                                            onClick={() => setProductType('hash')}
+                                        >
+                                            Hash
+                                        </LiquidChip>
+                                        <LiquidChip 
+                                            icon={Droplets} 
+                                            active={productType === 'concentrate'} 
+                                            color="cyan"
+                                            onClick={() => setProductType('concentrate')}
+                                        >
+                                            Concentré
+                                        </LiquidChip>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <GlassChip active icon={Leaf} color="green">Fleur</GlassChip>
-                                    <GlassChip icon={Flame} color="amber">Hash</GlassChip>
-                                    <GlassChip icon={Droplets} color="purple">Concentré</GlassChip>
+                                
+                                <LiquidDivider />
+                                
+                                {/* Form inputs */}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <LiquidInput 
+                                        label="Nom du produit"
+                                        placeholder="Ex: Purple Haze"
+                                        value={productName}
+                                        onChange={(e) => setProductName(e.target.value)}
+                                    />
+                                    <LiquidSelect 
+                                        label="Type"
+                                        options={[
+                                            { value: 'flower', label: '🌿 Fleur' },
+                                            { value: 'hash', label: '🟤 Hash' },
+                                            { value: 'concentrate', label: '💧 Concentré' },
+                                            { value: 'edible', label: '🍪 Comestible' }
+                                        ]}
+                                        value={productType}
+                                        onChange={(e) => setProductType(e.target.value)}
+                                    />
+                                    <LiquidInput 
+                                        label="Farm / Producteur"
+                                        placeholder="Ex: Cookies Fam"
+                                    />
+                                    <LiquidInput 
+                                        label="Cultivar(s)"
+                                        placeholder="Ex: GSC x Purple Punch"
+                                    />
+                                </div>
+                                
+                                {/* Ratings */}
+                                <div className="grid grid-cols-2 gap-6">
+                                    <LiquidRating value={8} max={10} label="Note Visuelle" color="purple" />
+                                    <LiquidRating value={7} max={10} label="Densité" color="cyan" />
+                                </div>
+                                
+                                {/* Actions */}
+                                <div className="flex gap-4 pt-4">
+                                    <LiquidButton 
+                                        variant="primary" 
+                                        size="lg" 
+                                        icon={Check}
+                                        onClick={() => setModalOpen(true)}
+                                    >
+                                        Enregistrer
+                                    </LiquidButton>
+                                    <LiquidButton variant="ghost" size="lg">
+                                        Annuler
+                                    </LiquidButton>
                                 </div>
                             </div>
-
-                            <div className="h-px bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <GlassInput
-                                    value={name}
-                                    onChange={(e) => setName(e.target.value)}
-                                    placeholder="Ex: Purple Haze"
-                                    label="Nom du produit"
-                                />
-                                <GlassSelect
-                                    options={[
-                                        { value: 'Fleur', label: '🌿 Fleur' },
-                                        { value: 'Hash', label: '🟤 Hash' },
-                                        { value: 'Concentre', label: '💧 Concentré' },
-                                        { value: 'Comestible', label: '🍪 Comestible' }
-                                    ]}
-                                    value={type}
-                                    onChange={setType}
-                                    placeholder="Type de produit"
-                                    label="Type"
-                                />
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                                <GlassInput placeholder="Ex: Cookies Fam" label="Farm / Producteur" />
-                                <GlassInput placeholder="Ex: GSC x Purple Punch" label="Cultivar(s)" />
-                            </div>
-
-                            {/* Rating Demo */}
-                            <GlassRating value={rating} max={10} label="Note Visuelle" />
-
-                            <div className="flex items-center gap-3 pt-2">
-                                <GlassButton variant="primary" size="lg" icon={Check} onClick={() => setModalOpen(true)}>
-                                    Enregistrer
-                                </GlassButton>
-                                <GlassButton variant="ghost" size="lg">Annuler</GlassButton>
-                            </div>
+                        </LiquidCard>
+                        
+                        {/* Feature Cards Row */}
+                        <div className="grid grid-cols-3 gap-6">
+                            {/* Aromas Card */}
+                            <LiquidCard glow="green" className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center border border-emerald-500/30">
+                                        <Leaf size={18} className="text-emerald-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white">Arômes</h3>
+                                        <p className="text-xs liquid-text-muted">Notes dominantes</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Agrumes', 'Pin', 'Épicé', 'Sucré', 'Terreux'].map(aroma => (
+                                        <LiquidChip 
+                                            key={aroma}
+                                            active={selectedAromas.includes(aroma)}
+                                            color="green"
+                                            onClick={() => toggleAroma(aroma)}
+                                        >
+                                            {aroma}
+                                        </LiquidChip>
+                                    ))}
+                                </div>
+                            </LiquidCard>
+                            
+                            {/* Effects Card */}
+                            <LiquidCard glow="purple" className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-violet-500/20 flex items-center justify-center border border-violet-500/30">
+                                        <Zap size={18} className="text-violet-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white">Effets</h3>
+                                        <p className="text-xs liquid-text-muted">Ressentis</p>
+                                    </div>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    {['Relaxant', 'Créatif', 'Euphorique', 'Focus'].map(effect => (
+                                        <LiquidChip 
+                                            key={effect}
+                                            active={selectedEffects.includes(effect)}
+                                            color="purple"
+                                            onClick={() => toggleEffect(effect)}
+                                        >
+                                            {effect}
+                                        </LiquidChip>
+                                    ))}
+                                </div>
+                            </LiquidCard>
+                            
+                            {/* Pipeline Card */}
+                            <LiquidCard glow="cyan" className="p-6">
+                                <div className="flex items-center gap-3 mb-4">
+                                    <div className="w-10 h-10 rounded-xl bg-cyan-500/20 flex items-center justify-center border border-cyan-500/30">
+                                        <Droplets size={18} className="text-cyan-400" />
+                                    </div>
+                                    <div>
+                                        <h3 className="font-semibold text-white">Pipeline</h3>
+                                        <p className="text-xs liquid-text-muted">Traçabilité</p>
+                                    </div>
+                                </div>
+                                <LiquidRating value={67} max={90} label="Progression" color="cyan" />
+                                <p className="text-xs liquid-text-muted mt-3">Jour 67 / 90 de curing</p>
+                            </LiquidCard>
                         </div>
-                    </GlassCard>
-
-                    {/* === RIGHT PANEL - Quick Actions === */}
-                    <div className="col-span-12 lg:col-span-4 space-y-6">
-                        <GlassCard padding="md" glow glowColor="cyan">
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <Settings size={18} className="text-cyan-400" />
-                                    Actions rapides
-                                </h3>
-                                <div className="flex flex-col gap-2">
-                                    <GlassButton variant="secondary" icon={Settings} className="justify-start">Paramètres</GlassButton>
-                                    <GlassButton variant="outline" icon={Download} className="justify-start">Exporter</GlassButton>
-                                    <GlassButton variant="danger" icon={X} className="justify-start">Supprimer</GlassButton>
-                                </div>
-                            </div>
-                        </GlassCard>
-
-                        <GlassCard padding="md" glow glowColor="amber">
-                            <div className="space-y-4">
-                                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                                    <Star size={18} className="text-amber-400" />
-                                    Notes rapides
-                                </h3>
-                                <div className="space-y-3">
-                                    <GlassRating value={8} max={10} label="Odeur" />
-                                    <GlassRating value={7} max={10} label="Goût" />
-                                    <GlassRating value={9} max={10} label="Effet" />
-                                </div>
-                            </div>
-                        </GlassCard>
                     </div>
 
-                    {/* === BOTTOM ROW - Feature Cards === */}
-                    <GlassCard className="col-span-12 sm:col-span-4" padding="md" hover glow glowColor="green">
-                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center">
-                                <Leaf size={16} className="text-emerald-400" />
+                    {/* === RIGHT COLUMN - Sidebar === */}
+                    <div className="col-span-12 lg:col-span-4 space-y-6">
+                        
+                        {/* Quick Actions */}
+                        <LiquidCard glow="cyan" className="p-6">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-3 mb-5">
+                                <Settings size={18} className="text-cyan-400" />
+                                Actions rapides
+                            </h3>
+                            <div className="space-y-3">
+                                <LiquidButton variant="default" icon={Eye} className="w-full justify-start">
+                                    Aperçu
+                                </LiquidButton>
+                                <LiquidButton variant="default" icon={Download} className="w-full justify-start">
+                                    Exporter
+                                </LiquidButton>
+                                <LiquidButton variant="default" icon={Palette} className="w-full justify-start">
+                                    Personnaliser
+                                </LiquidButton>
+                                <LiquidButton variant="danger" icon={X} className="w-full justify-start">
+                                    Supprimer
+                                </LiquidButton>
                             </div>
-                            Arômes
-                        </h4>
-                        <p className="text-white/40 text-sm mb-3">Sélectionnez les arômes dominants</p>
-                        <div className="flex gap-2 flex-wrap">
-                            {['Agrumes', 'Épicé', 'Sucré', 'Terreux', 'Floral'].map(chip => (
-                                <GlassChip
-                                    key={chip}
-                                    active={selectedChips.includes(chip)}
-                                    onClick={() => toggleChip(chip)}
-                                    color="green"
-                                >
-                                    {chip}
-                                </GlassChip>
-                            ))}
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard className="col-span-12 sm:col-span-4" padding="md" hover glow glowColor="purple">
-                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                                <Flame size={16} className="text-violet-400" />
+                        </LiquidCard>
+                        
+                        {/* Ratings Overview */}
+                        <LiquidCard glow="amber" className="p-6">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-3 mb-5">
+                                <Star size={18} className="text-amber-400" />
+                                Évaluations
+                            </h3>
+                            <div className="space-y-4">
+                                <LiquidRating value={8} max={10} label="Visuel" color="purple" />
+                                <LiquidRating value={9} max={10} label="Odeur" color="green" />
+                                <LiquidRating value={7} max={10} label="Goût" color="amber" />
+                                <LiquidRating value={8} max={10} label="Effet" color="cyan" />
                             </div>
-                            Effets
-                        </h4>
-                        <p className="text-white/40 text-sm mb-3">Caractéristiques des effets</p>
-                        <div className="flex gap-2 flex-wrap">
-                            {['Relaxant', 'Créatif', 'Euphorique', 'Focus'].map(chip => (
-                                <GlassChip key={chip} color="purple">{chip}</GlassChip>
-                            ))}
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard className="col-span-12 sm:col-span-4" padding="md" hover glow glowColor="cyan">
-                        <h4 className="text-white font-semibold mb-2 flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
-                                <Droplets size={16} className="text-cyan-400" />
+                        </LiquidCard>
+                        
+                        {/* Stats Card */}
+                        <LiquidCard glow="pink" className="p-6">
+                            <h3 className="text-lg font-semibold text-white flex items-center gap-3 mb-5">
+                                <Heart size={18} className="text-pink-400" />
+                                Statistiques
+                            </h3>
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="text-center p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                    <p className="text-3xl font-bold text-white">42</p>
+                                    <p className="text-xs liquid-text-muted mt-1">Reviews</p>
+                                </div>
+                                <div className="text-center p-4 rounded-xl bg-white/[0.03] border border-white/[0.06]">
+                                    <p className="text-3xl font-bold text-white">8.4</p>
+                                    <p className="text-xs liquid-text-muted mt-1">Moyenne</p>
+                                </div>
                             </div>
-                            Pipeline
-                        </h4>
-                        <p className="text-white/40 text-sm mb-3">Traçabilité de culture</p>
-                        <div className="h-2 bg-white/[0.06] rounded-full overflow-hidden">
-                            <div className="h-full w-3/4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" />
-                        </div>
-                        <p className="text-white/50 text-xs mt-2">Jour 67 / 90</p>
-                    </GlassCard>
+                        </LiquidCard>
+                    </div>
                 </div>
+                
+                {/* === COMPONENT SHOWCASE === */}
+                <motion.section 
+                    className="mt-16"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                >
+                    <h2 className="text-2xl font-semibold liquid-text-gradient mb-8">
+                        Composants du Design System
+                    </h2>
+                    
+                    <div className="grid grid-cols-12 gap-6">
+                        {/* Buttons showcase */}
+                        <LiquidCard glow="none" className="col-span-12 md:col-span-6 p-6">
+                            <h4 className="text-white font-semibold mb-4">Boutons</h4>
+                            <div className="flex flex-wrap gap-3">
+                                <LiquidButton>Default</LiquidButton>
+                                <LiquidButton variant="primary">Primary</LiquidButton>
+                                <LiquidButton variant="success">Success</LiquidButton>
+                                <LiquidButton variant="danger">Danger</LiquidButton>
+                                <LiquidButton variant="ghost">Ghost</LiquidButton>
+                            </div>
+                            <div className="flex flex-wrap gap-3 mt-4">
+                                <LiquidButton size="sm" icon={Coffee}>Small</LiquidButton>
+                                <LiquidButton size="md" icon={Coffee}>Medium</LiquidButton>
+                                <LiquidButton size="lg" icon={Coffee}>Large</LiquidButton>
+                            </div>
+                        </LiquidCard>
+                        
+                        {/* Chips showcase */}
+                        <LiquidCard glow="none" className="col-span-12 md:col-span-6 p-6">
+                            <h4 className="text-white font-semibold mb-4">Chips / Tags</h4>
+                            <div className="flex flex-wrap gap-2">
+                                <LiquidChip>Inactive</LiquidChip>
+                                <LiquidChip active color="purple">Purple</LiquidChip>
+                                <LiquidChip active color="green">Green</LiquidChip>
+                                <LiquidChip active color="cyan">Cyan</LiquidChip>
+                                <LiquidChip active color="amber">Amber</LiquidChip>
+                            </div>
+                            <div className="flex flex-wrap gap-2 mt-4">
+                                <LiquidChip icon={Leaf} active color="green">Avec icône</LiquidChip>
+                                <LiquidChip icon={Flame} active color="amber">Hash</LiquidChip>
+                                <LiquidChip icon={Droplets} active color="cyan">Concentré</LiquidChip>
+                            </div>
+                        </LiquidCard>
+                        
+                        {/* Inputs showcase */}
+                        <LiquidCard glow="none" className="col-span-12 md:col-span-6 p-6">
+                            <h4 className="text-white font-semibold mb-4">Inputs</h4>
+                            <div className="space-y-4">
+                                <LiquidInput label="Avec label" placeholder="Entrez du texte..." />
+                                <LiquidInput placeholder="Sans label" />
+                                <LiquidSelect 
+                                    label="Select"
+                                    options={[
+                                        { value: '1', label: 'Option 1' },
+                                        { value: '2', label: 'Option 2' },
+                                        { value: '3', label: 'Option 3' }
+                                    ]}
+                                />
+                            </div>
+                        </LiquidCard>
+                        
+                        {/* Ratings showcase */}
+                        <LiquidCard glow="none" className="col-span-12 md:col-span-6 p-6">
+                            <h4 className="text-white font-semibold mb-4">Ratings</h4>
+                            <div className="space-y-4">
+                                <LiquidRating value={9} max={10} label="Purple" color="purple" />
+                                <LiquidRating value={7} max={10} label="Green" color="green" />
+                                <LiquidRating value={8} max={10} label="Cyan" color="cyan" />
+                                <LiquidRating value={6} max={10} label="Amber" color="amber" />
+                            </div>
+                        </LiquidCard>
+                    </div>
+                </motion.section>
+            </div>
 
-                {/* === MODAL DEMO === */}
-                <AnimatePresence>
-                    {modalOpen && (
+            {/* === MODAL === */}
+            <AnimatePresence>
+                {modalOpen && (
+                    <motion.div
+                        className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                    >
+                        {/* Backdrop */}
                         <motion.div
-                            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+                            className="liquid-modal-overlay absolute inset-0"
+                            onClick={() => setModalOpen(false)}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
+                        />
+                        
+                        {/* Modal content */}
+                        <motion.div
+                            className="relative w-full max-w-md"
+                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                            animate={{ opacity: 1, scale: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+                            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                         >
-                            <motion.div
-                                className="absolute inset-0 bg-black/70 backdrop-blur-md"
-                                onClick={() => setModalOpen(false)}
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                            />
-                            <motion.div
-                                className="relative w-full max-w-lg"
-                                initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                                animate={{ opacity: 1, scale: 1, y: 0 }}
-                                exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                                transition={{ type: 'spring', damping: 25 }}
-                            >
-                                <GlassCard padding="lg" hover={false}>
-                                    <div className="space-y-5">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center">
-                                                <Check size={24} />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-xl font-semibold text-white">Confirmer l'enregistrement</h2>
-                                                <p className="text-white/40 text-sm">Review prête à être sauvegardée</p>
-                                            </div>
+                            <LiquidCard glow="purple" animate={false} className="p-8">
+                                <div className="space-y-6">
+                                    {/* Header */}
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                                            <Check size={28} className="text-white" />
                                         </div>
-
-                                        <div className="bg-white/[0.04] rounded-2xl p-4 border border-white/[0.06]">
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-white/50">Produit</span>
-                                                <span className="text-white font-medium">{name || 'Sans nom'}</span>
-                                            </div>
-                                            <div className="flex items-center justify-between text-sm mt-2">
-                                                <span className="text-white/50">Type</span>
-                                                <span className="text-white font-medium">{type}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex gap-3 justify-end">
-                                            <GlassButton variant="ghost" onClick={() => setModalOpen(false)}>Annuler</GlassButton>
-                                            <GlassButton variant="success" icon={Check} onClick={() => setModalOpen(false)}>Confirmer</GlassButton>
+                                        <div>
+                                            <h2 className="text-xl font-semibold text-white">
+                                                Confirmer l'enregistrement
+                                            </h2>
+                                            <p className="liquid-text-muted text-sm">
+                                                Review prête à être sauvegardée
+                                            </p>
                                         </div>
                                     </div>
-                                </GlassCard>
-                            </motion.div>
+                                    
+                                    {/* Summary */}
+                                    <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08]">
+                                        <div className="flex justify-between items-center text-sm">
+                                            <span className="liquid-text-muted">Produit</span>
+                                            <span className="text-white font-medium">
+                                                {productName || 'Sans nom'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm mt-3">
+                                            <span className="liquid-text-muted">Type</span>
+                                            <span className="text-white font-medium">
+                                                {productType === 'flower' ? 'Fleur' : 
+                                                 productType === 'hash' ? 'Hash' : 
+                                                 productType === 'concentrate' ? 'Concentré' : 'Comestible'}
+                                            </span>
+                                        </div>
+                                        <div className="flex justify-between items-center text-sm mt-3">
+                                            <span className="liquid-text-muted">Arômes</span>
+                                            <span className="text-white font-medium">
+                                                {selectedAromas.length} sélectionnés
+                                            </span>
+                                        </div>
+                                    </div>
+                                    
+                                    {/* Actions */}
+                                    <div className="flex gap-3 justify-end pt-2">
+                                        <LiquidButton 
+                                            variant="ghost" 
+                                            onClick={() => setModalOpen(false)}
+                                        >
+                                            Annuler
+                                        </LiquidButton>
+                                        <LiquidButton 
+                                            variant="success" 
+                                            icon={Check}
+                                            onClick={() => setModalOpen(false)}
+                                        >
+                                            Confirmer
+                                        </LiquidButton>
+                                    </div>
+                                </div>
+                            </LiquidCard>
                         </motion.div>
-                    )}
-                </AnimatePresence>
-            </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     )
 }
