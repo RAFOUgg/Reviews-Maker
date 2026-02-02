@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
@@ -399,7 +400,8 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
     // Données normalisées pour les composants enfants
     const normalizedData = normalizeReviewData(reviewData);
 
-    return (
+    // Utiliser createPortal pour rendre directement dans le body (évite les problèmes de stacking context)
+    return createPortal(
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -669,7 +671,8 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                     </div>
                 ) : null}
             </DragOverlay>
-        </DndContext>
+        </DndContext>,
+        document.body
     );
 }
 
