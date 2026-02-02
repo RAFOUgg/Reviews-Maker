@@ -354,7 +354,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                                         );
                                                     })}
                                                     {(group.fields?.length || 0) > 4 && (
-                                                        <span className="text-xs px-2 py-0.5 text-white/50">+{group.fields.length - 4}</span></span>
+                                                        <span className="text-xs px-2 py-0.5 text-white/50">+{group.fields.length - 4}</span>
                                                     )}
                                                 </div>
                                             </div>
