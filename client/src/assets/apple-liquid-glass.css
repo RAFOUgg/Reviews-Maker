@@ -726,3 +726,330 @@
 .liquid-card-animate:nth-child(6) {
     animation-delay: 375ms;
 }
+
+/* ============================================
+   LIQUID SELECT (Custom Dropdown)
+   ============================================ */
+
+.liquid-select-trigger {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    padding: 14px 18px;
+    font-size: 15px;
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    cursor: pointer;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2),
+                inset 0 1px 1px rgba(255, 255, 255, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.liquid-select-trigger:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.liquid-select-trigger.open {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(139, 92, 246, 0.5);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2),
+                0 0 0 3px rgba(139, 92, 246, 0.15);
+}
+
+.liquid-select-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    z-index: 100;
+    background: rgba(20, 20, 30, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 16px;
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+    overflow: hidden;
+}
+
+.liquid-select-search {
+    width: 100%;
+    padding: 10px 14px;
+    font-size: 14px;
+    color: white;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    outline: none;
+    transition: all 0.2s ease;
+}
+
+.liquid-select-search:focus {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(139, 92, 246, 0.4);
+}
+
+.liquid-select-search::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.liquid-select-options {
+    max-height: 280px;
+    overflow-y: auto;
+    padding: 6px;
+}
+
+.liquid-select-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.liquid-select-options::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.liquid-select-options::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 100px;
+}
+
+.liquid-select-option {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px 14px;
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.8);
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.liquid-select-option:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+}
+
+.liquid-select-option.selected {
+    background: rgba(139, 92, 246, 0.15);
+    color: white;
+}
+
+.liquid-select-option.selected:hover {
+    background: rgba(139, 92, 246, 0.25);
+}
+
+.liquid-select-option.disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.liquid-select-option.disabled:hover {
+    background: transparent;
+}
+
+/* ============================================
+   LIQUID TABS
+   ============================================ */
+
+.liquid-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.liquid-tab {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.5);
+    background: transparent;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.liquid-tab:hover:not(.disabled) {
+    color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.liquid-tab.active {
+    color: white;
+    background: rgba(139, 92, 246, 0.25);
+    box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+}
+
+.liquid-tab.disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+/* Pills variant */
+.liquid-tabs.pills {
+    background: transparent;
+    border: none;
+    padding: 0;
+    gap: 8px;
+}
+
+.liquid-tabs.pills .liquid-tab {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.liquid-tabs.pills .liquid-tab.active {
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.4), rgba(168, 85, 247, 0.3));
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* Underline variant */
+.liquid-tabs.underline {
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 0;
+    border-radius: 0;
+    gap: 0;
+}
+
+.liquid-tabs.underline .liquid-tab {
+    border-radius: 0;
+    padding: 12px 20px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+}
+
+.liquid-tabs.underline .liquid-tab.active {
+    background: transparent;
+    border-bottom-color: var(--liquid-primary);
+    box-shadow: none;
+}
+
+/* ============================================
+   LIQUID SKELETON
+   ============================================ */
+
+@keyframes skeleton-pulse {
+    0%, 100% {
+        opacity: 0.4;
+    }
+    50% {
+        opacity: 0.7;
+    }
+}
+
+.liquid-skeleton {
+    background: linear-gradient(
+        90deg,
+        rgba(255, 255, 255, 0.06) 0%,
+        rgba(255, 255, 255, 0.12) 50%,
+        rgba(255, 255, 255, 0.06) 100%
+    );
+    background-size: 200% 100%;
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+/* ============================================
+   LIQUID ALERT / TOAST
+   ============================================ */
+
+.liquid-alert {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(8px);
+}
+
+.liquid-alert.success {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.3);
+}
+
+.liquid-alert.warning {
+    background: rgba(245, 158, 11, 0.1);
+    border-color: rgba(245, 158, 11, 0.3);
+}
+
+.liquid-alert.danger {
+    background: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.liquid-alert.info {
+    background: rgba(6, 182, 212, 0.1);
+    border-color: rgba(6, 182, 212, 0.3);
+}
+
+/* ============================================
+   LIQUID PROGRESS
+   ============================================ */
+
+.liquid-progress {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 100px;
+    overflow: hidden;
+}
+
+.liquid-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--liquid-primary), var(--liquid-accent));
+    border-radius: 100px;
+    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+}
+
+.liquid-progress-bar::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 50%;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent);
+    border-radius: 100px 100px 0 0;
+}
+
+/* ============================================
+   FORM VALIDATION STATES
+   ============================================ */
+
+.liquid-input.error,
+.liquid-select-trigger.error {
+    border-color: rgba(239, 68, 68, 0.5) !important;
+}
+
+.liquid-input.error:focus,
+.liquid-select-trigger.error.open {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2),
+                0 0 0 3px rgba(239, 68, 68, 0.15) !important;
+}
+
+.liquid-input.success {
+    border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+.liquid-input.success:focus {
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2),
+                0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+}
