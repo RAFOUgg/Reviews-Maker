@@ -119,9 +119,6 @@ export function LiquidCard({
         velocityRef.current = { x: 0, y: 0 }
     }
 
-    // Calculate dynamic shimmer angle based on velocity
-    const shimmerAngle = Math.atan2(velocityRef.current.y, velocityRef.current.x) * (180 / Math.PI) + 90
-
     return (
         <motion.div
             ref={cardRef}
@@ -137,88 +134,41 @@ export function LiquidCard({
             onMouseLeave={handleMouseLeave}
             style={{
                 '--mouse-x': `${smoothPosition.x}%`,
-                '--mouse-y': `${smoothPosition.y}%`,
-                '--shimmer-intensity': shimmerIntensity,
-                '--shimmer-angle': `${shimmerAngle}deg`
+                '--mouse-y': `${smoothPosition.y}%`
             }}
         >
-            {/* Primary liquid cursor glow - follows with spring physics */}
-            {liquidEffect && (
-                <motion.div
-                    className="liquid-cursor-glow"
-                    animate={{
-                        opacity: isHovered ? 0.8 + shimmerIntensity * 0.2 : 0,
-                        scale: isHovered ? 1 + shimmerIntensity * 0.1 : 0.8
-                    }}
-                    transition={{ duration: 0.1, ease: 'linear' }}
-                    style={{
-                        background: `radial-gradient(
-                            ${400 + shimmerIntensity * 200}px circle at ${smoothPosition.x}% ${smoothPosition.y}%, 
-                            rgba(139, 92, 246, ${0.12 + shimmerIntensity * 0.1}), 
-                            rgba(6, 182, 212, ${0.06 + shimmerIntensity * 0.05}) 40%,
-                            transparent 70%
-                        )`
-                    }}
-                />
-            )}
-            
-            {/* Secondary highlight - faster response for snappy feel */}
-            {liquidEffect && (
-                <motion.div
-                    className="liquid-highlight"
-                    animate={{
-                        opacity: isHovered ? 0.6 + shimmerIntensity * 0.4 : 0
-                    }}
-                    transition={{ duration: 0.05, ease: 'linear' }}
-                    style={{
-                        background: `radial-gradient(
-                            ${150 + shimmerIntensity * 100}px circle at ${smoothPosition.x}% ${smoothPosition.y}%, 
-                            rgba(255, 255, 255, ${0.08 + shimmerIntensity * 0.12}), 
-                            transparent 60%
-                        )`
-                    }}
-                />
-            )}
-            
-            {/* Dynamic shimmer streak - follows movement direction */}
+            {/* Soft ambient glow that follows cursor */}
             {liquidEffect && (
                 <div
-                    className="liquid-shimmer-streak"
+                    className="liquid-cursor-glow"
                     style={{
-                        opacity: isHovered ? shimmerIntensity * 0.8 : 0,
-                        transform: `rotate(${shimmerAngle}deg)`,
-                        background: `linear-gradient(
-                            90deg,
-                            transparent 0%,
-                            transparent 30%,
-                            rgba(255, 255, 255, ${0.05 + shimmerIntensity * 0.15}) 45%,
-                            rgba(255, 255, 255, ${0.1 + shimmerIntensity * 0.2}) 50%,
-                            rgba(255, 255, 255, ${0.05 + shimmerIntensity * 0.15}) 55%,
-                            transparent 70%,
-                            transparent 100%
+                        opacity: isHovered ? 0.7 : 0,
+                        background: `radial-gradient(
+                            ${300 + shimmerIntensity * 150}px circle at ${smoothPosition.x}% ${smoothPosition.y}%, 
+                            rgba(139, 92, 246, 0.12), 
+                            rgba(6, 182, 212, 0.05) 50%,
+                            transparent 80%
                         )`,
-                        left: `${smoothPosition.x - 50}%`,
-                        top: `${smoothPosition.y - 50}%`
+                        filter: 'blur(20px)',
+                        transition: 'opacity 0.3s ease'
                     }}
                 />
             )}
             
-            {/* Organic ripple effect on fast movement */}
-            {liquidEffect && shimmerIntensity > 0.3 && (
-                <motion.div
-                    className="liquid-ripple"
-                    initial={{ scale: 0.5, opacity: 0.5 }}
-                    animate={{ 
-                        scale: 1 + shimmerIntensity, 
-                        opacity: 0 
-                    }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
+            {/* Subtle white highlight spot */}
+            {liquidEffect && (
+                <div
+                    className="liquid-highlight"
                     style={{
-                        left: `${smoothPosition.x}%`,
-                        top: `${smoothPosition.y}%`,
-                        transform: 'translate(-50%, -50%)'
+                        opacity: isHovered ? 0.5 + shimmerIntensity * 0.3 : 0,
+                        background: `radial-gradient(
+                            ${80 + shimmerIntensity * 40}px circle at ${smoothPosition.x}% ${smoothPosition.y}%, 
+                            rgba(255, 255, 255, 0.15), 
+                            transparent 70%
+                        )`,
+                        filter: 'blur(8px)',
+                        transition: 'opacity 0.15s ease'
                     }}
-                    key={Math.floor(Date.now() / 150)}
                 />
             )}
             
