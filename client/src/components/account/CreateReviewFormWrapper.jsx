@@ -13,11 +13,12 @@
 
 import { useState, useEffect, useRef } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Eye, X } from 'lucide-react'
+import { Eye, X, Layout, Download } from 'lucide-react'
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from '../forms/helpers/ResponsiveCreateReviewLayout'
 import ReviewPreview from '../gallery/ReviewPreview'
 import OrchardPanel from '../shared/orchard/OrchardPanel'
+import ExportMaker from '../export/ExportMaker'
 
 const CreateReviewFormWrapper = ({
     productType = 'flower',
@@ -40,6 +41,7 @@ const CreateReviewFormWrapper = ({
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
     const [showPreview, setShowPreview] = useState(false)
+    const [showExportMaker, setShowExportMaker] = useState(false)
     const layout = useResponsiveLayout()
     const scrollContainerRef = useRef(null)
 
@@ -83,8 +85,33 @@ const CreateReviewFormWrapper = ({
             onSubmit={onSubmit}
             isSaving={saving}
         >
-            {/* Aperçu Button - Mobile Optimized */}
-            <div className={`flex justify-end mb-4 ${layout.isMobile ? 'px-0' : 'px-0'}`}>
+            {/* Aperçu & Export Buttons - Mobile Optimized */}
+            <div className={`flex justify-end gap-2 mb-4 ${layout.isMobile ? 'px-0' : 'px-0'}`}>
+                {/* Bouton Orchard/Templates */}
+                <button
+                    onClick={() => setShowOrchard(!showOrchard)}
+                    className={`flex items-center gap-2 bg-cyan-600/20 hover:bg-cyan-600/30 border border-cyan-500/50 text-cyan-300 rounded-lg font-medium transition-all ${layout.isMobile
+                        ? 'px-3 py-2 text-xs'
+                        : 'px-4 py-2 text-sm'
+                        }`}
+                >
+                    <Layout className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+                    <span>Templates</span>
+                </button>
+
+                {/* Bouton Export Direct */}
+                <button
+                    onClick={() => setShowExportMaker(true)}
+                    className={`flex items-center gap-2 bg-amber-600/20 hover:bg-amber-600/30 border border-amber-500/50 text-amber-300 rounded-lg font-medium transition-all ${layout.isMobile
+                        ? 'px-3 py-2 text-xs'
+                        : 'px-4 py-2 text-sm'
+                        }`}
+                >
+                    <Download className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+                    <span>Exporter</span>
+                </button>
+
+                {/* Bouton Aperçu Complet */}
                 <button
                     onClick={() => setShowPreview(!showPreview)}
                     className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${layout.isMobile
@@ -93,7 +120,7 @@ const CreateReviewFormWrapper = ({
                         }`}
                 >
                     <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
-                    <span>Aperçu Complet</span>
+                    <span>Aperçu</span>
                 </button>
             </div>
 
@@ -193,6 +220,20 @@ const CreateReviewFormWrapper = ({
                     reviewData={formData}
                     productType={productType}
                     onClose={() => setShowOrchard(false)}
+                />
+            )}
+
+            {/* Export Maker Modal - z-index très élevé pour être au premier plan */}
+            {showExportMaker && (
+                <ExportMaker
+                    reviewData={{
+                        ...formData,
+                        images: photos,
+                        name: formData.nomCommercial || formData.holderName || 'Sans titre',
+                        author: { username: formData.ownerName || 'Anonyme' }
+                    }}
+                    productType={productType}
+                    onClose={() => setShowExportMaker(false)}
                 />
             )}
         </ResponsiveCreateReviewLayout>
