@@ -30,7 +30,6 @@ const SUPPORTED_LANGUAGES = [
 ]
 
 // Génère les onglets dynamiquement selon le type de compte
-// Gestion du compte UNIQUEMENT (pas de bibliothèque ici)
 const getTabSections = (accountType) => {
   return [
     { id: 'profile', label: 'Profil', icon: User },
@@ -46,18 +45,12 @@ const AccountPage = () => {
   const { user, accountType } = useStore()
   const { isProducteur } = useAccountFeatures()
 
-  // Check if profile is complete
   const isProfileComplete = user?.birthdate && user?.country
-
-  // Active tab state
   const [activeTab, setActiveTab] = useState('profile')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
-
-  // Profile/Language state
   const [language, setLanguage] = useState(() => i18n.language || 'fr')
   const [isSaved, setIsSaved] = useState(false)
 
-  // Preferences state (from PreferencesPage)
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('userPreferences')
     return saved ? JSON.parse(saved) : {
@@ -70,19 +63,15 @@ const AccountPage = () => {
     }
   })
 
-  // Handle language change
   const handleLanguageChange = async (newLang) => {
     try {
       setLanguage(newLang)
       await i18n.changeLanguage(newLang)
-
-      // Save to backend
       const response = await fetch('/api/account/language', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ language: newLang })
       })
-
       if (response.ok) {
         setIsSaved(true)
         setTimeout(() => setIsSaved(false), 2000)
@@ -92,7 +81,6 @@ const AccountPage = () => {
     }
   }
 
-  // Handle preference change
   const handlePreferenceChange = (key, value) => {
     setPreferences(prev => {
       const updated = { ...prev, [key]: value }
@@ -103,7 +91,6 @@ const AccountPage = () => {
     })
   }
 
-  // Handle logout
   const handleLogout = async () => {
     try {
       await fetch('/api/auth/logout', { method: 'POST' })
@@ -119,65 +106,68 @@ const AccountPage = () => {
     { value: 'public', label: 'Public' }
   ]
 
-  const getAccountTypeLabel = (type) => {
-    const types = {
-      'Amateur': 'Amateur',
-      'Producteur': 'Producteur',
-      'Influenceur': 'Influenceur'
-    }
-    return types[type] || type
-  }
-
   // ✅ PROFILE INCOMPLETE CHECK
   if (!isProfileComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-white p-4 md:p-8 flex items-center justify-center">
-        <div className="max-w-md w-full bg-gray-800/50 backdrop-blur-sm rounded-2xl border border-gray-700/50 p-8">
-          <div className="text-center mb-6">
-            <div className="w-16 h-16 rounded-full bg-amber-500/20 flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4v2m0 0H9m0 0h6m0 0v-2m0 2H9" />
-              </svg>
+      <div className="min-h-screen bg-[#07070f] text-white p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
+        {/* Ambient glow */}
+        <div className="fixed inset-0 pointer-events-none">
+          <div className="absolute top-[-20%] left-[-15%] w-[60%] h-[60%] bg-amber-500/10 rounded-full blur-[120px]" />
+          <div className="absolute bottom-[-20%] right-[-15%] w-[50%] h-[50%] bg-red-500/8 rounded-full blur-[100px]" />
+        </div>
+        
+        <div className="relative z-10 max-w-md w-full">
+          <div className="relative rounded-3xl overflow-hidden p-8">
+            <div className="absolute inset-0 bg-white/[0.03] backdrop-blur-2xl" />
+            <div className="absolute inset-0 bg-gradient-to-br from-white/[0.08] via-transparent to-white/[0.02]" />
+            <div className="absolute inset-[1px] rounded-3xl border border-white/[0.08]" />
+            
+            <div className="relative z-10 text-center">
+              <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/30">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-bold mb-2 text-white">Complétez votre profil</h2>
+              <p className="text-white/50 text-sm mb-6">Finalisez votre inscription pour déverrouiller toutes les fonctionnalités.</p>
+
+              <div className="space-y-2 mb-6">
+                {!user?.birthdate && (
+                  <div className="flex items-center gap-2 text-sm text-amber-400 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                    <span>📅</span>
+                    <span>Date de naissance manquante</span>
+                  </div>
+                )}
+                {!user?.country && (
+                  <div className="flex items-center gap-2 text-sm text-amber-400 bg-amber-500/10 p-3 rounded-xl border border-amber-500/20">
+                    <span>🌍</span>
+                    <span>Pays manquant</span>
+                  </div>
+                )}
+              </div>
+
+              <button
+                onClick={() => navigate('/choose-account')}
+                className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40"
+              >
+                Compléter mon profil
+              </button>
+
+              <button
+                onClick={() => navigate('/')}
+                className="w-full mt-3 px-6 py-3 bg-white/[0.06] hover:bg-white/[0.1] text-white/70 font-medium rounded-xl transition-all border border-white/[0.08]"
+              >
+                Retour à l'accueil
+              </button>
             </div>
-            <h2 className="text-2xl font-bold mb-2">Complétez votre profil</h2>
-            <p className="text-gray-400 text-sm mb-6">Finalisez votre inscription pour déverrouiller toutes les fonctionnalités.</p>
           </div>
-
-          <div className="space-y-2 mb-6">
-            {!user?.birthdate && (
-              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                <span>📅</span>
-                <span>Date de naissance manquante</span>
-              </div>
-            )}
-            {!user?.country && (
-              <div className="flex items-center gap-2 text-sm text-red-400 bg-red-500/10 p-3 rounded-lg border border-red-500/20">
-                <span>🌍</span>
-                <span>Pays manquant</span>
-              </div>
-            )}
-          </div>
-
-          <button
-            onClick={() => navigate('/choose-account')}
-            className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold rounded-lg transition-all shadow-lg"
-          >
-            Compléter mon profil
-          </button>
-
-          <button
-            onClick={() => navigate('/')}
-            className="w-full mt-3 px-6 py-3 bg-gray-700/50 hover:bg-gray-700 text-gray-300 font-medium rounded-lg transition-all"
-          >
-            Retour à l'accueil
-          </button>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] text-white p-4 md:p-8 relative overflow-hidden">
+    <div className="min-h-screen bg-[#07070f] text-white p-4 md:p-8 relative overflow-hidden">
       {/* Background ambient glow effects - Apple style */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/8 rounded-full blur-[120px] animate-pulse" style={{animationDuration: '8s'}} />
@@ -221,62 +211,62 @@ const AccountPage = () => {
                 return (
                   <button
                     key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`px-3 md:px-4 py-4 text-sm md:text-base font-medium transition-all border-b-2 ${activeTab === tab.id
-                  ? 'border-blue-500 bg-gray-700/30 text-white'
-                  : 'border-transparent text-gray-400 hover:text-gray-300'
-                  }`}
-                title={tab.label}
-              >
-                <div className="flex items-center gap-1 md:gap-2 justify-center">
-                  {Icon ? <Icon size={18} /> : <span>{tab.icon}</span>}
-                  <span className="hidden sm:inline">{tab.label}</span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
-
-        {/* Tab Content */}
-        <motion.div
-          key={activeTab}
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.2 }}
-          className="p-6 md:p-8"
-        >
-          {activeTab === 'profile' && (
-            <ProfileSection />
-          )}
-
-          {activeTab === 'subscription' && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold mb-2">💳 Gérer mon abonnement</h2>
-                <p className="text-gray-400">Découvrez nos offres et gérez votre souscription</p>
-              </div>
-              <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
-
-              {/* Historique des paiements (comptes payants uniquement) */}
-              {(accountType === 'producteur' || accountType === 'influenceur') && (
-                <SubscriptionHistory />
-              )}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`flex-1 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 flex items-center justify-center gap-2 ${
+                      isActive 
+                        ? 'bg-white/[0.1] text-white shadow-lg' 
+                        : 'text-white/50 hover:text-white/70 hover:bg-white/[0.04]'
+                    }`}
+                    title={tab.label}
+                  >
+                    {Icon && <Icon size={18} />}
+                    <span className="hidden sm:inline">{tab.label}</span>
+                  </button>
+                )
+              })}
             </div>
-          )}
 
-          {activeTab === 'preferences' && (
-            <PreferencesSection
-              preferences={preferences}
-              handlePreferenceChange={handlePreferenceChange}
-              visibilityOptions={visibilityOptions}
-              t={t}
-            />
-          )}
+            {/* Tab Content */}
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.2 }}
+              className="p-6 md:p-8"
+            >
+              {activeTab === 'profile' && (
+                <ProfileSection />
+              )}
 
-          {activeTab === 'security' && (
-            <SecuritySection t={t} />
-          )}
-        </motion.div>
+              {activeTab === 'subscription' && (
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold mb-2 text-white">💳 Gérer mon abonnement</h2>
+                    <p className="text-white/50">Découvrez nos offres et gérez votre souscription</p>
+                  </div>
+                  <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
+
+                  {(accountType === 'producteur' || accountType === 'influenceur') && (
+                    <SubscriptionHistory />
+                  )}
+                </div>
+              )}
+
+              {activeTab === 'preferences' && (
+                <PreferencesSection
+                  preferences={preferences}
+                  handlePreferenceChange={handlePreferenceChange}
+                  visibilityOptions={visibilityOptions}
+                  t={t}
+                />
+              )}
+
+              {activeTab === 'security' && (
+                <SecuritySection t={t} />
+              )}
+            </motion.div>
+          </div>
+        </div>
       </div>
 
       {/* Modal Upgrade */}
@@ -293,110 +283,145 @@ const AccountPage = () => {
 function PreferencesSection({ preferences, handlePreferenceChange, visibilityOptions, t }) {
   return (
     <div>
-      <h3 className="text-2xl font-bold mb-6">{t('account.preferences') || 'Préférences'}</h3>
+      <h3 className="text-2xl font-bold mb-6 text-white">{t('account.preferences') || 'Préférences'}</h3>
 
-      {/* Preferences Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
         {/* Notifications */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-blue-500/30 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Bell size={20} className="text-blue-400" />
-              <span className="font-semibold">{t('account.notifications') || 'Notifications'}</span>
+        <div className="relative rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08] group-hover:border-blue-500/30 transition-colors" />
+          <div className="relative z-10 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
+                  <Bell size={16} className="text-blue-400" />
+                </div>
+                <span className="font-semibold text-white">{t('account.notifications') || 'Notifications'}</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={preferences.showNotifications}
+                onChange={(e) => handlePreferenceChange('showNotifications', e.target.checked)}
+                className="w-5 h-5 rounded accent-violet-500 cursor-pointer"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={preferences.showNotifications}
-              onChange={(e) => handlePreferenceChange('showNotifications', e.target.checked)}
-              className="w-5 h-5 rounded cursor-pointer"
-            />
+            <p className="text-sm text-white/40">{t('account.notificationsDesc') || 'Recevoir les notifications d\'activité'}</p>
           </div>
-          <p className="text-sm text-gray-400">{t('account.notificationsDesc') || 'Recevoir les notifications d\'activité'}</p>
         </div>
 
         {/* Visibility */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-green-500/30 transition-all">
-          <div className="flex items-center gap-2 mb-3">
-            <Eye size={20} className="text-green-400" />
-            <span className="font-semibold">{t('account.defaultVisibility') || 'Visibilité par défaut'}</span>
+        <div className="relative rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08] group-hover:border-green-500/30 transition-colors" />
+          <div className="relative z-10 p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
+                <Eye size={16} className="text-green-400" />
+              </div>
+              <span className="font-semibold text-white">{t('account.defaultVisibility') || 'Visibilité par défaut'}</span>
+            </div>
+            <select
+              value={preferences.defaultVisibility}
+              onChange={(e) => handlePreferenceChange('defaultVisibility', e.target.value)}
+              className="w-full bg-white/[0.04] border border-white/[0.08] rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500/50"
+            >
+              {visibilityOptions.map(opt => (
+                <option key={opt.value} value={opt.value} className="bg-[#1a1a2e]">{opt.label}</option>
+              ))}
+            </select>
           </div>
-          <select
-            value={preferences.defaultVisibility}
-            onChange={(e) => handlePreferenceChange('defaultVisibility', e.target.value)}
-            className="w-full bg-gray-600/40 border border-gray-600/30 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-green-500/50"
-          >
-            {visibilityOptions.map(opt => (
-              <option key={opt.value} value={opt.value}>{opt.label}</option>
-            ))}
-          </select>
         </div>
 
         {/* Auto-save */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-purple-500/30 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Save size={20} className="text-purple-400" />
-              <span className="font-semibold text-sm">{t('account.autoSave') || 'Sauvegarde auto.'}</span>
+        <div className="relative rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08] group-hover:border-purple-500/30 transition-colors" />
+          <div className="relative z-10 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-purple-500/20 flex items-center justify-center">
+                  <Save size={16} className="text-purple-400" />
+                </div>
+                <span className="font-semibold text-white text-sm">{t('account.autoSave') || 'Sauvegarde auto.'}</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={preferences.autoSaveDrafts}
+                onChange={(e) => handlePreferenceChange('autoSaveDrafts', e.target.checked)}
+                className="w-5 h-5 rounded accent-violet-500 cursor-pointer"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={preferences.autoSaveDrafts}
-              onChange={(e) => handlePreferenceChange('autoSaveDrafts', e.target.checked)}
-              className="w-5 h-5 rounded cursor-pointer"
-            />
+            <p className="text-sm text-white/40">{t('account.autoSaveDesc') || 'Sauvegarder automatiquement les brouillons'}</p>
           </div>
-          <p className="text-sm text-gray-400">{t('account.autoSaveDesc') || 'Sauvegarder automatiquement les brouillons'}</p>
         </div>
 
         {/* Social Sharing */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-pink-500/30 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Share2 size={20} className="text-pink-400" />
-              <span className="font-semibold">{t('account.socialSharing') || 'Partage social'}</span>
+        <div className="relative rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08] group-hover:border-pink-500/30 transition-colors" />
+          <div className="relative z-10 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">
+                  <Share2 size={16} className="text-pink-400" />
+                </div>
+                <span className="font-semibold text-white">{t('account.socialSharing') || 'Partage social'}</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={preferences.allowSocialSharing}
+                onChange={(e) => handlePreferenceChange('allowSocialSharing', e.target.checked)}
+                className="w-5 h-5 rounded accent-violet-500 cursor-pointer"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={preferences.allowSocialSharing}
-              onChange={(e) => handlePreferenceChange('allowSocialSharing', e.target.checked)}
-              className="w-5 h-5 rounded cursor-pointer"
-            />
+            <p className="text-sm text-white/40">{t('account.socialSharingDesc') || 'Autoriser le partage sur réseaux sociaux'}</p>
           </div>
-          <p className="text-sm text-gray-400">{t('account.socialSharingDesc') || 'Autoriser le partage sur réseaux sociaux'}</p>
         </div>
 
         {/* Statistics */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-orange-500/30 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <BarChart3 size={20} className="text-orange-400" />
-              <span className="font-semibold text-sm">{t('account.stats') || 'Statistiques'}</span>
+        <div className="relative rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08] group-hover:border-orange-500/30 transition-colors" />
+          <div className="relative z-10 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-orange-500/20 flex items-center justify-center">
+                  <BarChart3 size={16} className="text-orange-400" />
+                </div>
+                <span className="font-semibold text-white text-sm">{t('account.stats') || 'Statistiques'}</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={preferences.showDetailedStats}
+                onChange={(e) => handlePreferenceChange('showDetailedStats', e.target.checked)}
+                className="w-5 h-5 rounded accent-violet-500 cursor-pointer"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={preferences.showDetailedStats}
-              onChange={(e) => handlePreferenceChange('showDetailedStats', e.target.checked)}
-              className="w-5 h-5 rounded cursor-pointer"
-            />
+            <p className="text-sm text-white/40">{t('account.statsDesc') || 'Afficher les statistiques détaillées'}</p>
           </div>
-          <p className="text-sm text-gray-400">{t('account.statsDesc') || 'Afficher les statistiques détaillées'}</p>
         </div>
 
         {/* Privacy */}
-        <div className="bg-gray-700/30 rounded-xl p-4 border border-gray-600/30 hover:border-red-500/30 transition-all">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <Lock size={20} className="text-red-400" />
-              <span className="font-semibold">{t('account.privacy') || 'Profil privé'}</span>
+        <div className="relative rounded-2xl overflow-hidden group">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08] group-hover:border-red-500/30 transition-colors" />
+          <div className="relative z-10 p-4">
+            <div className="flex items-start justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
+                  <Lock size={16} className="text-red-400" />
+                </div>
+                <span className="font-semibold text-white">{t('account.privacy') || 'Profil privé'}</span>
+              </div>
+              <input
+                type="checkbox"
+                checked={preferences.privateProfile}
+                onChange={(e) => handlePreferenceChange('privateProfile', e.target.checked)}
+                className="w-5 h-5 rounded accent-violet-500 cursor-pointer"
+              />
             </div>
-            <input
-              type="checkbox"
-              checked={preferences.privateProfile}
-              onChange={(e) => handlePreferenceChange('privateProfile', e.target.checked)}
-              className="w-5 h-5 rounded cursor-pointer"
-            />
+            <p className="text-sm text-white/40">{t('account.privacyDesc') || 'Rendre mon profil privé'}</p>
           </div>
-          <p className="text-sm text-gray-400">{t('account.privacyDesc') || 'Rendre mon profil privé'}</p>
         </div>
       </div>
     </div>
@@ -406,57 +431,81 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
 function SecuritySection({ t }) {
   return (
     <div>
-      <h3 className="text-2xl font-bold mb-6">{t('account.security') || 'Sécurité'}</h3>
-      <p className="text-gray-400 mb-6">Gérez votre mot de passe et les paramètres de sécurité de votre compte.</p>
+      <h3 className="text-2xl font-bold mb-6 text-white">{t('account.security') || 'Sécurité'}</h3>
+      <p className="text-white/50 mb-6">Gérez votre mot de passe et les paramètres de sécurité de votre compte.</p>
 
       <div className="space-y-6">
-        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-          <h4 className="font-semibold text-white mb-4">Changer le mot de passe</h4>
-          <div className="space-y-4">
-            <input
-              type="password"
-              placeholder="Mot de passe actuel"
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600/50 rounded-lg text-white focus:border-blue-500/50 outline-none"
-            />
-            <input
-              type="password"
-              placeholder="Nouveau mot de passe"
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600/50 rounded-lg text-white focus:border-blue-500/50 outline-none"
-            />
-            <input
-              type="password"
-              placeholder="Confirmer le mot de passe"
-              className="w-full px-4 py-3 bg-gray-700 border border-gray-600/50 rounded-lg text-white focus:border-blue-500/50 outline-none"
-            />
-            <button className="w-full px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-all">
-              Mettre à jour le mot de passe
+        {/* Change Password */}
+        <div className="relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08]" />
+          <div className="relative z-10 p-6">
+            <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+              <Lock size={18} className="text-violet-400" />
+              Changer le mot de passe
+            </h4>
+            <div className="space-y-4">
+              <input
+                type="password"
+                placeholder="Mot de passe actuel"
+                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white placeholder-white/30 focus:border-violet-500/50 outline-none transition-colors"
+              />
+              <input
+                type="password"
+                placeholder="Nouveau mot de passe"
+                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white placeholder-white/30 focus:border-violet-500/50 outline-none transition-colors"
+              />
+              <input
+                type="password"
+                placeholder="Confirmer le mot de passe"
+                className="w-full px-4 py-3 bg-white/[0.04] border border-white/[0.08] rounded-xl text-white placeholder-white/30 focus:border-violet-500/50 outline-none transition-colors"
+              />
+              <button className="w-full px-6 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-purple-500/25 hover:shadow-purple-500/40">
+                Mettre à jour le mot de passe
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 2FA */}
+        <div className="relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08]" />
+          <div className="relative z-10 p-6">
+            <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+              <Settings size={18} className="text-emerald-400" />
+              Authentification à deux facteurs (2FA)
+            </h4>
+            <p className="text-white/40 text-sm mb-4">Ajoutez une couche de sécurité supplémentaire à votre compte</p>
+            <button className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-green-600 text-white font-semibold rounded-xl transition-all shadow-lg shadow-green-500/20 hover:shadow-green-500/35">
+              Activer 2FA
             </button>
           </div>
         </div>
 
-        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-          <h4 className="font-semibold text-white mb-4">Authentification à deux facteurs (2FA)</h4>
-          <p className="text-gray-400 text-sm mb-4">Ajoutez une couche de sécurité supplémentaire à votre compte</p>
-          <button className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition-all">
-            Activer 2FA
-          </button>
-        </div>
-
-        <div className="bg-gray-700/30 rounded-xl p-6 border border-gray-600/30">
-          <h4 className="font-semibold text-white mb-4">Sessions actives</h4>
-          <p className="text-gray-400 text-sm mb-4">Gérez vos sessions de connexion actives</p>
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center justify-between p-3 bg-gray-800/50 rounded-lg">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                <span className="text-gray-300 text-sm">Appareil actuel</span>
+        {/* Active Sessions */}
+        <div className="relative rounded-2xl overflow-hidden">
+          <div className="absolute inset-0 bg-white/[0.03]" />
+          <div className="absolute inset-[1px] rounded-2xl border border-white/[0.08]" />
+          <div className="relative z-10 p-6">
+            <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+              <User size={18} className="text-cyan-400" />
+              Sessions actives
+            </h4>
+            <p className="text-white/40 text-sm mb-4">Gérez vos sessions de connexion actives</p>
+            <div className="space-y-2 mb-4">
+              <div className="flex items-center justify-between p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                  <span className="text-white/70 text-sm">Appareil actuel</span>
+                </div>
+                <span className="text-white/30 text-xs">Maintenant</span>
               </div>
-              <span className="text-gray-500 text-xs">Maintenant</span>
             </div>
+            <button className="w-full px-4 py-3 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-xl transition-all">
+              Déconnecter tous les autres appareils
+            </button>
           </div>
-          <button className="w-full px-4 py-2 border border-red-500/30 text-red-400 hover:bg-red-500/10 rounded-lg transition-all">
-            Déconnecter tous les autres appareils
-          </button>
         </div>
       </div>
     </div>
