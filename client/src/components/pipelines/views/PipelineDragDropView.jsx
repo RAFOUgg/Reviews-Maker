@@ -133,7 +133,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     // Render the correct input type based on field definition
     const renderFieldInput = (field) => {
         const value = fieldValues[field.id] ?? '';
-        const baseClass = "px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-sm";
+        const baseClass = "px-2 py-1 bg-white/5 border border-white/20 rounded text-sm text-white";
 
         // SELECT
         if (field.type === 'select' && Array.isArray(field.options)) {
@@ -163,7 +163,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                         const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
                         const isChecked = selected.includes(val);
                         return (
-                            <label key={idx} className={`text-xs px-1 py-0.5 rounded border cursor-pointer ${isChecked ? 'bg-purple-100 dark:bg-purple-900 border-purple-400' : 'border-gray-300'}`}>
+                            <label key={idx} className={`text-xs px-1 py-0.5 rounded border cursor-pointer ${isChecked ? 'bg-purple-500/20 border-purple-400' : 'border-white/20'}`}>
                                 <input
                                     type="checkbox"
                                     checked={isChecked}
@@ -292,15 +292,15 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-[800px] max-w-[95vw] max-h-[85vh] border border-gray-200 dark:border-gray-700 flex flex-col overflow-hidden">
+            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-[800px] max-w-[95vw] max-h-[85vh] border border-white/10 flex flex-col overflow-hidden">
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
-                    <h3 className="font-bold text-lg text-gray-900 dark:text-white flex items-center gap-2">
+                <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
+                    <h3 className="font-bold text-lg text-white flex items-center gap-2">
                         <span>👥</span> Groupes de préréglages
-                        {mode === 'create' && <span className="text-sm font-normal text-gray-500">— Nouveau</span>}
-                        {mode === 'edit' && <span className="text-sm font-normal text-gray-500">— Modifier "{editingGroup?.name}"</span>}
+                        {mode === 'create' && <span className="text-sm font-normal text-white/50">— Nouveau</span>}
+                        {mode === 'edit' && <span className="text-sm font-normal text-white/50">— Modifier "{editingGroup?.name}"</span>}
                     </h3>
-                    <button onClick={onClose} className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors">
+                    <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
                         <span className="text-2xl leading-none">×</span>
                     </button>
                 </div>
@@ -309,7 +309,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                 {mode === 'list' && (
                     <div className="flex-1 overflow-y-auto p-6">
                         <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                            <h4 className="text-sm font-semibold text-white/70">
                                 {groups.length} groupe(s) enregistré(s)
                             </h4>
                             <button
@@ -324,7 +324,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                         </div>
 
                         {groups.length === 0 ? (
-                            <div className="text-center py-12 text-gray-500">
+                            <div className="text-center py-12 text-white/50">
                                 <div className="text-4xl mb-3">📦</div>
                                 <p>Aucun groupe de préréglages</p>
                                 <p className="text-sm mt-1">Créez un groupe pour sauvegarder plusieurs champs ensemble</p>
@@ -332,15 +332,15 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                         ) : (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 {groups.map((group, idx) => (
-                                    <div key={group.id || idx} className="p-4 bg-gray-50 dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700">
+                                    <div key={group.id || idx} className="p-4 bg-white/5 rounded-xl border border-white/10">
                                         <div className="flex items-start gap-3">
                                             <span className="text-3xl">{group.emoji || '🌱'}</span>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-semibold text-gray-900 dark:text-white">{group.name}</div>
+                                                <div className="font-semibold text-white">{group.name}</div>
                                                 {group.description && (
-                                                    <div className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{group.description}</div>
+                                                    <div className="text-sm text-white/50 mt-0.5">{group.description}</div>
                                                 )}
-                                                <div className="text-xs text-gray-400 mt-2">
+                                                <div className="text-xs text-white/50 mt-2">
                                                     {group.fields?.length || 0} champ(s)
                                                 </div>
                                                 {/* Preview des champs */}
@@ -348,27 +348,27 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                                     {(group.fields || []).slice(0, 4).map((f, i) => {
                                                         const def = findFieldDef(f.key);
                                                         return (
-                                                            <span key={i} className="text-xs px-2 py-0.5 bg-gray-200 dark:bg-gray-700 rounded">
+                                                            <span key={i} className="text-xs px-2 py-0.5 bg-white/10 rounded">
                                                                 {def?.icon || '📌'} {def?.label || f.key}: {String(f.value).substring(0, 15) || '—'}
                                                             </span>
                                                         );
                                                     })}
                                                     {(group.fields?.length || 0) > 4 && (
-                                                        <span className="text-xs px-2 py-0.5 text-gray-500">+{group.fields.length - 4}</span>
+                                                        <span className="text-xs px-2 py-0.5 text-white/50">+{group.fields.length - 4}</span></span>
                                                     )}
                                                 </div>
                                             </div>
                                         </div>
-                                        <div className="flex gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                        <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
                                             <button
                                                 onClick={() => startEdit(group)}
-                                                className="flex-1 px-3 py-1.5 text-sm bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 hover:bg-blue-200 dark:hover:bg-blue-900/50 rounded-lg transition-colors"
+                                                className="flex-1 px-3 py-1.5 text-sm bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors"
                                             >
                                                 ✏️ Modifier
                                             </button>
                                             <button
                                                 onClick={() => handleDeleteGroup(group.id || group.name)}
-                                                className="px-3 py-1.5 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                                className="px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
                                             >
                                                 🗑️
                                             </button>
@@ -384,23 +384,23 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                 {(mode === 'create' || mode === 'edit') && (
                     <div className="flex-1 flex flex-col overflow-hidden">
                         {/* Form header */}
-                        <div className="p-4 border-b border-gray-200 dark:border-gray-700 flex-shrink-0">
+                        <div className="p-4 border-b border-white/10 flex-shrink-0">
                             <div className="flex items-center gap-3">
                                 {/* Emoji picker */}
                                 <div className="relative">
                                     <button
                                         onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                        className="w-12 h-12 text-2xl bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 rounded-xl border border-gray-300 dark:border-gray-600 flex items-center justify-center transition-colors"
+                                        className="w-12 h-12 text-2xl bg-white/5 hover:bg-white/10 rounded-xl border border-white/20 flex items-center justify-center transition-colors"
                                     >
                                         {groupEmoji}
                                     </button>
                                     {showEmojiPicker && (
-                                        <div className="absolute top-14 left-0 z-10 p-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-200 dark:border-gray-700 grid grid-cols-6 gap-1 w-[200px]">
+                                        <div className="absolute top-14 left-0 z-10 p-2 bg-[#0a0a12] rounded-xl shadow-xl border border-white/10 grid grid-cols-6 gap-1 w-[200px]">
                                             {GROUP_EMOJIS.map(e => (
                                                 <button
                                                     key={e}
                                                     onClick={() => { setGroupEmoji(e); setShowEmojiPicker(false); }}
-                                                    className={`w-7 h-7 text-lg rounded hover:bg-gray-100 dark:hover:bg-gray-700 ${groupEmoji === e ? 'bg-purple-100 dark:bg-purple-900' : ''}`}
+                                                    className={`w-7 h-7 text-lg rounded hover:bg-white/10 ${groupEmoji === e ? 'bg-purple-500/20' : ''}`}
                                                 >
                                                     {e}
                                                 </button>
@@ -414,14 +414,14 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                         value={groupName}
                                         onChange={(e) => setGroupName(e.target.value)}
                                         placeholder="Nom du groupe *"
-                                        className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                        className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm text-white placeholder:text-white/40"
                                     />
                                     <input
                                         type="text"
                                         value={groupDescription}
                                         onChange={(e) => setGroupDescription(e.target.value)}
                                         placeholder="Description (optionnel)"
-                                        className="px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                        className="px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm text-white placeholder:text-white/40"
                                     />
                                 </div>
                             </div>
@@ -431,7 +431,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 placeholder="🔍 Rechercher un champ..."
-                                className="w-full mt-3 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm"
+                                className="w-full mt-3 px-3 py-2 bg-white/5 border border-white/20 rounded-lg text-sm text-white placeholder:text-white/40"
                             />
                         </div>
 
@@ -439,17 +439,17 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                         <div className="flex-1 overflow-y-auto p-4">
                             <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
                                 {filteredSections.map(section => (
-                                    <div key={section.id} className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+                                    <div key={section.id} className="border border-white/10 rounded-lg overflow-hidden">
                                         <button
                                             onClick={() => toggleSection(section.id)}
-                                            className="w-full flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700"
+                                            className="w-full flex items-center justify-between p-2 bg-white/5 hover:bg-white/10"
                                         >
                                             <div className="flex items-center gap-2">
                                                 <span>{section.icon}</span>
                                                 <span className="text-sm font-medium">{section.label}</span>
-                                                <span className="text-xs text-gray-500">({section.items.length})</span>
+                                                <span className="text-xs text-white/50">({section.items.length})</span>
                                             </div>
-                                            <span className="text-gray-400">{expandedSections[section.id] ? '▼' : '▶'}</span>
+                                            <span className="text-white/50">{expandedSections[section.id] ? '▼' : '▶'}</span>
                                         </button>
 
                                         {expandedSections[section.id] && (
@@ -459,7 +459,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                                     return (
                                                         <div
                                                             key={field.id}
-                                                            className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-50 dark:bg-purple-900/20' : 'hover:bg-gray-50 dark:hover:bg-gray-800'}`}
+                                                            className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
                                                         >
                                                             <input
                                                                 type="checkbox"
@@ -487,21 +487,21 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                         </div>
 
                         {/* Footer */}
-                        <div className="flex items-center justify-between gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0 bg-gray-50 dark:bg-gray-800/50">
-                            <div className="text-sm text-gray-600 dark:text-gray-400">
+                        <div className="flex items-center justify-between gap-3 p-4 border-t border-white/10 flex-shrink-0 bg-white/5">
+                            <div className="text-sm text-white/60">
                                 {selectedFields.length} champ(s) sélectionné(s)
                             </div>
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => { setMode('list'); resetForm(); }}
-                                    className="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                                    className="px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-lg font-medium transition-colors"
                                 >
                                     Annuler
                                 </button>
                                 <button
                                     onClick={handleSaveGroup}
                                     disabled={!groupName.trim() || selectedFields.length === 0}
-                                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-gray-400 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
+                                    className="px-6 py-2 bg-purple-600 hover:bg-purple-700 disabled:bg-white/20 disabled:cursor-not-allowed text-white rounded-lg font-medium transition-colors"
                                 >
                                     {editingGroup ? 'Enregistrer les modifications' : 'Créer le groupe'}
                                 </button>
@@ -512,10 +512,10 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
 
                 {/* Footer for list mode */}
                 {mode === 'list' && (
-                    <div className="flex gap-3 p-4 border-t border-gray-200 dark:border-gray-700 flex-shrink-0">
+                    <div className="flex gap-3 p-4 border-t border-white/10 flex-shrink-0">
                         <button
                             onClick={onClose}
-                            className="flex-1 px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-900 dark:text-white rounded-lg font-medium transition-colors"
+                            className="flex-1 px-4 py-2 bg-white/10 hover:bg-white/15 text-white rounded-lg font-medium transition-colors"
                         >
                             Fermer
                         </button>
@@ -571,7 +571,7 @@ function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSa
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl p-6 min-w-[360px] max-w-[95vw] border border-gray-200 dark:border-gray-700">
+            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl p-6 min-w-[360px] max-w-[95vw] border border-white/10">
                 <h3 className="font-bold text-lg mb-3">Sauvegarder / Charger un préréglage de pipeline</h3>
                 <div className="mb-2">
                     <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Nom du préréglage" value={name} onChange={e => setName(e.target.value)} />
@@ -1883,16 +1883,16 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 dark:border-gray-700/50 p-4 min-h-[600px] max-h-[85vh] overflow-hidden">
+        <div className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 min-h-[600px] max-h-[85vh] overflow-hidden">
             {/* LAYOUT FLEX-ROW : Sidebar gauche + Timeline droite */}
             <div className="flex flex-row gap-4 h-full">
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
                 {!isMobile && (
-                    <div className="w-80 flex-shrink-0 flex flex-col bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                    <div className="w-80 flex-shrink-0 flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden">
                         {/* Header Contenus */}
-                        <div className="sticky top-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm p-4 border-b border-gray-200 dark:border-gray-700 z-10 flex-shrink-0">
-                            <h3 className="font-bold text-gray-900 dark:text-white text-lg">📦 Contenus</h3>
-                            <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                        <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-4 border-b border-white/10 z-10 flex-shrink-0">
+                            <h3 className="font-bold text-white text-lg">📦 Contenus</h3>
+                            <p className="text-xs text-white/60 mt-1">
                                 {multiSelectedItems.length > 0
                                     ? `${multiSelectedItems.length} item${multiSelectedItems.length > 1 ? 's' : ''} sélectionné${multiSelectedItems.length > 1 ? 's' : ''} (Ctrl+clic ou appui long)`
                                     : 'Glissez les éléments vers les cases →'
@@ -1904,7 +1904,7 @@ const PipelineDragDropView = ({
                                     {multiSelectedItems.length > 0 && (
                                         <button
                                             onClick={() => setMultiSelectedItems([])}
-                                            className="px-2 py-1 text-xs bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors"
+                                            className="px-2 py-1 text-xs bg-red-500/20 text-red-300 rounded-lg hover:bg-red-500/30 transition-colors"
                                         >
                                             ✕ Désélectionner items ({multiSelectedItems.length})
                                         </button>
@@ -1912,7 +1912,7 @@ const PipelineDragDropView = ({
                                     {selectedCells.length > 1 && (
                                         <button
                                             onClick={() => setSelectedCells([])}
-                                            className="px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                                            className="px-2 py-1 text-xs bg-blue-500/20 text-blue-300 rounded-lg hover:bg-blue-500/30 transition-colors"
                                         >
                                             ✕ Désélectionner cases ({selectedCells.length})
                                         </button>
@@ -1957,7 +1957,7 @@ const PipelineDragDropView = ({
                         <div className="p-3 space-y-2 overflow-y-auto flex-1">
                             {/* Pré-configuration section (was MODE PIPELINE) */}
                             <div className="mb-3">
-                                <div className="font-semibold text-xs text-gray-400 dark:text-gray-300 mb-1">Pré-configuration</div>
+                                <div className="font-semibold text-xs text-white/50 mb-1">Pré-configuration</div>
                                 <button
                                     className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
                                     onClick={() => setShowGroupedPresetModal(true)}
@@ -1978,7 +1978,7 @@ const PipelineDragDropView = ({
                                                     setDraggedContent({ type: 'grouped', group });
                                                 }}
                                                 onDragEnd={() => setDraggedContent(null)}
-                                                className="px-3 py-2 rounded-lg bg-purple-50 dark:bg-purple-900/30 border border-purple-300 dark:border-purple-700 text-xs font-bold cursor-grab hover:bg-purple-100 dark:hover:bg-purple-900/50 transition-all"
+                                                className="px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 text-xs font-bold cursor-grab hover:bg-purple-500/20 transition-all"
                                                 title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
                                             >
                                                 <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
@@ -1988,26 +1988,26 @@ const PipelineDragDropView = ({
                                 )}
                             </div>
                             {(sidebarContent || []).map((section) => (
-                                <div key={section.id} className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
+                                <div key={section.id} className="rounded-lg overflow-hidden border border-white/10">
                                     <button
                                         onClick={() => toggleSection(section.id)}
-                                        className="w-full flex items-center justify-between p-3 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-800/50 hover:from-gray-100 hover:to-gray-200 dark:hover:from-gray-700 dark:hover:to-gray-700/50 transition-colors"
+                                        className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 transition-colors"
                                     >
                                         <div className="flex items-center gap-2">
                                             <span className="text-lg">{section.icon}</span>
-                                            <span className="font-semibold text-sm text-gray-900 dark:text-white">
+                                            <span className="font-semibold text-sm text-white">
                                                 {section.label === 'MODE PIPELINE' ? 'Pré-configuration' : section.label}
                                             </span>
                                         </div>
                                         {expandedSections[section.id] ? (
-                                            <ChevronDown className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                            <ChevronDown className="w-4 h-4 text-white/60" />
                                         ) : (
-                                            <ChevronRight className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+                                            <ChevronRight className="w-4 h-4 text-white/60" />
                                         )}
                                     </button>
 
                                     {expandedSections[section.id] && (
-                                        <div className="p-2 bg-white dark:bg-gray-900 space-y-1">
+                                        <div className="p-2 bg-[#0a0a12] space-y-1">
                                             {section.items?.map((item) => {
                                                 const itemKey = item.key || item.id;
                                                 const isSelected = multiSelectedItems.includes(itemKey);
@@ -2083,8 +2083,8 @@ const PipelineDragDropView = ({
                                                             });
                                                         }}
                                                         className={`relative flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing border-2 transition-all group ${isSelected
-                                                            ? 'bg-blue-100 dark:bg-blue-900/50 border-blue-500 dark:border-blue-400 ring-2 ring-blue-300 dark:ring-blue-600'
-                                                            : 'bg-gray-50 dark:bg-gray-800 border-transparent hover:bg-gray-100 dark:hover:bg-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+                                                            ? 'bg-blue-500/20 border-blue-500 ring-2 ring-blue-500/50'
+                                                            : 'bg-white/5 border-transparent hover:bg-white/10 hover:border-white/20'
                                                             }`}
                                                         style={{ touchAction: 'none' }}
                                                     >
@@ -2095,10 +2095,10 @@ const PipelineDragDropView = ({
                                                             </span>
                                                         )}
                                                         <span className="text-base">{item.icon}</span>
-                                                        <span className={`text-xs font-medium flex-1 ${isSelected ? 'text-blue-700 dark:text-blue-300' : 'text-gray-700 dark:text-gray-300'}`}>
+                                                        <span className={`text-xs font-medium flex-1 ${isSelected ? 'text-blue-300' : 'text-white/70'}`}>
                                                             {item.label}
                                                         </span>
-                                                        <span className="text-xs transition-colors text-gray-400 group-hover:text-gray-600">
+                                                        <span className="text-xs transition-colors text-white/40 group-hover:text-white/60">
                                                             ⋮⋮
                                                         </span>
                                                     </div>
@@ -2113,11 +2113,11 @@ const PipelineDragDropView = ({
                 )}
 
                 {/* TIMELINE PRINCIPALE DROITE */}
-                <div className="flex-1 min-w-0 bg-white/50 dark:bg-gray-800/50 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
+                <div className="flex-1 min-w-0 bg-white/5 rounded-xl border border-white/10 overflow-hidden flex flex-col">
                     {/* HEADER CONFIGURATION */}
-                    <div className="p-3 md:p-4 border-b border-gray-200 dark:border-gray-700 bg-transparent dark:bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
+                    <div className="p-3 md:p-4 border-b border-white/10 bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 md:mb-3">
-                            <h3 className="font-bold text-gray-900 dark:text-white text-base md:text-lg flex items-center gap-2 truncate">
+                            <h3 className="font-bold text-white text-base md:text-lg flex items-center gap-2 truncate">
                                 <span className="flex-shrink-0">📊</span>
                                 <span className="truncate">Pipeline {type === 'culture' ? 'Culture' : 'Curing'}</span>
                             </h3>
@@ -2127,8 +2127,8 @@ const PipelineDragDropView = ({
                                     onClick={() => undoLastAction()}
                                     disabled={historyPointer < 0}
                                     className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer < 0
-                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
-                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 border border-gray-300 dark:border-gray-600 hover:border-blue-400 dark:hover:border-blue-500 text-gray-700 dark:text-gray-300 hover:text-blue-700 dark:hover:text-blue-300 shadow-sm hover:shadow'
+                                        ? 'bg-white/5 text-white/40 cursor-not-allowed border border-white/10'
+                                        : 'bg-white/5 hover:bg-blue-500/20 border border-white/20 hover:border-blue-500/50 text-white/70 hover:text-blue-300 shadow-sm hover:shadow'
                                         }`}
                                     title="Annuler la dernière action (Ctrl+Z)"
                                 >
@@ -2143,8 +2143,8 @@ const PipelineDragDropView = ({
                                     onClick={() => redoLastAction()}
                                     disabled={historyPointer >= actionsHistory.length - 1}
                                     className={`group flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 ${historyPointer >= actionsHistory.length - 1
-                                        ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed border border-gray-300 dark:border-gray-700'
-                                        : 'bg-gray-100 dark:bg-gray-800 hover:bg-green-100 dark:hover:bg-green-900/40 border border-gray-300 dark:border-gray-600 hover:border-green-400 dark:hover:border-green-500 text-gray-700 dark:text-gray-300 hover:text-green-700 dark:hover:text-green-300 shadow-sm hover:shadow'
+                                        ? 'bg-white/5 text-white/40 cursor-not-allowed border border-white/10'
+                                        : 'bg-white/5 hover:bg-green-500/20 border border-white/20 hover:border-green-500/50 text-white/70 hover:text-green-300 shadow-sm hover:shadow'
                                         }`}
                                     title="Refaire la dernière action (Ctrl+Shift+Z / Ctrl+Y)"
                                 >
@@ -2159,14 +2159,14 @@ const PipelineDragDropView = ({
                         {/* Configuration inline - Dynamique selon type d'intervalle */}
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 md:gap-3 mt-3 md:mt-3">
                             <div>
-                                <label className="text-xs font-medium text-gray-900 dark:text-gray-300 mb-1 block truncate">
+                                <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                     Type intervalle
                                 </label>
                                 <select
                                     value={timelineConfig.type || 'phase'}
                                     onChange={(e) => onConfigChange('type', e.target.value)}
                                     disabled={timelineData.length > 0}
-                                    className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
+                                    className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 text-white border border-white/20 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
                                     title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
                                 >
@@ -2178,7 +2178,7 @@ const PipelineDragDropView = ({
                                     <option value="phase">🌱 Phases</option>
                                 </select>
                                 {timelineData.length > 0 && (
-                                    <p className="text-xs text-orange-600 dark:text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">
+                                    <p className="text-xs text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">
                                         <span className="flex-shrink-0">⚠️</span>
                                         <span className="truncate">Trame verrouillée ({timelineData.length} cell{timelineData.length > 1 ? 's' : ''})</span>
                                     </p>
@@ -2188,7 +2188,7 @@ const PipelineDragDropView = ({
                             {/* SECONDES - Max 900s */}
                             {timelineConfig.type === 'seconde' && (
                                 <div className="col-span-2 md:col-span-3">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Secondes (max 900)
                                     </label>
                                     <input
@@ -2197,7 +2197,7 @@ const PipelineDragDropView = ({
                                         max="900"
                                         value={timelineConfig.totalSeconds || ''}
                                         onChange={(e) => onConfigChange('totalSeconds', parseInt(e.target.value))}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         placeholder="300"
                                     />
                                 </div>
@@ -2206,7 +2206,7 @@ const PipelineDragDropView = ({
                             {/* HEURES - Max 336h */}
                             {timelineConfig.type === 'heure' && (
                                 <div className="col-span-2 md:col-span-3">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Heures (max 336)
                                     </label>
                                     <input
@@ -2215,7 +2215,7 @@ const PipelineDragDropView = ({
                                         max="336"
                                         value={timelineConfig.totalHours || ''}
                                         onChange={(e) => onConfigChange('totalHours', parseInt(e.target.value))}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         placeholder="72"
                                     />
                                 </div>
@@ -2224,7 +2224,7 @@ const PipelineDragDropView = ({
                             {/* JOURS - Max 365 jours */}
                             {timelineConfig.type === 'jour' && (
                                 <div className="col-span-2 md:col-span-3">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Jours (max 365)
                                     </label>
                                     <input
@@ -2233,7 +2233,7 @@ const PipelineDragDropView = ({
                                         max="365"
                                         value={timelineConfig.totalDays || ''}
                                         onChange={(e) => onConfigChange('totalDays', parseInt(e.target.value))}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         placeholder="90"
                                     />
                                 </div>
@@ -2243,33 +2243,33 @@ const PipelineDragDropView = ({
                             {timelineConfig.type === 'date' && (
                                 <>
                                     <div className="col-span-1">
-                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                             Début *
                                         </label>
                                         <input
                                             type="date"
                                             value={timelineConfig.start || ''}
                                             onChange={(e) => onConfigChange('start', e.target.value)}
-                                            className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                            className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
                                     <div className="col-span-1">
-                                        <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                        <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                             Fin *
                                         </label>
                                         <input
                                             type="date"
                                             value={timelineConfig.end || ''}
                                             onChange={(e) => onConfigChange('end', e.target.value)}
-                                            className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                            className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         />
                                     </div>
                                     {timelineConfig.start && timelineConfig.end && (
                                         <div className="col-span-1">
-                                            <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                            <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                                 Durée
                                             </label>
-                                            <div className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm font-medium text-gray-900 dark:text-white truncate">
+                                            <div className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/10 border border-white/20 rounded-lg text-xs md:text-sm font-medium text-white truncate">
                                                 {Math.ceil((new Date(timelineConfig.end) - new Date(timelineConfig.start)) / (1000 * 60 * 60 * 24)) + 1}j
                                             </div>
                                         </div>
@@ -2280,7 +2280,7 @@ const PipelineDragDropView = ({
                             {/* SEMAINES - Nombre de semaines */}
                             {timelineConfig.type === 'semaine' && (
                                 <div className="col-span-2 md:col-span-3">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block truncate">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Semaines (max 52)
                                     </label>
                                     <input
@@ -2289,7 +2289,7 @@ const PipelineDragDropView = ({
                                         max="52"
                                         value={timelineConfig.totalWeeks || ''}
                                         onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-xs md:text-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 dark:focus:ring-blue-400"
+                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         placeholder="12"
                                     />
                                 </div>
@@ -2298,10 +2298,10 @@ const PipelineDragDropView = ({
                             {/* PHASES - Prédéfinies selon type de pipeline */}
                             {timelineConfig.type === 'phase' && (
                                 <div className="col-span-2 md:col-span-3">
-                                    <label className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 block">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block">
                                         Phases prédéfinies
                                     </label>
-                                    <div className="w-full px-3 py-2 bg-gray-100 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium text-gray-900 dark:text-white">
+                                    <div className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white">
                                         {type === 'culture' ? '12 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
                                     </div>
                                 </div>
@@ -2311,13 +2311,13 @@ const PipelineDragDropView = ({
                         {/* Progress bar - Full width spanning entire config area */}
                         <div className="mt-4">
                             <div className="flex items-center justify-between mb-2">
-                                <div className="text-sm font-medium text-gray-700 dark:text-gray-300">Progression</div>
+                                <div className="text-sm font-medium text-white/70">Progression</div>
                                 <div className="flex items-center gap-3">
-                                    <div className="text-xs text-gray-500 dark:text-gray-400" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
-                                    <div className="text-sm font-bold text-purple-600 dark:text-purple-400">{Math.round(completionPercent)}%</div>
+                                    <div className="text-xs text-white/50" title={`${filledCells}/${cells.length} cases`}>{filledCells}/{cells.length}</div>
+                                    <div className="text-sm font-bold text-purple-400">{Math.round(completionPercent)}%</div>
                                 </div>
                             </div>
-                            <div className="w-full bg-gray-100 dark:bg-gray-800 rounded-full h-3 overflow-hidden border border-gray-200 dark:border-gray-700 shadow-inner">
+                            <div className="w-full bg-white/5 rounded-full h-3 overflow-hidden border border-white/10 shadow-inner">
                                 <div
                                     className="h-3 rounded-full bg-gradient-to-r from-purple-400 via-purple-500 to-purple-600 transition-all duration-500 ease-out"
                                     style={{ width: `${Math.max(0, Math.min(100, completionPercent))}%` }}
@@ -2334,24 +2334,24 @@ const PipelineDragDropView = ({
                         (timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900)) ||
                         (timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336)) ||
                         (timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365)) ? (
-                        <div className="px-3 md:px-4 py-2 bg-yellow-50 dark:bg-yellow-900/20 border-b border-yellow-200 dark:border-yellow-700 flex-shrink-0">
+                        <div className="px-3 md:px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/30 flex-shrink-0">
                             {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
-                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                <p className="text-xs text-yellow-300 flex items-center gap-1">
                                     <span>⚠️</span> Dates début ET fin obligatoires
                                 </p>
                             )}
                             {timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900) && (
-                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                <p className="text-xs text-yellow-300 flex items-center gap-1">
                                     <span>⚠️</span> Max 900s
                                 </p>
                             )}
                             {timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336) && (
-                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                <p className="text-xs text-yellow-300 flex items-center gap-1">
                                     <span>⚠️</span> Max 336h (14j)
                                 </p>
                             )}
                             {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
-                                <p className="text-xs text-yellow-800 dark:text-yellow-300 flex items-center gap-1">
+                                <p className="text-xs text-yellow-300 flex items-center gap-1">
                                     <span>⚠️</span> Max 365j
                                 </p>
                             )}
@@ -2361,14 +2361,14 @@ const PipelineDragDropView = ({
                     {/* TIMELINE GRID - Directement sous la configuration dans le même container */}
                     {cells.length === 0 ? (
                         <div className="flex-1 flex items-center justify-center p-4 md:p-8">
-                            <div className="text-center text-gray-500 dark:text-gray-400">
+                            <div className="text-center text-white/50">
                                 <Settings className="w-8 md:w-12 h-8 md:h-12 mx-auto mb-2 opacity-50" />
                                 <p className="text-xs md:text-sm">⚠️ Configurez la période pour voir la timeline</p>
                             </div>
                         </div>
                     ) : (
                         <div className="flex-1 flex flex-col overflow-hidden">
-                            <p className="text-xs md:text-sm text-gray-600 dark:text-gray-400 italic px-3 md:px-4 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0 line-clamp-2">
+                            <p className="text-xs md:text-sm text-white/50 italic px-3 md:px-4 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0 line-clamp-2">
                                 💡 <span className="hidden sm:inline"><strong>Première case</strong> : Config générale </span><span className="sm:hidden"><strong>1ère case</strong>: Config </span>|
                                 <span className="hidden sm:inline"> 📊 <strong>Autres cases</strong> : Drag & drop paramètres</span><span className="sm:hidden"> 📊 Drag & drop</span>
                             </p>
@@ -2455,15 +2455,15 @@ const PipelineDragDropView = ({
 
                                             // Palette verte progressive (GitHub-style)
                                             const gradients = [
-                                                'border-green-400 bg-green-100/40 dark:border-green-600 dark:bg-green-950/30',
-                                                'border-green-500 bg-green-200/50 dark:border-green-500 dark:bg-green-900/40',
-                                                'border-green-600 bg-green-300/60 dark:border-green-400 dark:bg-green-800/50',
-                                                'border-green-700 bg-green-400/70 dark:border-green-300 dark:bg-green-700/60',
-                                                'border-green-800 bg-green-500/80 dark:border-green-200 dark:bg-green-600/70'
+                                                'border-green-500/40 bg-green-500/10',
+                                                'border-green-500/50 bg-green-500/20',
+                                                'border-green-500/60 bg-green-500/30',
+                                                'border-green-500/70 bg-green-500/40',
+                                                'border-green-500/80 bg-green-500/50'
                                             ];
                                             cellClass += ' ' + gradients[intensityIndex];
                                         } else {
-                                            cellClass += ' border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800';
+                                            cellClass += ' border-white/20 bg-white/5';
                                         }
 
                                         // Selected par clic simple (modal)
@@ -2473,12 +2473,12 @@ const PipelineDragDropView = ({
 
                                         // Selected en mode masse (multi-sélection)
                                         cellClass += isSelected
-                                            ? ' ring-4 ring-blue-500 dark:ring-blue-400 bg-blue-500/10'
+                                            ? ' ring-4 ring-blue-500 bg-blue-500/10'
                                             : '';
 
                                         // Hover pendant drag
                                         cellClass += isHovered && draggedContent
-                                            ? ' ring-4 ring-violet-500 dark:ring-violet-400 scale-105 shadow-2xl animate-pulse'
+                                            ? ' ring-4 ring-violet-500 scale-105 shadow-2xl animate-pulse'
                                             : '';
 
                                         // Span 2 colonnes pour première cellule
@@ -2507,7 +2507,7 @@ const PipelineDragDropView = ({
                                             >
                                                 {/* Indicateur de sélection multiple */}
                                                 {isSelected && selectedCells.length > 1 && (
-                                                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg z-20 border-2 border-white dark:border-gray-900">
+                                                    <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-blue-500 text-white rounded-full flex items-center justify-center text-[10px] font-bold shadow-lg z-20 border-2 border-[#0a0a12]">
                                                         {selectedCells.indexOf(cell.timestamp) + 1}
                                                     </span>
                                                 )}
@@ -2534,15 +2534,15 @@ const PipelineDragDropView = ({
 
                                                 {/* Label cellule */}
                                                 <div className="relative z-10">
-                                                    <div className="text-[10px] sm:text-xs md:text-xs font-bold text-gray-900 dark:text-white mb-0.5 sm:mb-1 truncate">
+                                                    <div className="text-[10px] sm:text-xs md:text-xs font-bold text-white mb-0.5 sm:mb-1 truncate">
                                                         {massAssignMode && isSelected && '✓ '}
                                                         {isFirst ? '⚙️ ' : ''}<span className="truncate inline-block max-w-full">{cell.label}</span>
                                                     </div>
-                                                    <div className="text-[8px] sm:text-[9px] md:text-[10px] text-gray-600 dark:text-gray-400 truncate">
+                                                    <div className="text-[8px] sm:text-[9px] md:text-[10px] text-white/50 truncate">
                                                         {cell.date || cell.week || (cell.phase ? `(${cell.duration || 7}j)` : '')}
                                                     </div>
                                                     {isFirst && (
-                                                        <div className="mt-0.5 sm:mt-1 text-[8px] sm:text-[9px] md:text-[10px] dark:text-gray-300 font-semibold truncate">
+                                                        <div className="mt-0.5 sm:mt-1 text-[8px] sm:text-[9px] md:text-[10px] text-white/70 font-semibold truncate">
                                                             Config
                                                         </div>
                                                     )}
@@ -2554,7 +2554,7 @@ const PipelineDragDropView = ({
                                     {/* Bouton + pour ajouter des cellules */}
                                     {cells.length > 0 && (timelineConfig.type === 'seconde' || timelineConfig.type === 'heure' || timelineConfig.type === 'jour' || timelineConfig.type === 'semaine' || timelineConfig.type === 'date') && (
                                         <div
-                                            className="p-1.5 sm:p-2 md:p-3 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-800 hover:bg-gray-100 dark:hover:bg-gray-700 transition-all cursor-pointer flex items-center justify-center min-h-[60px] sm:min-h-[70px] md:min-h-[80px]"
+                                            className="p-1.5 sm:p-2 md:p-3 rounded-lg border-2 border-dashed border-white/20 bg-white/5 hover:bg-white/10 transition-all cursor-pointer flex items-center justify-center min-h-[60px] sm:min-h-[70px] md:min-h-[80px]"
                                             onClick={() => {
                                                 // Ajouter une cellule selon le type
                                                 if (timelineConfig.type === 'seconde' && timelineConfig.totalSeconds) {
@@ -2587,7 +2587,7 @@ const PipelineDragDropView = ({
                                             }}
                                             title="Ajouter une cellule"
                                         >
-                                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-gray-400" />
+                                            <Plus className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-white/50" />
                                         </div>
                                     )}
                                 </div>

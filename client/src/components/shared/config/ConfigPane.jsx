@@ -42,16 +42,16 @@ export default function ConfigPane() {
     const setActivePanel = useOrchardStore((state) => state.setActivePanel);
 
     return (
-        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
-            {/* Tab Navigation - Improved visibility */}
-            <div className="flex items-center gap-1 p-2 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border-b-2 border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600">
+        <div className="h-full flex flex-col bg-[#0a0a12]">
+            {/* Tab Navigation - Liquid Glass Style */}
+            <div className="flex items-center gap-1 p-2 bg-gradient-to-r from-white/5 to-transparent border-b border-white/10 overflow-x-auto scrollbar-thin scrollbar-thumb-white/20">
                 {PANELS.map((panel) => (
                     <motion.button
                         key={panel.id}
                         whileHover={{ scale: 1.05 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => setActivePanel(panel.id)}
-                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 shadow-sm ${activePanel === panel.id ? 'bg-gradient-to-r text-white shadow-lg shadow-purple-500/30 ring-2 dark:' : 'bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600 border border-gray-200 dark:border-gray-600'}`}
+                        className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all whitespace-nowrap flex-shrink-0 shadow-sm ${activePanel === panel.id ? 'bg-gradient-to-r from-purple-600 to-violet-600 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-400/50' : 'bg-white/10 text-white/70 hover:bg-white/15 border border-white/10'}`}
                     >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             {ICONS[panel.icon]}
@@ -61,8 +61,8 @@ export default function ConfigPane() {
                 ))}
             </div>
 
-            {/* Panel Content - Better scrollbar */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent hover:scrollbar-thumb-gray-400 dark:hover:scrollbar-thumb-gray-500">
+            {/* Panel Content - Liquid Glass Scrollbar */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-white/20 scrollbar-track-transparent hover:scrollbar-thumb-white/30">
                 <motion.div
                     key={activePanel}
                     initial={{ opacity: 0, y: 10 }}
