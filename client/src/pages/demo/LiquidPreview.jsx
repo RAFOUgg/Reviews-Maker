@@ -52,7 +52,8 @@ import {
     LiquidBadge,
     LiquidTabs,
     LiquidSkeleton,
-    LiquidAvatar
+    LiquidAvatar,
+    LiquidCursorGlow
 } from '../../components/ui/LiquidUI'
 
 // ============================================
@@ -66,32 +67,32 @@ export default function LiquidPreview() {
     const [farm, setFarm] = useState('')
     const [cultivar, setCultivar] = useState('')
     const [description, setDescription] = useState('')
-    
+
     // UI state
     const [darkMode, setDarkMode] = useState(true)
     const [notifications, setNotifications] = useState(true)
     const [modalOpen, setModalOpen] = useState(false)
     const [confirmModalOpen, setConfirmModalOpen] = useState(false)
     const [activeTab, setActiveTab] = useState('general')
-    
+
     // Selection state
     const [selectedAromas, setSelectedAromas] = useState(['Agrumes', 'Pin'])
     const [selectedEffects, setSelectedEffects] = useState(['Relaxant'])
-    
+
     const productOptions = [
         { value: 'flower', label: '🌿 Fleur', icon: '🌿' },
         { value: 'hash', label: '🟤 Hash', icon: '🟤' },
         { value: 'concentrate', label: '💧 Concentré', icon: '💧' },
         { value: 'edible', label: '🍪 Comestible', icon: '🍪' }
     ]
-    
+
     const tabs = [
         { id: 'general', label: 'Général', icon: Info },
         { id: 'visual', label: 'Visuel', icon: Eye },
         { id: 'effects', label: 'Effets', icon: Zap },
         { id: 'settings', label: 'Paramètres', icon: Settings }
     ]
-    
+
     const toggleAroma = (aroma) => {
         setSelectedAromas(prev =>
             prev.includes(aroma)
@@ -99,7 +100,7 @@ export default function LiquidPreview() {
                 : [...prev, aroma]
         )
     }
-    
+
     const toggleEffect = (effect) => {
         setSelectedEffects(prev =>
             prev.includes(effect)
@@ -111,21 +112,24 @@ export default function LiquidPreview() {
     return (
         <div className="min-h-screen bg-[#050508] text-white relative overflow-x-hidden liquid-scrollbar">
             
+            {/* === LIQUID CURSOR GLOW - Water effect following mouse === */}
+            <LiquidCursorGlow color="purple" size={350} intensity={0.35} blur={100} />
+
             {/* === ANIMATED BACKGROUND === */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div 
+                <div
                     className="liquid-blob purple"
                     style={{ width: '60vw', height: '60vw', top: '-20%', left: '-15%' }}
                 />
-                <div 
+                <div
                     className="liquid-blob cyan"
                     style={{ width: '50vw', height: '50vw', bottom: '-25%', right: '-15%' }}
                 />
-                <div 
+                <div
                     className="liquid-blob pink"
                     style={{ width: '35vw', height: '35vw', top: '50%', left: '40%', transform: 'translate(-50%, -50%)' }}
                 />
-                <div 
+                <div
                     className="absolute inset-0 opacity-30"
                     style={{
                         backgroundImage: `linear-gradient(rgba(255,255,255,0.02) 1px, transparent 1px),
@@ -139,14 +143,14 @@ export default function LiquidPreview() {
             <div className="relative z-10 max-w-7xl mx-auto px-6 py-10">
 
                 {/* === HEADER === */}
-                <motion.header 
+                <motion.header
                     className="flex items-center justify-between mb-12"
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.6 }}
                 >
                     <div className="flex items-center gap-5">
-                        <motion.div 
+                        <motion.div
                             className="relative w-14 h-14"
                             whileHover={{ rotate: 5, scale: 1.05 }}
                         >
@@ -155,7 +159,7 @@ export default function LiquidPreview() {
                                 <Sparkles size={26} className="text-white" />
                             </div>
                         </motion.div>
-                        
+
                         <div>
                             <h1 className="text-3xl font-bold liquid-text-gradient">
                                 Liquid Glass UI
@@ -165,7 +169,7 @@ export default function LiquidPreview() {
                             </p>
                         </div>
                     </div>
-                    
+
                     <div className="flex items-center gap-4">
                         <LiquidToggle checked={darkMode} onChange={setDarkMode} label="Mode sombre" />
                         <LiquidButton variant="default" icon={Search}>Rechercher</LiquidButton>
@@ -175,7 +179,7 @@ export default function LiquidPreview() {
 
                 {/* === TABS === */}
                 <div className="mb-8">
-                    <LiquidTabs 
+                    <LiquidTabs
                         tabs={tabs}
                         activeTab={activeTab}
                         onChange={setActiveTab}
@@ -188,7 +192,7 @@ export default function LiquidPreview() {
 
                     {/* === LEFT COLUMN - Main Form === */}
                     <div className="col-span-12 lg:col-span-8 space-y-6">
-                        
+
                         {/* Form Card */}
                         <LiquidCard glow="purple" padding="lg">
                             <div className="space-y-8">
@@ -202,61 +206,61 @@ export default function LiquidPreview() {
                                             Créez votre fiche technique avec les composants Liquid Glass
                                         </p>
                                     </div>
-                                    
+
                                     <div className="flex items-center gap-2">
                                         <LiquidBadge variant="info">Beta</LiquidBadge>
                                         <LiquidBadge variant="success">v2.0</LiquidBadge>
                                     </div>
                                 </div>
-                                
+
                                 {/* Type chips */}
                                 <div className="flex gap-2 flex-wrap">
-                                    <LiquidChip 
-                                        icon={Leaf} 
-                                        active={productType === 'flower'} 
+                                    <LiquidChip
+                                        icon={Leaf}
+                                        active={productType === 'flower'}
                                         color="green"
                                         onClick={() => setProductType('flower')}
                                     >
                                         Fleur
                                     </LiquidChip>
-                                    <LiquidChip 
-                                        icon={Flame} 
-                                        active={productType === 'hash'} 
+                                    <LiquidChip
+                                        icon={Flame}
+                                        active={productType === 'hash'}
                                         color="amber"
                                         onClick={() => setProductType('hash')}
                                     >
                                         Hash
                                     </LiquidChip>
-                                    <LiquidChip 
-                                        icon={Droplets} 
-                                        active={productType === 'concentrate'} 
+                                    <LiquidChip
+                                        icon={Droplets}
+                                        active={productType === 'concentrate'}
                                         color="cyan"
                                         onClick={() => setProductType('concentrate')}
                                     >
                                         Concentré
                                     </LiquidChip>
-                                    <LiquidChip 
-                                        icon={Coffee} 
-                                        active={productType === 'edible'} 
+                                    <LiquidChip
+                                        icon={Coffee}
+                                        active={productType === 'edible'}
                                         color="pink"
                                         onClick={() => setProductType('edible')}
                                     >
                                         Comestible
                                     </LiquidChip>
                                 </div>
-                                
+
                                 <LiquidDivider />
-                                
+
                                 {/* Form inputs */}
                                 <div className="grid grid-cols-2 gap-6">
-                                    <LiquidInput 
+                                    <LiquidInput
                                         label="Nom du produit"
                                         placeholder="Ex: Purple Haze"
                                         value={productName}
                                         onChange={(e) => setProductName(e.target.value)}
                                         icon={Leaf}
                                     />
-                                    <LiquidSelect 
+                                    <LiquidSelect
                                         label="Type de produit"
                                         options={productOptions}
                                         value={productType}
@@ -264,22 +268,22 @@ export default function LiquidPreview() {
                                         placeholder="Sélectionner un type..."
                                         searchable
                                     />
-                                    <LiquidInput 
+                                    <LiquidInput
                                         label="Farm / Producteur"
                                         placeholder="Ex: Cookies Fam"
                                         value={farm}
                                         onChange={(e) => setFarm(e.target.value)}
                                         icon={User}
                                     />
-                                    <LiquidInput 
+                                    <LiquidInput
                                         label="Cultivar(s)"
                                         placeholder="Ex: GSC x Purple Punch"
                                         value={cultivar}
                                         onChange={(e) => setCultivar(e.target.value)}
                                     />
                                 </div>
-                                
-                                <LiquidTextarea 
+
+                                <LiquidTextarea
                                     label="Description"
                                     placeholder="Décrivez le produit..."
                                     value={description}
@@ -287,18 +291,18 @@ export default function LiquidPreview() {
                                     rows={3}
                                     hint="Maximum 500 caractères"
                                 />
-                                
+
                                 {/* Ratings */}
                                 <div className="grid grid-cols-2 gap-6">
                                     <LiquidRating value={8} max={10} label="Note Visuelle" color="purple" />
                                     <LiquidRating value={7} max={10} label="Densité" color="cyan" />
                                 </div>
-                                
+
                                 {/* Actions */}
                                 <div className="flex gap-4 pt-4">
-                                    <LiquidButton 
-                                        variant="primary" 
-                                        size="lg" 
+                                    <LiquidButton
+                                        variant="primary"
+                                        size="lg"
                                         icon={Check}
                                         onClick={() => setModalOpen(true)}
                                     >
@@ -315,7 +319,7 @@ export default function LiquidPreview() {
                                 </div>
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Feature Cards Row */}
                         <div className="grid grid-cols-3 gap-6">
                             {/* Aromas Card */}
@@ -331,7 +335,7 @@ export default function LiquidPreview() {
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {['Agrumes', 'Pin', 'Épicé', 'Sucré', 'Terreux'].map(aroma => (
-                                        <LiquidChip 
+                                        <LiquidChip
                                             key={aroma}
                                             active={selectedAromas.includes(aroma)}
                                             color="green"
@@ -343,7 +347,7 @@ export default function LiquidPreview() {
                                     ))}
                                 </div>
                             </LiquidCard>
-                            
+
                             {/* Effects Card */}
                             <LiquidCard glow="purple" padding="md">
                                 <div className="flex items-center gap-3 mb-4">
@@ -357,7 +361,7 @@ export default function LiquidPreview() {
                                 </div>
                                 <div className="flex flex-wrap gap-2">
                                     {['Relaxant', 'Créatif', 'Euphorique', 'Focus'].map(effect => (
-                                        <LiquidChip 
+                                        <LiquidChip
                                             key={effect}
                                             active={selectedEffects.includes(effect)}
                                             color="purple"
@@ -369,7 +373,7 @@ export default function LiquidPreview() {
                                     ))}
                                 </div>
                             </LiquidCard>
-                            
+
                             {/* Pipeline Card */}
                             <LiquidCard glow="cyan" padding="md">
                                 <div className="flex items-center gap-3 mb-4">
@@ -389,7 +393,7 @@ export default function LiquidPreview() {
 
                     {/* === RIGHT COLUMN - Sidebar === */}
                     <div className="col-span-12 lg:col-span-4 space-y-6">
-                        
+
                         {/* Quick Actions */}
                         <LiquidCard glow="cyan" padding="md">
                             <h3 className="text-lg font-semibold text-white flex items-center gap-3 mb-5">
@@ -406,9 +410,9 @@ export default function LiquidPreview() {
                                 <LiquidButton variant="default" icon={Palette} className="w-full justify-start">
                                     Personnaliser
                                 </LiquidButton>
-                                <LiquidButton 
-                                    variant="danger" 
-                                    icon={X} 
+                                <LiquidButton
+                                    variant="danger"
+                                    icon={X}
                                     className="w-full justify-start"
                                     onClick={() => setConfirmModalOpen(true)}
                                 >
@@ -416,7 +420,7 @@ export default function LiquidPreview() {
                                 </LiquidButton>
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Settings Card */}
                         <LiquidCard glow="purple" padding="md">
                             <h3 className="text-lg font-semibold text-white flex items-center gap-3 mb-5">
@@ -424,18 +428,18 @@ export default function LiquidPreview() {
                                 Paramètres
                             </h3>
                             <div className="space-y-4">
-                                <LiquidToggle 
-                                    checked={notifications} 
+                                <LiquidToggle
+                                    checked={notifications}
                                     onChange={setNotifications}
                                     label="Notifications"
                                 />
-                                <LiquidToggle 
-                                    checked={darkMode} 
+                                <LiquidToggle
+                                    checked={darkMode}
                                     onChange={setDarkMode}
                                     label="Mode sombre"
                                 />
                                 <LiquidDivider className="my-3" />
-                                <LiquidSelect 
+                                <LiquidSelect
                                     label="Langue"
                                     options={[
                                         { value: 'fr', label: '🇫🇷 Français' },
@@ -443,11 +447,11 @@ export default function LiquidPreview() {
                                         { value: 'es', label: '🇪🇸 Español' }
                                     ]}
                                     value="fr"
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                 />
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Ratings Overview */}
                         <LiquidCard glow="amber" padding="md">
                             <h3 className="text-lg font-semibold text-white flex items-center gap-3 mb-5">
@@ -461,12 +465,12 @@ export default function LiquidPreview() {
                                 <LiquidRating value={8} max={10} label="Effet" color="cyan" />
                             </div>
                         </LiquidCard>
-                        
+
                         {/* User Card with Avatar */}
                         <LiquidCard glow="pink" padding="md">
                             <div className="flex items-center gap-4">
-                                <LiquidAvatar 
-                                    src="https://i.pravatar.cc/100" 
+                                <LiquidAvatar
+                                    src="https://i.pravatar.cc/100"
                                     alt="User"
                                     size="lg"
                                 />
@@ -482,9 +486,9 @@ export default function LiquidPreview() {
                         </LiquidCard>
                     </div>
                 </div>
-                
+
                 {/* === COMPONENT SHOWCASE === */}
-                <motion.section 
+                <motion.section
                     className="mt-16"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -493,7 +497,7 @@ export default function LiquidPreview() {
                     <h2 className="text-2xl font-semibold liquid-text-gradient mb-8">
                         Catalogue des Composants
                     </h2>
-                    
+
                     <div className="grid grid-cols-12 gap-6">
                         {/* Buttons showcase */}
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
@@ -515,7 +519,7 @@ export default function LiquidPreview() {
                                 <LiquidButton disabled>Disabled</LiquidButton>
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Chips showcase */}
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
                             <h4 className="text-white font-semibold mb-4">Chips / Tags</h4>
@@ -528,7 +532,7 @@ export default function LiquidPreview() {
                             </div>
                             <div className="flex flex-wrap gap-2 mt-4">
                                 <LiquidChip icon={Leaf} active color="green">Avec icône</LiquidChip>
-                                <LiquidChip active color="purple" onRemove={() => {}}>Supprimable</LiquidChip>
+                                <LiquidChip active color="purple" onRemove={() => { }}>Supprimable</LiquidChip>
                             </div>
                             <h4 className="text-white font-semibold mt-6 mb-4">Badges</h4>
                             <div className="flex flex-wrap gap-2">
@@ -539,7 +543,7 @@ export default function LiquidPreview() {
                                 <LiquidBadge variant="info">Info</LiquidBadge>
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Inputs showcase */}
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
                             <h4 className="text-white font-semibold mb-4">Inputs</h4>
@@ -550,12 +554,12 @@ export default function LiquidPreview() {
                                 <LiquidInput label="Avec hint" placeholder="Mot de passe..." hint="8 caractères minimum" icon={Lock} type="password" />
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Select showcase */}
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
                             <h4 className="text-white font-semibold mb-4">Select Custom</h4>
                             <div className="space-y-4">
-                                <LiquidSelect 
+                                <LiquidSelect
                                     label="Select basique"
                                     options={[
                                         { value: '1', label: 'Option 1' },
@@ -563,26 +567,26 @@ export default function LiquidPreview() {
                                         { value: '3', label: 'Option 3' }
                                     ]}
                                     value=""
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                     placeholder="Sélectionner..."
                                 />
-                                <LiquidSelect 
+                                <LiquidSelect
                                     label="Select avec recherche"
                                     options={productOptions}
                                     value={productType}
                                     onChange={setProductType}
                                     searchable
                                 />
-                                <LiquidSelect 
+                                <LiquidSelect
                                     label="Select désactivé"
                                     options={[{ value: '1', label: 'Option 1' }]}
                                     value="1"
-                                    onChange={() => {}}
+                                    onChange={() => { }}
                                     disabled
                                 />
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Ratings & Progress */}
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
                             <h4 className="text-white font-semibold mb-4">Ratings & Progress</h4>
@@ -593,7 +597,7 @@ export default function LiquidPreview() {
                                 <LiquidRating value={6} max={10} label="Amber" color="amber" />
                             </div>
                         </LiquidCard>
-                        
+
                         {/* Skeleton & Loading */}
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
                             <h4 className="text-white font-semibold mb-4">Skeleton Loading</h4>
@@ -615,8 +619,8 @@ export default function LiquidPreview() {
             </div>
 
             {/* === SAVE MODAL === */}
-            <LiquidModal 
-                isOpen={modalOpen} 
+            <LiquidModal
+                isOpen={modalOpen}
                 onClose={() => setModalOpen(false)}
                 size="md"
             >
@@ -628,7 +632,7 @@ export default function LiquidPreview() {
                         </div>
                     </LiquidModal.Title>
                 </LiquidModal.Header>
-                
+
                 <LiquidModal.Body>
                     <div className="p-4 rounded-2xl bg-white/[0.04] border border-white/[0.08] space-y-3">
                         <div className="flex justify-between items-center text-sm">
@@ -647,7 +651,7 @@ export default function LiquidPreview() {
                         </div>
                     </div>
                 </LiquidModal.Body>
-                
+
                 <LiquidModal.Footer>
                     <LiquidButton variant="ghost" onClick={() => setModalOpen(false)}>
                         Annuler
@@ -659,8 +663,8 @@ export default function LiquidPreview() {
             </LiquidModal>
 
             {/* === CONFIRM DELETE MODAL === */}
-            <LiquidModal 
-                isOpen={confirmModalOpen} 
+            <LiquidModal
+                isOpen={confirmModalOpen}
                 onClose={() => setConfirmModalOpen(false)}
                 size="sm"
             >
@@ -672,13 +676,13 @@ export default function LiquidPreview() {
                         </div>
                     </LiquidModal.Title>
                 </LiquidModal.Header>
-                
+
                 <LiquidModal.Body>
                     <p className="text-white/70">
                         Êtes-vous sûr de vouloir supprimer cet élément ? Toutes les données associées seront perdues.
                     </p>
                 </LiquidModal.Body>
-                
+
                 <LiquidModal.Footer>
                     <LiquidButton variant="ghost" onClick={() => setConfirmModalOpen(false)}>
                         Annuler

@@ -5,21 +5,146 @@
  * Import and use these components throughout the application
  * 
  * Usage:
- * import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidModal, ... } from '@/components/ui/LiquidUI'
+ * import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidModal, LiquidCursorGlow, ... } from '@/components/ui/LiquidUI'
  */
 
-import { useState, useRef, useEffect, createContext, useContext } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useState, useRef, useEffect, createContext, useContext, useCallback } from 'react'
+import { motion, AnimatePresence, useMotionValue, useSpring } from 'framer-motion'
 import { Check, ChevronDown, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
+
+// ============================================
+// LIQUID CURSOR GLOW (Water/Liquid Effect following cursor)
+// ============================================
+
+export function LiquidCursorGlow({
+    color = 'purple', // purple | cyan | amber | green | pink | white
+    size = 300,
+    intensity = 0.4,
+    blur = 80,
+    enabled = true
+}) {
+    const cursorX = useMotionValue(-1000)
+    const cursorY = useMotionValue(-1000)
+    
+    // Spring physics for smooth, liquid-like following
+    const springConfig = { damping: 25, stiffness: 200, mass: 0.5 }
+    const smoothX = useSpring(cursorX, springConfig)
+    const smoothY = useSpring(cursorY, springConfig)
+    
+    // Ripple state for click effects
+    const [ripples, setRipples] = useState([])
+    
+    const colorMap = {
+        purple: 'rgba(139, 92, 246, VAR)',
+        cyan: 'rgba(6, 182, 212, VAR)',
+        amber: 'rgba(245, 158, 11, VAR)',
+        green: 'rgba(16, 185, 129, VAR)',
+        pink: 'rgba(236, 72, 153, VAR)',
+        white: 'rgba(255, 255, 255, VAR)'
+    }
+    
+    const glowColor = colorMap[color]?.replace('VAR', intensity.toString()) || colorMap.purple.replace('VAR', intensity.toString())
+    const glowColorStrong = colorMap[color]?.replace('VAR', (intensity * 1.5).toString()) || colorMap.purple.replace('VAR', (intensity * 1.5).toString())
+    
+    useEffect(() => {
+        if (!enabled) return
+        
+        const handleMouseMove = (e) => {
+            cursorX.set(e.clientX)
+            cursorY.set(e.clientY)
+        }
+        
+        const handleClick = (e) => {
+            const id = Date.now()
+            setRipples(prev => [...prev, { id, x: e.clientX, y: e.clientY }])
+            // Remove ripple after animation
+            setTimeout(() => {
+                setRipples(prev => prev.filter(r => r.id !== id))
+            }, 800)
+        }
+        
+        window.addEventListener('mousemove', handleMouseMove)
+        window.addEventListener('click', handleClick)
+        
+        return () => {
+            window.removeEventListener('mousemove', handleMouseMove)
+            window.removeEventListener('click', handleClick)
+        }
+    }, [enabled, cursorX, cursorY])
+    
+    if (!enabled) return null
+    
+    return createPortal(
+        <>
+            {/* Main cursor glow */}
+            <motion.div
+                className="fixed pointer-events-none z-[9998]"
+                style={{
+                    x: smoothX,
+                    y: smoothY,
+                    width: size,
+                    height: size,
+                    marginLeft: -size / 2,
+                    marginTop: -size / 2,
+                    background: `radial-gradient(circle, ${glowColor} 0%, ${glowColor.replace(intensity.toString(), '0.1')} 40%, transparent 70%)`,
+                    filter: `blur(${blur}px)`,
+                    mixBlendMode: 'screen'
+                }}
+            />
+            
+            {/* Secondary smaller glow for more definition */}
+            <motion.div
+                className="fixed pointer-events-none z-[9998]"
+                style={{
+                    x: smoothX,
+                    y: smoothY,
+                    width: size * 0.4,
+                    height: size * 0.4,
+                    marginLeft: -size * 0.2,
+                    marginTop: -size * 0.2,
+                    background: `radial-gradient(circle, ${glowColorStrong} 0%, transparent 70%)`,
+                    filter: `blur(${blur * 0.5}px)`,
+                    mixBlendMode: 'screen'
+                }}
+            />
+            
+            {/* Click ripples */}
+            <AnimatePresence>
+                {ripples.map(ripple => (
+                    <motion.div
+                        key={ripple.id}
+                        className="fixed pointer-events-none z-[9997]"
+                        style={{
+                            left: ripple.x,
+                            top: ripple.y,
+                            marginLeft: -75,
+                            marginTop: -75,
+                            width: 150,
+                            height: 150,
+                            borderRadius: '50%',
+                            border: `2px solid ${glowColor}`,
+                            background: `radial-gradient(circle, ${glowColor.replace(intensity.toString(), '0.3')} 0%, transparent 70%)`
+                        }}
+                        initial={{ scale: 0, opacity: 1 }}
+                        animate={{ scale: 3, opacity: 0 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.8, ease: 'easeOut' }}
+                    />
+                ))}
+            </AnimatePresence>
+        </>,
+        document.body
+    )
+}
 
 // ============================================
 // LIQUID CARD
 // ============================================
 
-export function LiquidCard({ 
-    children, 
-    className = '', 
+export function LiquidCard({
+    children,
+    className = '',
     glow = 'purple', // purple | cyan | amber | green | pink | none
     animate = true,
     padding = 'md', // none | sm | md | lg
@@ -33,7 +158,7 @@ export function LiquidCard({
         md: 'p-6',
         lg: 'p-8'
     }
-    
+
     return (
         <motion.div
             as={Component}
@@ -56,8 +181,8 @@ export function LiquidCard({
 // LIQUID BUTTON
 // ============================================
 
-export function LiquidButton({ 
-    children, 
+export function LiquidButton({
+    children,
     variant = 'default', // default | primary | success | danger | ghost | outline
     size = 'md', // sm | md | lg
     icon: Icon,
@@ -65,16 +190,16 @@ export function LiquidButton({
     className = '',
     disabled = false,
     loading = false,
-    ...props 
+    ...props
 }) {
     const sizeClasses = {
         sm: 'px-3 py-2 text-xs gap-1.5',
         md: 'px-5 py-3 text-sm gap-2',
         lg: 'px-7 py-4 text-base gap-2.5'
     }
-    
+
     const iconSizes = { sm: 14, md: 16, lg: 20 }
-    
+
     return (
         <motion.button
             className={`liquid-button ${variant} ${sizeClasses[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
@@ -85,7 +210,7 @@ export function LiquidButton({
         >
             <span className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
-                    <motion.div 
+                    <motion.div
                         className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full"
                         animate={{ rotate: 360 }}
                         transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
@@ -103,30 +228,63 @@ export function LiquidButton({
 }
 
 // ============================================
-// LIQUID INPUT
+// LIQUID INPUT (with animated icon)
 // ============================================
 
-export function LiquidInput({ 
-    label, 
+export function LiquidInput({
+    label,
     error,
     hint,
     icon: Icon,
-    className = '', 
+    className = '',
     wrapperClassName = '',
-    ...props 
+    value,
+    onChange,
+    ...props
 }) {
+    const [isFocused, setIsFocused] = useState(false)
+    const [internalValue, setInternalValue] = useState(value || '')
+    
+    // Sync with external value
+    useEffect(() => {
+        if (value !== undefined) setInternalValue(value)
+    }, [value])
+    
+    const hasValue = internalValue && internalValue.toString().length > 0
+    const showIconFloating = isFocused || hasValue
+    
+    const handleChange = (e) => {
+        setInternalValue(e.target.value)
+        onChange?.(e)
+    }
+    
     return (
         <div className={`liquid-input-wrapper ${wrapperClassName}`}>
             {label && <label className="liquid-input-label">{label}</label>}
             <div className="relative">
                 {Icon && (
-                    <div className="absolute left-4 top-1/2 -translate-y-1/2 text-white/40">
+                    <motion.div 
+                        className="absolute top-1/2 text-white/40 pointer-events-none z-10"
+                        initial={false}
+                        animate={{
+                            left: showIconFloating ? 14 : 16,
+                            y: '-50%',
+                            scale: showIconFloating ? 0.85 : 1,
+                            opacity: showIconFloating ? 0.6 : 0.4,
+                            x: showIconFloating ? -2 : 0
+                        }}
+                        transition={{ duration: 0.2, ease: 'easeOut' }}
+                    >
                         <Icon size={18} />
-                    </div>
+                    </motion.div>
                 )}
-                <input 
-                    className={`liquid-input ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`} 
-                    {...props} 
+                <input
+                    className={`liquid-input ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
+                    value={internalValue}
+                    onChange={handleChange}
+                    onFocus={() => setIsFocused(true)}
+                    onBlur={() => setIsFocused(false)}
+                    {...props}
                 />
             </div>
             {error && <p className="text-red-400 text-xs mt-1 ml-1">{error}</p>}
@@ -139,22 +297,22 @@ export function LiquidInput({
 // LIQUID TEXTAREA
 // ============================================
 
-export function LiquidTextarea({ 
-    label, 
+export function LiquidTextarea({
+    label,
     error,
     hint,
-    className = '', 
+    className = '',
     wrapperClassName = '',
     rows = 4,
-    ...props 
+    ...props
 }) {
     return (
         <div className={`liquid-input-wrapper ${wrapperClassName}`}>
             {label && <label className="liquid-input-label">{label}</label>}
-            <textarea 
+            <textarea
                 className={`liquid-input resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
                 rows={rows}
-                {...props} 
+                {...props}
             />
             {error && <p className="text-red-400 text-xs mt-1 ml-1">{error}</p>}
             {hint && !error && <p className="text-white/40 text-xs mt-1 ml-1">{hint}</p>}
@@ -166,8 +324,8 @@ export function LiquidTextarea({
 // LIQUID SELECT (Custom Dropdown)
 // ============================================
 
-export function LiquidSelect({ 
-    label, 
+export function LiquidSelect({
+    label,
     options = [], // [{ value, label, icon?, disabled? }]
     value,
     onChange,
@@ -182,15 +340,15 @@ export function LiquidSelect({
     const [search, setSearch] = useState('')
     const containerRef = useRef(null)
     const inputRef = useRef(null)
-    
+
     const selectedOption = options.find(opt => opt.value === value)
-    
+
     const filteredOptions = searchable && search
-        ? options.filter(opt => 
+        ? options.filter(opt =>
             opt.label.toLowerCase().includes(search.toLowerCase())
-          )
+        )
         : options
-    
+
     // Close on outside click
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -202,25 +360,25 @@ export function LiquidSelect({
         document.addEventListener('mousedown', handleClickOutside)
         return () => document.removeEventListener('mousedown', handleClickOutside)
     }, [])
-    
+
     // Focus search input when opened
     useEffect(() => {
         if (isOpen && searchable && inputRef.current) {
             inputRef.current.focus()
         }
     }, [isOpen, searchable])
-    
+
     const handleSelect = (option) => {
         if (option.disabled) return
         onChange?.(option.value)
         setIsOpen(false)
         setSearch('')
     }
-    
+
     return (
         <div className={`liquid-input-wrapper ${wrapperClassName}`} ref={containerRef}>
             {label && <label className="liquid-input-label">{label}</label>}
-            
+
             {/* Trigger */}
             <button
                 type="button"
@@ -238,7 +396,7 @@ export function LiquidSelect({
                     <ChevronDown size={18} className="text-white/50" />
                 </motion.div>
             </button>
-            
+
             {/* Dropdown */}
             <AnimatePresence>
                 {isOpen && (
@@ -262,7 +420,7 @@ export function LiquidSelect({
                                 />
                             </div>
                         )}
-                        
+
                         {/* Options */}
                         <div className="liquid-select-options">
                             {filteredOptions.length === 0 ? (
@@ -289,7 +447,7 @@ export function LiquidSelect({
                     </motion.div>
                 )}
             </AnimatePresence>
-            
+
             {error && <p className="text-red-400 text-xs mt-1 ml-1">{error}</p>}
         </div>
     )
@@ -299,9 +457,9 @@ export function LiquidSelect({
 // LIQUID CHIP
 // ============================================
 
-export function LiquidChip({ 
-    children, 
-    active = false, 
+export function LiquidChip({
+    children,
+    active = false,
     color = 'purple', // purple | green | cyan | amber | pink
     icon: Icon,
     onRemove,
@@ -314,7 +472,7 @@ export function LiquidChip({
         lg: 'px-4 py-2 text-base gap-2'
     }
     const iconSizes = { sm: 12, md: 14, lg: 16 }
-    
+
     return (
         <motion.button
             type="button"
@@ -342,9 +500,9 @@ export function LiquidChip({
 // LIQUID TOGGLE
 // ============================================
 
-export function LiquidToggle({ 
-    checked, 
-    onChange, 
+export function LiquidToggle({
+    checked,
+    onChange,
     label,
     disabled = false,
     size = 'md' // sm | md | lg
@@ -355,7 +513,7 @@ export function LiquidToggle({
         lg: { width: 64, height: 36, knob: 30 }
     }
     const s = sizes[size]
-    
+
     return (
         <label className={`flex items-center gap-3 ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}>
             <motion.button
@@ -366,7 +524,7 @@ export function LiquidToggle({
                 whileTap={!disabled ? { scale: 0.95 } : {}}
                 disabled={disabled}
             >
-                <motion.div 
+                <motion.div
                     className="liquid-toggle-knob"
                     style={{ width: s.knob, height: s.knob }}
                     animate={{ x: checked ? s.width - s.knob - 6 : 0 }}
@@ -382,17 +540,17 @@ export function LiquidToggle({
 // LIQUID RATING
 // ============================================
 
-export function LiquidRating({ 
-    value, 
-    max = 10, 
-    label, 
+export function LiquidRating({
+    value,
+    max = 10,
+    label,
     color = 'purple', // purple | green | cyan | amber
     showValue = true,
     size = 'md' // sm | md | lg
 }) {
     const percentage = Math.min(100, Math.max(0, (value / max) * 100))
     const heights = { sm: 6, md: 8, lg: 10 }
-    
+
     return (
         <div className="liquid-rating">
             {(label || showValue) && (
@@ -402,7 +560,7 @@ export function LiquidRating({
                 </div>
             )}
             <div className="liquid-rating-track" style={{ height: heights[size] }}>
-                <motion.div 
+                <motion.div
                     className={`liquid-rating-fill ${color}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
@@ -427,9 +585,9 @@ export function LiquidDivider({ className = '' }) {
 
 const ModalContext = createContext(null)
 
-export function LiquidModal({ 
-    isOpen, 
-    onClose, 
+export function LiquidModal({
+    isOpen,
+    onClose,
     children,
     size = 'md', // sm | md | lg | xl | full
     closeOnOverlay = true,
@@ -443,7 +601,7 @@ export function LiquidModal({
         xl: 'max-w-xl',
         full: 'max-w-4xl'
     }
-    
+
     // Handle ESC key
     useEffect(() => {
         if (!closeOnEsc) return
@@ -453,7 +611,7 @@ export function LiquidModal({
         document.addEventListener('keydown', handleEsc)
         return () => document.removeEventListener('keydown', handleEsc)
     }, [isOpen, onClose, closeOnEsc])
-    
+
     // Prevent body scroll when open
     useEffect(() => {
         if (isOpen) {
@@ -463,9 +621,9 @@ export function LiquidModal({
         }
         return () => { document.body.style.overflow = '' }
     }, [isOpen])
-    
+
     if (typeof window === 'undefined') return null
-    
+
     return createPortal(
         <AnimatePresence>
             {isOpen && (
@@ -484,7 +642,7 @@ export function LiquidModal({
                             animate={{ opacity: 1 }}
                             exit={{ opacity: 0 }}
                         />
-                        
+
                         {/* Modal content */}
                         <motion.div
                             className={`relative w-full ${sizeClasses[size]}`}
@@ -564,22 +722,22 @@ LiquidModal.Footer = function ModalFooter({ children, className = '' }) {
 // LIQUID TOOLTIP
 // ============================================
 
-export function LiquidTooltip({ 
-    children, 
+export function LiquidTooltip({
+    children,
     content,
     position = 'top' // top | bottom | left | right
 }) {
     const [show, setShow] = useState(false)
-    
+
     const positions = {
         top: 'bottom-full left-1/2 -translate-x-1/2 mb-2',
         bottom: 'top-full left-1/2 -translate-x-1/2 mt-2',
         left: 'right-full top-1/2 -translate-y-1/2 mr-2',
         right: 'left-full top-1/2 -translate-y-1/2 ml-2'
     }
-    
+
     return (
-        <div 
+        <div
             className="relative inline-flex"
             onMouseEnter={() => setShow(true)}
             onMouseLeave={() => setShow(false)}
@@ -606,8 +764,8 @@ export function LiquidTooltip({
 // LIQUID BADGE
 // ============================================
 
-export function LiquidBadge({ 
-    children, 
+export function LiquidBadge({
+    children,
     variant = 'default', // default | success | warning | danger | info
     size = 'md' // sm | md | lg
 }) {
@@ -618,13 +776,13 @@ export function LiquidBadge({
         danger: 'bg-red-500/20 text-red-400 border-red-500/30',
         info: 'bg-cyan-500/20 text-cyan-400 border-cyan-500/30'
     }
-    
+
     const sizes = {
         sm: 'px-2 py-0.5 text-xs',
         md: 'px-2.5 py-1 text-xs',
         lg: 'px-3 py-1.5 text-sm'
     }
-    
+
     return (
         <span className={`inline-flex items-center rounded-full border border-white/10 font-medium ${variants[variant]} ${sizes[size]}`}>
             {children}
@@ -636,7 +794,7 @@ export function LiquidBadge({
 // LIQUID TABS
 // ============================================
 
-export function LiquidTabs({ 
+export function LiquidTabs({
     tabs, // [{ id, label, icon?, disabled? }]
     activeTab,
     onChange,
@@ -664,11 +822,11 @@ export function LiquidTabs({
 // LIQUID SKELETON
 // ============================================
 
-export function LiquidSkeleton({ 
-    width, 
-    height = 20, 
+export function LiquidSkeleton({
+    width,
+    height = 20,
     rounded = 'md', // sm | md | lg | full
-    className = '' 
+    className = ''
 }) {
     const roundedClasses = {
         sm: 'rounded',
@@ -676,9 +834,9 @@ export function LiquidSkeleton({
         lg: 'rounded-xl',
         full: 'rounded-full'
     }
-    
+
     return (
-        <div 
+        <div
             className={`liquid-skeleton ${roundedClasses[rounded]} ${className}`}
             style={{ width, height }}
         />
@@ -689,27 +847,27 @@ export function LiquidSkeleton({
 // LIQUID AVATAR
 // ============================================
 
-export function LiquidAvatar({ 
-    src, 
-    alt = '', 
+export function LiquidAvatar({
+    src,
+    alt = '',
     fallback,
     size = 'md', // sm | md | lg | xl
     className = ''
 }) {
     const [error, setError] = useState(false)
-    
+
     const sizes = {
         sm: 'w-8 h-8 text-xs',
         md: 'w-10 h-10 text-sm',
         lg: 'w-12 h-12 text-base',
         xl: 'w-16 h-16 text-lg'
     }
-    
+
     return (
         <div className={`relative ${sizes[size]} rounded-full overflow-hidden bg-white/10 flex items-center justify-center border border-white/10 ${className}`}>
             {src && !error ? (
-                <img 
-                    src={src} 
+                <img
+                    src={src}
                     alt={alt}
                     className="w-full h-full object-cover"
                     onError={() => setError(true)}
