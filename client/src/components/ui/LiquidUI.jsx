@@ -28,8 +28,15 @@ export function LiquidCard({
     liquidEffect = true // enable/disable cursor tracking
 }) {
     const cardRef = useRef(null)
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+    const [smoothPosition, setSmoothPosition] = useState({ x: 50, y: 50 })
+    const [shimmerIntensity, setShimmerIntensity] = useState(0)
     const [isHovered, setIsHovered] = useState(false)
+    
+    // Use refs for animation state to avoid re-render loops
+    const mousePositionRef = useRef({ x: 50, y: 50 })
+    const velocityRef = useRef({ x: 0, y: 0 })
+    const animationFrame = useRef(null)
+    const isHoveredRef = useRef(false)
 
     const glowClass = glow !== 'none' ? `glow-${glow}` : ''
     const paddingClasses = {
@@ -39,13 +46,81 @@ export function LiquidCard({
         lg: 'p-8'
     }
 
+    // Smooth spring-like animation for cursor following
+    useEffect(() => {
+        if (!liquidEffect) return
+        
+        const animateFrame = () => {
+            const targetX = mousePositionRef.current.x
+            const targetY = mousePositionRef.current.y
+            
+            setSmoothPosition(prev => {
+                const dx = targetX - prev.x
+                const dy = targetY - prev.y
+                const spring = 0.18 // Spring tension (higher = faster response)
+                const damping = 0.82 // Damping (higher = more smooth)
+                
+                let newVx = (velocityRef.current.x + dx * spring) * damping
+                let newVy = (velocityRef.current.y + dy * spring) * damping
+                
+                // Stop animation when nearly stationary and not hovered
+                if (!isHoveredRef.current && Math.abs(newVx) < 0.01 && Math.abs(newVy) < 0.01) {
+                    newVx = 0
+                    newVy = 0
+                }
+                
+                velocityRef.current = { x: newVx, y: newVy }
+                
+                // Calculate shimmer intensity based on velocity
+                const speed = Math.sqrt(newVx * newVx + newVy * newVy)
+                setShimmerIntensity(Math.min(speed * 2.5, 1))
+                
+                return {
+                    x: prev.x + newVx,
+                    y: prev.y + newVy
+                }
+            })
+            
+            animationFrame.current = requestAnimationFrame(animateFrame)
+        }
+        
+        animationFrame.current = requestAnimationFrame(animateFrame)
+        return () => {
+            if (animationFrame.current) {
+                cancelAnimationFrame(animationFrame.current)
+            }
+        }
+    }, [liquidEffect])
+
     const handleMouseMove = (e) => {
         if (!cardRef.current || !liquidEffect) return
         const rect = cardRef.current.getBoundingClientRect()
         const x = ((e.clientX - rect.left) / rect.width) * 100
         const y = ((e.clientY - rect.top) / rect.height) * 100
-        setMousePosition({ x, y })
+        mousePositionRef.current = { x, y }
     }
+
+    const handleMouseEnter = (e) => {
+        if (!cardRef.current) return
+        setIsHovered(true)
+        isHoveredRef.current = true
+        // Initialize position at cursor on enter for immediate response
+        const rect = cardRef.current.getBoundingClientRect()
+        const x = ((e.clientX - rect.left) / rect.width) * 100
+        const y = ((e.clientY - rect.top) / rect.height) * 100
+        mousePositionRef.current = { x, y }
+        setSmoothPosition({ x, y })
+    }
+
+    const handleMouseLeave = () => {
+        setIsHovered(false)
+        isHoveredRef.current = false
+        setShimmerIntensity(0)
+        velocityRef.current = { x: 0, y: 0 }
+    }
+
+    // Calculate dynamic shimmer angle based on velocity
+    const shimmerAngle = Math.atan2(velocityRef.current.y, velocityRef.current.x) * (180 / Math.PI) + 90
 
     return (
         <motion.div
@@ -58,41 +133,95 @@ export function LiquidCard({
             whileHover={onClick ? { scale: 1.01 } : {}}
             onClick={onClick}
             onMouseMove={handleMouseMove}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
+            onMouseEnter={handleMouseEnter}
+            onMouseLeave={handleMouseLeave}
             style={{
-                '--mouse-x': `${mousePosition.x}%`,
-                '--mouse-y': `${mousePosition.y}%`
+                '--mouse-x': `${smoothPosition.x}%`,
+                '--mouse-y': `${smoothPosition.y}%`,
+                '--shimmer-intensity': shimmerIntensity,
+                '--shimmer-angle': `${shimmerAngle}deg`
             }}
         >
-            {/* Liquid cursor-tracking effect */}
+            {/* Primary liquid cursor glow - follows with spring physics */}
             {liquidEffect && (
-                <div
+                <motion.div
                     className="liquid-cursor-glow"
+                    animate={{
+                        opacity: isHovered ? 0.8 + shimmerIntensity * 0.2 : 0,
+                        scale: isHovered ? 1 + shimmerIntensity * 0.1 : 0.8
+                    }}
+                    transition={{ duration: 0.1, ease: 'linear' }}
                     style={{
-                        opacity: isHovered ? 1 : 0,
-                        background: `radial-gradient(600px circle at ${mousePosition.x}% ${mousePosition.y}%, 
-                            rgba(139, 92, 246, 0.15), 
-                            rgba(6, 182, 212, 0.08) 40%,
-                            transparent 70%)`,
-                        transition: 'opacity 0.3s ease'
+                        background: `radial-gradient(
+                            ${400 + shimmerIntensity * 200}px circle at ${smoothPosition.x}% ${smoothPosition.y}%, 
+                            rgba(139, 92, 246, ${0.12 + shimmerIntensity * 0.1}), 
+                            rgba(6, 182, 212, ${0.06 + shimmerIntensity * 0.05}) 40%,
+                            transparent 70%
+                        )`
                     }}
                 />
             )}
-            {/* Liquid ripple highlight */}
+            
+            {/* Secondary highlight - faster response for snappy feel */}
+            {liquidEffect && (
+                <motion.div
+                    className="liquid-highlight"
+                    animate={{
+                        opacity: isHovered ? 0.6 + shimmerIntensity * 0.4 : 0
+                    }}
+                    transition={{ duration: 0.05, ease: 'linear' }}
+                    style={{
+                        background: `radial-gradient(
+                            ${150 + shimmerIntensity * 100}px circle at ${smoothPosition.x}% ${smoothPosition.y}%, 
+                            rgba(255, 255, 255, ${0.08 + shimmerIntensity * 0.12}), 
+                            transparent 60%
+                        )`
+                    }}
+                />
+            )}
+            
+            {/* Dynamic shimmer streak - follows movement direction */}
             {liquidEffect && (
                 <div
-                    className="liquid-highlight"
+                    className="liquid-shimmer-streak"
                     style={{
-                        opacity: isHovered ? 1 : 0,
-                        background: `radial-gradient(300px circle at ${mousePosition.x}% ${mousePosition.y}%, 
-                            rgba(255, 255, 255, 0.12), 
-                            transparent 60%)`,
-                        transition: 'opacity 0.2s ease'
+                        opacity: isHovered ? shimmerIntensity * 0.8 : 0,
+                        transform: `rotate(${shimmerAngle}deg)`,
+                        background: `linear-gradient(
+                            90deg,
+                            transparent 0%,
+                            transparent 30%,
+                            rgba(255, 255, 255, ${0.05 + shimmerIntensity * 0.15}) 45%,
+                            rgba(255, 255, 255, ${0.1 + shimmerIntensity * 0.2}) 50%,
+                            rgba(255, 255, 255, ${0.05 + shimmerIntensity * 0.15}) 55%,
+                            transparent 70%,
+                            transparent 100%
+                        )`,
+                        left: `${smoothPosition.x - 50}%`,
+                        top: `${smoothPosition.y - 50}%`
                     }}
                 />
             )}
-            <div className="liquid-card-shimmer" />
+            
+            {/* Organic ripple effect on fast movement */}
+            {liquidEffect && shimmerIntensity > 0.3 && (
+                <motion.div
+                    className="liquid-ripple"
+                    initial={{ scale: 0.5, opacity: 0.5 }}
+                    animate={{ 
+                        scale: 1 + shimmerIntensity, 
+                        opacity: 0 
+                    }}
+                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    style={{
+                        left: `${smoothPosition.x}%`,
+                        top: `${smoothPosition.y}%`,
+                        transform: 'translate(-50%, -50%)'
+                    }}
+                    key={Math.floor(Date.now() / 150)}
+                />
+            )}
+            
             <div className="liquid-card-content relative z-10">
                 {children}
             </div>
@@ -101,7 +230,7 @@ export function LiquidCard({
 }
 
 // ============================================
-// LIQUID BUTTON
+// LIQUID BUTTON - with interactive shimmer
 // ============================================
 
 export function LiquidButton({
@@ -115,6 +244,10 @@ export function LiquidButton({
     loading = false,
     ...props
 }) {
+    const buttonRef = useRef(null)
+    const [mousePosition, setMousePosition] = useState({ x: 50, y: 50 })
+    const [isHovered, setIsHovered] = useState(false)
+
     const sizeClasses = {
         sm: 'px-3 py-2 text-xs gap-1.5',
         md: 'px-5 py-3 text-sm gap-2',
@@ -123,14 +256,50 @@ export function LiquidButton({
 
     const iconSizes = { sm: 14, md: 16, lg: 20 }
 
+    const handleMouseMove = (e) => {
+        if (!buttonRef.current || disabled) return
+        const rect = buttonRef.current.getBoundingClientRect()
+        const x = ((e.clientX - rect.left) / rect.width) * 100
+        const y = ((e.clientY - rect.top) / rect.height) * 100
+        setMousePosition({ x, y })
+    }
+
     return (
         <motion.button
+            ref={buttonRef}
             className={`liquid-button ${variant} ${sizeClasses[size]} ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
             whileHover={!disabled ? { scale: 1.02 } : {}}
             whileTap={!disabled ? { scale: 0.98 } : {}}
             disabled={disabled || loading}
+            onMouseMove={handleMouseMove}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{
+                '--btn-mouse-x': `${mousePosition.x}%`,
+                '--btn-mouse-y': `${mousePosition.y}%`
+            }}
             {...props}
         >
+            {/* Interactive shimmer layer */}
+            <div 
+                className="absolute inset-0 rounded-xl overflow-hidden pointer-events-none"
+                style={{
+                    opacity: isHovered ? 1 : 0,
+                    transition: 'opacity 0.2s ease'
+                }}
+            >
+                <div
+                    className="absolute inset-0"
+                    style={{
+                        background: `radial-gradient(
+                            120px circle at ${mousePosition.x}% ${mousePosition.y}%,
+                            rgba(255, 255, 255, 0.25),
+                            transparent 60%
+                        )`,
+                        transition: 'none'
+                    }}
+                />
+            </div>
             <span className="relative z-10 flex items-center justify-center gap-2">
                 {loading ? (
                     <motion.div

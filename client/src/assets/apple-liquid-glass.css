@@ -168,71 +168,81 @@
     z-index: 1;
 }
 
-/* Shimmer effect on hover */
-.liquid-card-shimmer {
+/* Dynamic shimmer streak - follows cursor movement direction */
+.liquid-shimmer-streak {
     position: absolute;
-    top: -50%;
-    left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(90deg,
-            transparent 0%,
-            transparent 40%,
-            rgba(255, 255, 255, 0.03) 45%,
-            rgba(255, 255, 255, 0.08) 50%,
-            rgba(255, 255, 255, 0.03) 55%,
-            transparent 60%,
-            transparent 100%);
-    transform: translateX(-100%) rotate(25deg);
     pointer-events: none;
-    filter: blur(2px);
-    opacity: 0;
     z-index: 3;
+    filter: blur(4px);
+    transition: opacity 0.15s ease-out, transform 0.08s ease-out;
+    mix-blend-mode: overlay;
+    will-change: transform, opacity, left, top;
 }
 
-.liquid-card:hover .liquid-card-shimmer {
-    animation: shimmer-smooth 2s ease-in-out;
+/* Organic ripple effect for fast cursor movement */
+.liquid-ripple {
+    position: absolute;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: radial-gradient(
+        circle,
+        rgba(255, 255, 255, 0.2) 0%,
+        rgba(139, 92, 246, 0.1) 30%,
+        transparent 70%
+    );
+    pointer-events: none;
+    z-index: 4;
+    will-change: transform, opacity;
 }
 
-@keyframes shimmer-smooth {
-    0% {
-        transform: translateX(-100%) rotate(25deg);
-        opacity: 0;
-    }
-
-    10% {
-        opacity: 1;
-    }
-
-    90% {
-        opacity: 1;
-    }
-
-    100% {
-        transform: translateX(100%) rotate(25deg);
-        opacity: 0;
-    }
-}
-
-/* === LIQUID CURSOR TRACKING EFFECTS === */
+/* Enhanced cursor glow with GPU acceleration */
 .liquid-cursor-glow {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 1;
     border-radius: inherit;
-    transition: opacity 0.4s ease;
+    will-change: opacity, transform;
+    backface-visibility: hidden;
 }
 
+/* Enhanced highlight with faster response */
 .liquid-highlight {
     position: absolute;
     inset: 0;
     pointer-events: none;
     z-index: 2;
     border-radius: inherit;
-    mix-blend-mode: overlay;
-    transition: opacity 0.25s ease;
+    mix-blend-mode: soft-light;
+    will-change: opacity;
+    backface-visibility: hidden;
 }
+
+/* Ambient glow pulse for idle state */
+@keyframes ambient-pulse {
+    0%, 100% {
+        opacity: 0.3;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.02);
+    }
+}
+
+.liquid-card:not(:hover) .liquid-cursor-glow {
+    animation: ambient-pulse 4s ease-in-out infinite;
+    background: radial-gradient(
+        400px circle at 50% 50%,
+        rgba(139, 92, 246, 0.05),
+        transparent 60%
+    ) !important;
+}
+
+
 
 /* Subtle border glow that follows cursor */
 .liquid-card::after {
