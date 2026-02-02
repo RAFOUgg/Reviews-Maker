@@ -126,8 +126,8 @@ export default function MultiSelectPills({
                                                 ref={provided.innerRef}
                                                 {...provided.draggableProps}
                                                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border backdrop-blur-sm transition-all ${snapshot.isDragging
-                                                        ? `${glowColors[glowColor]} shadow-lg`
-                                                        : 'border-white/20 bg-white/5 hover:bg-white/10'
+                                                    ? `${glowColors[glowColor]} shadow-lg`
+                                                    : 'border-white/20 bg-white/5 hover:bg-white/10'
                                                     }`}
                                             >
                                                 <span
