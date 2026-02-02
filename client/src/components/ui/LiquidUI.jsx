@@ -67,7 +67,7 @@ export function LiquidCard({
         >
             {/* Liquid cursor-tracking effect */}
             {liquidEffect && (
-                <div 
+                <div
                     className="liquid-cursor-glow"
                     style={{
                         opacity: isHovered ? 1 : 0,
@@ -81,7 +81,7 @@ export function LiquidCard({
             )}
             {/* Liquid ripple highlight */}
             {liquidEffect && (
-                <div 
+                <div
                     className="liquid-highlight"
                     style={{
                         opacity: isHovered ? 1 : 0,
@@ -164,9 +164,9 @@ export function LiquidInput({
     ...props
 }) {
     return (
-        <div className={`flex flex-col gap-1.5 ${wrapperClassName}`}>
+        <div className={`flex flex-col gap-2 ${wrapperClassName}`}>
             {label && (
-                <label className="text-[13px] font-medium text-white/60 ml-1 block">
+                <label className="text-[13px] font-medium text-white/60 ml-1 relative z-20">
                     {label}
                 </label>
             )}
@@ -177,12 +177,12 @@ export function LiquidInput({
                     </div>
                 )}
                 <input
-                    className={`liquid-input w-full ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
+                    className={`liquid-input ${Icon ? 'pl-12' : ''} ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
                     {...props}
                 />
             </div>
-            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
-            {hint && !error && <p className="text-white/40 text-xs ml-1">{hint}</p>}
+            {error && <p className="text-red-400 text-xs ml-1 relative z-20">{error}</p>}
+            {hint && !error && <p className="text-white/40 text-xs ml-1 relative z-20">{hint}</p>}
         </div>
     )
 }
@@ -201,19 +201,19 @@ export function LiquidTextarea({
     ...props
 }) {
     return (
-        <div className={`flex flex-col gap-1.5 ${wrapperClassName}`}>
+        <div className={`flex flex-col gap-2 ${wrapperClassName}`}>
             {label && (
-                <label className="text-[13px] font-medium text-white/60 ml-1 block">
+                <label className="text-[13px] font-medium text-white/60 ml-1 relative z-20">
                     {label}
                 </label>
             )}
             <textarea
-                className={`liquid-input w-full resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
+                className={`liquid-input resize-none ${error ? 'border-red-500/50 focus:border-red-500' : ''} ${className}`}
                 rows={rows}
                 {...props}
             />
-            {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
-            {hint && !error && <p className="text-white/40 text-xs ml-1">{hint}</p>}
+            {error && <p className="text-red-400 text-xs ml-1 relative z-20">{error}</p>}
+            {hint && !error && <p className="text-white/40 text-xs ml-1 relative z-20">{hint}</p>}
         </div>
     )
 }
@@ -274,8 +274,12 @@ export function LiquidSelect({
     }
 
     return (
-        <div className={`liquid-input-wrapper ${wrapperClassName}`} ref={containerRef}>
-            {label && <label className="liquid-input-label">{label}</label>}
+        <div className={`flex flex-col gap-2 ${wrapperClassName}`} ref={containerRef}>
+            {label && (
+                <label className="text-[13px] font-medium text-white/60 ml-1 relative z-20">
+                    {label}
+                </label>
+            )}
 
             {/* Trigger */}
             <button

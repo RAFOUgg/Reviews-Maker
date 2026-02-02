@@ -171,20 +171,46 @@
 /* Shimmer effect on hover */
 .liquid-card-shimmer {
     position: absolute;
-    top: 0;
-    left: 0;
-    width: 50%;
-    height: 100%;
-    background: linear-gradient(90deg,
-            transparent,
-            rgba(255, 255, 255, 0.1),
-            transparent);
-    transform: translateX(-100%) rotate(15deg);
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        transparent 40%,
+        rgba(255, 255, 255, 0.03) 45%,
+        rgba(255, 255, 255, 0.08) 50%,
+        rgba(255, 255, 255, 0.03) 55%,
+        transparent 60%,
+        transparent 100%
+    );
+    transform: translateX(-100%) rotate(25deg);
     pointer-events: none;
+    filter: blur(2px);
+    opacity: 0;
+    z-index: 3;
 }
 
 .liquid-card:hover .liquid-card-shimmer {
-    animation: shimmer 1.5s ease-in-out;
+    animation: shimmer-smooth 2s ease-in-out;
+}
+
+@keyframes shimmer-smooth {
+    0% {
+        transform: translateX(-100%) rotate(25deg);
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(100%) rotate(25deg);
+        opacity: 0;
+    }
 }
 
 /* === LIQUID CURSOR TRACKING EFFECTS === */
@@ -213,11 +239,9 @@
     position: absolute;
     inset: -1px;
     border-radius: inherit;
-    background: radial-gradient(
-        400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
-        rgba(255, 255, 255, 0.1),
-        transparent 50%
-    );
+    background: radial-gradient(400px circle at var(--mouse-x, 50%) var(--mouse-y, 50%),
+            rgba(255, 255, 255, 0.1),
+            transparent 50%);
     pointer-events: none;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -412,7 +436,7 @@
 }
 
 .liquid-input {
-    position: relative;
+    display: block;
     width: 100%;
     padding: 14px 18px;
     font-size: 15px;
