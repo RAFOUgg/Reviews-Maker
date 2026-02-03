@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../../store/useStore'
 import { usePermissions } from '../../hooks/usePermissions'
 import { LiquidAvatar } from '@/components/ui/LiquidUI'
-import { User, Library, BarChart3, Dna, LogOut, ChevronDown, Settings } from 'lucide-react'
+import { User, Library, Dna, LogOut, ChevronDown, Settings } from 'lucide-react'
 
 export default function UserProfileDropdown() {
     const [isOpen, setIsOpen] = useState(false)
@@ -30,8 +30,7 @@ export default function UserProfileDropdown() {
 
     const menuItems = [
         { to: '/account', icon: User, label: 'Mon Compte', sublabel: 'Profil & Paramètres', color: 'violet' },
-        { to: '/library', icon: Library, label: 'Ma bibliothèque', sublabel: 'Gérer mes reviews', color: 'violet' },
-        { to: '/stats', icon: BarChart3, label: 'Mes statistiques', sublabel: 'Voir mes stats détaillées', color: 'cyan' },
+        { to: '/library', icon: Library, label: 'Ma bibliothèque', sublabel: 'Reviews & Statistiques', color: 'violet' },
     ]
 
     if (hasFeature('phenohunt')) {

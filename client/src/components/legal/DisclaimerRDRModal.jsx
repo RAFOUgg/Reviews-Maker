@@ -105,7 +105,10 @@ const DisclaimerRDRModal = () => {
         <LiquidModal
             isOpen={true}
             onClose={handleClose}
-            title={
+            size="lg"
+        >
+            {/* Header */}
+            <LiquidModal.Header>
                 <div className="flex items-center gap-3">
                     <div className="p-2 rounded-xl bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30">
                         <AlertTriangle className="w-6 h-6 text-amber-400" />
@@ -115,59 +118,60 @@ const DisclaimerRDRModal = () => {
                         <p className="text-sm text-white/60">Responsabilité, Divulgation, Réglementation</p>
                     </div>
                 </div>
-            }
-            size="lg"
-            glowColor="amber"
-            footer={
-                <div className="flex flex-col gap-3 w-full">
-                    <LiquidButton
-                        variant="primary"
-                        onClick={handleAccept}
-                        className="w-full py-3"
-                        style={{
-                            background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(249, 115, 22, 0.3))',
-                            borderColor: 'rgba(245, 158, 11, 0.5)'
-                        }}
-                    >
-                        ✓ J'ai compris et j'accepte
-                    </LiquidButton>
-                    <p className="text-xs text-white/40 text-center">
-                        Ce message s'affiche quotidiennement pour rappeler les conditions d'utilisation.
-                    </p>
-                </div>
-            }
-        >
-            <div className="space-y-4">
-                {rdrItems.map((item, index) => {
-                    const IconComponent = item.icon;
-                    return (
-                        <div key={index} className="flex gap-4 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors">
-                            <div className="flex-shrink-0 mt-0.5">
-                                <IconComponent className={`w-5 h-5 ${getIconColor(item.color)}`} />
-                            </div>
-                            <div>
-                                <h4 className="text-sm font-semibold text-white mb-1">{item.title}</h4>
-                                <p className="text-sm text-white/60 leading-relaxed">{item.text}</p>
-                            </div>
-                        </div>
-                    );
-                })}
+            </LiquidModal.Header>
 
-                <LiquidCard className="p-4 mt-4" style={{ borderColor: 'rgba(139, 92, 246, 0.3)' }}>
-                    <div className="flex gap-3">
-                        <ScrollText className="w-5 h-5 text-violet-400 flex-shrink-0 mt-0.5" />
-                        <div>
-                            <h4 className="text-sm font-semibold text-white mb-1">Conditions d'utilisation</h4>
-                            <p className="text-sm text-white/60">
-                                En continuant, vous confirmez avoir lu et accepté nos{' '}
-                                <a href="/cgu" className="text-violet-400 hover:text-violet-300 underline">CGU</a>
-                                {' '}et notre{' '}
-                                <a href="/privacy" className="text-violet-400 hover:text-violet-300 underline">Politique de Confidentialité</a>.
-                            </p>
+            {/* Body */}
+            <LiquidModal.Body>
+                <div className="space-y-4">
+                    {rdrItems.map((item, index) => {
+                        const IconComponent = item.icon;
+                        return (
+                            <div key={index} className="flex gap-4 p-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/8 transition-colors">
+                                <div className="flex-shrink-0 mt-0.5">
+                                    <IconComponent className={`w-5 h-5 ${getIconColor(item.color)}`} />
+                                </div>
+                                <div>
+                                    <h4 className="text-sm font-semibold text-white mb-1">{item.title}</h4>
+                                    <p className="text-sm text-white/60 leading-relaxed">{item.text}</p>
+                                </div>
+                            </div>
+                        );
+                    })}
+
+                    <LiquidCard className="p-4 mt-4" style={{ borderColor: 'rgba(139, 92, 246, 0.3)' }}>
+                        <div className="flex gap-3">
+                            <ScrollText className="w-5 h-5 text-violet-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <h4 className="text-sm font-semibold text-white mb-1">Conditions d'utilisation</h4>
+                                <p className="text-sm text-white/60">
+                                    En continuant, vous confirmez avoir lu et accepté nos{' '}
+                                    <a href="/cgu" className="text-violet-400 hover:text-violet-300 underline">CGU</a>
+                                    {' '}et notre{' '}
+                                    <a href="/privacy" className="text-violet-400 hover:text-violet-300 underline">Politique de Confidentialité</a>.
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                </LiquidCard>
-            </div>
+                    </LiquidCard>
+                </div>
+            </LiquidModal.Body>
+
+            {/* Footer */}
+            <LiquidModal.Footer className="flex-col items-stretch">
+                <LiquidButton
+                    variant="primary"
+                    onClick={handleAccept}
+                    className="w-full py-3"
+                    style={{
+                        background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.3), rgba(249, 115, 22, 0.3))',
+                        borderColor: 'rgba(245, 158, 11, 0.5)'
+                    }}
+                >
+                    ✓ J'ai compris et j'accepte
+                </LiquidButton>
+                <p className="text-xs text-white/40 text-center mt-3">
+                    Ce message s'affiche quotidiennement pour rappeler les conditions d'utilisation.
+                </p>
+            </LiquidModal.Footer>
         </LiquidModal>
     );
 };

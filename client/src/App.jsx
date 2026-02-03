@@ -30,7 +30,6 @@ const CreateEdibleReview = lazy(() => import('./pages/review/CreateEdibleReview'
 const EditReviewPage = lazy(() => import('./pages/review/EditReviewPage'))
 const LibraryPage = lazy(() => import('./pages/library/LibraryPage'))
 const GalleryPage = lazy(() => import('./pages/public/GalleryPage'))
-const StatsPage = lazy(() => import('./pages/account/StatsPage'))
 const AccountPage = lazy(() => import('./pages/account/AccountPage'))
 
 const AccountChoicePage = lazy(() => import('./pages/account/AccountChoicePage'))
@@ -161,7 +160,6 @@ function App() {
 
                                     <Route path="/library" element={<LibraryPage />} />
                                     <Route path="/gallery" element={<GalleryPage />} />
-                                    <Route path="/stats" element={<StatsPage />} />
                                     <Route path="/account" element={<AccountPage />} />
                                     <Route path="/manage-subscription" element={<ManageSubscription />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
