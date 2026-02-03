@@ -26,8 +26,8 @@ export default function Layout() {
 
     return (
         <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white">
-            {/* Navigation - Glassmorphism navbar */}
-            <nav className="fixed top-0 left-0 right-0 z-[100] bg-white/5 backdrop-blur-xl border-b border-white/10">
+            {/* Navigation - Glassmorphism navbar - positioned below RDR banner */}
+            <nav className="fixed top-[40px] left-0 right-0 z-[100] bg-white/5 backdrop-blur-xl border-b border-white/10">
                 <div className="container mx-auto px-4 py-3">
                     <div className="flex items-center justify-between">
                         {/* Logo */}
@@ -183,8 +183,8 @@ export default function Layout() {
                 )}
             </AnimatePresence>
 
-            {/* Main Content - with top padding for fixed navbar */}
-            <main className="flex-1 w-full pt-20 px-4 py-8">
+            {/* Main Content - with top padding for RDR banner (40px) + navbar */}
+            <main className="flex-1 w-full pt-28 px-4 py-8">
                 <Outlet />
             </main>
 

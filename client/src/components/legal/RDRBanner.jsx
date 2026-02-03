@@ -14,7 +14,9 @@ const RDRBanner = () => {
     const [isExpanded, setIsExpanded] = useState(false);
 
     return (
-        <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 backdrop-blur-md border-b border-amber-500/20 text-white shadow-lg sticky top-0 z-[9999]">
+        <div 
+            id="rdr-banner"
+            className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-amber-500/10 backdrop-blur-md border-b border-amber-500/20 text-white shadow-lg fixed top-0 left-0 right-0 z-[10000]">
             <div className="container mx-auto px-4">
                 {/* Version compacte */}
                 <div className="flex items-center justify-between py-2 text-sm">
