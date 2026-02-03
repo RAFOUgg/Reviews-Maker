@@ -18,7 +18,6 @@ import OdorSection from '../../../components/sections/OdorSection'
 import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
-import ExperienceUtilisation from '../../../components/forms/ExperienceUtilisation'
 import CuringMaturationSection from '../../../components/sections/CuringMaturationSection'
 
 // Import hooks
@@ -306,16 +305,10 @@ export default function CreateFlowerReview() {
                         />
                     )}
                     {currentSection === 8 && (
-                        <div className="space-y-6">
-                            <EffectsSection
-                                data={formData.effets || {}}
-                                onChange={(data) => handleChange('effets', data)}
-                            />
-                            <ExperienceUtilisation
-                                data={formData.experience || {}}
-                                onChange={(data) => handleChange('experience', data)}
-                            />
-                        </div>
+                        <EffectsSection
+                            data={formData.effets || {}}
+                            onChange={(data) => handleChange('effets', data)}
+                        />
                     )}
                     {currentSection === 9 && (
                         <CuringMaturationSection
