@@ -29,7 +29,7 @@ export default function AccountChoicePage() {
             description: 'Créez et gérez vos reviews personnelles',
             price: 0,
             icon: Sparkles,
-            gradient: 'from-green-500 to-emerald-600',
+            gradient: '',
             features: [
                 '⚠️ Filigrane "Terpologie" forcé sur tous les exports et aperçus',
                 'Sections : Info générale, Visuel, Curing, Odeurs, Goûts, Effets',
