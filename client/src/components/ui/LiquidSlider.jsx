@@ -21,10 +21,11 @@ const LiquidSlider = ({
     ...props
 }) => {
     const colorClasses = {
-        purple: ' ',
-        cyan: ' ',
+        purple: 'from-violet-500 to-purple-600',
+        cyan: 'from-cyan-500 to-blue-600',
         green: 'from-green-500 to-emerald-600',
         orange: 'from-orange-500 to-red-600',
+        amber: 'from-amber-500 to-orange-600',
     };
 
     const percentage = ((value - min) / (max - min)) * 100;

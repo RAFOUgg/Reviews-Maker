@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { TASTE_FAMILIES, getAllTasteNotes, TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../../data/tasteNotes';
 import { Coffee, Sparkles, ArrowDown, ArrowUp, Wind, Plus, X } from 'lucide-react';
-import { LiquidCard, LiquidRating, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
+import LiquidSlider from '@/components/ui/LiquidSlider';
 
 /**
  * Section Goûts pour Hash/Concentrés/Fleurs
@@ -139,37 +140,27 @@ export default function TasteSection({ productType, formData = {}, handleChange 
             {/* Intensité et Agressivité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Intensité gustative"
                         value={intensity}
-                        max={10}
-                        color="amber"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={intensity}
-                        onChange={(e) => setIntensity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-amber-500"
+                        step={1}
+                        color="orange"
+                        onChange={(val) => setIntensity(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{TASTE_INTENSITY_LEVELS[intensity - 1]?.label}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Agressivité / Piquant"
                         value={aggressiveness}
-                        max={10}
-                        color="amber"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={aggressiveness}
-                        onChange={(e) => setAggressiveness(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-orange-500"
+                        step={1}
+                        color="orange"
+                        onChange={(val) => setAggressiveness(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{AGGRESSIVENESS_LEVELS[aggressiveness - 1]?.label}</p>
                 </div>

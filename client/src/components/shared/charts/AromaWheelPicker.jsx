@@ -70,14 +70,14 @@ export default function AromaWheelPicker({
             {/* En-tête */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-semibold text-gray-800 flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-white flex items-center gap-2">
                         {title}
-                        <span className="text-sm font-normal text-gray-500">
+                        <span className="text-sm font-normal text-white/50">
                             ({selectedAromas.length}/{max})
                         </span>
                     </h3>
                     {helper && (
-                        <p className="text-sm text-gray-500 mt-1">{helper}</p>
+                        <p className="text-sm text-white/50 mt-1">{helper}</p>
                     )}
                 </div>
 
@@ -123,15 +123,15 @@ export default function AromaWheelPicker({
             )}
 
             {/* Barre de recherche et filtres */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
                 <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
                     <input
                         type="text"
                         placeholder="Rechercher un arôme..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus: focus:border-transparent"
+                        className="w-full pl-10 pr-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:border-violet-500/50 transition-all"
                     />
                 </div>
 
@@ -140,7 +140,9 @@ export default function AromaWheelPicker({
                         <button
                             key={mode}
                             onClick={() => setViewMode(mode)}
-                            className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${viewMode === mode ? ' text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                            className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${viewMode === mode 
+                                ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' 
+                                : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white/80'}`}
                         >
                             {mode === 'categories' && '🎨 Catégories'}
                             {mode === 'all' && '📋 Tous'}
