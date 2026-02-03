@@ -219,8 +219,8 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                             yearDropdownItemNumber={100}
                             placeholderText="JJ/MM/AAAA"
                             className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all"
-                            popperClassName="z-50"
-                            calendarClassName="!bg-[#0a0a14] !text-white !border !border-violet-500/30 !rounded-xl !shadow-2xl !p-3"
+                            popperClassName="react-datepicker-popper"
+                            portalId="datepicker-portal"
                             required
                         />
                         <p className="text-xs text-white/40">
