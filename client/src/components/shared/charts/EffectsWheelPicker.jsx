@@ -50,12 +50,12 @@ export default function EffectsWheelPicker({
     // Effets de la catégorie sélectionnée
     const categoryEffects = useMemo(() => {
         if (!selectedCategory) return []
-        
+
         const category = EFFECTS_CATEGORIES[selectedCategory]
         if (!category) return []
 
         let effects = []
-        
+
         if (category.positive) {
             effects = [...effects, ...category.positive.map(e => ({ ...e, category: selectedCategory, sentiment: 'positive' }))]
         }
@@ -264,12 +264,12 @@ export default function EffectsWheelPicker({
                                             key={effect.id}
                                             onClick={() => toggleEffect(effect.id)}
                                             disabled={!canAddMore && !isSelected}
-                                            className={`p-3 rounded-xl text-left transition-all ${isSelected 
-                                                ? 'text-white shadow-lg scale-105' 
+                                            className={`p-3 rounded-xl text-left transition-all ${isSelected
+                                                ? 'text-white shadow-lg scale-105'
                                                 : 'bg-white/5 hover:bg-white/10 border-2'} 
                                                 ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                                            style={isSelected 
-                                                ? { backgroundColor: category?.color } 
+                                            style={isSelected
+                                                ? { backgroundColor: category?.color }
                                                 : getSentimentStyle(effect.sentiment, isSelected)}
                                         >
                                             <div className="flex items-center gap-2 mb-1">
@@ -360,12 +360,12 @@ export default function EffectsWheelPicker({
                                 key={effect.id}
                                 onClick={() => toggleEffect(effect.id)}
                                 disabled={!canAddMore && !isSelected}
-                                className={`p-3 rounded-xl text-left transition-all ${isSelected 
-                                    ? 'text-white shadow-lg scale-105' 
+                                className={`p-3 rounded-xl text-left transition-all ${isSelected
+                                    ? 'text-white shadow-lg scale-105'
                                     : 'bg-white/5 hover:bg-white/10 border-2'} 
                                     ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                                style={isSelected 
-                                    ? { backgroundColor: getCategoryColor(effect.category) } 
+                                style={isSelected
+                                    ? { backgroundColor: getCategoryColor(effect.category) }
                                     : getSentimentStyle(effect.sentiment, isSelected)}
                             >
                                 <div className="flex items-center gap-2 mb-1">

@@ -3,6 +3,7 @@ import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { edibleReviewsService } from '../../../services/apiService'
 import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
+import { flattenEdibleFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -44,26 +45,12 @@ export default function CreateEdibleReview() {
     const handleSave = async () => {
         try {
             setSaving(true)
-            const reviewFormData = new FormData()
 
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
+            // Aplatir les données avec l'utilitaire
+            const flatData = flattenEdibleFormData(formData)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft')
 
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
-
-            reviewFormData.append('status', 'draft')
+            console.log('📤 Sending flattened Edible data:', flatData)
 
             let savedReview
             if (id) {
@@ -78,8 +65,8 @@ export default function CreateEdibleReview() {
                 navigate(`/edit/edible/${savedReview.id}`)
             }
         } catch (error) {
-            toast.error('Erreur lors de la sauvegarde')
-            console.error(error)
+            toast.error('Erreur lors de la sauvegarde: ' + (error.message || 'Erreur inconnue'))
+            console.error('Save error:', error)
         } finally {
             setSaving(false)
         }
@@ -93,26 +80,10 @@ export default function CreateEdibleReview() {
 
         try {
             setSaving(true)
-            const reviewFormData = new FormData()
 
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
-
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
-
-            reviewFormData.append('status', 'published')
+            // Aplatir les données avec l'utilitaire
+            const flatData = flattenEdibleFormData(formData)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published')
 
             if (id) {
                 await edibleReviewsService.update(id, reviewFormData)
@@ -124,8 +95,8 @@ export default function CreateEdibleReview() {
 
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de la publication')
-            console.error(error)
+            toast.error('Erreur lors de la publication: ' + (error.message || 'Erreur inconnue'))
+            console.error('Publish error:', error)
         } finally {
             setSaving(false)
         }

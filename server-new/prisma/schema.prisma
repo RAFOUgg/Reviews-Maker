@@ -658,6 +658,13 @@ model FlowerReview {
   // NEW: GitHub-style pipeline culture
   culturePipelineGithubId String? // ID PipelineGithub pour culture
   
+  // Configuration inline culture (JSON pour stockage direct)
+  cultureTimelineConfig   String? // JSON: {interval: "weeks", startDate: "...", ...}
+  cultureTimelineData     String? // JSON: [{week: 1, data: {...}}, ...]
+  cultureMode             String? // "indoor", "outdoor", "greenhouse", etc.
+  cultureSpaceType        String? // Type d'espace: "armoire", "tente", etc.
+  cultureSubstrat         String? // JSON: substrat utilisé
+  
   // Configuration globale culture
   cultureStartDate  DateTime? // Début de culture
   cultureEndDate    DateTime? // Fin de culture
@@ -697,6 +704,8 @@ model FlowerReview {
   aromesInhalation        String? // JSON: primaire/secondaire
   saveurBouche            String? // Rétro-olfaction
   intensiteAromeScore     Float?  // Intensité arôme/10
+  complexiteAromeScore    Float?  // Complexité arôme/10
+  fideliteAromeScore      Float?  // Fidélité au cultivar/10
   
   // ===== TEXTURE =====
   dureteScore         Float?  // Dureté/10
@@ -722,6 +731,12 @@ model FlowerReview {
   
   // NEW: GitHub-style pipeline curing
   curingPipelineGithubId String? // ID PipelineGithub pour curing
+  
+  // Configuration inline curing (JSON pour stockage direct)
+  curingTimelineConfig    String? // JSON: {interval: "days", duration: 30, ...}
+  curingTimelineData      String? // JSON: [{day: 1, temp: 18, humidity: 62, ...}, ...]
+  curingTemperature       Float?  // Température curing (°C) actuelle/moyenne
+  curingHumidity          Float?  // Humidité curing (%) actuelle/moyenne
   
   // Configuration globale curing
   curingDuration      Int?    // Durée (jours/semaines/mois selon trame)

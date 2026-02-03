@@ -185,8 +185,8 @@ export default function TasteWheelPicker({
                                             key={taste.id}
                                             onClick={() => toggleTaste(taste.id)}
                                             disabled={!canAddMore && !isSelected}
-                                            className={`p-3 rounded-xl text-left transition-all ${isSelected 
-                                                ? 'text-white shadow-lg scale-105' 
+                                            className={`p-3 rounded-xl text-left transition-all ${isSelected
+                                                ? 'text-white shadow-lg scale-105'
                                                 : 'bg-white/5 hover:bg-white/10 border-2 border-white/10'} 
                                                 ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                             style={isSelected ? { backgroundColor: family?.color } : {}}
@@ -262,8 +262,8 @@ export default function TasteWheelPicker({
                                 key={taste.id}
                                 onClick={() => toggleTaste(taste.id)}
                                 disabled={!canAddMore && !isSelected}
-                                className={`p-3 rounded-xl text-left transition-all ${isSelected 
-                                    ? 'text-white shadow-lg scale-105' 
+                                className={`p-3 rounded-xl text-left transition-all ${isSelected
+                                    ? 'text-white shadow-lg scale-105'
                                     : 'bg-white/5 hover:bg-white/10 border-2 border-white/10'} 
                                     ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                 style={isSelected ? { backgroundColor: taste.familyColor } : { borderColor: taste.familyColor }}

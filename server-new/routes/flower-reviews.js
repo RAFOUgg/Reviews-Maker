@@ -57,6 +57,7 @@ const requireAuth = (req, res, next) => {
 
 /**
  * Validation des données FlowerReview
+ * Accepte les champs aplatis envoyés par le frontend
  * @param {Object} data - Données à valider
  * @returns {Object} { valid: boolean, errors: string[], cleaned: Object }
  */
@@ -72,264 +73,414 @@ function validateFlowerReviewData(data) {
         cleaned.nomCommercial = data.nomCommercial.trim()
     }
 
+    // cultivars (optionnel - peut être string ou JSON array)
+    if (data.cultivars) {
+        if (typeof data.cultivars === 'string') {
+            try {
+                cleaned.cultivars = JSON.parse(data.cultivars)
+            } catch {
+                cleaned.cultivars = data.cultivars.trim()
+            }
+        } else if (Array.isArray(data.cultivars)) {
+            cleaned.cultivars = data.cultivars
+        }
+    }
+
     // farm (optionnel)
     if (data.farm && typeof data.farm === 'string') {
         cleaned.farm = data.farm.trim()
     }
 
-    // varietyType (obligatoire: "souche" ou "hybride")
-    if (!data.varietyType || !['souche', 'hybride'].includes(data.varietyType)) {
-        errors.push('varietyType must be "souche" or "hybride"')
-    } else {
-        cleaned.varietyType = data.varietyType
+    // varietyType (optionnel - valeurs CDC: indica, sativa, hybride indica-dominant, etc.)
+    const validVarietyTypes = ['indica', 'sativa', 'hybride', 'hybride indica-dominant', 'sativa-dominant', 'CBD-dominant', 'souche']
+    if (data.varietyType) {
+        const vt = data.varietyType.toLowerCase()
+        if (validVarietyTypes.includes(vt)) {
+            cleaned.varietyType = data.varietyType
+        }
+        // Ne pas bloquer si invalide, juste ignorer
     }
 
     // ===== SECTION 2: Génétiques =====
-    // breeder (optionnel)
     if (data.breeder && typeof data.breeder === 'string') {
         cleaned.breeder = data.breeder.trim()
     }
-
-    // variety (optionnel - autocomplete depuis cultivars)
     if (data.variety && typeof data.variety === 'string') {
         cleaned.variety = data.variety.trim()
     }
-
-    // genetics (optionnel - texte libre)
-    if (data.genetics && typeof data.genetics === 'string') {
-        cleaned.genetics = data.genetics.trim()
+    if (data.geneticType && typeof data.geneticType === 'string') {
+        cleaned.geneticType = data.geneticType.trim()
     }
-
-    // indicaRatio (optionnel, 0-100)
-    if (data.indicaRatio !== undefined && data.indicaRatio !== null && data.indicaRatio !== '') {
-        const ratio = parseFloat(data.indicaRatio)
-        if (isNaN(ratio) || ratio < 0 || ratio > 100) {
-            errors.push('indicaRatio must be a number between 0 and 100')
-        } else {
-            cleaned.indicaRatio = ratio
+    if (data.indicaPercent !== undefined && data.indicaPercent !== null && data.indicaPercent !== '') {
+        const val = parseInt(data.indicaPercent)
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+            cleaned.indicaPercent = val
         }
     }
-
-    // phenotype (optionnel)
-    if (data.phenotype && typeof data.phenotype === 'string') {
-        cleaned.phenotype = data.phenotype.trim()
+    if (data.sativaPercent !== undefined && data.sativaPercent !== null && data.sativaPercent !== '') {
+        const val = parseInt(data.sativaPercent)
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+            cleaned.sativaPercent = val
+        }
+    }
+    if (data.parentage) {
+        if (typeof data.parentage === 'string') {
+            try {
+                cleaned.parentage = JSON.parse(data.parentage)
+            } catch {
+                cleaned.parentage = data.parentage
+            }
+        } else {
+            cleaned.parentage = JSON.stringify(data.parentage)
+        }
+    }
+    if (data.phenotypeCode && typeof data.phenotypeCode === 'string') {
+        cleaned.phenotypeCode = data.phenotypeCode.trim()
+    }
+    if (data.geneticTreeId && typeof data.geneticTreeId === 'string') {
+        cleaned.geneticTreeId = data.geneticTreeId.trim()
     }
 
     // ===== SECTION 3: Pipeline Culture =====
-    // culturePipelineId (optionnel - UUID si pipeline créé)
-    if (data.culturePipelineId && typeof data.culturePipelineId === 'string') {
-        cleaned.culturePipelineId = data.culturePipelineId.trim()
+    if (data.cultureTimelineConfig) {
+        if (typeof data.cultureTimelineConfig === 'string') {
+            try {
+                const config = JSON.parse(data.cultureTimelineConfig)
+                cleaned.cultureTimelineConfig = config
+            } catch {
+                // Ignorer si invalide
+            }
+        } else {
+            cleaned.cultureTimelineConfig = data.cultureTimelineConfig
+        }
+    }
+    if (data.cultureTimelineData) {
+        if (typeof data.cultureTimelineData === 'string') {
+            try {
+                const timeline = JSON.parse(data.cultureTimelineData)
+                cleaned.cultureTimelineData = timeline
+            } catch {
+                // Ignorer si invalide
+            }
+        } else {
+            cleaned.cultureTimelineData = data.cultureTimelineData
+        }
+    }
+    if (data.cultureMode && typeof data.cultureMode === 'string') {
+        cleaned.cultureMode = data.cultureMode.trim()
+    }
+    if (data.cultureSpaceType && typeof data.cultureSpaceType === 'string') {
+        cleaned.cultureSpaceType = data.cultureSpaceType.trim()
+    }
+    if (data.cultureSubstrat) {
+        if (typeof data.cultureSubstrat === 'string') {
+            try {
+                cleaned.cultureSubstrat = JSON.parse(data.cultureSubstrat)
+            } catch {
+                cleaned.cultureSubstrat = data.cultureSubstrat
+            }
+        } else {
+            cleaned.cultureSubstrat = data.cultureSubstrat
+        }
     }
 
-    // cultureStartDate, cultureEndDate (optionnel - ISO dates)
-    if (data.cultureStartDate && typeof data.cultureStartDate === 'string') {
+    // Dates de culture
+    if (data.cultureStartDate) {
         const date = new Date(data.cultureStartDate)
         if (!isNaN(date.getTime())) {
             cleaned.cultureStartDate = date
         }
     }
-    if (data.cultureEndDate && typeof data.cultureEndDate === 'string') {
+    if (data.cultureEndDate) {
         const date = new Date(data.cultureEndDate)
         if (!isNaN(date.getTime())) {
             cleaned.cultureEndDate = date
         }
     }
 
-    // ===== SECTION 4: Analytics (PDF + cannabinoids) =====
-    // analyticsPdfUrl (géré par upload, pas validé ici)
-
-    // THC, CBD, autres cannabinoids (optionnel, float)
+    // ===== SECTION 4: Analytics =====
     const cannabinoids = ['thcPercent', 'cbdPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
     cannabinoids.forEach(field => {
         if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
             const val = parseFloat(data[field])
-            if (isNaN(val) || val < 0 || val > 100) {
-                errors.push(`${field} must be a number between 0 and 100`)
-            } else {
+            if (!isNaN(val) && val >= 0 && val <= 100) {
+                cleaned[field] = val
+            }
+        }
+    })
+    if (data.terpeneProfile) {
+        if (typeof data.terpeneProfile === 'string') {
+            try {
+                cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
+            } catch {
+                cleaned.terpeneProfile = data.terpeneProfile
+            }
+        } else {
+            cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
+        }
+    }
+
+    // ===== SECTION 5: Visuel & Technique =====
+    // Couleur nuancier (JSON array)
+    if (data.couleurNuancier) {
+        if (typeof data.couleurNuancier === 'string') {
+            try {
+                cleaned.couleurNuancier = JSON.parse(data.couleurNuancier)
+            } catch {
+                cleaned.couleurNuancier = data.couleurNuancier
+            }
+        } else {
+            cleaned.couleurNuancier = JSON.stringify(data.couleurNuancier)
+        }
+    }
+
+    // Scores visuels (Float 0-10)
+    const visualScoreFields = {
+        densiteVisuelle: 'densiteVisuelle',
+        trichomesScore: 'trichomesScore',
+        pistilsScore: 'pistilsScore',
+        manucureScore: 'manucureScore',
+        moisissureScore: 'moisissureScore',
+        grainesScore: 'grainesScore'
+    }
+    Object.keys(visualScoreFields).forEach(frontendField => {
+        const prismaField = visualScoreFields[frontendField]
+        if (data[frontendField] !== undefined && data[frontendField] !== null && data[frontendField] !== '') {
+            const val = parseFloat(data[frontendField])
+            if (!isNaN(val) && val >= 0 && val <= 10) {
+                cleaned[prismaField] = val
+            }
+        }
+    })
+
+    // ===== SECTION 6: Odeurs =====
+    // Notes dominantes et secondaires (JSON arrays max 7)
+    if (data.notesOdeursDominantes) {
+        if (typeof data.notesOdeursDominantes === 'string') {
+            try {
+                const arr = JSON.parse(data.notesOdeursDominantes)
+                if (Array.isArray(arr) && arr.length <= 7) {
+                    cleaned.notesOdeursDominantes = JSON.stringify(arr)
+                }
+            } catch {
+                // Ignorer
+            }
+        } else if (Array.isArray(data.notesOdeursDominantes)) {
+            if (data.notesOdeursDominantes.length <= 7) {
+                cleaned.notesOdeursDominantes = JSON.stringify(data.notesOdeursDominantes)
+            }
+        }
+    }
+    if (data.notesOdeursSecondaires) {
+        if (typeof data.notesOdeursSecondaires === 'string') {
+            try {
+                const arr = JSON.parse(data.notesOdeursSecondaires)
+                if (Array.isArray(arr) && arr.length <= 7) {
+                    cleaned.notesOdeursSecondaires = JSON.stringify(arr)
+                }
+            } catch {
+                // Ignorer
+            }
+        } else if (Array.isArray(data.notesOdeursSecondaires)) {
+            if (data.notesOdeursSecondaires.length <= 7) {
+                cleaned.notesOdeursSecondaires = JSON.stringify(data.notesOdeursSecondaires)
+            }
+        }
+    }
+
+    // Scores odeurs (Float 0-10)
+    const odeurScoreFields = ['intensiteAromeScore', 'complexiteAromeScore', 'fideliteAromeScore']
+    odeurScoreFields.forEach(field => {
+        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+            const val = parseFloat(data[field])
+            if (!isNaN(val) && val >= 0 && val <= 10) {
                 cleaned[field] = val
             }
         }
     })
 
-    // terpeneProfile (JSON object optionnel)
-    if (data.terpeneProfile && typeof data.terpeneProfile === 'string') {
-        try {
-            cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
-        } catch (e) {
-            errors.push('terpeneProfile must be valid JSON')
+    // ===== SECTION 7: Texture =====
+    const textureScoreFields = {
+        dureteScore: 'dureteScore',
+        densiteTactileScore: 'densiteTactileScore',
+        elasticiteScore: 'elasticiteScore',
+        collantScore: 'collantScore'
+    }
+    Object.keys(textureScoreFields).forEach(field => {
+        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+            const val = parseFloat(data[field])
+            if (!isNaN(val) && val >= 0 && val <= 10) {
+                cleaned[field] = val
+            }
         }
-    } else if (data.terpeneProfile && typeof data.terpeneProfile === 'object') {
-        cleaned.terpeneProfile = data.terpeneProfile
+    })
+
+    // ===== SECTION 8: Goûts =====
+    // Scores goûts (Float 0-10)
+    if (data.intensiteGoutScore !== undefined && data.intensiteGoutScore !== null && data.intensiteGoutScore !== '') {
+        const val = parseFloat(data.intensiteGoutScore)
+        if (!isNaN(val) && val >= 0 && val <= 10) {
+            cleaned.intensiteGoutScore = val
+        }
+    }
+    if (data.agressiviteScore !== undefined && data.agressiviteScore !== null && data.agressiviteScore !== '') {
+        const val = parseFloat(data.agressiviteScore)
+        if (!isNaN(val) && val >= 0 && val <= 10) {
+            cleaned.agressiviteScore = val
+        }
     }
 
-    // ===== SECTION 5: Consommation =====
-    // consumptionMethod (optionnel)
+    // Notes goûts (JSON arrays max 7)
+    const tasteArrayFields = ['dryPuffNotes', 'inhalationNotes', 'expirationNotes']
+    tasteArrayFields.forEach(field => {
+        if (data[field]) {
+            if (typeof data[field] === 'string') {
+                try {
+                    const arr = JSON.parse(data[field])
+                    if (Array.isArray(arr) && arr.length <= 7) {
+                        cleaned[field] = JSON.stringify(arr)
+                    }
+                } catch {
+                    // Ignorer
+                }
+            } else if (Array.isArray(data[field])) {
+                if (data[field].length <= 7) {
+                    cleaned[field] = JSON.stringify(data[field])
+                }
+            }
+        }
+    })
+
+    // ===== SECTION 9: Effets & Expérience =====
+    // Scores effets (Float 0-10)
+    if (data.monteeScore !== undefined && data.monteeScore !== null && data.monteeScore !== '') {
+        const val = parseFloat(data.monteeScore)
+        if (!isNaN(val) && val >= 0 && val <= 10) {
+            cleaned.monteeScore = val
+        }
+    }
+    if (data.intensiteEffetScore !== undefined && data.intensiteEffetScore !== null && data.intensiteEffetScore !== '') {
+        const val = parseFloat(data.intensiteEffetScore)
+        if (!isNaN(val) && val >= 0 && val <= 10) {
+            cleaned.intensiteEffetScore = val
+        }
+    }
+
+    // Effets choisis (JSON array max 8)
+    if (data.effetsChoisis) {
+        if (typeof data.effetsChoisis === 'string') {
+            try {
+                const arr = JSON.parse(data.effetsChoisis)
+                if (Array.isArray(arr) && arr.length <= 8) {
+                    cleaned.effetsChoisis = JSON.stringify(arr)
+                }
+            } catch {
+                // Ignorer
+            }
+        } else if (Array.isArray(data.effetsChoisis)) {
+            if (data.effetsChoisis.length <= 8) {
+                cleaned.effetsChoisis = JSON.stringify(data.effetsChoisis)
+            }
+        }
+    }
+
+    // Durée effets
+    if (data.effectDuration && typeof data.effectDuration === 'string') {
+        cleaned.effectDuration = data.effectDuration.trim()
+    }
+    if (data.effectDurationMinutes !== undefined && data.effectDurationMinutes !== null) {
+        const val = parseInt(data.effectDurationMinutes)
+        if (!isNaN(val) && val >= 0) {
+            // Convertir en HH:MM format
+            const hours = Math.floor(val / 60)
+            const mins = val % 60
+            cleaned.effectDuration = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+        }
+    }
+
+    // Champs expérience
     if (data.consumptionMethod && typeof data.consumptionMethod === 'string') {
         cleaned.consumptionMethod = data.consumptionMethod.trim()
     }
-
-    // ===== SECTION 6: Visuel Technique (7 scores /10) =====
-    const visualScores = ['couleurScore', 'densiteScore', 'trichomesScore', 'pistilsScore', 'manucureScore', 'moisissureScore', 'grainesScore']
-    visualScores.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (isNaN(val) || val < 0 || val > 10) {
-                errors.push(`${field} must be a number between 0 and 10`)
-            } else {
-                cleaned[field] = val
-            }
-        }
-    })
-
-    // nuancierColors (JSON array optionnel - tableau de hex codes)
-    if (data.nuancierColors && typeof data.nuancierColors === 'string') {
-        try {
-            cleaned.nuancierColors = JSON.parse(data.nuancierColors)
-        } catch (e) {
-            errors.push('nuancierColors must be valid JSON array')
-        }
-    } else if (data.nuancierColors && Array.isArray(data.nuancierColors)) {
-        cleaned.nuancierColors = data.nuancierColors
-    }
-
-    // ===== SECTION 7: Odeurs =====
-    // odeursDominantes, odeursSecondaires (JSON arrays max 7 each)
-    if (data.odeursDominantes && typeof data.odeursDominantes === 'string') {
-        try {
-            const arr = JSON.parse(data.odeursDominantes)
-            if (Array.isArray(arr) && arr.length <= 7) {
-                cleaned.odeursDominantes = arr
-            } else {
-                errors.push('odeursDominantes must be an array with max 7 items')
-            }
-        } catch (e) {
-            errors.push('odeursDominantes must be valid JSON array')
-        }
-    } else if (data.odeursDominantes && Array.isArray(data.odeursDominantes)) {
-        if (data.odeursDominantes.length <= 7) {
-            cleaned.odeursDominantes = data.odeursDominantes
-        } else {
-            errors.push('odeursDominantes must have max 7 items')
+    if (data.dosage !== undefined && data.dosage !== null && data.dosage !== '') {
+        const val = parseFloat(data.dosage)
+        if (!isNaN(val) && val >= 0) {
+            cleaned.dosage = val
         }
     }
-
-    if (data.odeursSecondaires && typeof data.odeursSecondaires === 'string') {
-        try {
-            const arr = JSON.parse(data.odeursSecondaires)
-            if (Array.isArray(arr) && arr.length <= 7) {
-                cleaned.odeursSecondaires = arr
-            } else {
-                errors.push('odeursSecondaires must be an array with max 7 items')
-            }
-        } catch (e) {
-            errors.push('odeursSecondaires must be valid JSON array')
-        }
-    } else if (data.odeursSecondaires && Array.isArray(data.odeursSecondaires)) {
-        if (data.odeursSecondaires.length <= 7) {
-            cleaned.odeursSecondaires = data.odeursSecondaires
-        } else {
-            errors.push('odeursSecondaires must have max 7 items')
-        }
+    if (data.dosageUnit && typeof data.dosageUnit === 'string') {
+        cleaned.dosageUnit = data.dosageUnit.trim()
+    }
+    if (data.effectOnset && typeof data.effectOnset === 'string') {
+        cleaned.effectOnset = data.effectOnset.trim()
+    }
+    if (data.effectLength && typeof data.effectLength === 'string') {
+        cleaned.effectLength = data.effectLength.trim()
     }
 
-    // odeursIntensiteScore (0-10)
-    if (data.odeursIntensiteScore !== undefined && data.odeursIntensiteScore !== null && data.odeursIntensiteScore !== '') {
-        const val = parseFloat(data.odeursIntensiteScore)
-        if (isNaN(val) || val < 0 || val > 10) {
-            errors.push('odeursIntensiteScore must be a number between 0 and 10')
-        } else {
-            cleaned.odeursIntensiteScore = val
-        }
-    }
-
-    // ===== SECTION 8: Texture (4 scores /10) =====
-    const textureScores = ['textureHardness', 'textureDensity', 'textureElasticity', 'textureStickiness']
-    textureScores.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (isNaN(val) || val < 0 || val > 10) {
-                errors.push(`${field} must be a number between 0 and 10`)
-            } else {
-                cleaned[field] = val
-            }
-        }
-    })
-
-    // ===== SECTION 9: Goûts =====
-    // goutsIntensiteScore, goutsAgressiviteScore (0-10)
-    const tastingScores = ['goutsIntensiteScore', 'goutsAgressiviteScore']
-    tastingScores.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (isNaN(val) || val < 0 || val > 10) {
-                errors.push(`${field} must be a number between 0 and 10`)
-            } else {
-                cleaned[field] = val
-            }
-        }
-    })
-
-    // goutsDryPuff, goutsInhalation, goutsExpiration (JSON arrays max 7 each)
-    const tasteArrays = ['goutsDryPuff', 'goutsInhalation', 'goutsExpiration']
-    tasteArrays.forEach(field => {
-        if (data[field] && typeof data[field] === 'string') {
-            try {
-                const arr = JSON.parse(data[field])
-                if (Array.isArray(arr) && arr.length <= 7) {
-                    cleaned[field] = arr
-                } else {
-                    errors.push(`${field} must be an array with max 7 items`)
+    // JSON arrays pour expérience
+    const experienceArrayFields = ['effectProfiles', 'sideEffects', 'preferredUse']
+    experienceArrayFields.forEach(field => {
+        if (data[field]) {
+            if (typeof data[field] === 'string') {
+                try {
+                    const arr = JSON.parse(data[field])
+                    if (Array.isArray(arr)) {
+                        cleaned[field] = JSON.stringify(arr)
+                    }
+                } catch {
+                    cleaned[field] = data[field]
                 }
-            } catch (e) {
-                errors.push(`${field} must be valid JSON array`)
-            }
-        } else if (data[field] && Array.isArray(data[field])) {
-            if (data[field].length <= 7) {
-                cleaned[field] = data[field]
-            } else {
-                errors.push(`${field} must have max 7 items`)
+            } else if (Array.isArray(data[field])) {
+                cleaned[field] = JSON.stringify(data[field])
             }
         }
     })
 
-    // ===== SECTION 10: Effets =====
-    // effetsMonteeScore, effetsIntensiteScore (0-10)
-    const effectScores = ['effetsMonteeScore', 'effetsIntensiteScore']
-    effectScores.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (isNaN(val) || val < 0 || val > 10) {
-                errors.push(`${field} must be a number between 0 and 10`)
-            } else {
-                cleaned[field] = val
+    // ===== SECTION 10: Pipeline Curing =====
+    if (data.curingTimelineConfig) {
+        if (typeof data.curingTimelineConfig === 'string') {
+            try {
+                const config = JSON.parse(data.curingTimelineConfig)
+                cleaned.curingTimelineConfig = config
+            } catch {
+                // Ignorer
             }
-        }
-    })
-
-    // effetsSelectionnes (JSON array max 8)
-    if (data.effetsSelectionnes && typeof data.effetsSelectionnes === 'string') {
-        try {
-            const arr = JSON.parse(data.effetsSelectionnes)
-            if (Array.isArray(arr) && arr.length <= 8) {
-                cleaned.effetsSelectionnes = arr
-            } else {
-                errors.push('effetsSelectionnes must be an array with max 8 items')
-            }
-        } catch (e) {
-            errors.push('effetsSelectionnes must be valid JSON array')
-        }
-    } else if (data.effetsSelectionnes && Array.isArray(data.effetsSelectionnes)) {
-        if (data.effetsSelectionnes.length <= 8) {
-            cleaned.effetsSelectionnes = data.effetsSelectionnes
         } else {
-            errors.push('effetsSelectionnes must have max 8 items')
+            cleaned.curingTimelineConfig = data.curingTimelineConfig
+        }
+    }
+    if (data.curingTimelineData) {
+        if (typeof data.curingTimelineData === 'string') {
+            try {
+                const timeline = JSON.parse(data.curingTimelineData)
+                cleaned.curingTimelineData = timeline
+            } catch {
+                // Ignorer
+            }
+        } else {
+            cleaned.curingTimelineData = data.curingTimelineData
+        }
+    }
+    if (data.curingType && typeof data.curingType === 'string') {
+        cleaned.curingType = data.curingType.trim()
+    }
+    if (data.curingTemperature !== undefined && data.curingTemperature !== null && data.curingTemperature !== '') {
+        const val = parseFloat(data.curingTemperature)
+        if (!isNaN(val)) {
+            cleaned.curingTemperature = val
+        }
+    }
+    if (data.curingHumidity !== undefined && data.curingHumidity !== null && data.curingHumidity !== '') {
+        const val = parseFloat(data.curingHumidity)
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+            cleaned.curingHumidity = val
         }
     }
 
-    // ===== SECTION 11: Pipeline Curing =====
-    // curingPipelineId (optionnel - UUID si pipeline créé)
-    if (data.curingPipelineId && typeof data.curingPipelineId === 'string') {
-        cleaned.curingPipelineId = data.curingPipelineId.trim()
+    // Status
+    if (data.status && ['draft', 'published', 'archived'].includes(data.status)) {
+        cleaned.status = data.status
     }
 
     return {
@@ -410,10 +561,6 @@ router.post('/',
             const flowerReviewData = {
                 reviewId: review.id,
                 ...validation.cleaned,
-                photo1,
-                photo2,
-                photo3,
-                photo4,
                 analyticsPdfUrl
             }
 
@@ -421,27 +568,31 @@ router.post('/',
             if (flowerReviewData.terpeneProfile && typeof flowerReviewData.terpeneProfile === 'object') {
                 flowerReviewData.terpeneProfile = JSON.stringify(flowerReviewData.terpeneProfile)
             }
-            if (flowerReviewData.nuancierColors && Array.isArray(flowerReviewData.nuancierColors)) {
-                flowerReviewData.nuancierColors = JSON.stringify(flowerReviewData.nuancierColors)
+            if (flowerReviewData.couleurNuancier && typeof flowerReviewData.couleurNuancier === 'object') {
+                flowerReviewData.couleurNuancier = JSON.stringify(flowerReviewData.couleurNuancier)
             }
-            if (flowerReviewData.odeursDominantes && Array.isArray(flowerReviewData.odeursDominantes)) {
-                flowerReviewData.odeursDominantes = JSON.stringify(flowerReviewData.odeursDominantes)
+            if (flowerReviewData.cultureTimelineConfig && typeof flowerReviewData.cultureTimelineConfig === 'object') {
+                flowerReviewData.cultureTimelineConfig = JSON.stringify(flowerReviewData.cultureTimelineConfig)
             }
-            if (flowerReviewData.odeursSecondaires && Array.isArray(flowerReviewData.odeursSecondaires)) {
-                flowerReviewData.odeursSecondaires = JSON.stringify(flowerReviewData.odeursSecondaires)
+            if (flowerReviewData.cultureTimelineData && typeof flowerReviewData.cultureTimelineData === 'object') {
+                flowerReviewData.cultureTimelineData = JSON.stringify(flowerReviewData.cultureTimelineData)
             }
-            if (flowerReviewData.goutsDryPuff && Array.isArray(flowerReviewData.goutsDryPuff)) {
-                flowerReviewData.goutsDryPuff = JSON.stringify(flowerReviewData.goutsDryPuff)
+            if (flowerReviewData.cultureSubstrat && typeof flowerReviewData.cultureSubstrat === 'object') {
+                flowerReviewData.cultureSubstrat = JSON.stringify(flowerReviewData.cultureSubstrat)
             }
-            if (flowerReviewData.goutsInhalation && Array.isArray(flowerReviewData.goutsInhalation)) {
-                flowerReviewData.goutsInhalation = JSON.stringify(flowerReviewData.goutsInhalation)
+            if (flowerReviewData.curingTimelineConfig && typeof flowerReviewData.curingTimelineConfig === 'object') {
+                flowerReviewData.curingTimelineConfig = JSON.stringify(flowerReviewData.curingTimelineConfig)
             }
-            if (flowerReviewData.goutsExpiration && Array.isArray(flowerReviewData.goutsExpiration)) {
-                flowerReviewData.goutsExpiration = JSON.stringify(flowerReviewData.goutsExpiration)
+            if (flowerReviewData.curingTimelineData && typeof flowerReviewData.curingTimelineData === 'object') {
+                flowerReviewData.curingTimelineData = JSON.stringify(flowerReviewData.curingTimelineData)
             }
-            if (flowerReviewData.effetsSelectionnes && Array.isArray(flowerReviewData.effetsSelectionnes)) {
-                flowerReviewData.effetsSelectionnes = JSON.stringify(flowerReviewData.effetsSelectionnes)
+            if (flowerReviewData.parentage && typeof flowerReviewData.parentage === 'object') {
+                flowerReviewData.parentage = JSON.stringify(flowerReviewData.parentage)
             }
+
+            // Supprimer les champs qui ne sont pas dans le schéma Prisma
+            delete flowerReviewData.cultivars // stocké dans Review.holderName ou ailleurs
+            delete flowerReviewData.status    // stocké dans Review
 
             const flowerReview = await tx.flowerReview.create({
                 data: flowerReviewData
@@ -459,13 +610,22 @@ router.post('/',
             ...result.flowerReview,
             // Parser les JSON strings pour le frontend
             terpeneProfile: result.flowerReview.terpeneProfile ? JSON.parse(result.flowerReview.terpeneProfile) : null,
-            nuancierColors: result.flowerReview.nuancierColors ? JSON.parse(result.flowerReview.nuancierColors) : null,
-            odeursDominantes: result.flowerReview.odeursDominantes ? JSON.parse(result.flowerReview.odeursDominantes) : null,
-            odeursSecondaires: result.flowerReview.odeursSecondaires ? JSON.parse(result.flowerReview.odeursSecondaires) : null,
-            goutsDryPuff: result.flowerReview.goutsDryPuff ? JSON.parse(result.flowerReview.goutsDryPuff) : null,
-            goutsInhalation: result.flowerReview.goutsInhalation ? JSON.parse(result.flowerReview.goutsInhalation) : null,
-            goutsExpiration: result.flowerReview.goutsExpiration ? JSON.parse(result.flowerReview.goutsExpiration) : null,
-            effetsSelectionnes: result.flowerReview.effetsSelectionnes ? JSON.parse(result.flowerReview.effetsSelectionnes) : null
+            couleurNuancier: result.flowerReview.couleurNuancier ? JSON.parse(result.flowerReview.couleurNuancier) : null,
+            notesOdeursDominantes: result.flowerReview.notesOdeursDominantes ? JSON.parse(result.flowerReview.notesOdeursDominantes) : null,
+            notesOdeursSecondaires: result.flowerReview.notesOdeursSecondaires ? JSON.parse(result.flowerReview.notesOdeursSecondaires) : null,
+            dryPuffNotes: result.flowerReview.dryPuffNotes ? JSON.parse(result.flowerReview.dryPuffNotes) : null,
+            inhalationNotes: result.flowerReview.inhalationNotes ? JSON.parse(result.flowerReview.inhalationNotes) : null,
+            expirationNotes: result.flowerReview.expirationNotes ? JSON.parse(result.flowerReview.expirationNotes) : null,
+            effetsChoisis: result.flowerReview.effetsChoisis ? JSON.parse(result.flowerReview.effetsChoisis) : null,
+            effectProfiles: result.flowerReview.effectProfiles ? JSON.parse(result.flowerReview.effectProfiles) : null,
+            sideEffects: result.flowerReview.sideEffects ? JSON.parse(result.flowerReview.sideEffects) : null,
+            preferredUse: result.flowerReview.preferredUse ? JSON.parse(result.flowerReview.preferredUse) : null,
+            cultureTimelineConfig: result.flowerReview.cultureTimelineConfig ? JSON.parse(result.flowerReview.cultureTimelineConfig) : null,
+            cultureTimelineData: result.flowerReview.cultureTimelineData ? JSON.parse(result.flowerReview.cultureTimelineData) : null,
+            cultureSubstrat: result.flowerReview.cultureSubstrat ? JSON.parse(result.flowerReview.cultureSubstrat) : null,
+            curingTimelineConfig: result.flowerReview.curingTimelineConfig ? JSON.parse(result.flowerReview.curingTimelineConfig) : null,
+            curingTimelineData: result.flowerReview.curingTimelineData ? JSON.parse(result.flowerReview.curingTimelineData) : null,
+            parentage: result.flowerReview.parentage ? JSON.parse(result.flowerReview.parentage) : null
         }
 
         console.log('✅ FlowerReview created successfully:', formattedReview.id)
@@ -523,13 +683,22 @@ router.get('/:id', asyncHandler(async (req, res) => {
         formattedReview.flowerData = {
             ...review.flowerData,
             terpeneProfile: review.flowerData.terpeneProfile ? JSON.parse(review.flowerData.terpeneProfile) : null,
-            nuancierColors: review.flowerData.nuancierColors ? JSON.parse(review.flowerData.nuancierColors) : null,
-            odeursDominantes: review.flowerData.odeursDominantes ? JSON.parse(review.flowerData.odeursDominantes) : null,
-            odeursSecondaires: review.flowerData.odeursSecondaires ? JSON.parse(review.flowerData.odeursSecondaires) : null,
-            goutsDryPuff: review.flowerData.goutsDryPuff ? JSON.parse(review.flowerData.goutsDryPuff) : null,
-            goutsInhalation: review.flowerData.goutsInhalation ? JSON.parse(review.flowerData.goutsInhalation) : null,
-            goutsExpiration: review.flowerData.goutsExpiration ? JSON.parse(review.flowerData.goutsExpiration) : null,
-            effetsSelectionnes: review.flowerData.effetsSelectionnes ? JSON.parse(review.flowerData.effetsSelectionnes) : null
+            couleurNuancier: review.flowerData.couleurNuancier ? JSON.parse(review.flowerData.couleurNuancier) : null,
+            notesOdeursDominantes: review.flowerData.notesOdeursDominantes ? JSON.parse(review.flowerData.notesOdeursDominantes) : null,
+            notesOdeursSecondaires: review.flowerData.notesOdeursSecondaires ? JSON.parse(review.flowerData.notesOdeursSecondaires) : null,
+            dryPuffNotes: review.flowerData.dryPuffNotes ? JSON.parse(review.flowerData.dryPuffNotes) : null,
+            inhalationNotes: review.flowerData.inhalationNotes ? JSON.parse(review.flowerData.inhalationNotes) : null,
+            expirationNotes: review.flowerData.expirationNotes ? JSON.parse(review.flowerData.expirationNotes) : null,
+            effetsChoisis: review.flowerData.effetsChoisis ? JSON.parse(review.flowerData.effetsChoisis) : null,
+            effectProfiles: review.flowerData.effectProfiles ? JSON.parse(review.flowerData.effectProfiles) : null,
+            sideEffects: review.flowerData.sideEffects ? JSON.parse(review.flowerData.sideEffects) : null,
+            preferredUse: review.flowerData.preferredUse ? JSON.parse(review.flowerData.preferredUse) : null,
+            cultureTimelineConfig: review.flowerData.cultureTimelineConfig ? JSON.parse(review.flowerData.cultureTimelineConfig) : null,
+            cultureTimelineData: review.flowerData.cultureTimelineData ? JSON.parse(review.flowerData.cultureTimelineData) : null,
+            cultureSubstrat: review.flowerData.cultureSubstrat ? JSON.parse(review.flowerData.cultureSubstrat) : null,
+            curingTimelineConfig: review.flowerData.curingTimelineConfig ? JSON.parse(review.flowerData.curingTimelineConfig) : null,
+            curingTimelineData: review.flowerData.curingTimelineData ? JSON.parse(review.flowerData.curingTimelineData) : null,
+            parentage: review.flowerData.parentage ? JSON.parse(review.flowerData.parentage) : null
         }
     }
 
@@ -657,10 +826,6 @@ router.put('/:id',
             // 2. Mettre à jour la FlowerReview
             const flowerReviewData = {
                 ...validation.cleaned,
-                photo1,
-                photo2,
-                photo3,
-                photo4,
                 analyticsPdfUrl
             }
 
@@ -668,27 +833,31 @@ router.put('/:id',
             if (flowerReviewData.terpeneProfile && typeof flowerReviewData.terpeneProfile === 'object') {
                 flowerReviewData.terpeneProfile = JSON.stringify(flowerReviewData.terpeneProfile)
             }
-            if (flowerReviewData.nuancierColors && Array.isArray(flowerReviewData.nuancierColors)) {
-                flowerReviewData.nuancierColors = JSON.stringify(flowerReviewData.nuancierColors)
+            if (flowerReviewData.couleurNuancier && typeof flowerReviewData.couleurNuancier === 'object') {
+                flowerReviewData.couleurNuancier = JSON.stringify(flowerReviewData.couleurNuancier)
             }
-            if (flowerReviewData.odeursDominantes && Array.isArray(flowerReviewData.odeursDominantes)) {
-                flowerReviewData.odeursDominantes = JSON.stringify(flowerReviewData.odeursDominantes)
+            if (flowerReviewData.cultureTimelineConfig && typeof flowerReviewData.cultureTimelineConfig === 'object') {
+                flowerReviewData.cultureTimelineConfig = JSON.stringify(flowerReviewData.cultureTimelineConfig)
             }
-            if (flowerReviewData.odeursSecondaires && Array.isArray(flowerReviewData.odeursSecondaires)) {
-                flowerReviewData.odeursSecondaires = JSON.stringify(flowerReviewData.odeursSecondaires)
+            if (flowerReviewData.cultureTimelineData && typeof flowerReviewData.cultureTimelineData === 'object') {
+                flowerReviewData.cultureTimelineData = JSON.stringify(flowerReviewData.cultureTimelineData)
             }
-            if (flowerReviewData.goutsDryPuff && Array.isArray(flowerReviewData.goutsDryPuff)) {
-                flowerReviewData.goutsDryPuff = JSON.stringify(flowerReviewData.goutsDryPuff)
+            if (flowerReviewData.cultureSubstrat && typeof flowerReviewData.cultureSubstrat === 'object') {
+                flowerReviewData.cultureSubstrat = JSON.stringify(flowerReviewData.cultureSubstrat)
             }
-            if (flowerReviewData.goutsInhalation && Array.isArray(flowerReviewData.goutsInhalation)) {
-                flowerReviewData.goutsInhalation = JSON.stringify(flowerReviewData.goutsInhalation)
+            if (flowerReviewData.curingTimelineConfig && typeof flowerReviewData.curingTimelineConfig === 'object') {
+                flowerReviewData.curingTimelineConfig = JSON.stringify(flowerReviewData.curingTimelineConfig)
             }
-            if (flowerReviewData.goutsExpiration && Array.isArray(flowerReviewData.goutsExpiration)) {
-                flowerReviewData.goutsExpiration = JSON.stringify(flowerReviewData.goutsExpiration)
+            if (flowerReviewData.curingTimelineData && typeof flowerReviewData.curingTimelineData === 'object') {
+                flowerReviewData.curingTimelineData = JSON.stringify(flowerReviewData.curingTimelineData)
             }
-            if (flowerReviewData.effetsSelectionnes && Array.isArray(flowerReviewData.effetsSelectionnes)) {
-                flowerReviewData.effetsSelectionnes = JSON.stringify(flowerReviewData.effetsSelectionnes)
+            if (flowerReviewData.parentage && typeof flowerReviewData.parentage === 'object') {
+                flowerReviewData.parentage = JSON.stringify(flowerReviewData.parentage)
             }
+
+            // Supprimer les champs qui ne sont pas dans le schéma Prisma
+            delete flowerReviewData.cultivars
+            delete flowerReviewData.status
 
             const updatedFlowerReview = await tx.flowerReview.update({
                 where: { reviewId: req.params.id },
@@ -706,13 +875,22 @@ router.put('/:id',
         formattedReview.flowerData = {
             ...result.flowerReview,
             terpeneProfile: result.flowerReview.terpeneProfile ? JSON.parse(result.flowerReview.terpeneProfile) : null,
-            nuancierColors: result.flowerReview.nuancierColors ? JSON.parse(result.flowerReview.nuancierColors) : null,
-            odeursDominantes: result.flowerReview.odeursDominantes ? JSON.parse(result.flowerReview.odeursDominantes) : null,
-            odeursSecondaires: result.flowerReview.odeursSecondaires ? JSON.parse(result.flowerReview.odeursSecondaires) : null,
-            goutsDryPuff: result.flowerReview.goutsDryPuff ? JSON.parse(result.flowerReview.goutsDryPuff) : null,
-            goutsInhalation: result.flowerReview.goutsInhalation ? JSON.parse(result.flowerReview.goutsInhalation) : null,
-            goutsExpiration: result.flowerReview.goutsExpiration ? JSON.parse(result.flowerReview.goutsExpiration) : null,
-            effetsSelectionnes: result.flowerReview.effetsSelectionnes ? JSON.parse(result.flowerReview.effetsSelectionnes) : null
+            couleurNuancier: result.flowerReview.couleurNuancier ? JSON.parse(result.flowerReview.couleurNuancier) : null,
+            notesOdeursDominantes: result.flowerReview.notesOdeursDominantes ? JSON.parse(result.flowerReview.notesOdeursDominantes) : null,
+            notesOdeursSecondaires: result.flowerReview.notesOdeursSecondaires ? JSON.parse(result.flowerReview.notesOdeursSecondaires) : null,
+            dryPuffNotes: result.flowerReview.dryPuffNotes ? JSON.parse(result.flowerReview.dryPuffNotes) : null,
+            inhalationNotes: result.flowerReview.inhalationNotes ? JSON.parse(result.flowerReview.inhalationNotes) : null,
+            expirationNotes: result.flowerReview.expirationNotes ? JSON.parse(result.flowerReview.expirationNotes) : null,
+            effetsChoisis: result.flowerReview.effetsChoisis ? JSON.parse(result.flowerReview.effetsChoisis) : null,
+            effectProfiles: result.flowerReview.effectProfiles ? JSON.parse(result.flowerReview.effectProfiles) : null,
+            sideEffects: result.flowerReview.sideEffects ? JSON.parse(result.flowerReview.sideEffects) : null,
+            preferredUse: result.flowerReview.preferredUse ? JSON.parse(result.flowerReview.preferredUse) : null,
+            cultureTimelineConfig: result.flowerReview.cultureTimelineConfig ? JSON.parse(result.flowerReview.cultureTimelineConfig) : null,
+            cultureTimelineData: result.flowerReview.cultureTimelineData ? JSON.parse(result.flowerReview.cultureTimelineData) : null,
+            cultureSubstrat: result.flowerReview.cultureSubstrat ? JSON.parse(result.flowerReview.cultureSubstrat) : null,
+            curingTimelineConfig: result.flowerReview.curingTimelineConfig ? JSON.parse(result.flowerReview.curingTimelineConfig) : null,
+            curingTimelineData: result.flowerReview.curingTimelineData ? JSON.parse(result.flowerReview.curingTimelineData) : null,
+            parentage: result.flowerReview.parentage ? JSON.parse(result.flowerReview.parentage) : null
         }
 
         console.log('✅ FlowerReview updated successfully:', formattedReview.id)

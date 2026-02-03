@@ -7,6 +7,7 @@ import OrchardPanel from '../../../components/shared/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
+import { flattenFlowerFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -93,29 +94,14 @@ export default function CreateFlowerReview() {
         try {
             setSaving(true)
 
-            // Préparer les données pour l'upload
-            const reviewFormData = new FormData()
+            // Aplatir les données du formulaire avec l'utilitaire
+            const flatData = flattenFlowerFormData(formData)
 
-            // Ajouter toutes les données du formulaire
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
+            // Créer le FormData avec les données aplaties
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft')
 
-            // Ajouter les photos
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
-
-            reviewFormData.append('status', 'draft')
+            // Debug: log les données envoyées
+            console.log('📤 Sending flattened data:', flatData)
 
             let savedReview
             if (id) {
@@ -130,8 +116,8 @@ export default function CreateFlowerReview() {
                 navigate(`/edit/flower/${savedReview.id}`)
             }
         } catch (error) {
-            toast.error('Erreur lors de la sauvegarde')
-            console.error(error)
+            toast.error('Erreur lors de la sauvegarde: ' + (error.message || 'Erreur inconnue'))
+            console.error('Save error:', error)
         } finally {
             setSaving(false)
         }
