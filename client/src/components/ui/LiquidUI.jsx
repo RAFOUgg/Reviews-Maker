@@ -394,7 +394,7 @@ export function LiquidSelect({
     }
 
     return (
-        <div className={`flex flex-col gap-2 ${wrapperClassName}`} ref={containerRef}>
+        <div className={`flex flex-col gap-2 relative ${wrapperClassName}`} ref={containerRef}>
             {label && (
                 <label className="text-[13px] font-medium text-white/60 ml-1">
                     {label}

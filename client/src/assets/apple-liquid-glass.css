@@ -896,8 +896,8 @@ input[type="range"].liquid-range::-moz-range-thumb {
     top: calc(100% + 8px);
     left: 0;
     right: 0;
-    z-index: 100;
-    background: rgba(20, 20, 30, 0.95);
+    z-index: 9999;
+    background: rgba(20, 20, 30, 0.98);
     border: 1px solid rgba(255, 255, 255, 0.12);
     border-radius: 16px;
     backdrop-filter: blur(24px) saturate(150%);
@@ -905,6 +905,8 @@ input[type="range"].liquid-range::-moz-range-thumb {
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4),
         0 0 0 1px rgba(255, 255, 255, 0.05) inset;
     overflow: hidden;
+    max-height: 300px;
+    overflow-y: auto;
 }
 
 .liquid-select-search {
