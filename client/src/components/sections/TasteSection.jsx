@@ -109,20 +109,7 @@ export default function TasteSection({ productType, formData = {}, handleChange 
                 />
             </div>
 
-            {/* Résumé */}
-            <div className="p-4 bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-xl border border-amber-500/20 space-y-2">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    Résumé gustatif
-                </h4>
-                <div className="text-sm text-white/60 space-y-1">
-                    <p><span className="font-semibold text-white/80">Intensité :</span> {TASTE_INTENSITY_LEVELS[intensity - 1]?.label || `${intensity}/10`}</p>
-                    <p><span className="font-semibold text-white/80">Agressivité :</span> {AGGRESSIVENESS_LEVELS[aggressiveness - 1]?.label || `${aggressiveness}/10`}</p>
-                    <p><span className="font-semibold text-white/80">Dry puff :</span> {dryPuffNotes.length} note(s)</p>
-                    <p><span className="font-semibold text-white/80">Inhalation :</span> {inhalationNotes.length} note(s)</p>
-                    <p><span className="font-semibold text-white/80">Expiration :</span> {exhalationNotes.length} note(s)</p>
-                </div>
-            </div>
+
 
         </LiquidCard>
     );

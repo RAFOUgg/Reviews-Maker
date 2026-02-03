@@ -248,38 +248,7 @@ export default function VisualSection({ productType, formData = {}, handleChange
                 </div>
             </div>
 
-            {/* Résumé visuel */}
-            <div className="mt-6 p-4 bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-xl border border-violet-500/30">
-                <h4 className="text-sm font-semibold mb-3 text-white flex items-center gap-2">📊 Résumé Visuel</h4>
-                <div className="grid grid-cols-2 gap-3 text-sm">
-                    {selectedColors.length > 0 && (
-                        <div>
-                            <span className="text-white/50">Couleurs :</span>
-                            <span className="ml-2 font-bold text-white">{selectedColors.length}</span>
-                        </div>
-                    )}
-                    <div>
-                        <span className="text-white/50">Densité :</span>
-                        <span className="ml-2 font-bold text-white">{density}/10</span>
-                    </div>
-                    {productType === 'Fleur' && (
-                        <div>
-                            <span className="text-white/50">Trichomes :</span>
-                            <span className="ml-2 font-bold text-white">{trichomes}/10</span>
-                        </div>
-                    )}
-                    {isHashOrConcentrate && (
-                        <div>
-                            <span className="text-white/50">Transparence :</span>
-                            <span className="ml-2 font-bold text-white">{transparency}/10</span>
-                        </div>
-                    )}
-                    <div>
-                        <span className="text-white/50">Pureté :</span>
-                        <span className="ml-2 font-bold text-green-400">{Math.round((mold + seeds) / 2)}/10</span>
-                    </div>
-                </div>
-            </div>
+
         </LiquidCard>
     );
 }

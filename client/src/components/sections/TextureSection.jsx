@@ -284,43 +284,7 @@ export default function TextureSection({ productType, data: directData, onChange
                 </div>
             )}
 
-            {/* Résumé */}
-            <div className="p-4 bg-gradient-to-br from-pink-500/10 to-purple-500/10 rounded-xl border border-pink-500/20 space-y-2">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-pink-400" />
-                    Résumé texture
-                </h4>
-                <div className="text-sm text-white/60 space-y-1">
-                    <p><span className="font-semibold text-white/80">Dureté :</span> {TEXTURE_LABELS.hardness[hardness]} ({hardness}/10)</p>
-                    <p><span className="font-semibold text-white/80">Densité :</span> {TEXTURE_LABELS.density[density]} ({density}/10)</p>
-                    <p><span className="font-semibold text-white/80">Collant :</span> {TEXTURE_LABELS.stickiness[stickiness]} ({stickiness}/10)</p>
 
-                    {(productType === 'Fleurs' || productType === 'Fleur') && (
-                        <p><span className="font-semibold text-white/80">Élasticité :</span> {TEXTURE_LABELS.elasticity[elasticity]} ({elasticity}/10)</p>
-                    )}
-
-                    {productType === 'Hash' && (
-                        <>
-                            <p><span className="font-semibold text-white/80">Malléabilité :</span> {TEXTURE_LABELS.malleability[malleability]} ({malleability}/10)</p>
-                            <p><span className="font-semibold text-white/80">Friabilité :</span> {TEXTURE_LABELS.friability[friability]} ({friability}/10)</p>
-                        </>
-                    )}
-
-                    {productType === 'Concentré' && (
-                        <p><span className="font-semibold text-white/80">Viscosité :</span> {TEXTURE_LABELS.viscosity[viscosity]} ({viscosity}/10)</p>
-                    )}
-
-                    {(productType === 'Hash' || productType === 'Concentré') && purityScore && (
-                        <>
-                            <p><span className="font-semibold text-white/80">Melting :</span> {TEXTURE_LABELS.melting[melting]} ({melting}/10)</p>
-                            <p><span className="font-semibold text-white/80">Résidus :</span> {TEXTURE_LABELS.residue[residue]} ({residue}/10)</p>
-                            <p className="pt-2 border-t border-white/10">
-                                <span className="font-semibold text-amber-400">Score de pureté :</span> {purityScore}/10
-                            </p>
-                        </>
-                    )}
-                </div>
-            </div>
 
         </LiquidCard>
     );
