@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { EFFECTS_CATEGORIES, getAllEffects, getEffectsByFilter, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../data/effectsCategories';
+import { EFFECTS_CATEGORIES, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../data/effectsCategories';
 import { EXPERIENCE_VALUES } from '../../data/formValues';
-import { Zap, Sparkles, Clock, Filter, Plus, X, Beaker, ChevronDown } from 'lucide-react';
-import { LiquidCard, LiquidChip, LiquidDivider, LiquidButton } from '@/components/ui/LiquidUI';
+import { Zap, Sparkles, Clock, Beaker, ChevronDown } from 'lucide-react';
+import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
+import EffectsWheelPicker from '@/components/shared/charts/EffectsWheelPicker';
 
 /**
  * Section Effets Ressentis + Expérience d'Utilisation (FUSIONNÉE)
@@ -29,8 +30,6 @@ export default function EffectsSection({ productType, data: directData, onChange
     const [intensity, setIntensity] = useState(effectsData?.intensity || 5);
     const [duration, setDuration] = useState(effectsData?.duration || '1-2h');
     const [selectedEffects, setSelectedEffects] = useState(effectsData?.effects || []);
-    const [categoryFilter, setCategoryFilter] = useState(null);
-    const [sentimentFilter, setSentimentFilter] = useState(null);
 
     // EXPÉRIENCE D'UTILISATION
     const [methodeConsommation, setMethodeConsommation] = useState(effectsData?.methodeConsommation || '');
@@ -66,16 +65,6 @@ export default function EffectsSection({ productType, data: directData, onChange
         });
     }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes]);
 
-    const toggleEffect = (effectId) => {
-        setSelectedEffects(prev => {
-            if (prev.includes(effectId)) {
-                return prev.filter(id => id !== effectId);
-            }
-            if (prev.length >= 8) return prev;
-            return [...prev, effectId];
-        });
-    };
-
     const toggleMultiSelect = (key, value) => {
         if (key === 'profilsEffets') {
             setProfilsEffets(prev => {
@@ -95,27 +84,10 @@ export default function EffectsSection({ productType, data: directData, onChange
         }
     };
 
-    const filteredEffects = getEffectsByFilter(categoryFilter, sentimentFilter);
     const profilsFiltres = EXPERIENCE_VALUES.profilsEffets.filter(p => {
         if (filterProfils === 'tous') return true;
         return p.type === filterProfils;
     });
-
-    const getCategoryIcon = (categoryId) => {
-        return EFFECTS_CATEGORIES[categoryId]?.icon || '•';
-    };
-
-    const getEffectBadgeColor = (effect) => {
-        const categoryColor = EFFECTS_CATEGORIES[effect.category]?.color || '#6B7280';
-        // Retourne un gradient basé sur la catégorie et le sentiment
-        if (effect.sentiment === 'negative') {
-            return `from-red-500 to-red-600`;
-        }
-        if (effect.category === 'mental') return `from-purple-500 to-purple-600`;
-        if (effect.category === 'physical') return `from-green-500 to-green-600`;
-        if (effect.category === 'therapeutic') return `from-blue-500 to-blue-600`;
-        return `from-gray-500 to-gray-600`;
-    };
 
     return (
         <LiquidCard glow="cyan" padding="lg" className="space-y-8">
@@ -182,122 +154,14 @@ export default function EffectsSection({ productType, data: directData, onChange
                 </div>
             </div>
 
-            {/* Filtres */}
-            <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                    <Filter className="w-4 h-4 text-cyan-400" />
-                    Filtres
-                </label>
-
-                {/* Filtre par catégorie */}
-                <div className="flex flex-wrap gap-2">
-                    <LiquidChip
-                        active={categoryFilter === null}
-                        color="cyan"
-                        onClick={() => setCategoryFilter(null)}
-                    >
-                        Toutes catégories
-                    </LiquidChip>
-                    {Object.values(EFFECTS_CATEGORIES).map(category => (
-                        <LiquidChip
-                            key={category.id}
-                            active={categoryFilter === category.id}
-                            color="cyan"
-                            onClick={() => setCategoryFilter(category.id)}
-                        >
-                            {category.icon} {category.label}
-                        </LiquidChip>
-                    ))}
-                </div>
-
-                {/* Filtre par sentiment */}
-                <div className="flex flex-wrap gap-2">
-                    <LiquidChip
-                        active={sentimentFilter === null}
-                        color="cyan"
-                        onClick={() => setSentimentFilter(null)}
-                    >
-                        Tous
-                    </LiquidChip>
-                    <LiquidChip
-                        active={sentimentFilter === 'positive'}
-                        color="green"
-                        onClick={() => setSentimentFilter('positive')}
-                    >
-                        ✅ Positifs
-                    </LiquidChip>
-                    <LiquidChip
-                        active={sentimentFilter === 'negative'}
-                        color="pink"
-                        onClick={() => setSentimentFilter('negative')}
-                    >
-                        ⚠️ Négatifs
-                    </LiquidChip>
-                    <LiquidChip
-                        active={sentimentFilter === 'neutral'}
-                        color="purple"
-                        onClick={() => setSentimentFilter('neutral')}
-                    >
-                        ⚕️ Thérapeutiques
-                    </LiquidChip>
-                </div>
-            </div>
-
-            {/* Effets sélectionnés (max 8) */}
-            <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                        <Sparkles className="w-4 h-4 text-cyan-400" />
-                        Effets sélectionnés
-                    </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${selectedEffects.length >= 8 ? 'bg-red-500/20 text-red-400' : 'bg-cyan-500/20 text-cyan-400'}`}>
-                        {selectedEffects.length}/8
-                    </span>
-                </div>
-
-                {/* Badges sélectionnés */}
-                {selectedEffects.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-3 bg-cyan-500/10 rounded-xl border border-cyan-500/20">
-                        {selectedEffects.map(effectId => {
-                            const effect = getAllEffects().find(e => e.id === effectId);
-                            if (!effect) return null;
-                            return (
-                                <LiquidChip
-                                    key={effectId}
-                                    active
-                                    color="cyan"
-                                    onClick={() => toggleEffect(effectId)}
-                                    onRemove={() => toggleEffect(effectId)}
-                                >
-                                    {getCategoryIcon(effect.category)} {effect.name}
-                                </LiquidChip>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-
-            {/* Grille d'effets */}
-            <div className="space-y-3">
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto p-2 bg-white/5 rounded-xl border border-white/10">
-                    {filteredEffects.map(effect => {
-                        const isSelected = selectedEffects.includes(effect.id);
-                        const isDisabled = !isSelected && selectedEffects.length >= 8;
-
-                        return (
-                            <LiquidChip
-                                key={effect.id}
-                                active={isSelected}
-                                color="cyan"
-                                onClick={() => !isDisabled && toggleEffect(effect.id)}
-                                size="sm"
-                            >
-                                {getCategoryIcon(effect.category)} {effect.name}
-                            </LiquidChip>
-                        );
-                    })}
-                </div>
-            </div>
+            {/* Sélecteur d'effets avec le nouveau picker */}
+            <EffectsWheelPicker
+                selectedEffects={selectedEffects}
+                onChange={setSelectedEffects}
+                max={8}
+                title="💥 Sélectionner des effets"
+                helper="Choisissez jusqu'à 8 effets ressentis"
+            />
 
             {/* Résumé */}
             <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-xl border border-cyan-500/20 space-y-2">

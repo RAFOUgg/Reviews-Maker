@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { TASTE_FAMILIES, getAllTasteNotes, TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../../data/tasteNotes';
-import { Coffee, Sparkles, ArrowDown, ArrowUp, Wind, Plus, X } from 'lucide-react';
-import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
+import { TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../../data/tasteNotes';
+import { Coffee, Sparkles } from 'lucide-react';
+import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
+import TasteWheelPicker from '@/components/shared/charts/TasteWheelPicker';
 
 /**
  * Section Goûts pour Hash/Concentrés/Fleurs
@@ -10,7 +11,6 @@ import LiquidSlider from '@/components/ui/LiquidSlider';
  */
 export default function TasteSection({ productType, formData = {}, handleChange }) {
     const data = formData.gouts || {};
-    const [selectedFamily, setSelectedFamily] = useState(null);
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness || 5);
     const [dryPuffNotes, setDryPuffNotes] = useState(data?.dryPuffNotes || []);
@@ -28,98 +28,6 @@ export default function TasteSection({ productType, formData = {}, handleChange 
             exhalationNotes
         });
     }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes, handleChange]);
-
-    const toggleDryPuffNote = (noteId) => {
-        setDryPuffNotes(prev => {
-            if (prev.includes(noteId)) {
-                return prev.filter(id => id !== noteId);
-            }
-            if (prev.length >= 7) return prev;
-            return [...prev, noteId];
-        });
-    };
-
-    const toggleInhalationNote = (noteId) => {
-        setInhalationNotes(prev => {
-            if (prev.includes(noteId)) {
-                return prev.filter(id => id !== noteId);
-            }
-            if (prev.length >= 7) return prev;
-            return [...prev, noteId];
-        });
-    };
-
-    const toggleExhalationNote = (noteId) => {
-        setExhalationNotes(prev => {
-            if (prev.includes(noteId)) {
-                return prev.filter(id => id !== noteId);
-            }
-            if (prev.length >= 7) return prev;
-            return [...prev, noteId];
-        });
-    };
-
-    const allNotes = getAllTasteNotes();
-    const filteredNotes = selectedFamily
-        ? allNotes.filter(note => note.familyId === selectedFamily)
-        : allNotes;
-
-    const NoteSelector = ({ title, icon, notes, toggleNote, maxCount = 7, color }) => {
-        return (
-            <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                        {icon}
-                        {title}
-                    </label>
-                    <span className={`text-xs font-semibold px-3 py-1 rounded-full ${notes.length >= maxCount ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'}`}>
-                        {notes.length}/{maxCount}
-                    </span>
-                </div>
-
-                {/* Notes sélectionnées */}
-                {notes.length > 0 && (
-                    <div className="flex flex-wrap gap-2 p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
-                        {notes.map(noteId => {
-                            const note = allNotes.find(n => n.id === noteId);
-                            if (!note) return null;
-                            return (
-                                <LiquidChip
-                                    key={noteId}
-                                    active
-                                    color="amber"
-                                    onClick={() => toggleNote(noteId)}
-                                    onRemove={() => toggleNote(noteId)}
-                                >
-                                    {note.icon || note.familyIcon} {note.name}
-                                </LiquidChip>
-                            );
-                        })}
-                    </div>
-                )}
-
-                {/* Grille de sélection */}
-                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 max-h-48 overflow-y-auto p-2 bg-white/5 rounded-xl border border-white/10">
-                    {filteredNotes.map(note => {
-                        const isSelected = notes.includes(note.id);
-                        const isDisabled = !isSelected && notes.length >= maxCount;
-
-                        return (
-                            <LiquidChip
-                                key={note.id}
-                                active={isSelected}
-                                color="amber"
-                                onClick={() => !isDisabled && toggleNote(note.id)}
-                                size="sm"
-                            >
-                                {note.icon || note.familyIcon} {note.name}
-                            </LiquidChip>
-                        );
-                    })}
-                </div>
-            </div>
-        );
-    };
 
     return (
         <LiquidCard glow="amber" padding="lg" className="space-y-8">
@@ -166,63 +74,38 @@ export default function TasteSection({ productType, formData = {}, handleChange 
                 </div>
             </div>
 
-            {/* Filtre par famille */}
-            <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    Filtrer par famille
-                </label>
-                <div className="flex flex-wrap gap-2">
-                    <LiquidChip
-                        active={selectedFamily === null}
-                        color="amber"
-                        onClick={() => setSelectedFamily(null)}
-                    >
-                        Toutes
-                    </LiquidChip>
-                    {Object.values(TASTE_FAMILIES).map(family => (
-                        <LiquidChip
-                            key={family.id}
-                            active={selectedFamily === family.id}
-                            color="amber"
-                            onClick={() => setSelectedFamily(family.id)}
-                        >
-                            {family.icon} {family.label}
-                        </LiquidChip>
-                    ))}
-                </div>
-            </div>
+            {/* Filtre par famille - Supprimé : intégré dans les pickers */}
 
             {/* Dry Puff / Tirage à sec (max 7) */}
             <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <NoteSelector
-                    title="Dry puff / Tirage à sec"
-                    icon={<Wind className="w-4 h-4 text-purple-400" />}
-                    notes={dryPuffNotes}
-                    toggleNote={toggleDryPuffNote}
-                    color="purple"
+                <TasteWheelPicker
+                    selectedTastes={dryPuffNotes}
+                    onChange={setDryPuffNotes}
+                    max={7}
+                    title="🌬️ Dry puff / Tirage à sec"
+                    helper="Notes perçues avant la combustion"
                 />
             </div>
 
             {/* Inhalation (max 7) */}
             <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
-                <NoteSelector
-                    title="Inhalation"
-                    icon={<ArrowDown className="w-4 h-4 text-green-400" />}
-                    notes={inhalationNotes}
-                    toggleNote={toggleInhalationNote}
-                    color="green"
+                <TasteWheelPicker
+                    selectedTastes={inhalationNotes}
+                    onChange={setInhalationNotes}
+                    max={7}
+                    title="⬇️ Inhalation"
+                    helper="Notes perçues à l'inhalation"
                 />
             </div>
 
             {/* Expiration / Arrière-goût (max 7) */}
             <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
-                <NoteSelector
-                    title="Expiration / Arrière-goût"
-                    icon={<ArrowUp className="w-4 h-4 text-orange-400" />}
-                    notes={exhalationNotes}
-                    toggleNote={toggleExhalationNote}
-                    color="orange"
+                <TasteWheelPicker
+                    selectedTastes={exhalationNotes}
+                    onChange={setExhalationNotes}
+                    max={7}
+                    title="⬆️ Expiration / Arrière-goût"
+                    helper="Notes perçues à l'expiration et en rétro-olfaction"
                 />
             </div>
 
