@@ -789,7 +789,7 @@ router.post('/templates/:id/share', requireAuth, asyncHandler(async (req, res) =
     // Pour l'instant, stocker dans les tags comme solution temporaire
     const existingTags = template.tags ? JSON.parse(template.tags) : [];
     const newTags = [...existingTags.filter(t => !t.startsWith('share:')), `share:${shareCode}`];
-    
+
     await prisma.savedTemplate.update({
         where: { id: template.id },
         data: {
@@ -856,9 +856,9 @@ router.post('/templates/default', requireAuth, asyncHandler(async (req, res) => 
 
     // Stocker la préférence utilisateur (on pourrait utiliser une table User preferences)
     // Pour l'instant, on va simplement renvoyer une confirmation
-    res.json({ 
-        success: true, 
-        defaultId: isPredefined ? `predefined:${templateId}` : templateId 
+    res.json({
+        success: true,
+        defaultId: isPredefined ? `predefined:${templateId}` : templateId
     });
 }));
 

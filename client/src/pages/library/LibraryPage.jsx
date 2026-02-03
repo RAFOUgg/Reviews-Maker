@@ -14,8 +14,8 @@ import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
-import { 
-    Library, FileText, Leaf, Palette, Database, BarChart3, 
+import {
+    Library, FileText, Leaf, Palette, Database, BarChart3,
     Grid3X3, List, Calendar, Plus, Settings, Download, Upload,
     ChevronRight
 } from 'lucide-react'
@@ -30,45 +30,45 @@ import StatsTab from './tabs/StatsTab'
 
 // Configuration des onglets
 const TABS = [
-    { 
-        id: 'reviews', 
-        label: 'Mes Reviews', 
-        icon: FileText, 
+    {
+        id: 'reviews',
+        label: 'Mes Reviews',
+        icon: FileText,
         all: true,
         description: 'Gérez vos reviews sauvegardées'
     },
-    { 
-        id: 'cultivars', 
-        label: 'Cultivars & Génétiques', 
-        icon: Leaf, 
+    {
+        id: 'cultivars',
+        label: 'Cultivars & Génétiques',
+        icon: Leaf,
         producerOnly: true,
         description: 'Bibliothèque de cultivars et arbres généalogiques'
     },
-    { 
-        id: 'templates', 
-        label: 'Templates Export', 
-        icon: Palette, 
+    {
+        id: 'templates',
+        label: 'Templates Export',
+        icon: Palette,
         all: true,
         description: 'Templates d\'export prédéfinis et personnalisés'
     },
-    { 
-        id: 'watermarks', 
-        label: 'Filigranes', 
-        icon: Settings, 
+    {
+        id: 'watermarks',
+        label: 'Filigranes',
+        icon: Settings,
         all: true,
         description: 'Gérez vos filigranes personnalisés'
     },
-    { 
-        id: 'data', 
-        label: 'Données Récurrentes', 
-        icon: Database, 
+    {
+        id: 'data',
+        label: 'Données Récurrentes',
+        icon: Database,
         producerOnly: true,
         description: 'Substrats, engrais, techniques sauvegardés'
     },
-    { 
-        id: 'stats', 
-        label: 'Statistiques', 
-        icon: BarChart3, 
+    {
+        id: 'stats',
+        label: 'Statistiques',
+        icon: BarChart3,
         all: true,
         description: 'Statistiques de votre bibliothèque'
     },
@@ -80,7 +80,7 @@ export default function LibraryPage() {
     const { user } = useStore()
     const [activeTab, setActiveTab] = useState('reviews')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
-    
+
     // Vérifier authentification
     useEffect(() => {
         if (!user) {
@@ -148,16 +148,15 @@ export default function LibraryPage() {
                         {availableTabs.map((tab) => {
                             const Icon = tab.icon
                             const isActive = activeTab === tab.id
-                            
+
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${
-                                        isActive 
-                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
+                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                                    }`}
+                                        }`}
                                     title={sidebarCollapsed ? tab.label : undefined}
                                 >
                                     <Icon className={`w-5 h-5 ${isActive ? 'text-purple-400' : ''}`} />
@@ -178,7 +177,7 @@ export default function LibraryPage() {
                     <div className="p-4 border-t border-white/10 space-y-2">
                         {!sidebarCollapsed && (
                             <>
-                                <button 
+                                <button
                                     onClick={() => navigate('/create')}
                                     className="w-full flex items-center gap-2 px-3 py-2 bg-purple-600 hover:bg-purple-500 text-white rounded-xl transition-colors text-sm font-medium"
                                 >
@@ -186,7 +185,7 @@ export default function LibraryPage() {
                                     Nouvelle Review
                                 </button>
                                 <div className="flex gap-2">
-                                    <button 
+                                    <button
                                         onClick={() => toast.info('Export bibliothèque bientôt disponible')}
                                         className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors text-xs"
                                         title="Exporter bibliothèque"
@@ -194,7 +193,7 @@ export default function LibraryPage() {
                                         <Download className="w-3.5 h-3.5" />
                                         Export
                                     </button>
-                                    <button 
+                                    <button
                                         onClick={() => toast.info('Import bibliothèque bientôt disponible')}
                                         className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 bg-white/5 hover:bg-white/10 text-white/60 hover:text-white rounded-lg transition-colors text-xs"
                                         title="Importer bibliothèque"

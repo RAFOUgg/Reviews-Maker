@@ -14,8 +14,8 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
-import { 
-    Grid3X3, List, Calendar, Eye, EyeOff, Edit, Trash2, Copy, 
+import {
+    Grid3X3, List, Calendar, Eye, EyeOff, Edit, Trash2, Copy,
     ExternalLink, Clock, Search, Filter, SlidersHorizontal,
     Flower2, Hash, FlaskConical, Cookie, Plus, MoreVertical, FileText
 } from 'lucide-react'
@@ -44,7 +44,7 @@ const VISIBILITY_FILTERS = [
 export default function ReviewsTab() {
     const navigate = useNavigate()
     const toast = useToast()
-    
+
     // État
     const [reviews, setReviews] = useState([])
     const [loading, setLoading] = useState(true)
@@ -173,8 +173,8 @@ export default function ReviewsTab() {
                             {/* Image */}
                             <div className="w-16 h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
                                 {review.mainImage ? (
-                                    <img 
-                                        src={`/api/images/${review.mainImage}`} 
+                                    <img
+                                        src={`/api/images/${review.mainImage}`}
                                         alt={review.holderName}
                                         className="w-full h-full object-cover"
                                     />
@@ -189,9 +189,8 @@ export default function ReviewsTab() {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <h3 className="font-bold text-white truncate">{review.holderName}</h3>
-                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${
-                                        review.isPublic ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'
-                                    }`}>
+                                    <span className={`px-2 py-0.5 rounded text-xs font-bold ${review.isPublic ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'
+                                        }`}>
                                         {review.isPublic ? 'Publique' : 'Privée'}
                                     </span>
                                 </div>
@@ -264,8 +263,8 @@ export default function ReviewsTab() {
                     {/* Image */}
                     <div className="aspect-square bg-white/5 relative overflow-hidden">
                         {review.mainImage ? (
-                            <img 
-                                src={`/api/images/${review.mainImage}`} 
+                            <img
+                                src={`/api/images/${review.mainImage}`}
                                 alt={review.holderName}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -274,7 +273,7 @@ export default function ReviewsTab() {
                                 <TypeIcon className="w-12 h-12 text-white/20" />
                             </div>
                         )}
-                        
+
                         {/* Overlay actions */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
                             <div className="absolute bottom-2 left-2 right-2 flex justify-center gap-1">
@@ -312,9 +311,8 @@ export default function ReviewsTab() {
                         </div>
 
                         {/* Badge visibilité */}
-                        <div className={`absolute top-2 right-2 px-2 py-1 rounded-lg backdrop-blur text-xs font-bold ${
-                            review.isPublic ? 'bg-green-500/80 text-white' : 'bg-white/20 text-white/80'
-                        }`}>
+                        <div className={`absolute top-2 right-2 px-2 py-1 rounded-lg backdrop-blur text-xs font-bold ${review.isPublic ? 'bg-green-500/80 text-white' : 'bg-white/20 text-white/80'
+                            }`}>
                             {review.isPublic ? 'Publique' : 'Privée'}
                         </div>
                     </div>
@@ -335,9 +333,9 @@ export default function ReviewsTab() {
     // Vue Timeline
     const renderTimeline = () => {
         const groupedByDate = filteredReviews.reduce((acc, review) => {
-            const date = new Date(review.createdAt).toLocaleDateString('fr-FR', { 
-                year: 'numeric', 
-                month: 'long' 
+            const date = new Date(review.createdAt).toLocaleDateString('fr-FR', {
+                year: 'numeric',
+                month: 'long'
             })
             if (!acc[date]) acc[date] = []
             acc[date].push(review)
@@ -379,19 +377,18 @@ export default function ReviewsTab() {
                     {PRODUCT_TYPES.map((type) => {
                         const Icon = type.icon
                         const isActive = typeFilter === type.id
-                        const count = type.id === 'all' 
-                            ? reviews.length 
+                        const count = type.id === 'all'
+                            ? reviews.length
                             : reviews.filter(r => r.type === type.id).length
 
                         return (
                             <button
                                 key={type.id}
                                 onClick={() => setTypeFilter(type.id)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
-                                    isActive 
-                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30' 
+                                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
+                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                         : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
-                                }`}
+                                    }`}
                             >
                                 {Icon && <Icon className="w-4 h-4" />}
                                 <span className="text-sm font-medium">{type.label}</span>
@@ -439,11 +436,10 @@ export default function ReviewsTab() {
                                 <button
                                     key={mode.id}
                                     onClick={() => setViewMode(mode.id)}
-                                    className={`p-2 rounded-lg transition-colors ${
-                                        viewMode === mode.id 
-                                            ? 'bg-purple-500 text-white' 
+                                    className={`p-2 rounded-lg transition-colors ${viewMode === mode.id
+                                            ? 'bg-purple-500 text-white'
                                             : 'text-white/50 hover:text-white'
-                                    }`}
+                                        }`}
                                     title={mode.label}
                                 >
                                     <Icon className="w-4 h-4" />
@@ -465,8 +461,8 @@ export default function ReviewsTab() {
                             {reviews.length === 0 ? 'Aucune review' : 'Aucun résultat'}
                         </h3>
                         <p className="text-white/50 mb-6">
-                            {reviews.length === 0 
-                                ? 'Commencez par créer votre première review' 
+                            {reviews.length === 0
+                                ? 'Commencez par créer votre première review'
                                 : 'Essayez de modifier vos filtres de recherche'
                             }
                         </p>
@@ -484,8 +480,8 @@ export default function ReviewsTab() {
             ) : viewMode === 'timeline' ? (
                 renderTimeline()
             ) : (
-                <div className={viewMode === 'grid' 
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' 
+                <div className={viewMode === 'grid'
+                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
                     : 'space-y-2'
                 }>
                     <AnimatePresence>

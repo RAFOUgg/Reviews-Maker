@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
-import { 
+import {
     Database, Plus, Trash2, Edit, Save, X, Check,
     Leaf, Droplets, Wrench, Lightbulb, ChevronDown, ChevronRight,
     Package, Thermometer, Wind
@@ -96,7 +96,7 @@ const DATA_CATEGORIES = [
 
 export default function DataTab() {
     const toast = useToast()
-    
+
     const [savedData, setSavedData] = useState({})
     const [loading, setLoading] = useState(true)
     const [expandedCategory, setExpandedCategory] = useState('substrats')
@@ -161,7 +161,7 @@ export default function DataTab() {
     const saveItem = async (categoryId) => {
         const category = DATA_CATEGORIES.find(c => c.id === categoryId)
         const requiredFields = category.fields.filter(f => f.required)
-        
+
         for (const field of requiredFields) {
             if (!formData[field.key]?.trim()) {
                 toast.error(`Le champ "${field.label}" est requis`)
@@ -170,7 +170,7 @@ export default function DataTab() {
         }
 
         try {
-            const url = editingItem 
+            const url = editingItem
                 ? `/api/library/data/${editingItem.item.id}`
                 : '/api/library/data'
 
@@ -260,16 +260,15 @@ export default function DataTab() {
                                     type="button"
                                     onClick={() => {
                                         const current = formData[field.key] || []
-                                        const updated = selected 
+                                        const updated = selected
                                             ? current.filter(v => v !== opt)
                                             : [...current, opt]
                                         setFormData({ ...formData, [field.key]: updated })
                                     }}
-                                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${
-                                        selected 
-                                            ? 'bg-purple-500 text-white' 
+                                    className={`px-3 py-2 rounded-lg text-sm transition-colors ${selected
+                                            ? 'bg-purple-500 text-white'
                                             : 'bg-white/5 text-white/60 hover:bg-white/10'
-                                    }`}
+                                        }`}
                                 >
                                     {opt}
                                 </button>
@@ -407,7 +406,7 @@ export default function DataTab() {
                                     ) : (
                                         <div className="space-y-2">
                                             {items.map((item) => (
-                                                <div 
+                                                <div
                                                     key={item.id}
                                                     className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                                                 >

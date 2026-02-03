@@ -13,7 +13,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard } from '@/components/ui/LiquidUI'
 import { motion } from 'framer-motion'
-import { 
+import {
     BarChart3, TrendingUp, Eye, Heart, MessageCircle, Share2,
     FileText, Download, Flower2, Hash, FlaskConical, Cookie,
     Star, Calendar, Award, Target, Activity, Users
@@ -29,7 +29,7 @@ const TYPE_ICONS = {
 
 export default function StatsTab({ userTier = 'amateur' }) {
     const toast = useToast()
-    
+
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
     const [timeRange, setTimeRange] = useState('all') // 'week', 'month', 'year', 'all'
@@ -161,7 +161,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                                 <span className="text-white/50">{count} ({percentage}%)</span>
                             </div>
                             <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-                                <motion.div 
+                                <motion.div
                                     initial={{ width: 0 }}
                                     animate={{ width: `${percentage}%` }}
                                     transition={{ duration: 0.5, delay: 0.2 }}
@@ -213,11 +213,10 @@ export default function StatsTab({ userTier = 'amateur' }) {
                         <button
                             key={opt.id}
                             onClick={() => setTimeRange(opt.id)}
-                            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                                timeRange === opt.id 
-                                    ? 'bg-purple-500 text-white' 
+                            className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${timeRange === opt.id
+                                    ? 'bg-purple-500 text-white'
                                     : 'text-white/50 hover:text-white'
-                            }`}
+                                }`}
                         >
                             {opt.label}
                         </button>
@@ -227,7 +226,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
 
             {/* Stats principales */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <StatCard 
+                <StatCard
                     icon={FileText}
                     label="Reviews"
                     value={stats.reviews.total}
@@ -235,7 +234,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                     color="purple"
                     trend={15}
                 />
-                <StatCard 
+                <StatCard
                     icon={Download}
                     label="Exports"
                     value={stats.exports.total}
@@ -243,14 +242,14 @@ export default function StatsTab({ userTier = 'amateur' }) {
                     color="blue"
                     trend={8}
                 />
-                <StatCard 
+                <StatCard
                     icon={Eye}
                     label="Vues totales"
                     value={stats.engagement.views}
                     color="green"
                     trend={22}
                 />
-                <StatCard 
+                <StatCard
                     icon={Heart}
                     label="J'aime reçus"
                     value={stats.engagement.likes}
@@ -318,7 +317,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                         </div>
                     </div>
                     <div className="mt-4 h-2 bg-white/5 rounded-full overflow-hidden">
-                        <div 
+                        <div
                             className="h-full bg-amber-500 rounded-full"
                             style={{ width: `${(stats.ratings.given.average / 10) * 100}%` }}
                         />
@@ -340,7 +339,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                         </div>
                     </div>
                     <div className="mt-4 h-2 bg-white/5 rounded-full overflow-hidden">
-                        <div 
+                        <div
                             className="h-full bg-green-500 rounded-full"
                             style={{ width: `${(stats.ratings.received.average / 10) * 100}%` }}
                         />
@@ -354,7 +353,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                     <TrendingUp className="w-4 h-4 text-purple-400" />
                     Top reviews
                 </h3>
-                
+
                 {stats.topReviews.length === 0 ? (
                     <p className="text-center text-white/40 py-8">
                         Publiez des reviews pour voir votre classement
@@ -366,15 +365,14 @@ export default function StatsTab({ userTier = 'amateur' }) {
                             const Icon = config.icon
 
                             return (
-                                <div 
+                                <div
                                     key={review.id}
                                     className="flex items-center gap-4 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                                 >
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${
-                                        index === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                        index === 1 ? 'bg-gray-400/20 text-gray-400' :
-                                        'bg-orange-700/20 text-orange-600'
-                                    }`}>
+                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                            index === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                                'bg-orange-700/20 text-orange-600'
+                                        }`}>
                                         #{index + 1}
                                     </div>
                                     <div className={`w-10 h-10 rounded-lg bg-${config.color}-500/20 flex items-center justify-center`}>
@@ -427,7 +425,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                         <div>
                             <h3 className="font-bold text-white mb-1">Statistiques Producteur</h3>
                             <p className="text-sm text-white/60">
-                                En tant que Producteur, vous avez accès à des statistiques avancées sur vos cultures, 
+                                En tant que Producteur, vous avez accès à des statistiques avancées sur vos cultures,
                                 rendements et évolutions. Consultez l'onglet PipeLine pour plus de détails.
                             </p>
                         </div>

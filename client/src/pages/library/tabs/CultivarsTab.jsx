@@ -12,9 +12,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
-import { 
+import {
     Flower2, Plus, Trash2, Edit, Eye, GitBranch, Search,
-    Filter, Grid3X3, List, FolderTree, Dna, Beaker, 
+    Filter, Grid3X3, List, FolderTree, Dna, Beaker,
     X, Check, ChevronRight, Tag, Calendar, User
 } from 'lucide-react'
 
@@ -29,7 +29,7 @@ const CULTIVAR_TYPES = [
 
 export default function CultivarsTab({ userTier = 'producer' }) {
     const toast = useToast()
-    
+
     const [cultivars, setCultivars] = useState([])
     const [phenoHuntProjects, setPhenoHuntProjects] = useState([])
     const [loading, setLoading] = useState(true)
@@ -61,7 +61,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     const fetchData = useCallback(async () => {
         try {
             setLoading(true)
-            
+
             // Charger cultivars
             const cultivarsRes = await fetch('/api/library/cultivars', {
                 credentials: 'include'
@@ -154,7 +154,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         }
 
         try {
-            const url = editingCultivar 
+            const url = editingCultivar
                 ? `/api/library/cultivars/${editingCultivar.id}`
                 : '/api/library/cultivars'
 
@@ -349,9 +349,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                             <h3 className="font-bold text-white">{project.name}</h3>
                             <p className="text-sm text-white/50">{project.cultivarsCount || 0} cultivars</p>
                         </div>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${
-                            project.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'
-                        }`}>
+                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${project.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'
+                            }`}>
                             {project.status === 'active' ? 'En cours' : 'Terminé'}
                         </span>
                     </div>
@@ -389,11 +388,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             <div className="flex gap-4 border-b border-white/10 pb-4">
                 <button
                     onClick={() => setActiveTab('library')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                        activeTab === 'library'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'library'
                             ? 'bg-green-500/20 text-green-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
+                        }`}
                 >
                     <FolderTree className="w-4 h-4" />
                     Bibliothèque
@@ -401,11 +399,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 </button>
                 <button
                     onClick={() => setActiveTab('phenohunt')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                        activeTab === 'phenohunt'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'phenohunt'
                             ? 'bg-amber-500/20 text-amber-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
+                        }`}
                 >
                     <Beaker className="w-4 h-4" />
                     Projets PhenoHunt
@@ -421,19 +418,18 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         <div className="flex flex-wrap gap-2">
                             {CULTIVAR_TYPES.map((type) => {
                                 const isActive = typeFilter === type.id
-                                const count = type.id === 'all' 
-                                    ? cultivars.length 
+                                const count = type.id === 'all'
+                                    ? cultivars.length
                                     : cultivars.filter(c => c.type === type.id).length
 
                                 return (
                                     <button
                                         key={type.id}
                                         onClick={() => setTypeFilter(type.id)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${
-                                            isActive 
+                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
                                                 ? `bg-${type.color}-500/20 text-${type.color}-400 border border-${type.color}-500/30`
                                                 : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
-                                        }`}
+                                            }`}
                                     >
                                         <span className="text-sm font-medium">{type.label}</span>
                                         <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? `bg-${type.color}-500/30` : 'bg-white/10'}`}>
@@ -462,17 +458,15 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                             <div className="flex bg-white/5 rounded-xl p-1 border border-white/10">
                                 <button
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg transition-colors ${
-                                        viewMode === 'grid' ? 'bg-green-500 text-white' : 'text-white/50 hover:text-white'
-                                    }`}
+                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-green-500 text-white' : 'text-white/50 hover:text-white'
+                                        }`}
                                 >
                                     <Grid3X3 className="w-4 h-4" />
                                 </button>
                                 <button
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg transition-colors ${
-                                        viewMode === 'list' ? 'bg-green-500 text-white' : 'text-white/50 hover:text-white'
-                                    }`}
+                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-green-500 text-white' : 'text-white/50 hover:text-white'
+                                        }`}
                                 >
                                     <List className="w-4 h-4" />
                                 </button>
@@ -619,8 +613,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                     {cultivars.length === 0 ? 'Aucun cultivar' : 'Aucun résultat'}
                                 </h3>
                                 <p className="text-white/50 mb-6">
-                                    {cultivars.length === 0 
-                                        ? 'Commencez par ajouter votre premier cultivar' 
+                                    {cultivars.length === 0
+                                        ? 'Commencez par ajouter votre premier cultivar'
                                         : 'Essayez de modifier vos filtres'
                                     }
                                 </p>
@@ -636,8 +630,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                             </div>
                         </LiquidCard>
                     ) : (
-                        <div className={viewMode === 'grid' 
-                            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' 
+                        <div className={viewMode === 'grid'
+                            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
                             : 'space-y-2'
                         }>
                             <AnimatePresence>

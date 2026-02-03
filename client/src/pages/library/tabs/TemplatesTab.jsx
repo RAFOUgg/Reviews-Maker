@@ -12,9 +12,9 @@ import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
-import { 
-    Layout, LayoutGrid, LayoutList, Copy, Trash2, Eye, Star, 
-    Share2, Download, Plus, Check, Lock, Sparkles, 
+import {
+    Layout, LayoutGrid, LayoutList, Copy, Trash2, Eye, Star,
+    Share2, Download, Plus, Check, Lock, Sparkles,
     Smartphone, Monitor, FileText, Settings2
 } from 'lucide-react'
 
@@ -80,7 +80,7 @@ const TIER_CONFIG = {
 
 export default function TemplatesTab({ userTier = 'amateur' }) {
     const toast = useToast()
-    
+
     const [savedTemplates, setSavedTemplates] = useState([])
     const [loading, setLoading] = useState(true)
     const [defaultTemplateId, setDefaultTemplateId] = useState(null)
@@ -127,9 +127,9 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify({ 
-                    templateId, 
-                    isPredefined 
+                body: JSON.stringify({
+                    templateId,
+                    isPredefined
                 })
             })
 
@@ -226,9 +226,9 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
             >
-                <LiquidCard 
-                    glow={isDefault ? 'purple' : 'none'} 
-                    padding="none" 
+                <LiquidCard
+                    glow={isDefault ? 'purple' : 'none'}
+                    padding="none"
                     className={`overflow-hidden ${!accessible ? 'opacity-60' : ''} ${isDefault ? 'ring-2 ring-purple-500' : ''}`}
                 >
                     {/* Preview */}
@@ -263,7 +263,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                     <div className="p-4">
                         <h3 className="font-bold text-white mb-1">{template.name}</h3>
                         <p className="text-sm text-white/50 mb-3">{template.description}</p>
-                        
+
                         {/* Formats */}
                         <div className="flex flex-wrap gap-1 mb-4">
                             {(Array.isArray(template.format) ? template.format : [template.format]).map(f => (
@@ -320,8 +320,8 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
             >
-                <LiquidCard 
-                    glow={isDefault ? 'purple' : 'none'} 
+                <LiquidCard
+                    glow={isDefault ? 'purple' : 'none'}
                     padding="none"
                     className={`overflow-hidden ${isDefault ? 'ring-2 ring-purple-500' : ''}`}
                 >
@@ -359,11 +359,10 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setAsDefault(template.id, false)}
-                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                                    isDefault 
-                                        ? 'bg-purple-500/20 text-purple-400' 
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${isDefault
+                                        ? 'bg-purple-500/20 text-purple-400'
                                         : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                                }`}
+                                    }`}
                             >
                                 {isDefault ? '✓ Défaut' : 'Définir'}
                             </button>
@@ -444,7 +443,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                     Mes templates personnalisés
                     <span className="text-sm font-normal text-white/50">({savedTemplates.length})</span>
                 </h2>
-                
+
                 {savedTemplates.length === 0 ? (
                     <LiquidCard glow="none" padding="lg">
                         <div className="text-center py-8">
@@ -485,7 +484,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                                 <Share2 className="w-5 h-5 text-purple-400" />
                                 Partager "{selectedTemplate?.name}"
                             </h3>
-                            
+
                             <p className="text-white/60 mb-4">
                                 Partagez ce code avec d'autres utilisateurs pour qu'ils puissent importer votre template.
                             </p>

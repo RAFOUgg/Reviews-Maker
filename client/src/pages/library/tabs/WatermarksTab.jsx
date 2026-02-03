@@ -12,7 +12,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
-import { 
+import {
     Stamp, Plus, Trash2, Star, Edit, Eye, Upload, Type,
     Move, ZoomIn, Contrast, Check, X, Image as ImageIcon
 } from 'lucide-react'
@@ -32,7 +32,7 @@ const POSITIONS = [
 export default function WatermarksTab() {
     const toast = useToast()
     const fileInputRef = useRef(null)
-    
+
     const [watermarks, setWatermarks] = useState([])
     const [loading, setLoading] = useState(true)
     const [defaultWatermarkId, setDefaultWatermarkId] = useState(null)
@@ -152,7 +152,7 @@ export default function WatermarksTab() {
         }
 
         try {
-            const url = editingWatermark 
+            const url = editingWatermark
                 ? `/api/library/watermarks/${editingWatermark.id}`
                 : '/api/library/watermarks'
 
@@ -231,24 +231,24 @@ export default function WatermarksTab() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.05 }}
             >
-                <LiquidCard 
-                    glow={isDefault ? 'purple' : 'none'} 
+                <LiquidCard
+                    glow={isDefault ? 'purple' : 'none'}
                     padding="none"
                     className={`overflow-hidden ${isDefault ? 'ring-2 ring-purple-500' : ''}`}
                 >
                     {/* Preview */}
-                    <div 
+                    <div
                         className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 relative overflow-hidden"
                         style={{ backgroundImage: 'url(/images/watermark-preview-bg.jpg)', backgroundSize: 'cover' }}
                     >
                         {/* Rendu du filigrane */}
-                        <div 
+                        <div
                             className={`absolute ${getPositionClasses(watermark.position)} p-4`}
                             style={{ opacity: watermark.opacity / 100 }}
                         >
                             {watermark.type === 'text' ? (
-                                <span 
-                                    style={{ 
+                                <span
+                                    style={{
                                         fontFamily: watermark.fontFamily,
                                         fontSize: `${watermark.size / 5}px`,
                                         color: watermark.color,
@@ -259,10 +259,10 @@ export default function WatermarksTab() {
                                     {watermark.content}
                                 </span>
                             ) : (
-                                <img 
-                                    src={watermark.content} 
+                                <img
+                                    src={watermark.content}
                                     alt={watermark.name}
-                                    style={{ 
+                                    style={{
                                         width: `${watermark.size}%`,
                                         transform: `rotate(${watermark.rotation || 0}deg)`
                                     }}
@@ -285,7 +285,7 @@ export default function WatermarksTab() {
                             {watermark.type === 'text' ? <Type className="w-4 h-4" /> : <ImageIcon className="w-4 h-4" />}
                             {watermark.name}
                         </h3>
-                        
+
                         <div className="grid grid-cols-2 gap-2 text-xs text-white/50 mb-4">
                             <div className="flex items-center gap-1">
                                 <Move className="w-3 h-3" />
@@ -305,11 +305,10 @@ export default function WatermarksTab() {
                         <div className="flex gap-2">
                             <button
                                 onClick={() => setAsDefault(watermark.id)}
-                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
-                                    isDefault 
-                                        ? 'bg-purple-500/20 text-purple-400' 
+                                className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${isDefault
+                                        ? 'bg-purple-500/20 text-purple-400'
                                         : 'bg-white/5 text-white/60 hover:bg-white/10 hover:text-white'
-                                }`}
+                                    }`}
                             >
                                 {isDefault ? '✓ Défaut' : 'Définir'}
                             </button>
@@ -403,22 +402,20 @@ export default function WatermarksTab() {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => setFormData({ ...formData, type: 'text', content: '' })}
-                                                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors ${
-                                                    formData.type === 'text' 
-                                                        ? 'bg-purple-500 text-white' 
+                                                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors ${formData.type === 'text'
+                                                        ? 'bg-purple-500 text-white'
                                                         : 'bg-white/5 text-white/60 hover:bg-white/10'
-                                                }`}
+                                                    }`}
                                             >
                                                 <Type className="w-4 h-4" />
                                                 Texte
                                             </button>
                                             <button
                                                 onClick={() => setFormData({ ...formData, type: 'image', content: '' })}
-                                                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors ${
-                                                    formData.type === 'image' 
-                                                        ? 'bg-purple-500 text-white' 
+                                                className={`flex-1 py-3 px-4 rounded-xl flex items-center justify-center gap-2 transition-colors ${formData.type === 'image'
+                                                        ? 'bg-purple-500 text-white'
                                                         : 'bg-white/5 text-white/60 hover:bg-white/10'
-                                                }`}
+                                                    }`}
                                             >
                                                 <ImageIcon className="w-4 h-4" />
                                                 Image
@@ -517,18 +514,18 @@ export default function WatermarksTab() {
                                 {/* Preview */}
                                 <div>
                                     <label className="block text-sm text-white/60 mb-2">Aperçu</label>
-                                    <div 
+                                    <div
                                         className="aspect-video bg-gradient-to-br from-gray-800 to-gray-900 rounded-xl relative overflow-hidden border border-white/10"
                                         style={{ backgroundImage: 'url(/images/watermark-preview-bg.jpg)', backgroundSize: 'cover' }}
                                     >
                                         {formData.content && (
-                                            <div 
+                                            <div
                                                 className={`absolute ${getPositionClasses(formData.position)} p-4`}
                                                 style={{ opacity: formData.opacity / 100 }}
                                             >
                                                 {formData.type === 'text' ? (
-                                                    <span 
-                                                        style={{ 
+                                                    <span
+                                                        style={{
                                                             fontFamily: formData.fontFamily,
                                                             fontSize: `${formData.size / 5}px`,
                                                             color: formData.color,
@@ -539,10 +536,10 @@ export default function WatermarksTab() {
                                                         {formData.content}
                                                     </span>
                                                 ) : (
-                                                    <img 
-                                                        src={formData.content} 
+                                                    <img
+                                                        src={formData.content}
                                                         alt="Preview"
-                                                        style={{ 
+                                                        style={{
                                                             width: `${formData.size}%`,
                                                             transform: `rotate(${formData.rotation}deg)`
                                                         }}
