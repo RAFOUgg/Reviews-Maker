@@ -618,6 +618,251 @@ export const choiceCatalog = {
         "Rosin",
         "Wax",
         "Autre"
+    ],
+
+    // ===========================
+    // CURING & MATURATION
+    // ===========================
+
+    // Types de curing
+    curingTypes: [
+        "Froid (<5°C)",
+        "Frais (5-15°C)",
+        "Température ambiante (15-25°C)",
+        "Chaud (>25°C)"
+    ],
+
+    // Containers de curing
+    curingContainers: [
+        "Bocal en verre Mason",
+        "Bocal hermétique clip",
+        "Pot CVault",
+        "Pot Infinity Jar",
+        "Sac Grove Bags",
+        "Sac sous vide",
+        "Tupperware alimentaire",
+        "Boîte inox",
+        "Boîte bois cèdre",
+        "Humidor",
+        "Aire libre (séchage)",
+        "Autre"
+    ],
+
+    // Emballages primaires
+    emballagesPrimaires: [
+        "Aucun (contact direct)",
+        "Cellophane",
+        "Papier cuisson",
+        "Papier aluminium",
+        "Paper hash (papier à hash)",
+        "Papier sulfurisé",
+        "Sac congélation",
+        "Sac sous vide (machine)",
+        "Sac sous vide (manuel)",
+        "Film alimentaire",
+        "Sac antistatique",
+        "Autre"
+    ],
+
+    // Opacité des récipients
+    opaciteRecipients: [
+        "Transparent",
+        "Semi-transparent",
+        "Ambré (UV filter)",
+        "Violet (Miron glass)",
+        "Semi-opaque",
+        "Opaque",
+        "Noir total"
+    ],
+
+    // Intervalles de suivi curing
+    curingTimeframes: [
+        { value: "heures", label: "Par heure", maxSteps: 168 },
+        { value: "jours", label: "Par jour", maxSteps: 180 },
+        { value: "semaines", label: "Par semaine", maxSteps: 52 },
+        { value: "mois", label: "Par mois", maxSteps: 24 }
+    ],
+
+    // ===========================
+    // EXPÉRIENCE UTILISATION
+    // ===========================
+
+    // Méthodes de consommation
+    methodesConsommation: [
+        "Combustion - Joint",
+        "Combustion - Blunt",
+        "Combustion - Bong",
+        "Combustion - Pipe",
+        "Combustion - Chicha",
+        "Vaporisation - Portable",
+        "Vaporisation - Desktop",
+        "Dab - Banger quartz",
+        "Dab - E-nail",
+        "Dab - Puffco/E-rig",
+        "Infusion - Tisane",
+        "Infusion - Beurre/Huile",
+        "Ingestion orale",
+        "Sublingual",
+        "Topique",
+        "Autre"
+    ],
+
+    // Effets secondaires
+    effetsSecondaires: [
+        "Aucun",
+        "Bouche sèche",
+        "Yeux rouges",
+        "Yeux secs",
+        "Faim (munchies)",
+        "Soif intense",
+        "Anxiété légère",
+        "Paranoïa légère",
+        "Vertiges",
+        "Nausées",
+        "Maux de tête",
+        "Fatigue",
+        "Somnolence",
+        "Palpitations",
+        "Toux",
+        "Irritation gorge"
+    ],
+
+    // Usages préférés
+    usagesPreferes: [
+        "Matinée",
+        "Journée",
+        "Après-midi",
+        "Soirée",
+        "Nuit/Coucher",
+        "Seul",
+        "En couple",
+        "En petit groupe",
+        "En soirée/fête",
+        "Médical/Thérapeutique",
+        "Créativité/Artistique",
+        "Productivité/Focus",
+        "Sport/Activité physique",
+        "Méditation/Relaxation",
+        "Social",
+        "Intimité"
+    ],
+
+    // Profils d'effets
+    profilsEffets: [
+        "Anxiolytique",
+        "Relaxant",
+        "Sédatif",
+        "Énergisant",
+        "Stimulant",
+        "Euphorique",
+        "Créatif",
+        "Concentré/Focus",
+        "Social",
+        "Introspectif",
+        "Psychédélique léger",
+        "Corporel/Body high",
+        "Cérébral/Head high"
+    ],
+
+    // Début des effets
+    debutEffets: [
+        "Immédiat (<30s)",
+        "Très rapide (30s-2min)",
+        "Rapide (2-5min)",
+        "Modéré (5-15min)",
+        "Progressif (15-30min)",
+        "Lent (30min-1h)",
+        "Très lent (>1h)"
+    ],
+
+    // ===========================
+    // PIPELINE CULTURE GLOBAL
+    // ===========================
+
+    // Phases de culture prédéfinies
+    phasesCulture: [
+        { id: "germination", label: "🌱 Germination", defaultDays: 3, color: "#8B5CF6" },
+        { id: "plantule", label: "🌿 Plantule", defaultDays: 7, color: "#10B981" },
+        { id: "croissance_debut", label: "📈 Début croissance", defaultDays: 14, color: "#34D399" },
+        { id: "croissance_milieu", label: "📈 Milieu croissance", defaultDays: 14, color: "#6EE7B7" },
+        { id: "croissance_fin", label: "📈 Fin croissance", defaultDays: 14, color: "#A7F3D0" },
+        { id: "stretch_debut", label: "🚀 Début stretch", defaultDays: 7, color: "#FCD34D" },
+        { id: "stretch_milieu", label: "🚀 Milieu stretch", defaultDays: 7, color: "#FBBF24" },
+        { id: "stretch_fin", label: "🚀 Fin stretch", defaultDays: 7, color: "#F59E0B" },
+        { id: "floraison_debut", label: "🌸 Début floraison", defaultDays: 14, color: "#F472B6" },
+        { id: "floraison_milieu", label: "🌸 Milieu floraison", defaultDays: 21, color: "#EC4899" },
+        { id: "floraison_fin", label: "🌸 Fin floraison/Mûrissement", defaultDays: 14, color: "#DB2777" },
+        { id: "recolte", label: "✂️ Récolte", defaultDays: 1, color: "#DC2626" }
+    ],
+
+    // Types de trame pipeline
+    pipelineTimeframes: [
+        { value: "jours", label: "Par jour", requiresDates: true },
+        { value: "semaines", label: "Par semaine", requiresStart: true },
+        { value: "phases", label: "Par phase", usePredefined: true }
+    ],
+
+    // Couleurs trichomes (récolte)
+    couleursTrichomes: [
+        "100% Translucide (trop tôt)",
+        "75% Translucide / 25% Laiteux",
+        "50% Translucide / 50% Laiteux",
+        "25% Translucide / 75% Laiteux",
+        "100% Laiteux (pic THC)",
+        "90% Laiteux / 10% Ambré",
+        "80% Laiteux / 20% Ambré (optimal)",
+        "70% Laiteux / 30% Ambré",
+        "50% Laiteux / 50% Ambré (sédatif)",
+        "30% Laiteux / 70% Ambré (très sédatif)"
+    ],
+
+    // Types d'espaces de culture
+    typesEspaceCulture: [
+        "Armoire de culture",
+        "Tente de culture",
+        "Placard aménagé",
+        "Pièce dédiée",
+        "Serre",
+        "Balcon/Terrasse",
+        "Jardin extérieur",
+        "Champ",
+        "Container maritime",
+        "Autre"
+    ],
+
+    // Systèmes d'irrigation
+    systemesIrrigation: [
+        "Manuel (arrosoir)",
+        "Goutte à goutte",
+        "Flood and drain (Ebb & Flow)",
+        "NFT (Nutrient Film)",
+        "DWC (Deep Water Culture)",
+        "Aéroponie",
+        "Blumat/Autopot (passif)",
+        "Irrigation programmée",
+        "Wicking (mèche)",
+        "Autre"
+    ],
+
+    // ===========================
+    // TYPES DE COMESTIBLES
+    // ===========================
+
+    typesComestibles: [
+        "Gâteau/Brownie",
+        "Cookie",
+        "Bonbon/Gummy",
+        "Chocolat",
+        "Boisson",
+        "Tisane/Infusion",
+        "Huile/Teinture",
+        "Capsule",
+        "Beurre infusé",
+        "Miel infusé",
+        "Sirop",
+        "Sauce/Condiment",
+        "Plat cuisiné",
+        "Autre"
     ]
 };
 
@@ -707,6 +952,33 @@ export const productStructures = {
                     { key: "effects", label: "Effets", type: "effects" },
                     { key: "dureeEffet", label: "Durée des effets", type: "select", choices: choiceCatalog.dureeEffet }
                 ]
+            },
+            {
+                title: "🔥 PipeLine CURING MATURATION",
+                fields: [
+                    { key: "curingTimeframe", label: "Intervalle de suivi", type: "select", choices: ["heures", "jours", "semaines", "mois"], default: "jours" },
+                    { key: "curingDuration", label: "Durée totale (unités)", type: "number", min: 1, max: 365 },
+                    { key: "curingType", label: "Type de curing", type: "select", choices: choiceCatalog.curingTypes },
+                    { key: "curingTemp", label: "Température moyenne (°C)", type: "number", min: -5, max: 35 },
+                    { key: "curingHumidity", label: "Humidité relative (%)", type: "slider", max: 100, default: 62 },
+                    { key: "curingContainer", label: "Type de récipient", type: "select", choices: choiceCatalog.curingContainers },
+                    { key: "curingEmballage", label: "Emballage primaire", type: "select", choices: choiceCatalog.emballagesPrimaires },
+                    { key: "curingOpacite", label: "Opacité récipient", type: "select", choices: choiceCatalog.opaciteRecipients },
+                    { key: "curingVolume", label: "Volume occupé (mL)", type: "number", min: 0 },
+                    { key: "curingPipeline", label: "Évolution du curing", type: "curing-pipeline" }
+                ]
+            },
+            {
+                title: "🧪 Expérience d'utilisation",
+                fields: [
+                    { key: "consumptionMethod", label: "Méthode de consommation", type: "select", choices: choiceCatalog.methodesConsommation },
+                    { key: "dosageUsed", label: "Dosage utilisé (g)", type: "number", step: 0.1, min: 0 },
+                    { key: "effectsDurationMinutes", label: "Durée des effets (minutes)", type: "number", min: 0 },
+                    { key: "effectsProfile", label: "Profil des effets", type: "multiselect", choices: choiceCatalog.profilsEffets },
+                    { key: "sideEffectsExperienced", label: "Effets secondaires", type: "multiselect", choices: choiceCatalog.effetsSecondaires },
+                    { key: "effectsOnset", label: "Début des effets", type: "select", choices: choiceCatalog.debutEffets },
+                    { key: "preferredUsage", label: "Usage préféré", type: "multiselect", choices: choiceCatalog.usagesPreferes }
+                ]
             }
         ]
     },
@@ -784,6 +1056,33 @@ export const productStructures = {
                     { key: "montee", label: "Montée (rapidité)", type: "slider", max: 10 },
                     { key: "intensiteEffet", label: "Intensité", type: "slider", max: 10 },
                     { key: "dureeEffet", label: "Durée des effets", type: "select", choices: choiceCatalog.dureeEffet }
+                ]
+            },
+            {
+                title: "🔥 PipeLine CURING MATURATION",
+                fields: [
+                    { key: "curingTimeframe", label: "Intervalle de suivi", type: "select", choices: ["heures", "jours", "semaines", "mois"], default: "jours" },
+                    { key: "curingDuration", label: "Durée totale (unités)", type: "number", min: 1, max: 365 },
+                    { key: "curingType", label: "Type de curing", type: "select", choices: choiceCatalog.curingTypes },
+                    { key: "curingTemp", label: "Température moyenne (°C)", type: "number", min: -5, max: 35 },
+                    { key: "curingHumidity", label: "Humidité relative (%)", type: "slider", max: 100, default: 62 },
+                    { key: "curingContainer", label: "Type de récipient", type: "select", choices: choiceCatalog.curingContainers },
+                    { key: "curingEmballage", label: "Emballage primaire", type: "select", choices: choiceCatalog.emballagesPrimaires },
+                    { key: "curingOpacite", label: "Opacité récipient", type: "select", choices: choiceCatalog.opaciteRecipients },
+                    { key: "curingVolume", label: "Volume occupé (mL)", type: "number", min: 0 },
+                    { key: "curingPipeline", label: "Évolution du curing", type: "curing-pipeline" }
+                ]
+            },
+            {
+                title: "🧪 Expérience d'utilisation",
+                fields: [
+                    { key: "consumptionMethod", label: "Méthode de consommation", type: "select", choices: choiceCatalog.methodesConsommation },
+                    { key: "dosageUsed", label: "Dosage utilisé (g)", type: "number", step: 0.1, min: 0 },
+                    { key: "effectsDurationMinutes", label: "Durée des effets (minutes)", type: "number", min: 0 },
+                    { key: "effectsProfile", label: "Profil des effets", type: "multiselect", choices: choiceCatalog.profilsEffets },
+                    { key: "sideEffectsExperienced", label: "Effets secondaires", type: "multiselect", choices: choiceCatalog.effetsSecondaires },
+                    { key: "effectsOnset", label: "Début des effets", type: "select", choices: choiceCatalog.debutEffets },
+                    { key: "preferredUsage", label: "Usage préféré", type: "multiselect", choices: choiceCatalog.usagesPreferes }
                 ]
             }
         ]
@@ -868,6 +1167,33 @@ export const productStructures = {
                     { key: "effects", label: "Effets", type: "effects" },
                     { key: "dureeEffet", label: "Durée", type: "select", choices: choiceCatalog.dureeEffet }
                 ]
+            },
+            {
+                title: "🔥 PipeLine CURING MATURATION",
+                fields: [
+                    { key: "curingTimeframe", label: "Intervalle de suivi", type: "select", choices: ["heures", "jours", "semaines", "mois"], default: "jours" },
+                    { key: "curingDuration", label: "Durée totale (unités)", type: "number", min: 1, max: 365 },
+                    { key: "curingType", label: "Type de curing", type: "select", choices: choiceCatalog.curingTypes },
+                    { key: "curingTemp", label: "Température moyenne (°C)", type: "number", min: -5, max: 35 },
+                    { key: "curingHumidity", label: "Humidité relative (%)", type: "slider", max: 100, default: 62 },
+                    { key: "curingContainer", label: "Type de récipient", type: "select", choices: choiceCatalog.curingContainers },
+                    { key: "curingEmballage", label: "Emballage primaire", type: "select", choices: choiceCatalog.emballagesPrimaires },
+                    { key: "curingOpacite", label: "Opacité récipient", type: "select", choices: choiceCatalog.opaciteRecipients },
+                    { key: "curingVolume", label: "Volume occupé (mL)", type: "number", min: 0 },
+                    { key: "curingPipeline", label: "Évolution du curing", type: "curing-pipeline" }
+                ]
+            },
+            {
+                title: "🧪 Expérience d'utilisation",
+                fields: [
+                    { key: "consumptionMethod", label: "Méthode de consommation", type: "select", choices: choiceCatalog.methodesConsommation },
+                    { key: "dosageUsed", label: "Dosage utilisé (g)", type: "number", step: 0.1, min: 0 },
+                    { key: "effectsDurationMinutes", label: "Durée des effets (minutes)", type: "number", min: 0 },
+                    { key: "effectsProfile", label: "Profil des effets", type: "multiselect", choices: choiceCatalog.profilsEffets },
+                    { key: "sideEffectsExperienced", label: "Effets secondaires", type: "multiselect", choices: choiceCatalog.effetsSecondaires },
+                    { key: "effectsOnset", label: "Début des effets", type: "select", choices: choiceCatalog.debutEffets },
+                    { key: "preferredUsage", label: "Usage préféré", type: "multiselect", choices: choiceCatalog.usagesPreferes }
+                ]
             }
         ]
     },
@@ -877,9 +1203,9 @@ export const productStructures = {
                 title: "📋 Informations générales",
                 fields: [
                     { key: "holderName", label: "Nom du produit", type: "text", required: true },
-                    { key: "typeProduit", label: "Type de comestible", type: "text" },
+                    { key: "typeProduit", label: "Type de comestible", type: "select", choices: choiceCatalog.typesComestibles },
                     { key: "breeder", label: "Fabricant", type: "text" },
-                    { key: "typeGenetique", label: "Type de gemnétiques", type: "select", choices: ["Indica", "Hybride Indica", "Équilibré", "Hybride Sativa", "Sativa"] },
+                    { key: "typeGenetique", label: "Type de génétiques", type: "select", choices: ["Indica", "Hybride Indica", "Équilibré", "Hybride Sativa", "Sativa"] },
                     { key: "images", label: "Photos (1-4)", type: "images", required: true },
                     { key: "description", label: "Commentaire détaillé", type: "textarea", rows: 5 }
                 ]
@@ -894,16 +1220,29 @@ export const productStructures = {
                 title: "😋 Goûts",
                 fields: [
                     { key: "goutIntensity", label: "Intensité gustative", type: "slider", max: 10 },
-                    { key: "saveursProduit", label: "Saveurs du produit", type: "wheel" },
-                    { key: "saveursCannabis", label: "Saveurs cannabis", type: "wheel" }
+                    { key: "agressivite", label: "Agressivité/piquant", type: "slider", max: 10 },
+                    { key: "saveursProduit", label: "Saveurs du produit (max 7)", type: "wheel", maxSelections: 7 },
+                    { key: "saveursCannabis", label: "Saveurs cannabis (max 7)", type: "wheel", maxSelections: 7 }
                 ]
             },
             {
                 title: "⚡ Effets",
                 fields: [
+                    { key: "montee", label: "Montée (rapidité)", type: "slider", max: 10 },
                     { key: "effectsIntensity", label: "Intensité des effets", type: "slider", max: 10 },
                     { key: "effects", label: "Effets", type: "effects" },
                     { key: "dureeEffet", label: "Durée des effets", type: "select", choices: choiceCatalog.dureeEffet }
+                ]
+            },
+            {
+                title: "🧪 Expérience d'utilisation",
+                fields: [
+                    { key: "dosageUsed", label: "Dosage cannabinoïdes (mg THC)", type: "number", min: 0 },
+                    { key: "effectsDurationMinutes", label: "Durée des effets (minutes)", type: "number", min: 0 },
+                    { key: "effectsProfile", label: "Profil des effets", type: "multiselect", choices: choiceCatalog.profilsEffets },
+                    { key: "sideEffectsExperienced", label: "Effets secondaires", type: "multiselect", choices: choiceCatalog.effetsSecondaires },
+                    { key: "effectsOnset", label: "Début des effets", type: "select", choices: choiceCatalog.debutEffets },
+                    { key: "preferredUsage", label: "Usage préféré", type: "multiselect", choices: choiceCatalog.usagesPreferes }
                 ]
             }
         ]
