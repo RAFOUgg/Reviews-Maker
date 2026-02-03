@@ -217,38 +217,40 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
 
                 {/* Étape 3 : Disclaimer RDR */}
                 {step === 3 && (
-                    <div className="space-y-4 animate-fade-in">
-                        <div className="flex items-center gap-3 text-white">
+                    <div className="space-y-4 animate-fade-in flex flex-col max-h-[70vh]">
+                        <div className="flex items-center gap-3 text-white flex-shrink-0">
                             <AlertCircle className="w-5 h-5 text-amber-400" />
                             <h3 className="text-lg font-semibold">Disclaimer RDR (Réduction Des Risques)</h3>
                         </div>
 
-                        <LiquidCard
-                            className="p-6"
-                            style={{
-                                background: 'rgba(251, 191, 36, 0.1)',
-                                borderColor: 'rgba(251, 191, 36, 0.3)',
-                                boxShadow: '0 0 30px rgba(251, 191, 36, 0.15)'
-                            }}
-                        >
-                            <p className="font-semibold text-amber-300 mb-3">⚠️ Avertissement Important</p>
-                            <p className="text-white/80 mb-4">
-                                {disclaimers[country] || disclaimers.default}
-                            </p>
-                            <ul className="space-y-2 text-sm text-white/70 list-disc list-inside">
-                                <li>L'usage de cannabis peut affecter la mémoire, la concentration et les réflexes</li>
-                                <li>Ne consommez pas avant de conduire ou d'utiliser des machines</li>
-                                <li>Consultez un professionnel de santé en cas de questions</li>
-                                <li>Respectez la législation en vigueur dans votre pays</li>
-                            </ul>
-                        </LiquidCard>
+                        <div className="overflow-y-auto flex-1 min-h-0 pr-2 space-y-4">
+                            <LiquidCard
+                                className="p-6"
+                                style={{
+                                    background: 'rgba(251, 191, 36, 0.1)',
+                                    borderColor: 'rgba(251, 191, 36, 0.3)',
+                                    boxShadow: '0 0 30px rgba(251, 191, 36, 0.15)'
+                                }}
+                            >
+                                <p className="font-semibold text-amber-300 mb-3">⚠️ Avertissement Important</p>
+                                <p className="text-white/80 mb-4">
+                                    {disclaimers[country] || disclaimers.default}
+                                </p>
+                                <ul className="space-y-2 text-sm text-white/70 list-disc list-inside">
+                                    <li>L'usage de cannabis peut affecter la mémoire, la concentration et les réflexes</li>
+                                    <li>Ne consommez pas avant de conduire ou d'utiliser des machines</li>
+                                    <li>Consultez un professionnel de santé en cas de questions</li>
+                                    <li>Respectez la législation en vigueur dans votre pays</li>
+                                </ul>
+                            </LiquidCard>
+                        </div>
 
-                        <label className="flex items-start gap-3 cursor-pointer group p-3 rounded-xl border border-white/10 hover:border-violet-500/50 transition-colors">
+                        <label className="flex items-start gap-3 cursor-pointer group p-3 rounded-xl border border-white/10 hover:border-violet-500/50 transition-colors flex-shrink-0">
                             <input
                                 type="checkbox"
                                 checked={consentRDR}
                                 onChange={(e) => setConsentRDR(e.target.checked)}
-                                className="w-5 h-5 rounded border-white/30 bg-white/5 mt-0.5 accent-violet-500"
+                                className="w-5 h-5 rounded border-white/30 bg-white/5 mt-0.5 accent-violet-500 flex-shrink-0"
                             />
                             <span className="text-white/80 text-sm group-hover:text-white transition-colors">
                                 J'ai lu et compris ce disclaimer. Je confirme avoir l'âge légal requis dans mon pays et je m'engage à respecter la législation en vigueur.
