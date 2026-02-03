@@ -169,7 +169,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                         <p className="text-white/60 text-sm">
                             Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays) pour accéder à cette plateforme.
                         </p>
-                        
+
                         {/* Sélection de la date avec 3 selects */}
                         <div className="grid grid-cols-3 gap-3">
                             <div>
@@ -227,7 +227,7 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                                 </select>
                             </div>
                         </div>
-                        
+
                         {birthdate && (
                             <p className="text-sm text-violet-400">
                                 Date sélectionnée : {new Date(birthdate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
