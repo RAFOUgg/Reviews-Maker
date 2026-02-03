@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { LiquidCard, LiquidChip, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI'
+import LiquidSlider from '@/components/ui/LiquidSlider'
 import { Wind } from 'lucide-react'
 
 export default function Odeurs({ formData, handleChange }) {
@@ -48,19 +49,14 @@ export default function Odeurs({ formData, handleChange }) {
             <div className="space-y-6 mt-6">
                 {/* Intensité aromatique */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Intensité aromatique"
-                        value={formData.intensiteOdeur || 0}
+                        value={formData.intensiteOdeur || 5}
+                        min={1}
                         max={10}
+                        step={1}
                         color="green"
-                    />
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        value={formData.intensiteOdeur || 0}
-                        onChange={(e) => handleChange('intensiteOdeur', parseInt(e.target.value))}
-                        className="liquid-range green w-full mt-2"
+                        onChange={(val) => handleChange('intensiteOdeur', val)}
                     />
                 </div>
 

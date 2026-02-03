@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Scale, Droplet, Scissors, TrendingUp, Award, Wheat } from 'lucide-react'
-import { LiquidCard, LiquidDivider, LiquidChip, LiquidRating } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidDivider, LiquidChip } from '@/components/ui/LiquidUI'
+import LiquidSlider from '@/components/ui/LiquidSlider'
 import SegmentedControl from '../../../../components/shared/ui-helpers/SegmentedControl'
 
 /**
@@ -96,61 +97,40 @@ export default function Recolte({ formData, handleChange }) {
 
                         <div className="space-y-4">
                             {/* Translucides */}
-                            <div>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-white/60">⚪ Translucides</span>
-                                    <span className="font-semibold text-white">
-                                        {recolteData.trichomesTranslucides || 0}%
-                                    </span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    step="5"
-                                    value={recolteData.trichomesTranslucides || 0}
-                                    onChange={(e) => handleRecolteChange('trichomesTranslucides', parseFloat(e.target.value))}
-                                    className="liquid-range cyan w-full"
-                                />
-                            </div>
+                            <LiquidSlider
+                                label="⚪ Translucides"
+                                value={recolteData.trichomesTranslucides || 0}
+                                min={0}
+                                max={100}
+                                step={5}
+                                unit="%"
+                                color="cyan"
+                                onChange={(val) => handleRecolteChange('trichomesTranslucides', val)}
+                            />
 
                             {/* Laiteux */}
-                            <div>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-white/60">🥛 Laiteux</span>
-                                    <span className="font-semibold text-white">
-                                        {recolteData.trichomesLaiteux || 0}%
-                                    </span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    step="5"
-                                    value={recolteData.trichomesLaiteux || 0}
-                                    onChange={(e) => handleRecolteChange('trichomesLaiteux', parseFloat(e.target.value))}
-                                    className="liquid-range w-full"
-                                />
-                            </div>
+                            <LiquidSlider
+                                label="🥛 Laiteux"
+                                value={recolteData.trichomesLaiteux || 0}
+                                min={0}
+                                max={100}
+                                step={5}
+                                unit="%"
+                                color="purple"
+                                onChange={(val) => handleRecolteChange('trichomesLaiteux', val)}
+                            />
 
                             {/* Ambrés */}
-                            <div>
-                                <div className="flex justify-between text-sm mb-2">
-                                    <span className="text-white/60">🟠 Ambrés</span>
-                                    <span className="font-semibold text-white">
-                                        {recolteData.trichomesAmbres || 0}%
-                                    </span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min="0"
-                                    max="100"
-                                    step="5"
-                                    value={recolteData.trichomesAmbres || 0}
-                                    onChange={(e) => handleRecolteChange('trichomesAmbres', parseFloat(e.target.value))}
-                                    className="liquid-range amber w-full"
-                                />
-                            </div>
+                            <LiquidSlider
+                                label="🟠 Ambrés"
+                                value={recolteData.trichomesAmbres || 0}
+                                min={0}
+                                max={100}
+                                step={5}
+                                unit="%"
+                                color="amber"
+                                onChange={(val) => handleRecolteChange('trichomesAmbres', val)}
+                            />
 
                             {/* Validation somme = 100% */}
                             <div className={`px-4 py-3 rounded-lg flex items-center justify-between ${trichomesValid ? 'bg-green-500/20 border-2 border-green-500/50' : 'bg-red-500/20 border-2 border-red-500/50'}`}>

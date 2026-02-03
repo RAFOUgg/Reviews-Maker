@@ -26,6 +26,7 @@ const LiquidSlider = ({
         green: 'from-green-500 to-emerald-600',
         orange: 'from-orange-500 to-red-600',
         amber: 'from-amber-500 to-orange-600',
+        pink: 'from-pink-500 to-rose-600',
     };
 
     const percentage = ((value - min) / (max - min)) * 100;

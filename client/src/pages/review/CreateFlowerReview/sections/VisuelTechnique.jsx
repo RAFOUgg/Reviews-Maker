@@ -1,5 +1,6 @@
 import React from 'react'
-import { LiquidCard, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI'
+import LiquidSlider from '@/components/ui/LiquidSlider'
 import ColorWheelPicker from '../../../../components/shared/charts/ColorWheelPicker'
 import { Eye } from 'lucide-react'
 
@@ -53,23 +54,18 @@ export default function VisuelTechnique({ formData = {}, handleChange = () => { 
                 <div className="space-y-4">
                     {VISUAL_FIELDS.map(field => (
                         <div key={field.key} className="p-3 bg-white/5 rounded-xl border border-white/10">
-                            <LiquidRating
+                            <LiquidSlider
                                 label={field.label}
                                 value={formData[field.key] || 0}
+                                min={0}
                                 max={field.max}
+                                step={1}
                                 color="purple"
-                            />
-                            <input
-                                type="range"
-                                min="0"
-                                max={field.max}
-                                value={formData[field.key] || 0}
-                                onChange={(e) => {
+                                onChange={(val) => {
                                     if (handleChange && typeof handleChange === 'function') {
-                                        handleChange(field.key, parseInt(e.target.value))
+                                        handleChange(field.key, val)
                                     }
                                 }}
-                                className="liquid-range w-full mt-2"
                             />
                         </div>
                     ))}

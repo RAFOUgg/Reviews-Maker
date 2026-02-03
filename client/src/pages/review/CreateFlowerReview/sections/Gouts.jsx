@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { LiquidCard, LiquidChip, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI'
+import LiquidSlider from '@/components/ui/LiquidSlider'
 import { Utensils } from 'lucide-react'
 
 export default function Gouts({ formData, handleChange }) {
@@ -52,37 +53,27 @@ export default function Gouts({ formData, handleChange }) {
             <div className="space-y-6 mt-6">
                 {/* Intensité */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Intensité"
-                        value={formData.intensiteGout || 0}
+                        value={formData.intensiteGout || 5}
+                        min={1}
                         max={10}
+                        step={1}
                         color="amber"
-                    />
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        value={formData.intensiteGout || 0}
-                        onChange={(e) => handleChange('intensiteGout', parseInt(e.target.value))}
-                        className="liquid-range amber w-full mt-2"
+                        onChange={(val) => handleChange('intensiteGout', val)}
                     />
                 </div>
 
                 {/* Agressivité/piquant */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Agressivité/piquant"
-                        value={formData.agressivite || 0}
+                        value={formData.agressivite || 5}
+                        min={1}
                         max={10}
+                        step={1}
                         color="amber"
-                    />
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        value={formData.agressivite || 0}
-                        onChange={(e) => handleChange('agressivite', parseInt(e.target.value))}
-                        className="liquid-range amber w-full mt-2"
+                        onChange={(val) => handleChange('agressivite', val)}
                     />
                 </div>
 

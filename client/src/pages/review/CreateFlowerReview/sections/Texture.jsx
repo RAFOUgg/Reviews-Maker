@@ -1,5 +1,6 @@
 import React from 'react'
-import { LiquidCard, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI'
+import LiquidSlider from '@/components/ui/LiquidSlider'
 import { Hand } from 'lucide-react'
 
 const TEXTURE_FIELDS = [
@@ -27,19 +28,14 @@ export default function Texture({ formData, handleChange }) {
             <div className="space-y-4 mt-6">
                 {TEXTURE_FIELDS.map(field => (
                     <div key={field.key} className="p-3 bg-white/5 rounded-xl border border-white/10">
-                        <LiquidRating
+                        <LiquidSlider
                             label={field.label}
-                            value={formData[field.key] || 0}
+                            value={formData[field.key] || 5}
+                            min={1}
                             max={field.max}
+                            step={1}
                             color="pink"
-                        />
-                        <input
-                            type="range"
-                            min="0"
-                            max={field.max}
-                            value={formData[field.key] || 0}
-                            onChange={(e) => handleChange(field.key, parseInt(e.target.value))}
-                            className="liquid-range w-full mt-2"
+                            onChange={(val) => handleChange(field.key, val)}
                         />
                     </div>
                 ))}

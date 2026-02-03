@@ -140,8 +140,8 @@ export default function AromaWheelPicker({
                         <button
                             key={mode}
                             onClick={() => setViewMode(mode)}
-                            className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${viewMode === mode 
-                                ? 'bg-violet-500/20 text-violet-300 border-violet-500/30' 
+                            className={`px-3 py-2 rounded-xl text-sm font-medium transition-all border ${viewMode === mode
+                                ? 'bg-violet-500/20 text-violet-300 border-violet-500/30'
                                 : 'bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white/80'}`}
                         >
                             {mode === 'categories' && '🎨 Catégories'}

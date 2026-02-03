@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import { LiquidCard, LiquidChip, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI'
+import LiquidSlider from '@/components/ui/LiquidSlider'
 import { Zap } from 'lucide-react'
 
 export default function Effets({ formData, handleChange }) {
@@ -49,38 +50,34 @@ export default function Effets({ formData, handleChange }) {
             <div className="space-y-6 mt-6">
                 {/* Montée rapidité */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Montée (rapidité)"
-                        value={formData.montee || 0}
+                        value={formData.montee || 5}
+                        min={1}
                         max={10}
+                        step={1}
                         color="cyan"
+                        onChange={(val) => handleChange('montee', val)}
                     />
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        value={formData.montee || 0}
-                        onChange={(e) => handleChange('montee', parseInt(e.target.value))}
-                        className="liquid-range cyan w-full mt-2"
-                    />
+                    <p className="text-xs text-white/40 mt-1">
+                        {formData.montee <= 3 ? 'Lente' : formData.montee <= 6 ? 'Normale' : 'Rapide'}
+                    </p>
                 </div>
 
                 {/* Intensité */}
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Intensité"
-                        value={formData.intensiteEffet || 0}
+                        value={formData.intensiteEffet || 5}
+                        min={1}
                         max={10}
+                        step={1}
                         color="cyan"
+                        onChange={(val) => handleChange('intensiteEffet', val)}
                     />
-                    <input
-                        type="range"
-                        min="0"
-                        max="10"
-                        value={formData.intensiteEffet || 0}
-                        onChange={(e) => handleChange('intensiteEffet', parseInt(e.target.value))}
-                        className="liquid-range cyan w-full mt-2"
-                    />
+                    <p className="text-xs text-white/40 mt-1">
+                        {formData.intensiteEffet <= 3 ? 'Légère' : formData.intensiteEffet <= 6 ? 'Modérée' : 'Intense'}
+                    </p>
                 </div>
 
                 {/* Filtres par type */}
