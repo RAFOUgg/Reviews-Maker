@@ -236,7 +236,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                         </label>
                         <LiquidSelect
                             value={country}
-                            onChange={(e) => setCountry(e.target.value)}
+                            onChange={(value) => setCountry(value)}
                             options={[
                                 { value: '', label: t('ageVerification.selectCountry', 'Sélectionnez un pays') },
                                 ...allowedCountries.map((c) => ({
@@ -256,7 +256,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                             </label>
                             <LiquidSelect
                                 value={region}
-                                onChange={(e) => setRegion(e.target.value)}
+                                onChange={(value) => setRegion(value)}
                                 options={[
                                     { value: '', label: t('ageVerification.selectState', 'Sélectionnez un état') },
                                     ...(allowedRegions.US || DEFAULT_US_STATES).map((s) => ({

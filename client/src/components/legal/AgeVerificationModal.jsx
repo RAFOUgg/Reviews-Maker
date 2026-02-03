@@ -169,12 +169,70 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                         <p className="text-white/60 text-sm">
                             Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays) pour accéder à cette plateforme.
                         </p>
-                        <LiquidInput
-                            type="date"
-                            value={birthdate}
-                            onChange={(e) => setBirthdate(e.target.value)}
-                            max={new Date().toISOString().split('T')[0]}
-                        />
+                        
+                        {/* Sélection de la date avec 3 selects */}
+                        <div className="grid grid-cols-3 gap-3">
+                            <div>
+                                <label className="text-xs text-white/50 mb-1 block">Jour</label>
+                                <select
+                                    value={birthdate ? new Date(birthdate).getDate() : ''}
+                                    onChange={(e) => {
+                                        const day = e.target.value
+                                        const currentDate = birthdate ? new Date(birthdate) : new Date(2000, 0, 1)
+                                        currentDate.setDate(parseInt(day))
+                                        setBirthdate(currentDate.toISOString().split('T')[0])
+                                    }}
+                                    className="w-full px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-violet-500/50 focus:outline-none transition-colors"
+                                >
+                                    <option value="" className="bg-gray-900">JJ</option>
+                                    {Array.from({ length: 31 }, (_, i) => i + 1).map(d => (
+                                        <option key={d} value={d} className="bg-gray-900">{d.toString().padStart(2, '0')}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-white/50 mb-1 block">Mois</label>
+                                <select
+                                    value={birthdate ? new Date(birthdate).getMonth() : ''}
+                                    onChange={(e) => {
+                                        const month = e.target.value
+                                        const currentDate = birthdate ? new Date(birthdate) : new Date(2000, 0, 1)
+                                        currentDate.setMonth(parseInt(month))
+                                        setBirthdate(currentDate.toISOString().split('T')[0])
+                                    }}
+                                    className="w-full px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-violet-500/50 focus:outline-none transition-colors"
+                                >
+                                    <option value="" className="bg-gray-900">MM</option>
+                                    {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((m, i) => (
+                                        <option key={i} value={i} className="bg-gray-900">{m}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div>
+                                <label className="text-xs text-white/50 mb-1 block">Année</label>
+                                <select
+                                    value={birthdate ? new Date(birthdate).getFullYear() : ''}
+                                    onChange={(e) => {
+                                        const year = e.target.value
+                                        const currentDate = birthdate ? new Date(birthdate) : new Date(2000, 0, 1)
+                                        currentDate.setFullYear(parseInt(year))
+                                        setBirthdate(currentDate.toISOString().split('T')[0])
+                                    }}
+                                    className="w-full px-3 py-3 rounded-xl bg-white/5 border border-white/10 text-white focus:border-violet-500/50 focus:outline-none transition-colors"
+                                >
+                                    <option value="" className="bg-gray-900">AAAA</option>
+                                    {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - 10 - i).map(y => (
+                                        <option key={y} value={y} className="bg-gray-900">{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        {birthdate && (
+                            <p className="text-sm text-violet-400">
+                                Date sélectionnée : {new Date(birthdate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -189,12 +247,12 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                         <LiquidSelect
                             label="Pays *"
                             value={country}
-                            onChange={(e) => {
-                                setCountry(e.target.value)
+                            onChange={(value) => {
+                                setCountry(value)
                                 setRegion('')
                             }}
                             options={[
-                                { value: '', label: '-- Sélectionnez --' },
+                                { value: '', label: '-- Sélectionnez votre pays --' },
                                 ...countries.map(c => ({
                                     value: c.code,
                                     label: `${c.name} (âge minimum : ${c.minAge} ans)`
@@ -206,9 +264,9 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
                             <LiquidSelect
                                 label="État / Province *"
                                 value={region}
-                                onChange={(e) => setRegion(e.target.value)}
+                                onChange={(value) => setRegion(value)}
                                 options={[
-                                    { value: '', label: '-- Sélectionnez --' },
+                                    { value: '', label: '-- Sélectionnez votre état --' },
                                     ...selectedCountry.regions.map(r => ({ value: r, label: r }))
                                 ]}
                             />
