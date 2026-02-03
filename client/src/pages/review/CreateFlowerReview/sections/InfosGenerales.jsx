@@ -1,7 +1,6 @@
 import React from 'react'
 import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider, LiquidChip, LiquidButton } from '@/components/ui/LiquidUI'
-import MultiSelectPills from '../../../../components/shared/ui-helpers/MultiSelectPills'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
 
@@ -50,20 +49,15 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         <p className="text-xs text-white/40 mt-1">(Seul champ texte libre obligatoire)</p>
                     </div>
 
-                    {/* Cultivar(s) - Multi-select pills CDC conforme */}
+                    {/* Cultivar(s) - Champ texte libre */}
                     <div>
-                        <label className="block text-sm font-medium text-white mb-2">
-                            Cultivar(s)
-                        </label>
-                        <p className="text-xs text-white/40 mb-2">(Multi-sélection depuis bibliothèque)</p>
-                        <MultiSelectPills
-                            value={formData.cultivars || []}
-                            onChange={(cultivars) => handleChange('cultivars', cultivars)}
-                            source="user-library"
-                            placeholder="Sélectionner ou créer des cultivars"
-                            addNewButton
-                            addNewLabel="+ Nouveau cultivar"
+                        <LiquidInput
+                            label="Cultivar(s)"
+                            value={formData.cultivars || ''}
+                            onChange={(e) => handleChange('cultivars', e.target.value)}
+                            placeholder="Ex: OG Kush, Purple Haze, Wedding Cake..."
                         />
+                        <p className="text-xs text-white/40 mt-1">(Séparés par des virgules si plusieurs)</p>
                     </div>
 
                     {/* Farm */}

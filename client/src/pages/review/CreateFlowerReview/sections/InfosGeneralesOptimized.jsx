@@ -5,7 +5,6 @@ import { CollapsibleMobileSection, MobileFormGroup } from '../../../../component
 import { ResponsiveInput } from '../../../../components/forms/helpers/ResponsiveSectionComponents';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
 import { useMobileFormSection } from '../../../hooks/useMobileFormSection';
-import MultiSelectPills from '../../../../components/shared/ui-helpers/MultiSelectPills';
 
 /**
  * InfosGeneralesOptimized - Optimisée mobile
@@ -61,16 +60,16 @@ export default function InfosGeneralesOptimized({
                     />
                 </MobileFormGroup>
 
-                {/* Cultivar(s) */}
+                {/* Cultivar(s) - Champ texte libre */}
                 <MobileFormGroup
                     label="Cultivar(s)"
-                    hint="Multi-sélection depuis bibliothèque"
+                    hint="Séparés par des virgules si plusieurs"
                 >
-                    <MultiSelectPills
-                        value={formData.cultivars || []}
-                        onChange={(cultivars) => handleChange('cultivars', cultivars)}
-                        source="user-library"
-                        placeholder="Sélectionner cultivars"
+                    <ResponsiveInput
+                        type="text"
+                        value={formData.cultivars || ''}
+                        onChange={(e) => handleChange('cultivars', e.target.value)}
+                        placeholder="Ex: OG Kush, Purple Haze..."
                     />
                 </MobileFormGroup>
 
@@ -145,8 +144,8 @@ export default function InfosGeneralesOptimized({
                                     <motion.button
                                         onClick={() => setSelectedPhotoIdx(selectedPhotoIdx === idx ? null : idx)}
                                         className={`w-full text-left px-2 py-1 mt-1 rounded-lg text-xs font-medium transition ${selectedPhotoIdx === idx
-                                                ? 'bg-purple-600 text-white'
-                                                : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
+                                            ? 'bg-purple-600 text-white'
+                                            : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                                             }`}
                                     >
                                         Tags ({(photo.tags || []).length})
@@ -167,8 +166,8 @@ export default function InfosGeneralesOptimized({
                                                     key={tag}
                                                     onClick={() => togglePhotoTag(idx, tag)}
                                                     className={`px-2 py-1 rounded text-[10px] font-medium transition ${(photo.tags || []).includes(tag)
-                                                            ? 'bg-blue-600 text-white'
-                                                            : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                                                        ? 'bg-blue-600 text-white'
+                                                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                                                         }`}
                                                 >
                                                     {(photo.tags || []).includes(tag) && '✓ '}
