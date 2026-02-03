@@ -222,6 +222,16 @@ else
 
 header "🚀 MODE VPS : Déploiement Direct"
 
+# Source NVM si disponible
+if [ -s "$HOME/.nvm/nvm.sh" ]; then
+    . "$HOME/.nvm/nvm.sh"
+fi
+
+# Vérifier que git est disponible
+if ! command -v git &> /dev/null; then
+    log_error "Git non trouvé"
+fi
+
 # PHASE 1: Git Pull
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -285,10 +295,24 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 echo -e "${CYAN}  Étape 5/5 : Redémarrage (PM2)${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
+# Chercher PM2 (peut être dans nvm ou node_modules)
+PM2_CMD=""
+if command -v pm2 &> /dev/null; then
+    PM2_CMD="pm2"
+elif [ -f "$HOME/.nvm/versions/node/v24.11.1/bin/pm2" ]; then
+    PM2_CMD="$HOME/.nvm/versions/node/v24.11.1/bin/pm2"
+elif [ -f "$(npm root -g)/pm2/bin/pm2.js" ]; then
+    PM2_CMD="node $(npm root -g)/pm2/bin/pm2.js"
+fi
+
+if [ -z "$PM2_CMD" ]; then
+    log_error "PM2 introuvable. Installez-le : npm install -g pm2"
+fi
+
 step "Graceful reload du serveur..."
-pm2 gracefulReload reviews-maker || {
+$PM2_CMD gracefulReload reviews-maker || {
     log_warning "Graceful reload échoué, restart normal..."
-    pm2 restart reviews-maker --wait-ready
+    $PM2_CMD restart reviews-maker --wait-ready
 }
 
 sleep 2
@@ -297,11 +321,11 @@ log_success "PM2 redémarré"
 # Vérification santé
 echo ""
 step "Statut du service..."
-pm2 list || true
+$PM2_CMD list || true
 
 echo ""
 step "Derniers logs..."
-pm2 logs reviews-maker --lines 10 --nostream 2>/dev/null | tail -8 || true
+$PM2_CMD logs reviews-maker --lines 10 --nostream 2>/dev/null | tail -8 || true
 
 echo ""
 header "✨ DÉPLOIEMENT VPS TERMINÉ"
