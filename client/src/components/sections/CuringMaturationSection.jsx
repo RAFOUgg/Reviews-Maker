@@ -17,16 +17,17 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
 
     // Sync avec parent quand timelineData change
     useEffect(() => {
+        if (!onChange) return;
         onChange({
             ...data,
             curingTimeline: timelineData
         });
-    }, [timelineData]);
+    }, [timelineData, data]);
     // Construire la config timeline
-    // IMPORTANT: type='phase' par défaut pour générer les phases de curing
+    // NOTE: type='jour' par défaut pour curing (pas de phases générales)
     const timelineConfig = useMemo(() => ({
-        type: data.curingTimelineConfig?.type || 'phase',
-        mode: data.curingTimelineConfig?.mode || 'phases',
+        type: data.curingTimelineConfig?.type || 'jour',
+        mode: data.curingTimelineConfig?.mode || 'days',
         startDate: data.curingTimelineConfig?.startDate || '',
         endDate: data.curingTimelineConfig?.endDate || '',
         duration: data.curingTimelineConfig?.duration || null,

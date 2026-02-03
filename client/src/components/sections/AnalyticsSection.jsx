@@ -31,7 +31,7 @@ export default function AnalyticsSection({ productType, formData = {}, handleCha
             certificateFile: uploadedFile,
             terpeneFile: terpeneFile
         });
-    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile, handleChange]);
+    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile]);
 
     const handleFileUpload = (e, type = 'cannabinoid') => {
         const file = e.target.files?.[0];

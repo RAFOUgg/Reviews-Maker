@@ -16,7 +16,17 @@ export default function OdorSection({ productType, formData = {}, handleChange }
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [complexity, setComplexity] = useState(data?.complexity || 5);
     const [fidelity, setFidelity] = useState(data?.fidelity || 5);
-    // Synchroniser avec parent
+
+    // Synchroniser l'état LOCAL quand formData change (revenir à la section)
+    useEffect(() => {
+        setDominantNotes(data?.dominantNotes || []);
+        setSecondaryNotes(data?.secondaryNotes || []);
+        setIntensity(data?.intensity || 5);
+        setComplexity(data?.complexity || 5);
+        setFidelity(data?.fidelity || 5);
+    }, [data]);
+
+    // Synchroniser avec parent quand l'état LOCAL change
     useEffect(() => {
         if (!handleChange) return;
         handleChange('odeurs', {
@@ -26,7 +36,7 @@ export default function OdorSection({ productType, formData = {}, handleChange }
             complexity,
             fidelity
         });
-    }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity, handleChange]);
+    }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
 
     return (
         <LiquidCard glow="green" padding="lg" className="space-y-8">

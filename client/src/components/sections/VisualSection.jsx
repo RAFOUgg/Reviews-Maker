@@ -38,7 +38,7 @@ export default function VisualSection({ productType, formData = {}, handleChange
             seeds
         };
         handleChange('visual', visualData);
-    }, [selectedColors, colorRating, density, trichomes, mold, seeds, transparency, productType, handleChange]);
+    }, [selectedColors, colorRating, density, trichomes, transparency, mold, seeds, productType]);
 
     const allColors = getAllColorShades();
     const isHashOrConcentrate = productType === 'Hash' || productType === 'Concentré';

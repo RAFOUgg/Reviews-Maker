@@ -409,9 +409,6 @@ export const CURING_PIPELINE_CONFIG = {
     description: 'Suivi de l\'affinage et de la maturation',
 
     intervalTypes: [
-        { value: 'seconde', label: 'Secondes', icon: '⏱️', maxCells: 3600 },
-        { value: 'minute', label: 'Minutes', icon: '⏱️', maxCells: 1440 },
-        { value: 'heure', label: 'Heures', icon: '🕐', maxCells: 720 },
         { value: 'jour', label: 'Jours', icon: '📅', maxCells: 365 },
         { value: 'semaine', label: 'Semaines', icon: '📆', maxCells: 52 },
         { value: 'mois', label: 'Mois', icon: '📆', maxCells: 24 }

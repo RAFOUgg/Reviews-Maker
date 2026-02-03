@@ -189,7 +189,7 @@ export default function Layout() {
             </main>
 
             {/* Footer - Glassmorphism style */}
-            <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8 mt-auto">
+            <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
                 {/* Subtle glow line */}
                 <div
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px"

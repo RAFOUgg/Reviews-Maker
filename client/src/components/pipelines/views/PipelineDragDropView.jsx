@@ -643,6 +643,32 @@ const PipelineDragDropView = ({
             console.warn('Toast error', e);
         }
     };
+
+    // Options d'intervalTypes selon le type de pipeline
+    const getIntervalTypeOptions = () => {
+        const allOptions = {
+            seconde: { label: '⏱️ Secondes', value: 'seconde' },
+            heure: { label: '🕐 Heures', value: 'heure' },
+            jour: { label: '🗓️ Jours', value: 'jour' },
+            date: { label: '📅 Dates', value: 'date' },
+            semaine: { label: '📆 Semaines', value: 'semaine' },
+            phase: { label: '🌱 Phases', value: 'phase' }
+        };
+
+        // Selon le type de pipeline, on restreint les options
+        const typeOptions = {
+            culture: ['phase', 'jour', 'semaine'],  // Culture a les phases
+            curing: ['jour', 'semaine'],              // Curing NO phases (par défaut)
+            separation: ['seconde', 'minute', 'heure'], // Séparation basée temps court
+            extraction: ['seconde', 'minute', 'heure'], // Extraction basée temps court
+            purification: ['seconde', 'minute', 'heure'], // Purification basée temps court
+            recipe: ['minute', 'heure']                // Recettes basées temps court
+        };
+
+        const allowed = typeOptions[type] || ['jour', 'semaine', 'phase'];
+        return allowed.map(key => allOptions[key]).filter(Boolean);
+    };
+
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
@@ -2163,19 +2189,18 @@ const PipelineDragDropView = ({
                                     Type intervalle
                                 </label>
                                 <select
-                                    value={timelineConfig.type || 'phase'}
+                                    value={timelineConfig.type || 'jour'}
                                     onChange={(e) => onConfigChange('type', e.target.value)}
                                     disabled={timelineData.length > 0}
                                     className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 text-white border border-white/20 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
                                         }`}
                                     title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
                                 >
-                                    <option value="seconde">⏱️ Secondes</option>
-                                    <option value="heure">🕐 Heures</option>
-                                    <option value="jour">🗓️ Jours</option>
-                                    <option value="date">📅 Dates</option>
-                                    <option value="semaine">📆 Semaines</option>
-                                    <option value="phase">🌱 Phases</option>
+                                    {getIntervalTypeOptions().map(option => (
+                                        <option key={option.value} value={option.value}>
+                                            {option.label}
+                                        </option>
+                                    ))}
                                 </select>
                                 {timelineData.length > 0 && (
                                     <p className="text-xs text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">

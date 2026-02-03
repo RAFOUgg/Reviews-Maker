@@ -27,7 +27,7 @@ export default function TasteSection({ productType, formData = {}, handleChange 
             inhalationNotes,
             exhalationNotes
         });
-    }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes, handleChange]);
+    }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes]);
 
     return (
         <LiquidCard glow="amber" padding="lg" className="space-y-8">
