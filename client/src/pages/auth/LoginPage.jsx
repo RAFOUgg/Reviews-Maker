@@ -41,7 +41,16 @@ export default function LoginPage() {
                 }
             }
         } catch (err) {
-            setError(err.message || 'Connexion impossible')
+            // Gérer les différents types d'erreurs avec des messages adaptés
+            if (err.code === 'user_not_found') {
+                setError('Aucun compte trouvé avec cet email. Créez un compte pour commencer.')
+            } else if (err.code === 'oauth_account') {
+                setError(err.message || 'Ce compte utilise une connexion OAuth. Utilisez le bouton correspondant.')
+            } else if (err.code === 'invalid_credentials') {
+                setError('Mot de passe incorrect')
+            } else {
+                setError(err.message || 'Connexion impossible')
+            }
         } finally {
             setLoading(false)
         }

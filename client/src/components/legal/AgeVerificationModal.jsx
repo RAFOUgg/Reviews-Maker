@@ -109,10 +109,11 @@ export default function AgeVerificationModal({ isOpen, onClose, onVerified }) {
             }
 
             // Enregistrer le consentement RDR
-            await fetch('/api/legal/consent-rdr', {
+            await fetch('/api/legal/accept-consent', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
+                body: JSON.stringify({ consent: true })
             })
 
             setStep(4)

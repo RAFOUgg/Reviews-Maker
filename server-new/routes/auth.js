@@ -115,8 +115,19 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
     const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.CONSUMER
 
     const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } })
-    if (existing && existing.passwordHash) {
-        return res.status(409).json({ error: 'email_taken', message: 'Un compte existe déjà avec cet email' })
+    if (existing) {
+        if (existing.passwordHash) {
+            return res.status(409).json({ error: 'email_taken', message: 'Un compte existe déjà avec cet email. Connectez-vous ou réinitialisez votre mot de passe.' })
+        }
+        // Si l'utilisateur existe via OAuth, informer l'utilisateur
+        const provider = existing.googleId ? 'Google' : existing.discordId ? 'Discord' : existing.appleId ? 'Apple' : null
+        if (provider) {
+            return res.status(409).json({
+                error: 'oauth_account_exists',
+                message: `Un compte existe déjà avec cet email (via ${provider}). Connectez-vous avec ${provider} ou utilisez un autre email.`,
+                provider
+            })
+        }
     }
 
     const passwordHash = await hashPassword(password)
@@ -163,8 +174,14 @@ router.post('/email/login', asyncHandler(async (req, res) => {
     const normalizedEmail = String(email).trim().toLowerCase()
     const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
 
-    if (!user || !user.passwordHash) {
-        return res.status(401).json({ error: 'invalid_credentials', message: 'Identifiants invalides' })
+    if (!user) {
+        return res.status(404).json({ error: 'user_not_found', message: 'Aucun compte trouvé avec cet email. Voulez-vous créer un compte ?' })
+    }
+
+    if (!user.passwordHash) {
+        // L'utilisateur existe mais s'est inscrit via OAuth (Google, Discord, etc.)
+        const provider = user.googleId ? 'Google' : user.discordId ? 'Discord' : user.appleId ? 'Apple' : 'un autre service'
+        return res.status(401).json({ error: 'oauth_account', message: `Ce compte a été créé via ${provider}. Utilisez ce service pour vous connecter.` })
     }
 
     const valid = await verifyPassword(password, user.passwordHash)

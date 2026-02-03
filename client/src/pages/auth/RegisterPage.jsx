@@ -96,9 +96,13 @@ export default function RegisterPage() {
 
             if (!response.ok) {
                 if (data.error === 'email_taken') {
-                    setApiError('Cet email est déjà utilisé');
+                    setApiError('Cet email est déjà utilisé. Connectez-vous ou réinitialisez votre mot de passe.');
+                } else if (data.error === 'oauth_account_exists') {
+                    setApiError(`Ce compte existe déjà via ${data.provider || 'OAuth'}. Utilisez ce service pour vous connecter.`);
                 } else if (data.error === 'pseudo_taken') {
                     setApiError('Ce pseudo est déjà pris');
+                } else if (data.error === 'weak_password') {
+                    setApiError('Mot de passe trop faible (minimum 8 caractères)');
                 } else {
                     setApiError(data.message || 'Erreur lors de l\'inscription');
                 }

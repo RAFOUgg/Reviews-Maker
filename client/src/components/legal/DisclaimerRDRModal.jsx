@@ -33,7 +33,8 @@ const DisclaimerRDRModal = () => {
         document.body.style.overflow = 'hidden';
 
         return () => {
-            document.body.style.overflow = previousOverflow || '';
+            // Toujours restaurer le scroll, même si previousOverflow était déjà 'hidden'
+            document.body.style.overflow = '';
             try {
                 previousActiveElement.current?.focus?.();
             } catch (err) { }
