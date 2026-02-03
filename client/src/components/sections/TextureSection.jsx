@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
-import { LiquidCard, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
+import LiquidSlider from '@/components/ui/LiquidSlider';
 
 /**
  * Niveaux de qualité pour les sliders de texture
@@ -142,55 +143,40 @@ export default function TextureSection({ productType, data: directData, onChange
             {/* Champs communs (tous types) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Dureté"
                         value={hardness}
-                        max={10}
-                        color="purple"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={hardness}
-                        onChange={(e) => setHardness(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-pink-500"
+                        step={1}
+                        color="pink"
+                        onChange={(val) => setHardness(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.hardness[hardness]}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Densité tactile"
                         value={density}
-                        max={10}
-                        color="purple"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={density}
-                        onChange={(e) => setDensity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-pink-500"
+                        step={1}
+                        color="pink"
+                        onChange={(val) => setDensity(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.density[density]}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Collant"
                         value={stickiness}
-                        max={10}
-                        color="purple"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={stickiness}
-                        onChange={(e) => setStickiness(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-pink-500"
+                        step={1}
+                        color="pink"
+                        onChange={(val) => setStickiness(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.stickiness[stickiness]}</p>
                 </div>
@@ -198,19 +184,14 @@ export default function TextureSection({ productType, data: directData, onChange
                 {/* Élasticité (Fleurs uniquement) */}
                 {(productType === 'Fleurs' || productType === 'Fleur') && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                        <LiquidRating
+                        <LiquidSlider
                             label="Élasticité"
                             value={elasticity}
-                            max={10}
-                            color="purple"
-                        />
-                        <input
-                            type="range"
                             min={1}
                             max={10}
-                            value={elasticity}
-                            onChange={(e) => setElasticity(parseInt(e.target.value))}
-                            className="w-full mt-3 accent-pink-500"
+                            step={1}
+                            color="pink"
+                            onChange={(val) => setElasticity(val)}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.elasticity[elasticity]}</p>
                     </div>
@@ -219,19 +200,14 @@ export default function TextureSection({ productType, data: directData, onChange
                 {/* Malléabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                        <LiquidRating
+                        <LiquidSlider
                             label="Malléabilité"
                             value={malleability}
-                            max={10}
-                            color="purple"
-                        />
-                        <input
-                            type="range"
                             min={1}
                             max={10}
-                            value={malleability}
-                            onChange={(e) => setMalleability(parseInt(e.target.value))}
-                            className="w-full mt-3 accent-pink-500"
+                            step={1}
+                            color="pink"
+                            onChange={(val) => setMalleability(val)}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.malleability[malleability]}</p>
                     </div>
@@ -240,19 +216,14 @@ export default function TextureSection({ productType, data: directData, onChange
                 {/* Friabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                        <LiquidRating
+                        <LiquidSlider
                             label="Friabilité"
                             value={friability}
-                            max={10}
-                            color="purple"
-                        />
-                        <input
-                            type="range"
                             min={1}
                             max={10}
-                            value={friability}
-                            onChange={(e) => setFriability(parseInt(e.target.value))}
-                            className="w-full mt-3 accent-pink-500"
+                            step={1}
+                            color="pink"
+                            onChange={(val) => setFriability(val)}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.friability[friability]}</p>
                     </div>
@@ -261,19 +232,14 @@ export default function TextureSection({ productType, data: directData, onChange
                 {/* Viscosité (Concentrés uniquement) */}
                 {productType === 'Concentré' && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                        <LiquidRating
+                        <LiquidSlider
                             label="Viscosité"
                             value={viscosity}
-                            max={10}
-                            color="purple"
-                        />
-                        <input
-                            type="range"
                             min={1}
                             max={10}
-                            value={viscosity}
-                            onChange={(e) => setViscosity(parseInt(e.target.value))}
-                            className="w-full mt-3 accent-pink-500"
+                            step={1}
+                            color="pink"
+                            onChange={(val) => setViscosity(val)}
                         />
                         <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.viscosity[viscosity]}</p>
                     </div>
@@ -290,37 +256,27 @@ export default function TextureSection({ productType, data: directData, onChange
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                            <LiquidRating
+                            <LiquidSlider
                                 label="Melting (10 = Full Melt)"
                                 value={melting}
-                                max={10}
-                                color="amber"
-                            />
-                            <input
-                                type="range"
                                 min={1}
                                 max={10}
-                                value={melting}
-                                onChange={(e) => setMelting(parseInt(e.target.value))}
-                                className="w-full mt-3 accent-amber-500"
+                                step={1}
+                                color="amber"
+                                onChange={(val) => setMelting(val)}
                             />
                             <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.melting[melting]}</p>
                         </div>
 
                         <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                            <LiquidRating
+                            <LiquidSlider
                                 label="Résidus (10 = aucun)"
                                 value={residue}
-                                max={10}
-                                color="green"
-                            />
-                            <input
-                                type="range"
                                 min={1}
                                 max={10}
-                                value={residue}
-                                onChange={(e) => setResidue(parseInt(e.target.value))}
-                                className="w-full mt-3 accent-emerald-500"
+                                step={1}
+                                color="green"
+                                onChange={(val) => setResidue(val)}
                             />
                             <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.residue[residue]}</p>
                         </div>

@@ -6,7 +6,8 @@ import {
     INVERTED_LABELS,
     TRANSPARENCY_LEVELS
 } from '../../data/visualOptions';
-import { LiquidCard, LiquidRating, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidChip, LiquidDivider } from '@/components/ui/LiquidUI';
+import LiquidSlider from '@/components/ui/LiquidSlider';
 import { Eye, X, Check } from 'lucide-react';
 
 /**
@@ -174,19 +175,14 @@ export default function VisualSection({ productType, formData = {}, handleChange
             {/* Transparence (Hash/Concentrés uniquement) */}
             {isHashOrConcentrate && (
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Transparence"
                         value={transparency}
-                        max={10}
-                        color="purple"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={transparency}
-                        onChange={(e) => setTransparency(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-violet-500"
+                        step={1}
+                        color="purple"
+                        onChange={(val) => setTransparency(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{TRANSPARENCY_LEVELS[transparency - 1]?.example}</p>
                 </div>
@@ -196,38 +192,28 @@ export default function VisualSection({ productType, formData = {}, handleChange
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Densité */}
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Densité"
                         value={density}
-                        max={10}
-                        color="purple"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={density}
-                        onChange={(e) => setDensity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-violet-500"
+                        step={1}
+                        color="purple"
+                        onChange={(val) => setDensity(val)}
                     />
                 </div>
 
                 {/* Trichomes (Fleurs uniquement) */}
                 {productType === 'Fleur' && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                        <LiquidRating
+                        <LiquidSlider
                             label="Trichomes"
                             value={trichomes}
-                            max={10}
-                            color="purple"
-                        />
-                        <input
-                            type="range"
                             min={1}
                             max={10}
-                            value={trichomes}
-                            onChange={(e) => setTrichomes(parseInt(e.target.value))}
-                            className="w-full mt-3 accent-violet-500"
+                            step={1}
+                            color="purple"
+                            onChange={(val) => setTrichomes(val)}
                         />
                         <p className="text-xs text-white/40 mt-2">Quantité et qualité des cristaux</p>
                     </div>
@@ -235,38 +221,28 @@ export default function VisualSection({ productType, formData = {}, handleChange
 
                 {/* Moisissures (inversé) */}
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Moisissures (10 = aucune)"
                         value={mold}
-                        max={10}
-                        color="green"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={mold}
-                        onChange={(e) => setMold(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-emerald-500"
+                        step={1}
+                        color="green"
+                        onChange={(val) => setMold(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">10 = aucune moisissure</p>
                 </div>
 
                 {/* Graines (inversé) */}
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Graines (10 = aucune)"
                         value={seeds}
-                        max={10}
-                        color="green"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={seeds}
-                        onChange={(e) => setSeeds(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-emerald-500"
+                        step={1}
+                        color="green"
+                        onChange={(val) => setSeeds(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">10 = aucune graine</p>
                 </div>

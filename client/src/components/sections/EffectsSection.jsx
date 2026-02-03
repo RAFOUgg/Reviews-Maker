@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { EFFECTS_CATEGORIES, getAllEffects, getEffectsByFilter, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../data/effectsCategories';
 import { EXPERIENCE_VALUES } from '../../data/formValues';
 import { Zap, Sparkles, Clock, Filter, Plus, X, Beaker, ChevronDown } from 'lucide-react';
-import { LiquidCard, LiquidRating, LiquidChip, LiquidDivider, LiquidButton } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidChip, LiquidDivider, LiquidButton } from '@/components/ui/LiquidUI';
+import LiquidSlider from '@/components/ui/LiquidSlider';
 
 /**
  * Section Effets Ressentis + Expérience d'Utilisation (FUSIONNÉE)
@@ -135,37 +136,27 @@ export default function EffectsSection({ productType, data: directData, onChange
             {/* Montée, Intensité, Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Montée (rapidité)"
                         value={onset}
-                        max={10}
-                        color="cyan"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={onset}
-                        onChange={(e) => setOnset(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-cyan-500"
+                        step={1}
+                        color="cyan"
+                        onChange={(val) => setOnset(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{ONSET_LEVELS[onset - 1]?.label}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Intensité"
                         value={intensity}
-                        max={10}
-                        color="cyan"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={intensity}
-                        onChange={(e) => setIntensity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-cyan-500"
+                        step={1}
+                        color="cyan"
+                        onChange={(val) => setIntensity(val)}
                     />
                     <p className="text-xs text-white/40 mt-2">{INTENSITY_LEVELS[intensity - 1]?.label}</p>
                 </div>

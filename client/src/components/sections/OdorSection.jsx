@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Flower2 } from 'lucide-react';
-import { LiquidCard, LiquidRating, LiquidDivider } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
+import LiquidSlider from '@/components/ui/LiquidSlider';
 import AromaWheelPicker from '../shared/charts/AromaWheelPicker';
 
 /**
@@ -46,19 +47,14 @@ export default function OdorSection({ productType, formData = {}, handleChange }
             {/* Fidélité cultivars (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
                 <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20">
-                    <LiquidRating
+                    <LiquidSlider
                         label="Fidélité aux cultivars"
                         value={fidelity}
-                        max={10}
-                        color="purple"
-                    />
-                    <input
-                        type="range"
                         min={1}
                         max={10}
-                        value={fidelity}
-                        onChange={(e) => setFidelity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-purple-500"
+                        step={1}
+                        color="green"
+                        onChange={(val) => setFidelity(val)}
                     />
                 </div>
             )}
@@ -88,36 +84,26 @@ export default function OdorSection({ productType, formData = {}, handleChange }
             {/* Sliders Intensité et Complexité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
-                    <LiquidRating
+                    <LiquidSlider
                         label="💪 Intensité globale"
                         value={intensity}
+                        min={1}
                         max={10}
-                        color="amber"
-                    />
-                    <input
-                        type="range"
-                        min={0}
-                        max={10}
-                        value={intensity}
-                        onChange={(e) => setIntensity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-orange-500"
+                        step={1}
+                        color="green"
+                        onChange={(val) => setIntensity(val)}
                     />
                 </div>
 
                 <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-cyan-500/20">
-                    <LiquidRating
+                    <LiquidSlider
                         label="🌈 Complexité aromatique"
                         value={complexity}
+                        min={1}
                         max={10}
-                        color="cyan"
-                    />
-                    <input
-                        type="range"
-                        min={0}
-                        max={10}
-                        value={complexity}
-                        onChange={(e) => setComplexity(parseInt(e.target.value))}
-                        className="w-full mt-3 accent-cyan-500"
+                        step={1}
+                        color="green"
+                        onChange={(val) => setComplexity(val)}
                     />
                 </div>
             </div>
