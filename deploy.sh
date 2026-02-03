@@ -286,6 +286,9 @@ npm install --legacy-peer-deps 2>&1 | grep -E "added|up to date" | tail -1 || tr
 step "Prisma generate..."
 npm run prisma:generate 2>&1 | tail -1
 
+step "Prisma migrate (apply pending migrations)..."
+npm run prisma:deploy 2>&1 | tail -5
+
 log_success "Backend dépendances à jour"
 cd .. || exit 1
 
