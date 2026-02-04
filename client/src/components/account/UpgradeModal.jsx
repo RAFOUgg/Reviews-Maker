@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { X, CheckCircle, Sparkles, TrendingUp, Building2 } from 'lucide-react';
 import { useStore } from '../../store/useStore';
@@ -8,7 +8,7 @@ import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
 export default function UpgradeModal({ isOpen, onClose }) {
     const { accountType } = useStore();
     const navigate = useNavigate();
-    const [selectedType, setSelectedType] = useState(null);
+    const [selectedType, setSelectedType] = useState(accountType);
 
     const accountTypes = [
         {
@@ -59,13 +59,13 @@ export default function UpgradeModal({ isOpen, onClose }) {
         },
     ];
 
-    const handleRedirectToPayment = (type) => {
-        if (type === accountType) {
+    const handleContinue = () => {
+        if (selectedType === accountType) {
             onClose();
             return;
         }
 
-        navigate(`/account/payment?type=${type}`);
+        navigate(`/account/payment?type=${selectedType}`);
     };
 
     if (!isOpen) return null;
@@ -101,82 +101,153 @@ export default function UpgradeModal({ isOpen, onClose }) {
                 <div className="p-6">
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {accountTypes.map((type) => {
-                            const isCurrentPlan = accountType === type.type;
+                            const isSelected = selectedType === type.type;
                             const Icon = type.icon;
 
                             return (
-                                <div
+                                <button
                                     key={type.type}
-                                    className={`relative transition-all duration-300 ${type.popular ? 'md:scale-105 z-10' : ''}`}
+                                    type="button"
+                                    onClick={() => setSelectedType(type.type)}
+                                    className={`relative group text-left transition-all duration-500 transform hover:scale-105 ${isSelected ? 'scale-105 z-10' : ''}`}
                                 >
                                     {type.popular && (
-                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
-                                            <LiquidBadge variant="warning" size="md" className="animate-pulse">
-                                                ⭐ RECOMMANDÉ
+                                        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                                            <LiquidBadge variant="warning" size="lg" className="animate-pulse">
+                                                ⭐ POPULAIRE
                                             </LiquidBadge>
                                         </div>
                                     )}
 
                                     <LiquidCard
-                                        glow={isCurrentPlan ? 'green' : type.popular ? 'purple' : 'default'}
+                                        glow={isSelected ? 'purple' : 'default'}
                                         padding="lg"
-                                        className={`h-full ${isCurrentPlan ? 'ring-2 ring-green-500/50' : ''}`}
+                                        className={`h-full transition-all duration-300 ${isSelected ? 'ring-2 ring-purple-500/50' : ''}`}
                                     >
-                                        <div className="space-y-4">
+                                        <div className="relative space-y-6">
                                             <div className="flex items-start justify-between">
-                                                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
-                                                    <Icon className="w-8 h-8 text-white" />
+                                                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-2xl">
+                                                    <Icon className="w-10 h-10 text-white" strokeWidth={2.5} />
                                                 </div>
                                                 <div className="text-right">
                                                     {type.price > 0 ? (
                                                         <>
-                                                            <div className="text-3xl font-black text-white">
+                                                            <div className="text-4xl font-black text-white drop-shadow-lg">
                                                                 {type.price}€
                                                             </div>
-                                                            <div className="text-sm text-white/50">/mois</div>
+                                                            <div className="text-sm text-white/70 font-medium">/mois</div>
                                                         </>
                                                     ) : (
-                                                        <div className="text-2xl font-black text-emerald-400">
+                                                        <div className="text-3xl font-black text-emerald-400 drop-shadow-lg">
                                                             GRATUIT
                                                         </div>
                                                     )}
                                                 </div>
                                             </div>
 
-                                            <div>
-                                                <h3 className="text-xl font-bold text-white">{type.name}</h3>
-                                                <p className="text-sm text-white/50">{type.subtitle}</p>
+                                            <div className="space-y-2">
+                                                <h3 className="text-3xl font-black text-white drop-shadow-lg">
+                                                    {type.name}
+                                                </h3>
+                                                <p className="text-sm text-white/70 font-medium">
+                                                    {type.subtitle}
+                                                </p>
+                                                <p className="text-white/50 text-sm leading-relaxed">
+                                                    {type.description}
+                                                </p>
                                             </div>
 
-                                            <div className="space-y-2 min-h-[140px]">
-                                                {type.features.map((feature, idx) => (
-                                                    <div key={idx} className="flex items-start gap-2 text-sm">
-                                                        <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
-                                                        <span className="text-white/70">{feature}</span>
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            <div className="h-px bg-white/10"></div>
 
-                                            <LiquidButton
-                                                onClick={() => handleRedirectToPayment(type.type)}
-                                                disabled={isCurrentPlan}
-                                                variant={isCurrentPlan ? 'secondary' : 'primary'}
-                                                glow={type.popular && !isCurrentPlan ? 'purple' : undefined}
-                                                fullWidth
-                                                className={isCurrentPlan ? 'cursor-not-allowed opacity-60' : ''}
-                                            >
-                                                {isCurrentPlan ? '✓ Plan actuel' : `Passer à ${type.name}`}
-                                            </LiquidButton>
+                                            <div className="space-y-3">
+                                                <h4 className="text-sm font-bold text-white/80 uppercase tracking-wide">
+                                                    ✨ Fonctionnalités
+                                                </h4>
+                                                <ul className="space-y-2">
+                                                    {type.features.slice(0, 5).map((feature, idx) => (
+                                                        <li key={idx} className="flex items-start gap-2 text-sm text-white/80">
+                                                            <CheckCircle className="w-5 h-5 flex-shrink-0 mt-0.5 text-emerald-400" strokeWidth={2.5} />
+                                                            <span>{feature}</span>
+                                                        </li>
+                                                    ))}
+                                                </ul>
+
+                                                {type.features.length > 5 && (
+                                                    <p className="text-xs text-white/50 italic pl-7">
+                                                        + {type.features.length - 5} autres fonctionnalités
+                                                    </p>
+                                                )}
+                                            </div>
                                         </div>
                                     </LiquidCard>
-                                </div>
+                                </button>
                             );
                         })}
                     </div>
 
-                    <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
-                        <p className="text-sm text-amber-300">
-                            <strong>💳 Note :</strong> Le paiement est actuellement simulé. L'intégration PayPal/Stripe sera disponible prochainement.
+                    <LiquidCard glow="default" padding="lg" className="mt-8">
+                        <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-4">
+                            <span className="text-2xl">ℹ️</span>
+                            Informations importantes
+                        </h3>
+
+                        <div className="space-y-3 text-sm text-white/70 leading-relaxed">
+                            <p>
+                                <strong className="text-white font-bold">🔞 Âge légal requis :</strong> Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays de résidence) pour créer un compte. Une vérification sera effectuée lors de l'inscription.
+                            </p>
+
+                            {selectedType === 'producteur' && (
+                                <div className="bg-purple-500/10 p-4 rounded-xl border border-purple-500/20">
+                                    <strong className="text-white">🏢 Compte Producteur :</strong> Vous devrez fournir des justificatifs légaux (SIRET/SIREN ou équivalent, attestation d'activité légale) et une pièce d'identité pour activer votre compte professionnel.
+                                </div>
+                            )}
+
+                            {selectedType === 'influenceur' && (
+                                <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
+                                    <strong className="text-white">📱 Compte Influenceur :</strong> Vérification d'âge par pièce d'identité requise.
+                                </div>
+                            )}
+
+                            <p>
+                                <strong className="text-white">📜 Conformité légale :</strong> En continuant, vous acceptez nos
+                                <button className="underline hover:text-white transition-colors">
+                                    Conditions Générales d'Utilisation
+                                </button>
+                                {' '}et notre
+                                <button className="underline hover:text-white transition-colors">
+                                    Politique de Confidentialité
+                                </button>
+                                . Vous reconnaissez avoir pris connaissance du disclaimer RDR (Réduction Des Risques).
+                            </p>
+
+                            {(selectedType === 'influenceur' || selectedType === 'producteur') && (
+                                <div className="bg-amber-500/20 border border-amber-400/30 p-4 rounded-xl">
+                                    <strong className="text-amber-300 font-bold">💳 Abonnement :</strong> <span className="text-white">Le plan {accountTypes.find(t => t.type === selectedType)?.name} coûte {accountTypes.find(t => t.type === selectedType)?.price}€/mois. Vous pourrez activer l'abonnement après avoir complété votre profil et la vérification d'identité.</span>
+                                </div>
+                            )}
+                        </div>
+                    </LiquidCard>
+
+                    <div className="mt-8 text-center">
+                        <LiquidButton
+                            onClick={handleContinue}
+                            variant="primary"
+                            size="xl"
+                            glow="purple"
+                            className="px-12"
+                        >
+                            <span>
+                                {selectedType === accountType
+                                    ? 'Garder ce plan'
+                                    : `Continuer avec ${accountTypes.find(t => t.type === selectedType)?.name}`}
+                            </span>
+                            <svg className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                            </svg>
+                        </LiquidButton>
+
+                        <p className="mt-4 text-white/50 text-sm">
+                            Vous pourrez changer de plan à tout moment depuis vos paramètres
                         </p>
                     </div>
                 </div>
