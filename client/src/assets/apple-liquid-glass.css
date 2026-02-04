@@ -465,54 +465,72 @@ textarea.liquid-input:focus {
 
 /* === LIQUID GLASS RANGE SLIDER === */
 .liquid-range,
-input[type="range"].liquid-range {
+input[type="range"].liquid-range,
+.liquid-glass input[type="range"],
+.liquid-glass--card input[type="range"],
+.liquid-card input[type="range"],
+.glass input[type="range"] {
     -webkit-appearance: none;
     appearance: none;
     width: 100%;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.1) !important;
-    border-radius: 100px;
+    height: 6px; /* reduced thickness */
+    background: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 999px;
     outline: none;
     cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.liquid-range::-webkit-slider-thumb,
-input[type="range"].liquid-range::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 22px;
-    height: 22px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(168, 85, 247, 0.9));
-    border-radius: 50%;
-    cursor: grab;
-    box-shadow:
-        0 0 15px rgba(139, 92, 246, 0.5),
-        0 2px 8px rgba(0, 0, 0, 0.3),
-        inset 0 1px 0 rgba(255, 255, 255, 0.3);
     transition: all 0.2s ease;
 }
 
-.liquid-range::-webkit-slider-thumb:hover,
-input[type="range"].liquid-range::-webkit-slider-thumb:hover {
-    transform: scale(1.15);
+/* Smaller thumb for tighter UI */
+.liquid-range::-webkit-slider-thumb,
+input[type="range"].liquid-range::-webkit-slider-thumb,
+.liquid-glass input[type="range"]::-webkit-slider-thumb,
+.liquid-glass--card input[type="range"]::-webkit-slider-thumb,
+.liquid-card input[type="range"]::-webkit-slider-thumb,
+.glass input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(168, 85, 247, 0.95));
+    border-radius: 50%;
+    cursor: grab;
     box-shadow:
-        0 0 25px rgba(139, 92, 246, 0.7),
-        0 4px 12px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.4);
+        0 0 10px rgba(139, 92, 246, 0.45),
+        0 1px 6px rgba(0, 0, 0, 0.28),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    transition: transform 0.12s ease, box-shadow 0.12s ease;
+    margin-top: -4px; /* vertically center smaller thumb on track */
+}
+
+.liquid-range::-webkit-slider-thumb:hover,
+input[type="range"].liquid-range::-webkit-slider-thumb:hover,
+.liquid-glass input[type="range"]::-webkit-slider-thumb:hover,
+.liquid-glass--card input[type="range"]::-webkit-slider-thumb:hover,
+.liquid-card input[type="range"]::-webkit-slider-thumb:hover,
+.glass input[type="range"]::-webkit-slider-thumb:hover {
+    transform: scale(1.12);
+    box-shadow:
+        0 0 16px rgba(139, 92, 246, 0.65),
+        0 3px 10px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.32);
 }
 
 .liquid-range::-moz-range-thumb,
-input[type="range"].liquid-range::-moz-range-thumb {
-    width: 22px;
-    height: 22px;
-    background: linear-gradient(135deg, rgba(139, 92, 246, 0.9), rgba(168, 85, 247, 0.9));
+input[type="range"].liquid-range::-moz-range-thumb,
+.liquid-glass input[type="range"]::-moz-range-thumb,
+.liquid-glass--card input[type="range"]::-moz-range-thumb,
+.liquid-card input[type="range"]::-moz-range-thumb,
+.glass input[type="range"]::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.95), rgba(168, 85, 247, 0.95));
     border-radius: 50%;
     border: none;
     cursor: grab;
     box-shadow:
-        0 0 15px rgba(139, 92, 246, 0.5),
-        0 2px 8px rgba(0, 0, 0, 0.3);
+        0 0 10px rgba(139, 92, 246, 0.45),
+        0 1px 6px rgba(0, 0, 0, 0.28);
 }
 
 /* Range slider color variants */

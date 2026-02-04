@@ -162,21 +162,6 @@ export default function EffectsSection({ productType, data: directData, onChange
                 title="💥 Sélectionner des effets"
                 helper="Choisissez jusqu'à 8 effets ressentis"
             />
-
-            {/* Résumé */}
-            <div className="p-4 bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-xl border border-cyan-500/20 space-y-2">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-cyan-400" />
-                    Résumé des effets
-                </h4>
-                <div className="text-sm text-white/60 space-y-1">
-                    <p><span className="font-semibold text-white/80">Montée :</span> {ONSET_LEVELS[onset - 1]?.label || `${onset}/10`} ({ONSET_LEVELS[onset - 1]?.time || ''})</p>
-                    <p><span className="font-semibold text-white/80">Intensité :</span> {INTENSITY_LEVELS[intensity - 1]?.label || `${intensity}/10`}</p>
-                    <p><span className="font-semibold text-white/80">Durée :</span> {DURATION_OPTIONS.find(d => d.id === duration)?.label || duration}</p>
-                    <p><span className="font-semibold text-white/80">Effets :</span> {selectedEffects.length} sélectionné(s)</p>
-                </div>
-            </div>
-
             <LiquidDivider />
 
             {/* EXPÉRIENCE D'UTILISATION */}
