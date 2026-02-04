@@ -34,6 +34,29 @@ export const accountService = {
 }
 
 /**
+ * Service paiement (Stripe mock / checkout)
+ */
+export const paymentService = {
+    async createCheckout(accountType) {
+        return fetchAPI(`${API_BASE}/payment/create-checkout`, {
+            method: 'POST',
+            body: JSON.stringify({ accountType })
+        })
+    },
+
+    async upgrade(accountType, paymentCompleted = false) {
+        return fetchAPI(`${API_BASE}/payment/upgrade`, {
+            method: 'POST',
+            body: JSON.stringify({ accountType, paymentCompleted })
+        })
+    },
+
+    async status() {
+        return fetchAPI(`${API_BASE}/payment/status`)
+    }
+}
+
+/**
  * Types de produits et leurs routes correspondantes
  */
 export const PRODUCT_TYPES = {

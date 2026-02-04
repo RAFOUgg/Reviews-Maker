@@ -45,12 +45,11 @@ export default function StatsTab({ userTier = 'amateur' }) {
                 const data = await response.json()
                 setStats(data)
             } else {
-                // Utiliser des données mock si l'API n'existe pas encore
-                setStats(getMockStats())
+                setStats(null)
             }
         } catch (error) {
-            // Fallback sur données mock
-            setStats(getMockStats())
+            console.error('Erreur récupération des stats', error)
+            setStats(null)
         } finally {
             setLoading(false)
         }

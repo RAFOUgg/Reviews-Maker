@@ -5,7 +5,7 @@ import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
 import { useToast } from '../shared/ToastContainer';
-import { accountService } from '../../services/apiService';
+import { accountService, paymentService } from '../../services/apiService';
 
 export default function UpgradeModal({ isOpen, onClose }) {
     const { accountType, checkAuth } = useStore();
@@ -96,9 +96,32 @@ export default function UpgradeModal({ isOpen, onClose }) {
             return;
         }
 
-        // Try to change account type immediately (upgrade flow from account settings)
+        // If requesting Producteur, start payment/checkout flow instead
+        if (selectedType === 'producteur') {
+            try {
+                const loadingId = toast.loading('Redirection vers le paiement...');
+                const res = await paymentService.createCheckout('producteur');
+                toast.remove(loadingId);
+
+                if (res?.url) {
+                    toast.info('Ouverture de la page de paiement...');
+                    window.open(res.url, '_blank');
+                    onClose();
+                    return;
+                }
+
+                toast.error(res?.message || 'Impossible de démarrer le paiement');
+            } catch (err) {
+                toast.error(err?.message || 'Erreur lors du démarrage du paiement');
+            }
+
+            return;
+        }
+
+        // Otherwise try to change account type immediately (amateur <-> influenceur etc.)
+        let loadingId;
         try {
-            const loadingId = toast.loading('Mise à jour du plan en cours...');
+            loadingId = toast.loading('Mise à jour du plan en cours...');
             const res = await accountService.changeType(selectedType);
             toast.remove(loadingId);
             toast.success(res.message || 'Votre compte a été mis à jour avec succès !');
@@ -108,8 +131,27 @@ export default function UpgradeModal({ isOpen, onClose }) {
 
             onClose();
         } catch (err) {
+            if (loadingId) toast.remove(loadingId);
             const msg = err?.message || (err?.code ? `${err.code}` : 'Erreur lors de la mise à jour');
             toast.error(msg);
+        }
+    };
+
+    const handleCancelSubscription = async () => {
+        const confirm = window.confirm('Voulez-vous vraiment résilier votre abonnement ? Votre contenu restera visible mais vous perdrez l\'accès à la création.');
+        if (!confirm) return;
+
+        const loadingId = toast.loading('Résiliation en cours...');
+        try {
+            // Downgrade to amateur
+            const res = await accountService.changeType('amateur');
+            toast.remove(loadingId);
+            toast.success(res.message || 'Abonnement résilié, compte downgradé.');
+            await checkAuth();
+            onClose();
+        } catch (err) {
+            toast.remove(loadingId);
+            toast.error(err?.message || 'Erreur lors de la résiliation');
         }
     };
 
@@ -125,7 +167,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
                 <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/8 rounded-full blur-[100px]" />
             </div>
 
-            <div className="bg-gradient-to-br from-[#0a0a1a] to-[#07070f] rounded-2xl shadow-2xl max-w-5xl w-full border border-white/10 relative">
+            <div className="bg-gradient-to-br from-[#0a0a1a] to-[#07070f] rounded-2xl shadow-2xl max-w-5xl w-full border border-white/10 relative max-h-[90vh] overflow-hidden">
                 <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <div>
                         <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
@@ -142,8 +184,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
                         <X size={24} className="text-white/60" />
                     </button>
                 </div>
-
-                <div className="p-6">
+                <div className="p-6 overflow-auto" style={{ maxHeight: 'calc(90vh - 96px)' }}>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {accountTypes.map((type) => {
                             const isSelected = selectedType === type.type;
@@ -295,6 +336,18 @@ export default function UpgradeModal({ isOpen, onClose }) {
                             Vous pourrez changer de plan à tout moment depuis vos paramètres
                         </p>
                     </div>
+
+                    {/* Cancel subscription action */}
+                    {accountType && accountType !== 'amateur' && (
+                        <div className="mt-6 text-center">
+                            <button
+                                onClick={handleCancelSubscription}
+                                className="py-2 px-4 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors"
+                            >
+                                Résilier l'abonnement
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>

@@ -1,44 +1,40 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { Clock, Download, Receipt, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
+import { paymentService } from '../../services/apiService'
 
 /**
  * SubscriptionHistory - Affiche l'historique des abonnements et paiements
  * Affiche: Transactions passées, factures, dates de renouvellement
  */
 export default function SubscriptionHistory({ subscriptionHistory = [] }) {
-    // Données de démonstration (sera remplacé par API)
-    const mockHistory = subscriptionHistory.length > 0 ? subscriptionHistory : [
-        {
-            id: '1',
-            type: 'subscription_start',
-            date: '2026-01-15T10:00:00Z',
-            amount: 29.99,
-            status: 'success',
-            plan: 'Producteur',
-            period: 'mensuel',
-            invoice: 'INV-2026-001'
-        },
-        {
-            id: '2',
-            type: 'payment',
-            date: '2025-12-15T10:00:00Z',
-            amount: 29.99,
-            status: 'success',
-            plan: 'Producteur',
-            period: 'mensuel',
-            invoice: 'INV-2025-012'
-        },
-        {
-            id: '3',
-            type: 'payment',
-            date: '2025-11-15T10:00:00Z',
-            amount: 29.99,
-            status: 'success',
-            plan: 'Producteur',
-            period: 'mensuel',
-            invoice: 'INV-2025-011'
+    const [history, setHistory] = useState(subscriptionHistory || [])
+    const [loading, setLoading] = useState(false)
+    const [nextBilling, setNextBilling] = useState(null)
+
+    useEffect(() => {
+        let mounted = true
+        const fetchStatus = async () => {
+            setLoading(true)
+            try {
+                const res = await paymentService.status()
+                // backend returns { user } with subscriptionStatus etc.
+                if (!mounted) return
+                if (res?.user?.subscriptionHistory) {
+                    setHistory(res.user.subscriptionHistory)
+                }
+                if (res?.user?.nextBillingDate) setNextBilling(res.user.nextBillingDate)
+            } catch (err) {
+                // keep empty state if API not available
+                console.error('Payment status error', err)
+            } finally {
+                if (mounted) setLoading(false)
+            }
         }
-    ]
+
+        fetchStatus()
+
+        return () => { mounted = false }
+    }, [])
 
     const getStatusIcon = (status) => {
         switch (status) {
@@ -93,7 +89,16 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
         })
     }
 
-    if (mockHistory.length === 0) {
+    if (loading) {
+        return (
+            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 text-center">
+                <Clock className="w-12 h-12 text-gray-500 mx-auto mb-3 animate-spin" />
+                <p className="text-gray-400">Chargement de l'historique...</p>
+            </div>
+        )
+    }
+
+    if ((history || []).length === 0) {
         return (
             <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 text-center">
                 <Clock className="w-12 h-12 text-gray-500 mx-auto mb-3" />
@@ -116,7 +121,7 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
 
             <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
                 <div className="divide-y divide-gray-700/50">
-                    {mockHistory.map((item) => (
+                    {history.map((item) => (
                         <div key={item.id} className="p-4 hover:bg-gray-700/20 transition-colors">
                             <div className="flex items-center justify-between">
                                 <div className="flex items-center gap-3">
@@ -170,7 +175,7 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
                     <div>
                         <p className="text-blue-300 font-medium">Prochain prélèvement</p>
                         <p className="text-sm text-blue-400/80">
-                            15 février 2026 • 29,99€ (Producteur mensuel)
+                            {nextBilling ? `${new Date(nextBilling).toLocaleDateString('fr-FR')} • ` : 'Aucun prochain prélèvement enregistré'}
                         </p>
                     </div>
                 </div>

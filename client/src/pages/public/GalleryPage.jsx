@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { reviewsService } from '../../services/apiService';
 import {
   Search, Grid, List, Heart, MessageCircle, Eye, Star,
   Calendar, TrendingUp
@@ -117,20 +118,9 @@ export default function GalleryPage() {
     const fetchReviews = async () => {
       setLoading(true);
       try {
-        const mockReviews = Array.from({ length: 12 }, (_, i) => ({
-          id: `review-${i}`,
-          name: `Purple Haze ${i + 1}`,
-          type: ['flower', 'hash', 'concentrate', 'edible'][i % 4],
-          typeName: ['Fleur', 'Hash', 'Concentré', 'Comestible'][i % 4],
-          rating: (7 + Math.random() * 3),
-          imageUrl: `https://picsum.photos/seed/${i}/400/400`,
-          author: { username: `grower${i}` },
-          likes: Math.floor(Math.random() * 100),
-          comments: Math.floor(Math.random() * 20),
-          views: Math.floor(Math.random() * 500),
-          createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000),
-        }));
-        setReviews(mockReviews);
+        const res = await reviewsService.getAll({ type: selectedType === 'all' ? undefined : selectedType });
+        if (res?.reviews) setReviews(res.reviews);
+        else if (Array.isArray(res)) setReviews(res);
       } catch (error) {
         console.error('Erreur chargement reviews:', error);
       } finally {
