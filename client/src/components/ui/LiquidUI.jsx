@@ -393,6 +393,21 @@ export function LiquidSelect({
         setSearch('')
     }
 
+    // Calculate dropdown position
+    const [dropdownStyle, setDropdownStyle] = useState({})
+    useEffect(() => {
+        if (isOpen && containerRef.current) {
+            const rect = containerRef.current.getBoundingClientRect()
+            setDropdownStyle({
+                position: 'fixed',
+                top: rect.bottom + 8,
+                left: rect.left,
+                width: rect.width,
+                zIndex: 99999
+            })
+        }
+    }, [isOpen])
+
     return (
         <div className={`flex flex-col gap-2 relative ${wrapperClassName}`} ref={containerRef}>
             {label && (
@@ -419,56 +434,60 @@ export function LiquidSelect({
                 </motion.div>
             </button>
 
-            {/* Dropdown */}
-            <AnimatePresence>
-                {isOpen && (
-                    <motion.div
-                        className="liquid-select-dropdown"
-                        initial={{ opacity: 0, y: -10, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                        transition={{ duration: 0.15 }}
-                    >
-                        {/* Search input */}
-                        {searchable && (
-                            <div className="p-2 border-b border-white/10">
-                                <input
-                                    ref={inputRef}
-                                    type="text"
-                                    className="liquid-select-search"
-                                    placeholder="Rechercher..."
-                                    value={search}
-                                    onChange={(e) => setSearch(e.target.value)}
-                                />
-                            </div>
-                        )}
-
-                        {/* Options */}
-                        <div className="liquid-select-options">
-                            {filteredOptions.length === 0 ? (
-                                <div className="px-4 py-3 text-white/40 text-sm text-center">
-                                    Aucun résultat
+            {/* Dropdown - rendered via portal to escape overflow:hidden */}
+            {typeof window !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {isOpen && (
+                        <motion.div
+                            className="liquid-select-dropdown"
+                            style={dropdownStyle}
+                            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+                            transition={{ duration: 0.15 }}
+                        >
+                            {/* Search input */}
+                            {searchable && (
+                                <div className="p-2 border-b border-white/10">
+                                    <input
+                                        ref={inputRef}
+                                        type="text"
+                                        className="liquid-select-search"
+                                        placeholder="Rechercher..."
+                                        value={search}
+                                        onChange={(e) => setSearch(e.target.value)}
+                                    />
                                 </div>
-                            ) : (
-                                filteredOptions.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        className={`liquid-select-option ${option.value === value ? 'selected' : ''} ${option.disabled ? 'disabled' : ''}`}
-                                        onClick={() => handleSelect(option)}
-                                    >
-                                        {option.icon && <span className="mr-2">{option.icon}</span>}
-                                        <span className="flex-1 text-left">{option.label}</span>
-                                        {option.value === value && (
-                                            <Check size={16} className="text-violet-400" />
-                                        )}
-                                    </button>
-                                ))
                             )}
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
+
+                            {/* Options */}
+                            <div className="liquid-select-options">
+                                {filteredOptions.length === 0 ? (
+                                    <div className="px-4 py-3 text-white/40 text-sm text-center">
+                                        Aucun résultat
+                                    </div>
+                                ) : (
+                                    filteredOptions.map((option) => (
+                                        <button
+                                            key={option.value}
+                                            type="button"
+                                            className={`liquid-select-option ${option.value === value ? 'selected' : ''} ${option.disabled ? 'disabled' : ''}`}
+                                            onClick={() => handleSelect(option)}
+                                        >
+                                            {option.icon && <span className="mr-2">{option.icon}</span>}
+                                            <span className="flex-1 text-left">{option.label}</span>
+                                            {option.value === value && (
+                                                <Check size={16} className="text-violet-400" />
+                                            )}
+                                        </button>
+                                    ))
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
             {error && <p className="text-red-400 text-xs ml-1">{error}</p>}
         </div>
     )
