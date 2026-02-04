@@ -99,7 +99,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
     if (!isOpen) return null
 
     const modalContent = (
-        <div 
+        <div
             className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto"
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
@@ -125,8 +125,8 @@ export default function UpgradeModal({ isOpen, onClose }) {
                             <div
                                 key={tier.id}
                                 className={`relative rounded-xl border-2 transition-all ${tier.featured
-                                        ? 'border-blue-500 shadow-2xl shadow-blue-500/20 lg:scale-105 order-first lg:order-none'
-                                        : 'border-gray-700 hover:border-gray-600'
+                                    ? 'border-blue-500 shadow-2xl shadow-blue-500/20 lg:scale-105 order-first lg:order-none'
+                                    : 'border-gray-700 hover:border-gray-600'
                                     }`}
                             >
                                 {/* Featured badge */}
@@ -182,8 +182,8 @@ export default function UpgradeModal({ isOpen, onClose }) {
                                         }}
                                         disabled={tier.ctaDisabled}
                                         className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${tier.ctaDisabled
-                                                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                                : `bg-gradient-to-r ${tier.color} ${tier.textColor} hover:shadow-lg transform hover:scale-105`
+                                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
+                                            : `bg-gradient-to-r ${tier.color} ${tier.textColor} hover:shadow-lg transform hover:scale-105`
                                             }`}
                                     >
                                         {tier.cta}
