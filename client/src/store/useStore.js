@@ -1,31 +1,6 @@
 import { create } from 'zustand'
 import { reviewsService, authService, usersService } from '../services/apiService'
 
-/**
- * Extrait le type de compte depuis les rôles utilisateur
- * @param {string|null} rolesJson - Champ roles en JSON
- * @returns {string} Type de compte: 'admin' | 'producteur' | 'influenceur' | 'amateur'
- */
-function extractAccountType(rolesJson) {
-    if (!rolesJson) return 'amateur'
-    try {
-        const parsed = typeof rolesJson === 'string' ? JSON.parse(rolesJson) : rolesJson
-        const roles = parsed?.roles || []
-
-        // Priorité: admin > producteur > influenceur > amateur
-        if (roles.includes('admin')) return 'admin'
-        if (roles.includes('producteur')) return 'producteur'
-        if (roles.includes('influenceur')) return 'influenceur'
-        // Rétrocompatibilité
-        if (roles.includes('producer')) return 'producteur'
-        if (roles.includes('influencer_pro') || roles.includes('influencer_basic')) return 'influenceur'
-
-        return 'amateur'
-    } catch {
-        return 'amateur'
-    }
-}
-
 export const useStore = create((set, get) => ({
     // Reviews state
     reviews: [],
@@ -66,8 +41,9 @@ export const useStore = create((set, get) => ({
     checkAuth: async () => {
         try {
             const user = await authService.getMe()
-            // Extract account type from user roles
-            const accountType = extractAccountType(user?.roles) || 'amateur'
+            // Utiliser directement user.accountType fourni par le backend
+            // Le backend calcule déjà le type correct via getUserAccountType()
+            const accountType = user?.accountType || 'amateur'
             set({ user, isAuthenticated: true, accountType })
             return user
         } catch (error) {
