@@ -136,10 +136,13 @@ export function canUpgradeAccountType(user, targetType) {
         }
     }
 
-    // Producteur peut downgrade vers Amateur ou Influenceur
+    // Producteur peut downgrade vers Amateur uniquement
     if (currentType === ACCOUNT_TYPES.PRODUCTEUR) {
-        if ([ACCOUNT_TYPES.AMATEUR, ACCOUNT_TYPES.INFLUENCEUR].includes(targetType)) {
+        if (targetType === ACCOUNT_TYPES.AMATEUR) {
             return { allowed: true, needsCancellation: true };
+        }
+        if (targetType === ACCOUNT_TYPES.INFLUENCEUR) {
+            return { allowed: false, reason: 'Impossible de rétrograder de Producteur vers Influenceur' };
         }
     }
 
