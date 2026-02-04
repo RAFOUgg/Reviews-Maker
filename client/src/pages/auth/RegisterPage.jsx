@@ -31,7 +31,7 @@ export default function RegisterPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
-    const accountType = searchParams.get('type') || 'consumer'; // consumer, influencer, producer
+    const accountType = searchParams.get('type') || 'amateur'; // amateur, influenceur, producteur
     const isPaid = searchParams.get('paid') === 'true';
 
     const [formData, setFormData] = useState({
@@ -46,7 +46,7 @@ export default function RegisterPage() {
 
     // Rediriger vers choix de compte si pas de type sélectionné
     useEffect(() => {
-        if (!accountType || !['consumer', 'influencer', 'producer'].includes(accountType)) {
+        if (!accountType || !['amateur', 'influenceur', 'producteur'].includes(accountType)) {
             navigate('/choose-account');
         }
     }, [accountType, navigate]);
@@ -121,16 +121,16 @@ export default function RegisterPage() {
 
     const getAccountTypeLabel = () => {
         switch (accountType) {
-            case 'influencer': return 'Influenceur';
-            case 'producer': return 'Producteur';
+            case 'influenceur': return 'Influenceur';
+            case 'producteur': return 'Producteur';
             default: return 'Amateur';
         }
     };
 
     const getAccountTypeGlow = () => {
         switch (accountType) {
-            case 'influencer': return 'pink';
-            case 'producer': return 'cyan';
+            case 'influenceur': return 'pink';
+            case 'producteur': return 'cyan';
             default: return 'purple';
         }
     };

@@ -50,8 +50,8 @@ export function useAuth() {
                         const accountData = await accountResponse.json()
                         setAccountInfo(accountData)
 
-                        // Si nouveau utilisateur consumer, proposer sélection
-                        const isNewUser = accountData.accountType === 'consumer'
+                        // Si nouveau utilisateur amateur, proposer sélection
+                        const isNewUser = accountData.accountType === 'amateur'
                             && !localStorage.getItem('accountTypeSelected')
                         setNeedsAccountTypeSelection(isNewUser)
                     }

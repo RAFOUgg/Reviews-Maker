@@ -14,8 +14,8 @@ export default function AccountChoicePage() {
     const isUpgrade = mode === 'upgrade'
 
     const initial = useMemo(() => {
-        if (isUpgrade) return accountType || 'consumer'
-        return localStorage.getItem('preferredAccountType') || 'consumer'
+        if (isUpgrade) return accountType || 'amateur'
+        return localStorage.getItem('preferredAccountType') || 'amateur'
     }, [isUpgrade, accountType])
 
     const [selectedType, setSelectedType] = useState(initial)
@@ -23,7 +23,7 @@ export default function AccountChoicePage() {
     // Définition statique des types de comptes selon le CDC (cahier des charges)
     const accountTypes = [
         {
-            type: 'consumer',
+            type: 'amateur',
             name: 'Amateur',
             subtitle: 'Compte Gratuit',
             description: 'Créez et gérez vos reviews personnelles',
@@ -48,7 +48,7 @@ export default function AccountChoicePage() {
             ]
         },
         {
-            type: 'influencer',
+            type: 'influenceur',
             name: 'Influenceur',
             subtitle: 'Pour Créateurs de Contenu',
             description: 'Exports avancés et partage optimisé',
@@ -74,7 +74,7 @@ export default function AccountChoicePage() {
             ]
         },
         {
-            type: 'producer',
+            type: 'producteur',
             name: 'Producteur',
             subtitle: 'Professionnel',
             description: 'Traçabilité complète et exports professionnels',
@@ -106,14 +106,14 @@ export default function AccountChoicePage() {
             // Mode UPGRADE: Changement de plan
             if (selectedType === accountType) {
                 navigate('/account')  // Même plan, retour
-            } else if (selectedType === 'consumer') {
+            } else if (selectedType === 'amateur') {
                 navigate(`/payment?type=${selectedType}&mode=downgrade`)  // Downgrade
             } else {
                 navigate(`/payment?type=${selectedType}&mode=upgrade`)  // Upgrade
             }
         } else {
             // Mode SIGNUP: Flux de création
-            if (selectedType === 'influencer' || selectedType === 'producer') {
+            if (selectedType === 'influenceur' || selectedType === 'producteur') {
                 navigate(`/payment?type=${selectedType}`)  // Paiement → Inscription
             } else {
                 navigate(`/register?type=${selectedType}`)  // Inscription directe
@@ -274,13 +274,13 @@ export default function AccountChoicePage() {
                             <strong className="text-white font-bold">🔞 Âge légal requis :</strong> Vous devez avoir au moins 18 ans (ou 21 ans selon votre pays de résidence) pour créer un compte. Une vérification sera effectuée lors de l'inscription.
                         </p>
 
-                        {selectedType === 'producer' && (
+                        {selectedType === 'producteur' && (
                             <div className="bg-purple-500/10 p-4 rounded-xl border border-purple-500/20">
                                 <strong className="text-white">🏢 Compte Producteur :</strong> Vous devrez fournir des justificatifs légaux (SIRET/SIREN ou équivalent, attestation d'activité légale) et une pièce d'identité pour activer votre compte professionnel.
                             </div>
                         )}
 
-                        {selectedType === 'influencer' && (
+                        {selectedType === 'influenceur' && (
                             <div className="bg-blue-500/10 p-4 rounded-xl border border-blue-500/20">
                                 <strong className="text-white">📱 Compte Influenceur :</strong> Vérification d'âge par pièce d'identité requise.
                             </div>
@@ -298,7 +298,7 @@ export default function AccountChoicePage() {
                             . Vous reconnaissez avoir pris connaissance du disclaimer RDR (Réduction Des Risques).
                         </p>
 
-                        {(selectedType === 'influencer' || selectedType === 'producer') && (
+                        {(selectedType === 'influenceur' || selectedType === 'producteur') && (
                             <div className="bg-amber-500/20 border border-amber-400/30 p-4 rounded-xl">
                                 <strong className="text-amber-300 font-bold">💳 Abonnement :</strong> <span className="text-white">Le plan {accountTypes.find(t => t.type === selectedType)?.name} coûte {accountTypes.find(t => t.type === selectedType)?.price}€/mois. Vous pourrez activer l'abonnement après avoir complété votre profil et la vérification d'identité.</span>
                             </div>

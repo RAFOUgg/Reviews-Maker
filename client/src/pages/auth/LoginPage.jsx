@@ -30,7 +30,7 @@ export default function LoginPage() {
                 setShowAgeVerification(true)
             } else {
                 // Redirection selon type de compte
-                if (user.accountType === 'influencer' || user.accountType === 'producer') {
+                if (user.accountType === 'influenceur' || user.accountType === 'producteur') {
                     if (user.subscriptionStatus !== 'active' || user.kycStatus !== 'verified') {
                         navigate('/account')
                     } else {

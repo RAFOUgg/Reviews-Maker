@@ -112,7 +112,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase()
-    const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.CONSUMER
+    const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.AMATEUR
 
     const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } })
     if (existing) {
