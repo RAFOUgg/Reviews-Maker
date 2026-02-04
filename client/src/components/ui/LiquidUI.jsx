@@ -616,11 +616,11 @@ export function LiquidModal({
     showCloseButton = true
 }) {
     const sizeClasses = {
-        sm: 'max-w-sm',
-        md: 'max-w-md',
-        lg: 'max-w-lg',
-        xl: 'max-w-xl',
-        full: 'max-w-4xl'
+        sm: 'max-w-sm w-full',
+        md: 'max-w-lg w-full',
+        lg: 'max-w-xl w-full',
+        xl: 'max-w-2xl w-full',
+        full: 'max-w-4xl w-full'
     }
 
     // Handle ESC key
