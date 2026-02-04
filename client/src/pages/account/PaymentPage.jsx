@@ -5,7 +5,7 @@ import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
 import { ArrowLeft, Check } from 'lucide-react';
 
 const ACCOUNT_TYPES = {
-    'influencer': {
+    'influenceur': {
         name: 'Influenceur',
         price: 15.99,
         icon: '📱',
@@ -18,7 +18,7 @@ const ACCOUNT_TYPES = {
             'Statistiques détaillées'
         ]
     },
-    'producer': {
+    'producteur': {
         name: 'Producteur',
         price: 29.99,
         icon: '👨‍🌾',

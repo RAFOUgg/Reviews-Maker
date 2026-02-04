@@ -96,6 +96,11 @@ router.get('/discord', (req, res, next) => {
     console.log(`[AUTH-DBG] Start discord route - method: ${req.method} originalUrl: ${req.originalUrl} path: ${req.path} ip: ${req.ip}`)
     // Also log any X-Forwarded headers to inspect proxy behavior
     console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
+    // Stocker le type de compte et le statut de paiement en session avant OAuth
+    if (req.query.type) {
+        req.session.pendingAccountType = req.query.type
+        req.session.pendingIsPaid = req.query.paid === 'true'
+    }
     return passport.authenticate('discord')(req, res, next)
 })
 
@@ -272,14 +277,39 @@ router.get('/discord/callback', (req, res, next) => {
     console.log(`[AUTH-DBG] Query params:`, req.query)
     console.log(`[AUTH-DBG] Session ID:`, req.sessionID)
     console.log(`[AUTH-DBG] Headers: Host=${req.headers.host} X-Forwarded-For=${req.headers['x-forwarded-for']} X-Forwarded-Proto=${req.headers['x-forwarded-proto']}`)
+    console.log(`[AUTH-DBG] Pending account type:`, req.session?.pendingAccountType)
 
     return passport.authenticate('discord', {
         failureRedirect: process.env.FRONTEND_URL
-    })(req, res, (err) => {
+    })(req, res, async (err) => {
         if (err) {
             console.error('[AUTH] Error during Discord callback:', err)
             return next(err)
         }
+        
+        // Appliquer le type de compte et statut d'abonnement si stockés en session
+        const pendingType = req.session?.pendingAccountType
+        const isPaid = req.session?.pendingIsPaid
+        if (pendingType && req.user) {
+            const chosenType = Object.values(ACCOUNT_TYPES).includes(pendingType) ? pendingType : ACCOUNT_TYPES.AMATEUR
+            const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCEUR || chosenType === ACCOUNT_TYPES.PRODUCTEUR
+            const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
+            
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    accountType: chosenType,
+                    subscriptionStatus,
+                    roles: JSON.stringify({ roles: [chosenType] })
+                }
+            })
+            console.log(`[AUTH-DBG] Updated user ${req.user.username} with type: ${chosenType}, status: ${subscriptionStatus}`)
+            
+            // Nettoyer la session
+            delete req.session.pendingAccountType
+            delete req.session.pendingIsPaid
+        }
+        
         // Succès : rediriger vers le frontend
         console.log('[AUTH-DBG] Discord auth success! User:', req.user?.username, 'ID:', req.user?.id)
         console.log('[AUTH-DBG] Session after auth:', req.sessionID, 'isAuthenticated:', req.isAuthenticated?.())

@@ -44,13 +44,8 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
 
-    // Rediriger vers choix de compte si pas de type sélectionné
-    // Accepter les variantes anglaises/françaises
-    const validTypes = ['amateur', 'influenceur', 'producteur', 'influencer', 'producer', 'consumer'];
-    const normalizedAccountType = accountType === 'influencer' ? 'influenceur'
-        : accountType === 'producer' ? 'producteur'
-            : accountType === 'consumer' ? 'amateur'
-                : accountType;
+    // Types valides en français uniquement
+    const validTypes = ['amateur', 'influenceur', 'producteur'];
 
     useEffect(() => {
         if (!accountType || !validTypes.includes(accountType)) {
@@ -95,7 +90,7 @@ export default function RegisterPage() {
                     email: formData.email,
                     pseudo: formData.pseudo,
                     password: formData.password,
-                    accountType: normalizedAccountType, // Envoyer le type de compte normalisé
+                    accountType, // Envoyer le type de compte (français)
                     isPaid // Indiquer si l'utilisateur a payé
                 })
             });
@@ -129,7 +124,7 @@ export default function RegisterPage() {
     };
 
     const getAccountTypeLabel = () => {
-        switch (normalizedAccountType) {
+        switch (accountType) {
             case 'influenceur': return 'Influenceur';
             case 'producteur': return 'Producteur';
             default: return 'Amateur';
@@ -137,7 +132,7 @@ export default function RegisterPage() {
     };
 
     const getAccountTypeGlow = () => {
-        switch (normalizedAccountType) {
+        switch (accountType) {
             case 'influenceur': return 'pink';
             case 'producteur': return 'cyan';
             default: return 'purple';
@@ -153,7 +148,7 @@ export default function RegisterPage() {
                 </svg>
             ),
             color: 'bg-[#5865F2]/80 hover:bg-[#5865F2] text-white',
-            href: `/api/auth/discord?accountType=${normalizedAccountType}`
+            href: `/api/auth/discord?type=${accountType}&paid=${isPaid}`
         },
         {
             name: 'Google',
@@ -166,7 +161,7 @@ export default function RegisterPage() {
                 </svg>
             ),
             color: 'bg-white/90 hover:bg-white text-gray-700',
-            href: `/api/auth/google?type=${normalizedAccountType}&paid=${isPaid}`
+            href: `/api/auth/google?type=${accountType}&paid=${isPaid}`
         }
     ];
 
