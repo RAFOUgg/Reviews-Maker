@@ -49,7 +49,7 @@ export default function CreateHashReview() {
         { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' },
         { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'paid' }
     ]
-    
+
     // Filtrer les sections selon le type de compte
     const sections = allSections.filter(section => {
         if (section.access === 'all') return true

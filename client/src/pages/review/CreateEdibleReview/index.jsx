@@ -41,7 +41,7 @@ export default function CreateEdibleReview() {
         { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
         { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' }
     ]
-    
+
     // Filtrer les sections selon le type de compte
     const sections = allSections.filter(section => {
         if (section.access === 'all') return true

@@ -1,16 +1,19 @@
-import React, { useState } from 'react'
+import React from 'react'
+import { createPortal } from 'react-dom'
 import { X, Check } from 'lucide-react'
 import { useStore } from '../../store/useStore'
+import { useNavigate } from 'react-router-dom'
 
 /**
  * Modal de comparaison et upgrade d'abonnement
  * Affiche les 3 tiers avec features et prix
+ * Ordre: Amateur | Producteur (centre, recommandé) | Influenceur
  */
 export default function UpgradeModal({ isOpen, onClose }) {
     const { accountType } = useStore()
-    const [selectedTier, setSelectedTier] = useState(null)
-    const [isProcessing, setIsProcessing] = useState(false)
+    const navigate = useNavigate()
 
+    // Ordre: Amateur (gauche) - Producteur (centre, recommandé) - Influenceur (droite)
     const tiers = [
         {
             id: 'amateur',
@@ -23,12 +26,12 @@ export default function UpgradeModal({ isOpen, onClose }) {
             badgeColor: 'bg-slate-500',
             description: 'Gratuit - Idéal pour commencer',
             features: [
-                { name: '5 exports/mois', included: accountType !== 'amateur' ? false : true },
-                { name: 'Templates prédéfinis', included: accountType !== 'amateur' ? false : true },
-                { name: 'Statistiques basiques', included: accountType !== 'amateur' ? false : true },
-                { name: 'Limite 10 reviews publiques', included: accountType !== 'amateur' ? false : true },
+                { name: '5 exports/mois', included: true },
+                { name: 'Templates prédéfinis', included: true },
+                { name: 'Statistiques basiques', included: true },
+                { name: 'Limite 10 reviews publiques', included: true },
                 { name: 'Pas de drag-drop', included: false },
-                { name: 'Export PNG/JPEG/PDF', included: accountType !== 'amateur' ? false : true },
+                { name: 'Export PNG/JPEG/PDF', included: true },
             ],
             cta: accountType === 'amateur' ? 'Vous êtes ici' : 'Rétrograder',
             ctaDisabled: accountType === 'amateur',
@@ -45,16 +48,16 @@ export default function UpgradeModal({ isOpen, onClose }) {
             description: 'Premium - Pour les producteurs',
             featured: true,
             features: [
-                { name: 'Exports illimités', included: accountType === 'producteur' ? true : false },
-                { name: 'Templates personnalisés', included: accountType === 'producteur' ? true : false },
-                { name: 'Drag-drop editor', included: accountType === 'producteur' ? true : false },
-                { name: 'Pipelines configurables', included: accountType === 'producteur' ? true : false },
-                { name: 'Statistiques avancées', included: accountType === 'producteur' ? true : false },
-                { name: 'Export CSV/JSON/SVG/HTML', included: accountType === 'producteur' ? true : false },
-                { name: 'Filigranes personnalisés', included: accountType === 'producteur' ? true : false },
-                { name: 'Généalogie cultivars (canvas)', included: accountType === 'producteur' ? true : false },
-                { name: '300 dpi export', included: accountType === 'producteur' ? true : false },
-                { name: 'Dashboard culture', included: accountType === 'producteur' ? true : false },
+                { name: 'Exports illimités', included: false },
+                { name: 'Templates personnalisés', included: false },
+                { name: 'Drag-drop editor', included: false },
+                { name: 'Pipelines configurables', included: false },
+                { name: 'Statistiques avancées', included: false },
+                { name: 'Export CSV/JSON/SVG/HTML', included: false },
+                { name: 'Filigranes personnalisés', included: false },
+                { name: 'Généalogie cultivars (canvas)', included: false },
+                { name: '300 dpi export', included: false },
+                { name: 'Dashboard culture', included: false },
             ],
             cta: accountType === 'producteur' ? 'Vous êtes ici' : 'Upgrade vers Producteur',
             ctaDisabled: accountType === 'producteur',
@@ -70,77 +73,66 @@ export default function UpgradeModal({ isOpen, onClose }) {
             badgeColor: 'bg-purple-600',
             description: 'Premium - Pour les influenceurs',
             features: [
-                { name: '50 exports/mois', included: accountType === 'influenceur' ? true : false },
-                { name: 'Prévisualisations détaillées', included: accountType === 'influenceur' ? true : false },
-                { name: 'Analytics d\'engagement', included: accountType === 'influenceur' ? true : false },
-                { name: 'Export haute qualité (300dpi)', included: accountType === 'influenceur' ? true : false },
-                { name: 'Export SVG/PDF', included: accountType === 'influenceur' ? true : false },
-                { name: 'Dashboard influenceur', included: accountType === 'influenceur' ? true : false },
-                { name: 'Statistiques sociales', included: accountType === 'influenceur' ? true : false },
-                { name: 'Accès prévisualisations premium', included: accountType === 'influenceur' ? true : false },
-                { name: 'Templates haute qualité', included: accountType === 'influenceur' ? false : false },
-                { name: 'Partage avancé', included: accountType === 'influenceur' ? true : false },
+                { name: '50 exports/mois', included: false },
+                { name: 'Prévisualisations détaillées', included: false },
+                { name: 'Analytics d\'engagement', included: false },
+                { name: 'Export haute qualité (300dpi)', included: false },
+                { name: 'Export SVG/PDF', included: false },
+                { name: 'Dashboard influenceur', included: false },
+                { name: 'Statistiques sociales', included: false },
+                { name: 'Accès prévisualisations premium', included: false },
+                { name: 'Templates haute qualité', included: false },
+                { name: 'Partage avancé', included: false },
             ],
             cta: accountType === 'influenceur' ? 'Vous êtes ici' : 'Upgrade vers Influenceur',
             ctaDisabled: accountType === 'influenceur',
         },
     ]
 
-    const handleUpgrade = async (tierId) => {
-        setIsProcessing(true)
-        try {
-            // TODO: Intégration Stripe
-            const response = await fetch('/api/subscription/upgrade', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ accountType: tierId })
-            })
-
-            if (response.ok) {
-                // Mettre à jour le store et fermer
-                window.location.reload()
-            }
-        } catch (error) {
-            console.error('Upgrade failed:', error)
-        } finally {
-            setIsProcessing(false)
-        }
+    const handleUpgrade = (tierId) => {
+        if (tierId === 'amateur') return // Ne peut pas downgrader vers amateur
+        // Naviguer vers la page de paiement avec le type sélectionné
+        onClose()
+        navigate(`/payment?type=${tierId}`)
     }
 
     if (!isOpen) return null
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-6xl w-full max-h-[90vh] overflow-y-auto border border-gray-700">
+    const modalContent = (
+        <div 
+            className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto"
+            onClick={(e) => e.target === e.currentTarget && onClose()}
+        >
+            <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-6xl w-full mx-4 my-8 border border-gray-700 flex flex-col">
                 {/* Header */}
-                <div className="sticky top-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700 p-6 flex items-center justify-between">
+                <div className="sticky top-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700 p-4 md:p-6 flex items-center justify-between z-10 rounded-t-2xl">
                     <div>
-                        <h2 className="text-2xl md:text-3xl font-bold text-white mb-1">Choisir votre abonnement</h2>
-                        <p className="text-gray-400">Trouvez le plan qui vous convient</p>
+                        <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Choisir votre abonnement</h2>
+                        <p className="text-gray-400 text-sm">Trouvez le plan qui vous convient</p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors"
+                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
                     >
                         <X size={24} className="text-gray-400" />
                     </button>
                 </div>
 
                 {/* Pricing Cards */}
-                <div className="p-6 md:p-8">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="p-4 md:p-8 flex-1">
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
                         {tiers.map((tier) => (
                             <div
                                 key={tier.id}
                                 className={`relative rounded-xl border-2 transition-all ${tier.featured
-                                        ? 'border-blue-500 shadow-2xl shadow-blue-500/20 md:scale-105'
+                                        ? 'border-blue-500 shadow-2xl shadow-blue-500/20 lg:scale-105 order-first lg:order-none'
                                         : 'border-gray-700 hover:border-gray-600'
                                     }`}
                             >
                                 {/* Featured badge */}
                                 {tier.featured && (
-                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                                        <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-4 py-1 rounded-full text-sm font-semibold">
+                                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
+                                        <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
                                             ⭐ RECOMMANDÉ
                                         </span>
                                     </div>
@@ -181,22 +173,20 @@ export default function UpgradeModal({ isOpen, onClose }) {
                                 </div>
 
                                 {/* CTA Button */}
-                                <div className="p-6 border-t border-gray-700">
+                                <div className="p-4 md:p-6 border-t border-gray-700">
                                     <button
                                         onClick={() => {
                                             if (!tier.ctaDisabled) {
                                                 handleUpgrade(tier.id)
                                             }
                                         }}
-                                        disabled={tier.ctaDisabled || isProcessing}
+                                        disabled={tier.ctaDisabled}
                                         className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${tier.ctaDisabled
                                                 ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                                : `bg-gradient-to-r ${tier.color} ${tier.textColor} hover:shadow-lg hover:shadow-${tier.badgeColor}/50 transform hover:scale-105`
+                                                : `bg-gradient-to-r ${tier.color} ${tier.textColor} hover:shadow-lg transform hover:scale-105`
                                             }`}
                                     >
-                                        {isProcessing && tier.id === selectedTier
-                                            ? 'Traitement...'
-                                            : tier.cta}
+                                        {tier.cta}
                                     </button>
                                 </div>
                             </div>
@@ -204,24 +194,24 @@ export default function UpgradeModal({ isOpen, onClose }) {
                     </div>
 
                     {/* FAQ Section */}
-                    <div className="mt-12 bg-gray-800/30 rounded-xl p-6 border border-gray-700">
-                        <h3 className="text-xl font-bold text-white mb-6">❓ Questions fréquentes</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="mt-8 md:mt-12 bg-gray-800/30 rounded-xl p-4 md:p-6 border border-gray-700">
+                        <h3 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6">❓ Questions fréquentes</h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                             <div>
-                                <h4 className="font-semibold text-white mb-2">Puis-je changer de plan ?</h4>
-                                <p className="text-sm text-gray-400">Oui, vous pouvez changer d'abonnement n'importe quand. Les changements prennent effet immédiatement.</p>
+                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Puis-je changer de plan ?</h4>
+                                <p className="text-xs md:text-sm text-gray-400">Oui, vous pouvez changer d'abonnement n'importe quand. Les changements prennent effet immédiatement.</p>
                             </div>
                             <div>
-                                <h4 className="font-semibold text-white mb-2">Puis-je annuler ?</h4>
-                                <p className="text-sm text-gray-400">Oui, sans engagement. Vous pouvez annuler votre abonnement à tout moment depuis votre compte.</p>
+                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Puis-je annuler ?</h4>
+                                <p className="text-xs md:text-sm text-gray-400">Oui, sans engagement. Vous pouvez annuler votre abonnement à tout moment depuis votre compte.</p>
                             </div>
                             <div>
-                                <h4 className="font-semibold text-white mb-2">Quel paiement acceptez-vous ?</h4>
-                                <p className="text-sm text-gray-400">Nous acceptons les cartes de crédit via Stripe. Les paiements sont sécurisés et vérifiés.</p>
+                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Quel paiement acceptez-vous ?</h4>
+                                <p className="text-xs md:text-sm text-gray-400">Nous acceptons les cartes de crédit via Stripe. Les paiements sont sécurisés et vérifiés.</p>
                             </div>
                             <div>
-                                <h4 className="font-semibold text-white mb-2">Besoin d'aide ?</h4>
-                                <p className="text-sm text-gray-400">Contactez notre support : support@terpologie.eu</p>
+                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Besoin d'aide ?</h4>
+                                <p className="text-xs md:text-sm text-gray-400">Contactez notre support : support@terpologie.eu</p>
                             </div>
                         </div>
                     </div>
@@ -229,4 +219,6 @@ export default function UpgradeModal({ isOpen, onClose }) {
             </div>
         </div>
     )
+
+    return createPortal(modalContent, document.body)
 }
