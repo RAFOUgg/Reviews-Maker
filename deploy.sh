@@ -278,15 +278,31 @@ if [ -d "client/dist" ]; then
     GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "local")
     echo "build=${GIT_HASH}-${TIMESTAMP}" | sudo tee "$TMP_DIR/.build_version" >/dev/null
 
-    # Move atomically
+    # Move atomically (robust): remove old backup, rotate current -> .old, move tmp -> current
     sudo chown -R www-data:www-data "$TMP_DIR"
     # Verify temp dir exists and contains files before moving
     echo "DEBUG: TMP_DIR=${TMP_DIR}"
     if sudo test -d "$TMP_DIR"; then
         echo "DEBUG: listing tmp dir contents:" 
         sudo ls -la "$TMP_DIR" | sed -n '1,200p' || true
-        sudo mv "$TMP_DIR" "${TARGET_DIR}.old" 2>/dev/null || true
-        sudo mv "${TARGET_DIR}.old" "$TARGET_DIR"
+
+        # If a previous backup exists, remove it to avoid mv errors
+        if sudo test -d "${TARGET_DIR}.old"; then
+            echo "DEBUG: removing existing backup ${TARGET_DIR}.old"
+            sudo rm -rf "${TARGET_DIR}.old" || true
+        fi
+
+        # If target exists, move it to .old (rotate)
+        if sudo test -d "$TARGET_DIR"; then
+            echo "DEBUG: rotating current target $TARGET_DIR -> ${TARGET_DIR}.old"
+            sudo mv "$TARGET_DIR" "${TARGET_DIR}.old" || { log_warning "Failed to rotate existing target"; }
+        fi
+
+        # Move new build into place
+        sudo mv "$TMP_DIR" "$TARGET_DIR" || log_error "Failed to move new build into ${TARGET_DIR}"
+
+        # Ensure permissions and cleanup backup
+        sudo chown -R www-data:www-data "$TARGET_DIR"
         sudo rm -rf "${TARGET_DIR}.old" 2>/dev/null || true
         log_success "Frontend built and deployed atomically to ${TARGET_DIR}"
     else
