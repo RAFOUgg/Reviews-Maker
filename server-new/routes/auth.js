@@ -286,7 +286,7 @@ router.get('/discord/callback', (req, res, next) => {
             console.error('[AUTH] Error during Discord callback:', err)
             return next(err)
         }
-        
+
         // Appliquer le type de compte et statut d'abonnement si stockés en session
         const pendingType = req.session?.pendingAccountType
         const isPaid = req.session?.pendingIsPaid
@@ -294,7 +294,7 @@ router.get('/discord/callback', (req, res, next) => {
             const chosenType = Object.values(ACCOUNT_TYPES).includes(pendingType) ? pendingType : ACCOUNT_TYPES.AMATEUR
             const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCEUR || chosenType === ACCOUNT_TYPES.PRODUCTEUR
             const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
-            
+
             await prisma.user.update({
                 where: { id: req.user.id },
                 data: {
@@ -304,12 +304,12 @@ router.get('/discord/callback', (req, res, next) => {
                 }
             })
             console.log(`[AUTH-DBG] Updated user ${req.user.username} with type: ${chosenType}, status: ${subscriptionStatus}`)
-            
+
             // Nettoyer la session
             delete req.session.pendingAccountType
             delete req.session.pendingIsPaid
         }
-        
+
         // Succès : rediriger vers le frontend
         console.log('[AUTH-DBG] Discord auth success! User:', req.user?.username, 'ID:', req.user?.id)
         console.log('[AUTH-DBG] Session after auth:', req.sessionID, 'isAuthenticated:', req.isAuthenticated?.())
@@ -488,7 +488,7 @@ router.get('/google/callback', (req, res, next) => {
             console.error('[AUTH] Error during Google callback:', err)
             return next(err)
         }
-        
+
         // Appliquer le type de compte et statut d'abonnement si stockés en session
         const pendingType = req.session?.pendingAccountType
         const isPaid = req.session?.pendingIsPaid
@@ -496,7 +496,7 @@ router.get('/google/callback', (req, res, next) => {
             const chosenType = Object.values(ACCOUNT_TYPES).includes(pendingType) ? pendingType : ACCOUNT_TYPES.AMATEUR
             const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCEUR || chosenType === ACCOUNT_TYPES.PRODUCTEUR
             const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
-            
+
             await prisma.user.update({
                 where: { id: req.user.id },
                 data: {
@@ -506,12 +506,12 @@ router.get('/google/callback', (req, res, next) => {
                 }
             })
             console.log(`[AUTH-DBG] Updated user ${req.user.username} with type: ${chosenType}, status: ${subscriptionStatus}`)
-            
+
             // Nettoyer la session
             delete req.session.pendingAccountType
             delete req.session.pendingIsPaid
         }
-        
+
         // Succès : rediriger vers le frontend
         console.log('[AUTH-DBG] Google auth success! User:', req.user?.username, 'ID:', req.user?.id)
         console.log('[AUTH-DBG] Session after auth:', req.sessionID, 'isAuthenticated:', req.isAuthenticated?.())

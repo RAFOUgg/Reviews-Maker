@@ -102,13 +102,15 @@ export function useAuth() {
     const handleAgeVerified = useCallback(async () => {
         setNeedsAgeVerification(false)
         setNeedsConsent(true)
+        await checkAuth() // Rafraîchir le user dans le store avec birthdate/country
         await loadLegalStatus()
-    }, [loadLegalStatus])
+    }, [checkAuth, loadLegalStatus])
 
     const handleConsentAccepted = useCallback(async () => {
         setNeedsConsent(false)
+        await checkAuth() // Rafraîchir le user dans le store avec consentRDR
         await loadLegalStatus()
-    }, [loadLegalStatus])
+    }, [checkAuth, loadLegalStatus])
 
     const handleAccountTypeSelected = useCallback(async () => {
         setNeedsAccountTypeSelection(false)
