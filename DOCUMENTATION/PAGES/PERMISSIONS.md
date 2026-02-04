@@ -31,40 +31,40 @@
 | Permission | Amateur | Producteur | Influenceur |
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
-| Section Génétiques | ✓ | ✓ | ✓ |
-| Pipeline Culture | ✗ | ✓ | ✓ (lecture) |
+| Section Génétiques | ✗ | ✓ | ✗ |
+| Analyses | ✗ | ✓ | ✗ |
+| Pipeline Culture | ✗ | ✓ | ✗ |
 | Visuel & Technique | ✓ | ✓ | ✓ |
 | Odeurs | ✓ | ✓ | ✓ |
 | Texture | ✓ | ✓ | ✓ |
 | Goûts | ✓ | ✓ | ✓ |
 | Effets Ressentis | ✓ | ✓ | ✓ |
-| Pipeline Curing | ✗ | ✓ | ✓ (lecture) |
-| Arbre Généalogique | ✗ | ✓ | ✗ |
+| Pipeline Curing | ✗ | ✓ | ✓ |
+
 
 #### Hash
 | Permission | Amateur | Producteur | Influenceur |
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
-| Pipeline Séparation | ✗ | ✓ | ✓ (lecture) |
+| Pipeline Séparation | ✗ | ✓ | ✓  |
 | Visuel & Technique | ✓ | ✓ | ✓ |
 | Odeurs | ✓ | ✓ | ✓ |
 | Texture | ✓ | ✓ | ✓ |
 | Goûts | ✓ | ✓ | ✓ |
 | Effets Ressentis | ✓ | ✓ | ✓ |
-| Pipeline Curing | ✗ | ✓ | ✓ (lecture) |
+| Pipeline Curing | ✗ | ✓ | ✓  |
 
 #### Concentrés
 | Permission | Amateur | Producteur | Influenceur |
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
-| Pipeline Extraction | ✗ | ✓ | ✓ (lecture) |
-| Pipeline Purification | ✗ | ✓ | ✗ |
+| Pipeline Extraction | ✗ | ✓ | ✗ |
 | Visuel & Technique | ✓ | ✓ | ✓ |
 | Odeurs | ✓ | ✓ | ✓ |
 | Texture | ✓ | ✓ | ✓ |
 | Goûts | ✓ | ✓ | ✓ |
 | Effets Ressentis | ✓ | ✓ | ✓ |
-| Pipeline Curing | ✗ | ✓ | ✓ (lecture) |
+| Pipeline Curing | ✗ | ✓ | ✓ |
 
 #### Comestibles
 | Permission | Amateur | Producteur | Influenceur |
@@ -86,7 +86,7 @@
 | Cultiv. & Génétiques | ✗ | ✓ | ✗ |
 | Templates prédéfinis | ✓ | ✓ | ✓ |
 | Template personnalisé | ✗ | ✓ | ✓ |
-| Filigranes | ✓ (limité) | ✓ | ✓ (limité) |
+| Filigranes | ✗ | ✓ | ✓  |
 | Données récurrentes | ✗ | ✓ | ✗ |
 
 ---

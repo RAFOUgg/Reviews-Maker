@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
+import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 import { edibleReviewsService } from '../../../services/apiService'
 import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
 import { flattenEdibleFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
@@ -27,13 +28,24 @@ export default function CreateEdibleReview() {
 
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+    const { isProducteur } = useAccountFeatures()
 
-    const sections = [
-        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'recipe', icon: '🥘', title: 'Recette & Préparation' },
-        { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets + Expérience' }
+    // Définition des sections pour Edible avec restrictions selon CDC:
+    // Amateur/Influenceur: Info, Goûts, Effets (sections de base)
+    // Producteur: + Recette & Préparation (pipeline avancé)
+    const allSections = [
+        { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
+        { id: 'recipe', icon: '🥘', title: 'Recette & Préparation', access: 'producteur' },
+        { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
+        { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' }
     ]
+    
+    // Filtrer les sections selon le type de compte
+    const sections = allSections.filter(section => {
+        if (section.access === 'all') return true
+        if (section.access === 'producteur' && isProducteur) return true
+        return false
+    })
 
     const sectionComponents = {
         infos: InfosGenerales,

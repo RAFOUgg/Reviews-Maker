@@ -1,6 +1,7 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
+import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 import { hashReviewsService } from '../../../services/apiService'
 import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
 import { flattenHashFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
@@ -31,19 +32,29 @@ export default function CreateHashReview() {
 
     const { formData, handleChange, loading, saving, setSaving } = useHashForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+    const { isProducteur } = useAccountFeatures()
 
-    // Définition des sections pour Hash
-    const sections = [
-        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'separation', icon: '⚗️', title: 'Pipeline Séparation', premium: false },
-        { id: 'analytics', icon: '🔬', title: 'Données Analytiques' },
-        { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
-        { id: 'odeurs', icon: '👃', title: 'Odeurs' },
-        { id: 'texture', icon: '🤚', title: 'Texture' },
-        { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effets', icon: '💥', title: 'Effets + Expérience' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' }
+    // Définition des sections pour Hash avec restrictions selon CDC:
+    // Amateur/Influenceur: Info, Visuel, Odeurs, Texture, Goûts, Effets, Curing
+    // Producteur: + Pipeline Séparation, Analytiques
+    const allSections = [
+        { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
+        { id: 'separation', icon: '⚗️', title: 'Pipeline Séparation', access: 'producteur' },
+        { id: 'analytics', icon: '🔬', title: 'Données Analytiques', access: 'producteur' },
+        { id: 'visual', icon: '👁️', title: 'Visuel & Technique', access: 'all' },
+        { id: 'odeurs', icon: '👃', title: 'Odeurs', access: 'all' },
+        { id: 'texture', icon: '🤚', title: 'Texture', access: 'all' },
+        { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
+        { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' },
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'all' }
     ]
+    
+    // Filtrer les sections selon le type de compte
+    const sections = allSections.filter(section => {
+        if (section.access === 'all') return true
+        if (section.access === 'producteur' && isProducteur) return true
+        return false
+    })
 
     // Map des sections aux composants
     const sectionComponents = {

@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Save, Eye } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Save, Eye, Lock } from 'lucide-react'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
+import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 import OrchardPanel from '../../../components/shared/orchard/OrchardPanel'
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
@@ -36,6 +37,15 @@ export default function CreateFlowerReview() {
     const [searchParams] = useSearchParams()
     const { user, isAuthenticated } = useStore()
 
+    // Récupérer les permissions selon le type de compte
+    const {
+        isProducteur,
+        isInfluenceur,
+        isAmateur,
+        canConfigurePipeline,
+        canAccessGeneticsCanvas
+    } = useAccountFeatures()
+
     const {
         formData,
         setFormData,
@@ -63,19 +73,29 @@ export default function CreateFlowerReview() {
         }
     }, [photos])
 
-    // Définition des 10 sections (fusionné : Effets+Expérience, Analytiques+Terpènes)
-    const sections = [
-        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
-        { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt' },
-        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline' }, // Récolte intégrée dans sidebar RECOLTE
-        { id: 'analytics', icon: '🔬', title: 'Analytiques' }, // Cannabinoïdes + Terpènes
-        { id: 'visual', icon: '👁️', title: 'Visuel & Technique' },
-        { id: 'odeurs', icon: '👃', title: 'Odeurs' },
-        { id: 'texture', icon: '🤚', title: 'Texture' },
-        { id: 'gouts', icon: '😋', title: 'Goûts' },
-        { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience' }, // Fusionné
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation' },
+    // Définition des 10 sections avec permissions selon CDC :
+    // Amateur : Info général, Visuel & Technique, Curing, Odeurs, Goûts, Effets
+    // Influenceur : Comme Amateur (même accès aux sections)
+    // Producteur : TOUT (Culture & Pipeline, Génétiques, Analytiques complets)
+    const allSections = [
+        { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
+        { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt', access: 'producteur' },
+        { id: 'culture', icon: '🌱', title: 'Culture & Pipeline', access: 'producteur' },
+        { id: 'analytics', icon: '🔬', title: 'Analytiques', access: 'producteur' },
+        { id: 'visual', icon: '👁️', title: 'Visuel & Technique', access: 'all' },
+        { id: 'odeurs', icon: '👃', title: 'Odeurs', access: 'all' },
+        { id: 'texture', icon: '🤚', title: 'Texture', access: 'all' },
+        { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
+        { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience', access: 'all' },
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'all' },
     ]
+
+    // Filtrer les sections selon le type de compte
+    const sections = allSections.filter(section => {
+        if (section.access === 'all') return true
+        if (section.access === 'producteur' && isProducteur) return true
+        return false
+    })
 
     // Emojis pour le carousel
     const sectionEmojis = sections.map(s => s.icon)
@@ -239,8 +259,8 @@ export default function CreateFlowerReview() {
                         </div>
                     </div>
 
-                    {/* Render current section */}
-                    {currentSection === 0 && (
+                    {/* Render current section by ID */}
+                    {currentSectionData.id === 'infos' && (
                         <InfosGenerales
                             formData={formData}
                             photos={photos}
@@ -249,54 +269,54 @@ export default function CreateFlowerReview() {
                             removePhoto={removePhoto}
                         />
                     )}
-                    {currentSection === 1 && (
+                    {currentSectionData.id === 'genetics' && (
                         <Genetiques formData={formData} handleChange={handleChange} />
                     )}
-                    {currentSection === 2 && (
+                    {currentSectionData.id === 'culture' && (
                         <CulturePipelineSection
                             data={formData.culture || {}}
                             onChange={(cultureData) => handleChange('culture', cultureData)}
                         />
                     )}
-                    {currentSection === 3 && (
+                    {currentSectionData.id === 'analytics' && (
                         <AnalyticsSection
                             productType="Fleur"
                             data={formData.analytics || {}}
                             onChange={(analyticsData) => handleChange('analytics', analyticsData)}
                         />
                     )}
-                    {currentSection === 4 && (
+                    {currentSectionData.id === 'visual' && (
                         <VisuelTechnique
                             formData={formData}
                             handleChange={handleChange}
                         />
                     )}
-                    {currentSection === 5 && (
+                    {currentSectionData.id === 'odeurs' && (
                         <OdorSection
                             data={formData.odeurs || {}}
                             onChange={(odeursData) => handleChange('odeurs', odeursData)}
                         />
                     )}
-                    {currentSection === 6 && (
+                    {currentSectionData.id === 'texture' && (
                         <TextureSection
                             productType="Fleur"
                             data={formData.texture || {}}
                             onChange={(textureData) => handleChange('texture', textureData)}
                         />
                     )}
-                    {currentSection === 7 && (
+                    {currentSectionData.id === 'gouts' && (
                         <TasteSection
                             data={formData.gouts || {}}
                             onChange={(goutsData) => handleChange('gouts', goutsData)}
                         />
                     )}
-                    {currentSection === 8 && (
+                    {currentSectionData.id === 'effects-experience' && (
                         <EffectsSection
                             data={formData.effets || {}}
                             onChange={(data) => handleChange('effets', data)}
                         />
                     )}
-                    {currentSection === 9 && (
+                    {currentSectionData.id === 'curing' && (
                         <CuringMaturationSection
                             data={formData.curing || {}}
                             onChange={(curingData) => handleChange('curing', curingData)}
