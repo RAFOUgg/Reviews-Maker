@@ -9,6 +9,7 @@ import { flattenEdibleFormData, createFormDataFromFlat } from '../../../utils/fo
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
+import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
 
@@ -30,12 +31,13 @@ export default function CreateEdibleReview() {
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
     const { isProducteur } = useAccountFeatures()
 
-    // Définition des sections pour Edible avec restrictions selon CDC:
-    // Amateur/Influenceur: Info, Goûts, Effets (sections de base)
-    // Producteur: + Recette & Préparation (pipeline avancé)
+    // Définition des sections pour Edible selon PERMISSIONS.md:
+    // Amateur/Influenceur: Infos, Analytics, Goûts, Effets
+    // Producteur: + Recette (pipeline avancé)
     const allSections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
         { id: 'recipe', icon: '🥘', title: 'Recette & Préparation', access: 'producteur' },
+        { id: 'analytics', icon: '🔬', title: 'Données Analytiques', access: 'all' },
         { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
         { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' }
     ]
@@ -50,6 +52,7 @@ export default function CreateEdibleReview() {
     const sectionComponents = {
         infos: InfosGenerales,
         recipe: RecipePipelineSection,
+        analytics: AnalyticsSection,
         gouts: TasteSection,
         effets: EffectsSection
     }

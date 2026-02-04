@@ -32,26 +32,28 @@ export default function CreateConcentrateReview() {
 
     const { formData, handleChange, loading, saving, setSaving } = useConcentrateForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
-    const { isProducteur } = useAccountFeatures()
+    const { isProducteur, isInfluenceur } = useAccountFeatures()
 
-    // Définition des sections pour Concentré avec restrictions selon CDC:
-    // Amateur/Influenceur: Info, Visuel, Odeurs, Texture, Goûts, Effets, Curing
-    // Producteur: + Pipeline Extraction, Analytiques
+    // Définition des sections pour Concentré selon PERMISSIONS.md:
+    // Amateur: Infos, Analytics, Visuel, Odeurs, Texture, Goûts, Effets
+    // Influenceur: Amateur + Curing
+    // Producteur: TOUT (+ Pipeline Extraction)
     const allSections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
         { id: 'extraction', icon: '⚗️', title: 'Pipeline Extraction', access: 'producteur' },
-        { id: 'analytics', icon: '🔬', title: 'Données Analytiques', access: 'producteur' },
+        { id: 'analytics', icon: '🔬', title: 'Données Analytiques', access: 'all' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique', access: 'all' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs', access: 'all' },
         { id: 'texture', icon: '🤚', title: 'Texture', access: 'all' },
         { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
         { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'all' }
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'paid' }
     ]
     
     // Filtrer les sections selon le type de compte
     const sections = allSections.filter(section => {
         if (section.access === 'all') return true
+        if (section.access === 'paid' && (isProducteur || isInfluenceur)) return true
         if (section.access === 'producteur' && isProducteur) return true
         return false
     })

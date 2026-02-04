@@ -73,26 +73,27 @@ export default function CreateFlowerReview() {
         }
     }, [photos])
 
-    // Définition des 10 sections avec permissions selon CDC :
-    // Amateur : Info général, Visuel & Technique, Curing, Odeurs, Goûts, Effets
-    // Influenceur : Comme Amateur (même accès aux sections)
-    // Producteur : TOUT (Culture & Pipeline, Génétiques, Analytiques complets)
+    // Définition des 10 sections avec permissions selon PERMISSIONS.md :
+    // Amateur: Infos, Analytics, Visuel, Odeurs, Texture, Goûts, Effets
+    // Influenceur: Amateur + Curing
+    // Producteur: TOUT (+ Génétiques, Culture)
     const allSections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
         { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt', access: 'producteur' },
         { id: 'culture', icon: '🌱', title: 'Culture & Pipeline', access: 'producteur' },
-        { id: 'analytics', icon: '🔬', title: 'Analytiques', access: 'producteur' },
+        { id: 'analytics', icon: '🔬', title: 'Analytiques', access: 'all' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique', access: 'all' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs', access: 'all' },
         { id: 'texture', icon: '🤚', title: 'Texture', access: 'all' },
         { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
         { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience', access: 'all' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'all' },
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'paid' },
     ]
 
     // Filtrer les sections selon le type de compte
     const sections = allSections.filter(section => {
         if (section.access === 'all') return true
+        if (section.access === 'paid' && (isProducteur || isInfluenceur)) return true
         if (section.access === 'producteur' && isProducteur) return true
         return false
     })

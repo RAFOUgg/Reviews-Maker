@@ -32,7 +32,7 @@
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
 | Section Génétiques | ✗ | ✓ | ✗ |
-| Analyses | ✗ | ✓ | ✗ |
+| Données Analytiques | ✓ | ✓ | ✓ |
 | Pipeline Culture | ✗ | ✓ | ✗ |
 | Visuel & Technique | ✓ | ✓ | ✓ |
 | Odeurs | ✓ | ✓ | ✓ |
@@ -46,7 +46,8 @@
 | Permission | Amateur | Producteur | Influenceur |
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
-| Pipeline Séparation | ✗ | ✓ | ✓  |
+| Pipeline Séparation | ✗ | ✓ | ✗  |
+| Données Analytiques | ✓ | ✓ | ✓ |
 | Visuel & Technique | ✓ | ✓ | ✓ |
 | Odeurs | ✓ | ✓ | ✓ |
 | Texture | ✓ | ✓ | ✓ |
@@ -59,18 +60,20 @@
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
 | Pipeline Extraction | ✗ | ✓ | ✗ |
+| Données Analytiques | ✓ | ✓ | ✓ |
 | Visuel & Technique | ✓ | ✓ | ✓ |
 | Odeurs | ✓ | ✓ | ✓ |
 | Texture | ✓ | ✓ | ✓ |
 | Goûts | ✓ | ✓ | ✓ |
 | Effets Ressentis | ✓ | ✓ | ✓ |
-| Pipeline Curing | ✗ | ✓ | ✓ |
+| Pipeline Curing | ✗ | ✓ | ✓  |
 
 #### Comestibles
 | Permission | Amateur | Producteur | Influenceur |
 |-----------|---------|-----------|------------|
 | Section Infos Générales | ✓ | ✓ | ✓ |
-| Pipeline Recette | ✓ | ✓ | ✓ |
+| Pipeline Recette | ✗ | ✓ | ✗ |
+| Données Analytiques | ✓ | ✓ | ✓ |
 | Goûts | ✓ | ✓ | ✓ |
 | Effets Ressentis | ✓ | ✓ | ✓ |
 
@@ -86,7 +89,8 @@
 | Cultiv. & Génétiques | ✗ | ✓ | ✗ |
 | Templates prédéfinis | ✓ | ✓ | ✓ |
 | Template personnalisé | ✗ | ✓ | ✓ |
-| Filigranes | ✗ | ✓ | ✓  |
+| Filigranes Terpologie obligatoire | ✓ | ✗ | ✗ |
+| Filigranes Personnalisées| ✗ | ✓ | ✓  |
 | Données récurrentes | ✗ | ✓ | ✗ |
 
 ---
