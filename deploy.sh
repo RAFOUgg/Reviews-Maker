@@ -280,11 +280,25 @@ if [ -d "client/dist" ]; then
 
     # Move atomically
     sudo chown -R www-data:www-data "$TMP_DIR"
-    sudo mv "$TMP_DIR" "${TARGET_DIR}.old" 2>/dev/null || true
-    sudo mv "$TMP_DIR" "$TARGET_DIR"
-    sudo rm -rf "${TARGET_DIR}.old" 2>/dev/null || true
-
-    log_success "Frontend built and deployed atomically to ${TARGET_DIR}"
+    # Verify temp dir exists and contains files before moving
+    echo "DEBUG: TMP_DIR=${TMP_DIR}"
+    if sudo test -d "$TMP_DIR"; then
+        echo "DEBUG: listing tmp dir contents:" 
+        sudo ls -la "$TMP_DIR" | sed -n '1,200p' || true
+        sudo mv "$TMP_DIR" "${TARGET_DIR}.old" 2>/dev/null || true
+        sudo mv "${TARGET_DIR}.old" "$TARGET_DIR"
+        sudo rm -rf "${TARGET_DIR}.old" 2>/dev/null || true
+        log_success "Frontend built and deployed atomically to ${TARGET_DIR}"
+    else
+        log_warning "Temp build dir $TMP_DIR not found — falling back to direct copy"
+        if sudo mkdir -p "$TARGET_DIR"; then
+            sudo cp -r ~/Reviews-Maker/client/dist/* "$TARGET_DIR/" || log_error "Fallback copy failed"
+            sudo chown -R www-data:www-data "$TARGET_DIR"
+            log_success "Frontend deployed via fallback copy to ${TARGET_DIR}"
+        else
+            log_error "Cannot create target dir $TARGET_DIR for fallback copy"
+        fi
+    fi
 else
     log_error "No client/dist directory found after build - aborting"
 fi
