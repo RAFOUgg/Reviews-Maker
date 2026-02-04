@@ -257,15 +257,37 @@ step "Nettoyage et copie des fichiers frontend..."
 if [ -d "client" ]; then
     log_info "Building frontend on VPS..."
     (cd client && npm install --legacy-peer-deps >/dev/null 2>&1 || true)
-    (cd client && npm run build >/dev/null 2>&1 || log_warning "Frontend build may have failed")
+    if (cd client && npm run build >/dev/null 2>&1); then
+        log_success "Frontend build succeeded on VPS"
+    else
+        log_error "Frontend build failed on VPS - aborting deploy"
+    fi
 fi
 
-# Clean old dist and copy new build
-sudo rm -rf /var/www/reviews-maker/client/dist/*
-sudo cp -r ~/Reviews-Maker/client/dist/* /var/www/reviews-maker/client/dist/ || log_warning "No built assets found to copy"
-sudo chown -R www-data:www-data /var/www/reviews-maker/client/dist/
+# Prepare atomic deploy: copy to temp then move
+TIMESTAMP=$(date +%s)
+TARGET_DIR=/var/www/reviews-maker/client/dist
+TMP_DIR=${TARGET_DIR}.new.${TIMESTAMP}
 
-log_success "Cache vidé et frontend déployé"
+if [ -d "client/dist" ]; then
+    sudo rm -rf "$TMP_DIR" || true
+    sudo mkdir -p "$TMP_DIR"
+    sudo cp -r ~/Reviews-Maker/client/dist/* "$TMP_DIR/" || log_error "Failed to copy built assets to temp dir"
+
+    # write a build version file for cache-busting (commit hash + timestamp)
+    GIT_HASH=$(git rev-parse --short HEAD 2>/dev/null || echo "local")
+    echo "build=${GIT_HASH}-${TIMESTAMP}" | sudo tee "$TMP_DIR/.build_version" >/dev/null
+
+    # Move atomically
+    sudo chown -R www-data:www-data "$TMP_DIR"
+    sudo mv "$TMP_DIR" "${TARGET_DIR}.old" 2>/dev/null || true
+    sudo mv "$TMP_DIR" "$TARGET_DIR"
+    sudo rm -rf "${TARGET_DIR}.old" 2>/dev/null || true
+
+    log_success "Frontend built and deployed atomically to ${TARGET_DIR}"
+else
+    log_error "No client/dist directory found after build - aborting"
+fi
 
 # PHASE 3: Nginx Reload
 echo ""
