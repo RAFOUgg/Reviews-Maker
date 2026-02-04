@@ -253,9 +253,16 @@ step "Suppression du cache nginx..."
 sudo rm -rf /var/cache/nginx/* 2>/dev/null || log_warning "Cache vide"
 
 step "Nettoyage et copie des fichiers frontend..."
-# IMPORTANT: Nettoyer l'ancien dist avant de copier le nouveau
+# IMPORTANT: Rebuild frontend on VPS to ensure dist is up-to-date
+if [ -d "client" ]; then
+    log_info "Building frontend on VPS..."
+    (cd client && npm install --legacy-peer-deps >/dev/null 2>&1 || true)
+    (cd client && npm run build >/dev/null 2>&1 || log_warning "Frontend build may have failed")
+fi
+
+# Clean old dist and copy new build
 sudo rm -rf /var/www/reviews-maker/client/dist/*
-sudo cp -r ~/Reviews-Maker/client/dist/* /var/www/reviews-maker/client/dist/
+sudo cp -r ~/Reviews-Maker/client/dist/* /var/www/reviews-maker/client/dist/ || log_warning "No built assets found to copy"
 sudo chown -R www-data:www-data /var/www/reviews-maker/client/dist/
 
 log_success "Cache vidé et frontend déployé"
