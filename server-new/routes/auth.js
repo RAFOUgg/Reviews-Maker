@@ -140,6 +140,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
             data: {
                 passwordHash,
                 username: existing.username || finalUsername || normalizedEmail.split('@')[0],
+                accountType: chosenType, // Mettre à jour le type de compte
                 roles: existing.roles || JSON.stringify({ roles: [chosenType] })
             }
         })
@@ -149,6 +150,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
                 email: normalizedEmail,
                 username: finalUsername || normalizedEmail.split('@')[0],
                 passwordHash,
+                accountType: chosenType, // Définir le type de compte
                 roles: JSON.stringify({ roles: [chosenType] })
             }
         })

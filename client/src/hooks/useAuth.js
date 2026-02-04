@@ -41,7 +41,7 @@ export function useAuth() {
                     setNeedsAgeVerification(false)
                     setNeedsConsent(false)
 
-                    // Vérifier le type de compte
+                    // Charger les infos du compte (plus besoin de vérifier le type - c'est fait avant inscription)
                     const accountResponse = await fetch('/api/account/info', {
                         credentials: 'include',
                     })
@@ -49,12 +49,11 @@ export function useAuth() {
                     if (accountResponse.ok) {
                         const accountData = await accountResponse.json()
                         setAccountInfo(accountData)
-
-                        // Si nouveau utilisateur amateur, proposer sélection
-                        const isNewUser = accountData.accountType === 'amateur'
-                            && !localStorage.getItem('accountTypeSelected')
-                        setNeedsAccountTypeSelection(isNewUser)
                     }
+                    
+                    // Le type de compte est maintenant choisi AVANT la création via /choose-account
+                    // Plus besoin de needsAccountTypeSelection
+                    setNeedsAccountTypeSelection(false)
                 }
             }
         } catch (error) {
