@@ -213,8 +213,8 @@ export default function StatsTab({ userTier = 'amateur' }) {
                             key={opt.id}
                             onClick={() => setTimeRange(opt.id)}
                             className={`px-3 py-1.5 rounded-lg text-sm transition-colors ${timeRange === opt.id
-                                    ? 'bg-purple-500 text-white'
-                                    : 'text-white/50 hover:text-white'
+                                ? 'bg-purple-500 text-white'
+                                : 'text-white/50 hover:text-white'
                                 }`}
                         >
                             {opt.label}
@@ -369,8 +369,8 @@ export default function StatsTab({ userTier = 'amateur' }) {
                                     className="flex items-center gap-4 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
                                 >
                                     <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                            index === 1 ? 'bg-gray-400/20 text-gray-400' :
-                                                'bg-orange-700/20 text-orange-600'
+                                        index === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                            'bg-orange-700/20 text-orange-600'
                                         }`}>
                                         #{index + 1}
                                     </div>

@@ -142,8 +142,8 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
                                             {item.type === 'refund' ? '+' : ''}{item.amount?.toFixed(2)}€
                                         </p>
                                         <p className={`text-xs ${item.status === 'success' ? 'text-green-400' :
-                                                item.status === 'failed' ? 'text-red-400' :
-                                                    'text-yellow-400'
+                                            item.status === 'failed' ? 'text-red-400' :
+                                                'text-yellow-400'
                                             }`}>
                                             {getStatusLabel(item.status)}
                                         </p>
