@@ -252,10 +252,13 @@ echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━�
 step "Suppression du cache nginx..."
 sudo rm -rf /var/cache/nginx/* 2>/dev/null || log_warning "Cache vide"
 
-step "Suppression des anciens chunks..."
-sudo find /var/www/reviews-maker -type f \( -name "*chunk*.js" -o -name "*chunk*.css" \) -mtime +7 -delete 2>/dev/null || true
+step "Nettoyage et copie des fichiers frontend..."
+# IMPORTANT: Nettoyer l'ancien dist avant de copier le nouveau
+sudo rm -rf /var/www/reviews-maker/client/dist/*
+sudo cp -r ~/Reviews-Maker/client/dist/* /var/www/reviews-maker/client/dist/
+sudo chown -R www-data:www-data /var/www/reviews-maker/client/dist/
 
-log_success "Cache vidé"
+log_success "Cache vidé et frontend déployé"
 
 # PHASE 3: Nginx Reload
 echo ""
