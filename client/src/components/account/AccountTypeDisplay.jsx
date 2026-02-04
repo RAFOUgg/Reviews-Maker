@@ -193,7 +193,16 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                             ❌ Résilier l'abonnement
                         </button>
                     </div>
-                    <button className="mt-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                    <button
+                        onClick={() => {
+                            if (typeof onUpgradeClick === 'function') {
+                                onUpgradeClick()
+                                return
+                            }
+                            window.location.href = '/account/manage'
+                        }}
+                        className="mt-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
+                    >
                         Gérer mon abonnement →
                     </button>
                 </div>
