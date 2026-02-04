@@ -1,8 +1,8 @@
 /**
  * DisclaimerRDRModal - Modal de rappel RDR (Réduction Des Risques)
- * S'affiche tous les jours (24h localStorage expiration)
+ * S'affiche à chaque ouverture de l'application (session-based via sessionStorage)
  * Rappelle la conformité légale et les conditions d'utilisation
- * Liquid Glass UI Design System
+ * Liquid Glass UI Design System - Responsive Mobile First
  */
 
 import React, { useEffect, useState, useRef } from 'react';
@@ -14,14 +14,14 @@ const DisclaimerRDRModal = () => {
     const previousActiveElement = useRef(null);
 
     useEffect(() => {
-        const lastAccepted = localStorage.getItem('rdr_last_accepted');
-        const now = Date.now();
-        const oneDayMs = 24 * 60 * 60 * 1000;
+        // Utiliser sessionStorage au lieu de localStorage pour afficher à chaque session
+        const sessionAccepted = sessionStorage.getItem('rdr_session_accepted');
 
-        if (!lastAccepted || (now - parseInt(lastAccepted)) > oneDayMs) {
+        // Afficher si pas encore accepté dans cette session
+        if (!sessionAccepted) {
             const timer = setTimeout(() => {
                 setIsVisible(true);
-            }, 2000);
+            }, 1500);
             return () => clearTimeout(timer);
         }
     }, []);
@@ -42,7 +42,8 @@ const DisclaimerRDRModal = () => {
     }, [isVisible]);
 
     const handleAccept = () => {
-        localStorage.setItem('rdr_last_accepted', Date.now().toString());
+        // Marquer comme accepté pour cette session uniquement
+        sessionStorage.setItem('rdr_session_accepted', 'true');
         setIsVisible(false);
     };
 

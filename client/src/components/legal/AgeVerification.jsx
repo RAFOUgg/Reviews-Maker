@@ -170,19 +170,110 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
         <LiquidModal
             isOpen={true}
             onClose={() => { }}
-            title={
-                <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 border border-violet-500/30">
-                        <ShieldCheck className="w-6 h-6 text-violet-400" />
-                    </div>
-                    <span className="text-xl font-bold text-white">
-                        {t('ageVerification.title', 'Vérification de l\'âge')}
-                    </span>
-                </div>
-            }
             size="xl"
-            glowColor="violet"
-            footer={
+            showCloseButton={false}
+            closeOnOverlay={false}
+            closeOnEsc={false}
+        >
+            {/* Header */}
+            <LiquidModal.Header>
+                <LiquidModal.Title icon={ShieldCheck}>
+                    {t('ageVerification.title', 'Vérification de l\'âge')}
+                </LiquidModal.Title>
+            </LiquidModal.Header>
+
+            {/* Body */}
+            <LiquidModal.Body>
+                <div className="space-y-5">
+                    <p className="text-sm text-white/60">
+                        {t('ageVerification.description', 'Pour accéder à cette plateforme, vous devez confirmer que vous avez l\'âge légal dans votre pays.')}
+                    </p>
+
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* Date de naissance */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-sm font-medium text-white">
+                                <Calendar className="w-4 h-4 text-violet-400" />
+                                {t('ageVerification.birthdate', 'Date de naissance')}
+                            </label>
+                            <ReactDatePicker
+                                selected={birthdate}
+                                onChange={(date) => setBirthdate(date)}
+                                dateFormat="dd/MM/yyyy"
+                                maxDate={new Date()}
+                                showYearDropdown
+                                scrollableYearDropdown
+                                yearDropdownItemNumber={100}
+                                placeholderText="JJ/MM/AAAA"
+                                className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all"
+                                popperClassName="react-datepicker-popper"
+                                portalId="datepicker-portal"
+                                required
+                            />
+                            <p className="text-xs text-white/40">
+                                {t('ageVerification.hint', 'Nous vérifions uniquement votre éligibilité, aucune donnée n\'est partagée.')}
+                            </p>
+                        </div>
+
+                        {/* Pays */}
+                        <div className="space-y-2">
+                            <label className="flex items-center gap-2 text-sm font-medium text-white">
+                                <Globe className="w-4 h-4 text-violet-400" />
+                                {t('ageVerification.country', 'Pays')}
+                            </label>
+                            <LiquidSelect
+                                value={country}
+                                onChange={(value) => setCountry(value)}
+                                options={[
+                                    { value: '', label: t('ageVerification.selectCountry', 'Sélectionnez un pays') },
+                                    ...allowedCountries.map((c) => ({
+                                        value: c.code,
+                                        label: `${t(`countries.${c.code}`, c.name || c.code)} (min. ${c.minAge} ans)`
+                                    }))
+                                ]}
+                            />
+                        </div>
+
+                        {/* État US si applicable */}
+                        {country === 'US' && (
+                            <div className="space-y-2">
+                                <label className="flex items-center gap-2 text-sm font-medium text-white">
+                                    <MapPin className="w-4 h-4 text-violet-400" />
+                                    {t('ageVerification.state', 'État')}
+                                </label>
+                                <LiquidSelect
+                                    value={region}
+                                    onChange={(value) => setRegion(value)}
+                                    options={[
+                                        { value: '', label: t('ageVerification.selectState', 'Sélectionnez un état') },
+                                        ...(allowedRegions.US || DEFAULT_US_STATES).map((s) => ({
+                                            value: s.code,
+                                            label: s.name || s.code
+                                        }))
+                                    ]}
+                                />
+                            </div>
+                        )}
+
+                        {/* Erreur */}
+                        {error && (
+                            <LiquidCard className="p-3" style={{
+                                background: 'rgba(239, 68, 68, 0.1)',
+                                borderColor: 'rgba(239, 68, 68, 0.3)'
+                            }}>
+                                <p className="text-sm text-red-400">{error}</p>
+                            </LiquidCard>
+                        )}
+                    </form>
+
+                    <p className="text-xs text-white/40 text-center">
+                        {t('ageVerification.privacy', 'Vos données sont confidentielles et utilisées uniquement pour vérifier votre éligibilité.')}
+                    </p>
+                </div>
+            </LiquidModal.Body>
+
+            {/* Footer */}
+            <LiquidModal.Footer>
                 <LiquidButton
                     variant="primary"
                     onClick={handleSubmit}
@@ -195,94 +286,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                         ? t('ageVerification.verifying', 'Vérification...')
                         : t('ageVerification.verify', 'Vérifier mon âge')}
                 </LiquidButton>
-            }
-        >
-            <div className="space-y-5">
-                <p className="text-sm text-white/60">
-                    {t('ageVerification.description', 'Pour accéder à cette plateforme, vous devez confirmer que vous avez l\'âge légal dans votre pays.')}
-                </p>
-
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Date de naissance */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-white">
-                            <Calendar className="w-4 h-4 text-violet-400" />
-                            {t('ageVerification.birthdate', 'Date de naissance')}
-                        </label>
-                        <ReactDatePicker
-                            selected={birthdate}
-                            onChange={(date) => setBirthdate(date)}
-                            dateFormat="dd/MM/yyyy"
-                            maxDate={new Date()}
-                            showYearDropdown
-                            scrollableYearDropdown
-                            yearDropdownItemNumber={100}
-                            placeholderText="JJ/MM/AAAA"
-                            className="w-full px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder:text-white/40 focus:border-violet-500/50 focus:ring-2 focus:ring-violet-500/20 focus:outline-none transition-all"
-                            popperClassName="react-datepicker-popper"
-                            portalId="datepicker-portal"
-                            required
-                        />
-                        <p className="text-xs text-white/40">
-                            {t('ageVerification.hint', 'Nous vérifions uniquement votre éligibilité, aucune donnée n\'est partagée.')}
-                        </p>
-                    </div>
-
-                    {/* Pays */}
-                    <div className="space-y-2">
-                        <label className="flex items-center gap-2 text-sm font-medium text-white">
-                            <Globe className="w-4 h-4 text-violet-400" />
-                            {t('ageVerification.country', 'Pays')}
-                        </label>
-                        <LiquidSelect
-                            value={country}
-                            onChange={(value) => setCountry(value)}
-                            options={[
-                                { value: '', label: t('ageVerification.selectCountry', 'Sélectionnez un pays') },
-                                ...allowedCountries.map((c) => ({
-                                    value: c.code,
-                                    label: `${t(`countries.${c.code}`, c.name || c.code)} (min. ${c.minAge} ans)`
-                                }))
-                            ]}
-                        />
-                    </div>
-
-                    {/* État US si applicable */}
-                    {country === 'US' && (
-                        <div className="space-y-2">
-                            <label className="flex items-center gap-2 text-sm font-medium text-white">
-                                <MapPin className="w-4 h-4 text-violet-400" />
-                                {t('ageVerification.state', 'État')}
-                            </label>
-                            <LiquidSelect
-                                value={region}
-                                onChange={(value) => setRegion(value)}
-                                options={[
-                                    { value: '', label: t('ageVerification.selectState', 'Sélectionnez un état') },
-                                    ...(allowedRegions.US || DEFAULT_US_STATES).map((s) => ({
-                                        value: s.code,
-                                        label: s.name || s.code
-                                    }))
-                                ]}
-                            />
-                        </div>
-                    )}
-
-                    {/* Erreur */}
-                    {error && (
-                        <LiquidCard className="p-3" style={{
-                            background: 'rgba(239, 68, 68, 0.1)',
-                            borderColor: 'rgba(239, 68, 68, 0.3)'
-                        }}>
-                            <p className="text-sm text-red-400">{error}</p>
-                        </LiquidCard>
-                    )}
-                </form>
-
-                <p className="text-xs text-white/40 text-center">
-                    {t('ageVerification.privacy', 'Vos données sont confidentielles et utilisées uniquement pour vérifier votre éligibilité.')}
-                </p>
-            </div>
+            </LiquidModal.Footer>
         </LiquidModal>
     );
 };
