@@ -15,14 +15,14 @@ const registerSchema = z.object({
     path: ['confirmPassword']
 });
 
-const OAuthButton = ({ provider, logo, color, href }) => {
+const OAuthButton = ({ name, logo, color, href }) => {
     return (
         <a
             href={href}
             className={`flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl font-semibold transition-all hover:scale-[1.02] active:scale-[0.98] border border-white/10 backdrop-blur-sm ${color}`}
         >
             {logo}
-            <span>Continuer avec {provider}</span>
+            <span>Continuer avec {name}</span>
         </a>
     );
 };
@@ -45,8 +45,15 @@ export default function RegisterPage() {
     const [apiError, setApiError] = useState('');
 
     // Rediriger vers choix de compte si pas de type sélectionné
+    // Accepter les variantes anglaises/françaises
+    const validTypes = ['amateur', 'influenceur', 'producteur', 'influencer', 'producer', 'consumer'];
+    const normalizedAccountType = accountType === 'influencer' ? 'influenceur' 
+        : accountType === 'producer' ? 'producteur' 
+        : accountType === 'consumer' ? 'amateur'
+        : accountType;
+    
     useEffect(() => {
-        if (!accountType || !['amateur', 'influenceur', 'producteur'].includes(accountType)) {
+        if (!accountType || !validTypes.includes(accountType)) {
             navigate('/choose-account');
         }
     }, [accountType, navigate]);
@@ -88,7 +95,7 @@ export default function RegisterPage() {
                     email: formData.email,
                     pseudo: formData.pseudo,
                     password: formData.password,
-                    accountType: accountType // Envoyer le type de compte
+                    accountType: normalizedAccountType // Envoyer le type de compte normalisé
                 })
             });
 
@@ -120,7 +127,7 @@ export default function RegisterPage() {
     };
 
     const getAccountTypeLabel = () => {
-        switch (accountType) {
+        switch (normalizedAccountType) {
             case 'influenceur': return 'Influenceur';
             case 'producteur': return 'Producteur';
             default: return 'Amateur';
@@ -128,7 +135,7 @@ export default function RegisterPage() {
     };
 
     const getAccountTypeGlow = () => {
-        switch (accountType) {
+        switch (normalizedAccountType) {
             case 'influenceur': return 'pink';
             case 'producteur': return 'cyan';
             default: return 'purple';
@@ -144,7 +151,7 @@ export default function RegisterPage() {
                 </svg>
             ),
             color: 'bg-[#5865F2]/80 hover:bg-[#5865F2] text-white',
-            href: `/api/auth/discord?accountType=${accountType}`
+            href: `/api/auth/discord?accountType=${normalizedAccountType}`
         },
         {
             name: 'Google',
@@ -157,7 +164,7 @@ export default function RegisterPage() {
                 </svg>
             ),
             color: 'bg-white/90 hover:bg-white text-gray-700',
-            href: `/api/auth/google?accountType=${accountType}`
+            href: `/api/auth/google?accountType=${normalizedAccountType}`
         }
     ];
 
