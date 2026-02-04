@@ -101,7 +101,8 @@ router.get('/discord', (req, res, next) => {
 
 // POST /api/auth/email/signup - Création de compte email/password
 router.post('/email/signup', asyncHandler(async (req, res) => {
-    const { email, password, username, accountType } = req.body || {}
+    const { email, password, username, pseudo, accountType } = req.body || {}
+    const finalUsername = username || pseudo // Accepter les deux noms de champ
 
     if (!email || !password) {
         return res.status(400).json({ error: 'missing_fields', message: 'Email et mot de passe requis' })
@@ -138,7 +139,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
             where: { id: existing.id },
             data: {
                 passwordHash,
-                username: existing.username || username || normalizedEmail.split('@')[0],
+                username: existing.username || finalUsername || normalizedEmail.split('@')[0],
                 roles: existing.roles || JSON.stringify({ roles: [chosenType] })
             }
         })
@@ -146,7 +147,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
         user = await prisma.user.create({
             data: {
                 email: normalizedEmail,
-                username: username || normalizedEmail.split('@')[0],
+                username: finalUsername || normalizedEmail.split('@')[0],
                 passwordHash,
                 roles: JSON.stringify({ roles: [chosenType] })
             }

@@ -47,11 +47,11 @@ export default function RegisterPage() {
     // Rediriger vers choix de compte si pas de type sélectionné
     // Accepter les variantes anglaises/françaises
     const validTypes = ['amateur', 'influenceur', 'producteur', 'influencer', 'producer', 'consumer'];
-    const normalizedAccountType = accountType === 'influencer' ? 'influenceur' 
-        : accountType === 'producer' ? 'producteur' 
-        : accountType === 'consumer' ? 'amateur'
-        : accountType;
-    
+    const normalizedAccountType = accountType === 'influencer' ? 'influenceur'
+        : accountType === 'producer' ? 'producteur'
+            : accountType === 'consumer' ? 'amateur'
+                : accountType;
+
     useEffect(() => {
         if (!accountType || !validTypes.includes(accountType)) {
             navigate('/choose-account');
@@ -116,8 +116,9 @@ export default function RegisterPage() {
                 return;
             }
 
-            // Rediriger vers la vérification email
-            navigate(`/verify-email?email=${encodeURIComponent(formData.email)}&type=register`);
+            // Inscription réussie - l'utilisateur est déjà connecté côté serveur
+            // Rediriger vers la page d'accueil (le modal de vérification d'âge apparaîtra si nécessaire)
+            window.location.href = '/';
         } catch (error) {
             console.error('Register error:', error);
             setApiError('Erreur de connexion au serveur');
