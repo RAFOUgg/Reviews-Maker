@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
 import { ArrowLeft, Check } from 'lucide-react';
+import { useStore } from '../../store/useStore';
 
 const ACCOUNT_TYPES = {
     'influenceur': {
@@ -41,10 +42,14 @@ export default function PaymentPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const accountType = searchParams.get('type');
+    const { user, isAuthenticated, checkAuth } = useStore();
 
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const paymentMethod = 'paypal'; // Uniquement PayPal disponible
+    
+    // Déterminer si c'est un upgrade (user connecté) ou nouvelle inscription
+    const isUpgrade = isAuthenticated && user;
 
     useEffect(() => {
         if (!accountType || !ACCOUNT_TYPES[accountType]) {
@@ -59,15 +64,39 @@ export default function PaymentPage() {
         setError('');
 
         try {
-            // TODO: Intégrer Stripe/Paypal
+            // TODO: Intégrer Stripe/Paypal réel
             // Pour l'instant, simulation de paiement
             await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Rediriger vers l'inscription avec le type de compte
-            navigate(`/register?type=${accountType}&paid=true`);
+            if (isUpgrade) {
+                // UPGRADE: Mettre à jour le compte existant via API
+                const response = await fetch('/api/payment/upgrade', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({ 
+                        accountType: accountType,
+                        paymentCompleted: true 
+                    })
+                });
+
+                if (!response.ok) {
+                    const data = await response.json();
+                    throw new Error(data.error || 'Erreur lors de la mise à jour du compte');
+                }
+
+                // Rafraîchir les données utilisateur dans le store
+                await checkAuth();
+                
+                // Rediriger vers la page compte avec message de succès
+                navigate('/account?upgraded=true');
+            } else {
+                // NOUVELLE INSCRIPTION: Rediriger vers register
+                navigate(`/register?type=${accountType}&paid=true`);
+            }
         } catch (err) {
             console.error('Payment error:', err);
-            setError('Erreur lors du paiement. Veuillez réessayer.');
+            setError(err.message || 'Erreur lors du paiement. Veuillez réessayer.');
         } finally {
             setIsLoading(false);
         }

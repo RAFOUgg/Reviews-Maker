@@ -105,4 +105,67 @@ router.get('/status', requireAuth, async (req, res) => {
     }
 })
 
+/**
+ * POST /api/subscription/upgrade
+ * Upgrade un compte existant vers influenceur ou producteur
+ * (Appelé après paiement simulé ou réel)
+ */
+router.post('/upgrade', requireAuth, async (req, res) => {
+    try {
+        const { accountType, paymentCompleted } = req.body
+        const userId = req.user.id
+
+        // Validation du type de compte (en français)
+        if (!['influenceur', 'producteur'].includes(accountType)) {
+            return res.status(400).json({ error: 'Type de compte invalide. Utilisez "influenceur" ou "producteur".' })
+        }
+
+        // Vérifier que le paiement est confirmé
+        if (!paymentCompleted) {
+            return res.status(400).json({ error: 'Paiement non confirmé' })
+        }
+
+        // Récupérer l'utilisateur actuel
+        const user = await prisma.user.findUnique({ where: { id: userId } })
+        if (!user) {
+            return res.status(404).json({ error: 'Utilisateur introuvable' })
+        }
+
+        // Empêcher le downgrade (producteur ne peut pas devenir influenceur)
+        if (user.accountType === 'producteur' && accountType === 'influenceur') {
+            return res.status(400).json({ error: 'Impossible de rétrograder de Producteur vers Influenceur' })
+        }
+
+        // Mettre à jour le compte
+        const updatedUser = await prisma.user.update({
+            where: { id: userId },
+            data: {
+                accountType: accountType,
+                subscriptionStatus: 'active',
+                // Enregistrer la date de mise à niveau
+                updatedAt: new Date(),
+            },
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                accountType: true,
+                subscriptionStatus: true,
+                roles: true,
+            }
+        })
+
+        console.log(`✅ Upgrade réussi: ${user.username} → ${accountType}`)
+
+        res.json({
+            success: true,
+            message: `Compte mis à niveau vers ${accountType} avec succès!`,
+            user: updatedUser
+        })
+    } catch (error) {
+        console.error('❌ Upgrade error:', error)
+        res.status(500).json({ error: 'Erreur lors de la mise à niveau du compte' })
+    }
+})
+
 export default router
