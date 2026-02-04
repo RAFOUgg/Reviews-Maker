@@ -180,7 +180,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                     </span>
                 </div>
             }
-            size="lg"
+            size="xl"
             glowColor="violet"
             footer={
                 <LiquidButton

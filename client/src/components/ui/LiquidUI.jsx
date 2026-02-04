@@ -692,7 +692,7 @@ export function LiquidModal({
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="liquid-card glow-purple p-0 overflow-hidden">
+                            <div className="liquid-card glow-purple p-0 overflow-visible">
                                 <div className="liquid-card-shimmer" />
                                 <div className="liquid-card-content relative z-10">
                                     {showCloseButton && (
