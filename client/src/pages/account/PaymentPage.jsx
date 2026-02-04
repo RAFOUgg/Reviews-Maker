@@ -47,7 +47,7 @@ export default function PaymentPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState('');
     const paymentMethod = 'paypal'; // Uniquement PayPal disponible
-    
+
     // Déterminer si c'est un upgrade (user connecté) ou nouvelle inscription
     const isUpgrade = isAuthenticated && user;
 
@@ -74,9 +74,9 @@ export default function PaymentPage() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     credentials: 'include',
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         accountType: accountType,
-                        paymentCompleted: true 
+                        paymentCompleted: true
                     })
                 });
 
@@ -87,7 +87,7 @@ export default function PaymentPage() {
 
                 // Rafraîchir les données utilisateur dans le store
                 await checkAuth();
-                
+
                 // Rediriger vers la page compte avec message de succès
                 navigate('/account?upgraded=true');
             } else {

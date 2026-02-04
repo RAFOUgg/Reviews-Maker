@@ -1,219 +1,265 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { X, Check } from 'lucide-react'
+import { X, CheckCircle, Sparkles, TrendingUp, Building2 } from 'lucide-react'
 import { useStore } from '../../store/useStore'
 import { useNavigate } from 'react-router-dom'
+import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
 
 /**
  * Modal de comparaison et upgrade d'abonnement
- * Affiche les 3 tiers avec features et prix
- * Ordre: Amateur | Producteur (centre, recommandé) | Influenceur
+ * Reprend le style de AccountChoicePage
  */
 export default function UpgradeModal({ isOpen, onClose }) {
-    const { accountType } = useStore()
+    const { accountType, checkAuth, isAuthenticated, user } = useStore()
     const navigate = useNavigate()
+    const [selectedType, setSelectedType] = useState(null)
+    const [isProcessing, setIsProcessing] = useState(false)
+    const [error, setError] = useState('')
 
-    // Ordre: Amateur (gauche) - Producteur (centre, recommandé) - Influenceur (droite)
-    const tiers = [
+    // Définition des types de comptes (même structure que AccountChoicePage)
+    const accountTypes = [
         {
-            id: 'amateur',
-            label: 'Amateur',
-            emoji: '👤',
-            price: '0',
-            period: '/mois',
-            color: 'from-slate-400 to-slate-500',
-            textColor: 'text-slate-900',
-            badgeColor: 'bg-slate-500',
-            description: 'Gratuit - Idéal pour commencer',
+            type: 'amateur',
+            name: 'Amateur',
+            subtitle: 'Compte Gratuit',
+            description: 'Créez et gérez vos reviews personnelles',
+            price: 0,
+            icon: Sparkles,
             features: [
-                { name: '5 exports/mois', included: true },
-                { name: 'Templates prédéfinis', included: true },
-                { name: 'Statistiques basiques', included: true },
-                { name: 'Limite 10 reviews publiques', included: true },
-                { name: 'Pas de drag-drop', included: false },
-                { name: 'Export PNG/JPEG/PDF', included: true },
+                'Sections : Info générale, Visuel, Odeurs, Goûts, Effets',
+                'Templates prédéfinis (Compact, Détaillé, Complète)',
+                'Export PNG/JPEG/PDF qualité standard',
+                'Bibliothèque privée limitée : 20 reviews max',
+                'Publications publiques limitées : 5 reviews max',
             ],
-            cta: accountType === 'amateur' ? 'Vous êtes ici' : 'Rétrograder',
-            ctaDisabled: accountType === 'amateur',
         },
         {
-            id: 'producteur',
-            label: 'Producteur',
-            emoji: '🌾',
-            price: '29,99',
-            period: '/mois',
-            color: 'from-blue-500 to-blue-600',
-            textColor: 'text-white',
-            badgeColor: 'bg-blue-600',
-            description: 'Premium - Pour les producteurs',
-            featured: true,
+            type: 'producteur',
+            name: 'Producteur',
+            subtitle: 'Professionnel',
+            description: 'Traçabilité complète et exports professionnels',
+            price: 29.99,
+            icon: Building2,
+            popular: true,
             features: [
-                { name: 'Exports illimités', included: false },
-                { name: 'Templates personnalisés', included: false },
-                { name: 'Drag-drop editor', included: false },
-                { name: 'Pipelines configurables', included: false },
-                { name: 'Statistiques avancées', included: false },
-                { name: 'Export CSV/JSON/SVG/HTML', included: false },
-                { name: 'Filigranes personnalisés', included: false },
-                { name: 'Généalogie cultivars (canvas)', included: false },
-                { name: '300 dpi export', included: false },
-                { name: 'Dashboard culture', included: false },
+                'Accès complet à TOUTES les fonctionnalités',
+                'PipeLines configurables (Culture, Extraction, Séparation)',
+                'Système de génétique avec canvas',
+                'Export TOUS formats (PNG/JPEG/PDF/SVG/CSV/JSON)',
+                'Exports et reviews illimités',
             ],
-            cta: accountType === 'producteur' ? 'Vous êtes ici' : 'Upgrade vers Producteur',
-            ctaDisabled: accountType === 'producteur',
         },
         {
-            id: 'influenceur',
-            label: 'Influenceur',
-            emoji: '⭐',
-            price: '15,99',
-            period: '/mois',
-            color: 'from-purple-500 to-purple-600',
-            textColor: 'text-white',
-            badgeColor: 'bg-purple-600',
-            description: 'Premium - Pour les influenceurs',
+            type: 'influenceur',
+            name: 'Influenceur',
+            subtitle: 'Pour Créateurs de Contenu',
+            description: 'Exports avancés et partage optimisé',
+            price: 15.99,
+            icon: TrendingUp,
             features: [
-                { name: '50 exports/mois', included: false },
-                { name: 'Prévisualisations détaillées', included: false },
-                { name: 'Analytics d\'engagement', included: false },
-                { name: 'Export haute qualité (300dpi)', included: false },
-                { name: 'Export SVG/PDF', included: false },
-                { name: 'Dashboard influenceur', included: false },
-                { name: 'Statistiques sociales', included: false },
-                { name: 'Accès prévisualisations premium', included: false },
-                { name: 'Templates haute qualité', included: false },
-                { name: 'Partage avancé', included: false },
+                'Export GIF animé pour PipeLines',
+                'Système drag & drop pour personnalisation',
+                'Export haute qualité (PNG/JPEG/SVG/PDF 300dpi)',
+                'Templates avancés + filigranes personnalisés',
+                '50 exports par jour',
             ],
-            cta: accountType === 'influenceur' ? 'Vous êtes ici' : 'Upgrade vers Influenceur',
-            ctaDisabled: accountType === 'influenceur',
         },
     ]
 
-    const handleUpgrade = (tierId) => {
-        if (tierId === 'amateur') return // Ne peut pas downgrader vers amateur
-        // Naviguer vers la page de paiement avec le type sélectionné
-        onClose()
-        navigate(`/payment?type=${tierId}`)
+    const handleUpgrade = async (type) => {
+        if (type === accountType) {
+            onClose()
+            return
+        }
+
+        if (type === 'amateur') {
+            // Downgrade non supporté pour l'instant
+            return
+        }
+
+        setSelectedType(type)
+        setIsProcessing(true)
+        setError('')
+
+        try {
+            // Simuler le paiement (TODO: intégrer Stripe/PayPal)
+            await new Promise(resolve => setTimeout(resolve, 1500))
+
+            // Appeler l'API d'upgrade
+            const response = await fetch('/api/payment/upgrade', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    accountType: type,
+                    paymentCompleted: true
+                })
+            })
+
+            if (!response.ok) {
+                const data = await response.json()
+                throw new Error(data.error || 'Erreur lors de la mise à niveau')
+            }
+
+            // Rafraîchir les données utilisateur
+            await checkAuth()
+
+            // Fermer le modal et afficher succès
+            onClose()
+
+            // Optionnel: Afficher un toast de succès
+            alert(`✅ Votre compte a été mis à niveau vers ${type} avec succès!`)
+
+        } catch (err) {
+            console.error('Upgrade error:', err)
+            setError(err.message || 'Erreur lors de la mise à niveau')
+        } finally {
+            setIsProcessing(false)
+            setSelectedType(null)
+        }
     }
 
     if (!isOpen) return null
 
     const modalContent = (
         <div
-            className="fixed inset-0 z-[9999] flex items-start justify-center bg-black/70 backdrop-blur-sm overflow-y-auto"
+            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto p-4"
             onClick={(e) => e.target === e.currentTarget && onClose()}
         >
-            <div className="bg-gray-900 rounded-2xl shadow-2xl max-w-6xl w-full mx-4 my-8 border border-gray-700 flex flex-col">
+            {/* Ambient glow effects */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden">
+                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[120px]" />
+                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/8 rounded-full blur-[100px]" />
+            </div>
+
+            <div className="bg-gradient-to-br from-[#0a0a1a] to-[#07070f] rounded-2xl shadow-2xl max-w-5xl w-full border border-white/10 relative">
                 {/* Header */}
-                <div className="sticky top-0 bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 border-b border-gray-700 p-4 md:p-6 flex items-center justify-between z-10 rounded-t-2xl">
+                <div className="p-6 border-b border-white/10 flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl md:text-2xl font-bold text-white mb-1">Choisir votre abonnement</h2>
-                        <p className="text-gray-400 text-sm">Trouvez le plan qui vous convient</p>
+                        <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+                            Changer de Plan
+                        </h2>
+                        <p className="text-white/50 mt-1">
+                            Plan actuel: <span className="text-purple-400 font-semibold capitalize">{accountType}</span>
+                        </p>
                     </div>
                     <button
                         onClick={onClose}
-                        className="p-2 hover:bg-gray-800 rounded-lg transition-colors flex-shrink-0"
+                        className="p-2 hover:bg-white/10 rounded-xl transition-colors"
                     >
-                        <X size={24} className="text-gray-400" />
+                        <X size={24} className="text-white/60" />
                     </button>
                 </div>
 
+                {/* Error message */}
+                {error && (
+                    <div className="mx-6 mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-xl">
+                        <p className="text-red-400 text-sm">{error}</p>
+                    </div>
+                )}
+
                 {/* Pricing Cards */}
-                <div className="p-4 md:p-8 flex-1">
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
-                        {tiers.map((tier) => (
-                            <div
-                                key={tier.id}
-                                className={`relative rounded-xl border-2 transition-all ${tier.featured
-                                    ? 'border-blue-500 shadow-2xl shadow-blue-500/20 lg:scale-105 order-first lg:order-none'
-                                    : 'border-gray-700 hover:border-gray-600'
-                                    }`}
-                            >
-                                {/* Featured badge */}
-                                {tier.featured && (
-                                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2 z-10">
-                                        <span className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap">
-                                            ⭐ RECOMMANDÉ
-                                        </span>
-                                    </div>
-                                )}
+                <div className="p-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {accountTypes.map((type) => {
+                            const isCurrentPlan = accountType === type.type
+                            const Icon = type.icon
+                            const isLoading = isProcessing && selectedType === type.type
 
-                                {/* Card content */}
-                                <div className={`bg-gradient-to-br ${tier.color} p-6 rounded-t-xl text-center`}>
-                                    <div className="text-5xl mb-3">{tier.emoji}</div>
-                                    <h3 className={`text-2xl font-bold ${tier.textColor} mb-2`}>{tier.label}</h3>
-                                    <p className={`text-sm ${tier.textColor} opacity-90 mb-4`}>{tier.description}</p>
-                                    <div className="flex items-baseline justify-center gap-1">
-                                        <span className={`text-4xl font-bold ${tier.textColor}`}>{tier.price}€</span>
-                                        <span className={`text-sm ${tier.textColor} opacity-75`}>{tier.period}</span>
-                                    </div>
-                                </div>
+                            return (
+                                <div
+                                    key={type.type}
+                                    className={`relative transition-all duration-300 ${type.popular ? 'md:scale-105 z-10' : ''}`}
+                                >
+                                    {/* Badge Populaire */}
+                                    {type.popular && (
+                                        <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20">
+                                            <LiquidBadge variant="warning" size="md" className="animate-pulse">
+                                                ⭐ RECOMMANDÉ
+                                            </LiquidBadge>
+                                        </div>
+                                    )}
 
-                                {/* Features list */}
-                                <div className="bg-gray-800/50 p-6">
-                                    <ul className="space-y-3">
-                                        {tier.features.map((feature, idx) => (
-                                            <li
-                                                key={idx}
-                                                className="flex items-center gap-3 text-sm"
-                                            >
-                                                {feature.included ? (
-                                                    <Check size={18} className="text-green-500 flex-shrink-0" />
-                                                ) : (
-                                                    <X size={18} className="text-gray-600 flex-shrink-0" />
-                                                )}
-                                                <span
-                                                    className={feature.included ? 'text-gray-200' : 'text-gray-500'}
-                                                >
-                                                    {feature.name}
-                                                </span>
-                                            </li>
-                                        ))}
-                                    </ul>
-                                </div>
-
-                                {/* CTA Button */}
-                                <div className="p-4 md:p-6 border-t border-gray-700">
-                                    <button
-                                        onClick={() => {
-                                            if (!tier.ctaDisabled) {
-                                                handleUpgrade(tier.id)
-                                            }
-                                        }}
-                                        disabled={tier.ctaDisabled}
-                                        className={`w-full py-3 px-4 rounded-lg font-semibold transition-all ${tier.ctaDisabled
-                                            ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                                            : `bg-gradient-to-r ${tier.color} ${tier.textColor} hover:shadow-lg transform hover:scale-105`
-                                            }`}
+                                    <LiquidCard
+                                        glow={isCurrentPlan ? 'green' : type.popular ? 'purple' : 'default'}
+                                        padding="lg"
+                                        className={`h-full ${isCurrentPlan ? 'ring-2 ring-green-500/50' : ''}`}
                                     >
-                                        {tier.cta}
-                                    </button>
+                                        <div className="space-y-4">
+                                            {/* Icône et prix */}
+                                            <div className="flex items-start justify-between">
+                                                <div className="p-3 bg-white/10 backdrop-blur-sm rounded-xl">
+                                                    <Icon className="w-8 h-8 text-white" />
+                                                </div>
+                                                <div className="text-right">
+                                                    {type.price > 0 ? (
+                                                        <>
+                                                            <div className="text-3xl font-black text-white">
+                                                                {type.price}€
+                                                            </div>
+                                                            <div className="text-sm text-white/50">/mois</div>
+                                                        </>
+                                                    ) : (
+                                                        <div className="text-2xl font-black text-emerald-400">
+                                                            GRATUIT
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Nom et description */}
+                                            <div>
+                                                <h3 className="text-xl font-bold text-white">{type.name}</h3>
+                                                <p className="text-sm text-white/50">{type.subtitle}</p>
+                                            </div>
+
+                                            {/* Fonctionnalités */}
+                                            <div className="space-y-2 min-h-[140px]">
+                                                {type.features.map((feature, idx) => (
+                                                    <div key={idx} className="flex items-start gap-2 text-sm">
+                                                        <CheckCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-emerald-400" />
+                                                        <span className="text-white/70">{feature}</span>
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Bouton */}
+                                            <LiquidButton
+                                                onClick={() => handleUpgrade(type.type)}
+                                                disabled={isCurrentPlan || isProcessing}
+                                                variant={isCurrentPlan ? 'secondary' : 'primary'}
+                                                glow={type.popular && !isCurrentPlan ? 'purple' : undefined}
+                                                fullWidth
+                                                className={isCurrentPlan ? 'cursor-not-allowed opacity-60' : ''}
+                                            >
+                                                {isLoading ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                                                        </svg>
+                                                        Traitement...
+                                                    </span>
+                                                ) : isCurrentPlan ? (
+                                                    '✓ Plan actuel'
+                                                ) : type.type === 'amateur' ? (
+                                                    'Rétrograder'
+                                                ) : (
+                                                    `Passer à ${type.name}`
+                                                )}
+                                            </LiquidButton>
+                                        </div>
+                                    </LiquidCard>
                                 </div>
-                            </div>
-                        ))}
+                            )
+                        })}
                     </div>
 
-                    {/* FAQ Section */}
-                    <div className="mt-8 md:mt-12 bg-gray-800/30 rounded-xl p-4 md:p-6 border border-gray-700">
-                        <h3 className="text-lg md:text-xl font-bold text-white mb-4 md:mb-6">❓ Questions fréquentes</h3>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                            <div>
-                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Puis-je changer de plan ?</h4>
-                                <p className="text-xs md:text-sm text-gray-400">Oui, vous pouvez changer d'abonnement n'importe quand. Les changements prennent effet immédiatement.</p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Puis-je annuler ?</h4>
-                                <p className="text-xs md:text-sm text-gray-400">Oui, sans engagement. Vous pouvez annuler votre abonnement à tout moment depuis votre compte.</p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Quel paiement acceptez-vous ?</h4>
-                                <p className="text-xs md:text-sm text-gray-400">Nous acceptons les cartes de crédit via Stripe. Les paiements sont sécurisés et vérifiés.</p>
-                            </div>
-                            <div>
-                                <h4 className="font-semibold text-white mb-2 text-sm md:text-base">Besoin d'aide ?</h4>
-                                <p className="text-xs md:text-sm text-gray-400">Contactez notre support : support@terpologie.eu</p>
-                            </div>
-                        </div>
+                    {/* Note de paiement */}
+                    <div className="mt-6 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                        <p className="text-sm text-amber-300">
+                            <strong>💳 Note :</strong> Le paiement est actuellement simulé. L'intégration PayPal/Stripe sera disponible prochainement.
+                        </p>
                     </div>
                 </div>
             </div>
