@@ -10,6 +10,8 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
     const [history, setHistory] = useState(subscriptionHistory || [])
     const [loading, setLoading] = useState(false)
     const [nextBilling, setNextBilling] = useState(null)
+    const [changingPlan, setChangingPlan] = useState(false)
+    const [selectedPlan, setSelectedPlan] = useState('influenceur')
 
     useEffect(() => {
         let mounted = true
@@ -87,6 +89,46 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
             month: 'long',
             day: 'numeric'
         })
+    }
+
+    const handleCancel = async () => {
+        if (!window.confirm('Confirmer la résiliation de votre abonnement ?')) return
+        try {
+            setLoading(true)
+            const res = await paymentService.cancel()
+            // optimistic UI: set nextBilling to null
+            setNextBilling(null)
+            alert(res?.message || 'Abonnement résilié. Vous recevrez une confirmation par email.')
+        } catch (err) {
+            console.error('Cancel error', err)
+            alert(err.message || 'Échec de la résiliation')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleChangePlan = async (plan) => {
+        try {
+            setChangingPlan(true)
+            // Try to create a checkout session first
+            const checkout = await paymentService.createCheckout(plan)
+            if (checkout?.checkoutUrl) {
+                window.location.href = checkout.checkoutUrl
+                return
+            }
+
+            // fallback to direct upgrade endpoint
+            const res = await paymentService.upgrade(plan, false)
+            alert(res?.message || 'Modification de l\'abonnement effectuée.')
+            // Optionally refresh status
+            const status = await paymentService.status()
+            if (status?.user?.nextBillingDate) setNextBilling(status.user.nextBillingDate)
+        } catch (err) {
+            console.error('Plan change error', err)
+            alert(err.message || 'Erreur lors du changement de formule')
+        } finally {
+            setChangingPlan(false)
+        }
     }
 
     if (loading) {
@@ -186,8 +228,29 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
                 <button className="flex-1 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors">
                     Modifier le moyen de paiement
                 </button>
-                <button className="py-2 px-4 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors">
+                <button onClick={handleCancel} disabled={loading} className="py-2 px-4 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors">
                     Annuler l'abonnement
+                </button>
+            </div>
+
+            {/* Upgrade / Downgrade quick actions */}
+            <div className="mt-3 flex items-center gap-3">
+                <select
+                    aria-label="Choisir une formule"
+                    value={selectedPlan}
+                    onChange={(e) => setSelectedPlan(e.target.value)}
+                    className="bg-gray-800 text-white rounded-lg p-2 text-sm"
+                >
+                    <option value="amateur">Amateur (gratuit)</option>
+                    <option value="influenceur">Influenceur</option>
+                    <option value="producteur">Producteur</option>
+                </select>
+                <button
+                    onClick={() => handleChangePlan(selectedPlan)}
+                    disabled={changingPlan}
+                    className="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
+                >
+                    {changingPlan ? 'Traitement...' : 'Changer de formule'}
                 </button>
             </div>
         </div>

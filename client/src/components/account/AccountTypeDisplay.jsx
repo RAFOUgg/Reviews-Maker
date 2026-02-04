@@ -1,6 +1,7 @@
 import React from 'react'
 import { useStore } from '../../store/useStore'
 import { getAccountTypeLabel, getAccountTypeColor, getAccountTypeEmoji } from '../../hooks/useAccountFeatures'
+import { paymentService, accountService } from '../../services/apiService'
 
 /**
  * Composant pour afficher le type de compte actuel
@@ -114,23 +115,85 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 </div>
             </div>
 
-            {/* Bouton upgrade */}
+            {/* Boutons d'upgrade / downgrade / résiliation */}
             {accountType === 'amateur' && (
-                <button
-                    onClick={onUpgradeClick}
-                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-                >
-                    ✨ Upgrader mon compte
-                </button>
+                <div className="space-y-2">
+                    <button
+                        onClick={async () => {
+                            try {
+                                const res = await paymentService.createCheckout('influenceur')
+                                if (res?.checkoutUrl) window.location.href = res.checkoutUrl
+                            } catch (err) {
+                                console.error(err)
+                                alert('Impossible de démarrer le paiement')
+                            }
+                        }}
+                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg"
+                    >
+                        ✨ Passer à Influenceur
+                    </button>
+
+                    <button
+                        onClick={async () => {
+                            try {
+                                const res = await paymentService.createCheckout('producteur')
+                                if (res?.checkoutUrl) window.location.href = res.checkoutUrl
+                            } catch (err) {
+                                console.error(err)
+                                alert('Impossible de démarrer le paiement')
+                            }
+                        }}
+                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg"
+                    >
+                        🚀 Passer à Producteur
+                    </button>
+                </div>
             )}
 
             {/* Info pour tiers payants */}
             {(accountType === 'producteur' || accountType === 'influenceur') && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-3">
                     <p className="text-sm text-blue-900 dark:text-blue-300">
                         📅 Votre renouvellement: <span className="font-semibold">15 février 2026</span>
                     </p>
-                    <button className="mt-3 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={async () => {
+                                // downgrade to influenceur or amateur
+                                const target = accountType === 'producteur' ? 'influenceur' : 'amateur'
+                                if (!window.confirm(`Confirmer le changement de formule vers ${target} ?`)) return
+                                try {
+                                    await accountService.changeType(target)
+                                    alert('Formule modifiée. Rechargez la page pour voir le changement.')
+                                    window.location.reload()
+                                } catch (err) {
+                                    console.error(err)
+                                    alert('Erreur lors du changement de formule')
+                                }
+                            }}
+                            className="text-sm font-medium text-blue-600 dark:text-blue-400 bg-white/5 px-3 py-2 rounded-lg hover:bg-white/10"
+                        >
+                            {accountType === 'producteur' ? '⬇️ Passer à Influenceur' : '⬇️ Rétrograder en Amateur'}
+                        </button>
+
+                        <button
+                            onClick={async () => {
+                                if (!window.confirm('Confirmer la résiliation de votre abonnement ?')) return
+                                try {
+                                    const res = await paymentService.cancel()
+                                    alert(res?.message || 'Abonnement résilié')
+                                    window.location.reload()
+                                } catch (err) {
+                                    console.error(err)
+                                    alert('Erreur lors de la résiliation')
+                                }
+                            }}
+                            className="text-sm font-medium text-red-400 bg-white/5 px-3 py-2 rounded-lg hover:bg-red-900/10"
+                        >
+                            ❌ Résilier l'abonnement
+                        </button>
+                    </div>
+                    <button className="mt-1 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">
                         Gérer mon abonnement →
                     </button>
                 </div>

@@ -51,6 +51,12 @@ export const paymentService = {
         })
     },
 
+    async cancel() {
+        return fetchAPI(`${API_BASE}/payment/cancel`, {
+            method: 'POST'
+        })
+    },
+
     async status() {
         return fetchAPI(`${API_BASE}/payment/status`)
     }
