@@ -4,6 +4,7 @@
  */
 
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import ReactDatePicker from 'react-datepicker';
 import { ShieldCheck, Calendar, Globe, MapPin, Loader2 } from 'lucide-react';
@@ -114,11 +115,18 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
 
     if (!isOpen) return null;
 
-    return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md max-h-[90vh] flex flex-col bg-gradient-to-br from-[#1a1a2e] to-[#16162a] rounded-2xl border border-white/10 shadow-2xl">
+    // Utilise un Portal pour s'assurer que le modal est rendu hors de tout conteneur avec overflow:hidden
+    const modalContent = (
+        <div
+            className="fixed inset-0 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
+            style={{ zIndex: 99999, position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+        >
+            <div
+                className="w-full max-w-md bg-gradient-to-br from-[#1a1a2e] to-[#16162a] rounded-2xl border border-white/10 shadow-2xl"
+                style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
+            >
                 {/* Header */}
-                <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-white/10">
+                <div style={{ flexShrink: 0, padding: '24px 24px 16px 24px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                             <ShieldCheck className="w-6 h-6 text-white" />
@@ -131,7 +139,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                 </div>
 
                 {/* Body - scrollable si nécessaire */}
-                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+                <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }} className="space-y-5">
                     <p className="text-sm text-white/60">
                         Pour accéder à cette plateforme, vous devez confirmer que vous avez l'âge légal dans votre pays.
                     </p>
@@ -213,7 +221,7 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                 </div>
 
                 {/* Footer avec le bouton - TOUJOURS visible */}
-                <div className="flex-shrink-0 px-6 py-4 border-t border-white/10 bg-white/5 rounded-b-2xl">
+                <div style={{ flexShrink: 0, padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', borderRadius: '0 0 16px 16px' }}>
                     <button
                         type="button"
                         onClick={handleSubmit}
@@ -240,6 +248,9 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
             </div>
         </div>
     );
+
+    // Render dans document.body via Portal pour éviter les problèmes de overflow:hidden des parents
+    return createPortal(modalContent, document.body);
 };
 
 export default AgeVerification;
