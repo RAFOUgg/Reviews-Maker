@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OAuthButtons from '../../components/account/OAuthButtons'
-import AgeVerificationModal from '../../components/legal/AgeVerificationModal'
+import AgeVerification from '../../components/legal/AgeVerification'
 import { LiquidCard, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI'
 import { authService } from '../../services/apiService'
 import { useStore } from '../../store/useStore'
@@ -62,10 +62,10 @@ export default function LoginPage() {
 
     return (
         <>
-            <AgeVerificationModal
+            <AgeVerification
                 isOpen={showAgeVerification}
-                onClose={() => setShowAgeVerification(false)}
                 onVerified={handleAgeVerified}
+                onReject={() => setShowAgeVerification(false)}
             />
 
             <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white flex items-center justify-center px-4 py-8">
