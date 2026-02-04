@@ -18,6 +18,22 @@ export class APIError extends Error {
 }
 
 /**
+ * Service pour les opérations de compte (upgrade/downgrade)
+ */
+export const accountService = {
+    async changeType(newType, options = {}) {
+        return fetchAPI(`${API_BASE}/account/change-type`, {
+            method: 'POST',
+            body: JSON.stringify({ newType, options })
+        })
+    },
+
+    async getInfo() {
+        return fetchAPI(`${API_BASE}/account/info`)
+    }
+}
+
+/**
  * Types de produits et leurs routes correspondantes
  */
 export const PRODUCT_TYPES = {

@@ -1,13 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X, CheckCircle, Sparkles, TrendingUp, Building2 } from 'lucide-react';
-import { useStore } from '../../store/useStore';
+import { X, CheckCircle, Sparkles, TrendingUp, Building2, ArrowLeft } from 'lucide-react';
+import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
+import { useToast } from '../shared/ToastContainer';
+import { accountService } from '../../services/apiService';
 
 export default function UpgradeModal({ isOpen, onClose }) {
-    const { accountType } = useStore();
+    const { accountType, checkAuth } = useStore();
     const navigate = useNavigate();
+    const toast = useToast();
     const [selectedType, setSelectedType] = useState(accountType);
 
     const accountTypes = [
@@ -18,29 +21,23 @@ export default function UpgradeModal({ isOpen, onClose }) {
             description: 'Créez et gérez vos reviews personnelles',
             price: 0,
             icon: Sparkles,
+            gradient: '',
             features: [
-                'Sections : Info générale, Visuel, Odeurs, Goûts, Effets',
-                'Templates prédéfinis (Compact, Détaillé, Complète)',
+                '⚠️ Filigrane "Terpologie" forcé sur tous les exports et aperçus',
+                'Sections : Info générale, Visuel, Curing, Odeurs, Goûts, Effets',
+                'Templates prédéfinis imposés (Compact, Détaillé, Complète)',
                 'Export PNG/JPEG/PDF qualité standard',
-                'Bibliothèque privée limitée : 20 reviews max',
-                'Publications publiques limitées : 5 reviews max',
+                'Personnalisation de base (thèmes, couleurs, typo)',
+                '📚 Bibliothèque privée limitée : 20 reviews max',
+                '🌐 Publications publiques limitées : 5 reviews max',
+                '📤 Exports quotidiens limités : 3 par jour',
             ],
-        },
-        {
-            type: 'producteur',
-            name: 'Producteur',
-            subtitle: 'Professionnel',
-            description: 'Traçabilité complète et exports professionnels',
-            price: 29.99,
-            icon: Building2,
-            popular: true,
-            features: [
-                'Accès complet à TOUTES les fonctionnalités',
-                'PipeLines configurables (Culture, Extraction, Séparation)',
-                'Système de génétique avec canvas',
-                'Export TOUS formats (PNG/JPEG/PDF/SVG/CSV/JSON)',
-                'Exports et reviews illimités',
-            ],
+            limitations: [
+                'Formats d\'export imposés par templates',
+                'Pas d\'accès aux PipeLines Culture/Extraction/Séparation',
+                'Pas de filigrane personnalisé',
+                'Pas d\'export GIF',
+            ]
         },
         {
             type: 'influenceur',
@@ -49,23 +46,71 @@ export default function UpgradeModal({ isOpen, onClose }) {
             description: 'Exports avancés et partage optimisé',
             price: 15.99,
             icon: TrendingUp,
+            gradient: ' ',
+            popular: true,
             features: [
-                'Export GIF animé pour PipeLines',
-                'Système drag & drop pour personnalisation',
-                'Export haute qualité (PNG/JPEG/SVG/PDF 300dpi)',
-                'Templates avancés + filigranes personnalisés',
-                '50 exports par jour',
+                '✨ Sans filigrane Terpologie',
+                '🎬 Export GIF animé pour PipeLines',
+                '🎨 Système drag & drop pour personnalisation des rendus',
+                '📸 Export haute qualité (PNG/JPEG/SVG/PDF 300dpi)',
+                '🎭 Templates avancés (20 max)',
+                '🏷️ Filigranes personnalisés (10 max)',
+                '📊 Statistiques avancées et analytics',
+                '📚 Bibliothèque illimitée (reviews publiques et privées)',
+                '📤 50 exports par jour',
+                'Toutes les sections Amateur incluses',
             ],
+            limitations: [
+                'PipeLines Culture/Extraction/Séparation non accessibles (réservés Producteurs)',
+                'Pas d\'accès au système de génétique',
+            ]
+        },
+        {
+            type: 'producteur',
+            name: 'Producteur',
+            subtitle: 'Professionnel',
+            description: 'Traçabilité complète et exports professionnels',
+            price: 29.99,
+            icon: Building2,
+            gradient: ' ',
+            features: [
+                '🌿 Accès complet à TOUTES les fonctionnalités',
+                '⚙️ PipeLines configurables (Culture, Extraction, Séparation, Curing)',
+                '🧬 Système de génétique avec canvas (arbres généalogiques)',
+                '🎨 Templates 100% personnalisables avec drag & drop',
+                '📦 Export TOUS formats (PNG/JPEG/PDF/SVG 300dpi + CSV/JSON/HTML)',
+                '🔤 Polices personnalisées et filigranes illimités',
+                '🏢 Gestion entreprise (SIRET, logo, infos légales)',
+                '📊 Statistiques de production avancées',
+                '📚 Bibliothèque illimitée avec organisation avancée',
+                '♾️ Exports illimités',
+                'Toutes les fonctionnalités Influenceur incluses',
+            ],
+            limitations: []
         },
     ];
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         if (selectedType === accountType) {
             onClose();
             return;
         }
 
-        navigate(`/account/payment?type=${selectedType}`);
+        // Try to change account type immediately (upgrade flow from account settings)
+        try {
+            const loadingId = toast.loading('Mise à jour du plan en cours...');
+            const res = await accountService.changeType(selectedType);
+            toast.remove(loadingId);
+            toast.success(res.message || 'Votre compte a été mis à jour avec succès !');
+
+            // Refresh auth/profile in store
+            await checkAuth();
+
+            onClose();
+        } catch (err) {
+            const msg = err?.message || (err?.code ? `${err.code}` : 'Erreur lors de la mise à jour');
+            toast.error(msg);
+        }
     };
 
     if (!isOpen) return null;
