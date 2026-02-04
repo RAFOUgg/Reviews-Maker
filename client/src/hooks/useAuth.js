@@ -50,7 +50,7 @@ export function useAuth() {
                         const accountData = await accountResponse.json()
                         setAccountInfo(accountData)
                     }
-                    
+
                     // Le type de compte est maintenant choisi AVANT la création via /choose-account
                     // Plus besoin de needsAccountTypeSelection
                     setNeedsAccountTypeSelection(false)

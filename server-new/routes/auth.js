@@ -101,7 +101,7 @@ router.get('/discord', (req, res, next) => {
 
 // POST /api/auth/email/signup - Création de compte email/password
 router.post('/email/signup', asyncHandler(async (req, res) => {
-    const { email, password, username, pseudo, accountType } = req.body || {}
+    const { email, password, username, pseudo, accountType, isPaid } = req.body || {}
     const finalUsername = username || pseudo // Accepter les deux noms de champ
 
     if (!email || !password) {
@@ -133,6 +133,10 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
 
     const passwordHash = await hashPassword(password)
 
+    // Définir subscriptionStatus en fonction du type de compte et du paiement
+    const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCEUR || chosenType === ACCOUNT_TYPES.PRODUCTEUR
+    const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
+
     let user
     if (existing) {
         user = await prisma.user.update({
@@ -141,6 +145,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
                 passwordHash,
                 username: existing.username || finalUsername || normalizedEmail.split('@')[0],
                 accountType: chosenType, // Mettre à jour le type de compte
+                subscriptionStatus, // Activer l'abonnement si payé
                 roles: existing.roles || JSON.stringify({ roles: [chosenType] })
             }
         })
@@ -151,6 +156,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
                 username: finalUsername || normalizedEmail.split('@')[0],
                 passwordHash,
                 accountType: chosenType, // Définir le type de compte
+                subscriptionStatus, // Activer l'abonnement si payé
                 roles: JSON.stringify({ roles: [chosenType] })
             }
         })
@@ -430,6 +436,11 @@ router.post('/logout', asyncHandler(async (req, res) => {
 // GET /api/auth/google - Initier l'authentification Google
 router.get('/google', (req, res, next) => {
     console.log(`[AUTH-DBG] Start google route - method: ${req.method} originalUrl: ${req.originalUrl}`)
+    // Stocker le type de compte et le statut de paiement en session avant OAuth
+    if (req.query.type) {
+        req.session.pendingAccountType = req.query.type
+        req.session.pendingIsPaid = req.query.paid === 'true'
+    }
     return passport.authenticate('google', { scope: ['profile', 'email'] })(req, res, next)
 })
 
@@ -438,14 +449,39 @@ router.get('/google/callback', (req, res, next) => {
     console.log(`[AUTH-DBG] Google callback received - method: ${req.method} originalUrl: ${req.originalUrl}`)
     console.log(`[AUTH-DBG] Query params:`, req.query)
     console.log(`[AUTH-DBG] Session ID:`, req.sessionID)
+    console.log(`[AUTH-DBG] Pending account type:`, req.session?.pendingAccountType)
 
     return passport.authenticate('google', {
         failureRedirect: process.env.FRONTEND_URL
-    })(req, res, (err) => {
+    })(req, res, async (err) => {
         if (err) {
             console.error('[AUTH] Error during Google callback:', err)
             return next(err)
         }
+        
+        // Appliquer le type de compte et statut d'abonnement si stockés en session
+        const pendingType = req.session?.pendingAccountType
+        const isPaid = req.session?.pendingIsPaid
+        if (pendingType && req.user) {
+            const chosenType = Object.values(ACCOUNT_TYPES).includes(pendingType) ? pendingType : ACCOUNT_TYPES.AMATEUR
+            const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCEUR || chosenType === ACCOUNT_TYPES.PRODUCTEUR
+            const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
+            
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: {
+                    accountType: chosenType,
+                    subscriptionStatus,
+                    roles: JSON.stringify({ roles: [chosenType] })
+                }
+            })
+            console.log(`[AUTH-DBG] Updated user ${req.user.username} with type: ${chosenType}, status: ${subscriptionStatus}`)
+            
+            // Nettoyer la session
+            delete req.session.pendingAccountType
+            delete req.session.pendingIsPaid
+        }
+        
         // Succès : rediriger vers le frontend
         console.log('[AUTH-DBG] Google auth success! User:', req.user?.username, 'ID:', req.user?.id)
         console.log('[AUTH-DBG] Session after auth:', req.sessionID, 'isAuthenticated:', req.isAuthenticated?.())

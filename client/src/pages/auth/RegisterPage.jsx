@@ -95,7 +95,8 @@ export default function RegisterPage() {
                     email: formData.email,
                     pseudo: formData.pseudo,
                     password: formData.password,
-                    accountType: normalizedAccountType // Envoyer le type de compte normalisé
+                    accountType: normalizedAccountType, // Envoyer le type de compte normalisé
+                    isPaid // Indiquer si l'utilisateur a payé
                 })
             });
 
@@ -165,7 +166,7 @@ export default function RegisterPage() {
                 </svg>
             ),
             color: 'bg-white/90 hover:bg-white text-gray-700',
-            href: `/api/auth/google?accountType=${normalizedAccountType}`
+            href: `/api/auth/google?type=${normalizedAccountType}&paid=${isPaid}`
         }
     ];
 
