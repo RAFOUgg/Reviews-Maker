@@ -116,9 +116,9 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm">
-            <div className="w-full max-w-md bg-gradient-to-br from-[#1a1a2e] to-[#16162a] rounded-2xl border border-white/10 shadow-2xl overflow-hidden">
+            <div className="w-full max-w-md max-h-[90vh] flex flex-col bg-gradient-to-br from-[#1a1a2e] to-[#16162a] rounded-2xl border border-white/10 shadow-2xl">
                 {/* Header */}
-                <div className="px-6 pt-6 pb-4 border-b border-white/10">
+                <div className="flex-shrink-0 px-6 pt-6 pb-4 border-b border-white/10">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                             <ShieldCheck className="w-6 h-6 text-white" />
@@ -130,8 +130,8 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                     </div>
                 </div>
 
-                {/* Body */}
-                <div className="px-6 py-5 space-y-5">
+                {/* Body - scrollable si nécessaire */}
+                <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
                     <p className="text-sm text-white/60">
                         Pour accéder à cette plateforme, vous devez confirmer que vous avez l'âge légal dans votre pays.
                     </p>
@@ -212,8 +212,8 @@ const AgeVerification = ({ isOpen, onVerified, onReject }) => {
                     </p>
                 </div>
 
-                {/* Footer avec le bouton */}
-                <div className="px-6 py-4 border-t border-white/10 bg-white/5">
+                {/* Footer avec le bouton - TOUJOURS visible */}
+                <div className="flex-shrink-0 px-6 py-4 border-t border-white/10 bg-white/5 rounded-b-2xl">
                     <button
                         type="button"
                         onClick={handleSubmit}
