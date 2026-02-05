@@ -5,9 +5,9 @@ export default function ConfirmDialog({
     isOpen,
     onClose,
     onConfirm,
-    title,
-    message,
-    confirmText = 'Confirmer',
+    title = 'Confirmer la résiliation',
+    message = 'Êtes-vous sûr de vouloir résilier votre abonnement ? Cette action peut entraîner une perte d\'accès à certaines fonctionnalités.',
+    confirmText = 'Oui, résilier',
     cancelText = 'Annuler',
     variant = 'danger' // danger, warning, info
 }) {
@@ -44,23 +44,30 @@ export default function ConfirmDialog({
         <LiquidModal
             isOpen={isOpen}
             onClose={onClose}
-            title={
-                <div className="flex items-center gap-3">
-                    <span className="text-2xl">{style.icon}</span>
-                    <span>{title}</span>
-                </div>
-            }
-            size="sm"
-            glowColor={style.glowColor}
-            footer={
-                <div className="flex gap-3 w-full">
-                    <LiquidButton
-                        onClick={onClose}
-                        variant="ghost"
-                        className="flex-1"
-                    >
+            size="md"
+            closeOnOverlay={false}
+            showCloseButton={true}
+        >
+            <LiquidModal.Header>
+                <LiquidModal.Title className="items-start" icon={() => <span className="text-2xl">{style.icon}</span>}>
+                    <div>
+                        <div className="text-lg font-semibold text-white">{title}</div>
+                        <div className="text-sm text-white/60 mt-1">{message}</div>
+                    </div>
+                </LiquidModal.Title>
+            </LiquidModal.Header>
+
+            <LiquidModal.Body className="pt-2">
+                {/* Extra explanation area (keeps layout consistent) */}
+                <div className="text-sm text-white/70">Si vous confirmez, votre abonnement prendra fin à la prochaine date de facturation. Certaines données resteront disponibles mais l'accès à des fonctionnalités avancées sera restreint.</div>
+            </LiquidModal.Body>
+
+            <LiquidModal.Footer>
+                <div className="flex w-full gap-3">
+                    <LiquidButton onClick={onClose} variant="ghost" className="flex-1">
                         {cancelText}
                     </LiquidButton>
+
                     <LiquidButton
                         onClick={() => {
                             onConfirm()
@@ -72,9 +79,7 @@ export default function ConfirmDialog({
                         {confirmText}
                     </LiquidButton>
                 </div>
-            }
-        >
-            <p className="text-white/70">{message}</p>
+            </LiquidModal.Footer>
         </LiquidModal>
     )
 }
