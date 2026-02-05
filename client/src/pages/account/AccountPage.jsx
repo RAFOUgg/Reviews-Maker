@@ -22,6 +22,7 @@ import ProfileSection from './sections/ProfileSection'
 import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
 import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
+import { accountService, paymentService } from '../../services/apiService'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 
 const SUPPORTED_LANGUAGES = [
@@ -43,7 +44,7 @@ const getTabSections = (accountType) => {
 const AccountPage = () => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { user, accountType } = useStore()
+  const { user, accountType, checkAuth } = useStore()
   const { isProducteur } = useAccountFeatures()
 
   const isProfileComplete = user?.birthdate && user?.country
@@ -224,12 +225,74 @@ const AccountPage = () => {
               <div className="space-y-6">
                 <div>
                   <h2 className="text-2xl font-bold mb-2 text-white">💳 Gérer mon abonnement</h2>
-                  <p className="text-white/50">Découvrez nos offres et gérez votre souscription</p>
+                  <p className="text-white/50">Visualisez votre plan actuel et gérez vos options (modifier, moyen de paiement, résilier).</p>
                 </div>
-                <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
+
+                {/* Deux colonnes : résumé du plan + panneau d'actions */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div className="md:col-span-2">
+                    <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
+                  </div>
+
+                  <div className="md:col-span-1">
+                    <div className="bg-white/3 dark:bg-white/5 rounded-lg p-4 space-y-4 border border-white/6">
+                      <h3 className="text-lg font-semibold text-white">Actions</h3>
+
+                      <p className="text-sm text-white/60">Plan actuel: <span className="font-medium text-white capitalize">{accountType || 'Amateur'}</span></p>
+
+                      <button
+                        onClick={() => setShowUpgradeModal(true)}
+                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg"
+                      >
+                        ✨ Modifier le plan
+                      </button>
+
+                      <button
+                        onClick={() => { window.location.href = '/manage-subscription' }}
+                        className="w-full bg-gray-700 text-white font-medium py-2 px-3 rounded-lg hover:bg-gray-600"
+                      >
+                        ⚙️ Gérer le moyen de paiement
+                      </button>
+
+                      {accountType && accountType !== 'amateur' && (
+                        <button
+                          onClick={async () => {
+                            if (!window.confirm('Confirmer la résiliation de votre abonnement ?')) return
+                            try {
+                              // Prefer accountService changeType to ensure account roles update
+                              await accountService.changeType('amateur')
+                              // refresh auth/store
+                              if (typeof checkAuth === 'function') await checkAuth()
+                              alert('Abonnement résilié. Votre compte a été rétrogradé.')
+                              window.location.reload()
+                            } catch (err) {
+                              console.error('Cancel subscription error', err)
+                              try {
+                                // fallback to payment cancel endpoint
+                                await paymentService.cancel()
+                                if (typeof checkAuth === 'function') await checkAuth()
+                                alert('Abonnement résilié via le service de paiement.')
+                                window.location.reload()
+                              } catch (err2) {
+                                console.error('Payment cancel fallback failed', err2)
+                                alert(err2?.message || 'Erreur lors de la résiliation')
+                              }
+                            }
+                          }}
+                          className="w-full text-sm font-medium text-red-400 bg-white/5 px-3 py-2 rounded-lg hover:bg-red-900/10"
+                        >
+                          ❌ Résilier l'abonnement
+                        </button>
+                      )}
+
+                    </div>
+                  </div>
+                </div>
 
                 {(accountType === 'producteur' || accountType === 'influenceur') && (
-                  <SubscriptionHistory />
+                  <div>
+                    <SubscriptionHistory />
+                  </div>
                 )}
               </div>
             )}
