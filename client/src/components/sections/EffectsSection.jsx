@@ -171,20 +171,13 @@ export default function EffectsSection({ productType, data: directData, onChange
                                         size="sm"
                                     >
                                         {e.label}
-                                    </LiquidChip>
-                                ))}
-                            </div>
-                        </div>
+                                    </LiquidCard >
+                                );
+                            }
 
-                        {/* Usages préférés */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
-                            <div className="flex flex-wrap gap-2">
-                                {EXPERIENCE_VALUES.usagesPreferes.map(u => (
-                                    <LiquidChip
-                                        key={u.value}
-                                        active={usagesPreferes.includes(u.value)}
-                                        color="purple"
+                            */
+
+                            export { default } from './EffectsSectionImpl';
                                         onClick={() => toggleMultiSelect('usagesPreferes', u.value)}
                                         size="sm"
                                     >
