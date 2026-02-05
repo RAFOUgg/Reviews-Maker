@@ -15,10 +15,7 @@
 
 import React, { useCallback, useEffect, useState } from 'react';
 import ReactFlow, {
-    Node,
-    Edge,
     addEdge,
-    Connection,
     useNodesState,
     useEdgesState,
     Background,

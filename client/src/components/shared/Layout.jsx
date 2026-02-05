@@ -5,7 +5,7 @@
 import { useState } from 'react';
 import { Outlet, Link, NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../../hooks/useAuth.js';
+import { useAuth } from '../../hooks/useAuth';
 import { usePermissions } from '../../hooks/usePermissions';
 import UserProfileDropdown from '../account/UserProfileDropdown';
 import { LiquidButton, LiquidAvatar, LiquidModal } from '@/components/ui/LiquidUI';
