@@ -4,6 +4,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
+import { getCategoryFieldsByType, getExportSectionsByType } from '../../../utils/orchard/productTypeMappings';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION COMPLÈTE DES MODULES PAR CATÉGORIE
@@ -304,7 +305,7 @@ function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
                 ref={setNodeRef}
                 style={style}
                 whileHover={{ scale: 1.02 }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? ' dark: border dark:' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-60' }`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? ' dark: border dark:' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-60'}`}
                 onClick={onToggle}
             >
                 <span className="text-sm">{module.icon}</span>
@@ -324,7 +325,7 @@ function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
             style={style}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex items-center gap-3 p-3 rounded-xl transition-all shadow-sm ${isVisible ? 'bg-white dark:bg-gray-800 border-2 shadow-purple-100 dark:shadow-purple-900/20' : 'bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700' } ${isDragging ? 'shadow-lg ring-2 ' : ''}`}
+            className={`flex items-center gap-3 p-3 rounded-xl transition-all shadow-sm ${isVisible ? 'bg-white dark:bg-gray-800 border-2 shadow-purple-100 dark:shadow-purple-900/20' : 'bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700'} ${isDragging ? 'shadow-lg ring-2 ' : ''}`}
         >
             {/* Drag handle */}
             <button
@@ -356,7 +357,7 @@ function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
             {/* Toggle */}
             <button
                 onClick={onToggle}
-                className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${isVisible ? 'bg-gradient-to-r ' : 'bg-gray-300 dark:bg-gray-600' }`}
+                className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${isVisible ? 'bg-gradient-to-r ' : 'bg-gray-300 dark:bg-gray-600'}`}
                 title={isVisible ? 'Désactiver' : 'Activer'}
             >
                 <motion.span
@@ -470,6 +471,7 @@ function CategorySection({ category, categoryKey, modules, contentModules, onTog
 
 export default function ContentModuleControls() {
     const config = useOrchardStore((state) => state.config);
+    const reviewData = useOrchardStore((state) => state.reviewData);
     const toggleContentModule = useOrchardStore((state) => state.toggleContentModule);
     const reorderModules = useOrchardStore((state) => state.reorderModules);
     const setContentModules = useOrchardStore((state) => state.setContentModules);
@@ -498,6 +500,38 @@ export default function ContentModuleControls() {
             );
         });
     }, [config.moduleOrder, searchQuery]);
+
+    // Determine relevant modules based on current product type (from reviewData)
+    const productType = (reviewData && reviewData.type) ? reviewData.type : 'flower';
+    const categoryFieldsMap = getCategoryFieldsByType(productType);
+    const exportSections = getExportSectionsByType(productType);
+
+    // Map export sections (profile/genetics/visual/etc.) to module keys
+    const sectionToModules = {
+        profile: ['holderName', 'title', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category', 'author', 'date'],
+        genetics: ['cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker'],
+        culture: [...(categoryFieldsMap.visual || []), ...(categoryFieldsMap.smell || []), ...(categoryFieldsMap.texture || [])],
+        visual: categoryFieldsMap.visual || [],
+        smell: categoryFieldsMap.smell || [],
+        texture: categoryFieldsMap.texture || [],
+        taste: categoryFieldsMap.taste || [],
+        effects: categoryFieldsMap.effects || [],
+        curing: ['curing', 'drying', 'processing', 'yield', 'floweringTime', 'harvestDate'],
+        extraction: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification'],
+        recipe: ['tastes', 'tastesIntensity']
+    };
+
+    // Build set of relevant modules
+    const relevantModulesSet = useMemo(() => {
+        const set = new Set();
+        exportSections.forEach(sec => {
+            const mods = sectionToModules[sec] || [];
+            mods.forEach(m => set.add(m));
+        });
+        // Always include a few basics
+        ['tags', 'extraData', 'thcLevel', 'cbdLevel', 'terpenes', 'effects'].forEach(m => set.add(m));
+        return set;
+    }, [exportSections, productType]);
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -546,8 +580,8 @@ export default function ContentModuleControls() {
         }));
     };
 
-    const visibleCount = Object.values(config.contentModules).filter(Boolean).length;
-    const totalCount = Object.keys(config.contentModules).length;
+    const visibleCount = Object.keys(config.contentModules).filter(k => relevantModulesSet.has(k) && config.contentModules[k]).length;
+    const totalCount = Array.from(relevantModulesSet).filter(k => k && (config.contentModules.hasOwnProperty(k) || MODULE_LABELS[k])).length;
 
     return (
         <div className="space-y-4">
@@ -596,20 +630,20 @@ export default function ContentModuleControls() {
                 <div className="flex-1 flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <button
                         onClick={() => setViewMode('categories')}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'categories' ? ' text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }`}
+                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'categories' ? ' text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                     >
                         📂 Catégories
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'list' ? ' text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700' }`}
+                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'list' ? ' text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                     >
                         📋 Liste
                     </button>
                 </div>
                 <button
                     onClick={() => setShowPresets(!showPresets)}
-                    className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${showPresets ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                    className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${showPresets ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                 >
                     ⚡ Presets
                 </button>
@@ -650,18 +684,23 @@ export default function ContentModuleControls() {
             {/* Vue par catégories */}
             {viewMode === 'categories' && !searchQuery && (
                 <div className="space-y-3">
-                    {Object.entries(MODULE_CATEGORIES).map(([catKey, category]) => (
-                        <CategorySection
-                            key={catKey}
-                            category={category}
-                            categoryKey={catKey}
-                            modules={MODULE_LABELS}
-                            contentModules={config.contentModules}
-                            onToggle={toggleContentModule}
-                            expanded={expandedCategories[catKey] || false}
-                            onExpandToggle={() => toggleCategory(catKey)}
-                        />
-                    ))}
+                    {Object.entries(MODULE_CATEGORIES).map(([catKey, category]) => {
+                        const allowed = category.modules.filter(m => relevantModulesSet.has(m));
+                        if (!allowed || allowed.length === 0) return null;
+                        const catCopy = { ...category, modules: allowed };
+                        return (
+                            <CategorySection
+                                key={catKey}
+                                category={catCopy}
+                                categoryKey={catKey}
+                                modules={MODULE_LABELS}
+                                contentModules={config.contentModules}
+                                onToggle={toggleContentModule}
+                                expanded={expandedCategories[catKey] || false}
+                                onExpandToggle={() => toggleCategory(catKey)}
+                            />
+                        );
+                    })}
                 </div>
             )}
 
@@ -670,7 +709,7 @@ export default function ContentModuleControls() {
                 <div className="space-y-2">
                     <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
                         <span>⚡ Glissez pour réorganiser</span>
-                        <span>{filteredModules.length} modules</span>
+                        <span>{filteredModules.filter(m => relevantModulesSet.has(m)).length} modules</span>
                     </div>
 
                     <DndContext
@@ -683,7 +722,7 @@ export default function ContentModuleControls() {
                             strategy={verticalListSortingStrategy}
                         >
                             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                                {filteredModules.map((moduleName) => (
+                                {filteredModules.filter(m => relevantModulesSet.has(m)).map((moduleName) => (
                                     <SortableModule
                                         key={moduleName}
                                         id={moduleName}
