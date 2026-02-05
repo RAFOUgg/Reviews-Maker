@@ -335,14 +335,15 @@ export default function EffectsSection({ productType, data: directData, onChange
             {/* En-tête */}
             <LiquidDivider />
                                 >
-                                    {e.label}
-                                </LiquidChip>
-                            ))}
-                        </div>
-                    </div>
+            {e.label}
+        </LiquidChip>
+    ))
+}
+                        </div >
+                    </div >
 
-                    {/* Usages préférés */}
-                    <div className="space-y-3">
+    {/* Usages préférés */ }
+    < div className = "space-y-3" >
                         <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
                         <div className="flex flex-wrap gap-2">
                             {EXPERIENCE_VALUES.usagesPreferes.map(u => (
@@ -357,60 +358,60 @@ export default function EffectsSection({ productType, data: directData, onChange
                                 </LiquidChip>
                             ))}
                         </div>
-                    </div>
-                </div>
+                    </div >
+                </div >
             )}
 
-            {/* Montée, Intensité, Durée */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidSlider
-                        label="Montée (rapidité)"
-                        value={onset}
-                        min={1}
-                        max={10}
-                        step={1}
-                        color="cyan"
-                        onChange={(val) => setOnset(val)}
-                    />
-                    <p className="text-xs text-white/40 mt-2">{ONSET_LEVELS[onset - 1]?.label}</p>
-                </div>
+{/* Montée, Intensité, Durée */ }
+<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+        <LiquidSlider
+            label="Montée (rapidité)"
+            value={onset}
+            min={1}
+            max={10}
+            step={1}
+            color="cyan"
+            onChange={(val) => setOnset(val)}
+        />
+        <p className="text-xs text-white/40 mt-2">{ONSET_LEVELS[onset - 1]?.label}</p>
+    </div>
 
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidSlider
-                        label="Intensité"
-                        value={intensity}
-                        min={1}
-                        max={10}
-                        step={1}
-                        color="cyan"
-                        onChange={(val) => setIntensity(val)}
-                    />
-                    <p className="text-xs text-white/40 mt-2">{INTENSITY_LEVELS[intensity - 1]?.label}</p>
-                </div>
-            </div>
+    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+        <LiquidSlider
+            label="Intensité"
+            value={intensity}
+            min={1}
+            max={10}
+            step={1}
+            color="cyan"
+            onChange={(val) => setIntensity(val)}
+        />
+        <p className="text-xs text-white/40 mt-2">{INTENSITY_LEVELS[intensity - 1]?.label}</p>
+    </div>
+</div>
 
-            {/* Durée des effets */}
-            <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-cyan-400" />
-                    Durée des effets
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {DURATION_OPTIONS.map(option => (
-                        <LiquidChip
-                            key={option.id}
-                            active={duration === option.id}
-                            color="cyan"
-                            onClick={() => setDuration(option.id)}
-                        >
-                            {option.label}
-                        </LiquidChip>
-                    ))}
-                </div>
-            </div>
+{/* Durée des effets */ }
+<div className="space-y-3">
+    <label className="text-sm font-medium text-white/80 flex items-center gap-2">
+        <Clock className="w-4 h-4 text-cyan-400" />
+        Durée des effets
+    </label>
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        {DURATION_OPTIONS.map(option => (
+            <LiquidChip
+                key={option.id}
+                active={duration === option.id}
+                color="cyan"
+                onClick={() => setDuration(option.id)}
+            >
+                {option.label}
+            </LiquidChip>
+        ))}
+    </div>
+</div>
 
-            {/* Sélecteur d'effets avec le nouveau picker */}
+{/* Sélecteur d'effets avec le nouveau picker */ }
             <EffectsWheelPicker
                 selectedEffects={selectedEffects}
                 onChange={setSelectedEffects}
@@ -420,123 +421,123 @@ export default function EffectsSection({ productType, data: directData, onChange
             />
             <LiquidDivider />
 
-            {/* EXPÉRIENCE D'UTILISATION - contenu développé (le bouton se trouve maintenant en haut) */}
-            <div className="pt-4">
-                {expandExperience && (
-                    <div className="mt-4 space-y-6 p-4 bg-white/5 rounded-xl border border-white/10">
-                        {/* Méthode de consommation */}
-                        <div className="space-y-2">
-                            <label className="text-sm font-medium text-white/80 flex items-center gap-2">💨 Méthode de consommation *</label>
-                            <select
-                                value={methodeConsommation}
-                                onChange={(e) => setMethodeConsommation(e.target.value)}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
-                            >
-                                <option value="" className="bg-gray-900">Sélectionner une méthode...</option>
-                                {EXPERIENCE_VALUES.methodeConsommation.map(m => (
-                                    <option key={m.value} value={m.value} className="bg-gray-900">{m.label}</option>
-                                ))}
-                            </select>
-                        </div>
-
-                        {/* Dosage & Durée */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-white/80">⚖️ Dosage</label>
-                                <div className="flex gap-2">
-                                    <input
-                                        type="number"
-                                        step="0.01"
-                                        min="0"
-                                        value={dosageUtilise}
-                                        onChange={(e) => setDosageUtilise(e.target.value)}
-                                        placeholder="0.0"
-                                        className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
-                                    />
-                                    <select
-                                        value={dosageUnite}
-                                        onChange={(e) => setDosageUnite(e.target.value)}
-                                        className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
-                                    >
-                                        <option value="g" className="bg-gray-900">g</option>
-                                        <option value="mg" className="bg-gray-900">mg</option>
-                                        <option value="ml" className="bg-gray-900">ml</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-white/80">⏱️ Durée des effets</label>
-                                <div className="flex gap-2 items-center">
-                                    <input type="number" min="0" max="23" value={dureeEffetsHeures} onChange={(e) => setDureeEffetsHeures(e.target.value)} placeholder="HH" className="w-16 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none text-center" />
-                                    <span className="text-white/40 py-2">:</span>
-                                    <input type="number" min="0" max="59" value={dureeEffetsMinutes} onChange={(e) => setDureeEffetsMinutes(e.target.value)} placeholder="MM" className="w-16 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none text-center" />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Début & Durée catégorie */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-white/80">🚀 Début des effets</label>
-                                <select value={debutEffets} onChange={(e) => setDebutEffets(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
-                                    <option value="" className="bg-gray-900">Sélectionner...</option>
-                                    {EXPERIENCE_VALUES.debutEffets.map(d => (
-                                        <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-sm font-medium text-white/80">⏰ Catégorie durée</label>
-                                <select value={dureeEffetsCategorie} onChange={(e) => setDureeEffetsCategorie(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
-                                    {EXPERIENCE_VALUES.dureeEffets.map(d => (
-                                        <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Effets secondaires */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-white/80">Effets secondaires (max 10)</label>
-                            <div className="flex flex-wrap gap-2">
-                                {EXPERIENCE_VALUES.effetsSecondaires.map(e => (
-                                    <LiquidChip
-                                        key={e.value}
-                                        active={effetsSecondaires.includes(e.value)}
-                                        color="amber"
-                                        onClick={() => toggleMultiSelect('effetsSecondaires', e.value)}
-                                        size="sm"
-                                    >
-                                        {e.label}
-                                    </LiquidChip>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Usages préférés */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
-                            <div className="flex flex-wrap gap-2">
-                                {EXPERIENCE_VALUES.usagesPreferes.map(u => (
-                                    <LiquidChip
-                                        key={u.value}
-                                        active={usagesPreferes.includes(u.value)}
-                                        color="purple"
-                                        onClick={() => toggleMultiSelect('usagesPreferes', u.value)}
-                                        size="sm"
-                                    >
-                                        {u.label}
-                                    </LiquidChip>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                )}
+{/* EXPÉRIENCE D'UTILISATION - contenu développé (le bouton se trouve maintenant en haut) */ }
+<div className="pt-4">
+    {expandExperience && (
+        <div className="mt-4 space-y-6 p-4 bg-white/5 rounded-xl border border-white/10">
+            {/* Méthode de consommation */}
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-white/80 flex items-center gap-2">💨 Méthode de consommation *</label>
+                <select
+                    value={methodeConsommation}
+                    onChange={(e) => setMethodeConsommation(e.target.value)}
+                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
+                >
+                    <option value="" className="bg-gray-900">Sélectionner une méthode...</option>
+                    {EXPERIENCE_VALUES.methodeConsommation.map(m => (
+                        <option key={m.value} value={m.value} className="bg-gray-900">{m.label}</option>
+                    ))}
+                </select>
             </div>
 
-        </LiquidCard>
+            {/* Dosage & Durée */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/80">⚖️ Dosage</label>
+                    <div className="flex gap-2">
+                        <input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={dosageUtilise}
+                            onChange={(e) => setDosageUtilise(e.target.value)}
+                            placeholder="0.0"
+                            className="flex-1 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
+                        />
+                        <select
+                            value={dosageUnite}
+                            onChange={(e) => setDosageUnite(e.target.value)}
+                            className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
+                        >
+                            <option value="g" className="bg-gray-900">g</option>
+                            <option value="mg" className="bg-gray-900">mg</option>
+                            <option value="ml" className="bg-gray-900">ml</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/80">⏱️ Durée des effets</label>
+                    <div className="flex gap-2 items-center">
+                        <input type="number" min="0" max="23" value={dureeEffetsHeures} onChange={(e) => setDureeEffetsHeures(e.target.value)} placeholder="HH" className="w-16 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none text-center" />
+                        <span className="text-white/40 py-2">:</span>
+                        <input type="number" min="0" max="59" value={dureeEffetsMinutes} onChange={(e) => setDureeEffetsMinutes(e.target.value)} placeholder="MM" className="w-16 px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none text-center" />
+                    </div>
+                </div>
+            </div>
+
+            {/* Début & Durée catégorie */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/80">🚀 Début des effets</label>
+                    <select value={debutEffets} onChange={(e) => setDebutEffets(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
+                        <option value="" className="bg-gray-900">Sélectionner...</option>
+                        {EXPERIENCE_VALUES.debutEffets.map(d => (
+                            <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
+                        ))}
+                    </select>
+                </div>
+
+                <div className="space-y-2">
+                    <label className="text-sm font-medium text-white/80">⏰ Catégorie durée</label>
+                    <select value={dureeEffetsCategorie} onChange={(e) => setDureeEffetsCategorie(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
+                        {EXPERIENCE_VALUES.dureeEffets.map(d => (
+                            <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            {/* Effets secondaires */}
+            <div className="space-y-3">
+                <label className="text-sm font-medium text-white/80">Effets secondaires (max 10)</label>
+                <div className="flex flex-wrap gap-2">
+                    {EXPERIENCE_VALUES.effetsSecondaires.map(e => (
+                        <LiquidChip
+                            key={e.value}
+                            active={effetsSecondaires.includes(e.value)}
+                            color="amber"
+                            onClick={() => toggleMultiSelect('effetsSecondaires', e.value)}
+                            size="sm"
+                        >
+                            {e.label}
+                        </LiquidChip>
+                    ))}
+                </div>
+            </div>
+
+            {/* Usages préférés */}
+            <div className="space-y-3">
+                <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
+                <div className="flex flex-wrap gap-2">
+                    {EXPERIENCE_VALUES.usagesPreferes.map(u => (
+                        <LiquidChip
+                            key={u.value}
+                            active={usagesPreferes.includes(u.value)}
+                            color="purple"
+                            onClick={() => toggleMultiSelect('usagesPreferes', u.value)}
+                            size="sm"
+                        >
+                            {u.label}
+                        </LiquidChip>
+                    ))}
+                </div>
+            </div>
+        </div>
+    )}
+</div>
+
+        </LiquidCard >
     );
 }
 
