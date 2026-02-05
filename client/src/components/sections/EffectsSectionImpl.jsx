@@ -178,22 +178,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                         </div>
                     </div>
 
-                    <div className="space-y-3">
-                        <label className="text-sm font-medium text-white/80">Effets secondaires (max 10)</label>
-                        <div className="flex flex-wrap gap-2">
-                            {EXPERIENCE_VALUES.effetsSecondaires.map(e => (
-                                <LiquidChip
-                                    key={e.value}
-                                    active={effetsSecondaires.includes(e.value)}
-                                    color="amber"
-                                    onClick={() => toggleMultiSelect('effetsSecondaires', e.value)}
-                                    size="sm"
-                                >
-                                    {e.label}
-                                </LiquidChip>
-                            ))}
-                        </div>
-                    </div>
+                    {/* 'Effets secondaires' selection removed from Expérience d'utilisation as requested */}
 
                     <div className="space-y-3">
                         <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
