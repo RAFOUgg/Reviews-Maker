@@ -302,14 +302,15 @@ export default function EffectsSection({ productType, data: directData, onChange
             <div className="space-y-3">
                 {/* Removed duplicate 'Effets secondaires' and 'Usages préférés' blocks
                 to avoid repetition — these are kept inside the 'Expérience d'utilisation' panel. */}
+            </div>
 
-                <LiquidDivider />
+            <LiquidDivider />
 
-                <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
-                    <p className="text-sm text-white/60">
-                        <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
-                    </p>
-                </div>
+            <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
+                <p className="text-sm text-white/60">
+                    <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
+                </p>
+            </div>
 
         </LiquidCard>
     );
