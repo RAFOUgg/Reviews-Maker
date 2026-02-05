@@ -115,40 +115,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 </div>
             </div>
 
-            {/* Boutons d'upgrade / downgrade / résiliation */}
-            {accountType === 'amateur' && (
-                <div className="space-y-2">
-                    <button
-                        onClick={async () => {
-                            try {
-                                const res = await paymentService.createCheckout('influenceur')
-                                if (res?.checkoutUrl) window.location.href = res.checkoutUrl
-                            } catch (err) {
-                                console.error(err)
-                                alert('Impossible de démarrer le paiement')
-                            }
-                        }}
-                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg"
-                    >
-                        ✨ Passer à Influenceur
-                    </button>
-
-                    <button
-                        onClick={async () => {
-                            try {
-                                const res = await paymentService.createCheckout('producteur')
-                                if (res?.checkoutUrl) window.location.href = res.checkoutUrl
-                            } catch (err) {
-                                console.error(err)
-                                alert('Impossible de démarrer le paiement')
-                            }
-                        }}
-                        className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg"
-                    >
-                        🚀 Passer à Producteur
-                    </button>
-                </div>
-            )}
+            {/* Legacy direct checkout buttons removed: use the 'Modifier le plan' action instead */}
 
             {/* Info pour tiers payants */}
             {(accountType === 'producteur' || accountType === 'influenceur') && (
