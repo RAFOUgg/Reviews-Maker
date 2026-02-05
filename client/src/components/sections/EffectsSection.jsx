@@ -105,6 +105,24 @@ export default function EffectsSection({ productType, data: directData, onChange
 
             <LiquidDivider />
 
+            {/* BOUTON EXPÉRIENCE D'UTILISATION - placé en haut de la section */}
+            <div className="pt-2">
+                <button
+                    type="button"
+                    onClick={() => setExpandExperience(!expandExperience)}
+                    className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
+                >
+                    <div className="flex items-center gap-3">
+                        <Beaker className="w-5 h-5 text-cyan-400" />
+                        <div className="text-left">
+                            <h3 className="text-md font-semibold text-white">🧪 Expérience d'utilisation</h3>
+                            <p className="text-xs text-white/50">Documentez vos tests de consommation</p>
+                        </div>
+                    </div>
+                    <ChevronDown className={`w-5 h-5 text-cyan-400 transition-transform ${expandExperience ? 'rotate-180' : ''}`} />
+                </button>
+            </div>
+
             {/* Montée, Intensité, Durée */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
@@ -164,23 +182,8 @@ export default function EffectsSection({ productType, data: directData, onChange
             />
             <LiquidDivider />
 
-            {/* EXPÉRIENCE D'UTILISATION */}
+            {/* EXPÉRIENCE D'UTILISATION - contenu développé (le bouton se trouve maintenant en haut) */}
             <div className="pt-4">
-                <button
-                    type="button"
-                    onClick={() => setExpandExperience(!expandExperience)}
-                    className="w-full flex items-center justify-between p-4 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
-                >
-                    <div className="flex items-center gap-3">
-                        <Beaker className="w-5 h-5 text-cyan-400" />
-                        <div className="text-left">
-                            <h3 className="text-lg font-semibold text-white">🧪 Expérience d'utilisation</h3>
-                            <p className="text-sm text-white/50">Documentez vos tests de consommation</p>
-                        </div>
-                    </div>
-                    <ChevronDown className={`w-5 h-5 text-cyan-400 transition-transform ${expandExperience ? 'rotate-180' : ''}`} />
-                </button>
-
                 {expandExperience && (
                     <div className="mt-4 space-y-6 p-4 bg-white/5 rounded-xl border border-white/10">
                         {/* Méthode de consommation */}
@@ -253,36 +256,6 @@ export default function EffectsSection({ productType, data: directData, onChange
                                         <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
                                     ))}
                                 </select>
-                            </div>
-                        </div>
-
-                        {/* Profils d'effets */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-medium text-white/80">Profils d'effets ressentis (max 8)</label>
-                            <div className="flex gap-2 flex-wrap">
-                                {['tous', 'positif', 'negatif', 'neutre'].map(t => (
-                                    <LiquidChip
-                                        key={t}
-                                        active={filterProfils === t}
-                                        color={t === 'positif' ? 'green' : t === 'negatif' ? 'pink' : 'cyan'}
-                                        onClick={() => setFilterProfils(t)}
-                                    >
-                                        {t === 'tous' ? 'Tous' : t === 'positif' ? '✅ Positif' : t === 'negatif' ? '⚠️ Négatif' : '⚕️ Neutre'}
-                                    </LiquidChip>
-                                ))}
-                            </div>
-                            <div className="flex flex-wrap gap-2 p-3 bg-white/5 rounded-xl border border-white/10 max-h-48 overflow-y-auto">
-                                {profilsFiltres.map(p => (
-                                    <LiquidChip
-                                        key={p.value}
-                                        active={profilsEffets.includes(p.value)}
-                                        color={p.type === 'positif' ? 'green' : p.type === 'negatif' ? 'pink' : 'purple'}
-                                        onClick={() => toggleMultiSelect('profilsEffets', p.value)}
-                                        size="sm"
-                                    >
-                                        {p.label}
-                                    </LiquidChip>
-                                ))}
                             </div>
                         </div>
 

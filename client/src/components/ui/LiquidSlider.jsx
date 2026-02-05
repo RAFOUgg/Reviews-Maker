@@ -35,6 +35,9 @@ const LiquidSlider = ({
 
     const percentage = ((value - min) / (max - min)) * 100;
 
+    // compute fill width so the fill's right edge aligns with the thumb center
+    const fillWidth = percentage <= 0 ? '0%' : `calc(${percentage}% - 4px)`;
+
     function setFromPointer(clientX) {
         const track = trackRef.current
         if (!track) return
@@ -81,7 +84,7 @@ const LiquidSlider = ({
                     <motion.div
                         className={`liquid-slider-fill h-full bg-gradient-to-r ${colorClasses[color]} rounded-full`}
                         initial={{ width: '0%' }}
-                        animate={{ width: `${percentage}%` }}
+                        animate={{ width: fillWidth }}
                         transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
                     />
                 </div>

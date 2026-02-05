@@ -19,6 +19,10 @@ import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const { isPremium, isProducer, isConsumer, accountType } = useAccountType();
+    const canExportSVG = isProducer || accountType === 'influenceur' || accountType === 'influencer';
+    const canExportAdvanced = isProducer;
+    const canUseCustomLayout = isProducer || accountType === 'influenceur' || accountType === 'influencer';
+    const canExportGIF = isProducer || accountType === 'influenceur' || accountType === 'influencer';
     const exportRef = useRef(null);
     const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
     const [selectedTemplate, setSelectedTemplate] = useState('compact');
@@ -153,40 +157,54 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         {mode === 'templates' && (
                             <div className="space-y-2">
                                 <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Choisir un style</h3>
-                                {templates.map(t => (
-                                    <button
-                                        key={t.id}
-                                        onClick={() => setSelectedTemplate(t.id)}
-                                        className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${selectedTemplate === t.id ? ' text-white' : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'}`}
-                                    >
-                                        <div className={`p-2 rounded-lg ${selectedTemplate === t.id ? ' text-white' : 'bg-white/10 text-gray-400'}`}>
-                                            <t.icon className="w-5 h-5" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <div className="font-medium flex items-center gap-2">
-                                                {t.name}
-                                                {t.premium && <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">PRO</span>}
+                                {templates.map(t => {
+                                    const locked = t.premium && !canUseCustomLayout;
+                                    return (
+                                        <button
+                                            key={t.id}
+                                            onClick={() => !locked && setSelectedTemplate(t.id)}
+                                            disabled={locked}
+                                            title={locked ? 'Réservé aux comptes Producteur / Influenceur' : ''}
+                                            className={`w-full text-left p-3 rounded-xl border transition-all flex items-center gap-3 ${selectedTemplate === t.id ? ' text-white' : 'bg-white/5 border-transparent text-gray-300 hover:bg-white/10'} ${locked ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                        >
+                                            <div className={`p-2 rounded-lg ${selectedTemplate === t.id ? ' text-white' : 'bg-white/10 text-gray-400'}`}>
+                                                <t.icon className="w-5 h-5" />
                                             </div>
-                                            <div className="text-xs text-gray-400">{t.description}</div>
-                                        </div>
-                                    </button>
-                                ))}
+                                            <div className="flex-1">
+                                                <div className="font-medium flex items-center gap-2">
+                                                    {t.name}
+                                                    {t.premium && <span className="text-xs bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded">PRO</span>}
+                                                </div>
+                                                <div className="text-xs text-gray-400">{t.description}</div>
+                                            </div>
+                                        </button>
+                                    );
+                                })}
                             </div>
                         )}
 
                         {mode === 'custom' && (
-                            <DragDropExport
-                                productType={productType}
-                                selectedSections={customSections}
-                                onSectionsChange={setCustomSections}
-                            />
+                            <FeatureGate hasAccess={canUseCustomLayout} upgradeType="producer">
+                                <DragDropExport
+                                    productType={productType}
+                                    selectedSections={customSections}
+                                    onSectionsChange={setCustomSections}
+                                />
+                            </FeatureGate>
                         )}
 
                         {mode === 'watermark' && (
-                            <WatermarkEditor
-                                watermark={watermark}
-                                onWatermarkChange={setWatermark}
-                            />
+                            canUseCustomLayout ? (
+                                <WatermarkEditor
+                                    watermark={watermark}
+                                    onWatermarkChange={setWatermark}
+                                />
+                            ) : (
+                                <div className="p-4 bg-white/5 rounded">
+                                    <div className="text-sm text-gray-300">La personnalisation avancée des filigranes est réservée aux comptes Producteur / Influenceur.</div>
+                                    <div className="text-xs text-gray-500 mt-2">Votre export inclura automatiquement le filigrane Terpologie.</div>
+                                </div>
+                            )
                         )}
                     </div>
 
@@ -195,31 +213,34 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         {/* Bouton Export GIF - Disponible pour tous si pipeline présent */}
                         {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
                             reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
-                                <button
-                                    onClick={handleExportGIF}
-                                    disabled={exportingGIF}
-                                    className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
-                                >
-                                    {exportingGIF ? (
-                                        <>
-                                            <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                                            <span>{gifProgress}%</span>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <Film className="w-5 h-5" />
-                                            <span>Exporter Pipeline en GIF</span>
-                                        </>
-                                    )}
-                                </button>
+                                <FeatureGate hasAccess={canExportGIF} upgradeType="producer">
+                                    <button
+                                        onClick={handleExportGIF}
+                                        disabled={exportingGIF}
+                                        className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {exportingGIF ? (
+                                            <>
+                                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                                <span>{gifProgress}%</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Film className="w-5 h-5" />
+                                                <span>Exporter Pipeline en GIF</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </FeatureGate>
                             )}
 
-                        <FeatureGate hasAccess={isProducer} upgradeType="producer" showOverlay={false}>
-                            <div className="flex gap-2">
+                        <div className="flex gap-2">
+                            <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
                                 <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
-                                <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
-                            </div>
-                        </FeatureGate>
+                            </FeatureGate>
+
+                            <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
+                        </div>
 
                         <button
                             onClick={() => handleExport('png')}
