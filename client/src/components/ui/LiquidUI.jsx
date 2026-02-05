@@ -599,9 +599,9 @@ export function LiquidRating({
                     {showValue && <span className="liquid-rating-value">{value}/{max}</span>}
                 </div>
             )}
-            <div className="liquid-rating-track" style={{ height: heights[size] }}>
+            <div className="liquid-rating-track" data-size={size} style={{ height: heights[size] }}>
                 <motion.div
-                    className={`liquid-rating-fill ${color}`}
+                    className={`liquid-rating-fill ${color || 'default'}`}
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
                     transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}

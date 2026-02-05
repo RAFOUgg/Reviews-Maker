@@ -676,7 +676,7 @@ input[type="range"].liquid-range::-moz-range-thumb,
     transform: translateX(22px);
 }
 
-/* === LIQUID GLASS RATING BAR === */
+/* === LIQUID GLASS RATING BAR (GLASSMORPH) === */
 .liquid-rating {
     display: flex;
     flex-direction: column;
@@ -691,65 +691,132 @@ input[type="range"].liquid-range::-moz-range-thumb,
 
 .liquid-rating-label {
     font-size: 13px;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.75);
+    letter-spacing: 0.2px;
 }
 
 .liquid-rating-value {
-    font-size: 14px;
-    font-weight: 600;
-    color: white;
+    font-size: 13px;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(90deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
 }
 
 .liquid-rating-track {
     position: relative;
-    height: 8px;
-    background: rgba(255, 255, 255, 0.08);
+    height: 10px;
     border-radius: 100px;
-    overflow: hidden;
+    overflow: visible;
+    padding: 3px; /* outer padding to show glass edge */
 
-    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.3);
+    background: linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+    border: 1px solid rgba(255,255,255,0.06);
+    box-shadow:
+        inset 0 1px 6px rgba(0,0,0,0.45),
+        0 6px 20px rgba(0,0,0,0.45);
+    backdrop-filter: blur(6px) saturate(140%);
+    -webkit-backdrop-filter: blur(6px) saturate(140%);
+}
+
+.liquid-rating-track::before {
+    /* subtle grid/texture */
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 100px;
+    background: linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.01) 1px, transparent 1px);
+    background-size: 40px 100%, 100% 40px;
+    pointer-events: none;
+    opacity: 0.5;
 }
 
 .liquid-rating-fill {
     position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    background: linear-gradient(90deg, #8b5cf6, #a855f7, #c084fc);
+    top: 3px;
+    left: 3px;
+    height: calc(100% - 6px);
     border-radius: 100px;
-    transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-
-    box-shadow: 0 0 20px rgba(139, 92, 246, 0.5);
+    transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+    overflow: visible;
+    display: block;
 }
 
+/* glossy gradient + soft glow */
+.liquid-rating-fill.default {
+    background: linear-gradient(90deg, #8b5cf6, #a855f7, #c084fc);
+    box-shadow: 0 6px 30px rgba(139,92,246,0.18), inset 0 1px 10px rgba(255,255,255,0.06);
+}
+
+/* Purple variant alias for legacy 'purple' color prop */
+.liquid-rating-fill.purple {
+    background: linear-gradient(90deg, #8b5cf6, #a855f7, #c084fc);
+    box-shadow: 0 6px 30px rgba(139,92,246,0.18), inset 0 1px 10px rgba(255,255,255,0.06);
+}
+
+.liquid-rating-fill.green {
+    background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
+    box-shadow: 0 6px 30px rgba(16,185,129,0.12), inset 0 1px 10px rgba(255,255,255,0.05);
+}
+
+.liquid-rating-fill.cyan {
+    background: linear-gradient(90deg, #06b6d4, #22d3ee, #67e8f9);
+    box-shadow: 0 6px 30px rgba(6,182,212,0.12), inset 0 1px 10px rgba(255,255,255,0.05);
+}
+
+.liquid-rating-fill.amber {
+    background: linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d);
+    box-shadow: 0 6px 30px rgba(245,158,11,0.12), inset 0 1px 10px rgba(255,255,255,0.05);
+}
+
+/* glossy sheen across the fill */
 .liquid-rating-fill::after {
     content: '';
     position: absolute;
-    top: 0;
+    top: -25%;
     left: 0;
-    right: 0;
-    height: 50%;
-    background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), transparent);
-    border-radius: 100px 100px 0 0;
+    height: 150%;
+    width: 30%;
+    transform: translateX(-100%) rotate(-12deg);
+    background: linear-gradient(90deg, rgba(255,255,255,0.35), rgba(255,255,255,0.06), rgba(255,255,255,0));
+    filter: blur(6px);
+    opacity: 0.8;
+    animation: sheen 2.6s linear infinite;
+    pointer-events: none;
 }
 
-/* Green variant */
-.liquid-rating-fill.green {
-    background: linear-gradient(90deg, #10b981, #34d399, #6ee7b7);
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+/* small glowing orb at the leading edge */
+.liquid-rating-fill::before {
+    content: '';
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 30%, rgba(255,255,255,0.95), rgba(255,255,255,0.7) 20%, rgba(255,255,255,0.05) 60%);
+    box-shadow: 0 6px 24px rgba(255,255,255,0.06), 0 0 18px rgba(255,255,255,0.08) inset;
+    mix-blend-mode: screen;
 }
 
-/* Cyan variant */
-.liquid-rating-fill.cyan {
-    background: linear-gradient(90deg, #06b6d4, #22d3ee, #67e8f9);
-    box-shadow: 0 0 20px rgba(6, 182, 212, 0.5);
+@keyframes sheen {
+    0% { transform: translateX(-120%) rotate(-12deg); opacity: 0.1; }
+    30% { opacity: 0.9; }
+    100% { transform: translateX(220%) rotate(-12deg); opacity: 0.1; }
 }
 
-/* Amber variant */
-.liquid-rating-fill.amber {
-    background: linear-gradient(90deg, #f59e0b, #fbbf24, #fcd34d);
-    box-shadow: 0 0 20px rgba(245, 158, 11, 0.5);
-}
+/* Sizes */
+.liquid-rating-track { height: 10px; }
+.liquid-rating-track[data-size="sm"] { height: 8px; }
+.liquid-rating-track[data-size="lg"] { height: 14px; }
+
+/* adjust knob for small/large */
+.liquid-rating-fill::before { width: 16px; height: 16px; }
+.liquid-rating-track[data-size="sm"] .liquid-rating-fill::before { width: 12px; height: 12px; right: -6px; }
+.liquid-rating-track[data-size="lg"] .liquid-rating-fill::before { width: 20px; height: 20px; right: -10px; }
 
 /* === LIQUID BACKGROUND BLOBS === */
 .liquid-blob {
