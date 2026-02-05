@@ -9,15 +9,20 @@ import AromaWheelPicker from '../shared/charts/AromaWheelPicker';
  * NOUVEAU: Utilise AromaWheelPicker avec roue CATA
  * Props: productType, formData, handleChange
  */
-export default function OdorSection({ productType, formData = {}, handleChange }) {
-    const data = formData.odeurs || {};
+export default function OdorSection({ productType, data: directData, onChange, formData, handleChange }) {
+    const data = directData || formData?.odeurs || {};
+    const safeUpdate = (payload) => {
+        if (typeof onChange === 'function') return onChange(payload)
+        if (typeof handleChange === 'function') return handleChange('odeurs', payload)
+    }
+
     const [dominantNotes, setDominantNotes] = useState(data?.dominantNotes || []);
     const [secondaryNotes, setSecondaryNotes] = useState(data?.secondaryNotes || []);
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [complexity, setComplexity] = useState(data?.complexity || 5);
     const [fidelity, setFidelity] = useState(data?.fidelity || 5);
 
-    // Synchroniser l'état LOCAL quand formData change (revenir à la section)
+    // Synchroniser l'état LOCAL quand les props changent (revenir à la section)
     useEffect(() => {
         setDominantNotes(data?.dominantNotes || []);
         setSecondaryNotes(data?.secondaryNotes || []);
@@ -28,14 +33,13 @@ export default function OdorSection({ productType, formData = {}, handleChange }
 
     // Synchroniser avec parent quand l'état LOCAL change
     useEffect(() => {
-        if (!handleChange) return;
-        handleChange('odeurs', {
+        safeUpdate({
             dominantNotes,
             secondaryNotes,
             intensity,
             complexity,
             fidelity
-        });
+        })
     }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
 
     return (

@@ -9,8 +9,13 @@ import TasteWheelPicker from '@/components/shared/charts/TasteWheelPicker';
  * Section Goûts pour Hash/Concentrés/Fleurs
  * Props: productType, formData, handleChange
  */
-export default function TasteSection({ productType, formData = {}, handleChange }) {
-    const data = formData.gouts || {};
+export default function TasteSection({ productType, data: directData, onChange, formData, handleChange }) {
+    const data = directData || formData?.gouts || {};
+    const safeUpdate = (payload) => {
+        if (typeof onChange === 'function') return onChange(payload)
+        if (typeof handleChange === 'function') return handleChange('gouts', payload)
+    }
+
     const [intensity, setIntensity] = useState(data?.intensity || 5);
     const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness || 5);
     const [dryPuffNotes, setDryPuffNotes] = useState(data?.dryPuffNotes || []);
@@ -19,14 +24,13 @@ export default function TasteSection({ productType, formData = {}, handleChange 
 
     // Synchroniser avec parent
     useEffect(() => {
-        if (!handleChange) return;
-        handleChange('gouts', {
+        safeUpdate({
             intensity,
             aggressiveness,
             dryPuffNotes,
             inhalationNotes,
             exhalationNotes
-        });
+        })
     }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes]);
 
     return (
