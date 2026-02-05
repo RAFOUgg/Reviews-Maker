@@ -103,13 +103,17 @@ export default function UpgradeModal({ isOpen, onClose }) {
                 const res = await paymentService.createCheckout('producteur');
                 toast.remove(loadingId);
 
-                if (res?.url) {
+                // backend may return different keys depending on implementation
+                const redirectUrl = res?.url || res?.checkoutUrl || res?.checkout_url || res?.redirectUrl || (res && res.data && (res.data.url || res.data.checkoutUrl || res.data.redirectUrl));
+
+                if (redirectUrl) {
                     toast.info('Ouverture de la page de paiement...');
-                    window.open(res.url, '_blank');
+                    try { window.open(redirectUrl, '_blank'); } catch (e) { window.location.href = redirectUrl }
                     onClose();
                     return;
                 }
 
+                console.debug('createCheckout returned', res);
                 toast.error(res?.message || 'Impossible de démarrer le paiement');
             } catch (err) {
                 toast.error(err?.message || 'Erreur lors du démarrage du paiement');
