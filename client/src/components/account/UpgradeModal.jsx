@@ -108,7 +108,8 @@ export default function UpgradeModal({ isOpen, onClose }) {
 
                 if (redirectUrl) {
                     toast.info('Ouverture de la page de paiement...');
-                    try { window.open(redirectUrl, '_blank'); } catch (e) { window.location.href = redirectUrl }
+                    // Navigate in the same tab to keep UX consistent
+                    window.location.href = redirectUrl
                     onClose();
                     return;
                 }
