@@ -18,11 +18,11 @@ import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
  * Intègre Drag & Drop (Phase 5) et Filigranes
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
-    const { isPremium, isProducer, isConsumer, accountType } = useAccountType();
-    const canExportSVG = isProducer || accountType === 'influenceur' || accountType === 'influencer';
-    const canExportAdvanced = isProducer;
-    const canUseCustomLayout = isProducer || accountType === 'influenceur' || accountType === 'influencer';
-    const canExportGIF = isProducer || accountType === 'influenceur' || accountType === 'influencer';
+    const { isPremium, isProducer, isConsumer, isInfluencer, permissions, canAccess } = useAccountType();
+    const canExportSVG = permissions.export.formats.svg === true;
+    const canExportAdvanced = permissions.export.quality.high === true;
+    const canUseCustomLayout = permissions.export.templates.custom === true || isInfluencer;
+    const canExportGIF = isProducer || isInfluencer; // pipeline GIF only for producer/influencer per PERMISSIONS
     const exportRef = useRef(null);
     const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
     const [selectedTemplate, setSelectedTemplate] = useState('compact');
@@ -39,6 +39,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const [exporting, setExporting] = useState(false);
     const [exportingGIF, setExportingGIF] = useState(false);
     const [gifProgress, setGifProgress] = useState(0);
+
+    // Force Terpologie watermark for amateur (consumer) accounts
+    useEffect(() => {
+        if (isConsumer) {
+            setWatermark(w => ({ ...w, visible: true }));
+        }
+    }, [isConsumer]);
 
     // Templates prédéfinis
     const templates = [
@@ -140,14 +147,18 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             Templates
                         </button>
                         <button
-                            onClick={() => setMode('custom')}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? ' text-white' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => canUseCustomLayout && setMode('custom')}
+                            disabled={!canUseCustomLayout}
+                            title={!canUseCustomLayout ? 'Réservé aux comptes Producteur / Influenceur' : ''}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? ' text-white' : 'text-gray-400 hover:text-white'} ${!canUseCustomLayout ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             Custom
                         </button>
                         <button
-                            onClick={() => setMode('watermark')}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'watermark' ? ' text-white' : 'text-gray-400 hover:text-white'}`}
+                            onClick={() => (isConsumer ? null : setMode('watermark'))}
+                            disabled={isConsumer}
+                            title={isConsumer ? 'La personnalisation du filigrane est réservée aux comptes payants' : ''}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'watermark' ? ' text-white' : 'text-gray-400 hover:text-white'} ${isConsumer ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             Filigrane
                         </button>
@@ -194,7 +205,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         )}
 
                         {mode === 'watermark' && (
-                            canUseCustomLayout ? (
+                            !isConsumer ? (
                                 <WatermarkEditor
                                     watermark={watermark}
                                     onWatermarkChange={setWatermark}
@@ -387,7 +398,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         )}
 
                         {/* Filigrane Terpologie forcé pour comptes Amateur */}
-                        {(accountType === 'consumer' || accountType === 'amateur' || !isPremium) && (
+                        {isConsumer && (
                             <div
                                 className="absolute pointer-events-none z-[60]"
                                 style={{

@@ -61,12 +61,12 @@ OrchardPanel.jsx              ← Panel principal (683 lignes)
 
 ```
 ExportMaker.jsx        ← Gestionnaire exports (principal)
-ExportModal.jsx        ← Modal export (appelé par Orchard)
+ExportModal.jsx        ← Modal export (appelé par Export Maker)
 ExportOptions.jsx      ← Options (probable)
 ```
 
 **État**: Fonctionne pour Fleurs  
-**À Faire**: Intégrer avec Orchard pour généraliser
+**À Faire**: Intégrer avec Export Maker pour généraliser
 
 ---
 
@@ -77,7 +77,7 @@ LibraryPage.jsx        ← Bibliothèque reviews (principal)
 ├─ Filtre visibilité (public/private)
 ├─ FilterBar component
 ├─ Actions (edit, delete, visibility toggle)
-└─ À enrichir: templates orchad, cultvars, données récurrentes
+└─ À enrichir: templates Export Maker, cultvars, données récurrentes
 ```
 
 **État**: OK mais incomplet  

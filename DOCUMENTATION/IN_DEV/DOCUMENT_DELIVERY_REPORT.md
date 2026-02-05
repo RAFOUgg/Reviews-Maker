@@ -132,7 +132,7 @@
 ## ✅ REQUIREMENTS MET
 
 ### Original Request
-> "Approfondir l'audit. Ma vision n'est pas clair alors établie un cahier des charges en language humains français. Facile à comprendre. Pour le type Fleurs uniquement, incluant phénohunt, la refonte de la bibliothèque. orchad maker et l'export des reviews, le stockage et galerie publique, les permissions suivant le type de comptes."
+> "Approfondir l'audit. Ma vision n'est pas clair alors établie un cahier des charges en language humains français. Facile à comprendre. Pour le type Fleurs uniquement, incluant phénohunt, la refonte de la bibliothèque. Export Maker et l'export des reviews, le stockage et galerie publique, les permissions suivant le type de comptes."
 
 ### Delivered ✅
 - [x] Cahier des charges (clear, non-technical French)

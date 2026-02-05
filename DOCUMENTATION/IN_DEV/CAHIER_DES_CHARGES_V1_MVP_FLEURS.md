@@ -495,7 +495,7 @@ Système phénohunt complet ICI ! (C'est ici qu'ils vont gêrer leurs projets ph
 
 ---
 
-## 🎨 EXPORT & RENDU (Orchad Maker dejà pas mal avancé, comparer et fusionner les bonnes idées dans le sys. existant Orchad maker)
+## 🎨 EXPORT & RENDU (Export Maker déjà pas mal avancé, comparer et fusionner les bonnes idées dans le sys. existant Export Maker)
 
 **Description**: Générer et télécharger les reviews sous différents formats
 

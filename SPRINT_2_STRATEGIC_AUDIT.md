@@ -10,7 +10,7 @@
 
 ### ✅ EXISTE & FONCTIONNE (à adapter/finaliser)
 
-#### **A. ORCHARD/EXPORT SYSTEM** 
+#### **A. EXPORT MAKER / EXPORT SYSTEM** 
 **État**: 80% fait - Code existant
 - ✅ `OrchardPanel.jsx` (684 lignes) - composant principal
 - ✅ `normalizeByType.js` - normalisation générique par type
@@ -154,7 +154,7 @@
 - ✅ Subscription management
 - ✅ KYC integration
 
-### **TÂCHE 2: ORCHARD/EXPORT FIXES & ADAPTATION** (20 heures)
+### **TÂCHE 2: EXPORT MAKER FIXES & ADAPTATION** (20 heures)
 1. **Fix code errors** (6 heures)
    - Unifier categoryFieldsMap (use productTypeMappings)
    - Fix EDIBLE_CATEGORY_FIELDS
@@ -162,7 +162,7 @@
    - Add account type awareness
 
 2. **Adapter per type de compte** (6 heures)
-   - Amateur: PNG/JPEG/PDF only
+   - Amateur: PNG/JPEG/PDF only (filigrane Terpologie obligatoire, templates prédéfinis)
    - Producteur: PNG/JPEG/SVG/PDF/CSV/JSON
    - Influenceur: PNG/JPEG/SVG/PDF only
 
