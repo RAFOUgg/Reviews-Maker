@@ -110,7 +110,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                 <button
                     type="button"
                     onClick={() => setExpandExperience(!expandExperience)}
-                    className="w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all"
+                    className="relative z-20 w-full flex items-center justify-between p-3 bg-white/5 hover:bg-white/10 rounded-xl border border-white/10 transition-all pointer-events-auto"
                 >
                     <div className="flex items-center gap-3">
                         <Beaker className="w-5 h-5 text-cyan-400" />
