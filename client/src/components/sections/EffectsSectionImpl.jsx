@@ -270,42 +270,6 @@ export default function EffectsSection({ productType, data: directData, onChange
             />
             <LiquidDivider />
 
-            <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80">Profils d'effets ressentis (max 8)</label>
-                <div className="flex gap-2 flex-wrap">
-                    {['tous', 'positif', 'negatif', 'neutre'].map(t => (
-                        <LiquidChip
-                            key={t}
-                            active={filterProfils === t}
-                            color={t === 'positif' ? 'green' : t === 'negatif' ? 'pink' : 'cyan'}
-                            onClick={() => setFilterProfils(t)}
-                        >
-                            {t === 'tous' ? 'Tous' : t === 'positif' ? '✅ Positif' : t === 'negatif' ? '⚠️ Négatif' : '⚕️ Neutre'}
-                        </LiquidChip>
-                    ))}
-                </div>
-                <div className="flex flex-wrap gap-2 p-3 bg-white/5 rounded-xl border border-white/10 max-h-48 overflow-y-auto">
-                    {profilsFiltres.map(p => (
-                        <LiquidChip
-                            key={p.value}
-                            active={profilsEffets.includes(p.value)}
-                            color={p.type === 'positif' ? 'green' : p.type === 'negatif' ? 'pink' : 'purple'}
-                            onClick={() => toggleMultiSelect('profilsEffets', p.value)}
-                            size="sm"
-                        >
-                            {p.label}
-                        </LiquidChip>
-                    ))}
-                </div>
-            </div>
-
-            <div className="space-y-3">
-                {/* Removed duplicate 'Effets secondaires' and 'Usages préférés' blocks
-                to avoid repetition — these are kept inside the 'Expérience d'utilisation' panel. */}
-            </div>
-
-            <LiquidDivider />
-
             <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
                 <p className="text-sm text-white/60">
                     <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
