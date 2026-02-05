@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
 import { useToast } from '../shared/ToastContainer';
 import { accountService, paymentService } from '../../services/apiService';
+import ConfirmDialog from '../shared/ConfirmDialog';
 
 export default function UpgradeModal({ isOpen, onClose }) {
     const { accountType, checkAuth } = useStore();
@@ -142,23 +143,27 @@ export default function UpgradeModal({ isOpen, onClose }) {
         }
     };
 
-    const handleCancelSubscription = async () => {
-        const confirm = window.confirm('Voulez-vous vraiment résilier votre abonnement ? Votre contenu restera visible mais vous perdrez l\'accès à la création.');
-        if (!confirm) return;
+    const [showCancelDialog, setShowCancelDialog] = React.useState(false)
 
-        const loadingId = toast.loading('Résiliation en cours...');
+    const handleCancelSubscription = async () => {
+        setShowCancelDialog(true)
+    }
+
+    const doCancelSubscription = async () => {
+        setShowCancelDialog(false)
+        const loadingId = toast.loading('Résiliation en cours...')
         try {
             // Downgrade to amateur
-            const res = await accountService.changeType('amateur');
-            toast.remove(loadingId);
-            toast.success(res.message || 'Abonnement résilié, compte downgradé.');
-            await checkAuth();
-            onClose();
+            const res = await accountService.changeType('amateur')
+            toast.remove(loadingId)
+            toast.success(res.message || 'Abonnement résilié, compte downgradé.')
+            await checkAuth()
+            onClose()
         } catch (err) {
-            toast.remove(loadingId);
-            toast.error(err?.message || 'Erreur lors de la résiliation');
+            toast.remove(loadingId)
+            toast.error(err?.message || 'Erreur lors de la résiliation')
         }
-    };
+    }
 
     if (!isOpen) return null;
 
@@ -353,6 +358,15 @@ export default function UpgradeModal({ isOpen, onClose }) {
                             </button>
                         </div>
                     )}
+                    <ConfirmDialog
+                        isOpen={showCancelDialog}
+                        title="Confirmer la résiliation"
+                        description="Voulez-vous vraiment résilier votre abonnement ? Votre contenu restera visible mais vous perdrez l'accès à la création."
+                        onConfirm={doCancelSubscription}
+                        onCancel={() => setShowCancelDialog(false)}
+                        confirmText="Résilier"
+                        cancelText="Annuler"
+                    />
                 </div>
             </div>
         </div>
