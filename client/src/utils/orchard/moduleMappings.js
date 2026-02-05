@@ -3,73 +3,115 @@
 
 import { FLOWER_CATEGORY_FIELDS, HASH_CATEGORY_FIELDS, CONCENTRATE_CATEGORY_FIELDS, EDIBLE_CATEGORY_FIELDS } from './productTypeMappings';
 
-const FLOWER_MODULES = [
-    // Essentials
-    'holderName', 'title', 'rating', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category',
-    // Identity
-    'author', 'ownerName', 'date', 'createdAt', 'tags',
-    // Provenance
-    'cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker', 'origin', 'country', 'region',
-    // Ratings/global
-    'overallRating', 'note', 'qualityScore', 'ratings', 'categoryRatings', 'categoryRatings.visual', 'categoryRatings.smell', 'categoryRatings.texture', 'categoryRatings.taste', 'categoryRatings.effects',
-    // Visual details
-    ...FLOWER_CATEGORY_FIELDS.visual,
-    // Smell
-    ...FLOWER_CATEGORY_FIELDS.smell,
-    // Texture
-    ...FLOWER_CATEGORY_FIELDS.texture,
-    // Taste
-    ...FLOWER_CATEGORY_FIELDS.taste,
-    // Effects
-    ...FLOWER_CATEGORY_FIELDS.effects,
-    // Terpenes/technical
-    'terpenes', 'thcLevel', 'cbdLevel', 'strainType', 'indicaRatio', 'sativaRatio', 'strainRatio',
-    // Pipelines
-    'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline', 'substratMix', 'purgevide', 'curing', 'drying', 'processing', 'yield', 'floweringTime', 'harvestDate',
-    // Text & extra
-    'conclusion', 'notes', 'comments', 'recommendations', 'warnings', 'extraData', 'certifications', 'awards', 'labResults'
+// New structured sections per product type
+// Each section has: id, label, access ('all'|'influenceur'|'producteur'), fields[]
+const FLOWER_SECTIONS = [
+    {
+        id: 'infos_generales',
+        label: 'Infos générales',
+        access: 'all',
+        fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type', 'date', 'author']
+    },
+    {
+        id: 'genetique',
+        label: 'Génétique',
+        access: 'producteur',
+        fields: ['cultivar', 'cultivarsList', 'breeder', 'strainType']
+    },
+    {
+        id: 'culture',
+        label: 'Culture',
+        access: 'producteur',
+        fields: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'floweringTime', 'harvestDate', 'yield']
+    },
+    {
+        id: 'analytiques',
+        label: 'Analytiques',
+        access: 'all',
+        fields: ['thcLevel', 'cbdLevel', 'labResults']
+    },
+    {
+        id: 'visuel',
+        label: 'Visuel',
+        access: 'all',
+        fields: [...FLOWER_CATEGORY_FIELDS.visual]
+    },
+    {
+        id: 'odeurs',
+        label: 'Odeurs',
+        access: 'all',
+        fields: [...FLOWER_CATEGORY_FIELDS.smell]
+    },
+    {
+        id: 'texture',
+        label: 'Texture',
+        access: 'all',
+        fields: [...FLOWER_CATEGORY_FIELDS.texture]
+    },
+    {
+        id: 'effets',
+        label: 'Effets',
+        access: 'all',
+        fields: [...FLOWER_CATEGORY_FIELDS.effects]
+    },
+    {
+        id: 'gout',
+        label: 'Goût',
+        access: 'all',
+        fields: [...FLOWER_CATEGORY_FIELDS.taste]
+    },
+    {
+        id: 'maturation',
+        label: 'Maturation',
+        access: 'influenceur',
+        fields: ['curing', 'pipelineCuring']
+    }
 ];
 
-const HASH_MODULES = [
-    'holderName', 'title', 'rating', 'image', 'images', 'description', 'type',
-    // provenance/extract
-    'hashmaker', 'cultivarsList', 'origin', 'country', 'region',
-    // visual/textures specific to hash
-    ...HASH_CATEGORY_FIELDS.visual,
-    ...HASH_CATEGORY_FIELDS.smell,
-    ...HASH_CATEGORY_FIELDS.texture,
-    ...HASH_CATEGORY_FIELDS.taste,
-    ...HASH_CATEGORY_FIELDS.effects,
-    'terpenes', 'thcLevel', 'cbdLevel', 'pipelineSeparation', 'pipelinePurification', 'purgevide', 'yield', 'processing',
-    'notes', 'extraData'
+const HASH_SECTIONS = [
+    { id: 'infos_generales', label: 'Infos générales', access: 'all', fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type', 'date', 'author'] },
+    { id: 'production', label: 'Production', access: 'producteur', fields: ['hashmaker', 'cultivarsList', 'pipelineSeparation', 'pipelinePurification', 'processing'] },
+    { id: 'analytiques', label: 'Analytiques', access: 'all', fields: ['thcLevel', 'cbdLevel', 'labResults'] },
+    { id: 'visuel', label: 'Visuel', access: 'all', fields: [...HASH_CATEGORY_FIELDS.visual] },
+    { id: 'odeurs', label: 'Odeurs', access: 'all', fields: [...HASH_CATEGORY_FIELDS.smell] },
+    { id: 'texture', label: 'Texture', access: 'all', fields: [...HASH_CATEGORY_FIELDS.texture] },
+    { id: 'effets', label: 'Effets', access: 'all', fields: [...HASH_CATEGORY_FIELDS.effects] },
+    { id: 'gout', label: 'Goût', access: 'all', fields: [...HASH_CATEGORY_FIELDS.taste] },
+    { id: 'maturation', label: 'Maturation', access: 'influenceur', fields: ['curing'] }
 ];
 
-const CONCENTRATE_MODULES = [
-    'holderName', 'title', 'rating', 'image', 'images', 'description', 'type',
-    ...CONCENTRATE_CATEGORY_FIELDS.visual,
-    ...CONCENTRATE_CATEGORY_FIELDS.smell,
-    ...CONCENTRATE_CATEGORY_FIELDS.texture,
-    ...CONCENTRATE_CATEGORY_FIELDS.taste,
-    ...CONCENTRATE_CATEGORY_FIELDS.effects,
-    'pipelineExtraction', 'pipelinePurification', 'purgevide', 'yield', 'processing', 'thcLevel', 'cbdLevel', 'terpenes', 'notes', 'extraData'
+const CONCENTRATE_SECTIONS = [
+    { id: 'infos_generales', label: 'Infos générales', access: 'all', fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type'] },
+    { id: 'extraction', label: 'Extraction', access: 'producteur', fields: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'processing'] },
+    { id: 'analytiques', label: 'Analytiques', access: 'all', fields: ['thcLevel', 'cbdLevel', 'labResults'] },
+    { id: 'visuel', label: 'Visuel', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.visual] },
+    { id: 'odeurs', label: 'Odeurs', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.smell] },
+    { id: 'texture', label: 'Texture', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.texture] },
+    { id: 'effets', label: 'Effets', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.effects] }
 ];
 
-const EDIBLE_MODULES = [
-    'holderName', 'title', 'rating', 'image', 'images', 'description', 'type',
-    // Edibles focus on taste and effects
-    ...EDIBLE_CATEGORY_FIELDS.taste,
-    ...EDIBLE_CATEGORY_FIELDS.effects,
-    'tastes', 'tastesIntensity', 'conclusion', 'notes', 'extraData'
+const EDIBLE_SECTIONS = [
+    { id: 'infos_generales', label: 'Infos générales', access: 'all', fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type'] },
+    { id: 'recette', label: 'Recette', access: 'producteur', fields: ['recipe', 'ingredients'] },
+    { id: 'gout_effets', label: 'Goûts & Effets', access: 'all', fields: [...EDIBLE_CATEGORY_FIELDS.taste, ...EDIBLE_CATEGORY_FIELDS.effects] }
 ];
 
-export function getModulesByProductType(productType = 'flower') {
+export function getModuleSectionsByProductType(productType = 'flower') {
     const t = (productType || '').toLowerCase();
-    if (t.includes('hash')) return Array.from(new Set(HASH_MODULES));
-    if (t.includes('concentrat') || t.includes('concentré') || t.includes('concentrate')) return Array.from(new Set(CONCENTRATE_MODULES));
-    if (t.includes('edible') || t.includes('comestible')) return Array.from(new Set(EDIBLE_MODULES));
-    return Array.from(new Set(FLOWER_MODULES));
+    if (t.includes('hash')) return HASH_SECTIONS;
+    if (t.includes('concentrat') || t.includes('concentré') || t.includes('concentrate')) return CONCENTRATE_SECTIONS;
+    if (t.includes('edible') || t.includes('comestible')) return EDIBLE_SECTIONS;
+    return FLOWER_SECTIONS;
+}
+
+// Backwards-compatible helper: flatten sections into module list
+export function getModulesByProductType(productType = 'flower') {
+    const sections = getModuleSectionsByProductType(productType);
+    const modules = sections.flatMap(s => s.fields || []);
+    return Array.from(new Set(modules));
 }
 
 export default {
-    getModulesByProductType
+    getModulesByProductType,
+    getModuleSectionsByProductType
 };
