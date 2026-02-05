@@ -26,7 +26,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const canExportGIF = permissions.export?.features?.dragDrop === true;
     const exportRef = useRef(null);
     const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
-    const [selectedTemplate, setSelectedTemplate] = useState('compact');
+    const [selectedTemplate, setSelectedTemplate] = useState('minimal');
     const [format, setFormat] = useState('1:1');
     const [highQuality, setHighQuality] = useState(false);
     const [watermark, setWatermark] = useState({
@@ -68,6 +68,16 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             premium: !available
         };
     });
+
+    // Elements allowed for the currently selected template
+    const selectedTemplateDef = getPredefinedTemplate(productKey, selectedTemplate) || predefined[selectedTemplate] || predefined['minimal'];
+    const allowedElementIds = (selectedTemplateDef?.elements || []).map(e => e.id);
+
+    const hasElement = (ids) => {
+        if (!ids) return false;
+        const arr = Array.isArray(ids) ? ids : [ids];
+        return arr.some(id => allowedElementIds.includes(id));
+    };
 
     const Star = ({ className }) => (
         <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -337,11 +347,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             {/* Main Image & Stats */}
                             <div className="grid grid-cols-2 gap-6 mb-8 flex-1">
                                 <div className="rounded-2xl overflow-hidden border border-white/10 relative group">
-                                    {reviewData.images?.[0] ? (
-                                        <img src={URL.createObjectURL(reviewData.images[0])} className="w-full h-full object-cover" alt="Product" />
+                                    {hasElement(['photo', 'photos', 'gallery', 'image']) ? (
+                                        reviewData.images?.[0] ? (
+                                            <img src={URL.createObjectURL(reviewData.images[0])} className="w-full h-full object-cover" alt="Product" />
+                                        ) : (
+                                            <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
+                                                <ImageIcon className="w-12 h-12 opacity-50" />
+                                            </div>
+                                        )
                                     ) : (
                                         <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
-                                            <ImageIcon className="w-12 h-12 opacity-50" />
+                                            <div className="text-sm text-gray-400">Image non disponible pour ce template</div>
                                         </div>
                                     )}
                                 </div>
@@ -349,21 +365,37 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div className="space-y-4">
                                     {/* Stats grid */}
                                     <div className="grid grid-cols-2 gap-3">
-                                        {[
-                                            { label: 'Odeur', value: reviewData.odeurNote },
-                                            { label: 'Goût', value: reviewData.goutNote },
-                                            { label: 'Effets', value: reviewData.effetsIntensite },
-                                            { label: 'Visuel', value: reviewData.visuelNote },
-                                        ].map((stat, i) => (
-                                            <div key={i} className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-1">{stat.label}</div>
-                                                <div className="text-xl font-bold text-white">{stat.value || '-'}</div>
+                                        {hasElement(['odor', 'odorNotes', 'odors']) && (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-1">Odeur</div>
+                                                <div className="text-xl font-bold text-white">{reviewData.odeurNote || '-'}</div>
                                             </div>
-                                        ))}
+                                        )}
+
+                                        {hasElement(['taste', 'tasteNotes', 'tastes']) && (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-1">Goût</div>
+                                                <div className="text-xl font-bold text-white">{reviewData.goutNote || '-'}</div>
+                                            </div>
+                                        )}
+
+                                        {hasElement('effects') && (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-1">Effets</div>
+                                                <div className="text-xl font-bold text-white">{reviewData.effetsIntensite || '-'}</div>
+                                            </div>
+                                        )}
+
+                                        {hasElement('visual') && (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-1">Visuel</div>
+                                                <div className="text-xl font-bold text-white">{reviewData.visuelNote || '-'}</div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Custom Sections (Drag & Drop) */}
-                                    {mode === 'custom' && customSections.map(section => (
+                                    {mode === 'custom' && customSections.filter(s => allowedElementIds.includes(s.id)).map(section => (
                                         <div key={section.id} className="bg-white/5 p-3 rounded-xl border border-white/5">
                                             <div className="text-xs font-bold uppercase mb-1">{section.name}</div>
                                             <div className="text-white text-sm">Contenu de la section...</div>
