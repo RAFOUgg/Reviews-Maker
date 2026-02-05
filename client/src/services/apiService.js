@@ -38,9 +38,25 @@ export const accountService = {
  */
 export const paymentService = {
     async createCheckout(accountType) {
+        // backend expects english keys for checkout endpoint: 'influencer'|'producer'
+        const mapping = {
+            producteur: 'producer',
+            producteur_fr: 'producer',
+            producteur_en: 'producer',
+            producteur_key: 'producer',
+            influenceur: 'influencer',
+            influenceur_fr: 'influencer',
+            influenceur_en: 'influencer',
+            // support direct english keys
+            producer: 'producer',
+            influencer: 'influencer'
+        }
+
+        const normalized = mapping[accountType] || accountType
+
         return fetchAPI(`${API_BASE}/payment/create-checkout`, {
             method: 'POST',
-            body: JSON.stringify({ accountType })
+            body: JSON.stringify({ accountType: normalized })
         })
     },
 
