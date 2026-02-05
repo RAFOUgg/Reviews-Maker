@@ -14,6 +14,7 @@ import SectionNavigator from '../../components/shared/ui-helpers/SectionNavigato
 import CategoryRatingSummary from '../../components/shared/charts/CategoryRatingSummary';
 import OrchardPanel from '../../components/shared/orchard/OrchardPanel';
 import { AnimatePresence } from 'framer-motion';
+import LiquidSlider from '../../components/ui/LiquidSlider';
 import { productStructures } from '../../utils/productStructures';
 import { calculateCategoryRatings as calcCategoryRatings, CATEGORY_DISPLAY_ORDER } from '../../utils/categoryMappings';
 
@@ -407,6 +408,19 @@ export default function CreateReviewPage() {
             case 'textarea': return <textarea value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} rows={field.rows || 3} placeholder={field.label} className="w-full px-4 py-3 bg-transparent rounded-xl focus:outline-none resize-none glow-container-subtle" style={{ border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />;
             case 'number': return <input type="number" min="0" max={field.max || 100} value={value} onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))} className="w-full px-4 py-3 bg-transparent rounded-xl focus:outline-none glow-container-subtle" style={{ border: '1px solid', borderColor: 'var(--border)', color: 'var(--text-primary)' }} />;
             case 'slider': return <div><input type="range" min="0" max={field.max || 10} step="0.5" value={value} onChange={(e) => handleInputChange(field.key, parseFloat(e.target.value))} className="w-full h-3 rounded-lg appearance-none cursor-pointer shadow-lg" style={{ background: 'var(--gradient-primary)', border: '2px solid', borderColor: 'var(--primary)' }} /><div className="flex justify-between items-center mt-2"><span className="text-xs opacity-70 font-bold" style={{ color: 'var(--text-primary)' }}>0</span><span className="text-2xl font-bold glow-text-subtle" style={{ color: 'var(--text-primary)' }}>{value}/{field.max || 10}</span><span className="text-xs opacity-70 font-bold" style={{ color: 'var(--text-primary)' }}>{field.max || 10}</span></div></div>;
+            case 'slider': return (
+                <LiquidSlider
+                    label={field.label}
+                    value={value}
+                    onChange={(v) => handleInputChange(field.key, v)}
+                    min={field.min ?? 0}
+                    max={field.max ?? 10}
+                    step={field.step ?? 0.5}
+                    color={field.color ?? 'purple'}
+                    showValue={true}
+                    size="md"
+                />
+            );
             case 'select': return <select value={value} onChange={(e) => handleInputChange(field.key, e.target.value)} className="w-full px-4 py-3 rounded-xl font-medium focus:outline-none shadow-lg select-themed"><option value="">-- Sélectionner --</option>{field.choices?.map((choice, i) => <option key={i} value={choice}>{choice}</option>)}</select>;
             case 'multiselect': const selected = Array.isArray(value) ? value : []; return <div className="flex flex-wrap gap-2">{field.choices?.map((choice, i) => <button key={i} type="button" onClick={() => { const newVal = selected.includes(choice) ? selected.filter(v => v !== choice) : [...selected, choice]; handleInputChange(field.key, newVal); }} className="px-3 py-1.5 rounded-lg text-sm transition-all" style={{ backgroundColor: selected.includes(choice) ? 'var(--primary-light)' : 'transparent', border: '1px solid', borderColor: selected.includes(choice) ? 'var(--primary)' : 'var(--border)', color: 'var(--text-primary)', opacity: selected.includes(choice) ? 1 : 0.7 }}>{choice}</button>)}</div>;
             case 'checkbox':
