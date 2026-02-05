@@ -153,7 +153,7 @@ export const DRAGGABLE_FIELDS = {
 
 // Labels de section pour l'affichage
 export const SECTION_LABELS = {
-    basic: '📋 Informations de base',
+    basic: '📋 Informations générales*',
     ratings: '⭐ Notes globales',
     visualRatings: '👁️ Détails Visuels',
     smellRatings: '👃 Détails Odeur',
