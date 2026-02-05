@@ -4,6 +4,7 @@
 import express from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { prisma } from '../server.js'
+import { changeAccountType } from '../services/account.js'
 
 const router = express.Router()
 
@@ -147,31 +148,25 @@ router.post('/upgrade', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Impossible de rétrograder de Producteur vers Influenceur' })
         }
 
-        // Mettre à jour le compte
-        const updatedUser = await prisma.user.update({
-            where: { id: userId },
-            data: {
-                accountType: accountType,
-                subscriptionStatus: 'active',
-                // Enregistrer la date de mise à niveau
-                updatedAt: new Date(),
-            },
-            select: {
-                id: true,
-                username: true,
-                email: true,
-                accountType: true,
-                subscriptionStatus: true,
-                roles: true,
-            }
-        })
+        // Utiliser la logique centralisée pour changer le type de compte
+        // Ceci mettra à jour le champ roles et créera les profils associés si nécessaire
+        const updatedUser = await changeAccountType(userId, accountType, {})
+
+        // Mettre à jour le statut d'abonnement dans l'utilisateur/prisma
+        await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
 
         console.log(`✅ Upgrade réussi: ${user.username} → ${accountType}`)
 
+        // Retourner une version simplifiée de l'utilisateur (roles sont mis à jour par changeAccountType)
         res.json({
             success: true,
             message: `Compte mis à niveau vers ${accountType} avec succès!`,
-            user: updatedUser
+            user: {
+                id: updatedUser.id,
+                username: updatedUser.username,
+                email: updatedUser.email,
+                roles: updatedUser.roles
+            }
         })
     } catch (error) {
         console.error('❌ Upgrade error:', error)
