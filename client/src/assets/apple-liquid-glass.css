@@ -1337,6 +1337,123 @@ input[type="range"].liquid-range::-moz-range-thumb,
 }
 
 /* ============================================
+   LIQUID SLIDER (glassmorphism)
+   ============================================ */
+.liquid-slider {
+    width: 100%;
+}
+
+.liquid-slider .liquid-slider-track {
+    position: relative;
+    height: 12px;
+    border-radius: 999px;
+    padding: 4px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.02), rgba(255, 255, 255, 0.01));
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.45), 0 6px 18px rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px) saturate(140%);
+}
+
+.liquid-slider-fill {
+    position: absolute;
+    left: 4px;
+    top: 4px;
+    height: calc(100% - 8px);
+    border-radius: 999px;
+    box-shadow: inset 0 1px 8px rgba(255, 255, 255, 0.04), 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.liquid-slider-thumb {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 30;
+    pointer-events: none;
+}
+
+.liquid-slider-thumb-inner {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    transform: translateY(2px);
+}
+
+.liquid-slider-thumb-core {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45), 0 0 26px rgba(255, 255, 255, 0.06) inset;
+    border: 1px solid rgba(255, 255, 255, 0.9);
+}
+
+.liquid-slider-thumb-inner .bg-white {
+    background: linear-gradient(180deg, #ffffff, #f2f2f2);
+}
+
+.liquid-slider-value-bubble {
+    position: absolute;
+    top: -48px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 6px 10px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.9));
+    color: #111;
+    font-weight: 700;
+    font-size: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+    white-space: nowrap;
+}
+
+.liquid-slider-thumb:hover .liquid-slider-thumb-core,
+.liquid-slider-thumb:active .liquid-slider-thumb-core {
+    transform: scale(1.06);
+}
+
+/* responsive/smaller */
+.liquid-slider .liquid-slider-track[data-size="sm"] {
+    height: 8px;
+    padding: 3px;
+}
+
+.liquid-slider .liquid-slider-track[data-size="sm"] .liquid-slider-thumb-inner {
+    width: 36px;
+    height: 36px
+}
+
+.liquid-slider .liquid-slider-track[data-size="lg"] {
+    height: 16px;
+    padding: 6px
+}
+
+/* subtle decorative bubbles */
+.liquid-slider-track::before,
+.liquid-slider-track::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.02);
+    pointer-events: none;
+}
+
+.liquid-slider-track::before {
+    width: 8px;
+    height: 8px;
+    right: 14%;
+    top: 18%;
+}
+
+.liquid-slider-track::after {
+    width: 4px;
+    height: 4px;
+    right: 26%;
+    top: 62%;
+}
+
+/* ============================================
    FORM VALIDATION STATES
    ============================================ */
 

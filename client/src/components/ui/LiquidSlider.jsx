@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 
 /**
@@ -29,10 +29,26 @@ const LiquidSlider = ({
         pink: 'from-pink-500 to-rose-600',
     };
 
+    const [hover, setHover] = useState(false)
+    const [dragging, setDragging] = useState(false)
+    const trackRef = useRef(null)
+
     const percentage = ((value - min) / (max - min)) * 100;
 
+    function setFromPointer(clientX) {
+        const track = trackRef.current
+        if (!track) return
+        const rect = track.getBoundingClientRect()
+        const x = Math.min(Math.max(clientX - rect.left, 0), rect.width)
+        const ratio = x / rect.width
+        const raw = min + ratio * (max - min)
+        const stepped = Math.round(raw / step) * step
+        const clamped = Math.min(max, Math.max(min, stepped))
+        onChange(clamped)
+    }
+
     return (
-        <div className={`w-full ${className}`}>
+        <div className={`w-full liquid-slider ${className}`}>
             {label && (
                 <div className="flex justify-between items-center mb-3">
                     <label className="text-sm font-medium text-[var(--text-primary)]">
@@ -51,19 +67,26 @@ const LiquidSlider = ({
                 </div>
             )}
 
-            <div className="relative">
-                {/* Track */}
-                <div className="liquid-glass h-3 rounded-full overflow-hidden">
-                    {/* Fill */}
+            <div
+                className="relative"
+                ref={trackRef}
+                onPointerDown={(e) => { setDragging(true); setFromPointer(e.clientX) }}
+                onPointerUp={() => setDragging(false)}
+                onPointerMove={(e) => dragging && setFromPointer(e.clientX)}
+                onMouseEnter={() => setHover(true)}
+                onMouseLeave={() => { setHover(false); setDragging(false) }}
+            >
+                {/* Track (glass) */}
+                <div className="liquid-slider-track liquid-glass h-3 rounded-full overflow-hidden">
                     <motion.div
-                        className={`h-full bg-gradient-to-r ${colorClasses[color]} rounded-full`}
+                        className={`liquid-slider-fill h-full bg-gradient-to-r ${colorClasses[color]} rounded-full`}
                         initial={{ width: '0%' }}
                         animate={{ width: `${percentage}%` }}
-                        transition={{ duration: 0.3, ease: 'easeOut' }}
+                        transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
                     />
                 </div>
 
-                {/* Input (invisible but functional) */}
+                {/* native input (for accessibility/keyboard) */}
                 <input
                     type="range"
                     min={min}
@@ -72,16 +95,33 @@ const LiquidSlider = ({
                     value={value}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    aria-valuemin={min}
+                    aria-valuemax={max}
+                    aria-valuenow={value}
                     {...props}
                 />
 
-                {/* Thumb indicator */}
+                {/* Thumb */}
                 <motion.div
-                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 bg-white rounded-full shadow-lg pointer-events-none"
-                    style={{ left: `calc(${percentage}% - 10px)` }}
-                    animate={{ left: `calc(${percentage}% - 10px)` }}
-                    transition={{ duration: 0.3, ease: 'easeOut' }}
-                />
+                    className={`liquid-slider-thumb`}
+                    style={{ left: `${percentage}%` }}
+                    animate={{ left: `${percentage}%` }}
+                    transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
+                >
+                    <div className="liquid-slider-thumb-inner">
+                        <div className={`liquid-slider-thumb-core bg-white`} />
+                    </div>
+
+                    {/* Value bubble */}
+                    <motion.div
+                        className="liquid-slider-value-bubble"
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: hover || dragging ? 1 : 0.8, opacity: hover || dragging ? 1 : 0 }}
+                        transition={{ duration: 0.18 }}
+                    >
+                        {value}{unit}
+                    </motion.div>
+                </motion.div>
             </div>
 
             {/* Scale indicators */}
