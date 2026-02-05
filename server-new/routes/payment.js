@@ -52,11 +52,22 @@ router.post('/create-checkout', requireAuth, async (req, res) => {
         // })
         // res.json({ sessionId: session.id, url: session.url })
 
-        // MOCK pour développement
+        // Determine client URL: prefer env, fallback to request origin
+        const clientUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`
+
+        // Map backend account types to frontend query values (French)
+        const clientTypeMap = {
+            producer: 'producteur',
+            influencer: 'influenceur'
+        }
+
+        const clientType = clientTypeMap[accountType] || accountType
+
+        // MOCK pour développement - direct user to the frontend payment handler
         res.json({
             sessionId: 'mock_session_' + Date.now(),
-            url: `${process.env.CLIENT_URL}/payment?mock_payment=success`,
-            message: 'MOCK: Paiement simulé (Stripe non configuré)',
+            url: `${clientUrl}/payment?type=${clientType}&mock_payment=success`,
+            message: 'MOCK: Paiement simulé (Stripe non configuré)'
         })
     } catch (error) {
         console.error('❌ Payment error:', error)
