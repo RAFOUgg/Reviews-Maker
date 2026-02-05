@@ -5,6 +5,8 @@
  */
 
 import { useMemo, useState } from 'react';
+import { useStore } from '../../../store/useStore';
+import { getExportSectionsByType } from '../../../utils/orchard/productTypeMappings';
 import PropTypes from 'prop-types';
 
 // Types de champs disponibles pour le drag & drop (utilisé par dnd-kit ou react-dnd)
@@ -248,7 +250,7 @@ function DraggableField({ field, isPlaced, hasValue, valuePreview }) {
             style={style}
             {...listeners}
             {...attributes}
-            className={`p-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-all select-none ${isDragging ? 'scale-105 shadow-xl z-50' : 'scale-100'} ${isPlaced ? 'bg-green-500/20 border-green-500 border-2' : hasValue ? ' /50 border hover: hover:' : 'bg-gray-700/30 border-gray-600/50 border border-dashed opacity-50' } hover:shadow-lg`}
+            className={`p-2.5 rounded-lg cursor-grab active:cursor-grabbing transition-all select-none ${isDragging ? 'scale-105 shadow-xl z-50' : 'scale-100'} ${isPlaced ? 'bg-green-500/20 border-green-500 border-2' : hasValue ? ' /50 border hover: hover:' : 'bg-gray-700/30 border-gray-600/50 border border-dashed opacity-50'} hover:shadow-lg`}
             title={hasValue ? `Valeur: ${valuePreview}` : 'Aucune donnée'}
         >
             <div className="flex items-center gap-2">
@@ -426,6 +428,45 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
         'content', 'stickers'
     ];
 
+    // Déterminer les sections autorisées selon le type de produit et le type de compte
+    const accountType = useStore(state => state.accountType) || 'amateur';
+    const productType = reviewData?.type || reviewData?.productType || 'flower';
+
+    // Mapping simple entre les sections d'export (productTypeMappings) et nos sections UI
+    const EXPORT_TO_UI_SECTION = {
+        profile: 'basic',
+        genetics: 'basic',
+        culture: 'pipelines',
+        visual: 'visualRatings',
+        smell: 'smellRatings',
+        texture: 'textureRatings',
+        taste: 'tasteRatings',
+        effects: 'effectsRatings',
+        curing: 'pipelines',
+        extraction: 'pipelines',
+        purification: 'pipelines',
+        recipe: 'content'
+    };
+
+    const baseExportSections = getExportSectionsByType(productType);
+    const baseUISections = Array.from(new Set(baseExportSections.map(s => EXPORT_TO_UI_SECTION[s] || s).filter(Boolean)));
+
+    // Ajouter des sections supplémentaires selon le type de compte pour correspondre aux règles métier
+    const extraForAccount = [];
+    if (accountType === 'influenceur' || accountType === 'influencer') {
+        // Influenceurs voient en plus les données sensorielles
+        extraForAccount.push('sensorial');
+    }
+    if (accountType === 'producteur' || accountType === 'producer') {
+        // Producteurs voient les sensorial, pipelines et niveaux techniques
+        extraForAccount.push('sensorial', 'pipelines', 'levels');
+    }
+
+    const allowedSectionsSet = new Set([...baseUISections, ...extraForAccount]);
+
+    // Filtrer l'ordre des sections pour ne garder que celles autorisées
+    const filteredSectionOrder = sectionOrder.filter(k => allowedSectionsSet.has(k));
+
     return (
         <div className="h-full bg-gray-900/95 backdrop-blur-sm flex flex-col border-r /30">
             {/* Header sticky */}
@@ -466,7 +507,7 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
 
             {/* Sections scrollables */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
-                {sectionOrder.map(sectionKey => (
+                {filteredSectionOrder.map(sectionKey => (
                     DRAGGABLE_FIELDS[sectionKey] && (
                         <FieldSection
                             key={sectionKey}
