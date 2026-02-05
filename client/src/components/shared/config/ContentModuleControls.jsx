@@ -521,27 +521,24 @@ export default function ContentModuleControls() {
         const preset = QUICK_PRESETS[presetKey];
         if (!preset) return;
 
-        // Désactiver tous les modules d'abord
-        const newModules = {};
-        Object.keys(config.contentModules).forEach(key => {
+        // Désactiver tous les modules pertinents d'abord
+        const newModules = { ...config.contentModules };
+        Array.from(relevantModulesSet).forEach(key => {
             newModules[key] = false;
         });
 
-        // Activer ceux du preset
+        // Activer ceux du preset (mais seulement si pertinents)
         preset.modules.forEach(moduleName => {
-            newModules[moduleName] = true;
+            if (relevantModulesSet.has(moduleName)) newModules[moduleName] = true;
         });
 
         if (setContentModules) {
             setContentModules(newModules);
         } else {
             // Fallback si setContentModules n'existe pas
-            Object.keys(config.contentModules).forEach(key => {
-                if (config.contentModules[key] && !preset.modules.includes(key)) {
-                    toggleContentModule(key);
-                } else if (!config.contentModules[key] && preset.modules.includes(key)) {
-                    toggleContentModule(key);
-                }
+            Array.from(relevantModulesSet).forEach(key => {
+                const should = !!newModules[key];
+                if (config.contentModules[key] !== should) toggleContentModule(key);
             });
         }
         setShowPresets(false);
@@ -724,7 +721,7 @@ export default function ContentModuleControls() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                        Object.keys(config.contentModules).forEach(key => {
+                        Array.from(relevantModulesSet).forEach(key => {
                             if (!config.contentModules[key]) toggleContentModule(key);
                         });
                     }}
@@ -736,7 +733,7 @@ export default function ContentModuleControls() {
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
                     onClick={() => {
-                        Object.keys(config.contentModules).forEach(key => {
+                        Array.from(relevantModulesSet).forEach(key => {
                             if (config.contentModules[key]) toggleContentModule(key);
                         });
                     }}

@@ -439,7 +439,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-white drop-shadow-sm">
-                                🌸 Orchard Studio
+                                🌸 Export Maker
                             </h2>
                             <p className="text-xs font-medium text-white/60">
                                 Système de rendu et d'exportation
