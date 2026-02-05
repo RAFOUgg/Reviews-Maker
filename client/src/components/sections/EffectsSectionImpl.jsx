@@ -76,7 +76,7 @@ export default function EffectsSection({ productType, data: directData, onChange
     });
 
     return (
-        <LiquidCard glow="cyan" padding="lg" className="space-y-8">
+        <LiquidCard glow="cyan" padding="lg" className="space-y-10">
             <div className="flex items-center gap-3 pb-4">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
                     <Zap className="w-5 h-5 text-white" />
@@ -107,7 +107,7 @@ export default function EffectsSection({ productType, data: directData, onChange
             </div>
 
             {expandExperience && (
-                <div className="mt-4 space-y-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                <div className="mt-4 space-y-8 p-6 bg-white/5 rounded-xl border border-white/10">
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white/80 flex items-center gap-2">💨 Méthode de consommation *</label>
                         <select
@@ -122,7 +122,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                         </select>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-white/80">⚖️ Dosage</label>
                             <div className="flex gap-2">
@@ -157,7 +157,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="space-y-2">
                             <label className="text-sm font-medium text-white/80">🚀 Début des effets</label>
                             <select value={debutEffets} onChange={(e) => setDebutEffets(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
@@ -199,8 +199,8 @@ export default function EffectsSection({ productType, data: directData, onChange
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Montée (rapidité)"
                         value={onset}
@@ -213,7 +213,7 @@ export default function EffectsSection({ productType, data: directData, onChange
                     <p className="text-xs text-white/40 mt-2">{ONSET_LEVELS[onset - 1]?.label}</p>
                 </div>
 
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Intensité"
                         value={intensity}
@@ -255,7 +255,7 @@ export default function EffectsSection({ productType, data: directData, onChange
             />
             <LiquidDivider />
 
-            <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
+            <div className="p-6 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
                 <p className="text-sm text-white/60">
                     <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
                 </p>
