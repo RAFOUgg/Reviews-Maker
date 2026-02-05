@@ -97,7 +97,11 @@ const LiquidSlider = ({
                     step={step}
                     value={value}
                     onChange={(e) => onChange(parseFloat(e.target.value))}
+                    onPointerDown={(e) => { setDragging(true); setFromPointer(e.clientX) }}
+                    onPointerUp={() => setDragging(false)}
+                    onPointerMove={(e) => dragging && setFromPointer(e.clientX)}
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    style={{ zIndex: 40 }}
                     aria-valuemin={min}
                     aria-valuemax={max}
                     aria-valuenow={value}

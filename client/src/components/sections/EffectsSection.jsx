@@ -1,3 +1,4 @@
+/*
 import React, { useState, useEffect } from 'react';
 import { EFFECTS_CATEGORIES, ONSET_LEVELS, INTENSITY_LEVELS, DURATION_OPTIONS } from '../../data/effectsCategories';
 import { EXPERIENCE_VALUES } from '../../data/formValues';
