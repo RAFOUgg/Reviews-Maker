@@ -24,6 +24,7 @@ import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
 import { accountService, paymentService } from '../../services/apiService'
 import ConfirmDialog from '../../components/shared/ConfirmDialog'
+import { useToast } from '../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 
 const SUPPORTED_LANGUAGES = [
@@ -54,6 +55,8 @@ const AccountPage = () => {
   const [language, setLanguage] = useState(() => i18n.language || 'fr')
   const [isSaved, setIsSaved] = useState(false)
   const [showCancelDialog, setShowCancelDialog] = useState(false)
+
+  const toast = useToast()
 
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('userPreferences')
@@ -275,18 +278,19 @@ const AccountPage = () => {
                               try {
                                 await accountService.changeType('amateur')
                                 if (typeof checkAuth === 'function') await checkAuth()
-                                alert('Abonnement résilié. Votre compte a été rétrogradé.')
-                                window.location.reload()
+                                toast.success('Abonnement résilié. Votre compte a été rétrogradé.')
+                                // small delay so toast is visible before reload
+                                setTimeout(() => window.location.reload(), 700)
                               } catch (err) {
                                 console.error('Cancel subscription error', err)
                                 try {
                                   await paymentService.cancel()
                                   if (typeof checkAuth === 'function') await checkAuth()
-                                  alert('Abonnement résilié via le service de paiement.')
-                                  window.location.reload()
+                                  toast.success('Abonnement résilié via le service de paiement.')
+                                  setTimeout(() => window.location.reload(), 700)
                                 } catch (err2) {
                                   console.error('Payment cancel fallback failed', err2)
-                                  alert(err2?.message || 'Erreur lors de la résiliation')
+                                  toast.error(err2?.message || 'Erreur lors de la résiliation')
                                 }
                               }
                             }}
