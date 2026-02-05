@@ -14,7 +14,7 @@ import VisualSection from '../../../components/sections/VisualSection'
 import OdorSection from '../../../components/sections/OdorSection'
 import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
-import EffectsSection from '../../../components/sections/EffectsSection'
+import EffectsSection from '../../../components/sections/EffectsSectionImpl'
 
 // Import hooks
 import { useHashForm } from './hooks/useHashForm'

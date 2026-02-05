@@ -11,7 +11,7 @@ import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import TasteSection from '../../../components/sections/TasteSection'
-import EffectsSection from '../../../components/sections/EffectsSection'
+import EffectsSection from '../../../components/sections/EffectsSectionImpl'
 
 // Import hooks
 import { useEdibleForm } from './hooks/useEdibleForm'

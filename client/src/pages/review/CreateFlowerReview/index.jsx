@@ -19,7 +19,7 @@ import VisuelTechnique from './sections/VisuelTechnique'
 import OdorSection from '../../../components/sections/OdorSection'
 import TextureSection from '../../../components/sections/TextureSection'
 import TasteSection from '../../../components/sections/TasteSection'
-import EffectsSection from '../../../components/sections/EffectsSection'
+import EffectsSection from '../../../components/sections/EffectsSectionImpl'
 import CuringMaturationSection from '../../../components/sections/CuringMaturationSection'
 
 // Import hooks
