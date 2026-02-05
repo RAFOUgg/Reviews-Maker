@@ -167,3 +167,51 @@ export function getAvailableTemplatesByType(productType = 'flower', accountType 
   
   return templates;
 }
+
+// ============================================================================
+// ALLOWED FIELDS PER PRODUCT TYPE AND ACCOUNT TIER
+// ============================================================================
+// These lists define which draggable fields should be available in Export Maker
+// for each combination of product type and account tier. Keep lists minimal
+// for 'amateur' tiers to match available input fields in the review form.
+export const ALLOWED_FIELDS_BY_TYPE_AND_TIER = {
+  hash: {
+    amateur: [
+      // basic / profile
+      'holderName','title','mainImage','images','description','type',
+      // provenance
+      'breeder','farm','hashmaker','cultivarsList',
+      // visual (hash-specific)
+      'couleur','pureteVisuelle','densite','viscosite','melting','residus','pistils',
+      // smell
+      'aromasIntensity','fideliteCultivars',
+      // texture
+      'durete','densiteTexture','friabilite','viscositeTexture',
+      // taste
+      'intensiteFumee','agressivite','cendre',
+      // effects
+      'montee','intensiteEffet','dureeEffet',
+      // extras commonly useful
+      'terpenes','thcLevel'
+    ],
+    influencer: [
+      // include amateur fields + sensorial tags
+      /* reuse amateur then add */
+    ],
+    producteur: [
+      // include influencer fields + pipelines & levels
+      /* reuse influencer then add */
+    ]
+  }
+};
+
+// Helper to get allowed fields for a productType/accountTier
+export function getAllowedFields(productType = 'flower', accountTier = 'amateur') {
+  const type = (productType || 'flower').toLowerCase();
+  const tierKey = (accountTier || 'amateur').toLowerCase();
+  const entry = ALLOWED_FIELDS_BY_TYPE_AND_TIER[type];
+  if (!entry) return null;
+
+  // Try exact tier, fallback to 'amateur'
+  return entry[tierKey] || entry['amateur'] || null;
+}

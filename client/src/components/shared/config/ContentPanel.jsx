@@ -6,7 +6,8 @@
 
 import { useMemo, useState } from 'react';
 import { useStore } from '../../../store/useStore';
-import { getExportSectionsByType } from '../../../utils/orchard/productTypeMappings';
+import { getExportSectionsByType, getAllowedFields } from '../../../utils/orchard/productTypeMappings';
+import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 import PropTypes from 'prop-types';
 
 // Types de champs disponibles pour le drag & drop (utilisé par dnd-kit ou react-dnd)
@@ -393,20 +394,27 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
     }, [placedFields]);
 
     // Compter les champs avec données
+    // Recompute totals only for allowed sections/fields
     const totalFieldsWithData = useMemo(() => {
         let count = 0;
-        Object.values(DRAGGABLE_FIELDS).forEach(fields => {
+        filteredSectionOrder.forEach(sectionKey => {
+            const fields = DRAGGABLE_FIELDS[sectionKey] || [];
             fields.forEach(f => {
-                if (hasData(f.id, reviewData)) count++;
+                if (allowedFieldsSet.has(f.id) && hasData(f.id, reviewData)) count++;
             });
         });
         return count;
-    }, [reviewData]);
+    }, [reviewData, filteredSectionOrder]);
 
-    // Compter tous les champs
+    // Compter tous les champs (seulement ceux autorisés pour ce type/compte)
     const totalFields = useMemo(() => {
-        return Object.values(DRAGGABLE_FIELDS).reduce((sum, fields) => sum + fields.length, 0);
-    }, []);
+        let sum = 0;
+        filteredSectionOrder.forEach(sectionKey => {
+            const fields = DRAGGABLE_FIELDS[sectionKey] || [];
+            sum += fields.filter(f => allowedFieldsSet.has(f.id)).length;
+        });
+        return sum;
+    }, [filteredSectionOrder]);
 
     const toggleSection = (key) => {
         setOpenSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -431,6 +439,7 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
     // Déterminer les sections autorisées selon le type de produit et le type de compte
     const accountType = useStore(state => state.accountType) || 'amateur';
     const productType = reviewData?.type || reviewData?.productType || 'flower';
+    const pages = useOrchardPagesStore(state => state.pages) || [];
 
     // Mapping simple entre les sections d'export (productTypeMappings) et nos sections UI
     const EXPORT_TO_UI_SECTION = {
@@ -466,6 +475,55 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
 
     // Filtrer l'ordre des sections pour ne garder que celles autorisées
     const filteredSectionOrder = sectionOrder.filter(k => allowedSectionsSet.has(k));
+
+    // Obtenir la liste des champs autorisés par type+compte
+    const allowedFields = getAllowedFields(productType, accountType) || [];
+
+    // Récupérer les modules des pages (si le mode pages est utilisé)
+    const modulesFromPages = Array.from(new Set(pages.flatMap(p => p.modules || [])));
+
+    // Table d'alias pour mapper les modules de page aux IDs de champs draggable
+    const MODULE_TO_FIELD_ALIASES = {
+        image: ['mainImage', 'imageUrl', 'images'],
+        title: ['title', 'holderName'],
+        rating: ['rating', 'overallRating', 'note'],
+        type: ['type', 'strainType'],
+        cultivar: ['cultivar', 'cultivarsList'],
+        breeder: ['breeder'],
+        farm: ['farm'],
+        hashmaker: ['hashmaker'],
+        pipelineSeparation: ['pipelineSeparation'],
+        pipelinePurification: ['pipelinePurification'],
+        pipelineExtraction: ['pipelineExtraction'],
+        categoryRatings: ['categoryRatings', 'categoryRatings.visual', 'categoryRatings.smell', 'categoryRatings.texture', 'categoryRatings.taste', 'categoryRatings.effects'],
+        aromas: ['aromas', 'aromasIntensity'],
+        tastes: ['tastes', 'tastesIntensity'],
+        effects: ['effects', 'effectsIntensity', 'montee', 'intensiteEffet', 'dureeEffet'],
+        description: ['description', 'conclusion'],
+        texture: ['durete', 'densiteTexture', 'friabilite', 'viscositeTexture'],
+        terpenes: ['terpenes'],
+        thcLevel: ['thcLevel'],
+        gouts: ['intensiteGout','goutIntensity']
+    };
+
+    // Construire l'ensemble des champs présents dans les pages
+    const pageFields = new Set();
+    modulesFromPages.forEach(m => {
+        if (MODULE_TO_FIELD_ALIASES[m]) {
+            MODULE_TO_FIELD_ALIASES[m].forEach(f => pageFields.add(f));
+        } else {
+            // Si le module correspond directement à un champ
+            pageFields.add(m);
+        }
+    });
+
+    // Si aucune page n'est définie, on autorise tous les champs définis pour le compte
+    const allowedFieldsSet = (() => {
+        const byAccount = new Set(allowedFields);
+        if (pageFields.size === 0) return byAccount;
+        // Intersection: seuls les champs qui sont à la fois autorisés et présents sur les pages
+        return new Set(allowedFields.filter(f => pageFields.has(f)));
+    })();
 
     return (
         <div className="h-full bg-gray-900/95 backdrop-blur-sm flex flex-col border-r /30">
@@ -507,21 +565,25 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
 
             {/* Sections scrollables */}
             <div className="flex-1 overflow-y-auto p-3 space-y-1">
-                {filteredSectionOrder.map(sectionKey => (
-                    DRAGGABLE_FIELDS[sectionKey] && (
+                {filteredSectionOrder.map(sectionKey => {
+                    const allFields = DRAGGABLE_FIELDS[sectionKey] || [];
+                    // Filter fields by allowedFieldsSet
+                    const fieldsToRender = allFields.filter(f => allowedFieldsSet.size === 0 ? true : allowedFieldsSet.has(f.id));
+                    if (fieldsToRender.length === 0) return null;
+                    return (
                         <FieldSection
                             key={sectionKey}
                             sectionKey={sectionKey}
                             title={SECTION_LABELS[sectionKey] || sectionKey}
-                            fields={DRAGGABLE_FIELDS[sectionKey]}
+                            fields={fieldsToRender}
                             placedFieldIds={placedFieldIds}
                             reviewData={reviewData}
                             isOpen={openSections[sectionKey]}
                             onToggle={() => toggleSection(sectionKey)}
                             showOnlyWithData={showOnlyWithData}
                         />
-                    )
-                ))}
+                    );
+                })}
             </div>
 
             {/* Footer avec actions */}
