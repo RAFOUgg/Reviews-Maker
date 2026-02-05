@@ -76,7 +76,7 @@ export default function EffectsSection({ productType, data: directData, onChange
     });
 
     return (
-        <LiquidCard glow="cyan" padding="lg" className="space-y-10">
+        <LiquidCard glow="cyan" padding="lg" className="space-y-12">
             <div className="flex items-center gap-3 pb-4">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
                     <Zap className="w-5 h-5 text-white" />
