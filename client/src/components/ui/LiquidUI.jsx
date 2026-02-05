@@ -606,6 +606,18 @@ export function LiquidRating({
                     animate={{ width: `${percentage}%` }}
                     transition={{ duration: 0.8, ease: [0.4, 0, 0.2, 1] }}
                 />
+
+                {/* Floating knob that follows the fill */}
+                <motion.div
+                    className="liquid-rating-knob"
+                    initial={{ left: '0%' }}
+                    animate={{ left: `${percentage}%` }}
+                    transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+                >
+                    <div className="liquid-rating-knob-inner">
+                        <span className="liquid-rating-knob-value">{Math.round(percentage)}</span>
+                    </div>
+                </motion.div>
             </div>
         </div>
     )
