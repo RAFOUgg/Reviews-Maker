@@ -23,6 +23,7 @@ import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
 import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
 import { accountService, paymentService } from '../../services/apiService'
+import ConfirmDialog from '../../components/shared/ConfirmDialog'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 
 const SUPPORTED_LANGUAGES = [
@@ -52,6 +53,7 @@ const AccountPage = () => {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [language, setLanguage] = useState(() => i18n.language || 'fr')
   const [isSaved, setIsSaved] = useState(false)
+  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('userPreferences')
@@ -255,34 +257,43 @@ const AccountPage = () => {
                       </button>
 
                       {accountType && accountType !== 'amateur' && (
-                        <button
-                          onClick={async () => {
-                            if (!window.confirm('Confirmer la résiliation de votre abonnement ?')) return
-                            try {
-                              // Prefer accountService changeType to ensure account roles update
-                              await accountService.changeType('amateur')
-                              // refresh auth/store
-                              if (typeof checkAuth === 'function') await checkAuth()
-                              alert('Abonnement résilié. Votre compte a été rétrogradé.')
-                              window.location.reload()
-                            } catch (err) {
-                              console.error('Cancel subscription error', err)
+                        <>
+                          <button
+                            onClick={() => setShowCancelDialog(true)}
+                            className="w-full text-sm font-medium text-red-400 bg-white/5 px-3 py-2 rounded-lg hover:bg-red-900/10"
+                          >
+                            ❌ Résilier l'abonnement
+                          </button>
+
+                          <ConfirmDialog
+                            isOpen={showCancelDialog}
+                            title="Confirmer la résiliation"
+                            description="Voulez-vous vraiment résilier votre abonnement ? Votre contenu restera visible mais vous perdrez l'accès à la création."
+                            onCancel={() => setShowCancelDialog(false)}
+                            onConfirm={async () => {
+                              setShowCancelDialog(false)
                               try {
-                                // fallback to payment cancel endpoint
-                                await paymentService.cancel()
+                                await accountService.changeType('amateur')
                                 if (typeof checkAuth === 'function') await checkAuth()
-                                alert('Abonnement résilié via le service de paiement.')
+                                alert('Abonnement résilié. Votre compte a été rétrogradé.')
                                 window.location.reload()
-                              } catch (err2) {
-                                console.error('Payment cancel fallback failed', err2)
-                                alert(err2?.message || 'Erreur lors de la résiliation')
+                              } catch (err) {
+                                console.error('Cancel subscription error', err)
+                                try {
+                                  await paymentService.cancel()
+                                  if (typeof checkAuth === 'function') await checkAuth()
+                                  alert('Abonnement résilié via le service de paiement.')
+                                  window.location.reload()
+                                } catch (err2) {
+                                  console.error('Payment cancel fallback failed', err2)
+                                  alert(err2?.message || 'Erreur lors de la résiliation')
+                                }
                               }
-                            }
-                          }}
-                          className="w-full text-sm font-medium text-red-400 bg-white/5 px-3 py-2 rounded-lg hover:bg-red-900/10"
-                        >
-                          ❌ Résilier l'abonnement
-                        </button>
+                            }}
+                            confirmText="Résilier"
+                            cancelText="Annuler"
+                          />
+                        </>
                       )}
 
                     </div>
