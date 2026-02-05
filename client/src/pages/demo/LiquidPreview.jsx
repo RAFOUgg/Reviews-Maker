@@ -467,7 +467,7 @@ export default function LiquidPreview() {
                                 <Star size={18} className="text-amber-400" />
                                 Évaluations
                             </h3>
-                                <div className="space-y-4">
+                            <div className="space-y-4">
                                 <LiquidSlider label="Visuel" value={visuelScore} onChange={setVisuelScore} min={0} max={10} step={1} color="purple" />
                                 <LiquidSlider label="Odeur" value={odeurScore} onChange={setOdeurScore} min={0} max={10} step={1} color="green" />
                                 <LiquidSlider label="Goût" value={goutScore} onChange={setGoutScore} min={0} max={10} step={1} color="amber" />
