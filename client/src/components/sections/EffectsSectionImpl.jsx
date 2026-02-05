@@ -300,46 +300,16 @@ export default function EffectsSection({ productType, data: directData, onChange
             </div>
 
             <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80">Effets secondaires (max 10)</label>
-                <div className="flex flex-wrap gap-2">
-                    {EXPERIENCE_VALUES.effetsSecondaires.map(e => (
-                        <LiquidChip
-                            key={e.value}
-                            active={effetsSecondaires.includes(e.value)}
-                            color="amber"
-                            onClick={() => toggleMultiSelect('effetsSecondaires', e.value)}
-                            size="sm"
-                        >
-                            {e.label}
-                        </LiquidChip>
-                    ))}
+                {/* Removed duplicate 'Effets secondaires' and 'Usages préférés' blocks
+                to avoid repetition — these are kept inside the 'Expérience d'utilisation' panel. */}
+
+                <LiquidDivider />
+
+                <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
+                    <p className="text-sm text-white/60">
+                        <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
+                    </p>
                 </div>
-            </div>
-
-            <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80">Usages préférés (max 10)</label>
-                <div className="flex flex-wrap gap-2">
-                    {EXPERIENCE_VALUES.usagesPreferes.map(u => (
-                        <LiquidChip
-                            key={u.value}
-                            active={usagesPreferes.includes(u.value)}
-                            color="purple"
-                            onClick={() => toggleMultiSelect('usagesPreferes', u.value)}
-                            size="sm"
-                        >
-                            {u.label}
-                        </LiquidChip>
-                    ))}
-                </div>
-            </div>
-
-            <LiquidDivider />
-
-            <div className="p-4 bg-cyan-500/10 border-l-4 border-cyan-500 rounded-r-xl">
-                <p className="text-sm text-white/60">
-                    <span className="font-semibold text-cyan-400">💡 Conseil:</span> Ces informations aident la communauté à mieux comprendre les effets et usages recommandés pour ce cultivar.
-                </p>
-            </div>
 
         </LiquidCard>
     );
