@@ -53,7 +53,7 @@ export const EDIBLE_CATEGORY_FIELDS = {
 // ============================================================================
 export function getCategoryFieldsByType(productType = 'flower') {
   const typeNormalized = productType?.toLowerCase() || 'flower';
-  
+
   switch (typeNormalized) {
     case 'hash':
     case 'hash, kief, ice-o-lator, dry-sift':
@@ -159,12 +159,12 @@ export const AVAILABLE_TEMPLATES_BY_TYPE = {
 export function getAvailableTemplatesByType(productType = 'flower', accountType = 'Amateur') {
   const typeNormalized = productType?.toLowerCase() || 'flower';
   const templates = AVAILABLE_TEMPLATES_BY_TYPE[typeNormalized] || AVAILABLE_TEMPLATES_BY_TYPE.flower;
-  
+
   // Filter based on account type (e.g., only Producteur can use advanced templates)
   if (accountType === 'Amateur') {
     return templates.filter(t => ['compact', 'detailed'].includes(t));
   }
-  
+
   return templates;
 }
 
@@ -178,21 +178,21 @@ export const ALLOWED_FIELDS_BY_TYPE_AND_TIER = {
   hash: {
     amateur: [
       // basic / profile
-      'holderName','title','mainImage','images','description','type',
+      'holderName', 'title', 'mainImage', 'images', 'description', 'type',
       // provenance
-      'breeder','farm','hashmaker','cultivarsList',
+      'breeder', 'farm', 'hashmaker', 'cultivarsList',
       // visual (hash-specific)
-      'couleur','pureteVisuelle','densite','viscosite','melting','residus','pistils',
+      'couleur', 'pureteVisuelle', 'densite', 'viscosite', 'melting', 'residus', 'pistils',
       // smell
-      'aromasIntensity','fideliteCultivars',
+      'aromasIntensity', 'fideliteCultivars',
       // texture
-      'durete','densiteTexture','friabilite','viscositeTexture',
+      'durete', 'densiteTexture', 'friabilite', 'viscositeTexture',
       // taste
-      'intensiteFumee','agressivite','cendre',
+      'intensiteFumee', 'agressivite', 'cendre',
       // effects
-      'montee','intensiteEffet','dureeEffet',
+      'montee', 'intensiteEffet', 'dureeEffet',
       // extras commonly useful
-      'terpenes','thcLevel'
+      'terpenes', 'thcLevel'
     ],
     influencer: [
       // include amateur fields + sensorial tags

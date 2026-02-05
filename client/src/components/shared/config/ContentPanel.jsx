@@ -503,7 +503,7 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
         texture: ['durete', 'densiteTexture', 'friabilite', 'viscositeTexture'],
         terpenes: ['terpenes'],
         thcLevel: ['thcLevel'],
-        gouts: ['intensiteGout','goutIntensity']
+        gouts: ['intensiteGout', 'goutIntensity']
     };
 
     // Construire l'ensemble des champs présents dans les pages
