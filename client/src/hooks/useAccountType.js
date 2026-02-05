@@ -13,7 +13,15 @@ export function useAccountType() {
   const { user } = useStore();
 
   const accountType = useMemo(() => {
-    return user?.accountType || user?.type || 'consumer';
+    const raw = user?.accountType || user?.type || 'consumer';
+    const normalized = String(raw).toLowerCase();
+
+    // Support French/English labels and variations (Amateur/Producteur/Influencer)
+    if (normalized === 'amateur' || normalized === 'consumer' || normalized === 'consommateur') return 'consumer';
+    if (normalized === 'producteur' || normalized === 'producer') return 'producer';
+    if (normalized === 'influenceur' || normalized === 'influencer' || normalized === 'influencer_pro') return 'influencer';
+
+    return 'consumer';
   }, [user]);
 
   const isProducer = accountType === 'producer';
@@ -65,8 +73,8 @@ export function useAccountType() {
       },
       templates: {
         compact: true,
-        detailed: true,
-        complete: true,
+        detailed: isPremium,   // Détail réservé aux comptes premium
+        complete: isPremium,   // Export complet réservé aux comptes premium
         influencer: isInfluencer || isProducer,
         custom: isProducer,
       },

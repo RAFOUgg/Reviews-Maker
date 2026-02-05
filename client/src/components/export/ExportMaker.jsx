@@ -12,6 +12,7 @@ import { FeatureGate } from '../account/FeatureGate';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
+import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from '../../data/exportTemplates';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -19,14 +20,15 @@ import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const { isPremium, isProducer, isConsumer, isInfluencer, permissions, canAccess } = useAccountType();
-    const canExportSVG = permissions.export.formats.svg === true;
-    const canExportAdvanced = permissions.export.quality.high === true;
-    const canUseCustomLayout = permissions.export.templates.custom === true || isInfluencer;
-    const canExportGIF = isProducer || isInfluencer; // pipeline GIF only for producer/influencer per PERMISSIONS
+    const canExportSVG = permissions.export?.formats?.svg === true;
+    const canExportAdvanced = permissions.export?.quality?.high === true;
+    const canUseCustomLayout = permissions.export?.templates?.custom === true;
+    const canExportGIF = permissions.export?.features?.dragDrop === true;
     const exportRef = useRef(null);
     const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
     const [selectedTemplate, setSelectedTemplate] = useState('compact');
     const [format, setFormat] = useState('1:1');
+    const [highQuality, setHighQuality] = useState(false);
     const [watermark, setWatermark] = useState({
         visible: false,
         type: 'text',
@@ -40,20 +42,32 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const [exportingGIF, setExportingGIF] = useState(false);
     const [gifProgress, setGifProgress] = useState(0);
 
-    // Force Terpologie watermark for amateur (consumer) accounts
+    // Force Terpologie watermark when watermark customization is not available
     useEffect(() => {
-        if (isConsumer) {
+        if (!permissions.export?.features?.watermark) {
             setWatermark(w => ({ ...w, visible: true }));
         }
-    }, [isConsumer]);
+    }, [permissions]);
 
-    // Templates prédéfinis
-    const templates = [
-        { id: 'compact', name: 'Compact', icon: Grid, description: 'Idéal réseaux sociaux' },
-        { id: 'detailed', name: 'Détaillé', icon: Layout, description: 'Vue d\'ensemble complète' },
-        { id: 'story', name: 'Story', icon: Maximize2, description: 'Format vertical 9:16' },
-        { id: 'influencer', name: 'Influenceur', icon: Star, description: 'Style premium', premium: true },
-    ];
+    // Templates prédéfinis — utiliser les templates par type de produit si présents
+    const productKey = productType || 'Fleurs';
+    const predefined = PREDEFINED_TEMPLATES[productKey] || PREDEFINED_TEMPLATES['Fleurs'];
+
+    const templates = Object.keys(predefined).map((key) => {
+        const meta = predefined[key];
+        // Map key -> display name and basic icon choice
+        const name = key === 'minimal' ? 'Compact' : key === 'standard' ? 'Standard' : key === 'detailed' ? 'Détaillé' : key === 'custom' ? 'Personnalisé' : key;
+        const icon = key === 'detailed' ? Layout : key === 'minimal' ? Grid : Maximize2;
+        const accountName = (typeof accountInfo !== 'undefined' && accountInfo?.name) ? accountInfo.name : 'Amateur';
+        const available = isTemplateAvailable(key, accountName);
+        return {
+            id: key,
+            name,
+            icon,
+            description: meta?.description || `${name} template`,
+            premium: !available
+        };
+    });
 
     const Star = ({ className }) => (
         <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -67,7 +81,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
         try {
             const canvas = await html2canvas(exportRef.current, {
-                scale: 2,
+                scale: highQuality ? 3 : 2,
                 useCORS: true,
                 backgroundColor: null,
             });
@@ -149,16 +163,16 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         <button
                             onClick={() => canUseCustomLayout && setMode('custom')}
                             disabled={!canUseCustomLayout}
-                            title={!canUseCustomLayout ? 'Réservé aux comptes Producteur / Influenceur' : ''}
+                            title={!canUseCustomLayout ? 'Réservé aux comptes Producteur' : ''}
                             className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? ' text-white' : 'text-gray-400 hover:text-white'} ${!canUseCustomLayout ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            Custom
+                            Personnalisé
                         </button>
                         <button
-                            onClick={() => (isConsumer ? null : setMode('watermark'))}
-                            disabled={isConsumer}
-                            title={isConsumer ? 'La personnalisation du filigrane est réservée aux comptes payants' : ''}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'watermark' ? ' text-white' : 'text-gray-400 hover:text-white'} ${isConsumer ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => (permissions.export?.features?.watermark ? setMode('watermark') : null)}
+                            disabled={!permissions.export?.features?.watermark}
+                            title={!permissions.export?.features?.watermark ? 'La personnalisation du filigrane est réservée aux comptes payants' : ''}
+                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'watermark' ? ' text-white' : 'text-gray-400 hover:text-white'} ${!permissions.export?.features?.watermark ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
                             Filigrane
                         </button>
@@ -169,7 +183,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             <div className="space-y-2">
                                 <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Choisir un style</h3>
                                 {templates.map(t => {
-                                    const locked = t.premium && !canUseCustomLayout;
+                                    const locked = !!t.premium;
                                     return (
                                         <button
                                             key={t.id}
@@ -205,14 +219,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         )}
 
                         {mode === 'watermark' && (
-                            !isConsumer ? (
+                            permissions.export?.features?.watermark ? (
                                 <WatermarkEditor
                                     watermark={watermark}
                                     onWatermarkChange={setWatermark}
                                 />
                             ) : (
                                 <div className="p-4 bg-white/5 rounded">
-                                    <div className="text-sm text-gray-300">La personnalisation avancée des filigranes est réservée aux comptes Producteur / Influenceur.</div>
+                                    <div className="text-sm text-gray-300">La personnalisation avancée des filigranes est réservée aux comptes payants.</div>
                                     <div className="text-xs text-gray-500 mt-2">Votre export inclura automatiquement le filigrane Terpologie.</div>
                                 </div>
                             )
@@ -245,12 +259,24 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </FeatureGate>
                             )}
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 items-center">
                             <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
                                 <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
                             </FeatureGate>
 
                             <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
+
+                            {/* Haute qualité (visible si la permission existe) */}
+                            {permissions.export?.quality && (
+                                <button
+                                    onClick={() => setHighQuality(h => !h)}
+                                    disabled={!canExportAdvanced}
+                                    title={!canExportAdvanced ? 'Haute qualité réservé aux comptes payants' : 'Activer la haute qualité (300dpi)'}
+                                    className={`ml-2 px-3 py-2 text-xs rounded-lg ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10') : 'opacity-50 cursor-not-allowed bg-white/5 text-gray-500'}`}
+                                >
+                                    Haute qualité
+                                </button>
+                            )}
                         </div>
 
                         <button
@@ -398,7 +424,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         )}
 
                         {/* Filigrane Terpologie forcé pour comptes Amateur */}
-                        {isConsumer && (
+                        {(!permissions.export?.features?.watermark) && (
                             <div
                                 className="absolute pointer-events-none z-[60]"
                                 style={{
