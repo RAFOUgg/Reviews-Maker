@@ -5,6 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 import { getCategoryFieldsByType, getExportSectionsByType } from '../../../utils/orchard/productTypeMappings';
+import { getModulesByProductType } from '../../../utils/orchard/moduleMappings';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION COMPLÈTE DES MODULES PAR CATÉGORIE
@@ -503,35 +504,8 @@ export default function ContentModuleControls() {
 
     // Determine relevant modules based on current product type (from reviewData)
     const productType = (reviewData && reviewData.type) ? reviewData.type : 'flower';
-    const categoryFieldsMap = getCategoryFieldsByType(productType);
-    const exportSections = getExportSectionsByType(productType);
-
-    // Map export sections (profile/genetics/visual/etc.) to module keys
-    const sectionToModules = {
-        profile: ['holderName', 'title', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category', 'author', 'date'],
-        genetics: ['cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker'],
-        culture: [...(categoryFieldsMap.visual || []), ...(categoryFieldsMap.smell || []), ...(categoryFieldsMap.texture || [])],
-        visual: categoryFieldsMap.visual || [],
-        smell: categoryFieldsMap.smell || [],
-        texture: categoryFieldsMap.texture || [],
-        taste: categoryFieldsMap.taste || [],
-        effects: categoryFieldsMap.effects || [],
-        curing: ['curing', 'drying', 'processing', 'yield', 'floweringTime', 'harvestDate'],
-        extraction: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification'],
-        recipe: ['tastes', 'tastesIntensity']
-    };
-
-    // Build set of relevant modules
-    const relevantModulesSet = useMemo(() => {
-        const set = new Set();
-        exportSections.forEach(sec => {
-            const mods = sectionToModules[sec] || [];
-            mods.forEach(m => set.add(m));
-        });
-        // Always include a few basics
-        ['tags', 'extraData', 'thcLevel', 'cbdLevel', 'terpenes', 'effects'].forEach(m => set.add(m));
-        return set;
-    }, [exportSections, productType]);
+    const relevantModules = useMemo(() => getModulesByProductType(productType), [productType]);
+    const relevantModulesSet = useMemo(() => new Set(relevantModules), [relevantModules]);
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
