@@ -45,15 +45,16 @@ import {
     LiquidSelect,
     LiquidChip,
     LiquidToggle,
-    LiquidRating,
     LiquidDivider,
     LiquidModal,
     LiquidTooltip,
     LiquidBadge,
     LiquidTabs,
     LiquidSkeleton,
-    LiquidAvatar
+    LiquidAvatar,
+    LiquidRating
 } from '../../components/ui/LiquidUI'
+import LiquidSlider from '../../components/ui/LiquidSlider'
 
 // ============================================
 // MAIN PREVIEW PAGE
@@ -77,6 +78,18 @@ export default function LiquidPreview() {
     // Selection state
     const [selectedAromas, setSelectedAromas] = useState(['Agrumes', 'Pin'])
     const [selectedEffects, setSelectedEffects] = useState(['Relaxant'])
+    // Demo interactive values for preview sliders
+    const [noteVisuelle, setNoteVisuelle] = useState(8)
+    const [densiteScore, setDensiteScore] = useState(7)
+    const [progression, setProgression] = useState(67)
+    const [visuelScore, setVisuelScore] = useState(8)
+    const [odeurScore, setOdeurScore] = useState(9)
+    const [goutScore, setGoutScore] = useState(7)
+    const [effetScore, setEffetScore] = useState(8)
+    const [showPurple, setShowPurple] = useState(9)
+    const [showGreen, setShowGreen] = useState(7)
+    const [showCyan, setShowCyan] = useState(8)
+    const [showAmber, setShowAmber] = useState(6)
 
     const productOptions = [
         { value: 'flower', label: '🌿 Fleur', icon: '🌿' },
@@ -290,8 +303,8 @@ export default function LiquidPreview() {
 
                                 {/* Ratings */}
                                 <div className="grid grid-cols-2 gap-6">
-                                    <LiquidRating value={8} max={10} label="Note Visuelle" color="purple" />
-                                    <LiquidRating value={7} max={10} label="Densité" color="cyan" />
+                                    <LiquidSlider label="Note Visuelle" value={noteVisuelle} onChange={setNoteVisuelle} min={0} max={10} step={1} color="purple" />
+                                    <LiquidSlider label="Densité" value={densiteScore} onChange={setDensiteScore} min={0} max={10} step={1} color="cyan" />
                                 </div>
 
                                 {/* Actions */}
@@ -381,7 +394,7 @@ export default function LiquidPreview() {
                                         <p className="text-xs liquid-text-muted">Traçabilité</p>
                                     </div>
                                 </div>
-                                <LiquidRating value={67} max={90} label="Progression" color="cyan" />
+                                <LiquidSlider label="Progression" value={progression} onChange={setProgression} min={0} max={90} step={1} color="cyan" />
                                 <p className="text-xs liquid-text-muted mt-3">Jour 67 / 90 de curing</p>
                             </LiquidCard>
                         </div>
@@ -454,11 +467,11 @@ export default function LiquidPreview() {
                                 <Star size={18} className="text-amber-400" />
                                 Évaluations
                             </h3>
-                            <div className="space-y-4">
-                                <LiquidRating value={8} max={10} label="Visuel" color="purple" />
-                                <LiquidRating value={9} max={10} label="Odeur" color="green" />
-                                <LiquidRating value={7} max={10} label="Goût" color="amber" />
-                                <LiquidRating value={8} max={10} label="Effet" color="cyan" />
+                                <div className="space-y-4">
+                                <LiquidSlider label="Visuel" value={visuelScore} onChange={setVisuelScore} min={0} max={10} step={1} color="purple" />
+                                <LiquidSlider label="Odeur" value={odeurScore} onChange={setOdeurScore} min={0} max={10} step={1} color="green" />
+                                <LiquidSlider label="Goût" value={goutScore} onChange={setGoutScore} min={0} max={10} step={1} color="amber" />
+                                <LiquidSlider label="Effet" value={effetScore} onChange={setEffetScore} min={0} max={10} step={1} color="cyan" />
                             </div>
                         </LiquidCard>
 
@@ -587,10 +600,10 @@ export default function LiquidPreview() {
                         <LiquidCard glow="none" padding="md" className="col-span-12 md:col-span-6">
                             <h4 className="text-white font-semibold mb-4">Ratings & Progress</h4>
                             <div className="space-y-4">
-                                <LiquidRating value={9} max={10} label="Purple" color="purple" />
-                                <LiquidRating value={7} max={10} label="Green" color="green" />
-                                <LiquidRating value={8} max={10} label="Cyan" color="cyan" />
-                                <LiquidRating value={6} max={10} label="Amber" color="amber" />
+                                <LiquidSlider label="Purple" value={showPurple} onChange={setShowPurple} min={0} max={10} step={1} color="purple" />
+                                <LiquidSlider label="Green" value={showGreen} onChange={setShowGreen} min={0} max={10} step={1} color="green" />
+                                <LiquidSlider label="Cyan" value={showCyan} onChange={setShowCyan} min={0} max={10} step={1} color="cyan" />
+                                <LiquidSlider label="Amber" value={showAmber} onChange={setShowAmber} min={0} max={10} step={1} color="amber" />
                             </div>
                         </LiquidCard>
 
