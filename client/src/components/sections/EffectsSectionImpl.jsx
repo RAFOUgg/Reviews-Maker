@@ -199,53 +199,6 @@ export default function EffectsSection({ productType, data: directData, onChange
                 </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidSlider
-                        label="Montée (rapidité)"
-                        value={onset}
-                        min={1}
-                        max={10}
-                        step={1}
-                        color="cyan"
-                        onChange={(val) => setOnset(val)}
-                    />
-                    <p className="text-xs text-white/40 mt-2">{ONSET_LEVELS[onset - 1]?.label}</p>
-                </div>
-
-                <div className="p-6 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                    <LiquidSlider
-                        label="Intensité"
-                        value={intensity}
-                        min={1}
-                        max={10}
-                        step={1}
-                        color="cyan"
-                        onChange={(val) => setIntensity(val)}
-                    />
-                    <p className="text-xs text-white/40 mt-2">{INTENSITY_LEVELS[intensity - 1]?.label}</p>
-                </div>
-            </div>
-
-            <div className="space-y-3">
-                <label className="text-sm font-medium text-white/80 flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-cyan-400" />
-                    Durée des effets
-                </label>
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                    {DURATION_OPTIONS.map(option => (
-                        <LiquidChip
-                            key={option.id}
-                            active={duration === option.id}
-                            color="cyan"
-                            onClick={() => setDuration(option.id)}
-                        >
-                            {option.label}
-                        </LiquidChip>
-                    ))}
-                </div>
-            </div>
-
             <EffectsWheelPicker
                 selectedEffects={selectedEffects}
                 onChange={setSelectedEffects}
