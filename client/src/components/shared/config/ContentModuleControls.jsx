@@ -40,7 +40,6 @@ const CATEGORY_COLORS = {
 // keep it for compatibility but prefer sections defined in
 // `moduleMappings.js`. Build computed categories at runtime
 // so new review types / sections are reflected automatically.
-import { getModuleSectionsByProductType } from '../../../utils/orchard/moduleMappings';
 
 /**
  * Build categories from the canonical module sections for a given product type.
