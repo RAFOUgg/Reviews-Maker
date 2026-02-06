@@ -31,6 +31,8 @@ export function useFlowerForm(reviewId = null) {
     }
 
     const handleChange = (field, value) => {
+        // Debug: trace every change routed to the centralized form state
+        try { console.debug('[useFlowerForm] handleChange', { field, value }) } catch (e) { }
         setFormData(prev => ({ ...prev, [field]: value }))
     }
 

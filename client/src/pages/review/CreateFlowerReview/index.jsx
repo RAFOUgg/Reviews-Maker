@@ -111,6 +111,13 @@ export default function CreateFlowerReview() {
         }
     }, [isAuthenticated])
 
+    // Debug: log form state whenever the current section changes to help reproduce lost values
+    useEffect(() => {
+        try {
+            console.debug('[CreateFlowerReview] sectionChange', { currentSection, sectionId: currentSectionData?.id, formData })
+        } catch (e) { }
+    }, [currentSection, formData])
+
     const handleSave = async () => {
         try {
             setSaving(true)
@@ -198,12 +205,14 @@ export default function CreateFlowerReview() {
 
     const handlePrevious = () => {
         if (currentSection > 0) {
+            try { console.debug('[CreateFlowerReview] handlePrevious - before', { currentSection, formData }) } catch (e) { }
             setCurrentSection(currentSection - 1)
         }
     }
 
     const handleNext = () => {
         if (currentSection < sections.length - 1) {
+            try { console.debug('[CreateFlowerReview] handleNext - before', { currentSection, formData }) } catch (e) { }
             setCurrentSection(currentSection + 1)
         }
     }
