@@ -5,7 +5,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 import { getCategoryFieldsByType, getExportSectionsByType } from '../../../utils/orchard/productTypeMappings';
-import { getModulesByProductType } from '../../../utils/orchard/moduleMappings';
+import { getModulesByProductType, getModuleSectionsByProductType } from '../../../utils/orchard/moduleMappings';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CONFIGURATION COMPLÈTE DES MODULES PAR CATÉGORIE
@@ -507,20 +507,38 @@ export default function ContentModuleControls() {
     // Build a Set of modules allowed for this product type for fast lookups
     const relevantModulesSet = useMemo(() => new Set(getModulesByProductType(productType)), [productType]);
 
-    // Compute category list filtered by available modules for this product type.
-    // This makes the UI category groups (Essentiels, Identité, Provenance, ...) adapt
-    // automatically when sections/modules are added or changed in moduleMappings.
+    // Build categories from moduleMappings sections for this product type first.
+    // This ensures any section added/edited in `moduleMappings.js` is reflected
+    // directly in the Export UI. We then merge remaining UI categories to show
+    // any modules not covered by explicit sections.
     const computedCategories = useMemo(() => {
-        return Object.entries(MODULE_CATEGORIES)
+        const sections = getModuleSectionsByProductType(productType) || [];
+
+        // Convert sections into category-like objects
+        const sectionCategories = sections.map(sec => ({
+            key: `sec_${sec.id}`,
+            name: sec.label || sec.name || sec.id,
+            description: sec.access || '',
+            color: 'gray',
+            modules: (sec.fields || []).filter(f => relevantModulesSet.has(f))
+        })).filter(c => c.modules && c.modules.length > 0);
+
+        // Track modules already included from sections
+        const included = new Set(sectionCategories.flatMap(c => c.modules));
+
+        // Fallback: use legacy MODULE_CATEGORIES for any remaining modules
+        const legacyCats = Object.entries(MODULE_CATEGORIES)
             .map(([catKey, category]) => ({
                 key: catKey,
                 name: category.name,
                 description: category.description,
                 color: category.color,
-                modules: (category.modules || []).filter(m => relevantModulesSet.has(m))
+                modules: (category.modules || []).filter(m => relevantModulesSet.has(m) && !included.has(m))
             }))
             .filter(cat => Array.isArray(cat.modules) && cat.modules.length > 0);
-    }, [relevantModulesSet]);
+
+        return [...sectionCategories, ...legacyCats];
+    }, [productType, relevantModulesSet]);
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
