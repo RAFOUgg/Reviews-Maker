@@ -39,6 +39,56 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     console.warn('Orchard: merging nested sections failed', e);
   }
 
+  // --- Map common French form keys to Orchard expected keys ---
+  try {
+    // Photos from the form use `photos` (with {file, preview}) — map to `images` and `mainImage` for preview
+    if (Array.isArray(normalized.photos) && (!normalized.images || normalized.images.length === 0)) {
+      // Convert objects with preview to simple URL strings for the preview
+      normalized.images = normalized.photos.map(p => (p && typeof p === 'object') ? (p.preview || p.url || p.src || p.path || p.file?.name || p) : p);
+      if (!normalized.mainImage && normalized.images.length > 0) normalized.mainImage = normalized.images[0];
+      if (!normalized.mainImageUrl && normalized.images.length > 0) normalized.mainImageUrl = normalized.images[0];
+    }
+
+    // nomCommercial used in forms -> map to title/holderName/productName
+    if (!normalized.title && normalized.nomCommercial) {
+      normalized.title = normalized.nomCommercial;
+    }
+    if (!normalized.holderName && normalized.nomCommercial) {
+      normalized.holderName = normalized.nomCommercial;
+    }
+
+    // Odeurs (odeurs.*) -> aromas / aroma-related scores
+    if (normalized.odeurs && typeof normalized.odeurs === 'object') {
+      const o = normalized.odeurs;
+      if (Array.isArray(o.dominantNotes) && (!normalized.aromas || normalized.aromas.length === 0)) normalized.aromas = o.dominantNotes;
+      if (Array.isArray(o.secondaryNotes) && (!normalized.tastes || normalized.tastes.length === 0)) normalized.tastes = normalized.tastes || []; // keep tastes untouched
+      if (o.intensity !== undefined && normalized.aromasIntensity === undefined) normalized.aromasIntensity = o.intensity;
+      if (o.complexity !== undefined && normalized.complexiteAromas === undefined) normalized.complexiteAromas = o.complexity;
+      if (o.fidelity !== undefined && normalized.fideliteCultivars === undefined) normalized.fideliteCultivars = o.fidelity;
+    }
+
+    // Goûts (gouts) -> taste fields
+    if (normalized.gouts && typeof normalized.gouts === 'object') {
+      const g = normalized.gouts;
+      if (g.intensity !== undefined && normalized.intensiteFumee === undefined) normalized.intensiteFumee = g.intensity;
+      if (g.aggressiveness !== undefined && normalized.agressivite === undefined) normalized.agressivite = g.aggressiveness;
+      if (Array.isArray(g.dryPuffNotes) && (!normalized.tastes || normalized.tastes.length === 0)) normalized.tastes = g.dryPuffNotes;
+      if (Array.isArray(g.inhalationNotes) && normalized.tastes && normalized.tastes.length === 0) normalized.tastes = g.inhalationNotes;
+    }
+
+    // Effets -> map to effects keys
+    if (normalized.effets && typeof normalized.effets === 'object') {
+      const ef = normalized.effets;
+      if (ef.onset !== undefined && normalized.montee === undefined) normalized.montee = ef.onset;
+      if (ef.intensity !== undefined && normalized.intensiteEffet === undefined) normalized.intensiteEffet = ef.intensity;
+      if (ef.duration !== undefined && normalized.dureeEffet === undefined) normalized.dureeEffet = ef.duration;
+      if (Array.isArray(ef.effects) && (!normalized.effects || normalized.effects.length === 0)) normalized.effects = ef.effects;
+    }
+  } catch (e) {
+    // non-fatal mapping errors
+    console.warn('Orchard: french-key mappings failed', e);
+  }
+
   // Parse extraData if it's a JSON string
   let parsedExtra = {};
   try {
