@@ -504,8 +504,23 @@ export default function ContentModuleControls() {
 
     // Determine relevant modules based on current product type (from reviewData)
     const productType = (reviewData && reviewData.type) ? reviewData.type : 'flower';
-    const relevantModules = useMemo(() => getModulesByProductType(productType), [productType]);
-    const relevantModulesSet = useMemo(() => new Set(relevantModules), [relevantModules]);
+    // Build a Set of modules allowed for this product type for fast lookups
+    const relevantModulesSet = useMemo(() => new Set(getModulesByProductType(productType)), [productType]);
+
+    // Compute category list filtered by available modules for this product type.
+    // This makes the UI category groups (Essentiels, Identité, Provenance, ...) adapt
+    // automatically when sections/modules are added or changed in moduleMappings.
+    const computedCategories = useMemo(() => {
+        return Object.entries(MODULE_CATEGORIES)
+            .map(([catKey, category]) => ({
+                key: catKey,
+                name: category.name,
+                description: category.description,
+                color: category.color,
+                modules: (category.modules || []).filter(m => relevantModulesSet.has(m))
+            }))
+            .filter(cat => Array.isArray(cat.modules) && cat.modules.length > 0);
+    }, [relevantModulesSet]);
 
     const handleDragEnd = (event) => {
         const { active, over } = event;
@@ -655,20 +670,18 @@ export default function ContentModuleControls() {
             {/* Vue par catégories */}
             {viewMode === 'categories' && !searchQuery && (
                 <div className="space-y-3">
-                    {Object.entries(MODULE_CATEGORIES).map(([catKey, category]) => {
-                        const allowed = category.modules.filter(m => relevantModulesSet.has(m));
-                        if (!allowed || allowed.length === 0) return null;
-                        const catCopy = { ...category, modules: allowed };
+                    {computedCategories.map((category) => {
+                        const catCopy = { ...category };
                         return (
                             <CategorySection
-                                key={catKey}
+                                key={category.key}
                                 category={catCopy}
-                                categoryKey={catKey}
+                                categoryKey={category.key}
                                 modules={MODULE_LABELS}
                                 contentModules={config.contentModules}
                                 onToggle={toggleContentModule}
-                                expanded={expandedCategories[catKey] || false}
-                                onExpandToggle={() => toggleCategory(catKey)}
+                                expanded={expandedCategories[category.key] || false}
+                                onExpandToggle={() => toggleCategory(category.key)}
                             />
                         );
                     })}
