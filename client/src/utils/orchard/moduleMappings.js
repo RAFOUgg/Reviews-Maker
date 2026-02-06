@@ -115,3 +115,54 @@ export default {
     getModulesByProductType,
     getModuleSectionsByProductType
 };
+
+// Sections mapping (for DragDrop & UI)
+const SECTIONS_BY_TYPE = {
+    flower: [
+        { id: 'general', name: 'Informations générales', modules: ['holderName','title','image','images','mainImage','imageUrl','description','type','category','author','date'] },
+        { id: 'genetics', name: 'Génétiques', modules: ['cultivar','cultivarsList','breeder','farm'] },
+        { id: 'culture', name: 'Pipeline Culture', modules: ['fertilizationPipeline','substratMix','yield','floweringTime','harvestDate'] },
+        { id: 'analytics', name: 'Analytiques', modules: ['thcLevel','cbdLevel','labResults'] },
+        { id: 'visual', name: 'Visuel & Technique', modules: FLOWER_CATEGORY_FIELDS.visual },
+        { id: 'odors', name: 'Odeurs', modules: FLOWER_CATEGORY_FIELDS.smell },
+        { id: 'texture', name: 'Texture', modules: FLOWER_CATEGORY_FIELDS.texture },
+        { id: 'tastes', name: 'Goûts', modules: FLOWER_CATEGORY_FIELDS.taste },
+        { id: 'effects', name: 'Effets', modules: FLOWER_CATEGORY_FIELDS.effects },
+        { id: 'curing', name: 'Curing & Maturation', modules: ['curing','drying','processing','purgevide'] }
+    ],
+    hash: [
+        { id: 'general', name: 'Informations générales', modules: ['holderName','title','image','images','description','type'] },
+        { id: 'separation', name: 'Pipeline Séparation', modules: ['pipelineSeparation'] },
+        { id: 'purification', name: 'Purification', modules: ['pipelinePurification'] },
+        { id: 'visual', name: 'Visuel & Technique', modules: HASH_CATEGORY_FIELDS.visual },
+        { id: 'odors', name: 'Odeurs', modules: HASH_CATEGORY_FIELDS.smell },
+        { id: 'texture', name: 'Texture', modules: HASH_CATEGORY_FIELDS.texture },
+        { id: 'tastes', name: 'Goûts', modules: HASH_CATEGORY_FIELDS.taste },
+        { id: 'effects', name: 'Effets', modules: HASH_CATEGORY_FIELDS.effects },
+        { id: 'curing', name: 'Curing', modules: ['curing'] }
+    ],
+    concentrate: [
+        { id: 'general', name: 'Informations générales', modules: ['holderName','title','image','images','description','type'] },
+        { id: 'extraction', name: 'Pipeline Extraction', modules: ['pipelineExtraction'] },
+        { id: 'purification', name: 'Purification', modules: ['pipelinePurification'] },
+        { id: 'visual', name: 'Visuel & Technique', modules: CONCENTRATE_CATEGORY_FIELDS.visual },
+        { id: 'odors', name: 'Odeurs', modules: CONCENTRATE_CATEGORY_FIELDS.smell },
+        { id: 'texture', name: 'Texture', modules: CONCENTRATE_CATEGORY_FIELDS.texture },
+        { id: 'tastes', name: 'Goûts', modules: CONCENTRATE_CATEGORY_FIELDS.taste },
+        { id: 'effects', name: 'Effets', modules: CONCENTRATE_CATEGORY_FIELDS.effects }
+    ],
+    edible: [
+        { id: 'general', name: 'Informations générales', modules: ['holderName','title','image','images','description','type'] },
+        { id: 'recipe', name: 'Recette', modules: ['tastes','tastesIntensity'] },
+        { id: 'tastes', name: 'Goûts', modules: EDIBLE_CATEGORY_FIELDS.taste },
+        { id: 'effects', name: 'Effets', modules: EDIBLE_CATEGORY_FIELDS.effects }
+    ]
+};
+
+export function getSectionsByProductType(productType = 'flower'){
+    const t = (productType||'').toLowerCase();
+    if (t.includes('hash')) return SECTIONS_BY_TYPE.hash;
+    if (t.includes('concentrat') || t.includes('concentré') || t.includes('concentrate')) return SECTIONS_BY_TYPE.concentrate;
+    if (t.includes('edible') || t.includes('comestible')) return SECTIONS_BY_TYPE.edible;
+    return SECTIONS_BY_TYPE.flower;
+}
