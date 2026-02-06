@@ -277,20 +277,43 @@ export default function ContentModuleControls() {
         return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     };
 
+    // Determine relevant modules based on current product type (from reviewData)
+    const productType = (reviewData && (reviewData.type || reviewData.productType || reviewData.typeProduit)) ? (reviewData.type || reviewData.productType || reviewData.typeProduit) : 'flower';
+
+    // Build a Set of modules allowed for this product type for fast lookups
+    const relevantModulesSet = useMemo(() => new Set(getModulesByProductType(productType)), [productType]);
+
     // Build dynamic module metadata from canonical mappings when possible
     const moduleMeta = useMemo(() => {
         const meta = {};
-        Array.from(relevantModulesSet).forEach(id => {
-            // try to pick label data from getModuleSectionsByProductType via sections
-            // but fallback to a humanized name/icon
-            meta[id] = {
-                name: humanize(id),
-                icon: '📦',
-                desc: ''
-            };
-        });
+
+        // Try to enrich metadata using canonical sections (labels/icons)
+        try {
+            const sections = getModuleSectionsByProductType(productType) || [];
+            // Build a quick map field -> section label
+            const fieldMap = {};
+            sections.forEach(sec => {
+                const fields = sec.fields || sec.modules || [];
+                fields.forEach(f => {
+                    fieldMap[f] = fieldMap[f] || { section: sec.label || sec.name || sec.id, sectionDesc: sec.access || '' };
+                });
+            });
+
+            Array.from(relevantModulesSet).forEach(id => {
+                meta[id] = {
+                    name: humanize(id),
+                    icon: '📦',
+                    desc: fieldMap[id] ? `${fieldMap[id].section}` : ''
+                };
+            });
+        } catch (e) {
+            Array.from(relevantModulesSet).forEach(id => {
+                meta[id] = { name: humanize(id), icon: '📦', desc: '' };
+            });
+        }
+
         return meta;
-    }, [relevantModulesSet]);
+    }, [productType, relevantModulesSet]);
 
     // Filtrer les modules par recherche
     const filteredModules = useMemo(() => {
@@ -306,11 +329,6 @@ export default function ContentModuleControls() {
             );
         });
     }, [config.moduleOrder, searchQuery, moduleMeta]);
-
-    // Determine relevant modules based on current product type (from reviewData)
-    const productType = (reviewData && reviewData.type) ? reviewData.type : 'flower';
-    // Build a Set of modules allowed for this product type for fast lookups
-    const relevantModulesSet = useMemo(() => new Set(getModulesByProductType(productType)), [productType]);
 
     // Build categories from moduleMappings sections for this product type first.
     // This ensures any section added/edited in `moduleMappings.js` is reflected

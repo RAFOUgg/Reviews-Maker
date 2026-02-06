@@ -16,6 +16,29 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
 
   let normalized = { ...reviewData };
 
+  // --- Merge known nested section objects from forms into top-level fields ---
+  // Many review forms use nested sections like `gouts`, `odeurs`, `texture`,
+  // `effets`, `analytics`, `culture`, `recipe`, etc. Merge those keys into
+  // the top-level normalized object so downstream templates and the Orchard
+  // UI read the actual form values instead of empty flattened fields.
+  try {
+    const sectionKeys = ['gouts', 'odeurs', 'texture', 'effets', 'visual', 'visuel', 'analytics', 'culture', 'genetique', 'genetics', 'recipe', 'curing', 'pipeline', 'pipelineCuring'];
+    sectionKeys.forEach(sk => {
+      const section = reviewData[sk] || reviewData[sk === 'visuel' ? 'visual' : sk];
+      if (section && typeof section === 'object' && !Array.isArray(section)) {
+        Object.keys(section).forEach(k => {
+          // If top-level doesn't have the specific field, copy it.
+          if (normalized[k] === undefined || normalized[k] === null || normalized[k] === '') {
+            normalized[k] = section[k];
+          }
+        });
+      }
+    });
+  } catch (e) {
+    // non-fatal, we'll continue with existing normalization
+    console.warn('Orchard: merging nested sections failed', e);
+  }
+
   // Parse extraData if it's a JSON string
   let parsedExtra = {};
   try {
