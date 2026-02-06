@@ -62,6 +62,7 @@ const DragDropExport = ({
   onSectionsChange,
   format = '1:1',
   className = '',
+  allowedModules = null
 }) => {
   const { canAccess, isProducer, isPremium } = useAccountType();
   const [draggedItem, setDraggedItem] = useState(null);
@@ -69,7 +70,34 @@ const DragDropExport = ({
   const [expandedSection, setExpandedSection] = useState(null);
 
   const availableSections = useMemo(() => {
-    return AVAILABLE_SECTIONS[productType] || AVAILABLE_SECTIONS.flower;
+    let secs = AVAILABLE_SECTIONS[productType] || AVAILABLE_SECTIONS.flower;
+
+    // If allowedModules provided, filter sections by whether they map to any allowed module
+    if (Array.isArray(allowedModules) && allowedModules.length > 0) {
+      const SECTION_MODULE_MAP = {
+        general: ['holderName', 'title', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category'],
+        genetics: ['cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker'],
+        culture: ['fertilizationPipeline', 'substratMix', 'yield', 'floweringTime', 'harvestDate'],
+        analytics: ['thcLevel', 'cbdLevel', 'labResults'],
+        visual: ['densite', 'trichome', 'pistil', 'manucure', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
+        odors: ['aromas', 'aromasIntensity', 'intensiteAromatique', 'fideliteCultivars'],
+        texture: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabiliteViscosite'],
+        tastes: ['tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite', 'cendre'],
+        effects: ['effects', 'effectsIntensity', 'montee', 'intensiteEffet', 'dureeEffet'],
+        curing: ['curing', 'drying', 'processing', 'purgevide'],
+        separation: ['pipelineSeparation'],
+        purification: ['pipelinePurification'],
+        extraction: ['pipelineExtraction'],
+        recipe: ['tastes', 'tastesIntensity']
+      };
+
+      secs = secs.filter(s => {
+        const mapped = SECTION_MODULE_MAP[s.id] || [];
+        return mapped.some(m => allowedModules.includes(m));
+      });
+    }
+
+    return secs;
   }, [productType]);
 
   // Sections non encore sélectionnées
@@ -285,6 +313,7 @@ DragDropExport.propTypes = {
   onSectionsChange: PropTypes.func,
   format: PropTypes.string,
   className: PropTypes.string,
+  allowedModules: PropTypes.array
 };
 
 export default DragDropExport;

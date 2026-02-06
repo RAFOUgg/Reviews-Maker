@@ -13,6 +13,7 @@ import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from '../../data/exportTemplates';
+import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -53,6 +54,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const productKey = productType || 'Fleurs';
     const predefined = PREDEFINED_TEMPLATES[productKey] || PREDEFINED_TEMPLATES['Fleurs'];
 
+    // Modules relevant to this product type
+    const relevantModules = getModulesByProductType(productType || productKey);
+    const relevantModulesSet = new Set(relevantModules);
+
     const templates = Object.keys(predefined).map((key) => {
         const meta = predefined[key];
         // Map key -> display name and basic icon choice
@@ -72,11 +77,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Elements allowed for the currently selected template
     const selectedTemplateDef = getPredefinedTemplate(productKey, selectedTemplate) || predefined[selectedTemplate] || predefined['minimal'];
     const allowedElementIds = (selectedTemplateDef?.elements || []).map(e => e.id);
+    // Final allowed ids = intersection(template elements, product relevant modules)
+    const finalAllowedIds = allowedElementIds.filter(id => relevantModulesSet.has(id));
 
     const hasElement = (ids) => {
         if (!ids) return false;
         const arr = Array.isArray(ids) ? ids : [ids];
-        return arr.some(id => allowedElementIds.includes(id));
+        return arr.some(id => finalAllowedIds.includes(id));
     };
 
     const Star = ({ className }) => (
@@ -224,6 +231,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     productType={productType}
                                     selectedSections={customSections}
                                     onSectionsChange={setCustomSections}
+                                    allowedModules={relevantModules}
                                 />
                             </FeatureGate>
                         )}

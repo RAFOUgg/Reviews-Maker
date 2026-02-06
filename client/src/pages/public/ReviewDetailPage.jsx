@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../../utils/imageUtils'
 import TemplateRenderer from '../../components/export/TemplateRenderer'
+import { getModulesByProductType } from '../../utils/orchard/moduleMappings'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
@@ -199,6 +200,7 @@ export default function ReviewDetailPage() {
                                 breeder: review.breeder || review.hashmaker,
                                 farm: review.farm
                             }}
+                            activeModules={getModulesByProductType(review.type)}
                         />
                     </LiquidCard>
                 ) : (

@@ -39,8 +39,8 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         TemplateComponent = CustomTemplate;
     }
 
-    // Filtrer les modules si on est en mode page
-    const filteredConfig = activeModules && pageMode ? {
+    // Filtrer les modules si `activeModules` est fourni (utilisé pour passer les modules pertinents par produit)
+    const filteredConfig = activeModules ? {
         ...config,
         contentModules: Object.fromEntries(
             Object.entries(config.contentModules).map(([key, value]) => [
