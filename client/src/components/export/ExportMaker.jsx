@@ -153,6 +153,32 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
     };
 
+    // Helper to render a review field value for export
+    const renderFieldValue = (fieldId) => {
+        const val = reviewData?.[fieldId];
+        if (val === null || typeof val === 'undefined') return '-';
+
+        // File / Blob (input file) -> preview first image
+        if (typeof File !== 'undefined' && val instanceof File) {
+            try { return <img src={URL.createObjectURL(val)} alt={fieldId} className="w-full h-auto rounded" />; } catch (e) { return '-'; }
+        }
+
+        if (Array.isArray(val)) {
+            // If array of files
+            if (val.length > 0 && typeof val[0] === 'object' && val[0] instanceof File) {
+                return <img src={URL.createObjectURL(val[0])} alt={fieldId} className="w-full h-auto rounded" />;
+            }
+            return val.map(v => (typeof v === 'object' ? (v.name || JSON.stringify(v)) : String(v))).join(', ');
+        }
+
+        if (typeof val === 'object') {
+            // common pattern: { name } or { label }
+            return val.name || val.label || JSON.stringify(val);
+        }
+
+        return String(val);
+    };
+
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
             <LiquidGlass variant="modal" className="w-full max-w-6xl h-[90vh] flex flex-col md:flex-row overflow-hidden relative z-[9999]">
@@ -406,7 +432,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     {mode === 'custom' && customSections.filter(s => allowedElementIds.includes(s.id)).map(section => (
                                         <div key={section.id} className="bg-white/5 p-3 rounded-xl border border-white/5">
                                             <div className="text-xs font-bold uppercase mb-1">{section.name}</div>
-                                            <div className="text-white text-sm">Contenu de la section...</div>
+                                            <div className="space-y-2">
+                                                {(section.modules || section.fields || []).map((modId) => (
+                                                    <div key={modId} className="text-white text-sm">
+                                                        <div className="text-xs text-gray-400 uppercase">{modId}</div>
+                                                        <div className="mt-1">{renderFieldValue(modId)}</div>
+                                                    </div>
+                                                ))}
+                                            </div>
                                         </div>
                                     ))}
                                 </div>

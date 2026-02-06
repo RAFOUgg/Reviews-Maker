@@ -11,258 +11,12 @@ import { getModulesByProductType, getModuleSectionsByProductType } from '../../.
 // CONFIGURATION COMPLÈTE DES MODULES PAR CATÉGORIE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const MODULE_CATEGORIES = {
-    essential: {
-        name: '🎯 Essentiels',
-        description: 'Informations principales',
-        color: 'purple',
-        modules: ['holderName', 'title', 'rating', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category']
-    },
-    identity: {
-        name: '🏷️ Identité',
-        description: 'Auteur, date, tags',
-        color: 'blue',
-        modules: ['author', 'ownerName', 'date', 'createdAt', 'tags']
-    },
-    provenance: {
-        name: '🌱 Provenance',
-        description: 'Origine, génétique',
-        color: 'green',
-        modules: ['cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker', 'origin', 'country', 'region']
-    },
-    ratingsGlobal: {
-        name: '⭐ Notes Globales',
-        description: 'Scores principaux',
-        color: 'yellow',
-        modules: ['overallRating', 'note', 'qualityScore', 'ratings', 'categoryRatings', 'categoryRatings.visual', 'categoryRatings.smell', 'categoryRatings.texture', 'categoryRatings.taste', 'categoryRatings.effects']
-    },
-    visualDetails: {
-        name: '👁️ Détails Visuels',
-        description: 'Apparence complète',
-        color: 'emerald',
-        modules: ['densite', 'trichome', 'pistil', 'pistils', 'manucure', 'moisissure', 'graines', 'couleur', 'couleurTransparence', 'pureteVisuelle', 'viscosite', 'melting', 'residus']
-    },
-    smellDetails: {
-        name: '👃 Détails Odeur',
-        description: 'Profil olfactif',
-        color: 'pink',
-        modules: ['aromas', 'aromasIntensity', 'intensiteAromatique', 'fideliteCultivars']
-    },
-    textureDetails: {
-        name: '🤏 Détails Texture',
-        description: 'Toucher et consistance',
-        color: 'amber',
-        modules: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabiliteViscosite', 'meltingResidus', 'aspectCollantGras', 'viscositeTexture']
-    },
-    tasteDetails: {
-        name: '👅 Détails Goût',
-        description: 'Saveurs détaillées',
-        color: 'red',
-        modules: ['tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite', 'cendre', 'intensiteGout', 'textureBouche', 'douceur', 'intensite', 'goutIntensity']
-    },
-    effectsDetails: {
-        name: '⚡ Détails Effets',
-        description: 'Effets ressentis',
-        color: 'violet',
-        modules: ['effects', 'effectsIntensity', 'montee', 'intensiteEffet', 'intensiteEffets', 'dureeEffet']
-    },
-    terpenes: {
-        name: '🍃 Terpènes',
-        description: 'Profil terpénique',
-        color: 'lime',
-        modules: ['terpenes']
-    },
-    technical: {
-        name: '🔬 Données Techniques',
-        description: 'THC, CBD, ratios',
-        color: 'cyan',
-        modules: ['thcLevel', 'cbdLevel', 'strainType', 'indicaRatio', 'sativaRatio', 'strainRatio']
-    },
-    pipelines: {
-        name: '⚗️ Pipelines',
-        description: 'Process de production',
-        color: 'orange',
-        modules: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline', 'substratMix', 'purgevide', 'curing', 'drying', 'processing', 'yield', 'floweringTime', 'harvestDate']
-    },
-    text: {
-        name: '📝 Contenu Texte',
-        description: 'Descriptions et notes',
-        color: 'slate',
-        modules: ['conclusion', 'notes', 'comments', 'recommendations', 'warnings']
-    },
-    extra: {
-        name: '📎 Extra',
-        description: 'Données additionnelles',
-        color: 'gray',
-        modules: ['extraData', 'certifications', 'awards', 'labResults']
-    }
-};
 
-const MODULE_LABELS = {
-    // === ESSENTIELS ===
-    holderName: { name: 'Nom du produit', icon: '🏷️', desc: 'Nom principal' },
-    title: { name: 'Titre', icon: '📝', desc: 'Titre alternatif' },
-    rating: { name: 'Note globale', icon: '⭐', desc: 'Score de 0 à 10' },
-    image: { name: 'Image', icon: '🖼️', desc: 'Photo principale' },
-    images: { name: 'Galerie', icon: '📷', desc: 'Photos additionnelles' },
-    mainImage: { name: 'Couverture', icon: '🖼️', desc: 'Image mise en avant' },
-    imageUrl: { name: 'URL Image', icon: '🔗', desc: 'Lien de l\'image' },
-    description: { name: 'Description', icon: '📄', desc: 'Texte descriptif' },
-    type: { name: 'Type', icon: '📦', desc: 'Fleur, Concentré, Hash...' },
-    category: { name: 'Catégorie', icon: '📂', desc: 'Classification' },
+// `MODULE_LABELS` has been migrated to runtime metadata built from
+// the authoritative `moduleMappings.js` sections. Humanized fallbacks
+// are used when no explicit label/icon is available.
 
-    // === IDENTITÉ ===
-    author: { name: 'Auteur', icon: '👤', desc: 'Auteur de la review' },
-    ownerName: { name: 'Publié par', icon: '🧾', desc: 'Propriétaire' },
-    date: { name: 'Date', icon: '📅', desc: 'Date de création' },
-    createdAt: { name: 'Créé le', icon: '📅', desc: 'Timestamp création' },
-    tags: { name: 'Tags', icon: '🏷️', desc: 'Mots-clés' },
 
-    // === PROVENANCE ===
-    cultivar: { name: 'Cultivar', icon: '🌱', desc: 'Variété cultivée' },
-    cultivarsList: { name: 'Cultivars (liste)', icon: '🌿', desc: 'Toutes variétés' },
-    breeder: { name: 'Breeder', icon: '🧬', desc: 'Créateur génétique' },
-    farm: { name: 'Farm', icon: '🏡', desc: 'Producteur' },
-    hashmaker: { name: 'Hash Maker', icon: '👨‍🔬', desc: 'Extracteur' },
-    origin: { name: 'Origine', icon: '🌍', desc: 'Provenance' },
-    country: { name: 'Pays', icon: '🗺️', desc: 'Pays d\'origine' },
-    region: { name: 'Région', icon: '📍', desc: 'Région' },
-
-    // === NOTES GLOBALES ===
-    overallRating: { name: 'Note globale (alt)', icon: '⭐', desc: 'Score alternatif' },
-    note: { name: 'Note', icon: '⭐', desc: 'Score simple' },
-    qualityScore: { name: 'Score qualité', icon: '🏆', desc: 'Indicateur global' },
-    ratings: { name: 'Toutes notes', icon: '📋', desc: 'Vue complète' },
-    categoryRatings: { name: 'Notes par catégorie', icon: '📊', desc: 'Toutes les notes' },
-    'categoryRatings.visual': { name: '👁️ Note Visuel', icon: '👁️', desc: 'Apparence' },
-    'categoryRatings.smell': { name: '👃 Note Odeur', icon: '👃', desc: 'Arômes' },
-    'categoryRatings.texture': { name: '🤏 Note Texture', icon: '🤏', desc: 'Toucher' },
-    'categoryRatings.taste': { name: '👅 Note Goût', icon: '👅', desc: 'Saveurs' },
-    'categoryRatings.effects': { name: '⚡ Note Effets', icon: '⚡', desc: 'Puissance' },
-
-    // === DÉTAILS VISUELS ===
-    densite: { name: 'Densité', icon: '🧱', desc: 'Compacité' },
-    trichome: { name: 'Trichomes', icon: '✨', desc: 'Couverture' },
-    pistil: { name: 'Pistils', icon: '🔶', desc: 'Couleur pistils' },
-    pistils: { name: 'Pistils (alt)', icon: '🔶', desc: 'Présence pistils' },
-    manucure: { name: 'Manucure', icon: '✂️', desc: 'Qualité trim' },
-    moisissure: { name: 'Moisissure', icon: '🦠', desc: 'Absence moisissure' },
-    graines: { name: 'Graines', icon: '🌰', desc: 'Absence graines' },
-    couleur: { name: 'Couleur', icon: '🎨', desc: 'Teinte générale' },
-    couleurTransparence: { name: 'Transparence', icon: '💎', desc: 'Clarté' },
-    pureteVisuelle: { name: 'Pureté visuelle', icon: '🔍', desc: 'Propreté' },
-    viscosite: { name: 'Viscosité', icon: '🫠', desc: 'Fluidité' },
-    melting: { name: 'Melting', icon: '🔥', desc: 'Fonte' },
-    residus: { name: 'Résidus', icon: '⚫', desc: 'Propreté résiduelle' },
-
-    // === DÉTAILS ODEUR ===
-    aromas: { name: 'Arômes', icon: '🌸', desc: 'Notes olfactives' },
-    aromasIntensity: { name: 'Intensité arômes', icon: '💨', desc: 'Force arômes (1-5)' },
-    intensiteAromatique: { name: 'Intensité aromat.', icon: '💨', desc: 'Puissance' },
-    fideliteCultivars: { name: 'Fidélité cultivar', icon: '🎯', desc: 'Représentation' },
-
-    // === DÉTAILS TEXTURE ===
-    durete: { name: 'Dureté', icon: '💪', desc: 'Résistance' },
-    densiteTexture: { name: 'Densité texture', icon: '🧱', desc: 'Compacité' },
-    elasticite: { name: 'Élasticité', icon: '🔄', desc: 'Souplesse' },
-    collant: { name: 'Collant', icon: '🍯', desc: 'Adhérence' },
-    friabiliteViscosite: { name: 'Friabilité', icon: '🥧', desc: 'Émiettement' },
-    meltingResidus: { name: 'Melting résidus', icon: '🔥', desc: 'Qualité fonte' },
-    aspectCollantGras: { name: 'Aspect gras', icon: '💧', desc: 'Huileux' },
-    viscositeTexture: { name: 'Viscosité tex.', icon: '🫠', desc: 'Fluidité' },
-
-    // === DÉTAILS GOÛT ===
-    tastes: { name: 'Goûts', icon: '👅', desc: 'Notes gustatives' },
-    tastesIntensity: { name: 'Intensité goûts', icon: '🔥', desc: 'Force goûts' },
-    intensiteFumee: { name: 'Intensité fumée', icon: '💨', desc: 'Épaisseur fumée' },
-    agressivite: { name: 'Agressivité', icon: '⚡', desc: 'Douceur gorge' },
-    cendre: { name: 'Cendre', icon: '⚫', desc: 'Couleur cendre' },
-    intensiteGout: { name: 'Intensité goût', icon: '🔥', desc: 'Force saveur' },
-    textureBouche: { name: 'Texture bouche', icon: '👄', desc: 'Sensation' },
-    douceur: { name: 'Douceur', icon: '🍬', desc: 'Suavité' },
-    intensite: { name: 'Intensité', icon: '📊', desc: 'Force générale' },
-    goutIntensity: { name: 'Goût intensité', icon: '🔥', desc: 'Puissance' },
-
-    // === DÉTAILS EFFETS ===
-    effects: { name: 'Effets', icon: '✨', desc: 'Effets ressentis' },
-    effectsIntensity: { name: 'Intensité effets', icon: '💪', desc: 'Force effets' },
-    montee: { name: 'Montée', icon: '📈', desc: 'Vitesse montée' },
-    intensiteEffet: { name: 'Intensité effet', icon: '⚡', desc: 'Puissance' },
-    intensiteEffets: { name: 'Intensité effets', icon: '⚡', desc: 'Force' },
-    dureeEffet: { name: 'Durée effet', icon: '⏱️', desc: 'Longévité' },
-
-    // === TERPÈNES ===
-    terpenes: { name: 'Terpènes', icon: '🍃', desc: 'Profil terpénique' },
-
-    // === TECHNIQUE ===
-    thcLevel: { name: 'THC', icon: '🔬', desc: 'Taux THC (%)' },
-    cbdLevel: { name: 'CBD', icon: '💊', desc: 'Taux CBD (%)' },
-    strainType: { name: 'Type strain', icon: '🧪', desc: 'Indica/Sativa' },
-    indicaRatio: { name: 'Ratio Indica', icon: '⚖️', desc: '% Indica' },
-    sativaRatio: { name: 'Ratio Sativa', icon: '⚖️', desc: '% Sativa' },
-    strainRatio: { name: 'Ratio strain', icon: '⚖️', desc: 'Balance' },
-
-    // === PIPELINES ===
-    pipelineExtraction: { name: 'Extraction', icon: '⚗️', desc: 'Méthode' },
-    pipelineSeparation: { name: 'Séparation', icon: '🧪', desc: 'Process' },
-    pipelinePurification: { name: 'Purification', icon: '✨', desc: 'Étapes' },
-    fertilizationPipeline: { name: 'Fertilisation', icon: '🌾', desc: 'Protocole' },
-    substratMix: { name: 'Substrat', icon: '🪴', desc: 'Composition sol' },
-    purgevide: { name: 'Purge vide', icon: '🫧', desc: 'Méthode purge' },
-    curing: { name: 'Curing', icon: '🫙', desc: 'Affinage' },
-    drying: { name: 'Séchage', icon: '💨', desc: 'Méthode' },
-    processing: { name: 'Transformation', icon: '⚙️', desc: 'Traitement' },
-    yield: { name: 'Rendement', icon: '📈', desc: 'Production' },
-    floweringTime: { name: 'Floraison', icon: '🌺', desc: 'Durée' },
-    harvestDate: { name: 'Récolte', icon: '🌾', desc: 'Date' },
-
-    // === TEXTE ===
-    conclusion: { name: 'Conclusion', icon: '✅', desc: 'Résumé final' },
-    notes: { name: 'Notes', icon: '📝', desc: 'Remarques' },
-    comments: { name: 'Commentaires', icon: '💬', desc: 'Avis' },
-    recommendations: { name: 'Recommandations', icon: '✅', desc: 'Conseils' },
-    warnings: { name: 'Avertissements', icon: '⚠️', desc: 'Mises en garde' },
-
-    // === EXTRA ===
-    extraData: { name: 'Données extra', icon: '📎', desc: 'Informations diverses' },
-    certifications: { name: 'Certifications', icon: '📜', desc: 'Labels' },
-    awards: { name: 'Récompenses', icon: '🏆', desc: 'Prix' },
-    labResults: { name: 'Analyses labo', icon: '🔬', desc: 'Tests' }
-};
-
-// Présets rapides par type de review
-const QUICK_PRESETS = {
-    minimal: {
-        name: '🎯 Minimal',
-        desc: 'Essentiel uniquement',
-        modules: ['holderName', 'rating', 'image', 'type']
-    },
-    standard: {
-        name: '📋 Standard',
-        desc: 'Review classique',
-        modules: ['holderName', 'rating', 'image', 'description', 'type', 'category', 'aromas', 'effects', 'terpenes', 'categoryRatings']
-    },
-    complete: {
-        name: '📊 Complète',
-        desc: 'Toutes les infos',
-        modules: ['holderName', 'rating', 'image', 'description', 'type', 'category', 'cultivar', 'breeder', 'farm', 'aromas', 'tastes', 'effects', 'terpenes', 'categoryRatings', 'thcLevel', 'cbdLevel', 'strainType']
-    },
-    hash: {
-        name: '🟤 Hash/Concentré',
-        desc: 'Optimisé extraction',
-        modules: ['holderName', 'rating', 'image', 'description', 'type', 'hashmaker', 'cultivarsList', 'pipelineExtraction', 'pipelinePurification', 'aromas', 'effects', 'categoryRatings', 'purgevide']
-    },
-    grower: {
-        name: '🌱 Grower',
-        desc: 'Focus cultivation',
-        modules: ['holderName', 'rating', 'image', 'description', 'cultivar', 'breeder', 'farm', 'fertilizationPipeline', 'substratMix', 'yield', 'floweringTime', 'strainType', 'terpenes']
-    },
-    social: {
-        name: '📱 Social Media',
-        desc: 'Pour Instagram/Stories',
-        modules: ['holderName', 'rating', 'image', 'type', 'effects', 'aromas']
-    }
-};
 
 // Couleurs par catégorie
 const CATEGORY_COLORS = {
@@ -281,6 +35,36 @@ const CATEGORY_COLORS = {
     lime: 'bg-lime-100 dark:bg-lime-900/30 border-lime-300 dark:border-lime-700 text-lime-700 dark:text-lime-300',
     slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
 };
+
+// DEPRECATED: `MODULE_CATEGORIES` (above) is obsolete —
+// keep it for compatibility but prefer sections defined in
+// `moduleMappings.js`. Build computed categories at runtime
+// so new review types / sections are reflected automatically.
+import { getModuleSectionsByProductType } from '../../../utils/orchard/moduleMappings';
+
+/**
+ * Build categories from the canonical module sections for a given product type.
+ * Returns an array of category objects: { key, name, description, color, modules }
+ */
+function buildComputedCategories(productType) {
+    try {
+        const sections = getModuleSectionsByProductType(productType) || [];
+        return sections.map((s, idx) => {
+            const key = s.id || s.key || `section_${idx}`;
+            return {
+                key,
+                name: s.name || s.title || key,
+                description: s.description || s.desc || '',
+                color: s.color || 'gray',
+                modules: Array.isArray(s.modules) ? s.modules : (s.items || [])
+            };
+        });
+    } catch (e) {
+        // If moduleMappings lookup fails, return empty array (no fallback)
+        return [];
+    }
+}
+
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT MODULE DRAGGABLE
@@ -480,19 +264,40 @@ export default function ContentModuleControls() {
     const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'list' | 'search'
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedCategories, setExpandedCategories] = useState({ essential: true });
-    const [showPresets, setShowPresets] = useState(false);
 
     const sensors = useSensors(
         useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
         useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
     );
 
+    // Helper to produce humanized labels when metadata is missing
+    const humanize = (id) => {
+        if (!id) return id;
+        const s = id.replace(/\./g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
+        return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    };
+
+    // Build dynamic module metadata from canonical mappings when possible
+    const moduleMeta = useMemo(() => {
+        const meta = {};
+        Array.from(relevantModulesSet).forEach(id => {
+            // try to pick label data from getModuleSectionsByProductType via sections
+            // but fallback to a humanized name/icon
+            meta[id] = {
+                name: humanize(id),
+                icon: '📦',
+                desc: ''
+            };
+        });
+        return meta;
+    }, [relevantModulesSet]);
+
     // Filtrer les modules par recherche
     const filteredModules = useMemo(() => {
         if (!searchQuery.trim()) return config.moduleOrder;
         const query = searchQuery.toLowerCase();
         return config.moduleOrder.filter(moduleName => {
-            const module = MODULE_LABELS[moduleName];
+            const module = moduleMeta[moduleName];
             if (!module) return moduleName.toLowerCase().includes(query);
             return (
                 module.name.toLowerCase().includes(query) ||
@@ -500,7 +305,7 @@ export default function ContentModuleControls() {
                 moduleName.toLowerCase().includes(query)
             );
         });
-    }, [config.moduleOrder, searchQuery]);
+    }, [config.moduleOrder, searchQuery, moduleMeta]);
 
     // Determine relevant modules based on current product type (from reviewData)
     const productType = (reviewData && reviewData.type) ? reviewData.type : 'flower';
@@ -523,21 +328,8 @@ export default function ContentModuleControls() {
             modules: (sec.fields || []).filter(f => relevantModulesSet.has(f))
         })).filter(c => c.modules && c.modules.length > 0);
 
-        // Track modules already included from sections
-        const included = new Set(sectionCategories.flatMap(c => c.modules));
-
-        // Fallback: use legacy MODULE_CATEGORIES for any remaining modules
-        const legacyCats = Object.entries(MODULE_CATEGORIES)
-            .map(([catKey, category]) => ({
-                key: catKey,
-                name: category.name,
-                description: category.description,
-                color: category.color,
-                modules: (category.modules || []).filter(m => relevantModulesSet.has(m) && !included.has(m))
-            }))
-            .filter(cat => Array.isArray(cat.modules) && cat.modules.length > 0);
-
-        return [...sectionCategories, ...legacyCats];
+        // Only use sections defined for the product type — no legacy fallbacks.
+        return sectionCategories;
     }, [productType, relevantModulesSet]);
 
     const handleDragEnd = (event) => {
@@ -550,32 +342,6 @@ export default function ContentModuleControls() {
         }
     };
 
-    const applyPreset = (presetKey) => {
-        const preset = QUICK_PRESETS[presetKey];
-        if (!preset) return;
-
-        // Désactiver tous les modules pertinents d'abord
-        const newModules = { ...config.contentModules };
-        Array.from(relevantModulesSet).forEach(key => {
-            newModules[key] = false;
-        });
-
-        // Activer ceux du preset (mais seulement si pertinents)
-        preset.modules.forEach(moduleName => {
-            if (relevantModulesSet.has(moduleName)) newModules[moduleName] = true;
-        });
-
-        if (setContentModules) {
-            setContentModules(newModules);
-        } else {
-            // Fallback si setContentModules n'existe pas
-            Array.from(relevantModulesSet).forEach(key => {
-                const should = !!newModules[key];
-                if (config.contentModules[key] !== should) toggleContentModule(key);
-            });
-        }
-        setShowPresets(false);
-    };
 
     const toggleCategory = (catKey) => {
         setExpandedCategories(prev => ({
@@ -585,7 +351,10 @@ export default function ContentModuleControls() {
     };
 
     const visibleCount = Object.keys(config.contentModules).filter(k => relevantModulesSet.has(k) && config.contentModules[k]).length;
-    const totalCount = Array.from(relevantModulesSet).filter(k => k && (config.contentModules.hasOwnProperty(k) || MODULE_LABELS[k])).length;
+    const totalCount = Array.from(relevantModulesSet).filter(k => k && (config.contentModules.hasOwnProperty(k) || moduleMeta[k])).length;
+
+    // `moduleMeta` and `humanize` are defined earlier to provide runtime
+    // metadata for modules (labels/icons) with sensible fallbacks.
 
     return (
         <div className="space-y-4">
@@ -645,45 +414,10 @@ export default function ContentModuleControls() {
                         📋 Liste
                     </button>
                 </div>
-                <button
-                    onClick={() => setShowPresets(!showPresets)}
-                    className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${showPresets ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
-                >
-                    ⚡ Presets
-                </button>
+                {/* Presets removed — QUICK_PRESETS deleted (breaking change) */}
             </div>
 
-            {/* Presets rapides */}
-            <AnimatePresence>
-                {showPresets && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="grid grid-cols-2 gap-2 overflow-hidden"
-                    >
-                        {Object.entries(QUICK_PRESETS).map(([key, preset]) => (
-                            <motion.button
-                                key={key}
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => applyPreset(key)}
-                                className="p-3 rounded-xl bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 text-left hover: transition-colors"
-                            >
-                                <div className="font-semibold text-sm text-gray-900 dark:text-white">
-                                    {preset.name}
-                                </div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                                    {preset.desc}
-                                </div>
-                                <div className="text-xs mt-1">
-                                    {preset.modules.length} modules
-                                </div>
-                            </motion.button>
-                        ))}
-                    </motion.div>
-                )}
-            </AnimatePresence>
+            {/* Presets removed */}
 
             {/* Vue par catégories */}
             {viewMode === 'categories' && !searchQuery && (
@@ -695,7 +429,7 @@ export default function ContentModuleControls() {
                                 key={category.key}
                                 category={catCopy}
                                 categoryKey={category.key}
-                                modules={MODULE_LABELS}
+                                modules={moduleMeta}
                                 contentModules={config.contentModules}
                                 onToggle={toggleContentModule}
                                 expanded={expandedCategories[category.key] || false}
@@ -728,7 +462,7 @@ export default function ContentModuleControls() {
                                     <SortableModule
                                         key={moduleName}
                                         id={moduleName}
-                                        module={MODULE_LABELS[moduleName]}
+                                        module={moduleMeta[moduleName] || { name: humanize(moduleName), icon: '📦', desc: '' }}
                                         isVisible={config.contentModules[moduleName]}
                                         onToggle={() => toggleContentModule(moduleName)}
                                     />

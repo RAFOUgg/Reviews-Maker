@@ -7,50 +7,7 @@ import {
 } from 'lucide-react';
 import { useAccountType } from '../../hooks/useAccountType';
 import { FeatureGate } from '../account/FeatureGate';
-
-// Données des sections disponibles pour drag & drop
-const AVAILABLE_SECTIONS = {
-  flower: [
-    { id: 'general', name: 'Informations générales', icon: '📋', required: true },
-    { id: 'genetics', name: 'Génétiques', icon: '🧬' },
-    { id: 'culture', name: 'Culture Pipeline', icon: '🌱', producerOnly: true },
-    { id: 'analytics', name: 'Analytiques', icon: '🔬' },
-    { id: 'visual', name: 'Visuel & Technique', icon: '👁️' },
-    { id: 'odors', name: 'Odeurs', icon: '👃' },
-    { id: 'texture', name: 'Texture', icon: '🤚' },
-    { id: 'tastes', name: 'Goûts', icon: '😋' },
-    { id: 'effects', name: 'Effets', icon: '💥' },
-    { id: 'curing', name: 'Curing & Maturation', icon: '🔥' },
-    { id: 'experience', name: 'Expérience', icon: '🧪' },
-  ],
-  hash: [
-    { id: 'general', name: 'Informations générales', icon: '📋', required: true },
-    { id: 'separation', name: 'Pipeline Séparation', icon: '🔬' },
-    { id: 'purification', name: 'Purification', icon: '⚗️' },
-    { id: 'visual', name: 'Visuel & Technique', icon: '👁️' },
-    { id: 'odors', name: 'Odeurs', icon: '👃' },
-    { id: 'texture', name: 'Texture', icon: '🤚' },
-    { id: 'tastes', name: 'Goûts', icon: '😋' },
-    { id: 'effects', name: 'Effets', icon: '💥' },
-    { id: 'curing', name: 'Curing', icon: '🔥' },
-  ],
-  concentrate: [
-    { id: 'general', name: 'Informations générales', icon: '📋', required: true },
-    { id: 'extraction', name: 'Pipeline Extraction', icon: '🔬' },
-    { id: 'purification', name: 'Purification', icon: '⚗️' },
-    { id: 'visual', name: 'Visuel & Technique', icon: '👁️' },
-    { id: 'odors', name: 'Odeurs', icon: '👃' },
-    { id: 'texture', name: 'Texture', icon: '🤚' },
-    { id: 'tastes', name: 'Goûts', icon: '😋' },
-    { id: 'effects', name: 'Effets', icon: '💥' },
-  ],
-  edible: [
-    { id: 'general', name: 'Informations générales', icon: '📋', required: true },
-    { id: 'recipe', name: 'Recette', icon: '🥘' },
-    { id: 'tastes', name: 'Goûts', icon: '😋' },
-    { id: 'effects', name: 'Effets', icon: '💥' },
-  ],
-};
+import { getSectionsByProductType } from '../../utils/orchard/moduleMappings';
 
 /**
  * DragDropExport - Éditeur personnalisé avec drag & drop pour exports
@@ -70,35 +27,25 @@ const DragDropExport = ({
   const [expandedSection, setExpandedSection] = useState(null);
 
   const availableSections = useMemo(() => {
-    let secs = AVAILABLE_SECTIONS[productType] || AVAILABLE_SECTIONS.flower;
+    // Use canonical sections from moduleMappings
+    const secs = getSectionsByProductType(productType || 'flower') || [];
 
-    // If allowedModules provided, filter sections by whether they map to any allowed module
+    // Normalize shape: { id, name, modules, required?, producerOnly?, icon }
+    const normalized = secs.map(s => ({
+      id: s.id || s.key,
+      name: s.name || s.label || s.label || s.title || s.name,
+      modules: s.modules || s.fields || s.items || [],
+      required: s.required || false,
+      producerOnly: s.access === 'producteur',
+      icon: s.icon || '📋'
+    }));
+
     if (Array.isArray(allowedModules) && allowedModules.length > 0) {
-      const SECTION_MODULE_MAP = {
-        general: ['holderName', 'title', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category'],
-        genetics: ['cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker'],
-        culture: ['fertilizationPipeline', 'substratMix', 'yield', 'floweringTime', 'harvestDate'],
-        analytics: ['thcLevel', 'cbdLevel', 'labResults'],
-        visual: ['densite', 'trichome', 'pistil', 'manucure', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
-        odors: ['aromas', 'aromasIntensity', 'intensiteAromatique', 'fideliteCultivars'],
-        texture: ['durete', 'densiteTexture', 'elasticite', 'collant', 'friabiliteViscosite'],
-        tastes: ['tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite', 'cendre'],
-        effects: ['effects', 'effectsIntensity', 'montee', 'intensiteEffet', 'dureeEffet'],
-        curing: ['curing', 'drying', 'processing', 'purgevide'],
-        separation: ['pipelineSeparation'],
-        purification: ['pipelinePurification'],
-        extraction: ['pipelineExtraction'],
-        recipe: ['tastes', 'tastesIntensity']
-      };
-
-      secs = secs.filter(s => {
-        const mapped = SECTION_MODULE_MAP[s.id] || [];
-        return mapped.some(m => allowedModules.includes(m));
-      });
+      return normalized.filter(s => (s.modules || []).some(m => allowedModules.includes(m)));
     }
 
-    return secs;
-  }, [productType]);
+    return normalized;
+  }, [productType, allowedModules]);
 
   // Sections non encore sélectionnées
   const unselectedSections = useMemo(() => {
