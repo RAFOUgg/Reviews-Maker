@@ -19,12 +19,15 @@ export class PermissionSyncService {
     /**
      * Fetch all account types and their permissions from backend
      */
-    async getAccountTypes() {
+    async getAccountTypes(timeoutMs = 5000) {
+        const request = this.api.get('/api/permissions/account-types', { withCredentials: true })
+        const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Request timeout')), timeoutMs))
+
         try {
-            const response = await this.api.get('/api/permissions/account-types', { withCredentials: true })
+            const response = await Promise.race([request, timeout])
             return response.data
         } catch (error) {
-            console.error('Failed to fetch account types:', error && error.message ? error.message : error)
+            console.warn('Failed to fetch account types (fallback to defaults):', error && error.message ? error.message : error)
             // Fallback to hardcoded defaults
             return DEFAULT_ACCOUNT_TYPES
         }
