@@ -45,6 +45,18 @@ export const useStore = create((set, get) => ({
             // Le backend calcule déjà le type correct via getUserAccountType()
             const accountType = user?.accountType || 'consumer'
             set({ user, isAuthenticated: true, accountType })
+
+            // Force permission resync on login to avoid stale local cache
+            try {
+                localStorage.removeItem('permissions_cache')
+                const { PermissionSyncService } = await import('@/utils/permissionSync')
+                const svc = new PermissionSyncService()
+                await svc.syncPermissions(user)
+                console.log('[AUTH] Permissions resynced for user', user.email)
+            } catch (e) {
+                console.warn('[AUTH] Failed to resync permissions', e)
+            }
+
             return user
         } catch (error) {
             set({ user: null, isAuthenticated: false, accountType: 'consumer' })
