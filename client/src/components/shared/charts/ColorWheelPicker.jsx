@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, Plus, X, Pipette } from 'lucide-react';
 
@@ -29,15 +29,123 @@ const PLANT_PARTS = [
 const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
     const [hoveredColor, setHoveredColor] = useState(null);
     const [warningMessage, setWarningMessage] = useState('');
-    const [allowedMax, setAllowedMax] = useState(maxSelections);
     const [expandedParts, setExpandedParts] = useState({});
 
     // value format: [{ colorId: 'green', percentage: 60, parts: [{ partId, percent }, ...] }, ...]
     const selectedColors = Array.isArray(value) ? value : [];
 
-    // Toggle details per color
-    const toggleParts = (colorId) => {
-        setExpandedParts(prev => ({ ...prev, [colorId]: !prev[colorId] }));
+    // Calcul du max autorisé : parties * 5
+    const computedMax = PLANT_PARTS.length * 5;
+
+    // Gradient / cursor states
+    const gradientRef = React.useRef(null);
+    const [cursorPos, setCursorPos] = React.useState(0.5); // 0..1
+    const [cursorColor, setCursorColor] = React.useState(DEFAULT_COLOR.hex);
+    const [dragging, setDragging] = React.useState(false);
+
+    // Modal states
+    const [showAddModal, setShowAddModal] = React.useState(false);
+    const [modalPercentage, setModalPercentage] = React.useState(20);
+    const [modalPart, setModalPart] = React.useState('');
+
+    // Helpers: create CSS gradient string from colors
+    const makeGradient = (colors) => {
+        if (!colors || colors.length === 0) return DEFAULT_COLOR.hex;
+        const step = 100 / colors.length;
+        const stops = colors.map((c, i) => `${c.hex} ${Math.round(i * step)}%`).join(', ');
+        return `linear-gradient(90deg, ${stops})`;
+    };
+
+    // Color interpolation helpers
+    const hexToRgb = (hex) => {
+        const h = hex.replace('#', '');
+        return { r: parseInt(h.substring(0, 2), 16), g: parseInt(h.substring(2, 4), 16), b: parseInt(h.substring(4, 6), 16) };
+    };
+    const rgbToHex = (r, g, b) => `#${[r, g, b].map(v => v.toString(16).padStart(2, '0')).join('')}`;
+    const lerp = (a, b, t) => Math.round(a + (b - a) * t);
+    const interpolateHex = (h1, h2, t) => {
+        const c1 = hexToRgb(h1); const c2 = hexToRgb(h2);
+        return rgbToHex(lerp(c1.r, c2.r, t), lerp(c1.g, c2.g, t), lerp(c1.b, c2.b, t));
+    };
+
+    const getColorAtPos = (pos) => {
+        const n = CANNABIS_COLORS.length;
+        const scaled = pos * n;
+        const idx = Math.floor(Math.max(0, Math.min(n - 1, scaled)));
+        const t = scaled - idx;
+        const c1 = CANNABIS_COLORS[idx % n].hex;
+        const c2 = CANNABIS_COLORS[(idx + 1) % n].hex;
+        return interpolateHex(c1, c2, t);
+    };
+
+    // Drag handlers
+    const updateCursorFromEvent = (clientX) => {
+        const el = gradientRef.current;
+        if (!el) return;
+        const rect = el.getBoundingClientRect();
+        const x = Math.max(0, Math.min(rect.width, clientX - rect.left));
+        const pos = x / rect.width;
+        setCursorPos(pos);
+        setCursorColor(getColorAtPos(pos));
+    };
+
+    const startDrag = (e) => {
+        e.preventDefault();
+        setDragging(true);
+        window.addEventListener('mousemove', onDrag);
+        window.addEventListener('mouseup', stopDrag);
+        if (e.clientX) updateCursorFromEvent(e.clientX);
+    };
+    const onDrag = (e) => { if (dragging) updateCursorFromEvent(e.clientX); };
+    const stopDrag = (e) => {
+        setDragging(false);
+        window.removeEventListener('mousemove', onDrag);
+        window.removeEventListener('mouseup', stopDrag);
+    };
+
+    const handleBarPointer = (e) => {
+        // pointer down on the bar -> place cursor and open modal? just position
+        updateCursorFromEvent(e.clientX);
+    };
+
+    // Modal handlers
+    const openAddModal = () => { setModalPercentage(20); setModalPart(''); setShowAddModal(true); };
+    const closeAddModal = () => { setShowAddModal(false); };
+
+    const confirmAddFromCursor = () => {
+        const n = CANNABIS_COLORS.length;
+        const scaled = cursorPos * n;
+        const nearestIndex = Math.round(Math.max(0, Math.min(n - 1, scaled)));
+        const colorData = CANNABIS_COLORS[nearestIndex];
+
+        if (selectedColors.length >= computedMax) {
+            setWarningMessage(`⚠️ Limite atteinte (${computedMax} couleurs max)`);
+            setTimeout(() => setWarningMessage(''), 2000);
+            return;
+        }
+
+        // distribute remaining percentage
+        const newPerc = Math.max(0, Math.min(100, modalPercentage));
+        const remaining = 100 - newPerc;
+        const totalExisting = selectedColors.reduce((s, c) => s + c.percentage, 0) || 0;
+
+        let updatedExisting = [];
+        if (totalExisting > 0 && remaining > 0) {
+            updatedExisting = selectedColors.map(s => ({ ...s, percentage: Math.round(s.percentage / totalExisting * remaining) }));
+            // adjust small rounding error
+            const sumUpd = updatedExisting.reduce((s, c) => s + c.percentage, 0);
+            if (sumUpd !== remaining && updatedExisting.length > 0) {
+                updatedExisting[updatedExisting.length - 1].percentage += (remaining - sumUpd);
+            }
+        } else if (remaining === 0) {
+            updatedExisting = selectedColors.map(s => ({ ...s, percentage: 0 }));
+        } else if (totalExisting === 0) {
+            updatedExisting = [];
+        }
+
+        const newColorObj = { colorId: colorData.id, percentage: newPerc, parts: modalPart ? [{ partId: modalPart, percent: 100 }] : [] };
+        onChange([...updatedExisting, newColorObj]);
+        setShowAddModal(false);
     };
 
     const handleColorClick = (color) => {
@@ -49,7 +157,7 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
             onChange(selectedColors.filter(s => s.colorId !== color.id));
         } else {
             // Ajouter la couleur si sous limite
-            if (selectedColors.length < allowedMax) {
+            if (selectedColors.length < computedMax) {
                 setWarningMessage('');
                 const newCount = selectedColors.length + 1;
                 const basePercentage = Math.floor(100 / newCount);
@@ -63,7 +171,7 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                 // ajout d'une structure parts vide
                 onChange([...redistributed, { colorId: color.id, percentage: basePercentage, parts: [] }]);
             } else {
-                setWarningMessage(`⚠️ Limite atteinte (${allowedMax} couleurs max)`);
+                setWarningMessage(`⚠️ Limite atteinte (${computedMax} couleurs max)`);
                 setTimeout(() => setWarningMessage(''), 2000);
             }
         }
@@ -133,124 +241,76 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
             {/* Roue de couleurs */}
             <div className="flex flex-col items-center">
                 <div className="relative">
-                    <svg width="280" height="280" viewBox="0 0 280 280" className="drop-shadow-xl">
-                        <defs>
-                            {/* Dégradés entre chaque couleur pour un fondu global */}
-                            {CANNABIS_COLORS.map((c, i) => {
-                                const next = CANNABIS_COLORS[(i + 1) % CANNABIS_COLORS.length];
-                                return (
-                                    <linearGradient id={`seg-grad-${i}`} key={`seg-grad-${i}`} x1="0%" y1="0%" x2="100%" y2="100%">
-                                        <stop offset="0%" stopColor={c.hex} />
-                                        <stop offset="100%" stopColor={next.hex} />
-                                    </linearGradient>
-                                );
-                            })}
-                        </defs>
+                    {/* Square gradient bar with draggable cursor */}
+                    <div
+                        ref={(el) => { if (el) gradientRef.current = el; }}
+                        onMouseDown={(e) => handleBarPointer(e)}
+                        onTouchStart={(e) => handleBarPointer(e.touches[0])}
+                        className="w-full h-12 rounded-lg overflow-hidden relative drop-shadow-xl"
+                        style={{
+                            background: makeGradient(CANNABIS_COLORS)
+                        }}
+                    >
+                        {/* draggable cursor */}
+                        <div
+                            className="absolute -top-3 w-10 h-10 rounded-full border-2 border-white shadow-lg flex items-center justify-center cursor-grab"
+                            style={{
+                                left: `${cursorPos * 100}%`,
+                                transform: 'translate(-50%, 0)',
+                                backgroundColor: cursorColor
+                            }}
+                            onMouseDown={(e) => startDrag(e)}
+                            onTouchStart={(e) => startDrag(e.touches[0])}
+                            title="Déplacez pour choisir une couleur"
+                        />
+                    </div>
 
-                        {/* Cercle central: couleur par défaut si aucune sélection */}
-                        <circle cx="140" cy="140" r="58" fill={selectedColors.length === 0 ? DEFAULT_COLOR.hex : '#1F2937'} className="drop-shadow-lg" />
+                    <div className="mt-3 flex items-center justify-between">
+                        <div className="text-sm text-gray-400">Sélection par glissement</div>
+                        <div className="flex items-center gap-2">
+                            <button onClick={() => openAddModal()} className="px-3 py-1 rounded-md bg-white/5 hover:bg-white/10 transition">Ajouter une couleur</button>
+                            <div className="text-xs text-gray-400">Max: {PLANT_PARTS.length * 5}</div>
+                        </div>
+                    </div>
 
-                        {/* 12 segments de couleur (légèrement chevauchés pour éviter les gaps) */}
-                        {CANNABIS_COLORS.map((color, index) => {
-                            const angle = (index * 30) - 90; // -90 pour commencer en haut
-                            const nextAngle = angle + 30.5; // 0.5 deg overlap to avoid hairline gaps
-                            const isSelected = selectedColors.some(s => s.colorId === color.id);
-                            const isHovered = hoveredColor?.id === color.id;
-
-                            // Calcul des points du segment (arc)
-                            const radius = 140;
-                            const innerRadius = 58;
-
-                            const startOuter = {
-                                x: 140 + radius * Math.cos((angle * Math.PI) / 180),
-                                y: 140 + radius * Math.sin((angle * Math.PI) / 180)
-                            };
-                            const endOuter = {
-                                x: 140 + radius * Math.cos((nextAngle * Math.PI) / 180),
-                                y: 140 + radius * Math.sin((nextAngle * Math.PI) / 180)
-                            };
-                            const startInner = {
-                                x: 140 + innerRadius * Math.cos((nextAngle * Math.PI) / 180),
-                                y: 140 + innerRadius * Math.sin((nextAngle * Math.PI) / 180)
-                            };
-                            const endInner = {
-                                x: 140 + innerRadius * Math.cos((angle * Math.PI) / 180),
-                                y: 140 + innerRadius * Math.sin((angle * Math.PI) / 180)
-                            };
-
-                            const pathData = `
-                M ${startOuter.x} ${startOuter.y}
-                A ${radius} ${radius} 0 0 1 ${endOuter.x} ${endOuter.y}
-                L ${startInner.x} ${startInner.y}
-                A ${innerRadius} ${innerRadius} 0 0 0 ${endInner.x} ${endInner.y}
-                Z
-              `;
-
-                            return (
-                                <g key={color.id}>
-                                    <motion.path
-                                        d={pathData}
-                                        fill={`url(#seg-grad-${index})`}
-                                        stroke="none"
-                                        className="cursor-pointer transition-all outline-none"
-                                        onMouseEnter={() => setHoveredColor(color)}
-                                        onMouseLeave={() => setHoveredColor(null)}
-                                        onClick={() => handleColorClick(color)}
-                                        whileHover={{ scale: 1.03 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        style={{
-                                            opacity: isSelected ? 1 : isHovered ? 0.95 : 0.9,
-                                            filter: isSelected
-                                                ? 'drop-shadow(0 0 10px rgba(255,255,255,0.9)) brightness(1.05)'
-                                                : 'none',
-                                            outline: 'none'
-                                        }}
-                                    />
-
-                                    {/* zone invisible pour capter le click exact si besoin */}
-                                    <path
-                                        d={pathData}
-                                        fill="transparent"
-                                        stroke="transparent"
-                                        onClick={() => handleColorClick(color)}
-                                    />
-                                </g>
-                            );
-                        })}
-
-                        {/* Icône centrale */}
-                        <foreignObject x="115" y="115" width="50" height="50">
-                            <div className="flex items-center justify-center w-full h-full">
-                                <Palette className="w-8 h-8 text-gray-400" />
-                            </div>
-                        </foreignObject>
-                    </svg>
-
-                    {/* Tooltip hover */}
+                    {/* Modal for adding color */}
                     <AnimatePresence>
-                        {hoveredColor && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: 10 }}
-                                className="absolute -bottom-12 left-1/2 -translate-x-1/2 bg-gray-900 border border-gray-700 rounded-lg px-4 py-2 text-sm text-white whitespace-nowrap shadow-xl z-10"
-                            >
-                                <div className="flex items-center gap-2">
-                                    <div
-                                        className="w-4 h-4 rounded-full border-2 border-white"
-                                        style={{ backgroundColor: hoveredColor.hex }}
-                                    />
-                                    {hoveredColor.name}
-                                </div>
+                        {showAddModal && (
+                            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 flex items-center justify-center z-50">
+                                <div className="absolute inset-0 bg-black/50" onClick={() => closeAddModal()} />
+                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-gray-900 rounded-lg p-6 z-60 w-[320px] border border-gray-700">
+                                    <h4 className="text-sm font-semibold mb-3">Ajouter la couleur choisie</h4>
+                                    <div className="mb-3 text-xs text-gray-400">Couleur: <span className="font-medium" style={{ color: cursorColor }}>{cursorColor}</span></div>
+
+                                    <div className="mb-3">
+                                        <label className="text-xs text-gray-300">Pourcentage du nuancier</label>
+                                        <input type="range" min="0" max="100" value={modalPercentage} onChange={(e) => setModalPercentage(parseInt(e.target.value, 10))} className="w-full mt-2" />
+                                        <div className="text-xs text-gray-400 mt-1">{modalPercentage}%</div>
+                                    </div>
+
+                                    <div className="mb-3">
+                                        <label className="text-xs text-gray-300">Partie de la plante</label>
+                                        <select value={modalPart} onChange={(e) => setModalPart(e.target.value)} className="w-full mt-2 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-sm text-white">
+                                            <option value="">-- Choisir --</option>
+                                            {PLANT_PARTS.map(p => <option key={p.id} value={p.id}>{p.label}</option>)}
+                                        </select>
+                                    </div>
+
+                                    <div className="flex justify-end gap-2">
+                                        <button className="px-3 py-1 text-xs" onClick={() => closeAddModal()}>Annuler</button>
+                                        <button className="px-3 py-1 rounded bg-green-600 text-xs" onClick={() => confirmAddFromCursor()}>Ajouter</button>
+                                    </div>
+                                </motion.div>
                             </motion.div>
                         )}
                     </AnimatePresence>
+
                 </div>
 
                 {/* Instructions */}
                 <p className="text-sm text-gray-400 mt-6 text-center">
                     <Pipette className="w-4 h-4 inline mr-2" />
-                    Cliquez sur la roue pour sélectionner jusqu'à {allowedMax} couleurs (par défaut couleur : Vert pâle grisâtre)
+                    Glissez sur le carré pour positionner le curseur puis cliquez sur "Ajouter une couleur" (Max: {computedMax}) — centre du curseur affiche la couleur choisie
                 </p>
             </div>
 
@@ -260,7 +320,7 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                     <div className="flex items-center justify-between mb-4">
                         <h4 className="text-sm font-semibold text-gray-200 flex items-center gap-2">
                             <Palette className="w-4 h-4" />
-                            Couleurs sélectionnées ({selectedColors.length}/{allowedMax})
+                            Couleurs sélectionnées ({selectedColors.length}/{computedMax})
                         </h4>
 
                         <div className="flex items-center gap-3">
@@ -268,21 +328,18 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                                 Total: {totalPercentage}%
                             </div>
 
-                            {/* Contrôle du nombre max (curseur 1..7) */}
-                            <div className="flex items-center gap-2 text-xs text-gray-300">
-                                <span className="text-xs text-gray-400">Max</span>
-                                <input type="range" min="1" max="7" value={allowedMax} onChange={(e) => setAllowedMax(parseInt(e.target.value, 10))} className="w-24" />
-                                <span className="w-6 text-right">{allowedMax}</span>
-                            </div>
+                            <div className="text-xs text-gray-400">Max autorisé: {computedMax} couleurs</div>
 
                             {/* Rapid add */}
                             <button
                                 onClick={() => {
-                                    const candidate = hoveredColor || CANNABIS_COLORS.find(c => !selectedColors.some(s => s.colorId === c.id));
+                                    const n = CANNABIS_COLORS.length;
+                                    const idx = Math.round(cursorPos * n) % n;
+                                    const candidate = CANNABIS_COLORS[idx] || CANNABIS_COLORS[0];
                                     if (candidate) handleColorClick(candidate);
                                 }}
                                 className="px-2 py-1 text-xs rounded-md bg-white/5 hover:bg-white/10 transition"
-                                title="Ajouter la couleur survolée ou la prochaine disponible"
+                                title="Ajouter la couleur sous le curseur"
                             >
                                 +
                             </button>

@@ -39,10 +39,45 @@ export const ResponsiveCreateReviewLayout = ({
 
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
-    const ITEM_WIDTH = 70; // px (emoji button width + gap)
-    const CONTAINER_CENTER = VISIBLE_ITEMS / 2; // Position du centre (2.5 = centre entre index 2 et 3)
-    // Permet de scroller jusqu'à montrer la dernière section au centre
-    const maxScroll = Math.max(0, (sectionEmojis.length - CONTAINER_CENTER) * ITEM_WIDTH);
+    const FALLBACK_ITEM_WIDTH = 70; // px (emoji button width + gap)
+    const CONTAINER_CENTER = VISIBLE_ITEMS / 2; // Position du centre (2.5 = centre between two)
+
+    // Measured sizes (dynamic): use DOM measurements for correct centering
+    const [itemWidth, setItemWidth] = useState(FALLBACK_ITEM_WIDTH);
+    const [containerWidthState, setContainerWidthState] = useState(0);
+    const [maxScrollState, setMaxScrollState] = useState(0);
+
+    // Compute/measure widths to calculate exact centering and maxScroll
+    useEffect(() => {
+        const measure = () => {
+            try {
+                if (!containerRef.current) return;
+                const containerWidth = containerRef.current.offsetWidth - 24; // account for small padding
+                setContainerWidthState(containerWidth);
+
+                // Try to detect a real item width from the first emoji button
+                const firstBtn = carouselRef.current?.querySelector('button');
+                let measuredItemWidth = FALLBACK_ITEM_WIDTH;
+                if (firstBtn) {
+                    const btnStyle = window.getComputedStyle(firstBtn);
+                    const marginRight = parseFloat(btnStyle.marginRight || '8') || 8;
+                    measuredItemWidth = Math.round(firstBtn.offsetWidth + marginRight);
+                }
+                setItemWidth(measuredItemWidth);
+
+                const totalWidth = sectionEmojis.length * measuredItemWidth;
+                const maxScroll = Math.max(0, totalWidth - containerWidth);
+                setMaxScrollState(maxScroll);
+            } catch (err) {
+                // ignore measurement failures
+            }
+        };
+
+        measure();
+        const t = setTimeout(measure, 150);
+        window.addEventListener('resize', measure);
+        return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
+    }, [sectionEmojis.length]);
 
     const handlePrevious = () => {
         if (currentSection > 0) {
@@ -87,15 +122,20 @@ export const ResponsiveCreateReviewLayout = ({
 
     // Auto-position carousel to center selected section
     useEffect(() => {
-        // Centrer la section courante au milieu du carousel
-        // scrollPosition = index * ITEM_WIDTH met la section 'index' au centre
-        const targetScroll = Math.max(0, Math.min(maxScroll, currentSection * ITEM_WIDTH));
+        // When we have measurements, compute the target scroll so the selected item is centered
+        const w = itemWidth || FALLBACK_ITEM_WIDTH;
+        const containerW = containerWidthState || (VISIBLE_ITEMS * w);
+        const totalWidth = sectionEmojis.length * w;
+        const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
 
-        // Smooth animation vers la position cible
+        // compute center-aligned scroll: itemCenter - containerCenter
+        const itemCenter = (currentSection * w) + (w / 2);
+        const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
+
         if (!isDragging) {
             setScrollPosition(targetScroll);
         }
-    }, [currentSection, isDragging, maxScroll, ITEM_WIDTH]);
+    }, [currentSection, isDragging, maxScrollState, itemWidth, containerWidthState, sectionEmojis.length]);
 
     // Pointer-enabled handlers - Improved touch responsiveness and softer snap
     // Use a ref-based drag state and rAF for smooth updates, avoid passive scroll interference
@@ -147,10 +187,13 @@ export const ResponsiveCreateReviewLayout = ({
 
         // Calcul de la nouvelle position de scroll basée sur le drag
         let newScroll = scrollPosition + diff;
+        const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
         newScroll = Math.max(0, Math.min(maxScroll, newScroll));
 
-        // Déterminer l'index scrolled et appliquer un seuil pour éviter l'effet "aimant" trop sensible
-        const scrolledIndex = newScroll / ITEM_WIDTH;
+        // Déterminer l'index scrolled selon la position du centre du conteneur
+        // scrolledIndex = (newScroll + containerCenter - itemWidth/2) / itemWidth
+        const containerCenter = (containerWidthState || (VISIBLE_ITEMS * itemWidth)) / 2;
+        const scrolledIndex = (newScroll + containerCenter - (itemWidth / 2)) / itemWidth;
         const movedSections = scrolledIndex - currentSection;
         const absMoved = Math.abs(movedSections);
 
@@ -163,7 +206,9 @@ export const ResponsiveCreateReviewLayout = ({
         }
 
         snapIndex = Math.max(0, Math.min(totalSections - 1, snapIndex));
-        const snappedScroll = Math.max(0, Math.min(maxScroll, snapIndex * ITEM_WIDTH));
+
+        // Calculer snappedScroll en centrant l'item choisi
+        const snappedScroll = Math.max(0, Math.min(maxScroll, (snapIndex * itemWidth + (itemWidth / 2)) - containerCenter));
 
         // Appliquer un snapping plus doux (easing moins agressif)
         setScrollPosition(snappedScroll);
