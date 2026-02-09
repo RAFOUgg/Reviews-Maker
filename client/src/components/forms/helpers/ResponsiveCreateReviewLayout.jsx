@@ -47,6 +47,10 @@ export const ResponsiveCreateReviewLayout = ({
     const [containerWidthState, setContainerWidthState] = useState(0);
     const [maxScrollState, setMaxScrollState] = useState(0);
 
+    // Backwards compatibility fallback: some bundles or older code paths may reference ITEM_WIDTH
+    // Defining it here prevents ReferenceError in case an uppercase variant is emitted by minifier.
+    const ITEM_WIDTH = itemWidth || FALLBACK_ITEM_WIDTH;
+
     // Compute/measure widths to calculate exact centering and maxScroll
     useEffect(() => {
         const measure = () => {

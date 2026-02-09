@@ -38,15 +38,15 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
     const computedMax = PLANT_PARTS.length * 5;
 
     // Gradient / cursor states
-    const gradientRef = React.useRef(null);
-    const [cursorPos, setCursorPos] = React.useState(0.5); // 0..1
-    const [cursorColor, setCursorColor] = React.useState(DEFAULT_COLOR.hex);
-    const [dragging, setDragging] = React.useState(false);
+    const gradientRef = useRef(null);
+    const [cursorPos, setCursorPos] = useState(0.5); // 0..1
+    const [cursorColor, setCursorColor] = useState(DEFAULT_COLOR.hex);
+    const [dragging, setDragging] = useState(false);
 
     // Modal states
-    const [showAddModal, setShowAddModal] = React.useState(false);
-    const [modalPercentage, setModalPercentage] = React.useState(20);
-    const [modalPart, setModalPart] = React.useState('');
+    const [showAddModal, setShowAddModal] = useState(false);
+    const [modalPercentage, setModalPercentage] = useState(20);
+    const [modalPart, setModalPart] = useState('');
 
     // Helpers: create CSS gradient string from colors
     const makeGradient = (colors) => {
@@ -89,18 +89,19 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
         setCursorColor(getColorAtPos(pos));
     };
 
+    const onPointerMove = (e) => { updateCursorFromEvent(e.clientX); };
+    const stopPointerDrag = () => {
+        setDragging(false);
+        window.removeEventListener('pointermove', onPointerMove);
+        window.removeEventListener('pointerup', stopPointerDrag);
+    };
+
     const startDrag = (e) => {
         e.preventDefault();
         setDragging(true);
-        window.addEventListener('mousemove', onDrag);
-        window.addEventListener('mouseup', stopDrag);
+        window.addEventListener('pointermove', onPointerMove);
+        window.addEventListener('pointerup', stopPointerDrag);
         if (e.clientX) updateCursorFromEvent(e.clientX);
-    };
-    const onDrag = (e) => { if (dragging) updateCursorFromEvent(e.clientX); };
-    const stopDrag = (e) => {
-        setDragging(false);
-        window.removeEventListener('mousemove', onDrag);
-        window.removeEventListener('mouseup', stopDrag);
     };
 
     const handleBarPointer = (e) => {
@@ -220,6 +221,15 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
         onChange(updated);
     };
 
+    // cleanup pointer listeners on unmount
+    useEffect(() => {
+        return () => {
+            window.removeEventListener('pointermove', onPointerMove);
+            window.removeEventListener('pointerup', stopPointerDrag);
+        };
+    }, []);
+
+
     const totalPercentage = selectedColors.reduce((sum, s) => sum + s.percentage, 0);
 
     return (
@@ -243,24 +253,25 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                 <div className="relative">
                     {/* Square gradient bar with draggable cursor */}
                     <div
-                        ref={(el) => { if (el) gradientRef.current = el; }}
-                        onMouseDown={(e) => handleBarPointer(e)}
-                        onTouchStart={(e) => handleBarPointer(e.touches[0])}
-                        className="w-full h-12 rounded-lg overflow-hidden relative drop-shadow-xl"
+                        ref={gradientRef}
+                        onPointerDown={(e) => { e.preventDefault(); updateCursorFromEvent(e.clientX); }}
+                        className="w-full h-20 rounded-lg overflow-hidden relative drop-shadow-xl"
                         style={{
-                            background: makeGradient(CANNABIS_COLORS)
+                            background: makeGradient(CANNABIS_COLORS),
+                            touchAction: 'none'
                         }}
                     >
                         {/* draggable cursor */}
                         <div
-                            className="absolute -top-3 w-10 h-10 rounded-full border-2 border-white shadow-lg flex items-center justify-center cursor-grab"
+                            className="absolute w-10 h-10 rounded-full border-2 border-white shadow-lg flex items-center justify-center cursor-grab"
                             style={{
                                 left: `${cursorPos * 100}%`,
-                                transform: 'translate(-50%, 0)',
-                                backgroundColor: cursorColor
+                                top: '50%',
+                                transform: 'translate(-50%, -50%)',
+                                backgroundColor: cursorColor,
+                                touchAction: 'none'
                             }}
-                            onMouseDown={(e) => startDrag(e)}
-                            onTouchStart={(e) => startDrag(e.touches[0])}
+                            onPointerDown={(e) => startDrag(e)}
                             title="Déplacez pour choisir une couleur"
                         />
                     </div>
@@ -277,8 +288,8 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                     <AnimatePresence>
                         {showAddModal && (
                             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 flex items-center justify-center z-50">
-                                <div className="absolute inset-0 bg-black/50" onClick={() => closeAddModal()} />
-                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-gray-900 rounded-lg p-6 z-60 w-[320px] border border-gray-700">
+                                <div className="absolute inset-0 bg-black/50 z-40" onClick={() => closeAddModal()} />
+                                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-gray-900 rounded-lg p-6 z-50 w-[320px] border border-gray-700" onClick={(e) => e.stopPropagation()}>
                                     <h4 className="text-sm font-semibold mb-3">Ajouter la couleur choisie</h4>
                                     <div className="mb-3 text-xs text-gray-400">Couleur: <span className="font-medium" style={{ color: cursorColor }}>{cursorColor}</span></div>
 

@@ -119,10 +119,6 @@ app.use('/api/presets', presetsRoutes)
 app.use('/api/export', exportRoutes)
 app.use('/api/admin', adminRoutes)
 
-// Permissions introspection endpoints (used by frontend permission sync)
-import permissionsRoutes from './routes/permissions.js'
-app.use('/api/permissions', permissionsRoutes)
-
 // Health check endpoint
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() })
