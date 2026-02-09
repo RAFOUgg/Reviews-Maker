@@ -1,10 +1,12 @@
 import { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
+import { useAccountType } from '../../hooks/useAccountType'
 
 export default function AuthCallback() {
     const navigate = useNavigate()
     const setUser = useStore((state) => state.setUser)
+    const { accountType } = useAccountType()
 
     useEffect(() => {
         // Vérifier l'authentification après callback Discord
@@ -17,6 +19,18 @@ export default function AuthCallback() {
                 if (response.ok) {
                     const userData = await response.json()
                     setUser(userData)
+
+                    // Vérifier si l'utilisateur a un type de compte défini
+                    // Si pas de type ou type 'consumer' par défaut, rediriger vers choix de compte
+                    const hasValidAccountType = userData.accountType &&
+                        ['consumer', 'producer', 'influencer'].includes(userData.accountType.toLowerCase())
+
+                    if (!hasValidAccountType) {
+                        console.log('[AUTH] New user detected, redirecting to account choice')
+                        navigate('/choose-account')
+                        return
+                    }
+
                     navigate('/')
                     return
                 }

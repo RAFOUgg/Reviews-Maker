@@ -64,14 +64,19 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         // Map key -> display name and basic icon choice
         const name = key === 'minimal' ? 'Compact' : key === 'standard' ? 'Standard' : key === 'detailed' ? 'Détaillé' : key === 'custom' ? 'Personnalisé' : key;
         const icon = key === 'detailed' ? Layout : key === 'minimal' ? Grid : Maximize2;
-        const accountName = (typeof accountInfo !== 'undefined' && accountInfo?.name) ? accountInfo.name : 'Amateur';
-        const available = isTemplateAvailable(key, accountName);
+
+        // Check template availability based on account type permissions
+        const isAvailable = key === 'minimal' || // compact always available
+            (key === 'standard' && isPremium) || // detailed for premium
+            (key === 'detailed' && isPremium) || // detailed for premium  
+            (key === 'custom' && isProducer); // custom for producer only
+
         return {
             id: key,
             name,
             icon,
             description: meta?.description || `${name} template`,
-            premium: !available
+            premium: !isAvailable
         };
     });
 

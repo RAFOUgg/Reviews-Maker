@@ -85,9 +85,23 @@ export default function LoginPage() {
 
                     {/* Carte principale */}
                     <LiquidCard glow="purple" padding="lg" className="mb-6">
-                        {/* OAuth Buttons */}
+                        {/* OAuth Buttons - Redirect to account choice first */}
                         <div className="space-y-3 mb-6">
-                            <OAuthButtons />
+                            <div className="text-center">
+                                <LiquidButton
+                                    onClick={() => navigate('/choose-account')}
+                                    variant="secondary"
+                                    size="lg"
+                                    className="w-full"
+                                    glow="purple"
+                                >
+                                    <UserPlus className="w-5 h-5 mr-2" />
+                                    Créer un compte
+                                </LiquidButton>
+                                <p className="text-white/50 text-sm mt-2">
+                                    Choisissez votre type de compte avant de vous connecter
+                                </p>
+                            </div>
                         </div>
 
                         {/* Divider */}
