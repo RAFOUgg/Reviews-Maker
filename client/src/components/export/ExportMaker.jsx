@@ -14,6 +14,7 @@ import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from '../../data/exportTemplates';
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
+import { getMaxElements } from '../../data/exportTemplates';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -80,10 +81,16 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Final allowed ids = intersection(template elements, product relevant modules)
     const finalAllowedIds = allowedElementIds.filter(id => relevantModulesSet.has(id));
 
+    // Pagination logic
+    const maxElements = getMaxElements(format, selectedTemplate);
+    const totalPages = Math.ceil(finalAllowedIds.length / maxElements);
+    const [currentPage, setCurrentPage] = useState(0);
+    const currentElements = finalAllowedIds.slice(currentPage * maxElements, (currentPage + 1) * maxElements);
+
     const hasElement = (ids) => {
         if (!ids) return false;
         const arr = Array.isArray(ids) ? ids : [ids];
-        return arr.some(id => finalAllowedIds.includes(id));
+        return arr.some(id => currentElements.includes(id));
     };
 
     const Star = ({ className }) => (
@@ -248,6 +255,32 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         </button>
                                     );
                                 })}
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div className="space-y-2">
+                                        <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-3">Navigation</h3>
+                                        <div className="flex items-center justify-between">
+                                            <button
+                                                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                                                disabled={currentPage === 0}
+                                                className="p-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white"
+                                            >
+                                                <ChevronsRight className="w-4 h-4 rotate-180" />
+                                            </button>
+                                            <span className="text-sm text-gray-300">
+                                                Page {currentPage + 1} sur {totalPages}
+                                            </span>
+                                            <button
+                                                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                                                disabled={currentPage === totalPages - 1}
+                                                className="p-2 bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed rounded-lg text-white"
+                                            >
+                                                <ChevronsRight className="w-4 h-4" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
 
