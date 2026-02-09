@@ -63,8 +63,9 @@ export default function VisuelTechniqueOptimized({ formData, handleChange }) {
                             <ColorWheelPicker
                                 value={formData.selectedColors || []}
                                 onChange={handleColorChange}
-                                maxSelections={5}
+                                maxSelections={7}
                             />
+                            <div className="mt-3 text-xs text-gray-400">🔗 Données envoyées : <a href="/server-new/routes/flower-reviews.js" className="underline text-gray-200">API Flower Reviews</a> • <a href="/server-new/prisma/schema.prisma" className="underline text-gray-200">DB Schema</a> • <a href="/client/src/components/export/ExportMaker.jsx" className="underline text-gray-200">ExportMaker</a></div>
                         </div>
                     )}
                 </div>

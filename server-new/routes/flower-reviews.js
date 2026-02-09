@@ -222,6 +222,8 @@ function validateFlowerReviewData(data) {
 
     // ===== SECTION 5: Visuel & Technique =====
     // Couleur nuancier (JSON array)
+    // Format attendu (nouveau): [{ colorId, percentage, parts: [{ partId, percent }] }, ...]
+    // Exemple: [{ colorId: 'green', percentage: 60, parts: [{ partId: 'bracts', percent: 70 }, { partId: 'pistils', percent: 30 }] }]
     if (data.couleurNuancier) {
         if (typeof data.couleurNuancier === 'string') {
             try {

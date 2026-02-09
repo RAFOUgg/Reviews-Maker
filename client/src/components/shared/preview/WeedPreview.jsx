@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 
+const DEFAULT_PREVIEW_COLOR = '#B6C7A6';
 const CANNABIS_COLORS = [
     { id: 'green-lime', hex: '#84CC16' },
     { id: 'green', hex: '#22C55E' },
@@ -33,9 +34,9 @@ const WeedPreview = ({
     graines = 10
 }) => {
     const baseColor = useMemo(() => {
-        if (!selectedColors || selectedColors.length === 0) return '#22C55E';
+        if (!selectedColors || selectedColors.length === 0) return DEFAULT_PREVIEW_COLOR;
         const firstColor = CANNABIS_COLORS.find(c => c.id === selectedColors[0].colorId);
-        return firstColor?.hex || '#22C55E';
+        return firstColor?.hex || DEFAULT_PREVIEW_COLOR;
     }, [selectedColors]);
 
     const bracts = useMemo(() => {
@@ -265,16 +266,17 @@ const WeedPreview = ({
                     <div className="text-xs text-gray-400 mb-2">Couleurs</div>
                     <div className="flex gap-1 h-4 rounded overflow-hidden">
                         {selectedColors.map((selected, index) => {
-                            const colorData = CANNABIS_COLORS.find(c => c.id === selected.colorId);
+                            const colorData = CANNABIS_COLORS.find(c => c.id === selected.colorId) || { hex: DEFAULT_PREVIEW_COLOR };
                             return (
-                                <div
-                                    key={selected.colorId}
-                                    style={{
-                                        backgroundColor: colorData?.hex,
-                                        width: `${selected.percentage}%`
-                                    }}
-                                    className="h-full"
-                                />
+                                <div key={selected.colorId} className="h-full flex items-center">
+                                    <div style={{ backgroundColor: colorData.hex, width: `${selected.percentage}%` }} className="h-full" />
+                                    {/* si des parties sont définies, on affiche un tooltip textuel */}
+                                    {selected.parts && selected.parts.length > 0 && (
+                                        <div className="ml-2 text-xs text-gray-300 truncate" style={{ maxWidth: '36%' }}>
+                                            {selected.parts.map(p => `${p.partId}: ${p.percent}%`).join(' • ')}
+                                        </div>
+                                    )}
+                                </div>
                             );
                         })}
                     </div>
