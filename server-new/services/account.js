@@ -3,9 +3,7 @@
  * Gère les transitions entre consumer et producer
  */
 
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '../server.js'
 
 /**
  * Types de comptes disponibles - Conforme CDC
@@ -207,7 +205,7 @@ export async function changeAccountType(userId, newType, options = {}) {
         });
     }
 
-    if (ACCOUNT_TYPES.INFLUENCEUR === newType && !user.influencerProfile) {
+    if (ACCOUNT_TYPES.INFLUENCER === newType && !user.influencerProfile) {
         await prisma.influencerProfile.create({
             data: {
                 userId: userId,
