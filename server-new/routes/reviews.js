@@ -8,6 +8,7 @@ import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } fro
 import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewData, validateReviewId } from '../utils/validation.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
+import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
 import { EXPORT_LIMITS } from '../middleware/permissions.js'
 
 const router = express.Router()
@@ -93,6 +94,8 @@ router.get('/', asyncHandler(async (req, res) => {
     let formattedReviews = formatReviews(reviews, currentUser)
     // Exposer orchardConfig/preset si présents
     formattedReviews = formattedReviews.map(r => liftOrchardFromExtra(r))
+    // Map DB field names to API-friendly English keys
+    formattedReviews = formattedReviews.map(r => mapToApi('Review', r))
 
     res.json(formattedReviews)
 }))
@@ -123,7 +126,10 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
         ownerId: review.author.id
     }))
 
-    res.json(reviewsWithMeta)
+    // Map DB field names to API-friendly English keys
+    const apiReviews = reviewsWithMeta.map(r => mapToApi('Review', r))
+
+    res.json(apiReviews)
 }))
 
 // GET /api/reviews/:id - Récupérer une review spécifique
@@ -183,9 +189,12 @@ router.get('/:id', asyncHandler(async (req, res) => {
         formattedReview.authorId = review.authorId
     }
 
-    console.log('✅ Sending review:', { id: formattedReview.id, authorId: formattedReview.authorId })
+    // Map DB fields to API (English keys)
+    const apiReview = mapToApi('Review', formattedReview)
 
-    res.json(formattedReview)
+    console.log('✅ Sending review:', { id: apiReview.id, authorId: apiReview.authorId })
+
+    res.json(apiReview)
 }))
 
 // POST /api/reviews - Créer une nouvelle review
@@ -241,6 +250,9 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
             });
         }
     }
+
+    // Map incoming English keys to DB field names (draft mapping)
+    req.body = mapToDb('Review', req.body)
 
     // Valider les données de la review
     const validation = validateReviewData(req.body)
@@ -301,9 +313,10 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
         }
     })
 
-    // Formater et retourner
+    // Formater, map DB fields to API (english keys), et retourner
     let formattedReview = formatReview(review, req.user)
     formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = mapToApi('Review', formattedReview)
 
     res.status(201).json(formattedReview)
 }))
@@ -311,6 +324,9 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
 // PUT /api/reviews/:id - Mettre à jour une review
 router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
     console.log(`🔁 PUT /api/reviews/${req.params.id} by user: ${req.user?.id || 'unknown'}`, 'body keys:', Object.keys(req.body))
+
+    // Map incoming English keys to DB field names (draft mapping)
+    req.body = mapToDb('Review', req.body)
     // Valider l'ID
     if (!validateReviewId(req.params.id)) {
         throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
@@ -555,6 +571,7 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
     // Formater et retourner
     let formattedReview = formatReview(updated, req.user)
     formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = mapToApi('Review', formattedReview)
     res.json(formattedReview)
 }))
 
@@ -630,6 +647,7 @@ router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
     // Formater et retourner
     let formattedReview = formatReview(updatedReview, req.user)
     formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = mapToApi('Review', formattedReview)
     res.json(formattedReview)
 }))
 
