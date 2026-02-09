@@ -21,10 +21,10 @@ export class PermissionSyncService {
      */
     async getAccountTypes() {
         try {
-            const response = await this.api.get('/api/permissions/account-types')
+            const response = await this.api.get('/api/permissions/account-types', { withCredentials: true })
             return response.data
         } catch (error) {
-            console.error('Failed to fetch account types:', error)
+            console.error('Failed to fetch account types:', error && error.message ? error.message : error)
             // Fallback to hardcoded defaults
             return DEFAULT_ACCOUNT_TYPES
         }
@@ -35,10 +35,10 @@ export class PermissionSyncService {
      */
     async getAvailableExportFormats() {
         try {
-            const response = await this.api.get('/api/export/formats')
+            const response = await this.api.get('/api/export/formats', { withCredentials: true })
             return response.data.availableFormats
         } catch (error) {
-            console.error('Failed to fetch export formats:', error)
+            console.error('Failed to fetch export formats:', error && error.message ? error.message : error)
             return ['png', 'jpg', 'pdf'] // Consumer default
         }
     }
@@ -48,10 +48,10 @@ export class PermissionSyncService {
      */
     async getAvailableTemplates() {
         try {
-            const response = await this.api.get('/api/export/templates')
+            const response = await this.api.get('/api/export/templates', { withCredentials: true })
             return response.data.templates
         } catch (error) {
-            console.error('Failed to fetch templates:', error)
+            console.error('Failed to fetch templates:', error && error.message ? error.message : error)
             return []
         }
     }
@@ -61,10 +61,11 @@ export class PermissionSyncService {
      */
     async canAccessFeature(featureName) {
         try {
-            const response = await this.api.get(`/api/permissions/feature/${featureName}`)
+            const response = await this.api.get(`/api/permissions/feature/${featureName}`, { withCredentials: true })
             return response.data.allowed
         } catch (error) {
             // If endpoint doesn't exist, assume based on user tier
+            console.warn('Failed to check feature availability:', error && error.message ? error.message : error)
             return false
         }
     }
