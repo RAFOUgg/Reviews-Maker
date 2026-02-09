@@ -14,6 +14,12 @@ export function useAccountFeatures() {
     const { accountType } = useStore()
 
     // Déterminer les features par type de compte
+    // Normalize account type to accept both French and English values
+    const normalized = String(accountType || '').toLowerCase()
+    const isProducer = ['producteur', 'producer'].includes(normalized)
+    const isInfluencer = ['influenceur', 'influencer'].includes(normalized)
+    const isAmateur = ['amateur', 'consumer'].includes(normalized)
+
     const features = {
         // ========== TOUTES LES TIERS ==========
         canCreateReviews: true,
@@ -23,49 +29,49 @@ export function useAccountFeatures() {
         canExportPDF: true,
 
         // ========== PRODUCTEUR (29.99€/mois) ==========
-        isProducteur: accountType === 'producteur',
-        canAccessProductorDashboard: accountType === 'producteur',
-        canCreateCustomTemplates: accountType === 'producteur',
-        canAccessTemplateEditor: accountType === 'producteur',
-        canCreateWatermarks: accountType === 'producteur',
-        canExportCSV: accountType === 'producteur',
-        canExportJSON: accountType === 'producteur',
-        canExportSVG: accountType === 'producteur',
-        canExportHTML: accountType === 'producteur',
-        canAccessDragDropExport: accountType === 'producteur',
-        canConfigurePipeline: accountType === 'producteur',
-        canAccessAdvancedStats: accountType === 'producteur',
-        canAccessProductorStats: accountType === 'producteur', // Stats culture, rendements
-        canExportUnlimited: accountType === 'producteur',
-        canAccessGeneticsCanvas: accountType === 'producteur', // Généalogie cultivars
-        canUseFertilizerTracking: accountType === 'producteur',
-        canAccessSavedPresets: accountType === 'producteur',
+        isProducteur: isProducer,
+        canAccessProductorDashboard: isProducer,
+        canCreateCustomTemplates: isProducer,
+        canAccessTemplateEditor: isProducer,
+        canCreateWatermarks: isProducer,
+        canExportCSV: isProducer,
+        canExportJSON: isProducer,
+        canExportSVG: isProducer,
+        canExportHTML: isProducer,
+        canAccessDragDropExport: isProducer,
+        canConfigurePipeline: isProducer,
+        canAccessAdvancedStats: isProducer,
+        canAccessProductorStats: isProducer, // Stats culture, rendements
+        canExportUnlimited: isProducer,
+        canAccessGeneticsCanvas: isProducer, // Généalogie cultivars
+        canUseFertilizerTracking: isProducer,
+        canAccessSavedPresets: isProducer,
 
         // ========== INFLUENCEUR (15.99€/mois) ==========
-        isInfluenceur: accountType === 'influenceur',
-        canAccessInfluencerDashboard: accountType === 'influenceur',
-        canAccessInfluencerStats: accountType === 'influenceur', // Stats engagement
-        canExportHighQuality: accountType === 'influenceur',
-        canAccessEngagementMetrics: accountType === 'influenceur', // Likes, partages, comments
-        canViewAudienceAnalytics: accountType === 'influenceur',
-        canAccessPreviewSystem: accountType === 'influenceur',
+        isInfluenceur: isInfluencer,
+        canAccessInfluencerDashboard: isInfluencer,
+        canAccessInfluencerStats: isInfluencer, // Stats engagement
+        canExportHighQuality: isInfluencer,
+        canAccessEngagementMetrics: isInfluencer, // Likes, partages, comments
+        canViewAudienceAnalytics: isInfluencer,
+        canAccessPreviewSystem: isInfluencer,
 
         // ========== PRODUCTEUR + INFLUENCEUR ==========
-        isPaid: accountType === 'producteur' || accountType === 'influenceur',
-        isAmateurOrAbove: accountType !== undefined,
+        isPaid: isProducer || isInfluencer,
+        isAmateurOrAbove: normalized !== '',
 
         // ========== ADMIN ==========
-        isAdmin: accountType === 'admin',
-        canAccessAdminPanel: accountType === 'admin',
-        canManageUsers: accountType === 'admin',
-        canViewAllReviews: accountType === 'admin',
-        canModerateContent: accountType === 'admin',
+        isAdmin: normalized === 'admin',
+        canAccessAdminPanel: normalized === 'admin',
+        canManageUsers: normalized === 'admin',
+        canViewAllReviews: normalized === 'admin',
+        canModerateContent: normalized === 'admin',
 
         // ========== AMATEUR (gratuit) ==========
-        isAmateur: accountType === 'amateur',
-        canAccessPresetTemplatesOnly: accountType === 'amateur',
-        hasExportLimit: accountType === 'amateur', // Max 5 exports/mois
-        cannotAccessPremiumFeatures: accountType === 'amateur',
+        isAmateur: isAmateur,
+        canAccessPresetTemplatesOnly: isAmateur,
+        hasExportLimit: isAmateur, // Max 5 exports/mois
+        cannotAccessPremiumFeatures: isAmateur,
     }
 
     return features
@@ -161,13 +167,17 @@ function getRequiredTierForFeature(featureName) {
  * Obtenir l'étiquette du type de compte
  */
 export function getAccountTypeLabel(accountType) {
+    const normalized = String(accountType || '').toLowerCase()
     const labels = {
         amateur: 'Amateur',
+        consumer: 'Amateur',
         producteur: 'Producteur',
+        producer: 'Producteur',
         influenceur: 'Influenceur',
+        influencer: 'Influenceur',
         admin: 'Administrateur',
     }
-    return labels[accountType] || 'Inconnu'
+    return labels[normalized] || 'Inconnu'
 }
 
 /**
