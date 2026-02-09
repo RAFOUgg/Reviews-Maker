@@ -9,7 +9,7 @@ async function seedTestUser() {
 
         // Check if test user already exists
         const existingUser = await prisma.user.findUnique({
-            where: { email: 'test@example.com' }
+            where: { emailBackup: 'test@example.com' }
         })
 
         if (existingUser) {
@@ -24,9 +24,10 @@ async function seedTestUser() {
         const user = await prisma.user.create({
             data: {
                 email: 'test@example.com',
+                emailBackup: 'test@example.com',
                 username: 'TestUser',
                 passwordHash: hashedPassword,
-                accountTier: 'Amateur',
+                accountType: 'consumer',
                 emailVerified: true,
                 kycStatus: 'pending',
                 createdAt: new Date(),

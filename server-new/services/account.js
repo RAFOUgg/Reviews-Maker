@@ -154,6 +154,18 @@ export function canUpgradeAccountType(user, targetType) {
  * @returns {Promise<Object>} Utilisateur mis à jour
  */
 export async function changeAccountType(userId, newType, options = {}) {
+    // DEV MODE: Handle dev user
+    if (process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id') {
+        console.log(`[DEV] Mock upgrade for dev user to ${newType}`);
+        return {
+            id: 'dev-test-user-id',
+            username: 'DevTestUser',
+            email: 'test@example.com',
+            roles: JSON.stringify({ roles: [newType] }),
+            accountType: newType
+        };
+    }
+
     const user = await prisma.user.findUnique({
         where: { id: userId },
         include: {

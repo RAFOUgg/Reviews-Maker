@@ -173,9 +173,19 @@ router.post('/upgrade', requireAuth, async (req, res) => {
         }
 
         // Récupérer l'utilisateur actuel
-        const user = await prisma.user.findUnique({ where: { id: userId } })
+        let user = null;
+        if (process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id') {
+            user = {
+                id: 'dev-test-user-id',
+                username: 'DevTestUser',
+                email: 'test@example.com',
+                roles: JSON.stringify({ roles: ['consumer'] })
+            };
+        } else {
+            user = await prisma.user.findUnique({ where: { id: userId } });
+        }
         if (!user) {
-            return res.status(404).json({ error: 'Utilisateur introuvable' })
+            return res.status(404).json({ error: 'Utilisateur introuvable' });
         }
 
         // Empêcher le downgrade (producteur ne peut pas devenir influenceur)
@@ -187,8 +197,10 @@ router.post('/upgrade', requireAuth, async (req, res) => {
         // Utiliser la logique centralisée pour changer le type de compte
         const updatedUser = await changeAccountType(userId, englishType, {})
 
-        // Mettre à jour le statut d'abonnement dans l'utilisateur/prisma
-        await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
+        // Mettre à jour le statut d'abonnement dans l'utilisateur/prisma (skip in dev)
+        if (!(process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id')) {
+            await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
+        }
 
         console.log(`✅ Upgrade réussi: ${user.username} → ${englishType}`)
 
