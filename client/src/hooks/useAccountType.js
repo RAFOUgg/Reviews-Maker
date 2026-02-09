@@ -16,10 +16,8 @@ export function useAccountType() {
     const raw = user?.accountType || user?.type || 'consumer';
     const normalized = String(raw).toLowerCase();
 
-    // Support French/English labels and variations (Amateur/Producteur/Influencer)
-    if (normalized === 'amateur' || normalized === 'consumer' || normalized === 'consommateur') return 'consumer';
-    if (normalized === 'producteur' || normalized === 'producer') return 'producer';
-    if (normalized === 'influenceur' || normalized === 'influencer' || normalized === 'influencer_pro') return 'influencer';
+    // Only support English account types
+    if (['consumer', 'producer', 'influencer'].includes(normalized)) return normalized;
 
     return 'consumer';
   }, [user]);
