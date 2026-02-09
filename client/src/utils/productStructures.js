@@ -867,7 +867,7 @@ export const choiceCatalog = {
 };
 
 export const productStructures = {
-    Fleur: {
+    flower: {
         sections: [
             {
                 title: "📋 Informations générales",
@@ -982,7 +982,7 @@ export const productStructures = {
             }
         ]
     },
-    Hash: {
+    hash: {
         sections: [
             {
                 title: "📋 Informations générales",
@@ -1087,7 +1087,7 @@ export const productStructures = {
             }
         ]
     },
-    Concentré: {
+    concentrate: {
         sections: [
             {
                 title: "📋 Informations générales",
@@ -1197,7 +1197,7 @@ export const productStructures = {
             }
         ]
     },
-    Comestible: {
+    edible: {
         sections: [
             {
                 title: "📋 Informations générales",

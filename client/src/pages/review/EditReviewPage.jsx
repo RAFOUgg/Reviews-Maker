@@ -171,7 +171,7 @@ export default function EditReviewPage() {
             // and populating any missing keys from parsedData / extraData / categoryRatings
             const filledFormData = { ...mergedFormData };
             try {
-                const structureSections = productStructures[parsedData.type || 'Fleur']?.sections || [];
+                const structureSections = productStructures[parsedData.type || 'flower']?.sections || [];
                 structureSections.forEach(section => {
                     (section.fields || []).forEach(f => {
                         const k = f.key;
@@ -226,7 +226,7 @@ export default function EditReviewPage() {
             setFormData(filledFormData);
             setExistingImages(parseImages(data.images));
 
-            const prodStructure = productStructures[data.type] || productStructures.Fleur;
+            const prodStructure = productStructures[data.type] || productStructures.flower;
             setStructure(prodStructure);
 
             setLoading(false);
@@ -872,7 +872,7 @@ export default function EditReviewPage() {
 
     // ✅ Utiliser le mapping centralisé
     const calculateCategoryRatings = () => {
-        return calcCategoryRatings(formData, formData.type || 'Fleur');
+        return calcCategoryRatings(formData, formData.type || 'flower');
     };
 
     const categoryRatings = calculateCategoryRatings();

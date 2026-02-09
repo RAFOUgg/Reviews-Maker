@@ -23,10 +23,10 @@ import {
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
     { id: 'all', label: 'Tous', icon: null },
-    { id: 'Fleur', label: 'Fleurs', icon: Flower2, color: 'green' },
-    { id: 'Hash', label: 'Hash', icon: Hash, color: 'amber' },
-    { id: 'Concentré', label: 'Concentrés', icon: FlaskConical, color: 'purple' },
-    { id: 'Comestible', label: 'Comestibles', icon: Cookie, color: 'pink' },
+    { id: 'flower', label: 'Fleurs', icon: Flower2, color: 'green' },
+    { id: 'hash', label: 'Hash', icon: Hash, color: 'amber' },
+    { id: 'concentrate', label: 'Concentrés', icon: FlaskConical, color: 'purple' },
+    { id: 'edible', label: 'Comestibles', icon: Cookie, color: 'pink' },
 ]
 
 const VIEW_MODES = [
@@ -386,8 +386,8 @@ export default function ReviewsTab() {
                                 key={type.id}
                                 onClick={() => setTypeFilter(type.id)}
                                 className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
-                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                        : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
+                                    ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                    : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
                                     }`}
                             >
                                 {Icon && <Icon className="w-4 h-4" />}
@@ -437,8 +437,8 @@ export default function ReviewsTab() {
                                     key={mode.id}
                                     onClick={() => setViewMode(mode.id)}
                                     className={`p-2 rounded-lg transition-colors ${viewMode === mode.id
-                                            ? 'bg-purple-500 text-white'
-                                            : 'text-white/50 hover:text-white'
+                                        ? 'bg-purple-500 text-white'
+                                        : 'text-white/50 hover:text-white'
                                         }`}
                                     title={mode.label}
                                 >

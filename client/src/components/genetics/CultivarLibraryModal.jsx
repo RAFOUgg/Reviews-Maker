@@ -28,8 +28,8 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
             });
             if (!response.ok) throw new Error('Erreur lors du chargement des reviews');
             const data = await response.json();
-            // Filtrer uniquement les reviews de type "Fleur"
-            const flowers = data.filter(review => review.type === 'Fleur');
+            // Filtrer uniquement les reviews de type "flower"
+            const flowers = data.filter(review => review.type === 'flower');
             setFlowerReviews(flowers);
         } catch (err) {
             setError(err.message);
@@ -54,7 +54,7 @@ export default function CultivarLibraryModal({ isOpen, onClose, onSelect }) {
             farm: review.farm || '',
             breeder: review.breeder || '',
             reviewId: review.id, // Lien vers la review d'origine
-            reviewType: 'Fleur'
+            reviewType: 'flower'
         };
         onSelect(cultivarData);
         onClose();

@@ -26,21 +26,21 @@ export default function CreateReviewPage() {
     const toast = useToast();
 
     // Support ancien système query param + nouveau path param
-    const typeFromUrl = productType || searchParams.get('type') || 'Fleur';
+    const typeFromUrl = productType || searchParams.get('type') || 'flower';
     const editId = searchParams.get('id');
     const isEditing = !!editId;
 
     // Redirection vers le nouveau système FlowerReview pour les fleurs
     useEffect(() => {
-        if (typeFromUrl === 'Fleur') {
+        if (typeFromUrl === 'flower') {
             const redirectPath = isEditing ? `/edit/flower/${editId}` : '/create/flower';
             navigate(redirectPath, { replace: true });
         }
     }, [typeFromUrl, isEditing, editId, navigate]);
-    const [structure, setStructure] = useState(productStructures[typeFromUrl] || productStructures.Fleur);
+    const [structure, setStructure] = useState(productStructures[typeFromUrl] || productStructures.flower);
     // Keep structure in sync if the type param in URL changes
     useEffect(() => {
-        setStructure(productStructures[typeFromUrl] || productStructures.Fleur);
+        setStructure(productStructures[typeFromUrl] || productStructures.flower);
     }, [typeFromUrl]);
     const sections = structure.sections;
 
@@ -179,7 +179,7 @@ export default function CreateReviewPage() {
                         // so field keys and sections match those in the saved review (fixes missing scores/tastes/effects on edit).
                         try {
                             if (review.type && review.type !== typeFromUrl) {
-                                const newStructure = productStructures[review.type] || productStructures.Fleur;
+                                const newStructure = productStructures[review.type] || productStructures.flower;
                                 setStructure(newStructure);
                             }
                         } catch (err) {
@@ -443,7 +443,7 @@ export default function CreateReviewPage() {
 
     // ✅ Utiliser le mapping centralisé
     const calculateCategoryRatings = () => {
-        return calcCategoryRatings(formData, formData.type || 'Fleur');
+        return calcCategoryRatings(formData, formData.type || 'flower');
     };
 
     const categoryRatings = calculateCategoryRatings();

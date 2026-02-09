@@ -9,14 +9,14 @@ const prisma = new PrismaClient();
 
 /**
  * Types de comptes disponibles - Conforme CDC
- * Amateur: gratuit, fonctionnalités limitées
- * Producteur: 29.99€/mois, accès complet pipelines et exports pros
- * Influenceur: 15.99€/mois, exports haute qualité et statistiques
+ * Consumer: gratuit, fonctionnalités limitées
+ * Producer: 29.99€/mois, accès complet pipelines et exports pros
+ * Influencer: 15.99€/mois, exports haute qualité et statistiques
  */
 export const ACCOUNT_TYPES = {
-    AMATEUR: 'amateur',           // Gratuit (ancien consumer)
-    PRODUCTEUR: 'producteur',     // 29.99€/mois (ancien producer)
-    INFLUENCEUR: 'influenceur',   // 15.99€/mois (anciens influencer_basic/pro)
+    CONSUMER: 'consumer',           // Gratuit (ancien amateur)
+    PRODUCER: 'producer',     // 29.99€/mois (ancien producteur)
+    INFLUENCER: 'influencer',   // 15.99€/mois (anciens influenceur)
     ADMIN: 'admin',               // Administrateur
 };
 
@@ -24,9 +24,9 @@ export const ACCOUNT_TYPES = {
  * Prix des abonnements
  */
 export const SUBSCRIPTION_PRICES = {
-    amateur: 0,
-    producteur: 29.99,
-    influenceur: 15.99
+    consumer: 0,
+    producer: 29.99,
+    influencer: 15.99
 };
 
 /**

@@ -196,7 +196,9 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
     // Vérifier les limites de reviews pour les comptes consumer
     const accountType = getUserAccountType(req.user);
     const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
-    const visibility = req.body.visibility || 'private';
+
+    // Determine visibility: frontend sends `isPublic` (boolean) or `visibility` (string)
+    const visibility = (req.body.isPublic === 'true' || req.body.isPublic === true || req.body.visibility === 'public') ? 'public' : 'private';
 
     // Vérifier limite reviews privées
     if (visibility === 'private' && limits.reviews !== -1) {

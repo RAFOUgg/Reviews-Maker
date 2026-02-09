@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
     const productTypes = [
         {
-            name: 'Fleur',
+            name: 'flower',
             icon: '🌿',
             gradient: 'from-green-500/30 to-emerald-500/30',
             border: 'border-green-500/50',
@@ -62,8 +62,8 @@ export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
                         onClick={() => isAuthenticated && onCreateReview(type.name)}
                         disabled={!isAuthenticated}
                         className={`group relative overflow-hidden rounded-2xl p-8 transition-all duration-300 backdrop-blur-md border ${type.border} bg-gradient-to-br ${type.gradient} ${isAuthenticated
-                                ? 'cursor-pointer hover:shadow-2xl'
-                                : 'opacity-40 cursor-not-allowed'
+                            ? 'cursor-pointer hover:shadow-2xl'
+                            : 'opacity-40 cursor-not-allowed'
                             }`}
                         style={{
                             boxShadow: isAuthenticated ? `0 0 30px ${type.glow}` : 'none'

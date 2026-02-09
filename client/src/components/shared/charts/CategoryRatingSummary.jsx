@@ -7,9 +7,9 @@
 import PropTypes from 'prop-types'
 import { CATEGORY_DISPLAY_ORDER, getCategoryIcon, getCategoryLabel } from '../../../utils/categoryMappings'
 
-export default function CategoryRatingSummary({ ratings, productType = 'Fleur' }) {
+export default function CategoryRatingSummary({ ratings, productType = 'flower' }) {
     // Obtenir les catégories à afficher pour ce type de produit
-    const categoriesToDisplay = CATEGORY_DISPLAY_ORDER[productType] || CATEGORY_DISPLAY_ORDER.Fleur;
+    const categoriesToDisplay = CATEGORY_DISPLAY_ORDER[productType] || CATEGORY_DISPLAY_ORDER.flower;
 
     return (
         <div className="flex items-center justify-center gap-4 text-sm">
@@ -45,7 +45,7 @@ CategoryRatingSummary.propTypes = {
         effects: PropTypes.number,
         overall: PropTypes.number
     }).isRequired,
-    productType: PropTypes.oneOf(['Fleur', 'Hash', 'Concentré', 'Comestible'])
+    productType: PropTypes.oneOf(['flower', 'hash', 'concentrate', 'edible'])
 }
 
 

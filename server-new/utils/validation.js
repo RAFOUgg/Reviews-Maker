@@ -182,7 +182,7 @@ export function validateReviewData(data) {
     }
 
     // Champ requis: type
-    const validTypes = ['Fleur', 'Hash', 'Rosin', 'Concentré']
+    const validTypes = ['flower', 'hash', 'concentrate', 'edible']
     if (!data.type || !validTypes.includes(data.type)) {
         errors.push(`type est requis et doit être l'un de: ${validTypes.join(', ')}`)
     } else {

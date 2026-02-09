@@ -102,12 +102,12 @@ export default function TextureSection({ productType, data: directData, onChange
             stickiness
         };
 
-        // Champs spécifiques selon productType - Note: "Fleur" (pas "Fleurs")
-        if (productType === 'Fleurs' || productType === 'Fleur') {
+        // Champs spécifiques selon productType - Note: "flower" (pas "Fleurs")
+        if (productType === 'Fleurs' || productType === 'flower') {
             newTextureData.elasticity = elasticity;
         }
 
-        if (productType === 'Hash' || productType === 'Concentré') {
+        if (productType === 'hash' || productType === 'concentrate') {
             newTextureData.melting = melting;
             newTextureData.residue = residue;
         }
@@ -182,7 +182,7 @@ export default function TextureSection({ productType, data: directData, onChange
                 </div>
 
                 {/* Élasticité (Fleurs uniquement) */}
-                {(productType === 'Fleurs' || productType === 'Fleur') && (
+                {(productType === 'Fleurs' || productType === 'flower') && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Élasticité"

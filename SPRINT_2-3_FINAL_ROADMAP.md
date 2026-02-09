@@ -11,7 +11,7 @@
 ### **AVANT (Ancien plan)**
 1. Admin Panel full (16h)
 2. Account Page (16h)
-3. Orchard/Export (20h)
+3. ExportMaker/Export (20h)
 4. Library (12h)
 5. Phenohunt (12h) ← TROP BAS!
 
@@ -20,7 +20,7 @@
 2. Phenohunt COMPLET (24h) ← TOP PRIORITY
 3. Bibliothèque Fleurs (16h) + préparer autres
 4. Admin Panel LIGHT (6h) ← Test/moderation only
-5. Orchard/Export fixes (ongoing, pas bloquant)
+5. ExportMaker/Export fixes (ongoing, pas bloquant)
 
 ---
 

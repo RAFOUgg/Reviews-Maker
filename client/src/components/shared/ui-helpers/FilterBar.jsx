@@ -29,7 +29,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
     const [showAdvanced, setShowAdvanced] = useState(false);
 
-    const productTypes = ['Fleur', 'Hash', 'Concentré', 'Comestible'];
+    const productTypes = ['flower', 'hash', 'concentrate', 'edible'];
     const dureeOptions = choiceCatalog.dureeEffet || ['5-15min', '15-30min', '30min-1h', '1h-2h', '2h-4h', '4h-8h', '8h+'];
 
     const applyFilters = (newFilters) => {
@@ -336,7 +336,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                             </div>
 
                             {/* Section 2: Filtres culture & génétique (Fleur) */}
-                            {(filters.type === 'Fleur' || filters.type === 'all') && (
+                            {(filters.type === 'flower' || filters.type === 'all') && (
                                 <div className="pt-4 border-t border-white/10">
                                     <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-green-400">
                                         🌱 Filtres Culture & Génétique

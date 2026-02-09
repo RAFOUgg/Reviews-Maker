@@ -12,7 +12,7 @@
 
 #### **A. EXPORT MAKER / EXPORT SYSTEM** 
 **État**: 80% fait - Code existant
-- ✅ `OrchardPanel.jsx` (684 lignes) - composant principal
+- ✅ `ExportMaker.jsx` (684 lignes) - composant principal
 - ✅ `normalizeByType.js` - normalisation générique par type
 - ✅ `productTypeMappings.js` - mappings pour Fleurs/Hash/Concentré/Comestible
 - ✅ 10+ composants support (PagedPreviewPane, PageManager, PipelineEditor, etc.)
@@ -23,7 +23,7 @@
 - 🔴 Gérer les permissions (qui peut exporter quoi)
 - 🔴 Audit code & bug fixes (voir section C)
 
-**Localisation**: `client/src/utils/orchard/` + `client/src/components/shared/orchard/`
+**Localisation**: `client/src/utils/export/` + `client/src/components/shared/export/`
 
 ---
 

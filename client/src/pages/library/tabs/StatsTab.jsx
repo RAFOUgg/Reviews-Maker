@@ -100,7 +100,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
             }
         },
         topReviews: [
-            { id: 1, name: 'Zkittlez Premium', type: 'Fleur', views: 324, likes: 28 },
+            { id: 1, name: 'Zkittlez Premium', type: 'flower', views: 324, likes: 28 },
             { id: 2, name: 'Temple Ball', type: 'Hash', views: 256, likes: 22 },
             { id: 3, name: 'Live Rosin OG', type: 'Concentré', views: 189, likes: 15 },
         ],

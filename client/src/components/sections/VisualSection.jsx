@@ -32,8 +32,8 @@ export default function VisualSection({ productType, formData = {}, handleChange
             colors: selectedColors,
             colorRating,
             density,
-            ...(productType === 'Fleur' && { trichomes }),
-            ...(productType !== 'Fleur' && { transparency }),
+            ...(productType === 'flower' && { trichomes }),
+            ...(productType !== 'flower' && { transparency }),
             mold,
             seeds
         };
@@ -204,7 +204,7 @@ export default function VisualSection({ productType, formData = {}, handleChange
                 </div>
 
                 {/* Trichomes (Fleurs uniquement) */}
-                {productType === 'Fleur' && (
+                {productType === 'flower' && (
                     <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Trichomes"
