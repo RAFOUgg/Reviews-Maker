@@ -8,6 +8,31 @@ import { changeAccountType } from '../services/account.js'
 
 const router = express.Router()
 
+/**
+ * Parse les rôles depuis le champ JSON
+ * @param {string} rolesJson - Champ User.roles
+ * @returns {Array<string>}
+ */
+function parseRoles(rolesJson) {
+    try {
+        // Handle undefined, null, or empty string
+        if (!rolesJson || rolesJson === '') {
+            return ['consumer'];
+        }
+
+        const parsed = JSON.parse(rolesJson);
+
+        // Ensure parsed.roles is an array
+        if (parsed && Array.isArray(parsed.roles) && parsed.roles.length > 0) {
+            return parsed.roles;
+        }
+
+        return ['consumer'];
+    } catch (error) {
+        return ['consumer'];
+    }
+}
+
 // Prix des abonnements (en centimes)
 const PRICES = {
     influencer: 1599, // 15.99€
@@ -127,10 +152,20 @@ router.post('/upgrade', requireAuth, async (req, res) => {
         const { accountType, paymentCompleted } = req.body
         const userId = req.user.id
 
-        // Validation du type de compte (en français)
-        if (!['influenceur', 'producteur'].includes(accountType)) {
-            return res.status(400).json({ error: 'Type de compte invalide. Utilisez "influenceur" ou "producteur".' })
+        // Validation du type de compte (accepte français et anglais)
+        const validTypes = ['influenceur', 'producteur', 'influencer', 'producer'];
+        if (!validTypes.includes(accountType)) {
+            return res.status(400).json({ error: 'Type de compte invalide. Utilisez "influenceur", "producteur", "influencer" ou "producer".' })
         }
+
+        // Mapper vers anglais pour la logique interne
+        const typeMap = {
+            'influenceur': 'influencer',
+            'producteur': 'producer',
+            'influencer': 'influencer',
+            'producer': 'producer'
+        };
+        const englishType = typeMap[accountType];
 
         // Vérifier que le paiement est confirmé
         if (!paymentCompleted) {
@@ -144,23 +179,23 @@ router.post('/upgrade', requireAuth, async (req, res) => {
         }
 
         // Empêcher le downgrade (producteur ne peut pas devenir influenceur)
-        if (user.accountType === 'producteur' && accountType === 'influenceur') {
+        const currentType = parseRoles(user.roles).find(role => ['consumer', 'producer', 'influencer'].includes(role)) || 'consumer';
+        if (currentType === 'producer' && englishType === 'influencer') {
             return res.status(400).json({ error: 'Impossible de rétrograder de Producteur vers Influenceur' })
         }
 
         // Utiliser la logique centralisée pour changer le type de compte
-        // Ceci mettra à jour le champ roles et créera les profils associés si nécessaire
-        const updatedUser = await changeAccountType(userId, accountType, {})
+        const updatedUser = await changeAccountType(userId, englishType, {})
 
         // Mettre à jour le statut d'abonnement dans l'utilisateur/prisma
         await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
 
-        console.log(`✅ Upgrade réussi: ${user.username} → ${accountType}`)
+        console.log(`✅ Upgrade réussi: ${user.username} → ${englishType}`)
 
-        // Retourner une version simplifiée de l'utilisateur (roles sont mis à jour par changeAccountType)
+        // Retourner une version simplifiée de l'utilisateur
         res.json({
             success: true,
-            message: `Compte mis à niveau vers ${accountType} avec succès!`,
+            message: `Compte mis à niveau vers ${englishType} avec succès!`,
             user: {
                 id: updatedUser.id,
                 username: updatedUser.username,

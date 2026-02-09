@@ -63,7 +63,7 @@ export const TEMPLATE_TYPES = {
         icon: '◯',
         description: 'Essentiel uniquement',
         color: 'gray',
-        accountTypes: ['Amateur', 'Influenceur', 'Producteur'],
+        accountTypes: ['Consumer', 'Influencer', 'Producer'],
         maxElements: 5
     },
     standard: {
@@ -72,7 +72,7 @@ export const TEMPLATE_TYPES = {
         icon: '◐',
         description: 'Équilibré',
         color: 'blue',
-        accountTypes: ['Amateur', 'Influenceur', 'Producteur'],
+        accountTypes: ['Consumer', 'Influencer', 'Producer'],
         maxElements: 10
     },
     detailed: {
@@ -81,7 +81,7 @@ export const TEMPLATE_TYPES = {
         icon: '◉',
         description: 'Complet',
         color: 'purple',
-        accountTypes: ['Influenceur', 'Producteur'],
+        accountTypes: ['Consumer', 'Influencer', 'Producer'],
         maxElements: 15
     },
     custom: {
@@ -90,7 +90,7 @@ export const TEMPLATE_TYPES = {
         icon: '🎨',
         description: 'Configuration libre',
         color: 'gradient',
-        accountTypes: ['Producteur'],
+        accountTypes: ['Producer'],
         maxElements: 20
     }
 };

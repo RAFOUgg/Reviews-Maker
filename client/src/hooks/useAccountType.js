@@ -71,7 +71,7 @@ export function useAccountType() {
       },
       templates: {
         compact: true,
-        detailed: isPremium,   // Détail réservé aux comptes premium
+        detailed: true,   // Accessible à tous
         complete: isPremium,   // Export complet réservé aux comptes premium
         influencer: isInfluencer || isProducer,
         custom: isProducer,
@@ -164,7 +164,7 @@ export function useAccountType() {
   // Informations du compte
   const accountInfo = useMemo(() => ({
     type: accountType,
-    name: isProducer ? 'Producteur' : isInfluencer ? 'Influenceur' : 'Amateur',
+    name: isProducer ? 'Producer' : isInfluencer ? 'Influencer' : 'Consumer',
     price: isProducer ? 29.99 : isInfluencer ? 15.99 : 0,
     isPremium,
     isProducer,
