@@ -61,9 +61,24 @@ export const paymentService = {
     },
 
     async upgrade(accountType, paymentCompleted = false) {
+        // Normalize french/english keys to backend expected values
+        const mapping = {
+            producteur: 'producer',
+            producteur_fr: 'producer',
+            producteur_en: 'producer',
+            producteur_key: 'producer',
+            influenceur: 'influencer',
+            influenceur_fr: 'influencer',
+            influenceur_en: 'influencer',
+            producer: 'producer',
+            influencer: 'influencer'
+        }
+
+        const normalized = mapping[accountType] || accountType
+
         return fetchAPI(`${API_BASE}/payment/upgrade`, {
             method: 'POST',
-            body: JSON.stringify({ accountType, paymentCompleted })
+            body: JSON.stringify({ accountType: normalized, paymentCompleted })
         })
     },
 

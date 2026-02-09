@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
 import { ArrowLeft, Check } from 'lucide-react';
 import { useStore } from '../../store/useStore';
+import { paymentService } from '../../services/apiService';
 
 const ACCOUNT_TYPES = {
     'influenceur': {
@@ -69,21 +70,8 @@ export default function PaymentPage() {
             await new Promise(resolve => setTimeout(resolve, 2000));
 
             if (isUpgrade) {
-                // UPGRADE: Mettre à jour le compte existant via API
-                const response = await fetch('/api/payment/upgrade', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        accountType: accountType,
-                        paymentCompleted: true
-                    })
-                });
-
-                if (!response.ok) {
-                    const data = await response.json();
-                    throw new Error(data.error || 'Erreur lors de la mise à jour du compte');
-                }
+                // UPGRADE: utiliser le service centralisé (mapping des clés inclus)
+                await paymentService.upgrade(accountType, true);
 
                 // Rafraîchir les données utilisateur dans le store
                 await checkAuth();
