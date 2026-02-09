@@ -243,7 +243,20 @@ const AccountPage = () => {
                     <div className="bg-white/3 dark:bg-white/5 rounded-lg p-4 space-y-4 border border-white/6">
                       <h3 className="text-lg font-semibold text-white">Actions</h3>
 
-                      <p className="text-sm text-white/60">Plan actuel: <span className="font-medium text-white capitalize">{accountType || 'Amateur'}</span></p>
+                      {/* Display human-friendly French label while keeping backend keys English */}
+                      {(() => {
+                        const map = {
+                          consumer: 'Amateur',
+                          producer: 'Producteur',
+                          influencer: 'Influenceur',
+                          admin: 'Administrateur',
+                          amateur: 'Amateur',
+                          producteur: 'Producteur',
+                          influenceur: 'Influenceur'
+                        }
+                        const label = map[accountType] || 'Amateur'
+                        return <p className="text-sm text-white/60">Plan actuel: <span className="font-medium text-white">{label}</span></p>
+                      })()}
 
                       <button
                         onClick={() => setShowUpgradeModal(true)}
@@ -259,7 +272,7 @@ const AccountPage = () => {
                         ⚙️ Gérer le moyen de paiement
                       </button>
 
-                      {accountType && accountType !== 'amateur' && (
+                      {accountType && accountType !== 'consumer' && (
                         <>
                           <button
                             onClick={() => setShowCancelDialog(true)}
@@ -276,7 +289,7 @@ const AccountPage = () => {
                             onConfirm={async () => {
                               setShowCancelDialog(false)
                               try {
-                                await accountService.changeType('amateur')
+                                await accountService.changeType('consumer')
                                 if (typeof checkAuth === 'function') await checkAuth()
                                 toast.success('Abonnement résilié. Votre compte a été rétrogradé.')
                                 // small delay so toast is visible before reload
@@ -304,7 +317,7 @@ const AccountPage = () => {
                   </div>
                 </div>
 
-                {(accountType === 'producteur' || accountType === 'influenceur') && (
+                {(accountType === 'producer' || accountType === 'influencer') && (
                   <div>
                     <SubscriptionHistory />
                   </div>

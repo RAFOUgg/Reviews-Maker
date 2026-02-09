@@ -18,7 +18,7 @@ export const useStore = create((set, get) => ({
     // User state
     user: null,
     isAuthenticated: false,
-    accountType: 'amateur', // 'amateur' | 'producteur' | 'influenceur' | 'admin'
+    accountType: 'consumer', // 'consumer' | 'producer' | 'influencer' | 'admin' (backend keys)
 
     // Cache pour éviter les requêtes répétées
     _reviewsCache: {},
@@ -35,7 +35,7 @@ export const useStore = create((set, get) => ({
         } catch (error) {
             // Erreur silencieuse
         }
-        set({ user: null, isAuthenticated: false, accountType: 'amateur', reviews: [], _reviewsCache: {} })
+        set({ user: null, isAuthenticated: false, accountType: 'consumer', reviews: [], _reviewsCache: {} })
     },
 
     checkAuth: async () => {
@@ -43,11 +43,11 @@ export const useStore = create((set, get) => ({
             const user = await authService.getMe()
             // Utiliser directement user.accountType fourni par le backend
             // Le backend calcule déjà le type correct via getUserAccountType()
-            const accountType = user?.accountType || 'amateur'
+            const accountType = user?.accountType || 'consumer'
             set({ user, isAuthenticated: true, accountType })
             return user
         } catch (error) {
-            set({ user: null, isAuthenticated: false, accountType: 'amateur' })
+            set({ user: null, isAuthenticated: false, accountType: 'consumer' })
             return null
         }
     },

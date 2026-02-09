@@ -11,8 +11,23 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
     const { accountType } = useStore()
 
     const getSubscriptionInfo = () => {
+        // Normalize incoming accountType (backend uses English keys)
+        const normalize = (t) => {
+            if (!t) return 'consumer'
+            const m = {
+                amateur: 'consumer',
+                consumer: 'consumer',
+                producteur: 'producer',
+                producer: 'producer',
+                influenceur: 'influencer',
+                influencer: 'influencer',
+                admin: 'admin'
+            }
+            return m[String(t).toLowerCase()] || String(t).toLowerCase()
+        }
+
         const info = {
-            amateur: {
+            consumer: {
                 label: 'Amateur',
                 emoji: '👤',
                 price: '0€',
@@ -26,7 +41,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                     '✓ Statistiques basiques',
                 ]
             },
-            producteur: {
+            producer: {
                 label: 'Producteur',
                 emoji: '🌾',
                 price: '29,99€',
@@ -43,7 +58,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                     '✓ Drag-drop editor',
                 ]
             },
-            influenceur: {
+            influencer: {
                 label: 'Influenceur',
                 emoji: '⭐',
                 price: '15,99€',
@@ -73,7 +88,9 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 ]
             }
         }
-        return info[accountType] || info.amateur
+
+        const key = normalize(accountType)
+        return info[key] || info.consumer
     }
 
     const info = getSubscriptionInfo()
