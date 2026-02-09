@@ -1,5 +1,5 @@
 import express from 'express'
-import { ACCOUNT_TYPES, EXPORT_FORMATS } from '../services/account.js'
+import { ACCOUNT_TYPES } from '../services/account.js'
 import { canAccessFeature, canAccessSection } from '../middleware/permissions.js'
 
 const router = express.Router()
