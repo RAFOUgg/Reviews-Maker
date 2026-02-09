@@ -39,6 +39,7 @@ import presetsRoutes from './routes/presets.js'
 import exportRoutes from './routes/export.js'
 import adminRoutes from './routes/admin.js'
 import debugRoutes from './routes/debug.js'
+import permissionsRoutes from './routes/permissions.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
 
 // Import config
@@ -120,6 +121,7 @@ app.use('/api/presets', presetsRoutes)
 app.use('/api/export', exportRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/debug', debugRoutes)
+app.use('/api/permissions', permissionsRoutes)
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
