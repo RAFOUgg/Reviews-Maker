@@ -39,6 +39,7 @@ export const ResponsiveCreateReviewLayout = ({
 
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
+    const REPEAT_COUNT = 3; // number of repetitions to simulate infinite carousel
     const FALLBACK_ITEM_WIDTH = 70; // px (emoji button width + gap)
     const CONTAINER_CENTER = VISIBLE_ITEMS / 2; // Position du centre (2.5 = centre between two)
 
@@ -84,15 +85,15 @@ export const ResponsiveCreateReviewLayout = ({
     }, [sectionEmojis.length]);
 
     const handlePrevious = () => {
-        if (currentSection > 0) {
-            onSectionChange(currentSection - 1);
-        }
+        // wrap to last if at first
+        const prev = (currentSection - 1 + totalSections) % totalSections;
+        onSectionChange(prev);
     };
 
     const handleNext = () => {
-        if (currentSection < totalSections - 1) {
-            onSectionChange(currentSection + 1);
-        }
+        // wrap to first if at last
+        const next = (currentSection + 1) % totalSections;
+        onSectionChange(next);
     };
 
     // Détecte si l'espace n'est pas suffisant pour afficher tous les émojis
@@ -124,16 +125,17 @@ export const ResponsiveCreateReviewLayout = ({
         };
     }, [layout.isMobile, sectionEmojis.length]);
 
-    // Auto-position carousel to center selected section
+    // Auto-position carousel to center selected section (using middle repetition)
     useEffect(() => {
-        // When we have measurements, compute the target scroll so the selected item is centered
+        if (!sectionEmojis.length) return;
         const w = itemWidth || FALLBACK_ITEM_WIDTH;
         const containerW = containerWidthState || (VISIBLE_ITEMS * w);
-        const totalWidth = sectionEmojis.length * w;
+        const totalWidth = sectionEmojis.length * w * REPEAT_COUNT;
         const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
 
-        // compute center-aligned scroll: itemCenter - containerCenter
-        const itemCenter = (currentSection * w) + (w / 2);
+        // target index = middle repetition + currentSection
+        const targetIndex = sectionEmojis.length + currentSection;
+        const itemCenter = (targetIndex * w) + (w / 2);
         const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
 
         if (!isDragging) {
@@ -191,34 +193,33 @@ export const ResponsiveCreateReviewLayout = ({
 
         // Calcul de la nouvelle position de scroll basée sur le drag
         let newScroll = scrollPosition + diff;
-        const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
+        const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth * REPEAT_COUNT) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
         newScroll = Math.max(0, Math.min(maxScroll, newScroll));
 
-        // Déterminer l'index scrolled selon la position du centre du conteneur
-        // scrolledIndex = (newScroll + containerCenter - itemWidth/2) / itemWidth
+        // Déterminer l'index scrolled selon la position du centre du conteneur (over repeated items)
         const containerCenter = (containerWidthState || (VISIBLE_ITEMS * itemWidth)) / 2;
         const scrolledIndex = (newScroll + containerCenter - (itemWidth / 2)) / itemWidth;
-        const movedSections = scrolledIndex - currentSection;
+        const movedSections = scrolledIndex - (sectionEmojis.length + currentSection); // relative to center repetition
         const absMoved = Math.abs(movedSections);
 
         let snapIndex;
-        // Si le déplacement est faible, revenir à la section courante pour éviter un snap indésirable
         if (absMoved < 0.35) {
-            snapIndex = currentSection;
+            snapIndex = sectionEmojis.length + currentSection;
         } else {
             snapIndex = Math.round(scrolledIndex);
         }
 
-        snapIndex = Math.max(0, Math.min(totalSections - 1, snapIndex));
+        // normalize to base array and re-center to middle repetition to avoid drift
+        const baseIndex = ((snapIndex % sectionEmojis.length) + sectionEmojis.length) % sectionEmojis.length;
+        const desiredIndex = sectionEmojis.length + baseIndex; // middle repetition
 
-        // Calculer snappedScroll en centrant l'item choisi
-        const snappedScroll = Math.max(0, Math.min(maxScroll, (snapIndex * itemWidth + (itemWidth / 2)) - containerCenter));
+        const snappedScroll = Math.max(0, Math.min(maxScroll, (desiredIndex * itemWidth + (itemWidth / 2)) - containerCenter));
 
-        // Appliquer un snapping plus doux (easing moins agressif)
+        // Appliquer snapping et réinitialiser offset
         setScrollPosition(snappedScroll);
         setDragOffset(0);
 
-        // Nettoyer les raf et listeners
+        // Nettoyer raf et listeners
         if (dragStateRef.current.raf) {
             cancelAnimationFrame(dragStateRef.current.raf);
             dragStateRef.current.raf = null;
@@ -228,9 +229,9 @@ export const ResponsiveCreateReviewLayout = ({
         window.removeEventListener('touchmove', handlePointerMove);
         window.removeEventListener('touchend', handlePointerUp);
 
-        // Déclencher le changement de section si nécessaire
-        if (snapIndex !== currentSection) {
-            onSectionChange(snapIndex);
+        // Déclencher le changement de section si nécessaire (use baseIndex)
+        if (baseIndex !== currentSection) {
+            onSectionChange(baseIndex);
         }
     };
 
@@ -280,6 +281,9 @@ export const ResponsiveCreateReviewLayout = ({
                                                 style={{ touchAction: 'pan-y' }}
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
+                                                {/* Build a repeated array to simulate infinite looping */}
+                                                {/* repeatedEmojis length = sectionEmojis.length * REPEAT_COUNT */}
+
                                                 {/* Gradient fade left - plus prononcé */}
                                                 <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#07070f] via-[#07070f]/70 to-transparent z-10 pointer-events-none" />
 
@@ -291,66 +295,58 @@ export const ResponsiveCreateReviewLayout = ({
                                                     transition: isDragging ? 'none' : 'transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1)'
                                                 }}>
                                                     <AnimatePresence mode="wait">
-                                                        {sectionEmojis.map((emoji, index) => {
-                                                            // Calculer l'offset visuel par rapport au centre
-                                                            // scrollPosition = index * itemWidth met cette section au centre
-                                                            const scrolledCenterIndex = (scrollPosition + dragOffset) / (itemWidth || FALLBACK_ITEM_WIDTH);
-                                                            const offset = index - scrolledCenterIndex;
-                                                            const isCenter = Math.abs(offset) < 0.5;
-                                                            const isAdjacent = Math.abs(offset) < 1.5;
+                                                        {(() => {
+                                                            // Flatten repeated array to render clones for infinite effect
+                                                            const repeated = Array.from({ length: REPEAT_COUNT }).flatMap(() => sectionEmojis);
+                                                            return repeated.map((emoji, index) => {
+                                                                // index is in repeated array; compute logical position relative to the visual center
+                                                                // scrolledCenterIndex is measured in items (over repeated array)
+                                                                const scrolledCenterIndex = (scrollPosition + dragOffset) / (itemWidth || FALLBACK_ITEM_WIDTH);
+                                                                const offset = index - scrolledCenterIndex;
+                                                                const isCenter = Math.abs(offset) < 0.5;
+                                                                const isAdjacent = Math.abs(offset) < 1.5;
+                                                                const absOffset = Math.abs(offset);
+                                                                let opacity = 0.2;
+                                                                let scale = 0.9;
 
-                                                            // Calcul opacité avec effect fade progressif
-                                                            const absOffset = Math.abs(offset);
-                                                            let opacity = 0.2; // Par défaut pour loin
-                                                            let scale = 0.9;
+                                                                if (absOffset < 0.5) {
+                                                                    opacity = 1;
+                                                                    scale = 1.25;
+                                                                } else if (absOffset < 1.5) {
+                                                                    opacity = 0.7;
+                                                                    scale = 1;
+                                                                } else if (absOffset < 2.5) {
+                                                                    opacity = 0.4;
+                                                                    scale = 0.95;
+                                                                }
 
-                                                            if (absOffset < 0.5) {
-                                                                opacity = 1;      // Center: 100% opaque
-                                                                scale = 1.25;     // Mais gros au centre
-                                                            } else if (absOffset < 1.5) {
-                                                                opacity = 0.7;    // Adjacent: 70%
-                                                                scale = 1;
-                                                            } else if (absOffset < 2.5) {
-                                                                opacity = 0.4;    // Far: 40%
-                                                                scale = 0.95;
-                                                            }
+                                                                // The logical index modulo the base array
+                                                                const logicalIndex = index % sectionEmojis.length;
 
-                                                            return (
-                                                                <motion.button
-                                                                    role="tab"
-                                                                    aria-selected={index === currentSection}
-                                                                    aria-current={index === currentSection ? 'true' : undefined}
-                                                                    key={index}
-                                                                    initial={{ opacity: 0.3, scale: 0.85, x: 50 }}
-                                                                    animate={{
-                                                                        opacity: opacity,
-                                                                        scale: scale,
-                                                                        x: isDragging ? dragOffset * 0.1 : 0
-                                                                    }}
-                                                                    exit={{ opacity: 0, scale: 0.85, x: -50 }}
-                                                                    transition={{
-                                                                        duration: isDragging ? 0 : 0.28,
-                                                                        ease: 'easeOut',
-                                                                        opacity: { duration: 0.18 },
-                                                                        scale: { duration: 0.18 }
-                                                                    }}
-                                                                    onClick={() => onSectionChange(index)}
-                                                                    className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
-                                                                        ? 'backdrop-blur-md bg-white/6 border border-white/10 ring-1 ring-purple-300/30 shadow-lg scale-110'
-                                                                        : 'bg-white/10 hover:bg-white/20'
-                                                                        }`}
-                                                                    style={{
-                                                                        filter: isCenter
-                                                                            ? 'drop-shadow(0 0 18px rgba(168,85,247,0.18))'
-                                                                            : isAdjacent ? 'drop-shadow(0 0 8px rgba(168,85,247,0.12))' : 'none'
-                                                                    }}
-                                                                    whileHover={{ y: -2 }}
-                                                                >
-                                                                    <span className="relative z-10">{sectionEmojis[index]}</span>
-                                                                    {index === currentSection && <span className="sr-only">Section active</span>}
-                                                                </motion.button>
-                                                            );
-                                                        })}
+                                                                return (
+                                                                    <motion.button
+                                                                        key={`${index}-${emoji}`}
+                                                                        role="tab"
+                                                                        aria-selected={logicalIndex === currentSection && isCenter}
+                                                                        aria-current={logicalIndex === currentSection && isCenter ? 'true' : undefined}
+                                                                        initial={{ opacity: 0.3, scale: 0.85, x: 50 }}
+                                                                        animate={{ opacity, scale, x: isDragging ? dragOffset * 0.1 : 0 }}
+                                                                        exit={{ opacity: 0, scale: 0.85, x: -50 }}
+                                                                        transition={{ duration: isDragging ? 0 : 0.28, ease: 'easeOut', opacity: { duration: 0.18 }, scale: { duration: 0.18 } }}
+                                                                        onClick={() => onSectionChange(logicalIndex)}
+                                                                        className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${logicalIndex === currentSection && isCenter
+                                                                            ? 'backdrop-blur-md bg-white/6 border border-white/10 ring-1 ring-purple-300/30 shadow-lg scale-110'
+                                                                            : 'bg-white/10 hover:bg-white/20'
+                                                                            }`}
+                                                                        style={{ filter: isCenter ? 'drop-shadow(0 0 18px rgba(168,85,247,0.18))' : isAdjacent ? 'drop-shadow(0 0 8px rgba(168,85,247,0.12))' : 'none' }}
+                                                                        whileHover={{ y: -2 }}
+                                                                    >
+                                                                        <span className="relative z-10">{emoji}</span>
+                                                                        {logicalIndex === currentSection && isCenter && <span className="sr-only">Section active</span>}
+                                                                    </motion.button>
+                                                                );
+                                                            });
+                                                        })()}
                                                     </AnimatePresence>
                                                 </div>
                                             </div>
@@ -411,10 +407,31 @@ export const ResponsiveCreateReviewLayout = ({
                 </div>
 
                 {/* Main Content - Flex-grow to push footer down, with padding-bottom for fixed footer */}
-                <main className={`relative z-20 flex-1 overflow-y-auto ${layout.isMobile
-                    ? 'px-3 py-4 pb-20'
-                    : 'px-6 md:px-8 py-8 pb-24'
-                    }`}>
+                <main
+                    className={`relative z-20 flex-1 overflow-y-auto ${layout.isMobile
+                        ? 'px-3 py-4 pb-20'
+                        : 'px-6 md:px-8 py-8 pb-24'
+                        }`}
+                    onClick={(e) => {
+                        // Recenter carousel when clicking elsewhere in the section
+                        // Ignore clicks on form controls to avoid interfering with interactions
+                        const tag = (e.target && e.target.tagName && e.target.tagName.toLowerCase()) || '';
+                        if (['input', 'textarea', 'select', 'button', 'a', 'svg', 'path'].includes(tag)) return;
+                        // Also ignore clicks inside modal-like elements (closest check)
+                        if (e.target.closest && e.target.closest('.modal, .react-modal, .fixed')) return;
+
+                        // center the carousel to the active section
+                        if (!sectionEmojis.length) return;
+                        const w = itemWidth || FALLBACK_ITEM_WIDTH;
+                        const containerW = containerWidthState || (VISIBLE_ITEMS * w);
+                        const totalWidth = sectionEmojis.length * w * REPEAT_COUNT;
+                        const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
+                        const targetIndex = sectionEmojis.length + currentSection;
+                        const itemCenter = (targetIndex * w) + (w / 2);
+                        const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
+                        setScrollPosition(targetScroll);
+                    }}
+                >
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
                         {children}
                     </div>
@@ -461,8 +478,8 @@ export const ResponsiveCreateReviewLayout = ({
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 
