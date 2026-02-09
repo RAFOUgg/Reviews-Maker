@@ -85,7 +85,7 @@ export default function LoginPage() {
 
                     {/* Carte principale */}
                     <LiquidCard glow="purple" padding="lg" className="mb-6">
-                        {/* OAuth Buttons - Redirect to account choice first */}
+                        {/* OAuth Buttons - Show providers directly and keep account choice */}
                         <div className="space-y-3 mb-6">
                             <div className="text-center">
                                 <LiquidButton
@@ -101,6 +101,11 @@ export default function LoginPage() {
                                 <p className="text-white/50 text-sm mt-2">
                                     Choisissez votre type de compte avant de vous connecter
                                 </p>
+                            </div>
+
+                            {/* OAuth buttons (Google/Discord/Apple/etc.) */}
+                            <div className="mt-4">
+                                <OAuthButtons className="mx-auto" />
                             </div>
                         </div>
 
