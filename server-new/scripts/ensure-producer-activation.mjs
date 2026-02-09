@@ -15,7 +15,14 @@ async function main(email){
   // Create producerProfile if missing
   const prod = await prisma.producerProfile.findFirst({ where: { userId: user.id } })
   if(!prod){
-    await prisma.producerProfile.create({ data: { userId: user.id, companyName: null, country: user.country || null, isVerified: false } })
+    await prisma.producerProfile.create({
+      data: {
+        user: { connect: { id: user.id } },
+        companyName: user.username || `Producer ${user.id.slice(0,6)}`,
+        country: user.country || 'ZZ',
+        isVerified: false
+      }
+    })
     console.log('Producer profile created')
   } else {
     console.log('Producer profile exists')
