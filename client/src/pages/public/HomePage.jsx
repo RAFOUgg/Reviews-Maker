@@ -52,19 +52,7 @@ export default function HomePage() {
                 </LiquidCard>
 
                 {/* PhénoHunt Navigation Button - Producer only */}
-                {hasFeature('phenohunt') && (
-                    <div className="text-center pt-8">
-                        <LiquidButton
-                            onClick={handleNavigateToPhenoHunt}
-                            variant="secondary"
-                            size="lg"
-                            glow="cyan"
-                            icon={Dna}
-                        >
-                            Accéder à PhénoHunt
-                        </LiquidButton>
-                    </div>
-                )}
+                {/* REMOVED: Phénohunt should be internal system, not separate page */}
             </div>
         </div>
     )

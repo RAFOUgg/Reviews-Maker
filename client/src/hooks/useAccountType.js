@@ -59,7 +59,7 @@ export function useAccountType() {
       formats: {
         png: true,
         jpeg: true,
-        pdf: true,
+        pdf: isPremium,
         svg: isPremium,
         csv: isProducer,
         json: isProducer,
@@ -70,9 +70,9 @@ export function useAccountType() {
         high: isPremium, // 300dpi
       },
       templates: {
-        compact: true,
-        detailed: true,   // Accessible à tous
-        complete: isPremium,   // Export complet réservé aux comptes premium
+        compact: true,    // Accessible à tous
+        detailed: isPremium,   // Réservé aux comptes premium
+        complete: isPremium,
         influencer: isInfluencer || isProducer,
         custom: isProducer,
       },
@@ -80,7 +80,7 @@ export function useAccountType() {
         watermark: isPremium,
         dragDrop: isPremium,
         customFonts: isProducer,
-        formatChoice: isPremium, // Choix libre du format
+        formatChoice: isPremium, // Choix libre du format - réservé premium
       },
     },
 

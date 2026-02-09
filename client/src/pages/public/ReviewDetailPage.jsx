@@ -10,6 +10,7 @@ import ExportMaker from '../../components/export/ExportMaker'
 import { templatesService } from '../../services/apiService'
 import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2 } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
+import LiquidModal from '../../components/ui/LiquidModal'
 
 export default function ReviewDetailPage() {
     const { id } = useParams()
@@ -210,7 +211,12 @@ export default function ReviewDetailPage() {
             </div>
 
             {/* Export Modal using ExportMaker */}
-            {showExportModal && (
+            <LiquidModal
+                isOpen={showExportModal}
+                onClose={() => setShowExportModal(false)}
+                title="Exporter la review"
+                size="xl"
+            >
                 <ExportMaker
                     reviewData={review}
                     productType={review.type}
@@ -218,7 +224,7 @@ export default function ReviewDetailPage() {
                     onClose={() => setShowExportModal(false)}
                     onSave={handleSaveTemplate}
                 />
-            )}
+            </LiquidModal>
         </div>
     )
 }

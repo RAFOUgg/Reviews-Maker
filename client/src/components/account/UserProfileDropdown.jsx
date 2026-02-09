@@ -33,10 +33,6 @@ export default function UserProfileDropdown() {
         { to: '/library', icon: Library, label: 'Ma bibliothèque', sublabel: 'Reviews & Statistiques', color: 'violet' },
     ]
 
-    if (hasFeature('phenohunt')) {
-        menuItems.push({ to: '/genetics', icon: Dna, label: 'Mes génétiques', sublabel: 'Bibliothèque généalogique', color: 'green' })
-    }
-
     const dropdownContent = isOpen && (
         <AnimatePresence>
             <>
