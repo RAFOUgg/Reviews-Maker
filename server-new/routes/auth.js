@@ -118,7 +118,18 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
     }
 
     const normalizedEmail = String(email).trim().toLowerCase()
-    const chosenType = Object.values(ACCOUNT_TYPES).includes(accountType) ? accountType : ACCOUNT_TYPES.AMATEUR
+
+    // Mapper les types de compte français vers anglais
+    const accountTypeMap = {
+        'amateur': ACCOUNT_TYPES.CONSUMER,
+        'influenceur': ACCOUNT_TYPES.INFLUENCER,
+        'producteur': ACCOUNT_TYPES.PRODUCER,
+        'consumer': ACCOUNT_TYPES.CONSUMER,
+        'influencer': ACCOUNT_TYPES.INFLUENCER,
+        'producer': ACCOUNT_TYPES.PRODUCER
+    };
+
+    const chosenType = accountTypeMap[accountType] || ACCOUNT_TYPES.CONSUMER
 
     const existing = await prisma.user.findFirst({ where: { email: normalizedEmail } })
     if (existing) {
@@ -139,7 +150,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
     const passwordHash = await hashPassword(password)
 
     // Définir subscriptionStatus en fonction du type de compte et du paiement
-    const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCEUR || chosenType === ACCOUNT_TYPES.PRODUCTEUR
+    const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCER || chosenType === ACCOUNT_TYPES.PRODUCER
     const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
 
     let user
