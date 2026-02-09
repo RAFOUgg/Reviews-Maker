@@ -28,6 +28,15 @@ async function main(email){
     console.log('Producer profile exists')
   }
 
+  // Ensure accountType and subscriptionType set for producer
+  const updates = {}
+  if(user.accountType !== 'producer') updates.accountType = 'producer'
+  if(user.subscriptionType !== 'producer') updates.subscriptionType = 'producer'
+  if(Object.keys(updates).length){
+    await prisma.user.update({ where: { id: user.id }, data: updates })
+    console.log('Updated accountType/subscriptionType for producer')
+  } else console.log('accountType/subscriptionType already set')
+
   // Ensure roles include producer
   try{
     const parsed = JSON.parse(user.roles || '{"roles":["consumer"]}')
