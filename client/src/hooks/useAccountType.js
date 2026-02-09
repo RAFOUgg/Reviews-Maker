@@ -33,7 +33,7 @@ export function useAccountType() {
     sections: {
       infosGenerales: true,              // TOUS
       genetiques: isProducer,             // Producteur uniquement (CDC)
-      culture: false,                     // Aucune section culture (legacy)
+      culture: isProducer,                // Producteur uniquement (anciennement legacy)
       analytics: true,                    // TOUS
       visual: true,                       // TOUS (Visuel & Technique)
       odeurs: true,                       // TOUS
@@ -43,6 +43,7 @@ export function useAccountType() {
       curing: true,                       // TOUS (PipeLine Curing/Maturation)
       experience: true,                   // TOUS
     },
+
 
     // PipeLines
     pipelines: {
