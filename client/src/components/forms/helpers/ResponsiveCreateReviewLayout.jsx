@@ -289,8 +289,8 @@ export const ResponsiveCreateReviewLayout = ({
                                                     <AnimatePresence mode="wait">
                                                         {sectionEmojis.map((emoji, index) => {
                                                             // Calculer l'offset visuel par rapport au centre
-                                                            // scrollPosition = index * ITEM_WIDTH met cette section au centre
-                                                            const scrolledCenterIndex = (scrollPosition + dragOffset) / ITEM_WIDTH;
+                                                            // scrollPosition = index * itemWidth met cette section au centre
+                                                            const scrolledCenterIndex = (scrollPosition + dragOffset) / (itemWidth || FALLBACK_ITEM_WIDTH);
                                                             const offset = index - scrolledCenterIndex;
                                                             const isCenter = Math.abs(offset) < 0.5;
                                                             const isAdjacent = Math.abs(offset) < 1.5;
