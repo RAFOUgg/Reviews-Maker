@@ -194,6 +194,23 @@ router.post('/upgrade', requireAuth, async (req, res) => {
             return res.status(400).json({ error: 'Impossible de rétrograder de Producteur vers Influenceur' })
         }
 
+        // Idempotence: si l'utilisateur a déjà le rôle demandé, on s'assure que l'abonnement / profil sont corrects
+        if (currentType === englishType) {
+            console.log(`ℹ️ Upgrade request idempotent: user already has type ${englishType}. Ensuring subscription/profile.`)
+
+            // Activer l'abonnement si nécessaire
+            if (!(process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id')) {
+                await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
+            }
+
+            // Créer le profile producteur si nécessaire
+            if (englishType === 'producer' && !user.producerProfile) {
+                await prisma.producerProfile.create({ data: { userId, companyName: null, country: user.country || null, isVerified: false } })
+            }
+
+            return res.json({ success: true, message: `Compte déjà de type ${englishType}. Abonnement activé et profil vérifié.` })
+        }
+
         // Utiliser la logique centralisée pour changer le type de compte
         const updatedUser = await changeAccountType(userId, englishType, {})
 
