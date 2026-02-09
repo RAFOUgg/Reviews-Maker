@@ -97,47 +97,92 @@ export const ResponsiveCreateReviewLayout = ({
         }
     }, [currentSection, isDragging, maxScroll, ITEM_WIDTH]);
 
-    // Drag handlers - Smooth scroll horizontal with live animation
-    const handleMouseDown = (e) => {
+    // Pointer-enabled handlers - Improved touch responsiveness and softer snap
+    // Use a ref-based drag state and rAF for smooth updates, avoid passive scroll interference
+    const dragStateRef = React.useRef({ active: false, startX: 0, lastX: 0, offset: 0, raf: null });
+
+    const handlePointerDown = (e) => {
         if (sectionEmojis.length <= VISIBLE_ITEMS) return;
+        // Normaliser clientX pour mouse/touch/pointer events
+        const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+        // Prevent accidental text selection / page pan for horizontal drags
+        e.preventDefault?.();
+        dragStateRef.current = { active: true, startX: clientX, lastX: clientX, offset: 0, raf: null };
         setIsDragging(true);
-        setDragStart(e.clientX || e.touches?.[0]?.clientX);
         setDragOffset(0);
+
+        // Attach global listeners to ensure we capture move/up outside the element
+        window.addEventListener('pointermove', handlePointerMove, { passive: false });
+        window.addEventListener('pointerup', handlePointerUp, { passive: false });
+        window.addEventListener('touchmove', handlePointerMove, { passive: false });
+        window.addEventListener('touchend', handlePointerUp, { passive: false });
     };
 
-    const handleMouseMove = (e) => {
-        if (!isDragging) return;
-        const currentPos = e.clientX || e.touches?.[0]?.clientX;
-        const offset = dragStart - currentPos;
-        setDragOffset(offset);
+    const handlePointerMove = (e) => {
+        if (!dragStateRef.current.active) return;
+        const clientX = e.clientX ?? e.touches?.[0]?.clientX;
+        const offset = dragStateRef.current.startX - clientX;
+        dragStateRef.current.lastX = clientX;
+        dragStateRef.current.offset = offset;
+
+        // rAF throttle updates for smoother visual feedback
+        if (!dragStateRef.current.raf) {
+            dragStateRef.current.raf = requestAnimationFrame(() => {
+                setDragOffset(dragStateRef.current.offset);
+                dragStateRef.current.raf = null;
+            });
+        }
+
+        // Prevent vertical page scrolling when significant horizontal move is detected
+        if (Math.abs(offset) > 6) e.preventDefault?.();
     };
 
-    const handleMouseUp = (e) => {
-        if (!isDragging) return;
+    const handlePointerUp = (e) => {
+        if (!dragStateRef.current.active) return;
+        dragStateRef.current.active = false;
         setIsDragging(false);
 
-        const dragEnd = e.clientX || e.changedTouches?.[0]?.clientX;
-        const diff = dragStart - dragEnd;
+        const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX ?? dragStateRef.current.lastX;
+        const diff = dragStateRef.current.startX - clientX;
 
         // Calcul de la nouvelle position de scroll basée sur le drag
         let newScroll = scrollPosition + diff;
-
-        // Limiter le scroll entre 0 et maxScroll
         newScroll = Math.max(0, Math.min(maxScroll, newScroll));
 
-        // Snap vers la section la plus proche quand on lâche
-        // Calculer l'index qui sera centré après snap
+        // Déterminer l'index scrolled et appliquer un seuil pour éviter l'effet "aimant" trop sensible
         const scrolledIndex = newScroll / ITEM_WIDTH;
-        const snapIndex = Math.round(scrolledIndex);
+        const movedSections = scrolledIndex - currentSection;
+        const absMoved = Math.abs(movedSections);
 
-        // Calculer le scroll pour mettre cette section au centre
+        let snapIndex;
+        // Si le déplacement est faible, revenir à la section courante pour éviter un snap indésirable
+        if (absMoved < 0.35) {
+            snapIndex = currentSection;
+        } else {
+            snapIndex = Math.round(scrolledIndex);
+        }
+
+        snapIndex = Math.max(0, Math.min(totalSections - 1, snapIndex));
         const snappedScroll = Math.max(0, Math.min(maxScroll, snapIndex * ITEM_WIDTH));
 
+        // Appliquer un snapping plus doux (easing moins agressif)
         setScrollPosition(snappedScroll);
         setDragOffset(0);
 
-        // Déclencher le changement de section
-        onSectionChange(snapIndex);
+        // Nettoyer les raf et listeners
+        if (dragStateRef.current.raf) {
+            cancelAnimationFrame(dragStateRef.current.raf);
+            dragStateRef.current.raf = null;
+        }
+        window.removeEventListener('pointermove', handlePointerMove);
+        window.removeEventListener('pointerup', handlePointerUp);
+        window.removeEventListener('touchmove', handlePointerMove);
+        window.removeEventListener('touchend', handlePointerUp);
+
+        // Déclencher le changement de section si nécessaire
+        if (snapIndex !== currentSection) {
+            onSectionChange(snapIndex);
+        }
     };
 
     return (
@@ -182,13 +227,8 @@ export const ResponsiveCreateReviewLayout = ({
                                             // Carousel mode: Drag-to-scroll with 5 items visible + fade effect
                                             <div
                                                 ref={carouselRef}
-                                                onMouseDown={handleMouseDown}
-                                                onMouseMove={handleMouseMove}
-                                                onMouseUp={handleMouseUp}
-                                                onMouseLeave={handleMouseUp}
-                                                onTouchStart={handleMouseDown}
-                                                onTouchMove={handleMouseMove}
-                                                onTouchEnd={handleMouseUp}
+                                                onPointerDown={handlePointerDown}
+                                                style={{ touchAction: 'pan-y' }}
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
                                                 {/* Gradient fade left - plus prononcé */}
@@ -199,7 +239,7 @@ export const ResponsiveCreateReviewLayout = ({
 
                                                 <div className="flex items-center justify-center gap-2" style={{
                                                     transform: `translateX(-${scrollPosition + dragOffset}px)`,
-                                                    transition: isDragging ? 'none' : 'transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)'
+                                                    transition: isDragging ? 'none' : 'transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1)'
                                                 }}>
                                                     <AnimatePresence mode="wait">
                                                         {sectionEmojis.map((emoji, index) => {
@@ -228,6 +268,9 @@ export const ResponsiveCreateReviewLayout = ({
 
                                                             return (
                                                                 <motion.button
+                                                                    role="tab"
+                                                                    aria-selected={index === currentSection}
+                                                                    aria-current={index === currentSection ? 'true' : undefined}
                                                                     key={index}
                                                                     initial={{ opacity: 0.3, scale: 0.85, x: 50 }}
                                                                     animate={{
@@ -237,24 +280,25 @@ export const ResponsiveCreateReviewLayout = ({
                                                                     }}
                                                                     exit={{ opacity: 0, scale: 0.85, x: -50 }}
                                                                     transition={{
-                                                                        duration: isDragging ? 0 : 0.3,
+                                                                        duration: isDragging ? 0 : 0.28,
                                                                         ease: 'easeOut',
-                                                                        opacity: { duration: 0.2 },
-                                                                        scale: { duration: 0.2 }
+                                                                        opacity: { duration: 0.18 },
+                                                                        scale: { duration: 0.18 }
                                                                     }}
                                                                     onClick={() => onSectionChange(index)}
                                                                     className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${index === currentSection
-                                                                        ? 'bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-purple-300 shadow-lg shadow-purple-500/50'
+                                                                        ? 'backdrop-blur-md bg-white/6 border border-white/10 ring-1 ring-purple-300/30 shadow-lg scale-110'
                                                                         : 'bg-white/10 hover:bg-white/20'
                                                                         }`}
                                                                     style={{
                                                                         filter: isCenter
-                                                                            ? 'drop-shadow(0 0 20px rgba(168, 85, 247, 0.6)) drop-shadow(0 0 8px rgba(168, 85, 247, 0.4))'
-                                                                            : isAdjacent ? 'drop-shadow(0 0 8px rgba(168, 85, 247, 0.2))' : 'none'
+                                                                            ? 'drop-shadow(0 0 18px rgba(168,85,247,0.18))'
+                                                                            : isAdjacent ? 'drop-shadow(0 0 8px rgba(168,85,247,0.12))' : 'none'
                                                                     }}
                                                                     whileHover={{ y: -2 }}
                                                                 >
-                                                                    <span>{sectionEmojis[index]}</span>
+                                                                    <span className="relative z-10">{sectionEmojis[index]}</span>
+                                                                    {index === currentSection && <span className="sr-only">Section active</span>}
                                                                 </motion.button>
                                                             );
                                                         })}

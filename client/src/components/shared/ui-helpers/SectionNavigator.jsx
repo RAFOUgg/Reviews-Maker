@@ -20,18 +20,27 @@ export default function SectionNavigator({
         amber: 'border-amber-500/50 bg-amber-500/20 shadow-amber-500/30',
     };
 
+    const glowShadows = {
+        violet: 'rgba(139,92,246,0.18)',
+        green: 'rgba(34,197,94,0.14)',
+        blue: 'rgba(59,130,246,0.14)',
+        amber: 'rgba(251,191,36,0.14)'
+    };
+
     return (
-        <div className="bg-[#07070f]/80 backdrop-blur-xl border-t border-white/10 overflow-x-auto">
+        <div className="bg-[#07070f]/80 backdrop-blur-xl border-t border-white/10 overflow-x-auto" role="tablist" aria-label="Navigation des sections">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="flex gap-2 py-3 justify-center flex-wrap">
                     {sections.map((section, idx) => (
                         <motion.button
                             key={idx}
+                            role="tab"
+                            aria-selected={idx === currentIndex}
                             onClick={() => onSectionClick(idx)}
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             className={`relative flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${idx === currentIndex
-                                    ? `${glowColors[glowColor]} text-white shadow-lg`
+                                    ? `backdrop-blur-md bg-white/6 border border-white/10 text-white shadow-lg ${glowColors[glowColor]}`
                                     : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20'
                                 }`}
                         >
@@ -41,12 +50,12 @@ export default function SectionNavigator({
                                     layoutId="section-indicator"
                                     className="absolute inset-0 rounded-xl"
                                     style={{
-                                        boxShadow: `0 0 15px var(--glow-color, rgba(139, 92, 246, 0.3))`
+                                        boxShadow: `0 10px 30px ${glowShadows[glowColor] || 'rgba(139,92,246,0.16)'}`
                                     }}
                                     transition={{
                                         type: "spring",
-                                        stiffness: 400,
-                                        damping: 30
+                                        stiffness: 300,
+                                        damping: 28
                                     }}
                                 />
                             )}
