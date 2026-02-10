@@ -24,6 +24,7 @@ import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
 import CellContextMenu from './CellContextMenu';
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
+import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
 
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
@@ -646,31 +647,9 @@ const PipelineDragDropView = ({
         }
     };
 
-    // Options d'intervalTypes selon le type de pipeline
+    // Options d'intervalTypes selon le type de pipeline (centralisées)
     const getIntervalTypeOptions = () => {
-        const allOptions = {
-            seconde: { label: '⏱️ Secondes', value: 'seconde' },
-            heure: { label: '🕐 Heures', value: 'heure' },
-            jour: { label: '🗓️ Jours', value: 'jour' },
-            date: { label: '📅 Dates', value: 'date' },
-            semaine: { label: '📆 Semaines', value: 'semaine' },
-            mois: { label: '🗓️ Mois', value: 'mois' },
-            annee: { label: '📆 Années', value: 'annee' },
-            phase: { label: '🌱 Phases', value: 'phase' }
-        };
-
-        // Selon le type de pipeline, on restreint les options
-        const typeOptions = {
-            culture: ['phase', 'jour', 'semaine', 'mois', 'annee'],  // Culture: jours, semaines, mois, année, phases
-            curing: ['seconde', 'heure', 'jour', 'semaine', 'phase'], // Curing: secondes, heures, jours, semaines, phases(4)
-            separation: ['seconde', 'heure', 'jour', 'semaine', 'phase'], // Separation: secondes, heures, jours, semaines, phases
-            extraction: ['seconde', 'heure', 'jour', 'semaine', 'phase'], // Extraction: mêmes que separation
-            purification: ['seconde', 'heure', 'jour', 'semaine'], // Purification: no phases by default
-            recipe: ['minute', 'heure']                // Recettes basées temps court
-        };
-
-        const allowed = typeOptions[type] || ['jour', 'semaine', 'phase'];
-        return allowed.map(key => allOptions[key]).filter(Boolean);
+        return getOptionsForPipeline(type).map(o => ({ label: o.label, value: o.key }));
     };
 
     const [expandedSections, setExpandedSections] = useState({});

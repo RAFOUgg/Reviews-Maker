@@ -38,15 +38,8 @@ export const INTERVAL_TYPES = {
     phases: { label: 'Phases', unit: 'P', max: 12, defaultDuration: 12, isPredefined: true }
 };
 
-// Allowed interval types per pipeline type (keys from INTERVAL_TYPES)
-const ALLOWED_INTERVALS_BY_PIPELINE = {
-    culture: ['phases', 'days', 'weeks', 'months', 'years'],
-    curing: ['seconds', 'hours', 'days', 'weeks', 'phases'],
-    separation: ['seconds', 'hours', 'days', 'weeks', 'phases'],
-    extraction: ['seconds', 'hours', 'days', 'weeks', 'phases'],
-    purification: ['seconds', 'hours', 'days', 'weeks'],
-    recipe: ['minutes', 'hours']
-};
+// Allowed interval types were centralized to config - use getOptionsForPipeline when rendering options
+import { getOptionsForPipeline } from '../../../config/intervalTypes';
 
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
 
@@ -78,8 +71,8 @@ const PipelineWithSidebar = ({
     };
 
     const [config, setConfig] = useState({
-        intervalType: value.intervalType || 'days',
-        duration: value.duration || INTERVAL_TYPES.days.defaultDuration,
+        intervalType: value.intervalType || 'phases',
+        duration: value.duration ?? INTERVAL_TYPES.days?.defaultDuration ?? 90,
         startDate: value.startDate || null,
         endDate: value.endDate || null,
         customPhases: value.customPhases || defaultPhasesByType(pipelineType)
@@ -404,11 +397,9 @@ const PipelineWithSidebar = ({
                                     onChange={(e) => handleConfigChange('intervalType', e.target.value)}
                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                                 >
-                                    {(ALLOWED_INTERVALS_BY_PIPELINE[pipelineType] || Object.keys(INTERVAL_TYPES)).map((key) => {
-                                        const val = INTERVAL_TYPES[key];
-                                        if (!val) return null;
-                                        return <option key={key} value={key}>{val.label}</option>;
-                                    })}
+                                    {getOptionsForPipeline(pipelineType).map((opt) => (
+                                        <option key={opt.key} value={opt.key}>{opt.label}</option>
+                                    ))}
                                 </select>
                             </div>
                             <div>
