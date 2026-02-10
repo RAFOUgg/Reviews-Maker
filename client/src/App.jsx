@@ -4,6 +4,7 @@ import { I18nextProvider } from 'react-i18next'
 import i18n from './i18n/i18n'
 import Layout from './components/shared/Layout'
 import HomePage from './pages/public/HomePage'
+import ExamplePipelineIntegration from './pages/public/ExamplePipelineIntegration'
 import LoginPage from './pages/auth/LoginPage'
 import AuthCallback from './components/account/AuthCallback'
 import ToastContainer from './components/shared/ToastContainer'
@@ -163,6 +164,8 @@ function App() {
                                     <Route path="/manage-subscription" element={<Navigate to="/account?tab=subscription" replace />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/liquid-preview" element={<LiquidPreview />} />
+
+                                    <Route path="/example-pipeline" element={<ExamplePipelineIntegration />} />
 
                                     <Route path="/choose-account" element={<AccountChoicePage />} />
                                     <Route path="/admin" element={

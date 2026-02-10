@@ -32,7 +32,18 @@ export default function EffectsSection({ productType, data: directData, onChange
     const [filterProfils, setFilterProfils] = useState('tous');
     const [expandExperience, setExpandExperience] = useState(false);
 
+    // Avoid emitting defaults on initial mount: only send data when user interacts or if incoming data exists
+    const isFirstRunRef = React.useRef(true);
+
     useEffect(() => {
+        // If initial mount and there's no incoming data, skip sending defaults
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            const hasIncoming = effectsData && Object.keys(effectsData).length > 0;
+            const hasManual = selectedEffects.length > 0 || methodeConsommation || dosageUtilise || dureeEffetsHeures || dureeEffetsMinutes || debutEffets;
+            if (!hasIncoming && !hasManual) return;
+        }
+
         updateHandler({
             onset,
             intensity,

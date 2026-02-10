@@ -246,24 +246,23 @@ const PipelineGridView = ({
 
     // Layout de la grille selon le type d'intervalle
     const gridLayout = () => {
+        // Phases: larger square tiles that wrap
         if (config.intervalType === 'phases') {
-            // Use responsive auto-fill grid for phases so cells wrap and never overflow horizontally
-            if (cellIndices.length <= 12) return 'grid grid-cols-12 gap-2';
-            return 'grid grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] gap-2';
+            return 'grid grid-cols-[repeat(auto-fill,minmax(5rem,1fr))] gap-2 auto-rows-[minmax(5rem,auto)]';
         }
 
-        // Mode jours/semaines: style GitHub (7 columns) but allow wrapping on smaller screens
-        if (config.intervalType === 'days' || config.intervalType === 'dates') {
-            return 'grid grid-cols-7 md:grid-cols-7 sm:grid-cols-4 gap-1';
+        // Weeks / Days / Dates: medium tiles that wrap responsively
+        if (config.intervalType === 'weeks' || config.intervalType === 'days' || config.intervalType === 'dates') {
+            return 'grid grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] gap-2 auto-rows-[minmax(4rem,auto)]';
         }
 
-        // Autres: grille adaptative using auto-fill
-        return 'grid grid-cols-[repeat(auto-fill,minmax(1.25rem,1fr))] gap-1';
+        // Other modes: compact tiles
+        return 'grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-2 auto-rows-[minmax(3.5rem,auto)]';
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto bg-gray-900/30">
-            <div className={gridLayout()}>
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll">
+            <div className={gridLayout()} data-testid="pipeline-grid">
                 {cellIndices.map((cellIndex) => {
                     const cellData = cells[cellIndex];
                     const intensity = getCellIntensity(cellData);
@@ -295,7 +294,7 @@ const PipelineGridView = ({
                             onDragOver={(e) => handleDragOver(e, cellIndex)}
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
-                            className={`relative cursor-pointer ${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'} rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                            className={`relative cursor-pointer aspect-square flex items-center justify-center rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                             title={getTooltipContent(cellIndex, cellData)}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
@@ -344,10 +343,10 @@ const PipelineGridView = ({
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onAddCells(10)}
-                        className={`${config.intervalType === 'phases' ? 'w-16 h-16 md:w-20 md:h-20' : 'w-3 h-3 md:w-4 md:h-4'} rounded-sm border-2 border-dashed border-gray-600 hover: hover: flex items-center justify-center transition-all duration-200`}
+                        className={`aspect-square flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
                         title="Ajouter 10 étapes"
                     >
-                        <Plus className={config.intervalType === 'phases' ? 'w-8 h-8' : 'w-2 h-2'} />
+                        <Plus className={'w-6 h-6'} />
                     </motion.button>
                 )}
             </div>

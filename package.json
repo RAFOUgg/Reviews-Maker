@@ -1,8 +1,11 @@
 {
   "devDependencies": {
-    "baseline-browser-mapping": "^2.9.19"
+    "baseline-browser-mapping": "^2.9.19",
+    "@playwright/test": "^1.36.0"
   },
   "scripts": {
-    "check:export-templates": "node --input-type=module ./scripts/check-export-templates.mjs"
+    "check:export-templates": "node --input-type=module ./scripts/check-export-templates.mjs",
+    "test:e2e:install": "playwright install",
+    "test:e2e": "playwright test"
   }
 }
