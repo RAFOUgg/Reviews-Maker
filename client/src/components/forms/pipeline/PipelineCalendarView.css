@@ -50,14 +50,20 @@
     flex-direction: column;
     gap: 0.75rem;
     margin-bottom: 1.5rem;
-    overflow-x: auto;
+    overflow-x: hidden;
+    /* plus d'overflow horizontal */
+    overflow-y: auto;
+    /* scroll vertical seulement si besoin */
     padding: 0.5rem 0;
+    min-height: var(--min-rows-height, 320px);
+    /* garantit 5 lignes minimum selon JS */
 }
 
 .calendar-week {
     display: flex;
     gap: 0.5rem;
     align-items: flex-start;
+    width: 100%;
 }
 
 .week-label {
@@ -81,33 +87,42 @@
 /* Calendar Cells */
 .week-cells {
     display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 0.35rem;
+    grid-template-columns: repeat(var(--columns, 7), 1fr);
+    gap: 0.5rem;
+    /* gap en px pour calcul JS */
+    width: calc(100% - 50px);
+    align-items: start;
 }
 
+/* Assigner une taille calculée (JS écrit --computed-cell-size) */
 .calendar-cell {
     position: relative;
-    aspect-ratio: 1;
-    min-width: 16px;
+    width: var(--computed-cell-size, 48px);
+    height: var(--computed-cell-size, 48px);
     background: #f0f0f0;
     border: 1px solid #ddd;
-    border-radius: 2px;
+    border-radius: 4px;
     cursor: pointer;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    font-size: 0.65rem;
-    font-weight: 500;
+    font-size: 0.75rem;
+    font-weight: 600;
     color: #333;
-    transition: all 0.15s ease;
+    transition: transform 0.12s ease, border-color 0.12s ease;
     user-select: none;
+    box-sizing: border-box;
 }
 
 .calendar-cell:hover {
-    transform: scale(1.15);
+    transform: scale(1.06);
     z-index: 10;
     border-color: #4a9d6f;
+}
+
+.cell-date {
+    opacity: 0.9;
 }
 
 .cell-date {
@@ -199,6 +214,26 @@
     font-size: 1rem;
 }
 
+/* Zoom controls */
+.zoom-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.zoom-btn {
+    background: #f5f7fa;
+    border: 1px solid #e0e6ed;
+    border-radius: 4px;
+    padding: 4px 8px;
+    font-weight: 700;
+    cursor: pointer;
+}
+
+.zoom-slider {
+    width: 160px;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .pipeline-calendar-view {
@@ -220,8 +255,7 @@
     }
 
     .calendar-cell {
-        min-width: 14px;
-        font-size: 0.6rem;
+        font-size: 0.64rem;
     }
 
     .week-tooltip {
@@ -231,6 +265,48 @@
 
     .calendar-stats {
         gap: 1rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-container {
+        gap: 0.25rem;
+        padding: 0.25rem 0;
+    }
+
+    .calendar-week {
+        gap: 0.25rem;
+    }
+
+    .week-label {
+        width: 30px;
+        font-size: 0.6rem;
+        height: 16px;
+    }
+
+    .week-cells {
+        gap: 0.2rem;
+        width: calc(100% - 30px);
+    }
+
+    .calendar-cell {
+        font-size: 0.58rem;
+    }
+
+    .calendar-header {
+        gap: 0.5rem;
+    }
+
+    .calendar-header h3 {
+        font-size: 1rem;
+    }
+
+    .legend {
+        gap: 0.75rem;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
     }
 }
 

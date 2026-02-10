@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import './PipelineCalendarView.css'
 
@@ -6,9 +6,16 @@ import './PipelineCalendarView.css'
  * PipelineCalendarView - Vue calendrier GitHub-style (90 jours)
  * Affiche un grid de 13x7 (91 jours) comme sur GitHub
  * Chaque cellule représente un jour/semaine/phase
+ * Améliorations :
+ *  - cellules responsive qui remplissent l'espace disponible
+ *  - pas de scroll horizontal (seulement vertical si nécessaire)
+ *  - contrainte minimale 4 colonnes x 5 lignes visibles
+ *  - contrôle de zoom (slider + / -)
  */
 export default function PipelineCalendarView({ startDate, endDate, mode = 'jours', stages = [], onStageClick }) {
     const [hoveredDate, setHoveredDate] = useState(null)
+    const [zoom, setZoom] = useState(1) // zoom factor (1 = 100%)
+    const containerRef = useRef(null)
 
     // Générer les cellules du calendrier
     const calendarCells = useMemo(() => {
@@ -72,10 +79,71 @@ export default function PipelineCalendarView({ startDate, endDate, mode = 'jours
         return weekDate.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' })
     }
 
+    // Resize observer - calcule les colonnes adaptatives pour chaque semaine
+    useEffect(() => {
+        if (!containerRef.current) return
+
+        const baseMinCell = 64 // px, taille de base pour une cellule (à zoomer)
+        const weekGap = 8 // correspond au gap utilisé dans CSS (approx)
+        const minColumns = 4
+        const maxColumns = 7
+
+        const ro = new ResizeObserver(() => {
+            const weeks = Array.from(containerRef.current.querySelectorAll('.calendar-week'))
+            weeks.forEach(weekEl => {
+                const weekLabel = weekEl.querySelector('.week-label')
+                const cellsEl = weekEl.querySelector('.week-cells')
+                if (!cellsEl) return
+
+                const available = Math.max(0, weekEl.clientWidth - (weekLabel ? weekLabel.offsetWidth : 0))
+                const desiredMin = Math.max(32, Math.floor(baseMinCell * zoom))
+                let columns = Math.floor((available + weekGap) / (desiredMin + weekGap))
+                columns = Math.max(minColumns, Math.min(maxColumns, columns || minColumns))
+
+                // Applique la grille et la taille calculée
+                cellsEl.style.setProperty('--columns', columns)
+                const computedCellSize = Math.floor((available - (columns - 1) * weekGap) / columns)
+                cellsEl.style.setProperty('--computed-cell-size', `${computedCellSize}px`)
+                // set min-height on container to ensure minimum 5 rows visible
+                const minRows = 5
+                const minHeight = computedCellSize * minRows + (minRows - 1) * (weekGap)
+                containerRef.current.style.setProperty('--min-rows-height', `${minHeight}px`)
+            })
+        })
+
+        ro.observe(containerRef.current)
+        window.addEventListener('resize', () => ro.takeRecords())
+
+        // initial trigger
+        ro.observe(containerRef.current)
+
+        return () => {
+            ro.disconnect()
+            window.removeEventListener('resize', () => ro.takeRecords())
+        }
+    }, [zoom])
+
     return (
         <div className="pipeline-calendar-view">
             <div className="calendar-header">
                 <h3>📅 Timeline de Culture (90 jours)</h3>
+
+                {/* Zoom control */}
+                <div className="zoom-controls" aria-hidden={false}>
+                    <button className="zoom-btn" onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))}>-</button>
+                    <input
+                        className="zoom-slider"
+                        type="range"
+                        min="0.5"
+                        max="1.6"
+                        step="0.05"
+                        value={zoom}
+                        onChange={(e) => setZoom(Number(e.target.value))}
+                        aria-label="Zoom"
+                    />
+                    <button className="zoom-btn" onClick={() => setZoom(z => Math.min(2, +(z + 0.1).toFixed(2)))}>+</button>
+                </div>
+
                 <div className="legend">
                     <div className="legend-item">
                         <div className="legend-box" style={{ backgroundColor: 'rgba(200, 200, 200, 0.1)' }}></div>
@@ -88,7 +156,7 @@ export default function PipelineCalendarView({ startDate, endDate, mode = 'jours
                 </div>
             </div>
 
-            <div className="calendar-container">
+            <div className="calendar-container" ref={containerRef}>
                 {weekRows.map((week, weekIdx) => (
                     <div key={weekIdx} className="calendar-week">
                         {/* Étiquette de semaine/mois */}
@@ -101,7 +169,7 @@ export default function PipelineCalendarView({ startDate, endDate, mode = 'jours
                         </div>
 
                         {/* Cellules de la semaine */}
-                        <div className="week-cells">
+                        <div className="week-cells" style={{ '--zoom': zoom }}>
                             {week.map(cell => (
                                 <motion.div
                                     key={cell.id}
@@ -109,7 +177,7 @@ export default function PipelineCalendarView({ startDate, endDate, mode = 'jours
                                     onClick={() => onStageClick?.(cell)}
                                     onMouseEnter={() => setHoveredDate(cell.id)}
                                     onMouseLeave={() => setHoveredDate(null)}
-                                    whileHover={{ scale: 1.1 }}
+                                    whileHover={{ scale: 1.06 }}
                                     style={{
                                         backgroundColor: getIntensityColor(cell.intensity),
                                         cursor: 'pointer',

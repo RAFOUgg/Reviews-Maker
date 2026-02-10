@@ -402,7 +402,7 @@ const PipelineWithSidebar = ({
                                 <select
                                     value={config.intervalType}
                                     onChange={(e) => handleConfigChange('intervalType', e.target.value)}
-                                    className="w-full mt-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded"
+                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
                                 >
                                     {(ALLOWED_INTERVALS_BY_PIPELINE[pipelineType] || Object.keys(INTERVAL_TYPES)).map((key) => {
                                         const val = INTERVAL_TYPES[key];

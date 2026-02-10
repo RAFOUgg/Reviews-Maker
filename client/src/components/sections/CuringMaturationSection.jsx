@@ -82,6 +82,18 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         });
     };
 
+    // Handler pour réinitialiser la trame (supprime aussi les données de timeline)
+    const handleClearTimeline = () => {
+        setTimelineData([]);
+        if (onChange) {
+            onChange({
+                ...data,
+                curingTimelineConfig: {},
+                curingTimeline: []
+            });
+        }
+    };
+
     // Handler pour changements de données de cellules
     // onDataChange est appelé avec (timestamp, field, value)
     const handleDataChange = (timestamp, field, value) => {
@@ -115,6 +127,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
             timelineData={timelineData}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
+            onClearTimeline={handleClearTimeline}
         />
     );
 };

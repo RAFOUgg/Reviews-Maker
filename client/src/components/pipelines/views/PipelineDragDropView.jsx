@@ -623,6 +623,7 @@ const PipelineDragDropView = ({
     timelineData = [],
     onConfigChange = () => { },
     onDataChange = () => { },
+    onClearTimeline = () => { },
     generalFields = [],
     generalData = {},
     onGeneralDataChange = () => { },
@@ -675,6 +676,7 @@ const PipelineDragDropView = ({
     const [expandedSections, setExpandedSections] = useState({});
     const [draggedContent, setDraggedContent] = useState(null);
     const [selectedCell, setSelectedCell] = useState(null);
+    const [showResetConfirm, setShowResetConfirm] = useState(false);
 
     // Empêcher la sélection automatique de la première case
     useEffect(() => {
@@ -1823,6 +1825,29 @@ const PipelineDragDropView = ({
             }));
         }
 
+        // MOIS (affichage par mois)
+        if ((intervalType === 'mois' || intervalType === 'months') && (timelineConfig.totalMonths || totalMonths)) {
+            const count = Math.min(timelineConfig.totalMonths || totalMonths || 0, 120);
+            const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+            return Array.from({ length: count }, (_, i) => ({
+                id: `month-${i + 1}`,
+                timestamp: `month-${i + 1}`,
+                label: months[i % 12] || `M${i + 1}`,
+                month: i + 1
+            }));
+        }
+
+        // ANNÉES (affichage par année, compte en années)
+        if ((intervalType === 'annee' || intervalType === 'years') && (timelineConfig.totalYears || totalYears)) {
+            const count = Math.min(timelineConfig.totalYears || totalYears || 0, 100);
+            return Array.from({ length: count }, (_, i) => ({
+                id: `year-${i + 1}`,
+                timestamp: `year-${i + 1}`,
+                label: `Y${i + 1}`,
+                year: i + 1
+            }));
+        }
+
         // PHASES prédéfinies selon type de pipeline
         if (intervalType === 'phase') {
             // Phases prédéfinies pour culture (CDC)
@@ -2208,21 +2233,49 @@ const PipelineDragDropView = ({
                                     value={timelineConfig.type || 'jour'}
                                     onChange={(e) => onConfigChange('type', e.target.value)}
                                     disabled={timelineData.length > 0}
-                                    className={`w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 text-white border border-white/20 rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-blue-500 ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''
-                                        }`}
+                                    className={`w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     title={timelineData.length > 0 ? '⚠️ Impossible de changer la trame : des données sont déjà renseignées' : 'Choisir le type d\'intervalles'}
                                 >
                                     {getIntervalTypeOptions().map(option => (
-                                        <option key={option.value} value={option.value}>
-                                            {option.label}
-                                        </option>
+                                        <option key={option.value} value={option.value} className="bg-[#0f0f1a]">{option.label}</option>
                                     ))}
                                 </select>
                                 {timelineData.length > 0 && (
-                                    <p className="text-xs text-orange-400 mt-1 flex items-center gap-1 line-clamp-2">
-                                        <span className="flex-shrink-0">⚠️</span>
-                                        <span className="truncate">Trame verrouillée ({timelineData.length} cell{timelineData.length > 1 ? 's' : ''})</span>
-                                    </p>
+                                    <div className="mt-2 flex items-center gap-2">
+                                        <p className="text-xs text-orange-400 flex items-center gap-1 line-clamp-2">
+                                            <span className="flex-shrink-0">⚠️</span>
+                                            <span className="truncate">Trame verrouillée ({timelineData.length} cell{timelineData.length > 1 ? 's' : ''})</span>
+                                        </p>
+
+                                        <button
+                                            onClick={() => setShowResetConfirm(true)}
+                                            className="ml-2 px-2 py-1 text-xs rounded-lg bg-transparent border border-orange-400 text-orange-300 hover:bg-orange-400/10"
+                                            title="Réinitialiser la trame et supprimer les données"
+                                        >
+                                            Réinitialiser la trame
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Confirm reset modal */}
+                                {showResetConfirm && (
+                                    <ConfirmModal
+                                        title="Réinitialiser la trame?"
+                                        message={`Voulez-vous vraiment supprimer les ${timelineData.length} point(s) de données et réinitialiser la trame ? Cette action est irréversible.`}
+                                        onClose={() => setShowResetConfirm(false)}
+                                        onConfirm={() => {
+                                            setShowResetConfirm(false);
+                                            if (typeof onClearTimeline === 'function') {
+                                                onClearTimeline();
+                                            } else {
+                                                // Fallback: emit an onConfigChange sentinel and notify
+                                                onConfigChange('resetTimeline', true);
+                                                showToast('Trame réinitialisée (fallback)');
+                                            }
+                                        }}
+                                        confirmLabel="Réinitialiser"
+                                        cancelLabel="Annuler"
+                                    />
                                 )}
                             </div>
 
@@ -2330,8 +2383,44 @@ const PipelineDragDropView = ({
                                         max="52"
                                         value={timelineConfig.totalWeeks || ''}
                                         onChange={(e) => onConfigChange('totalWeeks', parseInt(e.target.value))}
-                                        className="w-full px-2 md:px-3 py-1.5 md:py-2 bg-white/5 border border-white/20 rounded-lg text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         placeholder="12"
+                                    />
+                                </div>
+                            )}
+
+                            {/* MOIS - Max 12 mois */}
+                            {(timelineConfig.type === 'mois' || timelineConfig.type === 'months') && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block truncate">
+                                        Mois (max 120)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="120"
+                                        value={timelineConfig.totalMonths || ''}
+                                        onChange={(e) => onConfigChange('totalMonths', parseInt(e.target.value))}
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
+                                        placeholder="6"
+                                    />
+                                </div>
+                            )}
+
+                            {/* ANNÉES - Max 100 ans (affiché en années) */}
+                            {(timelineConfig.type === 'annee' || timelineConfig.type === 'years') && (
+                                <div className="col-span-2 md:col-span-3">
+                                    <label className="text-xs font-medium text-white/70 mb-1 block truncate">
+                                        Années (max 100)
+                                    </label>
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        max="100"
+                                        value={timelineConfig.totalYears || ''}
+                                        onChange={(e) => onConfigChange('totalYears', parseInt(e.target.value))}
+                                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
+                                        placeholder="1"
                                     />
                                 </div>
                             )}
@@ -2374,7 +2463,9 @@ const PipelineDragDropView = ({
                     {(timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end)) ||
                         (timelineConfig.type === 'seconde' && (!timelineConfig.totalSeconds || timelineConfig.totalSeconds > 900)) ||
                         (timelineConfig.type === 'heure' && (!timelineConfig.totalHours || timelineConfig.totalHours > 336)) ||
-                        (timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365)) ? (
+                        (timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365)) ||
+                        ((timelineConfig.type === 'mois' || timelineConfig.type === 'months') && (!timelineConfig.totalMonths || timelineConfig.totalMonths > 120)) ||
+                        ((timelineConfig.type === 'annee' || timelineConfig.type === 'years') && (!timelineConfig.totalYears || timelineConfig.totalYears > 100)) ? (
                         <div className="px-3 md:px-4 py-2 bg-yellow-500/10 border-b border-yellow-500/30 flex-shrink-0">
                             {timelineConfig.type === 'date' && (!timelineConfig.start || !timelineConfig.end) && (
                                 <p className="text-xs text-yellow-300 flex items-center gap-1">
@@ -2394,6 +2485,16 @@ const PipelineDragDropView = ({
                             {timelineConfig.type === 'jour' && (!timelineConfig.totalDays || timelineConfig.totalDays > 365) && (
                                 <p className="text-xs text-yellow-300 flex items-center gap-1">
                                     <span>⚠️</span> Max 365j
+                                </p>
+                            )}
+                            {(timelineConfig.type === 'mois' || timelineConfig.type === 'months') && (!timelineConfig.totalMonths || timelineConfig.totalMonths > 120) && (
+                                <p className="text-xs text-yellow-300 flex items-center gap-1">
+                                    <span>⚠️</span> Mois requis (max 120)
+                                </p>
+                            )}
+                            {(timelineConfig.type === 'annee' || timelineConfig.type === 'years') && (!timelineConfig.totalYears || timelineConfig.totalYears > 100) && (
+                                <p className="text-xs text-yellow-300 flex items-center gap-1">
+                                    <span>⚠️</span> Années requis (max 100)
                                 </p>
                             )}
                         </div>
@@ -2617,6 +2718,16 @@ const PipelineDragDropView = ({
                                                     const currentWeeks = timelineConfig.totalWeeks || cells.length;
                                                     if (currentWeeks < 52) {
                                                         onConfigChange('totalWeeks', currentWeeks + 1);
+                                                    }
+                                                } else if (timelineConfig.type === 'mois' || timelineConfig.type === 'months') {
+                                                    const currentMonths = timelineConfig.totalMonths || cells.length;
+                                                    if (currentMonths < 120) {
+                                                        onConfigChange('totalMonths', currentMonths + 1);
+                                                    }
+                                                } else if (timelineConfig.type === 'annee' || timelineConfig.type === 'years') {
+                                                    const currentYears = timelineConfig.totalYears || Math.ceil(cells.length / 12) || 1;
+                                                    if (currentYears < 100) {
+                                                        onConfigChange('totalYears', currentYears + 1);
                                                     }
                                                 } else if (timelineConfig.type === 'date' && timelineConfig.end) {
                                                     // Ajouter 1 jour à la date de fin
