@@ -255,12 +255,23 @@ sudo rm -rf /var/cache/nginx/* 2>/dev/null || log_warning "Cache vide"
 step "Nettoyage et copie des fichiers frontend..."
 # IMPORTANT: Rebuild frontend on VPS to ensure dist is up-to-date
 if [ -d "client" ]; then
-    log_info "Building frontend on VPS..."
-    (cd client && npm install --legacy-peer-deps >/dev/null 2>&1 || true)
-    if (cd client && npm run build >/dev/null 2>&1); then
+    log_info "Pre-checks: disk and memory"
+    # Disk and memory checks to fail early and provide guidance
+    echo "Disk usage:"; df -h | sed -n '1,5p'
+    echo "Memory usage:"; free -m | sed -n '1,5p'
+
+    log_info "Building frontend on VPS (logs -> ~/frontend-build.log, npm-install -> ~/frontend-npm-install.log)..."
+    # Run npm install and build with logs captured for easier debugging
+    (cd client && npm install --legacy-peer-deps 2>&1 | tee ~/frontend-npm-install.log) || true
+
+    if (cd client && npm run build 2>&1 | tee ~/frontend-build.log); then
         log_success "Frontend build succeeded on VPS"
     else
-        log_error "Frontend build failed on VPS - aborting deploy"
+        echo "\n===== FRONTEND BUILD FAILED - Showing last 200 lines of build log =====\n"
+        tail -n 200 ~/frontend-build.log || true
+        echo "\n===== NPM INSTALL LOG (last 200 lines) =====\n"
+        tail -n 200 ~/frontend-npm-install.log || true
+        log_error "Frontend build failed on VPS - aborting deploy (see ~/frontend-build.log)"
     fi
 fi
 
