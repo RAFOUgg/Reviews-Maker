@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { CULTURE_PHASES } from '../../../config/pipelinePhases';
+import './PipelineGridView.css';
 
 /**
  * PipelineGridView - Grille de cases style GitHub commits
