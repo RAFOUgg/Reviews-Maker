@@ -1934,7 +1934,7 @@ const PipelineDragDropView = ({
             <div className="flex flex-row gap-4 h-full">
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
                 {!isMobile && (
-                    <div className="w-80 flex-shrink-0 flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden">
+                    <div className="w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-y-auto overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
                         {/* Header Contenus */}
                         <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-4 border-b border-white/10 z-10 flex-shrink-0">
                             <h3 className="font-bold text-white text-lg">📦 Contenus</h3>

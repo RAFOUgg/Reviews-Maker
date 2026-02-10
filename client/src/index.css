@@ -398,6 +398,32 @@ body {
 }
 
 /* Checkboxes/radios: subtle accent for dark mode */
+
+
+/* Pipeline global layout fixes - fallbacks for any pages where pipeline components mount differently */
+[data-testid="pipeline-sidebar"],
+.w-80.flex-shrink-0.overflow-y-auto,
+.w-80.flex-shrink-0.overflow-hidden {
+    max-height: calc(85vh - 120px) !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    min-height: 0 !important;
+}
+
+/* Ensure pipeline grid has a larger sensible default when JS doesn't compute --min-cell */
+[data-testid="pipeline-grid"] {
+    grid-template-columns: repeat(auto-fit, minmax(var(--min-cell, 140px), 1fr)) !important;
+    grid-auto-rows: var(--min-cell, 140px) !important;
+}
+
+/* Hide horizontal overflow at app level to protect against accidental leaks */
+.page-content,
+.app-root,
+#root {
+    overflow-x: hidden !important;
+}
+
 input[type="checkbox"],
 input[type="radio"] {
     accent-color: rgba(255, 255, 255, 0.14);
