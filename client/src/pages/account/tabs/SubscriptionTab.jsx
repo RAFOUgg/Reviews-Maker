@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query'
 import { api } from '../../../services/api'
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
 import { CreditCard, Sparkles, Crown, Building2, Check } from 'lucide-react'
+import SubscriptionManager from '../../../components/account/SubscriptionManager'
 
 const SubscriptionTab = ({ user }) => {
     const accountType = user?.accountType || 'Amateur'
@@ -124,6 +125,11 @@ const SubscriptionTab = ({ user }) => {
                     </div>
                 </div>
             </LiquidCard>
+
+            {/* Inline subscription manager (payment & KYC) */}
+            {/* Use a compact manager component instead of navigating away */}
+            {/* eslint-disable-next-line react/jsx-pascal-case */}
+            <SubscriptionManager user={user} />
         </div>
     )
 }

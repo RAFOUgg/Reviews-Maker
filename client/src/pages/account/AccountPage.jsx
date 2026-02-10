@@ -58,6 +58,20 @@ const AccountPage = () => {
 
   const toast = useToast()
 
+  // Permet d'ouvrir directement un onglet via l'URL (ex: /account?tab=subscription)
+  useEffect(() => {
+    try {
+      const params = new URLSearchParams(window.location.search)
+      const tab = params.get('tab')
+      if (tab) setActiveTab(tab)
+      if (params.get('upgraded')) {
+        setTimeout(() => toast?.success?.('Votre abonnement a été mis à jour'), 300)
+      }
+    } catch (err) {
+      // ignore
+    }
+  }, [])
+
   const [preferences, setPreferences] = useState(() => {
     const saved = localStorage.getItem('userPreferences')
     return saved ? JSON.parse(saved) : {
@@ -266,7 +280,7 @@ const AccountPage = () => {
                       </button>
 
                       <button
-                        onClick={() => { window.location.href = '/manage-subscription' }}
+                        onClick={() => setActiveTab('subscription')}
                         className="w-full bg-gray-700 text-white font-medium py-2 px-3 rounded-lg hover:bg-gray-600"
                       >
                         ⚙️ Gérer le moyen de paiement
