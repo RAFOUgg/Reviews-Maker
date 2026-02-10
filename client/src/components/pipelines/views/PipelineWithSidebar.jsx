@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Save, Download, Upload, Info, FolderPlus } from 'lucide-react';
 import PipelineContentsSidebar from '../../shared/orchard/PipelineContentsSidebar';
@@ -91,6 +91,52 @@ const PipelineWithSidebar = ({
     const [currentPage, setCurrentPage] = useState(0);
     const [showPresetsManager, setShowPresetsManager] = useState(false);
     const [droppedItemForModal, setDroppedItemForModal] = useState(null); // Item qui vient d'être droppé
+
+    // Dynamic height measurement to make sidebar scroll reliable
+    const pipelineAreaRef = useRef(null);
+    const [availableHeight, setAvailableHeight] = useState(null);
+
+    useLayoutEffect(() => {
+        if (!pipelineAreaRef.current) return;
+        const measure = () => {
+            const rect = pipelineAreaRef.current.getBoundingClientRect();
+            const top = rect.top;
+
+            // Detect footer height if present
+            const footer = document.querySelector('footer');
+            const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
+
+            // Sum visible fixed bottom elements (e.g., floating action bars)
+            let fixedBottomHeight = 0;
+            document.querySelectorAll('[class*="fixed"]').forEach(el => {
+                const style = window.getComputedStyle(el);
+                if (style.position === 'fixed') {
+                    const bounds = el.getBoundingClientRect();
+                    // consider elements that touch or are near the bottom
+                    if (bounds.bottom >= window.innerHeight - 4) {
+                        fixedBottomHeight += bounds.height;
+                    }
+                }
+            });
+
+            const padding = 24; // small safety spacing
+            const available = Math.max(200, window.innerHeight - top - footerHeight - fixedBottomHeight - padding);
+            setAvailableHeight(Math.round(available));
+        };
+
+        measure();
+        window.addEventListener('resize', measure);
+        const ro = new ResizeObserver(measure);
+        const header = document.querySelector('header');
+        if (header) ro.observe(header);
+        const footerEl = document.querySelector('footer');
+        if (footerEl) ro.observe(footerEl);
+
+        return () => {
+            window.removeEventListener('resize', measure);
+            ro.disconnect();
+        };
+    }, [pipelineAreaRef.current]);
 
     // Pagination: 100 cases par page max
     const CELLS_PER_PAGE = 100;
@@ -439,7 +485,7 @@ const PipelineWithSidebar = ({
                     </div>
 
                     {/* Layout responsive: Sidebar left on desktop, stacked on mobile */}
-                    <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0 h-[calc(100vh-170px)]">
+                    <div ref={pipelineAreaRef} className="flex flex-col md:flex-row gap-4 flex-1 min-h-0" style={availableHeight ? { height: `${availableHeight}px` } : undefined}>
                         {/* Sidebar: full-width on mobile (stacked), fixed width on md+ */}
                         <div className="w-full md:w-80 md:flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0 h-full">
                             <PipelineContentsSidebar

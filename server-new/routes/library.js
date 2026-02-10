@@ -8,9 +8,39 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
+import multer from 'multer'
+import path from 'path'
+import { fileURLToPath } from 'url'
+import fs from 'fs/promises'
 
 const router = express.Router();
 const prisma = new PrismaClient();
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// Multer storage for export uploads
+const exportStorage = multer.diskStorage({
+    destination: async (req, file, cb) => {
+        const exportDir = path.join(__dirname, '../../db/review_images')
+        await fs.mkdir(exportDir, { recursive: true })
+        cb(null, exportDir)
+    },
+    filename: (req, file, cb) => {
+        const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9)
+        cb(null, `export-${uniqueSuffix}${path.extname(file.originalname)}`)
+    }
+})
+
+const uploadExport = multer({
+    storage: exportStorage,
+    limits: { fileSize: 50 * 1024 * 1024 }, // 50 MB
+    fileFilter: (req, file, cb) => {
+        const allowed = /jpeg|jpg|png|gif|webp|pdf/
+        const ext = allowed.test(path.extname(file.originalname).toLowerCase())
+        const mime = allowed.test(file.mimetype)
+        if (ext && mime) cb(null, true)
+        else cb(new Error('Invalid export file type'))
+    }
+})
 
 // Middleware d'authentification requis pour toutes les routes
 const requireAuth = (req, res, next) => {
@@ -444,6 +474,104 @@ router.post('/data', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/library/exports
+ * Upload an exported file (png/jpg/pdf) and save it into the user's library.
+ * Accepts multipart/form-data with 'file' or JSON body with 'fileUrl'.
+ * Fields: reviewId (optional), name, description, templateName, format, isPublic (true/false), tags
+ */
+router.post('/exports', requireAuth, uploadExport.single('file'), asyncHandler(async (req, res) => {
+    const { reviewId, name, description, templateName, format, isPublic: isPublicRaw, tags } = req.body
+    const isPublic = isPublicRaw === 'true' || isPublicRaw === true || isPublicRaw === '1'
+
+    if (!req.file && !req.body.fileUrl) {
+        return res.status(400).json({ error: 'missing_file', message: 'File upload or fileUrl required (field: file or fileUrl)' })
+    }
+
+    // Resolve file url (serve under /images/ for compatibility)
+    const fileUrl = req.file ? `/images/${req.file.filename}` : req.body.fileUrl
+
+    // If a reviewId is provided, validate it and permissions
+    let review = null
+    if (reviewId) {
+        review = await prisma.review.findUnique({ where: { id: reviewId } })
+        if (!review) return res.status(404).json({ error: 'review_not_found', message: 'Review not found' })
+        if (review.authorId !== req.user.id && !review.isPublic) {
+            return res.status(403).json({ error: 'forbidden', message: 'Cannot save export for a private review you do not own' })
+        }
+    }
+
+    // If attempting to publish to public gallery, ensure the requester owns the review
+    if (isPublic && review && review.authorId !== req.user.id) {
+        return res.status(403).json({ error: 'forbidden', message: 'Only the review owner can publish to public gallery' })
+    }
+
+    // Create saved data entry (dataType: 'export')
+    const payload = {
+        fileUrl,
+        reviewId: reviewId || null,
+        templateName: templateName || null,
+        format: format || null,
+        name: name || null,
+        description: description || null,
+        tags: tags ? (typeof tags === 'string' ? JSON.parse(tags) : tags) : [],
+        isPublic
+    }
+
+    const saved = await prisma.savedData.create({
+        data: {
+            userId: req.user.id,
+            dataType: 'export',
+            name: name || `Export ${new Date().toISOString()}`,
+            description: description || null,
+            data: JSON.stringify(payload),
+        }
+    })
+
+    // Create an export tracking record
+    const exportRec = await prisma.export.create({
+        data: {
+            userId: req.user.id,
+            reviewId: reviewId || null,
+            format: format || 'png',
+            quality: isPublic ? 'high' : 'standard'
+        }
+    })
+
+    // If publishing and the review belongs to the user, mark the review as public
+    if (isPublic && review && review.authorId === req.user.id && !review.isPublic) {
+        await prisma.review.update({ where: { id: review.id }, data: { isPublic: true } })
+    }
+
+    res.status(201).json({ saved, export: exportRec })
+}))
+
+/**
+ * GET /api/library/exports
+ * Liste les exports sauvegardés de l'utilisateur
+ */
+router.get('/exports', requireAuth, asyncHandler(async (req, res) => {
+    const exports = await prisma.savedData.findMany({
+        where: { userId: req.user.id, dataType: 'export' },
+        orderBy: { createdAt: 'desc' }
+    })
+
+    const parsed = exports.map(e => ({ ...e, data: e.data ? JSON.parse(e.data) : null }))
+    res.json(parsed)
+}))
+
+/**
+ * DELETE /api/library/exports/:id
+ * Supprime un export sauvegardé
+ */
+router.delete('/exports/:id', requireAuth, asyncHandler(async (req, res) => {
+    const existing = await prisma.savedData.findFirst({ where: { id: req.params.id, userId: req.user.id } })
+    if (!existing) return res.status(404).json({ error: 'not_found' })
+    await prisma.savedData.delete({ where: { id: req.params.id } })
+    res.json({ message: 'Export supprimé', id: req.params.id })
+}))
+
+
+/**
  * DELETE /api/library/data/:id
  * Supprime une donnée sauvegardée
  */
@@ -454,7 +582,6 @@ router.delete('/data/:id', requireAuth, asyncHandler(async (req, res) => {
             userId: req.user.id,
         },
     });
-
     if (!existing) {
         return res.status(404).json({
             error: 'not_found',

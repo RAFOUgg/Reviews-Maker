@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import LiquidGlass from '../ui/LiquidGlass';
 import { useAccountType } from '../../hooks/useAccountType';
+import { useAuth } from '../../hooks/useAuth';
 import { FeatureGate } from '../account/FeatureGate';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
@@ -48,12 +49,22 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const [exportingGIF, setExportingGIF] = useState(false);
     const [gifProgress, setGifProgress] = useState(0);
 
+    // Save to library modal state
+    const [savingToLibrary, setSavingToLibrary] = useState(false);
+    const [saveName, setSaveName] = useState('');
+    const [saveDescription, setSaveDescription] = useState('');
+    const [savePublic, setSavePublic] = useState(false);
+    const [saveLoading, setSaveLoading] = useState(false);
+    const [saveError, setSaveError] = useState(null);
+
     // Force Terpologie watermark when watermark customization is not available
     useEffect(() => {
         if (!permissions.export?.features?.watermark) {
             setWatermark(w => ({ ...w, visible: true }));
         }
     }, [permissions]);
+
+    const { user } = useAuth()
 
     // Templates prédéfinis — utiliser les templates par type de produit si présents
     const productKey = productType || 'Fleurs';
@@ -510,18 +521,29 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             )}
                         </div>
 
-                        <button
-                            onClick={() => handleExport('png')}
-                            disabled={exporting}
-                            className="w-full py-3 bg-gradient-to-r rounded-xl text-white font-bold shadow-lg hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
-                        >
-                            {exporting ? (
-                                <span className="animate-spin">⌛</span>
-                            ) : (
-                                <Download className="w-5 h-5" />
-                            )}
-                            Exporter l'image
-                        </button>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => handleExport('png')}
+                                disabled={exporting}
+                                className="w-full py-3 bg-gradient-to-r rounded-xl text-white font-bold shadow-lg hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
+                            >
+                                {exporting ? (
+                                    <span className="animate-spin">⌛</span>
+                                ) : (
+                                    <Download className="w-5 h-5" />
+                                )}
+                                Exporter l'image
+                            </button>
+
+                            <button
+                                onClick={() => setSavingToLibrary(true)}
+                                disabled={saveLoading}
+                                className="w-full py-3 bg-white/5 rounded-xl text-white font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
+                            >
+                                <Save className="w-4 h-4" />
+                                Sauvegarder dans la bibliothèque
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -783,6 +805,82 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     }}
                                 >
                                     Terpologie
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Save to Library Modal */}
+                        {savingToLibrary && (
+                            <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/60">
+                                <div className="bg-white/5 p-6 rounded-lg w-[420px]">
+                                    <h3 className="text-lg font-semibold text-white mb-3">Sauvegarder l'export</h3>
+                                    <div className="space-y-2">
+                                        <label className="text-xs text-gray-400">Nom</label>
+                                        <input value={saveName} onChange={(e) => setSaveName(e.target.value)} className="w-full p-2 rounded bg-black/30 text-white text-sm" placeholder={`Export ${new Date().toLocaleDateString()}`} />
+
+                                        <label className="text-xs text-gray-400">Description (optionnel)</label>
+                                        <textarea value={saveDescription} onChange={(e) => setSaveDescription(e.target.value)} className="w-full p-2 rounded bg-black/30 text-white text-sm" rows={3} />
+
+                                        <div className="flex items-start gap-2">
+                                            <input id="publish" type="checkbox" checked={savePublic} onChange={(e) => setSavePublic(e.target.checked)} disabled={!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)} />
+                                            <div className="flex flex-col">
+                                                <label htmlFor="publish" className="text-sm text-gray-300">Publier dans la galerie publique</label>
+                                                {(!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)) && (
+                                                    <div className="text-xs text-gray-500">Seul le propriétaire de la review peut la publier</div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        {saveError && (<div className="text-sm text-rose-400">{saveError}</div>)}
+
+                                        <div className="flex items-center justify-end gap-2 mt-4">
+                                            <button onClick={() => setSavingToLibrary(false)} className="px-3 py-2 rounded bg-white/5 text-sm">Annuler</button>
+                                            <button
+                                                onClick={async () => {
+                                                    setSaveError(null)
+                                                    setSaveLoading(true)
+                                                    try {
+                                                        // Render canvas and upload
+                                                        if (!exportRef.current) throw new Error('Aucune preview disponible')
+                                                        const canvas = await html2canvas(exportRef.current, { scale: highQuality ? 3 : 2, useCORS: true, backgroundColor: null })
+                                                        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+                                                        const filename = `export-${(reviewData.name || 'review').replace(/\s+/g, '-')}-${Date.now()}.png`
+                                                        const form = new FormData()
+                                                        form.append('file', blob, filename)
+                                                        if (reviewData?.id) form.append('reviewId', reviewData.id)
+                                                        form.append('name', saveName || '')
+                                                        form.append('description', saveDescription || '')
+                                                        form.append('format', 'png')
+                                                        form.append('templateName', selectedTemplate || 'detailed')
+                                                        form.append('isPublic', savePublic ? 'true' : 'false')
+
+                                                        const resp = await fetch('/api/library/exports', {
+                                                            method: 'POST',
+                                                            body: form,
+                                                            credentials: 'include'
+                                                        })
+                                                        if (!resp.ok) {
+                                                            const json = await resp.json().catch(() => ({ message: 'Erreur' }))
+                                                            throw new Error(json.message || 'Erreur lors de l\'upload')
+                                                        }
+
+                                                        const json = await resp.json()
+                                                        setSavingToLibrary(false)
+                                                        alert('Export enregistré dans votre bibliothèque')
+                                                    } catch (err) {
+                                                        console.error(err)
+                                                        setSaveError(err.message)
+                                                    } finally {
+                                                        setSaveLoading(false)
+                                                    }
+                                                }}
+                                                disabled={saveLoading}
+                                                className="px-4 py-2 rounded bg-emerald-600 text-white font-medium"
+                                            >
+                                                {saveLoading ? 'Enregistrement...' : 'Enregistrer'}
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         )}
