@@ -79,6 +79,12 @@ const PipelineGridView = ({
             // ensure no horizontal scroll on wrapper
             scrollRef.current.style.overflowX = 'hidden';
             scrollRef.current.style.boxSizing = 'border-box';
+            scrollRef.current.style.maxWidth = '100%';
+            // also protect parent element if exists
+            if (scrollRef.current.parentElement) {
+                scrollRef.current.parentElement.style.overflowX = 'hidden';
+                scrollRef.current.parentElement.style.boxSizing = 'border-box';
+            }
         });
 
         ro.observe(scrollRef.current);
@@ -324,7 +330,7 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll" ref={scrollRef}>
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
             {/* Zoom controls */}
             <div className="flex items-center justify-end gap-2 mb-2">
                 <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>
@@ -346,11 +352,14 @@ const PipelineGridView = ({
                 data-testid="pipeline-grid"
                 className="grid"
                 style={{
-                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 64px), 1fr))`,
-                    gridAutoRows: 'minmax(var(--min-cell, 64px), auto)',
+                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 72px), 1fr))`,
+                    gridAutoRows: `minmax(var(--min-cell, 72px), var(--computed-cell, auto))`,
                     gap: '8px',
                     alignItems: 'start',
-                    width: '100%'
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    minWidth: 0
                 }}
             >
                 {cellIndices.map((cellIndex) => {

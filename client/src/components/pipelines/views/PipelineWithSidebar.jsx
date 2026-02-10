@@ -347,7 +347,7 @@ const PipelineWithSidebar = ({
     };
 
     return (
-        <LiquidCard className="w-full">
+        <LiquidCard className="w-full overflow-x-hidden">
             {/* En-tête */}
             <div className="p-4 border-b border-gray-700">
                 <div className="flex items-center justify-between mb-4">
@@ -515,7 +515,7 @@ const PipelineWithSidebar = ({
                             </div>
 
                             {/* Grid - takes remaining space and scrolls internally */}
-                            <div className="flex-1 min-h-0 overflow-auto overflow-x-hidden">
+                            <div className="flex-1 min-h-0 overflow-auto overflow-x-hidden" style={{ minWidth: 0 }}>
                                 <PipelineGridView
                                     cells={cells}
                                     config={config}

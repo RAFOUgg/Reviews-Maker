@@ -294,7 +294,7 @@ export const ResponsiveCreateReviewLayout = ({
     };
 
     return (
-        <div className="min-h-screen bg-[#07070f] relative flex flex-col">
+        <div className="min-h-screen bg-[#07070f] relative flex flex-col" style={{ overflowX: 'hidden' }}>
             {/* Background decorative - hidden on mobile for performance */}
             {!layout.isMobile && (
                 <div className="fixed inset-0 bg-gradient-radial from-purple-500/5 via-transparent to-transparent pointer-events-none" />
