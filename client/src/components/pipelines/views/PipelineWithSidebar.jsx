@@ -318,7 +318,7 @@ const PipelineWithSidebar = ({
             </div>
 
             {/* Layout principal: Configuration + Grille (vertical stack) */}
-            <div className="flex flex-col gap-4 h-auto">
+            <div className="flex flex-col gap-4 h-full min-h-0">
                 {/* Configuration section avec scrollable container */}
                 <div className="flex-shrink-0 max-h-[200px] sm:max-h-[250px] md:max-h-[280px] overflow-y-auto bg-white/50 rounded-lg p-3 sm:p-4">
                     <div className="space-y-3">
@@ -427,9 +427,9 @@ const PipelineWithSidebar = ({
                     </div>
 
                     {/* Main grid container: Sidebar + Grid VERTICAL layout below config */}
-                    <div className="flex flex-col gap-3 sm:gap-4 flex-1">
+                    <div className="flex flex-col gap-3 sm:gap-4 flex-1 min-h-0">
                         {/* Sidebar gauche - scrollable, positioned above grid */}
-                        <div className="w-full max-h-[150px] sm:max-h-[200px] md:max-h-[250px] flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto">
+                        <div className="w-full h-full flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0">
                             <PipelineContentsSidebar
                                 contentSchema={contentSchema}
                                 onDragStart={handleDragStart}
