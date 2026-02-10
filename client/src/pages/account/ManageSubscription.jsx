@@ -1,8 +1,16 @@
-import React from 'react'
-import { useStore } from '../../store/useStore'
+import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CreditCard, Shield, Settings, AlertCircle, Check } from 'lucide-react'
-import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
+
+export default function ManageSubscription() {
+  const navigate = useNavigate()
+
+  // Redirige vers l'onglet abonnement de la page compte
+  useEffect(() => {
+    navigate('/account?tab=subscription', { replace: true })
+  }, [navigate])
+
+  return null
+}
 
 /**
  * ManageSubscription Page - Account Management

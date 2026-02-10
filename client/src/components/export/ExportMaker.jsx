@@ -123,7 +123,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     );
 
     const handleExport = async (exportFormat = 'png') => {
-        if (!exportRef.current) return;
+        console.debug('[ExportMaker] handleExport called', { exportFormat, exportRefCurrent: !!exportRef.current })
+        if (!exportRef.current) {
+            console.warn('[ExportMaker] No preview available (exportRef.current is null)')
+            alert('Aucune preview disponible pour l\'export. Assurez-vous que la fenêtre d\'aperçu est chargée.')
+            return;
+        }
+
         setExporting(true);
 
         try {
@@ -133,12 +139,53 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 backgroundColor: null,
             });
 
+            if (!canvas) {
+                console.error('[ExportMaker] html2canvas returned null/undefined canvas')
+                alert('Erreur: Impossible de générer le canvas pour l\'export. Voir console pour détails.')
+                return
+            }
+
+            // Log canvas size for debugging
+            try {
+                console.debug('[ExportMaker] Canvas generated', { width: canvas.width, height: canvas.height })
+            } catch (e) {
+                console.debug('[ExportMaker] Canvas debugging failed', e)
+            }
+
+            const mime = exportFormat === 'jpg' ? 'image/jpeg' : 'image/png'
             const link = document.createElement('a');
-            link.download = `review-${reviewData.name || 'export'}-${Date.now()}.${exportFormat}`;
-            link.href = canvas.toDataURL(`image/${exportFormat}`);
-            link.click();
+            link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.${exportFormat}`;
+
+            // Use toBlob when available for larger exports
+            if (canvas.toBlob) {
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        console.error('[ExportMaker] canvas.toBlob returned null')
+                        alert('Erreur: impossible de préparer le fichier export. Voir la console.')
+                        setExporting(false)
+                        return
+                    }
+                    const url = URL.createObjectURL(blob)
+                    link.href = url
+                    link.click()
+                    // Release after a delay
+                    setTimeout(() => URL.revokeObjectURL(url), 20000)
+                }, mime, highQuality ? 0.95 : 0.92)
+            } else {
+                // Fallback to dataURL
+                try {
+                    const dataUrl = canvas.toDataURL(mime)
+                    link.href = dataUrl
+                    link.click()
+                } catch (err) {
+                    console.error('[ExportMaker] toDataURL failed', err)
+                    alert('Erreur lors de la génération du fichier export. Voir la console.')
+                }
+            }
+
         } catch (err) {
-            console.error(err);
+            console.error('[ExportMaker] Export failed:', err);
+            alert('Erreur lors de l\'export. Voir la console pour plus de détails.')
         } finally {
             setExporting(false);
         }

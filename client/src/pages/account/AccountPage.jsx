@@ -22,6 +22,7 @@ import ProfileSection from './sections/ProfileSection'
 import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
 import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
+import SubscriptionManager from '../../components/account/SubscriptionManager'
 import { accountService, paymentService } from '../../services/apiService'
 import ConfirmDialog from '../../components/shared/ConfirmDialog'
 import { useToast } from '../../components/shared/ToastContainer'
@@ -257,75 +258,8 @@ const AccountPage = () => {
                     <div className="bg-white/3 dark:bg-white/5 rounded-lg p-4 space-y-4 border border-white/6">
                       <h3 className="text-lg font-semibold text-white">Actions</h3>
 
-                      {/* Display human-friendly French label while keeping backend keys English */}
-                      {(() => {
-                        const map = {
-                          consumer: 'Amateur',
-                          producer: 'Producteur',
-                          influencer: 'Influenceur',
-                          admin: 'Administrateur',
-                          amateur: 'Amateur',
-                          producteur: 'Producteur',
-                          influenceur: 'Influenceur'
-                        }
-                        const label = map[accountType] || 'Amateur'
-                        return <p className="text-sm text-white/60">Plan actuel: <span className="font-medium text-white">{label}</span></p>
-                      })()}
-
-                      <button
-                        onClick={() => setShowUpgradeModal(true)}
-                        className="w-full bg-gradient-to-r from-purple-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-lg"
-                      >
-                        ✨ Modifier le plan
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab('subscription')}
-                        className="w-full bg-gray-700 text-white font-medium py-2 px-3 rounded-lg hover:bg-gray-600"
-                      >
-                        ⚙️ Gérer le moyen de paiement
-                      </button>
-
-                      {accountType && accountType !== 'consumer' && (
-                        <>
-                          <button
-                            onClick={() => setShowCancelDialog(true)}
-                            className="w-full text-sm font-medium text-red-400 bg-white/5 px-3 py-2 rounded-lg hover:bg-red-900/10"
-                          >
-                            ❌ Résilier l'abonnement
-                          </button>
-
-                          <ConfirmDialog
-                            isOpen={showCancelDialog}
-                            title="Confirmer la résiliation"
-                            description="Voulez-vous vraiment résilier votre abonnement ? Votre contenu restera visible mais vous perdrez l'accès à la création."
-                            onCancel={() => setShowCancelDialog(false)}
-                            onConfirm={async () => {
-                              setShowCancelDialog(false)
-                              try {
-                                await accountService.changeType('consumer')
-                                if (typeof checkAuth === 'function') await checkAuth()
-                                toast.success('Abonnement résilié. Votre compte a été rétrogradé.')
-                                // small delay so toast is visible before reload
-                                setTimeout(() => window.location.reload(), 700)
-                              } catch (err) {
-                                console.error('Cancel subscription error', err)
-                                try {
-                                  await paymentService.cancel()
-                                  if (typeof checkAuth === 'function') await checkAuth()
-                                  toast.success('Abonnement résilié via le service de paiement.')
-                                  setTimeout(() => window.location.reload(), 700)
-                                } catch (err2) {
-                                  console.error('Payment cancel fallback failed', err2)
-                                  toast.error(err2?.message || 'Erreur lors de la résiliation')
-                                }
-                              }
-                            }}
-                            confirmText="Résilier"
-                            cancelText="Annuler"
-                          />
-                        </>
-                      )}
+                      {/* Inline subscription manager instead of navigating away */}
+                      <SubscriptionManager user={user} />
 
                     </div>
                   </div>
