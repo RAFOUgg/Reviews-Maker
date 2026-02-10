@@ -160,7 +160,7 @@ function App() {
                                     <Route path="/library" element={<LibraryPage />} />
                                     <Route path="/gallery" element={<GalleryPage />} />
                                     <Route path="/account" element={<AccountPage />} />
-                                    <Route path="/manage-subscription" element={<ManageSubscription />} />
+                                    <Route path="/manage-subscription" element={<Navigate to="/account?tab=subscription" replace />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/liquid-preview" element={<LiquidPreview />} />
 
