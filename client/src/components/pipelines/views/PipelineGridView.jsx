@@ -353,7 +353,7 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
             {/* Zoom controls */}
             <div className="flex items-center justify-end gap-2 mb-2">
                 <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>

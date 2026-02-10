@@ -1929,9 +1929,9 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 min-h-[600px] max-h-[85vh] overflow-hidden">
+        <div className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 h-[85vh] overflow-hidden flex flex-col">
             {/* LAYOUT FLEX-ROW : Sidebar gauche + Timeline droite */}
-            <div className="flex flex-row gap-4 h-full">
+            <div className="flex-1 overflow-hidden flex flex-row gap-4 min-h-0">
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
                 {!isMobile && (
                     <div className="w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-y-auto overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
