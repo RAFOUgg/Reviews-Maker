@@ -27,6 +27,11 @@ import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/e
  * Intègre Drag & Drop (Phase 5) et Filigranes
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
+    useEffect(() => {
+        console.debug('[ExportMaker] mounted', { productType, hasPreview: !!reviewData, reviewId: reviewData?.id })
+        return () => console.debug('[ExportMaker] unmounted')
+    }, [productType, reviewData?.id])
+
     const { isPremium, isProducer, isConsumer, isInfluencer, permissions, canAccess } = useAccountType();
     const canExportSVG = permissions.export?.formats?.svg === true;
     const canExportAdvanced = permissions.export?.quality?.high === true;

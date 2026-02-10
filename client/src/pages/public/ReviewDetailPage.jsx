@@ -128,7 +128,7 @@ export default function ReviewDetailPage() {
 
                     <div className="flex items-center gap-3">
                         <LiquidButton
-                            onClick={() => setShowExportModal(true)}
+                            onClick={() => { console.debug('[ReviewDetailPage] Export button clicked'); setShowExportModal(true); }}
                             variant="primary"
                             size="sm"
                         >
