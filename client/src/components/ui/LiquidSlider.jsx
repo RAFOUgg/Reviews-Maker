@@ -8,7 +8,8 @@ import { motion } from 'framer-motion';
 
 const LiquidSlider = ({
     label,
-    value = 5,
+    // default to 0 so a missing value doesn't show as 5
+    value = 0,
     onChange,
     min = 0,
     max = 10,

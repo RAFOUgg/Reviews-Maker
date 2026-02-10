@@ -16,8 +16,9 @@ export default function TasteSection({ productType, data: directData, onChange, 
         if (typeof handleChange === 'function') return handleChange('gouts', payload)
     }
 
-    const [intensity, setIntensity] = useState(data?.intensity || 5);
-    const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness || 5);
+    // Default to 0 so sliders start at 0 when no data is present
+    const [intensity, setIntensity] = useState(data?.intensity ?? 0);
+    const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness ?? 0);
     const [dryPuffNotes, setDryPuffNotes] = useState(data?.dryPuffNotes || []);
     const [inhalationNotes, setInhalationNotes] = useState(data?.inhalationNotes || []);
     const [exhalationNotes, setExhalationNotes] = useState(data?.exhalationNotes || []);
@@ -55,26 +56,26 @@ export default function TasteSection({ productType, data: directData, onChange, 
                     <LiquidSlider
                         label="Intensité gustative"
                         value={intensity}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="orange"
                         onChange={(val) => setIntensity(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TASTE_INTENSITY_LEVELS[intensity - 1]?.label}</p>
+                    <p className="text-xs text-white/40 mt-2">{intensity > 0 ? TASTE_INTENSITY_LEVELS[intensity - 1]?.label : 'Non évalué'}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Agressivité / Piquant"
                         value={aggressiveness}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="orange"
                         onChange={(val) => setAggressiveness(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{AGGRESSIVENESS_LEVELS[aggressiveness - 1]?.label}</p>
+                    <p className="text-xs text-white/40 mt-2">{aggressiveness > 0 ? AGGRESSIVENESS_LEVELS[aggressiveness - 1]?.label : 'Non évalué'}</p>
                 </div>
             </div>
 

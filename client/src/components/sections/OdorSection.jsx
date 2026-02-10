@@ -18,17 +18,18 @@ export default function OdorSection({ productType, data: directData, onChange, f
 
     const [dominantNotes, setDominantNotes] = useState(data?.dominantNotes || []);
     const [secondaryNotes, setSecondaryNotes] = useState(data?.secondaryNotes || []);
-    const [intensity, setIntensity] = useState(data?.intensity || 5);
-    const [complexity, setComplexity] = useState(data?.complexity || 5);
-    const [fidelity, setFidelity] = useState(data?.fidelity || 5);
+    // Default to 0 when no data exists (allow explicit 0)
+    const [intensity, setIntensity] = useState(data?.intensity ?? 0);
+    const [complexity, setComplexity] = useState(data?.complexity ?? 0);
+    const [fidelity, setFidelity] = useState(data?.fidelity ?? 0);
 
     // Synchroniser l'état LOCAL quand les props changent (revenir à la section)
     useEffect(() => {
         setDominantNotes(data?.dominantNotes || []);
         setSecondaryNotes(data?.secondaryNotes || []);
-        setIntensity(data?.intensity || 5);
-        setComplexity(data?.complexity || 5);
-        setFidelity(data?.fidelity || 5);
+        setIntensity(data?.intensity ?? 0);
+        setComplexity(data?.complexity ?? 0);
+        setFidelity(data?.fidelity ?? 0);
     }, [data]);
 
     // Synchroniser avec parent quand l'état LOCAL change
@@ -64,7 +65,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
                     <LiquidSlider
                         label="Fidélité aux cultivars"
                         value={fidelity}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="green"
@@ -101,7 +102,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
                     <LiquidSlider
                         label="💪 Intensité globale"
                         value={intensity}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="green"
@@ -113,7 +114,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
                     <LiquidSlider
                         label="🌈 Complexité aromatique"
                         value={complexity}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="green"

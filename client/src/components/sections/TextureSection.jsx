@@ -79,15 +79,16 @@ export default function TextureSection({ productType, data: directData, onChange
         }
     };
 
-    const [hardness, setHardness] = useState(textureData?.hardness || 5);
-    const [density, setDensity] = useState(textureData?.density || 5);
-    const [malleability, setMalleability] = useState(textureData?.malleability || 5);
-    const [elasticity, setElasticity] = useState(textureData?.elasticity || 5);
-    const [stickiness, setStickiness] = useState(textureData?.stickiness || 5);
-    const [melting, setMelting] = useState(textureData?.melting || 5);
-    const [residue, setResidue] = useState(textureData?.residue || 10);
-    const [friability, setFriability] = useState(textureData?.friability || 5);
-    const [viscosity, setViscosity] = useState(textureData?.viscosity || 5);
+    // Default to 0 (not evaluated) rather than 5
+    const [hardness, setHardness] = useState(textureData?.hardness ?? 0);
+    const [density, setDensity] = useState(textureData?.density ?? 0);
+    const [malleability, setMalleability] = useState(textureData?.malleability ?? 0);
+    const [elasticity, setElasticity] = useState(textureData?.elasticity ?? 0);
+    const [stickiness, setStickiness] = useState(textureData?.stickiness ?? 0);
+    const [melting, setMelting] = useState(textureData?.melting ?? 0);
+    const [residue, setResidue] = useState(textureData?.residue ?? 10);
+    const [friability, setFriability] = useState(textureData?.friability ?? 0);
+    const [viscosity, setViscosity] = useState(textureData?.viscosity ?? 0);
 
     // Score de pureté calculé pour Hash / Concentrés (moyenne simple melting/residue)
     const purityScore = (productType === 'Hash' || productType === 'Concentré')
@@ -146,39 +147,39 @@ export default function TextureSection({ productType, data: directData, onChange
                     <LiquidSlider
                         label="Dureté"
                         value={hardness}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="pink"
                         onChange={(val) => setHardness(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.hardness[hardness]}</p>
+                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.hardness[hardness] || 'Non évalué'}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Densité tactile"
                         value={density}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="pink"
                         onChange={(val) => setDensity(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.density[density]}</p>
+                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.density[density] || 'Non évalué'}</p>
                 </div>
 
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Collant"
                         value={stickiness}
-                        min={1}
+                        min={0}
                         max={10}
                         step={1}
                         color="pink"
                         onChange={(val) => setStickiness(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.stickiness[stickiness]}</p>
+                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.stickiness[stickiness] || 'Non évalué'}</p>
                 </div>
 
                 {/* Élasticité (Fleurs uniquement) */}
@@ -187,13 +188,13 @@ export default function TextureSection({ productType, data: directData, onChange
                         <LiquidSlider
                             label="Élasticité"
                             value={elasticity}
-                            min={1}
+                            min={0}
                             max={10}
                             step={1}
                             color="pink"
                             onChange={(val) => setElasticity(val)}
                         />
-                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.elasticity[elasticity]}</p>
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.elasticity[elasticity] || 'Non évalué'}</p>
                     </div>
                 )}
 
@@ -203,13 +204,13 @@ export default function TextureSection({ productType, data: directData, onChange
                         <LiquidSlider
                             label="Malléabilité"
                             value={malleability}
-                            min={1}
+                            min={0}
                             max={10}
                             step={1}
                             color="pink"
                             onChange={(val) => setMalleability(val)}
                         />
-                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.malleability[malleability]}</p>
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.malleability[malleability] || 'Non évalué'}</p>
                     </div>
                 )}
 
@@ -219,13 +220,13 @@ export default function TextureSection({ productType, data: directData, onChange
                         <LiquidSlider
                             label="Friabilité"
                             value={friability}
-                            min={1}
+                            min={0}
                             max={10}
                             step={1}
                             color="pink"
                             onChange={(val) => setFriability(val)}
                         />
-                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.friability[friability]}</p>
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.friability[friability] || 'Non évalué'}</p>
                     </div>
                 )}
 
@@ -235,13 +236,13 @@ export default function TextureSection({ productType, data: directData, onChange
                         <LiquidSlider
                             label="Viscosité"
                             value={viscosity}
-                            min={1}
+                            min={0}
                             max={10}
                             step={1}
                             color="pink"
                             onChange={(val) => setViscosity(val)}
                         />
-                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.viscosity[viscosity]}</p>
+                        <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.viscosity[viscosity] || 'Non évalué'}</p>
                     </div>
                 )}
             </div>

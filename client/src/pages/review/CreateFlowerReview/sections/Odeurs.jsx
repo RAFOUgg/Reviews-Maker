@@ -51,8 +51,8 @@ export default function Odeurs({ formData, handleChange }) {
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Intensité aromatique"
-                        value={formData.intensiteOdeur || 5}
-                        min={1}
+                        value={formData.intensiteOdeur ?? 0}
+                        min={0}
                         max={10}
                         step={1}
                         color="green"
