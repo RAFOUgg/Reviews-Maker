@@ -16,6 +16,8 @@ import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
 import { getMaxElements } from '../../data/exportTemplates';
 import { CANNABIS_COLORS } from '../../data/cannabisColors';
+import MiniBars from './MiniBars'
+import TerpeneBar from './TerpeneBar'
 import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/exportElementMappings';
 
 /**
@@ -548,13 +550,21 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div>
                                     <div className="text-sm font-bold tracking-widest uppercase mb-1">{reviewData.typeName || productType}</div>
                                     <h1 className="text-4xl font-black text-white mb-2">{reviewData.name || 'Produit sans nom'}</h1>
-                                    <div className="flex gap-2">
-                                        <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">
-                                            {reviewData.varietyType || 'Hybride'}
-                                        </span>
-                                        {(resolveReviewField('thc') || resolveReviewField('thcPercent')) && (
-                                            <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">THC: {resolveReviewField('thc') ?? resolveReviewField('thcPercent')}%</span>
-                                        )}
+                                    <div className="flex flex-col gap-2">
+                                        <div className="flex gap-2">
+                                            <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">
+                                                {reviewData.varietyType || 'Hybride'}
+                                            </span>
+                                            {(resolveReviewField('thc') || resolveReviewField('thcPercent')) && (
+                                                <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">THC: {resolveReviewField('thc') ?? resolveReviewField('thcPercent')}%</span>
+                                            )}
+                                            {(resolveReviewField('cbd') || resolveReviewField('cbdPercent')) && (
+                                                <span className="px-2 py-1 bg-emerald-600/10 text-emerald-300 rounded text-xs">CBD: {resolveReviewField('cbd') ?? resolveReviewField('cbdPercent')}%</span>
+                                            )}
+                                        </div>
+
+                                        {/* Genetics quick line */}
+                                        <div className="text-sm text-gray-300 mt-1">{resolveReviewField('genetics')}</div>
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -599,47 +609,86 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     <div className="grid grid-cols-2 gap-3">
                                         {hasElement(['odor', 'odorNotes', 'odors']) && (() => {
                                             const od = resolveReviewField('odor') || {}
-                                            const val = od.intensity ?? (Array.isArray(od.dominant) ? (od.dominant[0] || '-') : '-')
+                                            const items = []
+                                            if (Array.isArray(od.dominant) && od.dominant.length) items.push({ label: 'Dominant', value: (od.dominant.length || 0), color: '#84CC16' })
+                                            if (Array.isArray(od.secondary) && od.secondary.length) items.push({ label: 'Secondaires', value: (od.secondary.length || 0), color: '#10B981' })
+                                            if (od.intensity !== undefined) items.unshift({ label: 'Intensité', value: od.intensity, color: '#059669' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-1">Odeur</div>
-                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                    <div className="text-gray-400 text-xs mb-2">Odeur</div>
+                                                    <MiniBars items={items} max={10} />
                                                 </div>
                                             )
                                         })()}
 
                                         {hasElement(['taste', 'tasteNotes', 'tastes']) && (() => {
                                             const t = resolveReviewField('taste') || {}
-                                            const val = t.intensity ?? (Array.isArray(t.dryPuff) ? (t.dryPuff[0] || '-') : '-')
+                                            const items = []
+                                            if (t.intensity !== undefined) items.push({ label: 'Intensité', value: t.intensity, color: '#F59E0B' })
+                                            if (t.aggressiveness !== undefined) items.push({ label: 'Agressivité', value: t.aggressiveness, color: '#FB923C' })
+                                            if (Array.isArray(t.dryPuff) && t.dryPuff.length) items.push({ label: 'Dry', value: t.dryPuff.length, color: '#F97316' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-1">Goût</div>
-                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                    <div className="text-gray-400 text-xs mb-2">Goût</div>
+                                                    <MiniBars items={items} max={10} />
                                                 </div>
                                             )
                                         })()}
 
                                         {hasElement('effects') && (() => {
                                             const e = resolveReviewField('effects') || {}
-                                            const val = e.intensity ?? (Array.isArray(e.selected) ? (e.selected.length || '-') : '-')
+                                            const items = []
+                                            if (e.intensity !== undefined) items.push({ label: 'Intensité', value: e.intensity, color: '#06B6D4' })
+                                            if (e.onset !== undefined) items.push({ label: 'Montée', value: e.onset, color: '#34D399' })
+                                            if (Array.isArray(e.selected) && e.selected.length) items.push({ label: 'Choix', value: e.selected.length, color: '#60A5FA' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-1">Effets</div>
-                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                    <div className="text-gray-400 text-xs mb-2">Effets</div>
+                                                    <MiniBars items={items} max={10} />
                                                 </div>
                                             )
                                         })()}
 
                                         {hasElement('visual') && (() => {
                                             const v = resolveReviewField('visual') || {}
-                                            const val = v.densite ?? v.densiteVisuelle ?? v.trichomes ?? '-'
+                                            const items = []
+                                            if (v.densite !== undefined) items.push({ label: 'Densité', value: v.densite, color: '#8B5CF6' })
+                                            if (v.trichomes !== undefined) items.push({ label: 'Trichomes', value: v.trichomes, color: '#A78BFA' })
+                                            if (v.pistils !== undefined) items.push({ label: 'Pistils', value: v.pistils, color: '#C084FC' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-1">Visuel</div>
-                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                    <div className="text-gray-400 text-xs mb-2">Visuel</div>
+                                                    <MiniBars items={items} max={10} />
                                                 </div>
                                             )
                                         })()}
+
+                                        {/* Profil terpénique */}
+                                        {hasElement(['terpeneProfile', 'terpenes']) && (() => {
+                                            const terps = resolveReviewField('terpeneProfile') || resolveReviewField('terpenes') || []
+                                            const normalized = Array.isArray(terps) ? terps.map(t => ({ name: t.name || t.terpene || t.key || t.label || 'Autre', percent: t.percent || t.value || t.amount || 0 })) : []
+                                            return (
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div className="text-gray-400 text-xs mb-2">Profil terpénique</div>
+                                                    <TerpeneBar profile={normalized} />
+                                                </div>
+                                            )
+                                        })()}
+
+                                        {/* Analytique rapide */}
+                                        {(resolveReviewField('thc') || resolveReviewField('cbd') || resolveReviewField("cbg")) && (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-2">Analytiques</div>
+                                                <div className="flex gap-2 items-center">
+                                                    {resolveReviewField('thc') && <div className="px-2 py-1 bg-red-500/20 rounded text-xs text-red-300">THC: {resolveReviewField('thc')}</div>}
+                                                    {resolveReviewField('cbd') && <div className="px-2 py-1 bg-emerald-600/20 rounded text-xs text-emerald-300">CBD: {resolveReviewField('cbd')}</div>}
+                                                    {resolveReviewField('cbg') && <div className="px-2 py-1 bg-violet-600/20 rounded text-xs text-violet-300">CBG: {resolveReviewField('cbg')}</div>}
+                                                    {reviewData?.flowerData?.analyticsPdfUrl && (
+                                                        <a href={`/images/${reviewData.flowerData.analyticsPdfUrl}`} target="_blank" rel="noreferrer" className="ml-auto text-xs text-gray-300 underline">Certificat</a>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     {/* Custom Sections (Drag & Drop) */}
