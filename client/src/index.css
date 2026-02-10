@@ -413,8 +413,30 @@ body {
 
 /* Ensure pipeline grid has a larger sensible default when JS doesn't compute --min-cell */
 [data-testid="pipeline-grid"] {
-    grid-template-columns: repeat(auto-fit, minmax(var(--min-cell, 140px), 1fr)) !important;
-    grid-auto-rows: var(--min-cell, 140px) !important;
+    grid-template-columns: repeat(auto-fit, minmax(var(--min-cell, 160px), 1fr)) !important;
+    grid-auto-rows: var(--min-cell, 160px) !important;
+}
+
+/* Pipeline panel constraints and fallbacks to avoid vertical expansion */
+[data-testid="pipeline-panel"] {
+    height: 85vh !important;
+    max-height: 85vh !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+}
+
+[data-testid="pipeline-panel"]>.flex-1 {
+    min-height: 0 !important;
+    overflow: hidden !important;
+}
+
+[data-testid="pipeline-panel"] [data-testid="pipeline-sidebar"],
+[data-testid="pipeline-panel"] [data-testid="pipeline-scroll"] {
+    max-height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    min-height: 0 !important;
 }
 
 /* Hide horizontal overflow at app level to protect against accidental leaks */

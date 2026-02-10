@@ -84,8 +84,23 @@ const PipelineGridView = ({
             setCellSize(computed);
 
             // compute a robust min cell width depending on mode and zoom
-            const baseMinForMode = config && config.intervalType === 'phases' ? 120 : 96;
-            const minCellFinal = Math.max(baseMinForMode, minCell);
+            const baseMinForMode = config && config.intervalType === 'phases' ? 160 : 140;
+            let minCellFinal = Math.max(baseMinForMode, minCell);
+
+            // Ensure we prefer fewer columns if that increases the cell size (avoid many tiny cells)
+            // If computed size is smaller than desired base, attempt to reduce columns until acceptable or reach minColumns
+            if (computed < baseMinForMode) {
+                let k = bestCols;
+                while (k > minColumns) {
+                    k--;
+                    const sizeK = Math.floor((available - (k - 1) * gap) / k);
+                    if (sizeK >= baseMinForMode) {
+                        bestCols = k;
+                        minCellFinal = Math.max(baseMinForMode, sizeK);
+                        break;
+                    }
+                }
+            }
 
             // publish CSS variables used by the grid (auto-fit minmax)
             scrollRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
