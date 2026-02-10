@@ -133,6 +133,17 @@ export const ResponsiveCreateReviewLayout = ({
         // center the active item when index changes
         scrollToIndex(currentSection);
     }, [currentSection]);
+
+    // Apply calculated scrollPosition to the container (smooth)
+    React.useEffect(() => {
+        if (!carouselRef.current) return;
+        try {
+            carouselRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+        } catch (e) {
+            // Fallback si scrollTo avec options n'est pas supporté
+            carouselRef.current.scrollLeft = scrollPosition;
+        }
+    }, [scrollPosition]);
     // Détecte si l'espace n'est pas suffisant pour afficher tous les émojis
     useEffect(() => {
         const detectCarouselNeeded = () => {
@@ -250,6 +261,14 @@ export const ResponsiveCreateReviewLayout = ({
             snapIndex = Math.max(0, Math.min(totalSections - 1, Math.round(scrolledIndex)));
         }
 
+        // If we've hit the max scroll clamp, ensure we snap to the last section (avoid getting stuck before the end)
+        if (carouselRef.current) {
+            const currentScroll = carouselRef.current.scrollLeft;
+            if (Math.abs(currentScroll - maxScroll) <= 1) {
+                snapIndex = totalSections - 1;
+            }
+        }
+
         const snappedScroll = Math.max(0, Math.min(maxScroll, (snapIndex * itemWidth + (itemWidth / 2)) - containerCenter));
 
         // Appliquer snapping et réinitialiser offset
@@ -272,17 +291,6 @@ export const ResponsiveCreateReviewLayout = ({
             // assurer le recentrage visuel
             scrollToIndex(snapIndex);
         }
-
-        // Appliquer le scrollPosition calculé au conteneur pour garantir le recentrage (smooth)
-        React.useEffect(() => {
-            if (!carouselRef.current) return;
-            try {
-                carouselRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-            } catch (e) {
-                // Fallback si scrollTo avec options n'est pas supporté
-                carouselRef.current.scrollLeft = scrollPosition;
-            }
-        }, [scrollPosition]);
     };
 
     return (
@@ -420,7 +428,8 @@ export const ResponsiveCreateReviewLayout = ({
                         const containerW = containerWidthState || (VISIBLE_ITEMS * w);
                         const totalWidth = sectionEmojis.length * w;
                         const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
-                        const targetIndex = sectionEmojis.length + currentSection;
+                        // Center on the real current index
+                        const targetIndex = currentSection;
                         const itemCenter = (targetIndex * w) + (w / 2);
                         const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
                         setScrollPosition(targetScroll);

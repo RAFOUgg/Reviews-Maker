@@ -504,11 +504,6 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                             }
                         </motion.div>
                     )}
-
-                    {/* Short links to API / DB / Export docs */}
-                    <div className="text-xs text-gray-400 mt-2">
-                        🔧 Liens utiles: <a className="text-gray-200 underline" href="/server-new/routes/flower-reviews.js" target="_blank" rel="noreferrer">API Flower Reviews</a> • <a className="text-gray-200 underline" href="/server-new/prisma/schema.prisma" target="_blank" rel="noreferrer">DB Schema</a> • <a className="text-gray-200 underline" href="/client/src/components/export/ExportMaker.jsx" target="_blank" rel="noreferrer">ExportMaker</a>
-                    </div>
                 </div>
             )}
 
