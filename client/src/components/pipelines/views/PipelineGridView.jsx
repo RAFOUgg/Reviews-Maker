@@ -44,7 +44,7 @@ const PipelineGridView = ({
 
         const gap = 8; // gap en px, doit correspondre au gap Tailwind (gap-2 ~= 8px)
         const minColumns = 4;
-        const maxColumns = 14; // safeguard
+        const maxColumns = 8; // safeguard: cap columns to 8 to keep cells legible on wide screens
 
         const baseMin = config && config.intervalType === 'phases' ? 80 : 56; // base min size
 
