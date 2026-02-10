@@ -630,7 +630,7 @@ function PipelineDataModal({
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
+                        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50 flex flex-col"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -748,7 +748,7 @@ function PipelineDataModal({
 
                         {/* Contenu - TAB FORMULAIRE */}
                         {activeTab === 'data' && (
-                            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+                            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
                                 {itemsToDisplay.length === 0 ? (
                                     <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                                         <p className="text-lg mb-2">Aucun champ à afficher</p>
@@ -790,7 +790,7 @@ function PipelineDataModal({
 
                         {/* Contenu - TAB PRÉRÉGLAGES */}
                         {activeTab === 'presets' && (
-                            <div className="p-6 space-y-4 overflow-y-auto max-h-[calc(90vh-180px)]">
+                            <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
                                 <div className="flex items-center justify-between">
                                     <h3 className="text-sm font-semibold text-gray-900 dark:text-white">📦 Groupes de préréglages</h3>
                                     <button
