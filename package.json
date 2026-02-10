@@ -1,5 +1,8 @@
 {
   "devDependencies": {
     "baseline-browser-mapping": "^2.9.19"
+  },
+  "scripts": {
+    "check:export-templates": "node --input-type=module ./scripts/check-export-templates.mjs"
   }
 }

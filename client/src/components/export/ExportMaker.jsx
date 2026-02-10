@@ -16,6 +16,7 @@ import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
 import { getMaxElements } from '../../data/exportTemplates';
 import { CANNABIS_COLORS } from '../../data/cannabisColors';
+import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/exportElementMappings';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -84,8 +85,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Elements allowed for the currently selected template
     const selectedTemplateDef = getPredefinedTemplate(productKey, selectedTemplate) || predefined[selectedTemplate] || predefined['minimal'];
     const allowedElementIds = (selectedTemplateDef?.elements || []).map(e => e.id);
-    // Final allowed ids = intersection(template elements, product relevant modules)
-    const finalAllowedIds = allowedElementIds.filter(id => relevantModulesSet.has(id));
+
+    // Final allowed ids = template elements that are available for this product type
+    const finalAllowedIds = allowedElementIds.filter(id => {
+        try { return isElementAvailableForProduct(productType || productKey, id) } catch (e) { return false }
+    });
 
     // Pagination logic
     const maxElements = getMaxElements(format, selectedTemplate);
@@ -297,6 +301,30 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 if (val.expiration) lists.push('Out: ' + (val.expiration || []).join(', '))
                 if (val.selected) lists.push((val.selected || []).join(', '))
                 return lists.filter(Boolean).join(' • ') || '-'
+            }
+
+            // Récolte (trichomes + weights)
+            if (val.trichomesTranslucides !== undefined || val.trichomesLaiteux !== undefined || val.trichomesAmbres !== undefined) {
+                const total = (Number(val.trichomesTranslucides || 0) + Number(val.trichomesLaiteux || 0) + Number(val.trichomesAmbres || 0))
+                return (
+                    <div className="text-sm text-white">
+                        <div className="flex items-center gap-4 mb-2">
+                            <div className="text-xs text-gray-400">Trichomes</div>
+                            <div className="flex gap-2">
+                                <div className="text-xs">Translucides: <span className="font-medium">{val.trichomesTranslucides ?? 0}%</span></div>
+                                <div className="text-xs">Laiteux: <span className="font-medium">{val.trichomesLaiteux ?? 0}%</span></div>
+                                <div className="text-xs">Ambrés: <span className="font-medium">{val.trichomesAmbres ?? 0}%</span></div>
+                            </div>
+                        </div>
+                        <div className="flex items-center gap-4">
+                            <div className="text-xs text-gray-400">Poids</div>
+                            <div className="text-xs">Brut: <span className="font-medium">{val.poidsBrut ?? '-' } g</span></div>
+                            <div className="text-xs">Net: <span className="font-medium">{val.poidsNet ?? '-' } g</span></div>
+                            <div className="text-xs">Mode: <span className="font-medium">{val.modeRecolte ?? '-'}</span></div>
+                        </div>
+                        <div className={`mt-2 text-xs ${total === 100 ? 'text-green-400' : 'text-amber-400'}`}>Total trichomes: {total}%</div>
+                    </div>
+                )
             }
 
             // Timeline objects
@@ -524,7 +552,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">
                                             {reviewData.varietyType || 'Hybride'}
                                         </span>
-                                        {reviewData.thc && <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">THC: {reviewData.thc}%</span>}
+                                        { (resolveReviewField('thc') || resolveReviewField('thcPercent')) && (
+                                            <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">THC: {resolveReviewField('thc') ?? resolveReviewField('thcPercent')}%</span>
+                                        )}
                                     </div>
                                 </div>
                                 <div className="text-right">
@@ -539,13 +569,24 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             <div className="grid grid-cols-2 gap-6 mb-8 flex-1">
                                 <div className="rounded-2xl overflow-hidden border border-white/10 relative group">
                                     {hasElement(['photo', 'photos', 'gallery', 'image']) ? (
-                                        reviewData.images?.[0] ? (
-                                            <img src={URL.createObjectURL(reviewData.images[0])} className="w-full h-full object-cover" alt="Product" />
-                                        ) : (
-                                            <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
-                                                <ImageIcon className="w-12 h-12 opacity-50" />
-                                            </div>
-                                        )
+                                        (() => {
+                                            const mainCandidate = resolveReviewField('photo') || resolveReviewField('mainImage') || resolveReviewField('images')
+                                            let url = null
+                                            if (Array.isArray(mainCandidate)) url = mainCandidate[0]
+                                            else url = mainCandidate
+
+                                            if (!url) {
+                                                return (
+                                                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
+                                                        <ImageIcon className="w-12 h-12 opacity-50" />
+                                                    </div>
+                                                )
+                                            }
+
+                                            const src = (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) ? url : `/images/${String(url).replace(/^\//, '')}`
+
+                                            return <img src={src} className="w-full h-full object-cover" alt="Product" />
+                                        })()
                                     ) : (
                                         <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
                                             <div className="text-sm text-gray-400">Image non disponible pour ce template</div>
@@ -556,37 +597,56 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div className="space-y-4">
                                     {/* Stats grid */}
                                     <div className="grid grid-cols-2 gap-3">
-                                        {hasElement(['odor', 'odorNotes', 'odors']) && (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-1">Odeur</div>
-                                                <div className="text-xl font-bold text-white">{reviewData.odeurNote || '-'}</div>
-                                            </div>
-                                        )}
+                                        {hasElement(['odor', 'odorNotes', 'odors']) && (() => {
+                                            const od = resolveReviewField('odor') || {}
+                                            const val = od.intensity ?? (Array.isArray(od.dominant) ? (od.dominant[0] || '-') : '-')
+                                            return (
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div className="text-gray-400 text-xs mb-1">Odeur</div>
+                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                </div>
+                                            )
+                                        })()}
 
-                                        {hasElement(['taste', 'tasteNotes', 'tastes']) && (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-1">Goût</div>
-                                                <div className="text-xl font-bold text-white">{reviewData.goutNote || '-'}</div>
-                                            </div>
-                                        )}
+                                        {hasElement(['taste', 'tasteNotes', 'tastes']) && (() => {
+                                            const t = resolveReviewField('taste') || {}
+                                            const val = t.intensity ?? (Array.isArray(t.dryPuff) ? (t.dryPuff[0] || '-') : '-')
+                                            return (
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div className="text-gray-400 text-xs mb-1">Goût</div>
+                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                </div>
+                                            )
+                                        })()}
 
-                                        {hasElement('effects') && (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-1">Effets</div>
-                                                <div className="text-xl font-bold text-white">{reviewData.effetsIntensite || '-'}</div>
-                                            </div>
-                                        )}
+                                        {hasElement('effects') && (() => {
+                                            const e = resolveReviewField('effects') || {}
+                                            const val = e.intensity ?? (Array.isArray(e.selected) ? (e.selected.length || '-') : '-')
+                                            return (
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div className="text-gray-400 text-xs mb-1">Effets</div>
+                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                </div>
+                                            )
+                                        })()}
 
-                                        {hasElement('visual') && (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-1">Visuel</div>
-                                                <div className="text-xl font-bold text-white">{reviewData.visuelNote || '-'}</div>
-                                            </div>
-                                        )}
+                                        {hasElement('visual') && (() => {
+                                            const v = resolveReviewField('visual') || {}
+                                            const val = v.densite ?? v.densiteVisuelle ?? v.trichomes ?? '-'
+                                            return (
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div className="text-gray-400 text-xs mb-1">Visuel</div>
+                                                    <div className="text-xl font-bold text-white">{val ?? '-'}</div>
+                                                </div>
+                                            )
+                                        })()}
                                     </div>
 
                                     {/* Custom Sections (Drag & Drop) */}
-                                    {mode === 'custom' && customSections.filter(s => allowedElementIds.includes(s.id)).map(section => (
+                                    {mode === 'custom' && customSections.filter(s => (
+                                        // show the section if the section id or any of its modules are available for this product
+                                        isElementAvailable(s.id) || (s.modules || s.fields || []).some(m => relevantModulesSet.has(m))
+                                    )).map(section => (
                                         <div key={section.id} className="bg-white/5 p-3 rounded-xl border border-white/5">
                                             <div className="text-xs font-bold uppercase mb-1">{section.name}</div>
                                             <div className="space-y-2">
