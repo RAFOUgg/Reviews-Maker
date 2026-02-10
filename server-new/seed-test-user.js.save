@@ -1,0 +1,195 @@
+sed -i 's/email: '\''test@example.com'\''/emailBackup: '\''test@example.com'\''/g' seed-test-user.js
+cat seed-test-user.js
+cat > seed-test-user.js << 'EOF'
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+
+const prisma = new PrismaClient()
+
+async function seedTestUser() {
+    try {
+        console.log('🌱 Seeding test user...')
+
+        // Check if test user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { emailBackup: 'test@example.com' }
+        })
+
+        if (existingUser) {
+            console.log('✅ Test user already exists')
+            return
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash('test123456', 10)
+
+        // Create test user
+        const user = await prisma.user.create({
+            data: {
+                email: 'test@example.com',
+                emailBackup: 'test@example.com',
+                username: 'TestUser',
+                passwordHash: hashedPassword,
+                accountType: 'consumer',
+                emailVerified: true,
+                kycStatus: 'pending',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+        })
+
+        console.log('✅ Test user créé:')
+        console.log(`   Email: test@example.com`)
+        console.log(`   Mot de passe: test123456`)
+        console.log(`   ID: ${user.id}`)
+
+    } catch (error) {
+        console.error('❌ Erreur lors du seed:', error.message)
+        process.exit(1)
+    } finally {
+        await prisma.$disconnect()
+    }
+}
+
+seedTestUser()
+EOF
+node -e "
+import { PrismaClient } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+const prisma = new PrismaClient();
+async function createUser() {
+  try {
+    const hashedPassword = await bcrypt.hash('test123456', 10);
+    const user = await prisma.user.create({
+      data: {
+        email: 'test@example.com',
+        emailBackup: 'test@example.com',
+        username: 'TestUser',
+        passwordHash: hashedPassword,
+        accountType: 'consumer',
+        emailVerified: true,
+        kycStatus: 'pending'
+      }
+    });
+    console.log('User created:', user.id);
+  } catch (e) {
+    console.error(e.message);
+  } finally {
+    await prisma.\$disconnect();
+  }
+}
+createUser();
+"
+node -e "
+const { PrismaClient } = require('@prisma/client');
+const bcrypt = require('bcryptjs');
+const prisma = new PrismaClient();
+async function createUser() {
+  try {
+    const hashedPassword = await bcrypt.hash('test123456', 10);
+    const user = await prisma.user.create({
+      data: {
+        email: 'test@example.com',
+        emailBackup: 'test@example.com',
+        username: 'TestUser',
+        passwordHash: hashedPassword,
+        accountType: 'consumer',
+        emailVerified: true,
+        kycStatus: 'pending'
+      }
+    });
+    console.log('User created:', user.id);
+  } catch (e) {
+    console.error(e.message);
+  } finally {
+    await prisma.\$disconnect();
+  }
+}
+createUser();
+"
+scp c:\Users\Rafi\Documents\.0AMes-Logiciel\Reviews-Maker\server-new\services\account.js ubuntu@vps-lafoncedalle:~/Reviews-Maker/server-new/services/
+nano services/account.js
+head -20 services/account.js
+sed -i '/export async function changeAccountType/a \
+    \/\/ DEV MODE: Handle dev user\
+    if (process.env.NODE_ENV === '\''development'\'' ; userId === '\''dev-test-user-id'\'') {\
+        console.log(`[DEV] Mock upgrade for dev user to ${newType}`);\
+        return {\
+            id: '\''dev-test-user-id'\'',\
+            username: '\''DevTestUser'\'',\
+            email: '\''test@example.com'\'',\
+            roles: JSON.stringify({ roles: [newType] }),\
+            accountType: newType\
+        };\
+    }' services/account.js
+git status
+git pull origin main
+pm2 restart reviews-maker
+git add -A ; git commit -m "Fix account type mapping in signup - map French types to English constants"
+git push origin main
+ssh vps-lafoncedalle "cd ~/Reviews-Maker && git pull origin main && pm2 restart reviews-maker"
+ssh vps-lafoncedalle "cd ~/Reviews-Maker/server-new && node -e "
+const { PrismaClient } = require('@prisma/client');
+const prisma = new PrismaClient();
+async function checkUser() {
+  try {
+    const users = await prisma.user.findMany();
+    console.log('Users in DB:', users.map(u => ({ id: u.id, email: u.email, accountType: u.accountType, roles: u.roles })));
+  } catch (e) {
+    console.error(e.message);
+  } finally {
+    await prisma.\$disconnect();
+  }
+}
+checkUser();
+"
+import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
+
+const prisma = new PrismaClient()
+
+async function seedTestUser() {
+    try {
+        console.log('🌱 Seeding test user...')
+
+        // Check if test user already exists
+        const existingUser = await prisma.user.findUnique({
+            where: { email: 'test@example.com' }
+        })
+
+        if (existingUser) {
+            console.log('✅ Test user already exists')
+            return
+        }
+
+        // Hash password
+        const hashedPassword = await bcrypt.hash('test123456', 10)
+
+        // Create test user
+        const user = await prisma.user.create({
+            data: {
+                email: 'test@example.com',
+                username: 'TestUser',
+                passwordHash: hashedPassword,
+                accountTier: 'Amateur',
+                emailVerified: true,
+                kycStatus: 'pending',
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
+        })
+
+        console.log('✅ Test user créé:')
+        console.log(`   Email: test@example.com`)
+        console.log(`   Mot de passe: test123456`)
+        console.log(`   ID: ${user.id}`)
+
+    } catch (error) {
+        console.error('❌ Erreur lors du seed:', error.message)
+        process.exit(1)
+    } finally {
+        await prisma.$disconnect()
+    }
+}
+
+seedTestUser()
