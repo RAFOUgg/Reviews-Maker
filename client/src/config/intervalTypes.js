@@ -11,13 +11,14 @@ export const INTERVAL_TYPES_CONFIG = {
 };
 
 // Allowed interval keys per pipeline type (use keys from INTERVAL_TYPES_CONFIG)
+// Note: use canonical keys defined in INTERVAL_TYPES_CONFIG (ex: 'phases')
 export const ALLOWED_INTERVALS_BY_PIPELINE = {
-    culture: ['phase', 'jour', 'semaine', 'mois', 'annee'],
-    curing: ['seconde', 'heure', 'jour', 'semaine', 'phase'],
-    separation: ['seconde', 'heure', 'jour', 'semaine', 'phase'],
-    extraction: ['seconde', 'heure', 'jour', 'semaine', 'phase'],
+    culture: ['phases', 'jour', 'semaine', 'mois', 'annee'],
+    curing: ['seconde', 'heure', 'jour', 'semaine', 'phases'],
+    separation: ['seconde', 'heure', 'jour', 'semaine', 'phases'],
+    extraction: ['seconde', 'heure', 'jour', 'semaine', 'phases'],
     purification: ['seconde', 'heure', 'jour', 'semaine'],
-    recipe: ['seconde', 'heure', 'minute'] // minute may be unused but kept for completeness
+    recipe: ['seconde', 'heure', 'jour'] // simplified
 };
 
 // Utility: map alias to canonical key
@@ -35,5 +36,9 @@ export function resolveIntervalKey(keyOrAlias) {
 // Return options (value + label) for a pipeline type
 export function getOptionsForPipeline(pipelineType) {
     const allowed = ALLOWED_INTERVALS_BY_PIPELINE[pipelineType] || Object.keys(INTERVAL_TYPES_CONFIG);
-    return allowed.map(k => INTERVAL_TYPES_CONFIG[k]).filter(Boolean);
+    // tolerate aliases/incorrect keys by resolving
+    return allowed
+        .map(k => resolveIntervalKey(k) || k)
+        .map(canonical => INTERVAL_TYPES_CONFIG[canonical])
+        .filter(Boolean);
 }

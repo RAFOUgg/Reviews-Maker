@@ -31,6 +31,54 @@ const PipelineGridView = ({
     const [hoveredCell, setHoveredCell] = useState(null);
     const [dragOverCell, setDragOverCell] = useState(null);
 
+    // Responsive grid control
+    const gridRef = React.useRef(null);
+    const scrollRef = React.useRef(null);
+    const [columns, setColumns] = useState(7);
+    const [cellSize, setCellSize] = useState(56);
+    const [zoom, setZoom] = useState(1);
+
+    // ResizeObserver : calcule nombre de colonnes et taille des cellules pour remplir le container
+    React.useEffect(() => {
+        if (!gridRef.current || !scrollRef.current) return;
+
+        const gap = 8; // gap en px, doit correspondre au gap Tailwind (gap-2 ~= 8px)
+        const minColumns = 4;
+        const maxColumns = 14; // safeguard
+
+        const baseMin = config && config.intervalType === 'phases' ? 80 : 56; // base min size
+
+        const ro = new ResizeObserver(() => {
+            const available = Math.max(120, scrollRef.current.clientWidth);
+            // taille minimale souhaitée
+            const minCell = Math.max(32, Math.floor(baseMin * zoom));
+
+            let calcCols = Math.floor((available + gap) / (minCell + gap));
+            calcCols = Math.max(minColumns, Math.min(maxColumns, calcCols || minColumns));
+
+            // compute final cell size to perfectly fill width
+            const computed = Math.floor((available - (calcCols - 1) * gap) / calcCols);
+
+            setColumns(calcCols);
+            setCellSize(computed);
+
+            // ensure no horizontal scroll on wrapper
+            scrollRef.current.style.overflowX = 'hidden';
+        });
+
+        ro.observe(scrollRef.current);
+        window.addEventListener('resize', () => ro.takeRecords());
+
+        // initial trigger
+        ro.observe(scrollRef.current);
+
+        return () => {
+            ro.disconnect();
+            window.removeEventListener('resize', () => ro.takeRecords());
+        };
+    }, [config, zoom]);
+
+
     // Obtenir le label d'une case selon la configuration
     const getCellLabel = (index) => {
         if (config.intervalType === 'phases') {
@@ -261,8 +309,33 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll">
-            <div className={gridLayout()} data-testid="pipeline-grid">
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll" ref={scrollRef}>
+            {/* Zoom controls */}
+            <div className="flex items-center justify-end gap-2 mb-2">
+                <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>
+                <input
+                    type="range"
+                    min="0.5"
+                    max="1.6"
+                    step="0.05"
+                    value={zoom}
+                    onChange={(e) => setZoom(Number(e.target.value))}
+                    className="w-36"
+                />
+                <button onClick={() => setZoom(z => Math.min(2, +(z + 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">+</button>
+            </div>
+
+            {/* Grid - controlled via computed columns/cellSize */}
+            <div
+                ref={gridRef}
+                data-testid="pipeline-grid"
+                className="grid"
+                style={{
+                    gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
+                    gap: '8px',
+                    alignItems: 'start'
+                }}
+            >
                 {cellIndices.map((cellIndex) => {
                     const cellData = cells[cellIndex];
                     const intensity = getCellIntensity(cellData);
@@ -294,8 +367,9 @@ const PipelineGridView = ({
                             onDragOver={(e) => handleDragOver(e, cellIndex)}
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
-                            className={`relative cursor-pointer aspect-square flex items-center justify-center rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                             title={getTooltipContent(cellIndex, cellData)}
+                            style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
+                            className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
                             {config.intervalType === 'phases' && (
@@ -343,7 +417,8 @@ const PipelineGridView = ({
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onAddCells(10)}
-                        className={`aspect-square flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
+                        style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
+                        className={`flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
                         title="Ajouter 10 étapes"
                     >
                         <Plus className={'w-6 h-6'} />

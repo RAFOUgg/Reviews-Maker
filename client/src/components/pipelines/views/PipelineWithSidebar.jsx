@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, Save, Download, Upload, Info, FolderPlus } from 'lucide-react';
+import { Settings, Save, Download, Upload, Info, FolderPlus, ChevronDown } from 'lucide-react';
 import PipelineContentsSidebar from '../../shared/orchard/PipelineContentsSidebar';
 import PipelineGridView from './PipelineGridView';
 import PipelineDataModal from '../core/PipelineDataModal';
@@ -392,15 +392,18 @@ const PipelineWithSidebar = ({
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
                             <div>
                                 <label className="text-xs sm:text-sm font-medium text-gray-700">Type</label>
-                                <select
-                                    value={config.intervalType}
-                                    onChange={(e) => handleConfigChange('intervalType', e.target.value)}
-                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
-                                >
-                                    {getOptionsForPipeline(pipelineType).map((opt) => (
-                                        <option key={opt.key} value={opt.key}>{opt.label}</option>
-                                    ))}
-                                </select>
+                                <div className="relative mt-1">
+                                    <select
+                                        value={config.intervalType}
+                                        onChange={(e) => handleConfigChange('intervalType', e.target.value)}
+                                        className="w-full px-4 py-3 pr-10 bg-white/5 border border-white/10 rounded-xl text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                                    >
+                                        {getOptionsForPipeline(pipelineType).map((opt) => (
+                                            <option key={opt.key} value={opt.key}>{opt.label}</option>
+                                        ))}
+                                    </select>
+                                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 w-4 h-4 pointer-events-none" />
+                                </div>
                             </div>
                             <div>
                                 <label className="text-xs sm:text-sm font-medium text-gray-700">Durée</label>
