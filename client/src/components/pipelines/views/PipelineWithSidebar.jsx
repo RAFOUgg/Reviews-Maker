@@ -439,9 +439,9 @@ const PipelineWithSidebar = ({
                     </div>
 
                     {/* Layout responsive: Sidebar left on desktop, stacked on mobile */}
-                    <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
+                    <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0 h-[calc(100vh-170px)]">
                         {/* Sidebar: full-width on mobile (stacked), fixed width on md+ */}
-                        <div className="w-full md:w-80 md:flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0">
+                        <div className="w-full md:w-80 md:flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0 h-full">
                             <PipelineContentsSidebar
                                 contentSchema={contentSchema}
                                 onDragStart={handleDragStart}
@@ -451,7 +451,7 @@ const PipelineWithSidebar = ({
                         </div>
 
                         {/* Right area: config + grid */}
-                        <div className="flex-1 flex flex-col gap-3 min-h-0">
+                        <div className="flex-1 flex flex-col gap-3 min-h-0 h-full">
                             {/* Config kept compact */}
                             <div className="flex-shrink-0 max-h-[160px] sm:max-h-[220px] overflow-y-auto">
                                 {/* existing config content is above, so nothing to duplicate here */}
