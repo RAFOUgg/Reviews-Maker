@@ -27,44 +27,54 @@ export default function SectionNavigator({
         amber: 'rgba(251,191,36,0.14)'
     };
 
+    const containerRef = React.useRef(null);
+
+    // Keep active tab visible and centered if possible
+    React.useEffect(() => {
+        const el = containerRef.current?.querySelectorAll('button')?.[currentIndex];
+        if (el && containerRef.current) {
+            el.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+        }
+    }, [currentIndex]);
+
     return (
-        <div className="bg-[#07070f]/80 backdrop-blur-xl border-t border-white/10 overflow-x-auto" role="tablist" aria-label="Navigation des sections">
+        <nav ref={containerRef} className="bg-[#07070f]/80 backdrop-blur-xl border-t border-white/10 overflow-x-auto no-scrollbar" role="tablist" aria-label="Navigation des sections">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex gap-2 py-3 justify-center flex-wrap">
+                {/* Horizontal scroller - apple like feel */}
+                <div className="flex gap-3 py-3 items-center" style={{ scrollSnapType: 'x mandatory' }}>
                     {sections.map((section, idx) => (
                         <motion.button
                             key={idx}
                             role="tab"
                             aria-selected={idx === currentIndex}
                             onClick={() => onSectionClick(idx)}
-                            whileHover={{ scale: 1.02 }}
+                            whileHover={{ scale: 1.03 }}
                             whileTap={{ scale: 0.98 }}
-                            className={`relative flex-shrink-0 px-4 py-2 rounded-xl text-sm font-medium transition-all border ${idx === currentIndex
-                                ? `backdrop-blur-md bg-white/6 border border-white/10 text-white shadow-lg ${glowColors[glowColor]}`
-                                : 'border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10 hover:border-white/20'
+                            className={`relative flex-shrink-0 px-4 py-3 rounded-2xl text-sm font-medium transition-all ${idx === currentIndex
+                                ? `text-white ${glowColors[glowColor]} shadow-xl` // glassy active
+                                : 'text-white/70 bg-white/2 hover:bg-white/5'
                                 }`}
+                            style={{ scrollSnapAlign: 'center', backdropFilter: idx === currentIndex ? 'blur(6px) saturate(120%)' : 'none' }}
                         >
-                            {/* Active indicator */}
+                            {/* Animated glass highlight */}
                             {idx === currentIndex && (
                                 <motion.div
                                     layoutId="section-indicator"
-                                    className="absolute inset-0 rounded-xl"
+                                    className="absolute inset-0 rounded-2xl pointer-events-none"
                                     style={{
-                                        boxShadow: `0 10px 30px ${glowShadows[glowColor] || 'rgba(139,92,246,0.16)'}`
+                                        background: 'linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+                                        border: '1px solid rgba(255,255,255,0.06)'
                                     }}
-                                    transition={{
-                                        type: "spring",
-                                        stiffness: 300,
-                                        damping: 28
-                                    }}
+                                    transition={{ type: 'spring', stiffness: 320, damping: 30 }}
                                 />
                             )}
-                            <span className="relative z-10">{section.title}</span>
+
+                            <span className="relative z-10 px-1">{section.title}</span>
                         </motion.button>
                     ))}
                 </div>
             </div>
-        </div>
+        </nav>
     );
 }
 

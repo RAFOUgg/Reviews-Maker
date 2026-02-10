@@ -454,7 +454,7 @@ export default function CreateReviewPage() {
                 <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
                     <div className="flex items-center justify-between mb-3">
                         <button onClick={() => navigate('/')} className="transition-colors text-white/70 hover:text-white">← Retour</button>
-                        <div className="text-center"><h1 className="text-xl font-bold text-title">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1><p className="text-xs text-subtitle">Section {currentSectionIndex + 1}/{sections.length}</p></div>
+                        <div className="text-center"><h1 className="text-xl font-bold text-title">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1></div>
                         <button
                             onClick={() => setShowOrchardStudio(true)}
                             className="liquid-glass--button bg-gradient-to-r text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"

@@ -39,7 +39,6 @@ export const ResponsiveCreateReviewLayout = ({
 
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
-    const REPEAT_COUNT = 3; // number of repetitions to simulate infinite carousel
     const FALLBACK_ITEM_WIDTH = 70; // px (emoji button width + gap)
     const CONTAINER_CENTER = VISIBLE_ITEMS / 2; // Position du centre (2.5 = centre between two)
 
@@ -85,17 +84,55 @@ export const ResponsiveCreateReviewLayout = ({
     }, [sectionEmojis.length]);
 
     const handlePrevious = () => {
-        // wrap to last if at first
-        const prev = (currentSection - 1 + totalSections) % totalSections;
-        onSectionChange(prev);
+        if (currentSection > 0) onSectionChange(currentSection - 1);
     };
 
     const handleNext = () => {
-        // wrap to first if at last
-        const next = (currentSection + 1) % totalSections;
-        onSectionChange(next);
+        if (currentSection < totalSections - 1) onSectionChange(currentSection + 1);
     };
 
+    // Scroll-snap helpers (Apple-like UX)
+    const scrollTimeoutRef = React.useRef(null);
+    const scrollLockRef = React.useRef(false);
+
+    const scrollToIndex = (index) => {
+        if (!carouselRef.current) return;
+        const buttons = Array.from(carouselRef.current.querySelectorAll('button'));
+        const btn = buttons[index];
+        if (!btn) return;
+        // center using native API
+        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+    };
+
+    const handleScroll = () => {
+        if (!carouselRef.current || scrollLockRef.current) return;
+        const container = carouselRef.current;
+        const center = container.scrollLeft + container.offsetWidth / 2;
+        const buttons = Array.from(container.querySelectorAll('button'));
+        if (!buttons.length) return;
+        let closest = 0;
+        let minDist = Infinity;
+        buttons.forEach((b, idx) => {
+            const bCenter = b.offsetLeft + b.offsetWidth / 2;
+            const dist = Math.abs(bCenter - center);
+            if (dist < minDist) { minDist = dist; closest = idx; }
+        });
+        const logicalIndex = closest % totalSections;
+        if (logicalIndex !== currentSection) {
+            onSectionChange(logicalIndex);
+        }
+    };
+
+    const handleScrollDebounced = () => {
+        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
+        scrollTimeoutRef.current = setTimeout(() => handleScroll(), 80);
+    };
+
+    React.useEffect(() => {
+        if (!carouselRef.current) return;
+        // center the active item when index changes
+        scrollToIndex(currentSection);
+    }, [currentSection]);
     // Détecte si l'espace n'est pas suffisant pour afficher tous les émojis
     useEffect(() => {
         const detectCarouselNeeded = () => {
@@ -290,64 +327,39 @@ export const ResponsiveCreateReviewLayout = ({
                                                 {/* Gradient fade right - plus prononcé */}
                                                 <div className="absolute right-0 top-0 bottom-0 w-12 bg-gradient-to-l from-[#07070f] via-[#07070f]/70 to-transparent z-10 pointer-events-none" />
 
-                                                <div className="flex items-center justify-center gap-2" style={{
-                                                    transform: `translateX(-${scrollPosition + dragOffset}px)`,
-                                                    transition: isDragging ? 'none' : 'transform 0.34s cubic-bezier(0.2, 0.8, 0.2, 1)'
-                                                }}>
-                                                    <AnimatePresence mode="wait">
-                                                        {(() => {
-                                                            // Flatten repeated array to render clones for infinite effect
-                                                            const repeated = Array.from({ length: REPEAT_COUNT }).flatMap(() => sectionEmojis);
-                                                            return repeated.map((emoji, index) => {
-                                                                // index is in repeated array; compute logical position relative to the visual center
-                                                                // scrolledCenterIndex is measured in items (over repeated array)
-                                                                const scrolledCenterIndex = (scrollPosition + dragOffset) / (itemWidth || FALLBACK_ITEM_WIDTH);
-                                                                const offset = index - scrolledCenterIndex;
-                                                                const isCenter = Math.abs(offset) < 0.5;
-                                                                const isAdjacent = Math.abs(offset) < 1.5;
-                                                                const absOffset = Math.abs(offset);
-                                                                let opacity = 0.2;
-                                                                let scale = 0.9;
-
-                                                                if (absOffset < 0.5) {
-                                                                    opacity = 1;
-                                                                    scale = 1.25;
-                                                                } else if (absOffset < 1.5) {
-                                                                    opacity = 0.7;
-                                                                    scale = 1;
-                                                                } else if (absOffset < 2.5) {
-                                                                    opacity = 0.4;
-                                                                    scale = 0.95;
-                                                                }
-
-                                                                // The logical index modulo the base array
-                                                                const logicalIndex = index % sectionEmojis.length;
-
-                                                                return (
-                                                                    <motion.button
-                                                                        key={`${index}-${emoji}`}
-                                                                        role="tab"
-                                                                        aria-selected={logicalIndex === currentSection && isCenter}
-                                                                        aria-current={logicalIndex === currentSection && isCenter ? 'true' : undefined}
-                                                                        initial={{ opacity: 0.3, scale: 0.85, x: 50 }}
-                                                                        animate={{ opacity, scale, x: isDragging ? dragOffset * 0.1 : 0 }}
-                                                                        exit={{ opacity: 0, scale: 0.85, x: -50 }}
-                                                                        transition={{ duration: isDragging ? 0 : 0.28, ease: 'easeOut', opacity: { duration: 0.18 }, scale: { duration: 0.18 } }}
-                                                                        onClick={() => onSectionChange(logicalIndex)}
-                                                                        className={`flex-shrink-0 px-3.5 py-3 rounded-xl transition-all text-2xl font-medium ${logicalIndex === currentSection && isCenter
-                                                                            ? 'backdrop-blur-md bg-white/6 border border-white/10 ring-1 ring-purple-300/30 shadow-lg scale-110'
-                                                                            : 'bg-white/10 hover:bg-white/20'
-                                                                            }`}
-                                                                        style={{ filter: isCenter ? 'drop-shadow(0 0 18px rgba(168,85,247,0.18))' : isAdjacent ? 'drop-shadow(0 0 8px rgba(168,85,247,0.12))' : 'none' }}
-                                                                        whileHover={{ y: -2 }}
-                                                                    >
-                                                                        <span className="relative z-10">{emoji}</span>
-                                                                        {logicalIndex === currentSection && isCenter && <span className="sr-only">Section active</span>}
-                                                                    </motion.button>
-                                                                );
-                                                            });
-                                                        })()}
-                                                    </AnimatePresence>
+                                                {/* New Apple-like scroll-snap carousel (single pass, accessible) */}
+                                                <div
+                                                    ref={carouselRef}
+                                                    onScroll={() => handleScrollDebounced()}
+                                                    className="flex items-center gap-3 overflow-x-auto no-scrollbar py-4 px-4"
+                                                    style={{
+                                                        scrollSnapType: 'x mandatory',
+                                                        WebkitOverflowScrolling: 'touch'
+                                                    }}
+                                                >
+                                                    {sectionEmojis.map((emoji, index) => {
+                                                        const isActive = index === currentSection;
+                                                        return (
+                                                            <button
+                                                                key={index}
+                                                                role="tab"
+                                                                aria-selected={isActive}
+                                                                onClick={(e) => { e.preventDefault(); scrollToIndex(index); onSectionChange(index); }}
+                                                                className={`flex-shrink-0 scroll-item rounded-xl px-4 py-3 transition-all duration-200 ease-out text-2xl font-medium ${isActive ? 'scale-110 backdrop-blur-md bg-white/6 border border-white/10 shadow-[0_6px_24px_rgba(0,0,0,0.4)]' : 'bg-white/5 hover:bg-white/10'}`}
+                                                                style={{
+                                                                    scrollSnapAlign: 'center',
+                                                                    minWidth: 64,
+                                                                    display: 'inline-flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    gap: 8
+                                                                }}
+                                                            >
+                                                                <span className="relative z-10">{emoji}</span>
+                                                                {isActive && <span className="sr-only">Section active</span>}
+                                                            </button>
+                                                        );
+                                                    })}
                                                 </div>
                                             </div>
                                         ) : (
@@ -370,37 +382,7 @@ export const ResponsiveCreateReviewLayout = ({
                                     </div>
                                 )}
 
-                                {/* Counter + Progress Bar */}
-                                <div className={layout.isMobile ? 'space-y-1.5' : 'space-y-2'}>
-                                    {layout.isMobile ? (
-                                        // Mobile: Simple counter
-                                        <div className="text-center">
-                                            <div className="text-purple-400 font-bold text-sm">
-                                                {currentSection + 1}/{totalSections}
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        // Desktop: Counter + Progress Bar
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-sm text-white/50">
-                                                Étape {currentSection + 1} sur {totalSections}
-                                            </span>
-                                            <span className="text-sm text-purple-400 font-medium">
-                                                {Math.round(((currentSection + 1) / totalSections) * 100)}%
-                                            </span>
-                                        </div>
-                                    )}
 
-                                    {/* Progress Bar */}
-                                    <div className="w-full h-1.5 bg-white/10 rounded-full overflow-hidden">
-                                        <motion.div
-                                            className="h-full bg-gradient-to-r from-purple-500 to-purple-400"
-                                            initial={{ width: 0 }}
-                                            animate={{ width: `${((currentSection + 1) / totalSections) * 100}%` }}
-                                            transition={{ duration: 0.4, ease: 'easeInOut' }}
-                                        />
-                                    </div>
-                                </div>
                             </div>
                         )}
                     </div>

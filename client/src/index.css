@@ -255,6 +255,25 @@
     }
 }
 
+/* Hide scrollbars for horizontal carousels */
+.no-scrollbar {
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+/* Small helper for scroll items */
+.scroll-item {
+    transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+}
+
+
 html {
     background: var(--bg-primary);
     min-height: 100vh;
