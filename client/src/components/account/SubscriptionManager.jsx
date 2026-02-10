@@ -89,7 +89,7 @@ export default function SubscriptionManager({ user }) {
                         Gérer le moyen de paiement
                     </LiquidButton>
                     <LiquidButton variant="destructive" onClick={confirmCancel} disabled={isCancelling} aria-label="Annuler l'abonnement">
-                        {isCancelling ? 'Résiliation...' : 'Annuler l'abonnement'}
+                        {isCancelling ? 'Résiliation...' : "Annuler l'abonnement"}
                     </LiquidButton>
                 </div>
 
