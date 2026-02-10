@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
-import { CULTURE_PHASES } from './PipelineWithSidebar';
+import { CULTURE_PHASES } from '../../../config/pipelinePhases';
 
 /**
  * PipelineGridView - Grille de cases style GitHub commits
@@ -34,8 +34,8 @@ const PipelineGridView = ({
     // Obtenir le label d'une case selon la configuration
     const getCellLabel = (index) => {
         if (config.intervalType === 'phases') {
-            const phase = config.customPhases?.[index] || CULTURE_PHASES[index];
-            return phase?.name || `Phase ${index + 1}`;
+            const phase = config.customPhases?.[index] || (CULTURE_PHASES && CULTURE_PHASES.phases ? CULTURE_PHASES.phases[index] : CULTURE_PHASES?.[index]);
+            return (phase && (phase.name || phase.label)) || `Phase ${index + 1}`;
         }
 
         if (config.intervalType === 'dates' && config.startDate) {
@@ -60,8 +60,8 @@ const PipelineGridView = ({
     // Obtenir l'icône d'une phase
     const getPhaseIcon = (index) => {
         if (config.intervalType === 'phases') {
-            const phase = config.customPhases?.[index] || CULTURE_PHASES[index];
-            return phase?.icon || '📍';
+            const phase = config.customPhases?.[index] || (CULTURE_PHASES && CULTURE_PHASES.phases ? CULTURE_PHASES.phases[index] : CULTURE_PHASES?.[index]);
+            return (phase && (phase.icon || phase.emoji)) || '📍';
         }
         return null;
     };
@@ -247,17 +247,18 @@ const PipelineGridView = ({
     // Layout de la grille selon le type d'intervalle
     const gridLayout = () => {
         if (config.intervalType === 'phases') {
-            // Mode phases: disposition horizontale ou grille 4x3
-            return cellIndices.length <= 12 ? 'grid grid-cols-12 gap-2' : 'grid grid-cols-4 gap-2';
+            // Use responsive auto-fill grid for phases so cells wrap and never overflow horizontally
+            if (cellIndices.length <= 12) return 'grid grid-cols-12 gap-2';
+            return 'grid grid-cols-[repeat(auto-fill,minmax(4rem,1fr))] gap-2';
         }
 
-        // Mode jours/semaines: style GitHub (7 colonnes = 7 jours de la semaine)
+        // Mode jours/semaines: style GitHub (7 columns) but allow wrapping on smaller screens
         if (config.intervalType === 'days' || config.intervalType === 'dates') {
-            return 'grid grid-cols-7 gap-1';
+            return 'grid grid-cols-7 md:grid-cols-7 sm:grid-cols-4 gap-1';
         }
 
-        // Autres: grille adaptative
-        return 'grid gap-1' + (cellIndices.length <= 12 ? ' grid-cols-12' : ' grid-cols-10');
+        // Autres: grille adaptative using auto-fill
+        return 'grid grid-cols-[repeat(auto-fill,minmax(1.25rem,1fr))] gap-1';
     };
 
     return (

@@ -34,7 +34,18 @@ export const INTERVAL_TYPES = {
     dates: { label: 'Dates', unit: 'date', requiresStartEnd: true },
     weeks: { label: 'Semaines', unit: 'S', max: 52, defaultDuration: 12 },
     months: { label: 'Mois', unit: 'M', max: 12, defaultDuration: 6 },
+    years: { label: 'Années', unit: 'Y', max: 100, defaultDuration: 1 },
     phases: { label: 'Phases', unit: 'P', max: 12, defaultDuration: 12, isPredefined: true }
+};
+
+// Allowed interval types per pipeline type (keys from INTERVAL_TYPES)
+const ALLOWED_INTERVALS_BY_PIPELINE = {
+    culture: ['phases', 'days', 'weeks', 'months', 'years'],
+    curing: ['seconds', 'hours', 'days', 'weeks', 'phases'],
+    separation: ['seconds', 'hours', 'days', 'weeks', 'phases'],
+    extraction: ['seconds', 'hours', 'days', 'weeks', 'phases'],
+    purification: ['seconds', 'hours', 'days', 'weeks'],
+    recipe: ['minutes', 'hours']
 };
 
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
@@ -330,9 +341,11 @@ const PipelineWithSidebar = ({
                                     onChange={(e) => handleConfigChange('intervalType', e.target.value)}
                                     className="w-full mt-1 px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm border rounded"
                                 >
-                                    {Object.entries(INTERVAL_TYPES).map(([key, val]) => (
-                                        <option key={key} value={key}>{val.label}</option>
-                                    ))}
+                                    {(ALLOWED_INTERVALS_BY_PIPELINE[pipelineType] || Object.keys(INTERVAL_TYPES)).map((key) => {
+                                        const val = INTERVAL_TYPES[key];
+                                        if (!val) return null;
+                                        return <option key={key} value={key}>{val.label}</option>;
+                                    })}
                                 </select>
                             </div>
                             <div>
@@ -425,10 +438,10 @@ const PipelineWithSidebar = ({
                         </div>
                     </div>
 
-                    {/* Main grid container: Sidebar + Grid VERTICAL layout below config */}
-                    <div className="flex flex-col gap-3 sm:gap-4 flex-1 min-h-0">
-                        {/* Sidebar gauche - scrollable, positioned above grid */}
-                        <div className="w-full h-full flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0">
+                    {/* Layout responsive: Sidebar left on desktop, stacked on mobile */}
+                    <div className="flex flex-col md:flex-row gap-4 flex-1 min-h-0">
+                        {/* Sidebar: full-width on mobile (stacked), fixed width on md+ */}
+                        <div className="w-full md:w-80 md:flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0">
                             <PipelineContentsSidebar
                                 contentSchema={contentSchema}
                                 onDragStart={handleDragStart}
@@ -437,20 +450,28 @@ const PipelineWithSidebar = ({
                             />
                         </div>
 
-                        {/* Grille de cases - takes remaining space BELOW sidebar */}
-                        <div className="flex-1 bg-white/50 rounded-lg overflow-hidden">
-                            <PipelineGridView
-                                cells={cells}
-                                config={config}
-                                cellIndices={getPageCells()}
-                                onCellClick={handleCellClick}
-                                onDropOnCell={handleDropOnCell}
-                                draggedContent={draggedContent}
-                                selectedCells={selectedCells}
-                                readonly={readonly}
-                                onAddCells={handleAddCells}
-                                canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
-                            />
+                        {/* Right area: config + grid */}
+                        <div className="flex-1 flex flex-col gap-3 min-h-0">
+                            {/* Config kept compact */}
+                            <div className="flex-shrink-0 max-h-[160px] sm:max-h-[220px] overflow-y-auto">
+                                {/* existing config content is above, so nothing to duplicate here */}
+                            </div>
+
+                            {/* Grid - takes remaining space and scrolls internally */}
+                            <div className="flex-1 min-h-0 overflow-auto">
+                                <PipelineGridView
+                                    cells={cells}
+                                    config={config}
+                                    cellIndices={getPageCells()}
+                                    onCellClick={handleCellClick}
+                                    onDropOnCell={handleDropOnCell}
+                                    draggedContent={draggedContent}
+                                    selectedCells={selectedCells}
+                                    readonly={readonly}
+                                    onAddCells={handleAddCells}
+                                    canAddMore={config.duration < (INTERVAL_TYPES[config.intervalType].max || 365)}
+                                />
+                            </div>
                         </div>
                     </div>
                 </div>
