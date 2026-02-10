@@ -55,8 +55,8 @@ export default function Gouts({ formData, handleChange }) {
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Intensité"
-                        value={formData.intensiteGout || 5}
-                        min={1}
+                        value={formData.intensiteGout ?? 0}
+                        min={0}
                         max={10}
                         step={1}
                         color="amber"
@@ -68,8 +68,8 @@ export default function Gouts({ formData, handleChange }) {
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Agressivité/piquant"
-                        value={formData.agressivite || 5}
-                        min={1}
+                        value={formData.agressivite ?? 0}
+                        min={0}
                         max={10}
                         step={1}
                         color="amber"
