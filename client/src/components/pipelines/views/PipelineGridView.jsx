@@ -59,12 +59,27 @@ const PipelineGridView = ({
             // compute min cell respecting zoom and preferred base
             const minCell = Math.max(48, Math.floor(Math.max(minCellBase, phaseBase) * zoom));
 
-            // recompute computed cell size to visually fill width when possible
-            let calcCols = Math.floor((available + gap) / (minCell + gap));
-            calcCols = Math.max(minColumns, Math.min(maxColumns, calcCols || minColumns));
-            const computed = Math.floor((available - (calcCols - 1) * gap) / calcCols);
+            // Determine optimal number of columns (choose k between minColumns..maxColumns that maximizes cell size)
+            const totalCells = (cellIndices && cellIndices.length) || 0;
+            const maxCandidateCols = Math.min(maxColumns, Math.max(minColumns, totalCells || maxColumns));
+            let bestCols = Math.max(minColumns, Math.min(maxCandidateCols, Math.floor((available + gap) / (minCell + gap))));
+            let bestSize = Math.floor((available - (bestCols - 1) * gap) / bestCols);
 
-            setColumns(calcCols);
+            // Try all candidate column counts to find the one that gives largest cell size
+            for (let k = minColumns; k <= Math.min(maxCandidateCols, totalCells || maxCandidateCols); k++) {
+                const sizeK = Math.floor((available - (k - 1) * gap) / k);
+                if (sizeK > bestSize) {
+                    bestSize = sizeK;
+                    bestCols = k;
+                }
+            }
+
+            // If there are fewer cells than bestCols, shrink columns to number of cells
+            if (totalCells > 0) bestCols = Math.min(bestCols, totalCells);
+
+            const computed = Math.max(32, bestSize);
+
+            setColumns(bestCols);
             setCellSize(computed);
 
             // Publish CSS variable used by grid (auto-fit minmax)
@@ -97,7 +112,9 @@ const PipelineGridView = ({
             ro.disconnect();
             window.removeEventListener('resize', () => ro.takeRecords());
         };
-    }, [config, zoom]);
+    }, [config, zoom, cellIndices]);
+
+    const debugMode = typeof window !== 'undefined' && window.location.search.includes('pipeline-debug=1');
 
 
     // Obtenir le label d'une case selon la configuration
@@ -352,14 +369,15 @@ const PipelineGridView = ({
                 data-testid="pipeline-grid"
                 className="grid"
                 style={{
-                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 72px), 1fr))`,
-                    gridAutoRows: `minmax(var(--min-cell, 72px), var(--computed-cell, auto))`,
+                    gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
+                    gridAutoRows: `${cellSize}px`,
                     gap: '8px',
                     alignItems: 'start',
                     width: '100%',
                     maxWidth: '100%',
                     boxSizing: 'border-box',
-                    minWidth: 0
+                    minWidth: 0,
+                    justifyContent: 'start'
                 }}
             >
                 {cellIndices.map((cellIndex) => {
@@ -394,7 +412,7 @@ const PipelineGridView = ({
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
                             title={getTooltipContent(cellIndex, cellData)}
-                            style={{ width: '100%', aspectRatio: '1/1' }}
+                            style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
                             className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
@@ -443,7 +461,7 @@ const PipelineGridView = ({
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onAddCells(10)}
-                        style={{ width: '100%', aspectRatio: '1/1' }}
+                        style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
                         className={`flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
                         title="Ajouter 10 étapes"
                     >
@@ -451,6 +469,14 @@ const PipelineGridView = ({
                     </motion.button>
                 )}
             </div>
+
+            {debugMode && (
+                <div style={{ position: 'absolute', right: 20, top: 80, zIndex: 60, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '6px 8px', borderRadius: 8, fontSize: 12 }}>
+                    <div>cols: {columns}</div>
+                    <div>cell: {cellSize}px</div>
+                    <div>min: {scrollRef.current ? (getComputedStyle(scrollRef.current).getPropertyValue('--min-cell') || 'n/a') : 'n/a'}</div>
+                </div>
+            )}
 
             {/* Labels de jours de la semaine (pour mode jours/dates) */}
             {(config.intervalType === 'days' || config.intervalType === 'dates') && (
