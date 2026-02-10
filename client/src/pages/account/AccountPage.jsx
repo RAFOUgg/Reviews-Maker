@@ -248,20 +248,20 @@ const AccountPage = () => {
                   <p className="text-white/50">Visualisez votre plan actuel et gérez vos options (modifier, moyen de paiement, résilier).</p>
                 </div>
 
-                {/* Deux colonnes : résumé du plan + panneau d'actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="md:col-span-2">
+                {/* Layout revisited: place Actions below the 'Fonctionnalités incluses' */}
+                <div className="space-y-6">
+                  {/* Main summary and features */}
+                  <div>
                     <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
                   </div>
 
-                  <div className="md:col-span-1">
-                    <div className="bg-white/3 dark:bg-white/5 rounded-lg p-4 space-y-4 border border-white/6">
-                      <h3 className="text-lg font-semibold text-white">Actions</h3>
+                  {/* Actions block placed under the features for clearer flow on all breakpoints */}
+                  <div className="bg-white/3 dark:bg-white/5 rounded-lg p-4 space-y-4 border border-white/6 md:w-2/3 lg:w-1/2 mx-auto">
+                    <h3 className="text-lg font-semibold text-white">Actions</h3>
 
-                      {/* Inline subscription manager instead of navigating away */}
-                      <SubscriptionManager user={user} />
+                    {/* Inline subscription manager (payment & KYC) placed here */}
+                    <SubscriptionManager user={user} />
 
-                    </div>
                   </div>
                 </div>
 
