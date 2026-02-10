@@ -167,12 +167,11 @@ export const ResponsiveCreateReviewLayout = ({
         if (!sectionEmojis.length) return;
         const w = itemWidth || FALLBACK_ITEM_WIDTH;
         const containerW = containerWidthState || (VISIBLE_ITEMS * w);
-        const totalWidth = sectionEmojis.length * w * REPEAT_COUNT;
+        const totalWidth = sectionEmojis.length * w;
         const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
 
-        // target index = middle repetition + currentSection
-        const targetIndex = sectionEmojis.length + currentSection;
-        const itemCenter = (targetIndex * w) + (w / 2);
+        // center the currentSection
+        const itemCenter = (currentSection * w) + (w / 2);
         const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
 
         if (!isDragging) {
@@ -230,27 +229,23 @@ export const ResponsiveCreateReviewLayout = ({
 
         // Calcul de la nouvelle position de scroll basée sur le drag
         let newScroll = scrollPosition + diff;
-        const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth * REPEAT_COUNT) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
+        const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
         newScroll = Math.max(0, Math.min(maxScroll, newScroll));
 
-        // Déterminer l'index scrolled selon la position du centre du conteneur (over repeated items)
+        // Déterminer l'index scrolled selon la position du centre du conteneur
         const containerCenter = (containerWidthState || (VISIBLE_ITEMS * itemWidth)) / 2;
         const scrolledIndex = (newScroll + containerCenter - (itemWidth / 2)) / itemWidth;
-        const movedSections = scrolledIndex - (sectionEmojis.length + currentSection); // relative to center repetition
+        const movedSections = scrolledIndex - currentSection;
         const absMoved = Math.abs(movedSections);
 
         let snapIndex;
         if (absMoved < 0.35) {
-            snapIndex = sectionEmojis.length + currentSection;
+            snapIndex = currentSection;
         } else {
-            snapIndex = Math.round(scrolledIndex);
+            snapIndex = Math.max(0, Math.min(totalSections - 1, Math.round(scrolledIndex)));
         }
 
-        // normalize to base array and re-center to middle repetition to avoid drift
-        const baseIndex = ((snapIndex % sectionEmojis.length) + sectionEmojis.length) % sectionEmojis.length;
-        const desiredIndex = sectionEmojis.length + baseIndex; // middle repetition
-
-        const snappedScroll = Math.max(0, Math.min(maxScroll, (desiredIndex * itemWidth + (itemWidth / 2)) - containerCenter));
+        const snappedScroll = Math.max(0, Math.min(maxScroll, (snapIndex * itemWidth + (itemWidth / 2)) - containerCenter));
 
         // Appliquer snapping et réinitialiser offset
         setScrollPosition(snappedScroll);
@@ -319,7 +314,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
                                                 {/* Build a repeated array to simulate infinite looping */}
-                                                {/* repeatedEmojis length = sectionEmojis.length * REPEAT_COUNT */}
+                                                {/* repeatedEmojis removed: using single-pass scroll-snap for improved UX */}
 
                                                 {/* Gradient fade left - plus prononcé */}
                                                 <div className="absolute left-0 top-0 bottom-0 w-12 bg-gradient-to-r from-[#07070f] via-[#07070f]/70 to-transparent z-10 pointer-events-none" />
@@ -406,7 +401,7 @@ export const ResponsiveCreateReviewLayout = ({
                         if (!sectionEmojis.length) return;
                         const w = itemWidth || FALLBACK_ITEM_WIDTH;
                         const containerW = containerWidthState || (VISIBLE_ITEMS * w);
-                        const totalWidth = sectionEmojis.length * w * REPEAT_COUNT;
+                        const totalWidth = sectionEmojis.length * w;
                         const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
                         const targetIndex = sectionEmojis.length + currentSection;
                         const itemCenter = (targetIndex * w) + (w / 2);
