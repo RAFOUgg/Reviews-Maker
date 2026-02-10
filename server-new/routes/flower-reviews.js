@@ -10,9 +10,9 @@ import { validateReviewId } from '../utils/validation.js'
 import {
     requireSectionAccess,
     requirePhenoHunt,
-    requireActiveSubscription,
     canAccessSection
 } from '../middleware/permissions.js'
+import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -496,13 +496,20 @@ function validateFlowerReviewData(data) {
 router.post('/',
     requireAuth,
     requireSectionAccess('info'),  // Check: can access basic sections
-    requireActiveSubscription,     // Check: subscription active for paid tiers
     upload.fields([
         { name: 'images', maxCount: 4 }, // Photos produit (max 4)
         { name: 'analyticsPdf', maxCount: 1 } // PDF analytics (optionnel)
     ]), asyncHandler(async (req, res) => {
         console.log('🌿 Creating FlowerReview with data:', JSON.stringify(req.body, null, 2))
         console.log('📎 Files uploaded:', req.files)
+
+        // Allow saving drafts for all users. Only require an active paid account when publishing.
+        // status can be 'draft' or 'published' (form uses 'published' for publication)
+        const accountType = getUserAccountType(req.user)
+        const isPaid = [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType)
+        if ((req.body.status === 'published' || req.body.status === 'true') && !isPaid) {
+            throw Errors.FORBIDDEN('Publishing a review requires an active subscription')
+        }
 
         // Valider les données FlowerReview
         const validation = validateFlowerReviewData(req.body)
@@ -710,12 +717,18 @@ router.get('/:id', asyncHandler(async (req, res) => {
 // ===== PUT /api/reviews/flower/:id - Mettre à jour une review Fleur =====
 router.put('/:id',
     requireAuth,
-    requireActiveSubscription,
     upload.fields([
         { name: 'images', maxCount: 4 },
         { name: 'analyticsPdf', maxCount: 1 }
     ]), asyncHandler(async (req, res) => {
         console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)
+
+        // If attempting to publish via update, ensure user has active paid account
+        const accountType = getUserAccountType(req.user)
+        const isPaid = [ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType)
+        if ((req.body.status === 'published' || req.body.status === 'true') && !isPaid) {
+            throw Errors.FORBIDDEN('Publishing a review requires an active subscription')
+        }
 
         // Valider l'ID
         if (!validateReviewId(req.params.id)) {

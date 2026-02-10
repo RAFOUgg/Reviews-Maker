@@ -166,51 +166,138 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
     };
 
+    // Helper to resolve common field ids into actual review fields
+    const resolveReviewField = (id) => {
+        const f = reviewData || {}
+        const flower = f.flowerData || {}
+
+        switch (id) {
+            case 'productName':
+            case 'product_name':
+                return flower.nomCommercial || f.holderName || f.name || '-'
+            case 'photo':
+            case 'mainImage':
+                return f.images?.[0] || flower.mainImage || f.mainImageUrl || null
+            case 'photos':
+            case 'gallery':
+                return f.images || flower.images || []
+            case 'genetics':
+            case 'breeder':
+                return [flower.breeder, flower.variety].filter(Boolean).join(' • ') || '-'
+            case 'thc':
+                return flower.thcPercent ?? f.thc ?? '-'
+            case 'cbd':
+                return flower.cbdPercent ?? f.cbd ?? '-'
+            case 'analytics':
+            case 'terpeneProfile':
+                return flower.terpeneProfile || f.terpeneProfile || []
+            case 'visual':
+                return {
+                    densite: flower.densiteVisuelle ?? f.densiteVisuelle,
+                    trichomes: flower.trichomesScore ?? f.trichomesScore,
+                    pistils: flower.pistilsScore ?? f.pistilsScore,
+                    manucure: flower.manucureScore ?? f.manucureScore
+                }
+            case 'odor':
+            case 'odors':
+                return {
+                    dominant: flower.notesOdeursDominantes || [],
+                    secondary: flower.notesOdeursSecondaires || [],
+                    intensity: flower.intensiteAromatique ?? f.intensiteAromatique
+                }
+            case 'taste':
+            case 'tastes':
+                return {
+                    intensity: flower.intensiteGoutScore ?? f.intensiteGoutScore,
+                    aggressiveness: flower.agressiviteScore ?? f.agressiviteScore,
+                    dryPuff: flower.dryPuffNotes || [],
+                    inhalation: flower.inhalationNotes || [],
+                    expiration: flower.expirationNotes || []
+                }
+            case 'effects':
+                return {
+                    selected: flower.effetsChoisis || [],
+                    intensity: flower.intensiteEffetScore ?? f.intensiteEffetScore,
+                    onset: flower.monteeScore ?? f.monteeScore
+                }
+            case 'culture':
+                return {
+                    config: flower.cultureTimelineConfig || f.cultureTimelineConfig,
+                    data: flower.cultureTimelineData || f.cultureTimelineData
+                }
+            case 'curing':
+                return {
+                    config: flower.curingTimelineConfig || f.curingTimelineConfig,
+                    data: flower.curingTimelineData || f.curingTimelineData
+                }
+            case 'notes':
+            case 'description':
+                return f.description || flower.notes || '-'
+            default:
+                // Fallback: try direct field at top-level or in flowerData
+                return f[id] ?? flower[id] ?? undefined
+        }
+    }
+
     // Helper to render a review field value for export
     const renderFieldValue = (fieldId) => {
-        const val = reviewData?.[fieldId];
+        const val = resolveReviewField(fieldId)
         if (val === null || typeof val === 'undefined') return '-';
 
-        // File / Blob (input file) -> preview first image
-        if (typeof File !== 'undefined' && val instanceof File) {
-            try { return <img src={URL.createObjectURL(val)} alt={fieldId} className="w-full h-auto rounded" />; } catch (e) { return '-'; }
-        }
+        // If it's a primitive
+        if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') return String(val)
 
+        // If it's an array of images (filenames or urls) -> render first
         if (Array.isArray(val)) {
-            // If array of files
-            if (val.length > 0 && typeof val[0] === 'object' && val[0] instanceof File) {
-                return <img src={URL.createObjectURL(val[0])} alt={fieldId} className="w-full h-auto rounded" />;
+            // array of filenames/strings
+            if (val.length === 0) return '-'
+            // if array of objects with filename or url
+            if (typeof val[0] === 'object') {
+                const first = val[0]
+                const url = first.url || first.filename || first.path || first
+                return typeof url === 'string' ? <img src={url.startsWith('http') ? url : `/images/${String(url).replace(/^\//, '')}`} alt={fieldId} className="w-full h-auto rounded" /> : '-' 
             }
-
-            // Array of color objects (couleurNuancier)
-            if (val.length > 0 && typeof val[0] === 'object' && val[0].colorId) {
-                return (
-                    <div className="flex items-center gap-3 flex-wrap">
-                        {val.map((v, idx) => {
-                            const meta = CANNABIS_COLORS.find(c => c.id === v.colorId) || { hex: '#999', name: v.colorId };
-                            return (
-                                <div key={`${v.colorId}-${idx}`} className="flex items-center gap-2 text-sm bg-white/5 px-2 py-1 rounded">
-                                    <div className="w-5 h-5 rounded-full border" style={{ backgroundColor: meta.hex }} />
-                                    <div className="flex flex-col text-xs">
-                                        <div className="font-medium">{meta.name}</div>
-                                        <div className="text-gray-300">{v.percentage}%</div>
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                );
-            }
-
-            return val.map(v => (typeof v === 'object' ? (v.name || JSON.stringify(v)) : String(v))).join(', ');
+            // array of strings
+            return val.join(', ')
         }
 
+        // If val is an object (e.g., visual/taste/effects) render a compact representation
         if (typeof val === 'object') {
-            // common pattern: { name } or { label }
-            return val.name || val.label || JSON.stringify(val);
+            // Visual object
+            if (val.densite !== undefined || val.trichomes !== undefined) {
+                return (
+                    <div className="flex flex-col text-sm text-white">
+                        {Object.keys(val).map(k => (
+                            <div key={k} className="flex justify-between">
+                                <div className="text-xs text-gray-400">{k}</div>
+                                <div className="font-medium">{String(val[k] ?? '-')}</div>
+                            </div>
+                        ))}
+                    </div>
+                )
+            }
+
+            // Odors, tastes, effects
+            if (val.dominant || val.dryPuff || val.selected) {
+                const lists = []
+                if (val.dominant) lists.push((val.dominant || []).join(', '))
+                if (val.secondary) lists.push((val.secondary || []).join(', '))
+                if (val.dryPuff) lists.push('Dry: ' + (val.dryPuff || []).join(', '))
+                if (val.inhalation) lists.push('In: ' + (val.inhalation || []).join(', '))
+                if (val.expiration) lists.push('Out: ' + (val.expiration || []).join(', '))
+                if (val.selected) lists.push((val.selected || []).join(', '))
+                return lists.filter(Boolean).join(' • ') || '-'
+            }
+
+            // Timeline objects
+            if (val.data || val.config) {
+                return <div className="text-sm text-gray-300">Timeline ({val.data ? (val.data.length || 0) : 0} steps)</div>
+            }
+
+            return JSON.stringify(val)
         }
 
-        return String(val);
+        return String(val)
     };
 
     return (
