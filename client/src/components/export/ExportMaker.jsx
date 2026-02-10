@@ -318,8 +318,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         </div>
                         <div className="flex items-center gap-4">
                             <div className="text-xs text-gray-400">Poids</div>
-                            <div className="text-xs">Brut: <span className="font-medium">{val.poidsBrut ?? '-' } g</span></div>
-                            <div className="text-xs">Net: <span className="font-medium">{val.poidsNet ?? '-' } g</span></div>
+                            <div className="text-xs">Brut: <span className="font-medium">{val.poidsBrut ?? '-'} g</span></div>
+                            <div className="text-xs">Net: <span className="font-medium">{val.poidsNet ?? '-'} g</span></div>
                             <div className="text-xs">Mode: <span className="font-medium">{val.modeRecolte ?? '-'}</span></div>
                         </div>
                         <div className={`mt-2 text-xs ${total === 100 ? 'text-green-400' : 'text-amber-400'}`}>Total trichomes: {total}%</div>
@@ -552,7 +552,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">
                                             {reviewData.varietyType || 'Hybride'}
                                         </span>
-                                        { (resolveReviewField('thc') || resolveReviewField('thcPercent')) && (
+                                        {(resolveReviewField('thc') || resolveReviewField('thcPercent')) && (
                                             <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">THC: {resolveReviewField('thc') ?? resolveReviewField('thcPercent')}%</span>
                                         )}
                                     </div>
