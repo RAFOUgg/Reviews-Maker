@@ -57,7 +57,12 @@ const PipelineWithSidebar = ({
     value = {},
     onChange,
     contentSchema = [], // Schéma des contenus disponibles dans le sidebar
-    readonly = false
+    readonly = false,
+    // Optional: list of CSS selectors for fixed elements to IGNORE when measuring
+    // available height (e.g., ['.floating-action', '.bottom-cta']). The component
+    // also automatically ignores elements with attribute [data-pipeline-ignore]
+    // or class 'pipeline-ignore-fixed'.
+    fixedBottomIgnoreSelectors = []
 }) => {
     // État de configuration de la trame
     const defaultPhasesByType = (type) => {
@@ -106,9 +111,21 @@ const PipelineWithSidebar = ({
             const footer = document.querySelector('footer');
             const footerHeight = footer ? footer.getBoundingClientRect().height : 0;
 
-            // Sum visible fixed bottom elements (e.g., floating action bars)
+            // Sum visible fixed bottom elements (e.g., floating action bars),
+            // but allow callers to ignore specific selectors or elements marked
+            // with [data-pipeline-ignore] or class 'pipeline-ignore-fixed'.
             let fixedBottomHeight = 0;
-            document.querySelectorAll('[class*="fixed"]').forEach(el => {
+            const ignoreSelectors = fixedBottomIgnoreSelectors || [];
+            const IGNORE_ATTR = '[data-pipeline-ignore]';
+            const IGNORE_CLASS = 'pipeline-ignore-fixed';
+
+            document.querySelectorAll('[class*="fixed"], [class*="floating"], [class*="bottom"], [data-pipeline-ignore]').forEach(el => {
+                // skip ignored elements by selector, data attribute, or class
+                if (ignoreSelectors.some(sel => {
+                    try { return el.matches(sel); } catch (e) { return false; }
+                })) return;
+                if (el.matches(IGNORE_ATTR) || el.classList.contains(IGNORE_CLASS)) return;
+
                 const style = window.getComputedStyle(el);
                 if (style.position === 'fixed') {
                     const bounds = el.getBoundingClientRect();
@@ -136,7 +153,7 @@ const PipelineWithSidebar = ({
             window.removeEventListener('resize', measure);
             ro.disconnect();
         };
-    }, [pipelineAreaRef.current]);
+    }, [pipelineAreaRef.current, fixedBottomIgnoreSelectors]);
 
     // Pagination: 100 cases par page max
     const CELLS_PER_PAGE = 100;
@@ -566,7 +583,7 @@ const PipelineWithSidebar = ({
 
                 {/* Boutons d'action si multi-sélection */}
                 {selectedCells.length > 0 && (
-                    <div className="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-2xl">
+                    <div data-pipeline-ignore className="fixed bottom-6 right-6 bg-gray-800 border border-gray-700 rounded-xl p-4 shadow-2xl">
                         <div className="flex items-center gap-4">
                             <span className="text-white font-medium">
                                 {selectedCells.length} case(s) sélectionnée(s)
