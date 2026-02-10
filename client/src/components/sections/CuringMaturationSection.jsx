@@ -7,6 +7,7 @@
 import { useMemo, useState, useEffect } from 'react';
 import PipelineDragDropView from '../pipelines/views/PipelineDragDropView';
 import { CURING_SIDEBAR_CONTENT } from '../../config/curingSidebarContent';
+import { CURING_PHASES } from '../../config/pipelinePhases';
 
 const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }) => {
     // État local pour les données de timeline (tableau)
