@@ -105,6 +105,11 @@ const PipelineGridView = ({
             // publish CSS variables used by the grid (auto-fit minmax)
             scrollRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
             scrollRef.current.style.setProperty('--computed-cell', `${computed}px`);
+            // Also set on the grid element itself to ensure CSS fallback works even if outer styles are overridden
+            if (gridRef.current) {
+                gridRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
+                gridRef.current.style.setProperty('--computed-cell', `${computed}px`);
+            }
             // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
             const minRows = 5;
             const minRowsHeight = (minCellFinal * minRows) + (minRows - 1) * gap;

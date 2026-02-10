@@ -439,6 +439,23 @@ body {
     min-height: 0 !important;
 }
 
+/* Defensive: if some inner wrapper still has overflow-hidden, prefer scroll inside the left column */
+[data-testid="pipeline-panel"] > .flex-1 > .flex-row .w-80 {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    max-height: 100% !important;
+    height: 100% !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* If an inner element uses overflow-hidden accidentally, allow vertical scroll for content lists */
+[data-testid="pipeline-panel"] .w-80.overflow-hidden {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+
 /* Hide horizontal overflow at app level to protect against accidental leaks */
 .page-content,
 .app-root,
