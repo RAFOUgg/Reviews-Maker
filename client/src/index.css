@@ -440,7 +440,7 @@ body {
 }
 
 /* Defensive: if some inner wrapper still has overflow-hidden, prefer scroll inside the left column */
-[data-testid="pipeline-panel"] > .flex-1 > .flex-row .w-80 {
+[data-testid="pipeline-panel"]>.flex-1>.flex-row .w-80 {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     max-height: 100% !important;
