@@ -53,10 +53,13 @@ const PipelineGridView = ({
 
             // taille minimale souhaitée pour garantir au moins 4 colonnes
             const minCols = 4;
-            const minCellBase = Math.max(32, Math.floor((available - (minCols - 1) * gap) / minCols));
-            const minCell = Math.max(32, Math.floor(minCellBase * zoom));
+            // prefer larger base for phases (visually bigger)
+            const phaseBase = config && config.intervalType === 'phases' ? 96 : 72;
+            const minCellBase = Math.max(48, Math.floor((available - (minCols - 1) * gap) / minCols));
+            // compute min cell respecting zoom and preferred base
+            const minCell = Math.max(48, Math.floor(Math.max(minCellBase, phaseBase) * zoom));
 
-            // compute a reasonable cell size for display (used as fallback)
+            // recompute computed cell size to visually fill width when possible
             let calcCols = Math.floor((available + gap) / (minCell + gap));
             calcCols = Math.max(minColumns, Math.min(maxColumns, calcCols || minColumns));
             const computed = Math.floor((available - (calcCols - 1) * gap) / calcCols);
@@ -66,9 +69,16 @@ const PipelineGridView = ({
 
             // Publish CSS variable used by grid (auto-fit minmax)
             scrollRef.current.style.setProperty('--min-cell', `${minCell}px`);
+            scrollRef.current.style.setProperty('--computed-cell', `${computed}px`);
+            // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
+            const minRows = 5;
+            const minRowsHeight = (minCell * minRows) + (minRows - 1) * gap;
+            scrollRef.current.style.setProperty('--min-rows-height', `${minRowsHeight}px`);
+            scrollRef.current.style.minHeight = `${Math.max(200, minRowsHeight)}px`;
 
             // ensure no horizontal scroll on wrapper
             scrollRef.current.style.overflowX = 'hidden';
+            scrollRef.current.style.boxSizing = 'border-box';
         });
 
         ro.observe(scrollRef.current);
@@ -336,9 +346,11 @@ const PipelineGridView = ({
                 data-testid="pipeline-grid"
                 className="grid"
                 style={{
-                    gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
+                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 64px), 1fr))`,
+                    gridAutoRows: 'minmax(var(--min-cell, 64px), auto)',
                     gap: '8px',
-                    alignItems: 'start'
+                    alignItems: 'start',
+                    width: '100%'
                 }}
             >
                 {cellIndices.map((cellIndex) => {
