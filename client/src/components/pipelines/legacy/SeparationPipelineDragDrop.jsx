@@ -36,11 +36,11 @@ const SeparationPipelineDragDrop = ({
 
     // Configurer les phases si nécessaire
     const configWithDefaults = useMemo(() => {
-        const finalType = timelineConfig.type || initialData.type || 'custom';
+        const finalType = timelineConfig.type || initialData.type || 'phase';
         return {
             type: finalType,
             ...timelineConfig,
-            ...(finalType === 'phase' && SEPARATION_PHASES ? { phases: SEPARATION_PHASES } : {})
+            ...(finalType === 'phase' && SEPARATION_PHASES ? { phases: SEPARATION_PHASES.phases } : {})
         };
     }, [timelineConfig, initialData])
 

@@ -240,7 +240,7 @@ router.post('/api/reviews/:reviewId/pipeline', async (req, res) => {
     try {
         const userId = req.user.id;
         const { reviewId } = req.params;
-        const { mode, startDate, endDate, activeSetups, notesGenerales } = req.body;
+        const { mode, startDate, endDate, activeSetups, notesGenerales, phases } = req.body;
 
         // Vérifier que la review existe et appartient à l'utilisateur
         const review = await prisma.review.findFirst({
@@ -269,6 +269,7 @@ router.post('/api/reviews/:reviewId/pipeline', async (req, res) => {
                 activeSetups: JSON.stringify(activeSetups || []),
                 notesGenerales,
                 durationDays,
+                ...(phases !== undefined && { phases: JSON.stringify(phases) })
             },
         });
 
@@ -336,8 +337,8 @@ router.get('/api/reviews/:reviewId/pipeline', async (req, res) => {
         }
 
         // Parse JSON fields
-        pipeline.activeSetups = JSON.parse(pipeline.activeSetups);
-        pipeline.phases = JSON.parse(pipeline.phases);
+        pipeline.activeSetups = pipeline.activeSetups ? JSON.parse(pipeline.activeSetups) : [];
+        pipeline.phases = pipeline.phases ? JSON.parse(pipeline.phases) : [];
 
         res.json(pipeline);
     } catch (error) {
@@ -388,6 +389,7 @@ router.put('/api/reviews/:reviewId/pipeline', async (req, res) => {
                 ...(startDate && { startDate: new Date(startDate) }),
                 ...(endDate && { endDate: new Date(endDate) }),
                 ...(activeSetups && { activeSetups: JSON.stringify(activeSetups) }),
+                ...(phases !== undefined && { phases: JSON.stringify(phases) }),
                 ...(notesGenerales !== undefined && { notesGenerales }),
                 ...(durationDays && { durationDays }),
             },
@@ -398,8 +400,8 @@ router.put('/api/reviews/:reviewId/pipeline', async (req, res) => {
             },
         });
 
-        updated.activeSetups = JSON.parse(updated.activeSetups);
-        updated.phases = JSON.parse(updated.phases);
+        updated.activeSetups = updated.activeSetups ? JSON.parse(updated.activeSetups) : [];
+        updated.phases = updated.phases ? JSON.parse(updated.phases) : [];
 
         res.json(updated);
     } catch (error) {

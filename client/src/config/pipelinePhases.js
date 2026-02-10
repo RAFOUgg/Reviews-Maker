@@ -29,11 +29,25 @@ export const CURING_PHASES = {
     ]
 }
 
-export const SEPARATION_PHASES = null // Pas de phases, basé sur le temps
+export const SEPARATION_PHASES = {
+    phases: [
+        { id: 'sep-1', label: 'Pré-séparation', order: 0, duration: 1 },
+        { id: 'sep-2', label: 'Séparation', order: 1, duration: 1 },
+        { id: 'sep-3', label: 'Récupération', order: 2, duration: 1 },
+        { id: 'sep-4', label: 'Finition', order: 3, duration: 1 }
+    ]
+}
 
-export const PURIFICATION_PHASES = null // Passes successives, pas de phases
+export const PURIFICATION_PHASES = null // Passes successives, pas de phases par défaut
 
-export const EXTRACTION_PHASES = null // Basé sur le temps
+export const EXTRACTION_PHASES = {
+    phases: [
+        { id: 'ext-1', label: 'Préparation', order: 0, duration: 1 },
+        { id: 'ext-2', label: 'Extraction', order: 1, duration: 1 },
+        { id: 'ext-3', label: 'Concentration', order: 2, duration: 1 },
+        { id: 'ext-4', label: 'Finition', order: 3, duration: 1 }
+    ]
+}
 
 export const RECIPE_PHASES = {
     phases: [

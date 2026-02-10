@@ -36,11 +36,11 @@ const ExtractionPipelineDragDrop = ({
 
     // Configurer les phases si nécessaire
     const configWithDefaults = useMemo(() => {
-        const finalType = timelineConfig.type || initialData.type || 'custom';
+        const finalType = timelineConfig.type || initialData.type || 'phase';
         return {
             type: finalType,
             ...timelineConfig,
-            ...(finalType === 'phase' && EXTRACTION_PHASES ? { phases: EXTRACTION_PHASES } : {})
+            ...(finalType === 'phase' && EXTRACTION_PHASES ? { phases: EXTRACTION_PHASES.phases } : {})
         };
     }, [timelineConfig, initialData])
 

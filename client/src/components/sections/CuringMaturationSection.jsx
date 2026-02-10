@@ -24,14 +24,15 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         });
     }, [timelineData, data]);
     // Construire la config timeline
-    // NOTE: type='jour' par défaut pour curing (pas de phases générales)
+    // DEFAULT: use 'phase' mode by default for all pipelines (system-wide default)
     const timelineConfig = useMemo(() => ({
-        type: data.curingTimelineConfig?.type || 'jour',
-        mode: data.curingTimelineConfig?.mode || 'days',
+        type: data.curingTimelineConfig?.type || 'phase',
+        mode: data.curingTimelineConfig?.mode || 'phases',
         startDate: data.curingTimelineConfig?.startDate || '',
         endDate: data.curingTimelineConfig?.endDate || '',
         duration: data.curingTimelineConfig?.duration || null,
         totalSeconds: data.curingTimelineConfig?.totalSeconds || null,
+        phases: (data.curingTimelineConfig?.phases && data.curingTimelineConfig.phases.length) ? data.curingTimelineConfig.phases : CURING_PHASES.phases,
         curingType: data.curingType || 'cold',
         temperature: data.temperature || 5,
         humidity: data.humidity || 60
