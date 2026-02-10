@@ -37,21 +37,8 @@ export const INTERVAL_TYPES = {
     phases: { label: 'Phases', unit: 'P', max: 12, defaultDuration: 12, isPredefined: true }
 };
 
-// Phases prédéfinies pour culture (12 phases CDC)
-export const CULTURE_PHASES = [
-    { id: 'seed', name: 'Graine', icon: '🌰', order: 0 },
-    { id: 'germination', name: 'Germination', icon: '🌱', order: 1 },
-    { id: 'seedling', name: 'Plantule', icon: '🌿', order: 2 },
-    { id: 'early-veg', name: 'Début Croissance', icon: '🌳', order: 3 },
-    { id: 'mid-veg', name: 'Milieu Croissance', icon: '🌲', order: 4 },
-    { id: 'late-veg', name: 'Fin Croissance', icon: '🎋', order: 5 },
-    { id: 'early-stretch', name: 'Début Stretch', icon: '📈', order: 6 },
-    { id: 'mid-stretch', name: 'Milieu Stretch', icon: '📈', order: 7 },
-    { id: 'late-stretch', name: 'Fin Stretch', icon: '📈', order: 8 },
-    { id: 'early-flower', name: 'Début Floraison', icon: '🌸', order: 9 },
-    { id: 'mid-flower', name: 'Milieu Floraison', icon: '🌺', order: 10 },
-    { id: 'late-flower', name: 'Fin Floraison', icon: '💐', order: 11 }
-];
+import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
+
 
 const PipelineWithSidebar = ({
     pipelineType = 'culture', // culture | separation | extraction | curing | recette
@@ -62,12 +49,24 @@ const PipelineWithSidebar = ({
     readonly = false
 }) => {
     // État de configuration de la trame
+    const defaultPhasesByType = (type) => {
+        switch (type) {
+            case 'curing': return CURING_PHASES?.phases || [];
+            case 'separation': return SEPARATION_PHASES?.phases || [];
+            case 'extraction': return EXTRACTION_PHASES?.phases || [];
+            case 'recipe': return RECIPE_PHASES?.phases || [];
+            case 'culture':
+            default:
+                return CULTURE_PHASES?.phases || [];
+        }
+    };
+
     const [config, setConfig] = useState({
         intervalType: value.intervalType || 'days',
         duration: value.duration || INTERVAL_TYPES.days.defaultDuration,
         startDate: value.startDate || null,
         endDate: value.endDate || null,
-        customPhases: value.customPhases || CULTURE_PHASES
+        customPhases: value.customPhases || defaultPhasesByType(pipelineType)
     });
 
     // Données des cases (cellules) indexées par position
