@@ -52,7 +52,7 @@ export default function Effets({ formData, handleChange }) {
                 <div className="p-4 bg-white/5 rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Montée (rapidité)"
-                        value={formData.montee || 5}
+                        value={formData.montee ?? 0}
                         min={1}
                         max={10}
                         step={1}

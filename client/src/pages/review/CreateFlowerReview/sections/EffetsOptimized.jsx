@@ -99,7 +99,7 @@ export default function EffetsOptimized({ formData, handleChange }) {
                 <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-3`}>
                     <MobileFormGroup label="Montée (rapidité)">
                         <ResponsiveSlider
-                            value={formData.monteeMontee || 0}
+                            value={formData.monteeMontee ?? 0}
                             onChange={(val) => handleChange('monteeMontee', val)}
                             min={0}
                             max={10}

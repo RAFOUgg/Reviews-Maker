@@ -8,6 +8,15 @@ export default function Odeurs({ formData, handleChange }) {
     const [selectedDominant, setSelectedDominant] = useState(formData.odeursDominantes || [])
     const [selectedSecondary, setSelectedSecondary] = useState(formData.odeursSecondaires || [])
 
+    // Keep local selection in sync if formData changes externally (avoid blinking from outside updates)
+    useEffect(() => {
+        setSelectedDominant(formData.odeursDominantes || [])
+    }, [formData.odeursDominantes])
+
+    useEffect(() => {
+        setSelectedSecondary(formData.odeursSecondaires || [])
+    }, [formData.odeursSecondaires])
+
     useEffect(() => {
         // Load aromas from data/aromas.json
         fetch('/data/aromas.json')
