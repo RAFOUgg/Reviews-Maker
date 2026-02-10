@@ -498,7 +498,7 @@ const PipelineWithSidebar = ({
                     {/* Layout responsive: Sidebar left on desktop, stacked on mobile */}
                     <div ref={pipelineAreaRef} className="flex flex-col md:flex-row gap-4 flex-1 min-h-0" style={availableHeight ? { height: `${availableHeight}px` } : undefined}>
                         {/* Sidebar: full-width on mobile (stacked), fixed width on md+ */}
-                        <div className="w-full md:w-80 md:flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0 h-full">
+                        <div className="w-full md:w-80 md:flex-shrink-0 bg-gray-50 rounded-lg p-2 sm:p-3 overflow-y-auto min-h-0 h-full" style={availableHeight ? { maxHeight: `${Math.max(160, availableHeight - 24)}px`, overflowY: 'auto' } : {}}>
                             <PipelineContentsSidebar
                                 contentSchema={contentSchema}
                                 onDragStart={handleDragStart}

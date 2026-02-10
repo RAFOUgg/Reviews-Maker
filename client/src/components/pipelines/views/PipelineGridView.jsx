@@ -82,23 +82,28 @@ const PipelineGridView = ({
             setColumns(bestCols);
             setCellSize(computed);
 
-            // Publish CSS variable used by grid (auto-fit minmax)
-            scrollRef.current.style.setProperty('--min-cell', `${minCell}px`);
+            // compute a robust min cell width depending on mode and zoom
+            const baseMinForMode = config && config.intervalType === 'phases' ? 120 : 96;
+            const minCellFinal = Math.max(baseMinForMode, minCell);
+
+            // publish CSS variables used by the grid (auto-fit minmax)
+            scrollRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
             scrollRef.current.style.setProperty('--computed-cell', `${computed}px`);
             // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
             const minRows = 5;
-            const minRowsHeight = (minCell * minRows) + (minRows - 1) * gap;
+            const minRowsHeight = (minCellFinal * minRows) + (minRows - 1) * gap;
             scrollRef.current.style.setProperty('--min-rows-height', `${minRowsHeight}px`);
             scrollRef.current.style.minHeight = `${Math.max(200, minRowsHeight)}px`;
 
-            // ensure no horizontal scroll on wrapper
+            // ensure no horizontal scroll on wrapper and protect parents
             scrollRef.current.style.overflowX = 'hidden';
             scrollRef.current.style.boxSizing = 'border-box';
             scrollRef.current.style.maxWidth = '100%';
-            // also protect parent element if exists
             if (scrollRef.current.parentElement) {
-                scrollRef.current.parentElement.style.overflowX = 'hidden';
-                scrollRef.current.parentElement.style.boxSizing = 'border-box';
+                const p = scrollRef.current.parentElement;
+                p.style.overflowX = 'hidden';
+                p.style.boxSizing = 'border-box';
+                p.style.minWidth = '0';
             }
         });
 
@@ -369,15 +374,14 @@ const PipelineGridView = ({
                 data-testid="pipeline-grid"
                 className="grid"
                 style={{
-                    gridTemplateColumns: `repeat(${columns}, ${cellSize}px)`,
-                    gridAutoRows: `${cellSize}px`,
+                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 96px), 1fr))`,
+                    gridAutoRows: `var(--min-cell, 96px)`,
                     gap: '8px',
                     alignItems: 'start',
                     width: '100%',
                     maxWidth: '100%',
                     boxSizing: 'border-box',
-                    minWidth: 0,
-                    justifyContent: 'start'
+                    minWidth: 0
                 }}
             >
                 {cellIndices.map((cellIndex) => {
@@ -412,7 +416,7 @@ const PipelineGridView = ({
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
                             title={getTooltipContent(cellIndex, cellData)}
-                            style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
+                            style={{ width: '100%', height: 'var(--min-cell, 96px)' }}
                             className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}

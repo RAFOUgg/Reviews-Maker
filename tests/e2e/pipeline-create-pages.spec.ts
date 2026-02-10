@@ -19,6 +19,11 @@ for (const pagePath of PAGES) {
         const docScroll = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, win: window.innerWidth }));
         expect(docScroll.doc).toBeLessThanOrEqual(docScroll.win);
 
+        // Assert min cell size is reasonable (>= 96px)
+        const minCell = await scroll.evaluate((el) => getComputedStyle(el).getPropertyValue('--min-cell') || '');
+        const minCellVal = parseInt(minCell, 10) || 0;
+        expect(minCellVal).toBeGreaterThanOrEqual(96);
+
         // Resize narrow to ensure wrapping without horizontal scroll
         await page.setViewportSize({ width: 420, height: 900 });
         await page.waitForTimeout(300);
