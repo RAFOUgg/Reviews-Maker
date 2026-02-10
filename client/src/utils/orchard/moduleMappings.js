@@ -28,7 +28,7 @@ const FLOWER_SECTIONS = [
         id: 'recolte',
         label: 'Récolte',
         access: 'all',
-        fields: ['trichomesTranslucides','trichomesLaiteux','trichomesAmbres','modeRecolte','poidsBrut','poidsNet']
+        fields: ['trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
     },
     {
         id: 'analytiques',
@@ -134,7 +134,7 @@ const SECTIONS_BY_TYPE = {
         { id: 'texture', name: 'Texture', modules: FLOWER_CATEGORY_FIELDS.texture },
         { id: 'tastes', name: 'Goûts', modules: FLOWER_CATEGORY_FIELDS.taste },
         { id: 'effects', name: 'Effets', modules: FLOWER_CATEGORY_FIELDS.effects },
-        { id: 'recolte', name: 'Récolte & Post-Récolte', modules: ['trichomesTranslucides','trichomesLaiteux','trichomesAmbres','modeRecolte','poidsBrut','poidsNet'] },
+        { id: 'recolte', name: 'Récolte & Post-Récolte', modules: ['trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet'] },
         { id: 'curing', name: 'Curing & Maturation', modules: ['curing', 'drying', 'processing', 'purgevide'] }
     ],
     hash: [

@@ -8,33 +8,34 @@
 // FLOWER (FLEUR) MAPPINGS
 // ============================================================================
 export const FLOWER_CATEGORY_FIELDS = {
-  visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle'],
-  smell: ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas', 'intensiteAromatique'],
-  texture: ['durete', 'densiteTexture', 'elasticite', 'collant'],
-  taste: ['intensiteFumee', 'agressivite', 'cendre', 'douceur', 'persistanceGout'],
-  effects: ['montee', 'intensiteEffet', 'dureeEffet'],
+  // Use flattened field names (backend/frontend canonical) used across forms and flattener
+  visual: ['couleurNuancier', 'densiteVisuelle', 'trichomesScore', 'pistilsScore', 'manucureScore', 'moisissureScore', 'grainesScore'],
+  smell: ['intensiteAromeScore', 'notesOdeursDominantes', 'notesOdeursSecondaires', 'fideliteCultivars', 'complexiteAromeScore'],
+  texture: ['dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore'],
+  taste: ['intensiteGoutScore', 'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'expirationNotes'],
+  effects: ['monteeScore', 'intensiteEffetScore', 'effectDuration', 'effetsChoisis', 'effectProfiles', 'sideEffects']
 };
 
 // ============================================================================
 // HASH (HASH, KIEF, ICE-O-LATOR, DRY-SIFT) MAPPINGS
 // ============================================================================
 export const HASH_CATEGORY_FIELDS = {
-  visual: ['couleur', 'pureteVisuelle', 'densite', 'pistil', 'moisissure', 'graines', 'viscosite', 'melting', 'residus'],
-  smell: ['fideliteCultivars', 'intensiteAromatique'],
-  texture: ['durete', 'densiteTexture', 'friabilite', 'melting'],
-  taste: ['intensiteFumee', 'agressivite', 'cendre'],
-  effects: ['montee', 'intensiteEffet', 'dureeEffet'],
+  visual: ['couleurTransparence', 'pureteVisuelle', 'densiteVisuelle', 'pistils', 'moisissure', 'graines', 'viscosite', 'meltingScore', 'residuScore'],
+  smell: ['intensiteAromatique', 'fideliteCultivars'],
+  texture: ['dureteScore', 'friabiliteScore', 'viscositeScore', 'meltingScore'],
+  taste: ['intensiteFumee', 'agressiviteScore', 'cendre'],
+  effects: ['monteeScore', 'intensiteEffetScore', 'effectDuration']
 };
 
 // ============================================================================
 // CONCENTRATE (ROSIN, BHO, etc.) MAPPINGS
 // ============================================================================
 export const CONCENTRATE_CATEGORY_FIELDS = {
-  visual: ['couleur', 'viscosite', 'pureteVisuelle', 'melting', 'residus', 'pistil', 'moisissure'],
-  smell: ['fideliteCultivars', 'intensiteAromatique'],
-  texture: ['durete', 'densiteTexture', 'friabilite', 'melting'],
-  taste: ['intensiteFumee', 'agressivite', 'cendre'],
-  effects: ['montee', 'intensiteEffet', 'dureeEffet'],
+  visual: ['couleurTransparence', 'viscositeVisuelle', 'pureteVisuelle', 'meltingScore', 'residuScore', 'pistils', 'moisissure'],
+  smell: ['intensiteAromatique', 'fideliteCultivars'],
+  texture: ['dureteScore', 'friabiliteScore', 'viscositeScore', 'meltingScore'],
+  taste: ['intensiteFumee', 'agressiviteScore', 'cendre'],
+  effects: ['monteeScore', 'intensiteEffetScore', 'effectDuration']
 };
 
 // ============================================================================
@@ -44,8 +45,8 @@ export const EDIBLE_CATEGORY_FIELDS = {
   visual: [], // Edibles don't have visual ratings
   smell: [],  // Edibles don't have smell ratings typically
   texture: [], // Edibles don't have texture ratings typically
-  taste: ['intensiteFumee', 'agressivite', 'douceur'],
-  effects: ['montee', 'intensiteEffet', 'dureeEffet'],
+  taste: ['intensiteGoutScore', 'agressiviteScore', 'saveursDominantes'],
+  effects: ['monteeScore', 'intensiteEffetScore', 'dureeEffet']
 };
 
 // ============================================================================
@@ -175,33 +176,46 @@ export function getAvailableTemplatesByType(productType = 'flower', accountType 
 // for each combination of product type and account tier. Keep lists minimal
 // for 'amateur' tiers to match available input fields in the review form.
 export const ALLOWED_FIELDS_BY_TYPE_AND_TIER = {
-  hash: {
+  flower: {
     amateur: [
-      // basic / profile
-      'holderName', 'title', 'mainImage', 'images', 'description', 'type',
-      // provenance
-      'breeder', 'farm', 'hashmaker', 'cultivarsList',
-      // visual (hash-specific)
-      'couleur', 'pureteVisuelle', 'densite', 'viscosite', 'melting', 'residus', 'pistils',
-      // smell
-      'aromasIntensity', 'fideliteCultivars',
-      // texture
-      'durete', 'densiteTexture', 'friabilite', 'viscositeTexture',
+      // profile
+      'nomCommercial', 'holderName', 'title', 'mainImage', 'images', 'description', 'type', 'varietyType', 'farm',
+      // analytics
+      'thcPercent', 'cbdPercent', 'cbgPercent', 'terpeneProfile', 'analyticsPdfUrl',
+      // visual
+      'couleurNuancier', 'densiteVisuelle', 'trichomesScore', 'pistilsScore', 'manucureScore', 'moisissureScore', 'grainesScore',
+      // odors
+      'intensiteAromeScore', 'notesOdeursDominantes', 'notesOdeursSecondaires',
       // taste
-      'intensiteFumee', 'agressivite', 'cendre',
+      'intensiteGoutScore', 'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'expirationNotes',
       // effects
-      'montee', 'intensiteEffet', 'dureeEffet',
-      // extras commonly useful
-      'terpenes', 'thcLevel'
+      'monteeScore', 'intensiteEffetScore', 'effectDuration', 'effetsChoisis',
+      // misc
+      'geneticTreeId', 'breeder', 'variety'
     ],
     influencer: [
-      // include amateur fields + sensorial tags
-      /* reuse amateur then add */
+      // add curing/pipeline preview
+      'coupling', // placeholder: handled by pipeline modules
     ],
     producteur: [
-      // include influencer fields + pipelines & levels
-      /* reuse influencer then add */
+      // include pipelines and genetics
+      'cultureTimelineData', 'cultureTimelineConfig', 'curingTimelineData', 'curingTimelineConfig', 'parentage'
     ]
+  },
+  hash: {
+    amateur: [
+      'nomCommercial', 'hashmaker', 'laboratoire', 'images', 'description', 'type', 'purity', 'methodeSeparation', 'tailleMailles', 'qualiteMatierePremiere',
+      'couleurTransparence', 'pureteVisuelle', 'densiteVisuelle', 'pistils', 'moisissure', 'graines', 'viscosite', 'meltingScore', 'residuScore',
+      'intensiteAromatique', 'dryPuffNotes', 'intensiteGoutScore', 'monteeScore'
+    ],
+    influencer: [],
+    producteur: ['pipelineSeparation', 'pipelinePurification']
+  },
+  concentrate: {
+    amateur: [
+      'nomCommercial', 'hashmaker', 'laboratoire', 'images', 'type', 'purity', 'extractionMethod', 'viscositeVisuelle', 'pureteVisuelle'
+    ],
+    producteur: ['pipelineExtraction', 'pipelinePurification']
   }
 };
 
