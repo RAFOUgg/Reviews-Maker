@@ -255,7 +255,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             if (typeof val[0] === 'object') {
                 const first = val[0]
                 const url = first.url || first.filename || first.path || first
-                return typeof url === 'string' ? <img src={url.startsWith('http') ? url : `/images/${String(url).replace(/^\//, '')}`} alt={fieldId} className="w-full h-auto rounded" /> : '-' 
+                return typeof url === 'string' ? <img src={url.startsWith('http') ? url : `/images/${String(url).replace(/^\//, '')}`} alt={fieldId} className="w-full h-auto rounded" /> : '-'
             }
             // array of strings
             return val.join(', ')
