@@ -1,21 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, Plus, X, Pipette } from 'lucide-react';
-
-// 10 couleurs cannabis naturelles
-const DEFAULT_COLOR = { id: 'default', name: 'Vert pâle (par défaut)', hex: '#B6C7A6' };
-const CANNABIS_COLORS = [
-    { id: 'green-lime', name: 'Vert lime', hex: '#84CC16', angle: 0 },
-    { id: 'green', name: 'Vert', hex: '#22C55E', angle: 36 },
-    { id: 'green-forest', name: 'Vert forêt', hex: '#166534', angle: 72 },
-    { id: 'green-dark', name: 'Vert foncé', hex: '#14532D', angle: 108 },
-    { id: 'blue-green', name: 'Bleu-vert', hex: '#0D9488', angle: 144 },
-    { id: 'purple', name: 'Violet', hex: '#7C3AED', angle: 180 },
-    { id: 'purple-dark', name: 'Violet foncé', hex: '#4C1D95', angle: 216 },
-    { id: 'orange', name: 'Orange', hex: '#EA580C', angle: 252 },
-    { id: 'yellow', name: 'Jaune', hex: '#CA8A04', angle: 288 },
-    { id: 'brown', name: 'Brun', hex: '#78350F', angle: 324 }
-];
+import { CANNABIS_COLORS, DEFAULT_COLOR } from '../../../data/cannabisColors';
 
 // Parties possibles de la plante associables à une couleur
 const PLANT_PARTS = [
@@ -125,15 +111,38 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
             return;
         }
 
-        // distribute remaining percentage
         const newPerc = Math.max(0, Math.min(100, modalPercentage));
         const remaining = 100 - newPerc;
         const totalExisting = selectedColors.reduce((s, c) => s + c.percentage, 0) || 0;
 
+        // If color already exists, merge/update it instead of creating a duplicate
+        const existingIndex = selectedColors.findIndex(s => s.colorId === colorData.id);
+
         let updatedExisting = [];
+        if (existingIndex >= 0) {
+            // Update existing color's percentage and parts
+            const others = selectedColors.filter(s => s.colorId !== colorData.id);
+            if (others.length > 0 && remaining > 0) {
+                updatedExisting = others.map(s => ({ ...s, percentage: Math.round(s.percentage / totalExisting * remaining) }));
+                const sumUpd = updatedExisting.reduce((s, c) => s + c.percentage, 0);
+                if (sumUpd !== remaining && updatedExisting.length > 0) {
+                    updatedExisting[updatedExisting.length - 1].percentage += (remaining - sumUpd);
+                }
+            } else if (remaining === 0) {
+                updatedExisting = others.map(s => ({ ...s, percentage: 0 }));
+            } else {
+                updatedExisting = others;
+            }
+
+            const updatedColor = { ...selectedColors[existingIndex], percentage: newPerc, parts: modalPart ? [{ partId: modalPart, percent: 100 }] : selectedColors[existingIndex].parts || [] };
+            onChange([...updatedExisting, updatedColor]);
+            setShowAddModal(false);
+            return;
+        }
+
+        // otherwise add new color and redistribute percentages
         if (totalExisting > 0 && remaining > 0) {
             updatedExisting = selectedColors.map(s => ({ ...s, percentage: Math.round(s.percentage / totalExisting * remaining) }));
-            // adjust small rounding error
             const sumUpd = updatedExisting.reduce((s, c) => s + c.percentage, 0);
             if (sumUpd !== remaining && updatedExisting.length > 0) {
                 updatedExisting[updatedExisting.length - 1].percentage += (remaining - sumUpd);
@@ -149,34 +158,59 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
         setShowAddModal(false);
     };
 
-    const handleColorClick = (color) => {
-        const exists = selectedColors.find(s => s.colorId === color.id);
+    const addOrUpdateColor = (color, percentage = null, part = null) => {
+        const existsIndex = selectedColors.findIndex(s => s.colorId === color.id);
+        const newPerc = percentage !== null ? Math.max(0, Math.min(100, percentage)) : null;
 
-        if (exists) {
-            // Retirer la couleur (plus possible de n'avoir aucune couleur imposée)
-            setWarningMessage('');
-            onChange(selectedColors.filter(s => s.colorId !== color.id));
-        } else {
-            // Ajouter la couleur si sous limite
-            if (selectedColors.length < computedMax) {
-                setWarningMessage('');
-                const newCount = selectedColors.length + 1;
-                const basePercentage = Math.floor(100 / newCount);
+        if (existsIndex >= 0) {
+            // update existing
+            const totalExisting = selectedColors.reduce((s, c) => s + c.percentage, 0) || 0;
+            const others = selectedColors.filter(s => s.colorId !== color.id);
+            const remaining = newPerc !== null ? (100 - newPerc) : Math.max(0, 100 - selectedColors[existsIndex].percentage);
 
-                // Redistribuer les pourcentages existants puis ajouter la nouvelle
-                const redistributed = selectedColors.map(s => ({
-                    ...s,
-                    percentage: basePercentage
-                }));
-
-                // ajout d'une structure parts vide
-                onChange([...redistributed, { colorId: color.id, percentage: basePercentage, parts: [] }]);
-            } else {
-                setWarningMessage(`⚠️ Limite atteinte (${computedMax} couleurs max)`);
-                setTimeout(() => setWarningMessage(''), 2000);
+            let updatedOthers = others;
+            if (others.length > 0 && remaining > 0 && totalExisting - selectedColors[existsIndex].percentage > 0) {
+                const baseTotal = totalExisting - selectedColors[existsIndex].percentage;
+                updatedOthers = others.map(s => ({ ...s, percentage: Math.round(s.percentage / baseTotal * remaining) }));
+                const sumUpd = updatedOthers.reduce((s, c) => s + c.percentage, 0);
+                if (sumUpd !== remaining && updatedOthers.length > 0) updatedOthers[updatedOthers.length - 1].percentage += (remaining - sumUpd);
             }
+
+            const updatedColor = { ...selectedColors[existsIndex], percentage: newPerc !== null ? newPerc : selectedColors[existsIndex].percentage };
+            if (part) updatedColor.parts = [{ partId: part, percent: 100 }];
+
+            onChange([...updatedOthers, updatedColor]);
+            return;
         }
+
+        // adding new color
+        if (selectedColors.length >= computedMax) {
+            setWarningMessage(`⚠️ Limite atteinte (${computedMax} couleurs max)`);
+            setTimeout(() => setWarningMessage(''), 2000);
+            return;
+        }
+
+        const addPercent = newPerc !== null ? newPerc : Math.floor(100 / (selectedColors.length + 1));
+        const remaining = 100 - addPercent;
+        const totalExisting = selectedColors.reduce((s, c) => s + c.percentage, 0) || 0;
+        let updatedExisting = [];
+
+        if (totalExisting > 0 && remaining > 0) {
+            updatedExisting = selectedColors.map(s => ({ ...s, percentage: Math.round(s.percentage / totalExisting * remaining) }));
+            const sumUpd = updatedExisting.reduce((s, c) => s + c.percentage, 0);
+            if (sumUpd !== remaining && updatedExisting.length > 0) updatedExisting[updatedExisting.length - 1].percentage += (remaining - sumUpd);
+        } else if (remaining === 0) {
+            updatedExisting = selectedColors.map(s => ({ ...s, percentage: 0 }));
+        } else if (totalExisting === 0) {
+            updatedExisting = [];
+        }
+
+        const newColorObj = { colorId: color.id, percentage: addPercent, parts: part ? [{ partId: part, percent: 100 }] : [] };
+        onChange([...updatedExisting, newColorObj]);
     };
+
+    // backward-compatible alias used previously
+    const handleColorClick = (color) => addOrUpdateColor(color);
 
     const handlePercentageChange = (colorId, newValue) => {
         const updated = selectedColors.map(s =>
@@ -221,6 +255,11 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
         onChange(updated);
     };
 
+    // Toggle parts editor for a color
+    const toggleParts = (colorId) => {
+        setExpandedParts(prev => ({ ...prev, [colorId]: !prev[colorId] }));
+    };
+
     // cleanup pointer listeners on unmount
     useEffect(() => {
         return () => {
@@ -257,7 +296,9 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                         onPointerDown={(e) => { e.preventDefault(); updateCursorFromEvent(e.clientX); }}
                         className="w-full h-20 rounded-lg overflow-hidden relative drop-shadow-xl"
                         style={{
-                            background: makeGradient(CANNABIS_COLORS),
+                            // Layer a subtle vertical overlay to make the top slightly lighter and the bottom slightly darker
+                            backgroundImage: `linear-gradient(to bottom, rgba(255,255,255,0.08), rgba(0,0,0,0.16)), ${makeGradient(CANNABIS_COLORS)}`,
+                            backgroundBlendMode: 'overlay, normal',
                             touchAction: 'none'
                         }}
                     >
@@ -291,7 +332,10 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                                 <div className="absolute inset-0 bg-black/50 z-40" onClick={() => closeAddModal()} />
                                 <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="bg-gray-900 rounded-lg p-6 z-50 w-[320px] border border-gray-700" onClick={(e) => e.stopPropagation()}>
                                     <h4 className="text-sm font-semibold mb-3">Ajouter la couleur choisie</h4>
-                                    <div className="mb-3 text-xs text-gray-400">Couleur: <span className="font-medium" style={{ color: cursorColor }}>{cursorColor}</span></div>
+                                    <div className="mb-3 text-xs text-gray-400">Couleur: <span className="inline-flex items-center gap-2">
+                                        <span className="w-4 h-4 rounded-full border border-white/20 shadow-sm" style={{ backgroundColor: cursorColor }} />
+                                        <span className="font-medium" style={{ color: cursorColor }}>{cursorColor}</span>
+                                    </span></div>
 
                                     <div className="mb-3">
                                         <label className="text-xs text-gray-300">Pourcentage du nuancier</label>
@@ -374,16 +418,12 @@ const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
                                     className="bg-gray-900/50 rounded-lg p-3 border border-gray-700/50"
                                 >
                                     <div className="flex items-center gap-3">
-                                        {/* Pastille couleur */}
-                                        <div
-                                            className="w-8 h-8 rounded-lg border-2 border-gray-600 flex-shrink-0 shadow-lg"
-                                            style={{ backgroundColor: colorData.hex }}
-                                        />
-
-                                        {/* Nom */}
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-white truncate">
-                                                {colorData.name}
+                                        {/* Pastille couleur (rond) + hex */}
+                                        <div className="flex-shrink-0 flex items-center gap-3">
+                                            <div className="w-8 h-8 rounded-full border-2 border-gray-600 flex-shrink-0 shadow-lg" style={{ backgroundColor: colorData.hex }} />
+                                            <div className="flex flex-col">
+                                                <div className="text-sm font-medium text-white truncate">{colorData.name}</div>
+                                                <div className="text-xs text-gray-400">{colorData.hex}</div>
                                             </div>
                                         </div>
 

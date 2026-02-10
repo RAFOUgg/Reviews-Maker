@@ -70,25 +70,40 @@ export default function VisuelTechniqueOptimized({ formData, handleChange }) {
                     )}
                 </div>
 
-                {/* Sliders - Compact sur mobile */}
-                <div className={`space-y-${isMobile ? '2' : '3'}`}>
-                    {VISUAL_FIELDS.map(field => (
-                        <MobileFormGroup
-                            key={field.key}
-                            label={field.label}
-                        >
-                            <ResponsiveSlider
-                                value={formData[field.key] || 0}
-                                onChange={(val) => handleChange(field.key, val)}
-                                min={0}
-                                max={field.max}
-                                step={1}
-                                showValue={true}
-                                unit={`/${field.max}`}
-                            />
-                        </MobileFormGroup>
-                    ))}
-                </div>
+                {/* Sliders - Compact sur mobile; Desktop: 2 par 2 */}
+                {isMobile ? (
+                    <div className="space-y-2">
+                        {VISUAL_FIELDS.map(field => (
+                            <MobileFormGroup key={field.key} label={field.label}>
+                                <ResponsiveSlider
+                                    value={formData[field.key] || 0}
+                                    onChange={(val) => handleChange(field.key, val)}
+                                    min={0}
+                                    max={field.max}
+                                    step={1}
+                                    showValue={true}
+                                    unit={`/${field.max}`}
+                                />
+                            </MobileFormGroup>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        {VISUAL_FIELDS.map(field => (
+                            <MobileFormGroup key={field.key} label={field.label}>
+                                <ResponsiveSlider
+                                    value={formData[field.key] || 0}
+                                    onChange={(val) => handleChange(field.key, val)}
+                                    min={0}
+                                    max={field.max}
+                                    step={1}
+                                    showValue={true}
+                                    unit={`/${field.max}`}
+                                />
+                            </MobileFormGroup>
+                        ))}
+                    </div>
+                )}
 
                 {/* Densité totale - Summary */}
                 {!isMobile && (

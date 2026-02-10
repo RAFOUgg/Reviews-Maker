@@ -15,6 +15,7 @@ import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from '../../data/exportTemplates';
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
 import { getMaxElements } from '../../data/exportTemplates';
+import { CANNABIS_COLORS } from '../../data/cannabisColors';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -180,6 +181,27 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             if (val.length > 0 && typeof val[0] === 'object' && val[0] instanceof File) {
                 return <img src={URL.createObjectURL(val[0])} alt={fieldId} className="w-full h-auto rounded" />;
             }
+
+            // Array of color objects (couleurNuancier)
+            if (val.length > 0 && typeof val[0] === 'object' && val[0].colorId) {
+                return (
+                    <div className="flex items-center gap-3 flex-wrap">
+                        {val.map((v, idx) => {
+                            const meta = CANNABIS_COLORS.find(c => c.id === v.colorId) || { hex: '#999', name: v.colorId };
+                            return (
+                                <div key={`${v.colorId}-${idx}`} className="flex items-center gap-2 text-sm bg-white/5 px-2 py-1 rounded">
+                                    <div className="w-5 h-5 rounded-full border" style={{ backgroundColor: meta.hex }} />
+                                    <div className="flex flex-col text-xs">
+                                        <div className="font-medium">{meta.name}</div>
+                                        <div className="text-gray-300">{v.percentage}%</div>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                );
+            }
+
             return val.map(v => (typeof v === 'object' ? (v.name || JSON.stringify(v)) : String(v))).join(', ');
         }
 
