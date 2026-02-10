@@ -189,7 +189,9 @@ export const ResponsiveCreateReviewLayout = ({
         const clientX = e.clientX ?? e.touches?.[0]?.clientX;
         // Prevent accidental text selection / page pan for horizontal drags
         e.preventDefault?.();
-        dragStateRef.current = { active: true, startX: clientX, lastX: clientX, offset: 0, raf: null };
+        // Record initial scroll so we can apply offset live while dragging
+        const startScroll = carouselRef.current ? carouselRef.current.scrollLeft : 0;
+        dragStateRef.current = { active: true, startX: clientX, lastX: clientX, startScroll, offset: 0, raf: null };
         setIsDragging(true);
         setDragOffset(0);
 
@@ -207,10 +209,13 @@ export const ResponsiveCreateReviewLayout = ({
         dragStateRef.current.lastX = clientX;
         dragStateRef.current.offset = offset;
 
-        // rAF throttle updates for smoother visual feedback
+        // rAF throttle updates for smoother visual feedback and apply live scroll
         if (!dragStateRef.current.raf) {
             dragStateRef.current.raf = requestAnimationFrame(() => {
                 setDragOffset(dragStateRef.current.offset);
+                if (carouselRef.current) {
+                    carouselRef.current.scrollLeft = dragStateRef.current.startScroll + dragStateRef.current.offset;
+                }
                 dragStateRef.current.raf = null;
             });
         }
@@ -227,8 +232,8 @@ export const ResponsiveCreateReviewLayout = ({
         const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX ?? dragStateRef.current.lastX;
         const diff = dragStateRef.current.startX - clientX;
 
-        // Calcul de la nouvelle position de scroll basée sur le drag
-        let newScroll = scrollPosition + diff;
+        // Use real scroll position from the container (more reliable) or fallback
+        let newScroll = carouselRef.current ? carouselRef.current.scrollLeft : (scrollPosition + diff);
         const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
         newScroll = Math.max(0, Math.min(maxScroll, newScroll));
 
@@ -261,10 +266,23 @@ export const ResponsiveCreateReviewLayout = ({
         window.removeEventListener('touchmove', handlePointerMove);
         window.removeEventListener('touchend', handlePointerUp);
 
-        // Déclencher le changement de section si nécessaire (use baseIndex)
-        if (baseIndex !== currentSection) {
-            onSectionChange(baseIndex);
+        // Déclencher le changement de section si nécessaire (use snapIndex)
+        if (snapIndex !== currentSection) {
+            onSectionChange(snapIndex);
+            // assurer le recentrage visuel
+            scrollToIndex(snapIndex);
         }
+
+        // Appliquer le scrollPosition calculé au conteneur pour garantir le recentrage (smooth)
+        React.useEffect(() => {
+            if (!carouselRef.current) return;
+            try {
+                carouselRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
+            } catch (e) {
+                // Fallback si scrollTo avec options n'est pas supporté
+                carouselRef.current.scrollLeft = scrollPosition;
+            }
+        }, [scrollPosition]);
     };
 
     return (
@@ -308,7 +326,6 @@ export const ResponsiveCreateReviewLayout = ({
                                         {shouldUseCarousel ? (
                                             // Carousel mode: Drag-to-scroll with 5 items visible + fade effect
                                             <div
-                                                ref={carouselRef}
                                                 onPointerDown={handlePointerDown}
                                                 style={{ touchAction: 'pan-y' }}
                                                 className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
