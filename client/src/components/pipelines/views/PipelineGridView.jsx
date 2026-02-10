@@ -50,17 +50,22 @@ const PipelineGridView = ({
 
         const ro = new ResizeObserver(() => {
             const available = Math.max(120, scrollRef.current.clientWidth);
-            // taille minimale souhaitée
-            const minCell = Math.max(32, Math.floor(baseMin * zoom));
 
+            // taille minimale souhaitée pour garantir au moins 4 colonnes
+            const minCols = 4;
+            const minCellBase = Math.max(32, Math.floor((available - (minCols - 1) * gap) / minCols));
+            const minCell = Math.max(32, Math.floor(minCellBase * zoom));
+
+            // compute a reasonable cell size for display (used as fallback)
             let calcCols = Math.floor((available + gap) / (minCell + gap));
             calcCols = Math.max(minColumns, Math.min(maxColumns, calcCols || minColumns));
-
-            // compute final cell size to perfectly fill width
             const computed = Math.floor((available - (calcCols - 1) * gap) / calcCols);
 
             setColumns(calcCols);
             setCellSize(computed);
+
+            // Publish CSS variable used by grid (auto-fit minmax)
+            scrollRef.current.style.setProperty('--min-cell', `${minCell}px`);
 
             // ensure no horizontal scroll on wrapper
             scrollRef.current.style.overflowX = 'hidden';
@@ -368,8 +373,8 @@ const PipelineGridView = ({
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
                             title={getTooltipContent(cellIndex, cellData)}
-                            style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
-                            className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                            style={{ width: '100%', aspectRatio: '1/1' }}
+                            className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
                             {config.intervalType === 'phases' && (
@@ -417,7 +422,7 @@ const PipelineGridView = ({
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onAddCells(10)}
-                        style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
+                        style={{ width: '100%', aspectRatio: '1/1' }}
                         className={`flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
                         title="Ajouter 10 étapes"
                     >
