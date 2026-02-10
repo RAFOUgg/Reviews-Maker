@@ -110,6 +110,16 @@ export function flattenFlowerFormData(data) {
         if (data.culture.substrat) flat.cultureSubstrat = data.culture.substrat
     }
 
+    // Section 3.5 - Récolte (Harvest)
+    if (data.recolte) {
+        if (data.recolte.trichomesTranslucides !== undefined) flat.trichomesTranslucides = data.recolte.trichomesTranslucides
+        if (data.recolte.trichomesLaiteux !== undefined) flat.trichomesLaiteux = data.recolte.trichomesLaiteux
+        if (data.recolte.trichomesAmbres !== undefined) flat.trichomesAmbres = data.recolte.trichomesAmbres
+        if (data.recolte.modeRecolte) flat.modeRecolte = data.recolte.modeRecolte
+        if (data.recolte.poidsBrut !== undefined) flat.poidsBrut = data.recolte.poidsBrut
+        if (data.recolte.poidsNet !== undefined) flat.poidsNet = data.recolte.poidsNet
+    }
+
     // Section 4 - Analytics
     if (data.analytics) {
         if (data.analytics.thcPercent !== undefined) flat.thcPercent = data.analytics.thcPercent

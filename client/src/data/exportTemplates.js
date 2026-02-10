@@ -136,6 +136,7 @@ export const PREDEFINED_TEMPLATES = {
                 { id: 'taste', type: 'radar', label: 'Goûts radar', position: 'section-4', required: false },
                 { id: 'effects', type: 'radar', label: 'Effets radar', position: 'section-5', required: false },
                 { id: 'culture', type: 'timeline', label: 'Pipeline culture', position: 'bottom-full', required: false },
+                { id: 'recolte', type: 'table', label: 'Récolte', position: 'bottom-full', required: false },
                 { id: 'curing', type: 'timeline', label: 'Curing maturation', position: 'bottom-full', required: false },
                 { id: 'terpeneProfile', type: 'bar-chart', label: 'Profil terpénique', position: 'sidebar-bottom', required: false },
                 { id: 'notes', type: 'text-block', label: 'Notes personnelles', position: 'footer', required: false },

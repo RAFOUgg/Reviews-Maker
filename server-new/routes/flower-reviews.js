@@ -184,6 +184,37 @@ function validateFlowerReviewData(data) {
         }
     }
 
+    // ===== SECTION 3.5: Récolte (Harvest) =====
+    if (data.trichomesTranslucides !== undefined) {
+        const val = parseFloat(data.trichomesTranslucides)
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+            cleaned.trichomesTranslucides = val
+        }
+    }
+    if (data.trichomesLaiteux !== undefined) {
+        const val = parseFloat(data.trichomesLaiteux)
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+            cleaned.trichomesLaiteux = val
+        }
+    }
+    if (data.trichomesAmbres !== undefined) {
+        const val = parseFloat(data.trichomesAmbres)
+        if (!isNaN(val) && val >= 0 && val <= 100) {
+            cleaned.trichomesAmbres = val
+        }
+    }
+    if (data.modeRecolte && typeof data.modeRecolte === 'string') {
+        cleaned.modeRecolte = data.modeRecolte.trim()
+    }
+    if (data.poidsBrut !== undefined && data.poidsBrut !== null && data.poidsBrut !== '') {
+        const val = parseFloat(data.poidsBrut)
+        if (!isNaN(val) && val >= 0) cleaned.poidsBrut = val
+    }
+    if (data.poidsNet !== undefined && data.poidsNet !== null && data.poidsNet !== '') {
+        const val = parseFloat(data.poidsNet)
+        if (!isNaN(val) && val >= 0) cleaned.poidsNet = val
+    }
+
     // Dates de culture
     if (data.cultureStartDate) {
         const date = new Date(data.cultureStartDate)

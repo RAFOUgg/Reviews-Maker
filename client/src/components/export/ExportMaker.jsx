@@ -230,6 +230,16 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     config: flower.curingTimelineConfig || f.curingTimelineConfig,
                     data: flower.curingTimelineData || f.curingTimelineData
                 }
+            case 'recolte':
+                return {
+                    fenetre: flower.fenetreRecolte || f.fenetreRecolte || null,
+                    trichomesTranslucides: flower.trichomesTranslucides || f.trichomesTranslucides || 0,
+                    trichomesLaiteux: flower.trichomesLaiteux || f.trichomesLaiteux || 0,
+                    trichomesAmbres: flower.trichomesAmbres || f.trichomesAmbres || 0,
+                    modeRecolte: flower.modeRecolte || f.modeRecolte || null,
+                    poidsBrut: flower.poidsBrut || f.poidsBrut || null,
+                    poidsNet: flower.poidsNet || f.poidsNet || null
+                }
             case 'notes':
             case 'description':
                 return f.description || flower.notes || '-'
