@@ -411,6 +411,27 @@ body {
     min-height: 0 !important;
 }
 
+/* Global defensive rules: if any 80-width sidebar exists inside <main> force it to scroll vertically and cap height
+   This covers places where the pipeline panel isn't wrapped with our test-id or different layouts render sidebars */
+main .w-80.flex-shrink-0,
+main .w-80.flex-shrink-0.overflow-hidden,
+main .w-80.flex-shrink-0.overflow-y-auto {
+    max-height: calc(85vh - 120px) !important;
+    height: 100% !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+    min-height: 0 !important;
+    box-sizing: border-box !important;
+}
+
+/* Extra safety: force overflow-y auto for any w-80 overflow-hidden descendants globally (last resort) */
+.w-80.overflow-hidden {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+}
+
+
 /* Ensure pipeline grid has a larger sensible default when JS doesn't compute --min-cell */
 [data-testid="pipeline-grid"] {
     grid-template-columns: repeat(auto-fit, minmax(var(--min-cell, 160px), 1fr)) !important;
