@@ -440,8 +440,8 @@ main .w-80.flex-shrink-0.overflow-y-auto {
 
 /* Pipeline panel constraints and fallbacks to avoid vertical expansion */
 [data-testid="pipeline-panel"] {
-    height: 85vh !important;
-    max-height: 85vh !important;
+    height: 72vh !important;
+    max-height: 72vh !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
@@ -452,7 +452,7 @@ main .w-80.flex-shrink-0.overflow-y-auto {
     overflow: hidden !important;
 }
 
-[data-testid="pipeline-panel"] [data-testid="pipeline-sidebar"],
+/* Only allow the pipeline scroll area to manage vertical scroll */
 [data-testid="pipeline-panel"] [data-testid="pipeline-scroll"] {
     max-height: 100% !important;
     overflow-y: auto !important;
@@ -460,20 +460,17 @@ main .w-80.flex-shrink-0.overflow-y-auto {
     min-height: 0 !important;
 }
 
-/* Defensive: if some inner wrapper still has overflow-hidden, prefer scroll inside the left column */
+/* Ensure left column does not force scroll; keep it hidden so pipeline-scroll is the single scroller */
 [data-testid="pipeline-panel"]>.flex-1>.flex-row .w-80 {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
     max-height: 100% !important;
-    height: 100% !important;
     min-height: 0 !important;
     box-sizing: border-box !important;
 }
 
-/* If an inner element uses overflow-hidden accidentally, allow vertical scroll for content lists */
+/* If an inner element uses overflow-hidden accidentally, keep it hidden to avoid double scrollbars */
 [data-testid="pipeline-panel"] .w-80.overflow-hidden {
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
+    overflow: hidden !important;
 }
 
 

@@ -20,19 +20,26 @@ test.describe('Pipeline UI responsiveness & sidebar behavior', () => {
         const pipelinePanel = page.locator('[data-testid="pipeline-panel"]');
         await expect(pipelinePanel).toBeVisible();
 
-        // Sidebar scrollable
+        // Sidebar should NOT be independently scrollable (we centralize scrolling on the timeline)
         const sidebar = page.locator('[data-testid="pipeline-sidebar"]');
         await expect(sidebar).toBeVisible();
 
-        // Ensure sidebar has overflow (scrollHeight > clientHeight)
-        const scrollHeight = await sidebar.evaluate((el) => el.scrollHeight);
-        const clientHeight = await sidebar.evaluate((el) => el.clientHeight);
-        expect(scrollHeight).toBeGreaterThanOrEqual(clientHeight);
+        // Ensure sidebar does not have internal vertical scroll (scrollHeight <= clientHeight)
+        const sidebarScrollHeight = await sidebar.evaluate((el) => el.scrollHeight);
+        const sidebarClientHeight = await sidebar.evaluate((el) => el.clientHeight);
+        expect(sidebarScrollHeight).toBeLessThanOrEqual(sidebarClientHeight);
 
-        // Scroll sidebar programmatically and verify scrollTop changes
-        await sidebar.evaluate((el) => { el.scrollTop = 100; });
-        const scrollTop = await sidebar.evaluate((el) => el.scrollTop);
-        expect(scrollTop).toBeGreaterThan(0);
+        // Timeline scroll area should be scrollable
+        const timelineScroll = page.locator('[data-testid="pipeline-scroll"]');
+        await expect(timelineScroll).toBeVisible();
+        const tScrollHeight = await timelineScroll.evaluate((el) => el.scrollHeight);
+        const tClientHeight = await timelineScroll.evaluate((el) => el.clientHeight);
+        expect(tScrollHeight).toBeGreaterThanOrEqual(tClientHeight);
+
+        // Scroll timeline programmatically and verify scrollTop changes
+        await timelineScroll.evaluate((el) => { el.scrollTop = 100; });
+        const tScrollTop = await timelineScroll.evaluate((el) => el.scrollTop);
+        expect(tScrollTop).toBeGreaterThan(0);
 
         // Measure first cell width at desktop size
         const firstCell = page.locator('[data-testid="pipeline-cell-0"]');

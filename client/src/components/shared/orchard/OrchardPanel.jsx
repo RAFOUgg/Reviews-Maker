@@ -592,7 +592,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                                 className="flex h-full"
                             >
                                 {/* Content Panel - Left */}
-                                <div className="w-80 flex-shrink-0 h-full overflow-auto">
+                                <div className="w-80 flex-shrink-0 h-full overflow-hidden min-h-0">
                                     <ContentPanel
                                         reviewData={normalizedData}
                                         placedFields={customLayout}
@@ -641,7 +641,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
 
                                 {/* Page Manager - Middle (shown when pages enabled) */}
                                 {pagesEnabled && (
-                                    <div className="w-72 xl:w-80 border-r border-white/10 overflow-y-auto bg-gradient-to-b from-white/5 to-transparent flex-shrink-0">
+                                    <div className="w-72 xl:w-80 border-r border-white/10 overflow-hidden bg-gradient-to-b from-white/5 to-transparent flex-shrink-0 min-h-0">
                                         <PageManager />
                                     </div>
                                 )}

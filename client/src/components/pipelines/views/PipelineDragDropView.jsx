@@ -1929,12 +1929,12 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div data-testid="pipeline-panel" className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 h-full max-h-[72vh] overflow-hidden flex flex-col overscroll-contain min-h-0">
+        <div data-testid="pipeline-panel" className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 h-[72vh] overflow-hidden flex flex-col overscroll-contain min-h-0">
             {/* LAYOUT FLEX-ROW : Sidebar gauche + Timeline droite */}
             <div className="flex-1 overflow-hidden flex flex-row gap-4 min-h-0">
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
                 {!isMobile && (
-                    <div className="w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-y-auto overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
+                    <div className="w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
                         {/* Header Contenus */}
                         <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-4 border-b border-white/10 z-10 flex-shrink-0">
                             <h3 className="font-bold text-white text-lg">📦 Contenus</h3>
@@ -2494,7 +2494,7 @@ const PipelineDragDropView = ({
                                 <span className="hidden sm:inline"> 📊 <strong>Autres cases</strong> : Drag & drop paramètres</span><span className="sm:hidden"> 📊 Drag & drop</span>
                             </p>
 
-                            <div className="flex-1 overflow-auto">
+                            <div className="flex-1 overflow-hidden">
                                 <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', position: 'relative', minWidth: '100%' }}>
                                     {/* Visual selection frame overlay */}
                                     {selectedCells.length > 1 && !isSelecting && (() => {
