@@ -29,3 +29,15 @@
     max-width: 100% !important;
     box-sizing: border-box !important;
 }
+
+/* Optimize cells rendering to minimize repaints */
+[data-testid="pipeline-grid"] > * {
+    will-change: transform, opacity;
+}
+
+.pipeline-cell {
+    contain: layout size paint;
+    will-change: transform, opacity;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+}

@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react'
+import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { ChevronLeft, ChevronRight, Save, Eye, Lock } from 'lucide-react'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
-import OrchardPanel from '../../../components/shared/orchard/OrchardPanel'
+const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
@@ -336,12 +336,11 @@ export default function CreateFlowerReview() {
                 </motion.div>
             </AnimatePresence>
 
-            {/* Orchard Preview Panel */}
+            {/* Orchard Preview Panel (lazy-loaded) */}
             {showOrchard && (
-                <OrchardPanel
-                    reviewData={formData}
-                    onClose={() => setShowOrchard(false)}
-                />
+                <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
+                    <OrchardPanel reviewData={formData} onClose={() => setShowOrchard(false)} />
+                </Suspense>
             )}
         </ResponsiveCreateReviewLayout>
     )

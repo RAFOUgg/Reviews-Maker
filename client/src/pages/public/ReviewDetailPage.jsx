@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState, Suspense } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../../utils/imageUtils'
 import TemplateRenderer from '../../components/export/TemplateRenderer'
@@ -6,7 +6,7 @@ import { getModulesByProductType } from '../../utils/orchard/moduleMappings'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
-import ExportMaker from '../../components/export/ExportMaker'
+const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
 import { templatesService } from '../../services/apiService'
 import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2 } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
@@ -217,13 +217,15 @@ export default function ReviewDetailPage() {
                 title="Exporter la review"
                 size="xl"
             >
-                <ExportMaker
-                    reviewData={review}
-                    productType={review.type}
-                    accountType={user?.accountType || 'Amateur'}
-                    onClose={() => setShowExportModal(false)}
-                    onSave={handleSaveTemplate}
-                />
+                <Suspense fallback={<div className="p-6 text-center">Chargement de l'export…</div>}>
+                    <ExportMaker
+                        reviewData={review}
+                        productType={review.type}
+                        accountType={user?.accountType || 'Amateur'}
+                        onClose={() => setShowExportModal(false)}
+                        onSave={handleSaveTemplate}
+                    />
+                </Suspense>
             </LiquidModal>
         </div>
     )

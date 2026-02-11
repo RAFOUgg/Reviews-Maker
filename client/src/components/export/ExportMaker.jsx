@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { toPng, toJpeg, toSvg } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+// Note: heavy export libs (html-to-image, jspdf) are dynamically imported only when the user triggers an export
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Download, Settings, Image as ImageIcon, Type, Palette,
@@ -141,6 +140,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         try {
             const node = exportRef.current;
             const scale = highQuality ? 3 : 2;
+
+            // lazy-load heavy export libraries only when needed
+            const { toPng, toJpeg, toSvg } = await import('html-to-image');
+            let jsPDF;
+            if (exportFormat === 'pdf') {
+                ({ jsPDF } = await import('jspdf'));
+            }
 
             // PNG
             if (exportFormat === 'png') {

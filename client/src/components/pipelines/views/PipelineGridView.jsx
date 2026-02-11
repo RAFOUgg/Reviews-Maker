@@ -443,7 +443,7 @@ const PipelineGridView = ({
                             onDrop={(e) => handleDrop(e, cellIndex)}
                             title={getTooltipContent(cellIndex, cellData)}
                             style={{ width: '100%', height: 'var(--min-cell, 96px)' }}
-                            className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                            className={`pipeline-cell relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
                             {config.intervalType === 'phases' && (
