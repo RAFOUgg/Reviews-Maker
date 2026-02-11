@@ -34,6 +34,10 @@ const LiquidInput = React.forwardRef(({
 
   const inputClasses = `${baseInputClasses} ${passwordClasses} ${className}`;
 
+  // Extract value/default props safely (placed here to avoid inline declarations in JSX)
+  const { value: propValue, defaultValue: propDefault, ...restProps } = props;
+  const safeValue = propValue == null ? (propDefault == null ? '' : propDefault) : propValue;
+
   return (
     <div className={fullWidth ? 'w-full' : ''}>
       {label && (
@@ -51,9 +55,6 @@ const LiquidInput = React.forwardRef(({
             <Icon size={20} />
           </div>
         )}
-
-        const {value: propValue, defaultValue: propDefault, ...restProps } = props;
-        const safeValue = propValue == null ? (propDefault == null ? '' : propDefault) : propValue;
 
         <input
           ref={ref}

@@ -951,8 +951,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                         // Render canvas and upload
                                                         if (!exportRef.current) throw new Error('Aucune preview disponible')
                                                         const dataUrl = await toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
-                                                        const resp = await fetch(dataUrl)
-                                                        const blob = await resp.blob()
+                                                        const imgResp = await fetch(dataUrl)
+                                                        const blob = await imgResp.blob()
                                                         const filename = `export-${(reviewData.name || 'review').replace(/\s+/g, '-')}-${Date.now()}.png`
                                                         const form = new FormData()
                                                         form.append('file', blob, filename)
