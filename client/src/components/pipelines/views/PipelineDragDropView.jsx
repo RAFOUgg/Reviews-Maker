@@ -1929,7 +1929,7 @@ const PipelineDragDropView = ({
     const completionPercent = cells.length > 0 ? Math.round((filledCells / cells.length) * 100) : 0;
 
     return (
-        <div data-testid="pipeline-panel" className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 h-[85vh] overflow-hidden flex flex-col">
+        <div data-testid="pipeline-panel" className="bg-[#0a0a12]/90 backdrop-blur-xl rounded-2xl shadow-xl border border-white/10 p-4 h-[85vh] overflow-hidden flex flex-col overscroll-contain">
             {/* LAYOUT FLEX-ROW : Sidebar gauche + Timeline droite */}
             <div className="flex-1 overflow-hidden flex flex-row gap-4 min-h-0">
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
@@ -2495,7 +2495,7 @@ const PipelineDragDropView = ({
                             </p>
 
                             <div className="flex-1 overflow-auto">
-                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', position: 'relative', minWidth: '100%' }}>
+                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', position: 'relative', minWidth: '100%' }}>
                                     {/* Visual selection frame overlay */}
                                     {selectedCells.length > 1 && !isSelecting && (() => {
                                         // Compute aggregate bounding box of selected cells using DOM measurements
