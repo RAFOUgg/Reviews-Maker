@@ -74,15 +74,16 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                 left: `${position.x}%`,
                 top: `${position.y}%`,
                 width: `${width}%`,
-                minWidth: '120px',
-                zIndex: 10
+                zIndex: 10,
+                boxSizing: 'border-box',
+                minWidth: 0
             }}
         >
             <div
                 ref={combinedRef}
                 className={`relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl ${isZone ? 'border-dashed border-2 /50' : '/50'} ${isOver ? 'border-green-500 bg-green-500/20' : ''}`}
                 style={{
-                    minHeight: `${Math.max(height * 2, 60)}px`,
+                    minHeight: '40px',
                     transform: `rotate(${rotation}deg)`
                 }}
             >

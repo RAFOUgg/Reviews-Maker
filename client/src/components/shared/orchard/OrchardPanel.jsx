@@ -592,7 +592,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                                 className="flex h-full"
                             >
                                 {/* Content Panel - Left */}
-                                <div className="w-80 flex-shrink-0 overflow-hidden">
+                                <div className="w-80 flex-shrink-0 h-full overflow-auto">
                                     <ContentPanel
                                         reviewData={normalizedData}
                                         placedFields={customLayout}
@@ -605,7 +605,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                                 </div>
 
                                 {/* Custom Layout Canvas - Right */}
-                                <div ref={canvasRef} className="flex-1 overflow-hidden">
+                                <div ref={canvasRef} className="flex-1 overflow-hidden min-w-0 h-full">
                                     <CustomLayoutPane
                                         reviewData={normalizedData}
                                         layout={customLayout}
