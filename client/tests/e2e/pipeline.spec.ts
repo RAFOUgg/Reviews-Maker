@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Pipeline UI responsiveness & sidebar behavior', () => {
     test.beforeEach(async ({ page }) => {
-        await page.goto('/create/flower');
+        const base = process.env.E2E_BASE_URL || '';
+        await page.goto(`${base}/create/flower`);
         await page.waitForLoadState('networkidle');
     });
 
