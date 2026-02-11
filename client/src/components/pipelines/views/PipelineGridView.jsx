@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
+import { Grid as RVGrid } from 'react-window';
 import { CULTURE_PHASES } from '../../../config/pipelinePhases';
 import './PipelineGridView.css';
 
@@ -39,7 +40,10 @@ const PipelineGridView = ({
     const [cellSize, setCellSize] = useState(56);
     const [zoom, setZoom] = useState(1);
 
-    // ResizeObserver : calcule nombre de colonnes et taille des cellules pour remplir le container
+    // ResizeObserver : calcule nombre de colonnes, taille des cellules et dimensions du grid pour virtualisation
+    const [gridWidth, setGridWidth] = useState(0);
+    const [gridHeight, setGridHeight] = useState(0);
+
     React.useEffect(() => {
         if (!gridRef.current || !scrollRef.current) return;
 
@@ -131,6 +135,12 @@ const PipelineGridView = ({
                 p.style.boxSizing = 'border-box';
                 p.style.minWidth = '0';
             }
+
+            // Publish measured grid width/height for react-window
+            setGridWidth(scrollRef.current.clientWidth);
+            // reserve space for zoom controls + labels + info box (approx 120px)
+            const reserved = 120 + ((config.intervalType === 'days' || config.intervalType === 'dates') ? 28 : 0);
+            setGridHeight(Math.max(200, scrollRef.current.clientHeight - reserved));
         });
 
         ro.observe(scrollRef.current);
@@ -395,108 +405,108 @@ const PipelineGridView = ({
             </div>
 
             {/* Grid - controlled via computed columns/cellSize */}
-            <div
-                ref={gridRef}
-                data-testid="pipeline-grid"
-                className="grid"
-                style={{
-                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 96px), 1fr))`,
-                    gridAutoRows: `var(--min-cell, 96px)`,
-                    gap: '8px',
-                    alignItems: 'start',
-                    width: '100%',
-                    maxWidth: '100%',
-                    boxSizing: 'border-box',
-                    minWidth: 0
-                }}
-            >
-                {cellIndices.map((cellIndex) => {
-                    const cellData = cells[cellIndex];
-                    const intensity = getCellIntensity(cellData);
-                    const isSelected = selectedCells.includes(cellIndex);
-                    const isHovered = hoveredCell === cellIndex;
-                    const isDragOver = dragOverCell === cellIndex && draggedContent;
-                    const miniIcons = getMiniIcons(cellData);
-                    const phaseIcon = getPhaseIcon(cellIndex);
-
-                    return (
-                        <motion.div
-                            key={cellIndex}
-                            whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.15, zIndex: 10 }}
-                            whileTap={{ scale: 0.95 }}
-                            onClick={(e) => {
-                                if (e.ctrlKey || e.metaKey) {
-                                    // Multi-sélection
-                                    const newSelection = isSelected
-                                        ? selectedCells.filter(i => i !== cellIndex)
-                                        : [...selectedCells, cellIndex];
-                                    // Notifier parent via onCellClick avec flag multi
-                                    onCellClick(cellIndex, { multi: true, selected: newSelection });
-                                } else {
-                                    onCellClick(cellIndex);
-                                }
-                            }}
-                            onMouseEnter={() => setHoveredCell(cellIndex)}
-                            onMouseLeave={() => setHoveredCell(null)}
-                            onDragOver={(e) => handleDragOver(e, cellIndex)}
-                            onDragLeave={handleDragLeave}
-                            onDrop={(e) => handleDrop(e, cellIndex)}
-                            title={getTooltipContent(cellIndex, cellData)}
-                            style={{ width: '100%', height: 'var(--min-cell, 96px)' }}
-                            className={`pipeline-cell relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
-                        >
-                            {/* Mode phases: afficher icône de phase + mini-icônes */}
-                            {config.intervalType === 'phases' && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-2xl">{phaseIcon}</span>
-                                    {miniIcons.length > 0 && (
-                                        <div className="flex gap-0.5 mt-1">
-                                            {miniIcons.map((icon, idx) => (
-                                                <span key={idx} className="text-xs opacity-90">{icon}</span>
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Autres modes (jours/semaines): afficher mini-icônes toujours visibles si données présentes */}
-                            {config.intervalType !== 'phases' && (
-                                <div className="absolute inset-0 flex items-center justify-center">
-                                    {miniIcons.length > 0 ? (
-                                        <div className="flex flex-col gap-0.5 items-center justify-center">
-                                            {miniIcons.map((icon, idx) => (
-                                                <span key={idx} className="text-[8px] leading-none">{icon}</span>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <span className="text-[6px] text-gray-600 opacity-50">
-                                            {/* Indicateur vide au hover seulement */}
-                                            <span className="opacity-0 hover:opacity-100 transition-opacity">+</span>
-                                        </span>
-                                    )}
-                                </div>
-                            )}
-
-                            {/* Indicateur de sélection */}
-                            {isSelected && (
-                                <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"></div>
-                            )}
-                        </motion.div>
-                    );
-                })}
-
-                {/* Bouton + pour ajouter des cases */}
-                {canAddMore && onAddCells && !readonly && (
-                    <motion.button
-                        whileHover={{ scale: 1.15 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => onAddCells(10)}
-                        style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
-                        className={`flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
-                        title="Ajouter 10 étapes"
+            <div ref={gridRef} data-testid="pipeline-grid-wrapper" className="w-full" style={{ width: '100%', boxSizing: 'border-box' }}>
+                {/* Virtualized grid using react-window */}
+                {gridWidth > 0 && gridHeight > 0 ? (
+                    <RVGrid
+                        columnCount={columns}
+                        columnWidth={cellSize + 8} /* include gap */
+                        height={Math.max(200, gridHeight)}
+                        rowCount={Math.ceil((cellIndices && cellIndices.length) / Math.max(1, columns))}
+                        rowHeight={cellSize + 8}
+                        width={gridWidth}
+                        itemKey={({ columnIndex, rowIndex }) => rowIndex * columns + columnIndex}
                     >
-                        <Plus className={'w-6 h-6'} />
-                    </motion.button>
+                        {({ columnIndex, rowIndex, style }) => {
+                            const cellIndex = rowIndex * columns + columnIndex;
+                            if (cellIndex >= (cellIndices ? cellIndices.length : 0)) return null;
+                            const cellData = cells[cellIndex];
+                            const intensity = getCellIntensity(cellData);
+                            const isSelected = selectedCells.includes(cellIndex);
+                            const isHovered = hoveredCell === cellIndex;
+                            const isDragOver = dragOverCell === cellIndex && draggedContent;
+                            const miniIcons = getMiniIcons(cellData);
+                            const phaseIcon = getPhaseIcon(cellIndex);
+
+                            return (
+                                <div style={{ ...style, padding: 4 }} key={cellIndex}>
+                                    <motion.div
+                                        data-testid={`pipeline-cell-${cellIndex}`}
+                                        whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.15, zIndex: 10 }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={(e) => {
+                                            if (e.ctrlKey || e.metaKey) {
+                                                const newSelection = isSelected
+                                                    ? selectedCells.filter(i => i !== cellIndex)
+                                                    : [...selectedCells, cellIndex];
+                                                onCellClick(cellIndex, { multi: true, selected: newSelection });
+                                            } else {
+                                                onCellClick(cellIndex);
+                                            }
+                                        }}
+                                        onMouseEnter={() => setHoveredCell(cellIndex)}
+                                        onMouseLeave={() => setHoveredCell(null)}
+                                        onDragOver={(e) => handleDragOver(e, cellIndex)}
+                                        onDragLeave={handleDragLeave}
+                                        onDrop={(e) => handleDrop(e, cellIndex)}
+                                        title={getTooltipContent(cellIndex, cellData)}
+                                        style={{ width: '100%', height: '100%' }}
+                                        className={`pipeline-cell relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                                    >
+                                        {config.intervalType === 'phases' && (
+                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                <span className="text-2xl">{phaseIcon}</span>
+                                                {miniIcons.length > 0 && (
+                                                    <div className="flex gap-0.5 mt-1">
+                                                        {miniIcons.map((icon, idx) => (
+                                                            <span key={idx} className="text-xs opacity-90">{icon}</span>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {config.intervalType !== 'phases' && (
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                {miniIcons.length > 0 ? (
+                                                    <div className="flex flex-col gap-0.5 items-center justify-center">
+                                                        {miniIcons.map((icon, idx) => (
+                                                            <span key={idx} className="text-[8px] leading-none">{icon}</span>
+                                                        ))}
+                                                    </div>
+                                                ) : (
+                                                    <span className="text-[6px] text-gray-600 opacity-50">
+                                                        <span className="opacity-0 hover:opacity-100 transition-opacity">+</span>
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+
+                                        {isSelected && (
+                                            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"></div>
+                                        )}
+                                    </motion.div>
+                                </div>
+                            );
+                        }}
+                    </RVGrid>
+                ) : (
+                    <div className="w-full h-48 flex items-center justify-center text-sm text-gray-400">Chargement...</div>
+                )}
+
+                {/* Bouton + pour ajouter des cases (sous la grille) */}
+                {canAddMore && onAddCells && !readonly && (
+                    <div className="mt-3">
+                        <motion.button
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => onAddCells(10)}
+                            className={`px-3 py-2 rounded-md border-2 border-dashed border-gray-600 transition-all duration-200 bg-white/2 text-gray-200`}
+                            title="Ajouter 10 étapes"
+                        >
+                            <Plus className={'w-5 h-5 inline mr-2'} /> Ajouter 10 étapes
+                        </motion.button>
+                    </div>
                 )}
             </div>
 

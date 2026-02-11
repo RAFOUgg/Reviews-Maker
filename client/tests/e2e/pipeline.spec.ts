@@ -35,7 +35,7 @@ test.describe('Pipeline UI responsiveness & sidebar behavior', () => {
         expect(scrollTop).toBeGreaterThan(0);
 
         // Measure first cell width at desktop size
-        const firstCell = page.locator('[data-testid="pipeline-grid"] > *').first();
+        const firstCell = page.locator('[data-testid="pipeline-cell-0"]');
         const desktopCellWidth = await firstCell.evaluate((el) => el.getBoundingClientRect().width);
         expect(desktopCellWidth).toBeGreaterThanOrEqual(1);
 
