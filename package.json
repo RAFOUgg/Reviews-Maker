@@ -1,7 +1,8 @@
 {
   "devDependencies": {
+    "@playwright/test": "^1.36.0",
     "baseline-browser-mapping": "^2.9.19",
-    "@playwright/test": "^1.36.0"
+    "playwright": "^1.58.2"
   },
   "scripts": {
     "check:export-templates": "node --input-type=module ./scripts/check-export-templates.mjs",
