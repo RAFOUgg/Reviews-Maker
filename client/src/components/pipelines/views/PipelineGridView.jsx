@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { CULTURE_PHASES } from '../../../config/pipelinePhases';
+import './PipelineGridView.css';
 
 /**
  * PipelineGridView - Grille de cases style GitHub commits
@@ -30,6 +31,122 @@ const PipelineGridView = ({
 }) => {
     const [hoveredCell, setHoveredCell] = useState(null);
     const [dragOverCell, setDragOverCell] = useState(null);
+
+    // Responsive grid control
+    const gridRef = React.useRef(null);
+    const scrollRef = React.useRef(null);
+    const [columns, setColumns] = useState(7);
+    const [cellSize, setCellSize] = useState(56);
+    const [zoom, setZoom] = useState(1);
+
+    // ResizeObserver : calcule nombre de colonnes et taille des cellules pour remplir le container
+    React.useEffect(() => {
+        if (!gridRef.current || !scrollRef.current) return;
+
+        const gap = 8; // gap en px, doit correspondre au gap Tailwind (gap-2 ~= 8px)
+        const minColumns = 4;
+        const maxColumns = 8; // safeguard: cap columns to 8 to keep cells legible on wide screens
+
+        const baseMin = config && config.intervalType === 'phases' ? 80 : 56; // base min size
+
+        const ro = new ResizeObserver(() => {
+            const available = Math.max(120, scrollRef.current.clientWidth);
+
+            // taille minimale souhaitée pour garantir au moins 4 colonnes
+            const minCols = 4;
+            // prefer larger base for phases (visually bigger)
+            const phaseBase = config && config.intervalType === 'phases' ? 96 : 72;
+            const minCellBase = Math.max(48, Math.floor((available - (minCols - 1) * gap) / minCols));
+            // compute min cell respecting zoom and preferred base
+            const minCell = Math.max(48, Math.floor(Math.max(minCellBase, phaseBase) * zoom));
+
+            // Determine optimal number of columns (choose k between minColumns..maxColumns that maximizes cell size)
+            const totalCells = (cellIndices && cellIndices.length) || 0;
+            const maxCandidateCols = Math.min(maxColumns, Math.max(minColumns, totalCells || maxColumns));
+            let bestCols = Math.max(minColumns, Math.min(maxCandidateCols, Math.floor((available + gap) / (minCell + gap))));
+            let bestSize = Math.floor((available - (bestCols - 1) * gap) / bestCols);
+
+            // Try all candidate column counts to find the one that gives largest cell size
+            for (let k = minColumns; k <= Math.min(maxCandidateCols, totalCells || maxCandidateCols); k++) {
+                const sizeK = Math.floor((available - (k - 1) * gap) / k);
+                if (sizeK > bestSize) {
+                    bestSize = sizeK;
+                    bestCols = k;
+                }
+            }
+
+            // If there are fewer cells than bestCols, shrink columns to number of cells
+            if (totalCells > 0) bestCols = Math.min(bestCols, totalCells);
+
+            const computed = Math.max(32, bestSize);
+
+            setColumns(bestCols);
+            setCellSize(computed);
+
+            // compute a robust min cell width depending on mode and zoom
+            const baseMinForMode = config && config.intervalType === 'phases' ? 160 : 140;
+            let minCellFinal = Math.max(baseMinForMode, minCell);
+
+            // Mobile scale: make cells smaller on narrow viewports for better fit
+            const isMobileView = (scrollRef.current && scrollRef.current.clientWidth) ? scrollRef.current.clientWidth < 640 : (window.innerWidth < 640);
+            const mobileScale = isMobileView ? 0.6 : 1;
+            minCellFinal = Math.max(48, Math.round(minCellFinal * mobileScale));
+
+            // Ensure we prefer fewer columns if that increases the cell size (avoid many tiny cells)
+            // If computed size is smaller than desired base, attempt to reduce columns until acceptable or reach minColumns
+            if (computed < baseMinForMode * mobileScale) {
+                let k = bestCols;
+                while (k > minColumns) {
+                    k--;
+                    const sizeK = Math.floor((available - (k - 1) * gap) / k);
+                    if (sizeK >= baseMinForMode * mobileScale) {
+                        bestCols = k;
+                        minCellFinal = Math.max(Math.round(baseMinForMode * mobileScale), sizeK);
+                        break;
+                    }
+                }
+            }
+
+            // publish CSS variables used by the grid (auto-fit minmax)
+            scrollRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
+            scrollRef.current.style.setProperty('--computed-cell', `${computed}px`);
+            // Also set on the grid element itself to ensure CSS fallback works even if outer styles are overridden
+            if (gridRef.current) {
+                gridRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
+                gridRef.current.style.setProperty('--computed-cell', `${computed}px`);
+            }
+            // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
+            const minRows = 5;
+            const minRowsHeight = (minCellFinal * minRows) + (minRows - 1) * gap;
+            scrollRef.current.style.setProperty('--min-rows-height', `${minRowsHeight}px`);
+            scrollRef.current.style.minHeight = `${Math.max(200, minRowsHeight)}px`;
+
+            // ensure no horizontal scroll on wrapper and protect parents
+            scrollRef.current.style.overflowX = 'hidden';
+            scrollRef.current.style.boxSizing = 'border-box';
+            scrollRef.current.style.maxWidth = '100%';
+            if (scrollRef.current.parentElement) {
+                const p = scrollRef.current.parentElement;
+                p.style.overflowX = 'hidden';
+                p.style.boxSizing = 'border-box';
+                p.style.minWidth = '0';
+            }
+        });
+
+        ro.observe(scrollRef.current);
+        window.addEventListener('resize', () => ro.takeRecords());
+
+        // initial trigger
+        ro.observe(scrollRef.current);
+
+        return () => {
+            ro.disconnect();
+            window.removeEventListener('resize', () => ro.takeRecords());
+        };
+    }, [config, zoom, cellIndices]);
+
+    const debugMode = typeof window !== 'undefined' && window.location.search.includes('pipeline-debug=1');
+
 
     // Obtenir le label d'une case selon la configuration
     const getCellLabel = (index) => {
@@ -261,8 +378,38 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30" data-testid="pipeline-scroll">
-            <div className={gridLayout()} data-testid="pipeline-grid">
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0 overscroll-contain" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
+            {/* Zoom controls */}
+            <div className="flex items-center justify-end gap-2 mb-2">
+                <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>
+                <input
+                    type="range"
+                    min="0.5"
+                    max="1.6"
+                    step="0.05"
+                    value={zoom}
+                    onChange={(e) => setZoom(Number(e.target.value))}
+                    className="w-36"
+                />
+                <button onClick={() => setZoom(z => Math.min(2, +(z + 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">+</button>
+            </div>
+
+            {/* Grid - controlled via computed columns/cellSize */}
+            <div
+                ref={gridRef}
+                data-testid="pipeline-grid"
+                className="grid"
+                style={{
+                    gridTemplateColumns: `repeat(auto-fit, minmax(var(--min-cell, 96px), 1fr))`,
+                    gridAutoRows: `var(--min-cell, 96px)`,
+                    gap: '8px',
+                    alignItems: 'start',
+                    width: '100%',
+                    maxWidth: '100%',
+                    boxSizing: 'border-box',
+                    minWidth: 0
+                }}
+            >
                 {cellIndices.map((cellIndex) => {
                     const cellData = cells[cellIndex];
                     const intensity = getCellIntensity(cellData);
@@ -294,8 +441,9 @@ const PipelineGridView = ({
                             onDragOver={(e) => handleDragOver(e, cellIndex)}
                             onDragLeave={handleDragLeave}
                             onDrop={(e) => handleDrop(e, cellIndex)}
-                            className={`relative cursor-pointer aspect-square flex items-center justify-center rounded-sm border transition-all duration-200 ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                             title={getTooltipContent(cellIndex, cellData)}
+                            style={{ width: '100%', height: 'var(--min-cell, 96px)' }}
+                            className={`relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                         >
                             {/* Mode phases: afficher icône de phase + mini-icônes */}
                             {config.intervalType === 'phases' && (
@@ -343,13 +491,22 @@ const PipelineGridView = ({
                         whileHover={{ scale: 1.15 }}
                         whileTap={{ scale: 0.95 }}
                         onClick={() => onAddCells(10)}
-                        className={`aspect-square flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
+                        style={{ width: `${cellSize}px`, height: `${cellSize}px` }}
+                        className={`flex items-center justify-center rounded-sm border-2 border-dashed border-gray-600 transition-all duration-200`}
                         title="Ajouter 10 étapes"
                     >
                         <Plus className={'w-6 h-6'} />
                     </motion.button>
                 )}
             </div>
+
+            {debugMode && (
+                <div style={{ position: 'absolute', right: 20, top: 80, zIndex: 60, background: 'rgba(0,0,0,0.6)', color: 'white', padding: '6px 8px', borderRadius: 8, fontSize: 12 }}>
+                    <div>cols: {columns}</div>
+                    <div>cell: {cellSize}px</div>
+                    <div>min: {scrollRef.current ? (getComputedStyle(scrollRef.current).getPropertyValue('--min-cell') || 'n/a') : 'n/a'}</div>
+                </div>
+            )}
 
             {/* Labels de jours de la semaine (pour mode jours/dates) */}
             {(config.intervalType === 'days' || config.intervalType === 'dates') && (

@@ -52,11 +52,15 @@ const LiquidInput = React.forwardRef(({
           </div>
         )}
 
+        const {value: propValue, defaultValue: propDefault, ...restProps } = props;
+        const safeValue = propValue == null ? (propDefault == null ? '' : propDefault) : propValue;
+
         <input
           ref={ref}
           type={type}
           className={inputClasses}
-          {...props}
+          value={safeValue}
+          {...restProps}
         />
 
         {Icon && iconPosition === 'right' && (

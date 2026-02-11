@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
-import html2canvas from 'html2canvas';
+import { toPng, toJpeg, toSvg } from 'html-to-image';
+import { jsPDF } from 'jspdf';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Download, Settings, Image as ImageIcon, Type, Palette,
@@ -26,6 +27,11 @@ import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/e
  * Intègre Drag & Drop (Phase 5) et Filigranes
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
+    useEffect(() => {
+        console.debug('[ExportMaker] mounted', { productType, hasPreview: !!reviewData, reviewId: reviewData?.id })
+        return () => console.debug('[ExportMaker] unmounted')
+    }, [productType, reviewData?.id])
+
     const { isPremium, isProducer, isConsumer, isInfluencer, permissions, canAccess } = useAccountType();
     const canExportSVG = permissions.export?.formats?.svg === true;
     const canExportAdvanced = permissions.export?.quality?.high === true;
@@ -133,55 +139,110 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         setExporting(true);
 
         try {
-            const canvas = await html2canvas(exportRef.current, {
-                scale: highQuality ? 3 : 2,
-                useCORS: true,
-                backgroundColor: null,
-            });
+            const node = exportRef.current;
+            const scale = highQuality ? 3 : 2;
 
-            if (!canvas) {
-                console.error('[ExportMaker] html2canvas returned null/undefined canvas')
-                alert('Erreur: Impossible de générer le canvas pour l\'export. Voir console pour détails.')
-                return
+            // PNG
+            if (exportFormat === 'png') {
+                const dataUrl = await toPng(node, {
+                    cacheBust: true,
+                    pixelRatio: scale,
+                    backgroundColor: null,
+                    style: { transform: 'none' }
+                });
+                const link = document.createElement('a');
+                link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
+                link.href = dataUrl;
+                link.click();
+                return;
             }
 
-            // Log canvas size for debugging
-            try {
-                console.debug('[ExportMaker] Canvas generated', { width: canvas.width, height: canvas.height })
-            } catch (e) {
-                console.debug('[ExportMaker] Canvas debugging failed', e)
+            // JPEG
+            if (exportFormat === 'jpg' || exportFormat === 'jpeg') {
+                const dataUrl = await toJpeg(node, {
+                    cacheBust: true,
+                    quality: highQuality ? 0.95 : 0.92,
+                    pixelRatio: scale,
+                    backgroundColor: '#ffffff',
+                    style: { transform: 'none' }
+                });
+                const link = document.createElement('a');
+                link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.jpg`;
+                link.href = dataUrl;
+                link.click();
+                return;
             }
 
-            const mime = exportFormat === 'jpg' ? 'image/jpeg' : 'image/png'
-            const link = document.createElement('a');
-            link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.${exportFormat}`;
+            // SVG
+            if (exportFormat === 'svg') {
+                const svgString = await toSvg(node, {
+                    cacheBust: true,
+                    width: node.offsetWidth,
+                    height: node.offsetHeight,
+                    style: { transform: 'none' }
+                });
+                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.svg`;
+                link.href = url;
+                link.click();
+                setTimeout(() => URL.revokeObjectURL(url), 20000);
+                return;
+            }
 
-            // Use toBlob when available for larger exports
-            if (canvas.toBlob) {
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        console.error('[ExportMaker] canvas.toBlob returned null')
-                        alert('Erreur: impossible de préparer le fichier export. Voir la console.')
-                        setExporting(false)
-                        return
-                    }
-                    const url = URL.createObjectURL(blob)
-                    link.href = url
-                    link.click()
-                    // Release after a delay
-                    setTimeout(() => URL.revokeObjectURL(url), 20000)
-                }, mime, highQuality ? 0.95 : 0.92)
-            } else {
-                // Fallback to dataURL
-                try {
-                    const dataUrl = canvas.toDataURL(mime)
-                    link.href = dataUrl
-                    link.click()
-                } catch (err) {
-                    console.error('[ExportMaker] toDataURL failed', err)
-                    alert('Erreur lors de la génération du fichier export. Voir la console.')
+            // PDF
+            if (exportFormat === 'pdf') {
+                const dataUrl = await toPng(node, {
+                    cacheBust: true,
+                    pixelRatio: scale,
+                    backgroundColor: '#ffffff',
+                    style: { transform: 'none' }
+                });
+
+                const pdf = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: 'a4'
+                });
+
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+
+                const img = new Image();
+                img.src = dataUrl;
+                await img.decode();
+
+                const imgRatio = img.width / img.height;
+                const pageRatio = pageWidth / pageHeight;
+
+                let imgWidth, imgHeight;
+                if (imgRatio > pageRatio) {
+                    imgWidth = pageWidth - 20;
+                    imgHeight = imgWidth / imgRatio;
+                } else {
+                    imgHeight = pageHeight - 20;
+                    imgWidth = imgHeight * imgRatio;
                 }
+
+                const x = (pageWidth - imgWidth) / 2;
+                const y = (pageHeight - imgHeight) / 2;
+
+                pdf.addImage(dataUrl, 'PNG', x, y, imgWidth, imgHeight);
+                pdf.setProperties({
+                    title: reviewData.name || 'Review',
+                    author: reviewData.author?.username || reviewData.author || 'Reviews-Maker'
+                });
+                pdf.save(`review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.pdf`);
+                return;
             }
+
+            // default fallback to png
+            const fallbackDataUrl = await toPng(node, { cacheBust: true, pixelRatio: scale, backgroundColor: null, style: { transform: 'none' } });
+            const link = document.createElement('a');
+            link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
+            link.href = fallbackDataUrl;
+            link.click();
 
         } catch (err) {
             console.error('[ExportMaker] Export failed:', err);
@@ -889,8 +950,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                     try {
                                                         // Render canvas and upload
                                                         if (!exportRef.current) throw new Error('Aucune preview disponible')
-                                                        const canvas = await html2canvas(exportRef.current, { scale: highQuality ? 3 : 2, useCORS: true, backgroundColor: null })
-                                                        const blob = await new Promise((resolve) => canvas.toBlob(resolve, 'image/png'))
+                                                        const dataUrl = await toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
+                                                        const resp = await fetch(dataUrl)
+                                                        const blob = await resp.blob()
                                                         const filename = `export-${(reviewData.name || 'review').replace(/\s+/g, '-')}-${Date.now()}.png`
                                                         const form = new FormData()
                                                         form.append('file', blob, filename)

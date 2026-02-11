@@ -1,0 +1,31 @@
+/* Overrides to ensure pipeline grid uses a clear min cell and prevents overflow */
+[data-testid="pipeline-grid"] {
+    grid-template-columns: repeat(auto-fit, minmax(var(--min-cell, 120px), 1fr)) !important;
+    grid-auto-rows: var(--min-cell, 120px) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+/* Ensure each cell fills its grid area */
+[data-testid="pipeline-grid"]>* {
+    width: 100% !important;
+    height: var(--min-cell, 120px) !important;
+    min-height: var(--min-cell, 120px) !important;
+    box-sizing: border-box !important;
+}
+
+/* Sidebar: ensure vertical scrolling and not hidden */
+.w-80.overflow-hidden {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    -webkit-overflow-scrolling: touch !important;
+}
+
+/* Make pipeline scroll wrapper hide horizontal overflow */
+[data-testid="pipeline-scroll"] {
+    overflow-x: hidden !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+}

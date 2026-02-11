@@ -221,7 +221,7 @@ const PipelineContentsSidebar = ({
     };
 
     return (
-        <div className="w-80 border-r border-gray-700 bg-gray-900/50 overflow-y-auto">
+        <div className="w-80 border-r border-gray-700 bg-gray-900/50 overflow-y-auto" style={{ overscrollBehavior: 'contain', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }} tabIndex={0}>
             {/* En-tête */}
             <div className="p-4 border-b border-gray-700 sticky top-0 bg-gray-900 z-10">
                 <h3 className="text-lg font-semibold text-white mb-2">
