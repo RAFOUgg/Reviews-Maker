@@ -87,16 +87,21 @@ const PipelineGridView = ({
             const baseMinForMode = config && config.intervalType === 'phases' ? 160 : 140;
             let minCellFinal = Math.max(baseMinForMode, minCell);
 
+            // Mobile scale: make cells smaller on narrow viewports for better fit
+            const isMobileView = (scrollRef.current && scrollRef.current.clientWidth) ? scrollRef.current.clientWidth < 640 : (window.innerWidth < 640);
+            const mobileScale = isMobileView ? 0.6 : 1;
+            minCellFinal = Math.max(48, Math.round(minCellFinal * mobileScale));
+
             // Ensure we prefer fewer columns if that increases the cell size (avoid many tiny cells)
             // If computed size is smaller than desired base, attempt to reduce columns until acceptable or reach minColumns
-            if (computed < baseMinForMode) {
+            if (computed < baseMinForMode * mobileScale) {
                 let k = bestCols;
                 while (k > minColumns) {
                     k--;
                     const sizeK = Math.floor((available - (k - 1) * gap) / k);
-                    if (sizeK >= baseMinForMode) {
+                    if (sizeK >= baseMinForMode * mobileScale) {
                         bestCols = k;
-                        minCellFinal = Math.max(baseMinForMode, sizeK);
+                        minCellFinal = Math.max(Math.round(baseMinForMode * mobileScale), sizeK);
                         break;
                     }
                 }
@@ -373,7 +378,7 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
+        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0 overscroll-contain" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
             {/* Zoom controls */}
             <div className="flex items-center justify-end gap-2 mb-2">
                 <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>
