@@ -43,4 +43,18 @@
     will-change: transform, opacity;
     transform: translateZ(0);
     backface-visibility: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: stretch;
+    box-sizing: border-box;
+    padding: 8px;
+    height: 100%;
+    min-height: var(--min-cell, 96px);
+    overflow: hidden;
 }
+
+.pipeline-cell .truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;}

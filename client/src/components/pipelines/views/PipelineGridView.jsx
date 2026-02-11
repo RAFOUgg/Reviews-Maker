@@ -435,8 +435,8 @@ const PipelineGridView = ({
                                 <div style={{ ...style, padding: 4 }} key={cellIndex}>
                                     <motion.div
                                         data-testid={`pipeline-cell-${cellIndex}`}
-                                        whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.15, zIndex: 10 }}
-                                        whileTap={{ scale: 0.95 }}
+                                        whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.12, zIndex: 10 }}
+                                        whileTap={{ scale: 0.98 }}
                                         onClick={(e) => {
                                             if (e.ctrlKey || e.metaKey) {
                                                 const newSelection = isSelected
@@ -454,40 +454,32 @@ const PipelineGridView = ({
                                         onDrop={(e) => handleDrop(e, cellIndex)}
                                         title={getTooltipContent(cellIndex, cellData)}
                                         style={{ width: '100%', height: '100%' }}
-                                        className={`pipeline-cell relative cursor-pointer flex items-center justify-center rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                                        className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                                     >
-                                        {config.intervalType === 'phases' && (
-                                            <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                                <span className="text-2xl">{phaseIcon}</span>
-                                                {miniIcons.length > 0 && (
-                                                    <div className="flex gap-0.5 mt-1">
-                                                        {miniIcons.map((icon, idx) => (
-                                                            <span key={idx} className="text-xs opacity-90">{icon}</span>
-                                                        ))}
-                                                    </div>
+                                        {/* Top: label / phase */}
+                                        <div className="w-full flex items-start justify-between gap-2">
+                                            <div className="text-sm font-semibold text-white truncate max-w-[75%]">{getCellLabel(cellIndex)}</div>
+                                            <div className="text-xs text-gray-400">{/* small metadata */}</div>
+                                        </div>
+
+                                        {/* Middle: icons / summary */}
+                                        <div className="w-full flex-1 flex items-start pt-2">
+                                            <div className="flex gap-1 flex-wrap">
+                                                {miniIcons.length > 0 ? miniIcons.map((icon, idx) => (
+                                                    <span key={idx} className="text-xs leading-none" style={{ lineHeight: 1 }}>{icon}</span>
+                                                )) : (
+                                                    <span className="text-xs text-gray-600 opacity-50">&nbsp;</span>
                                                 )}
                                             </div>
-                                        )}
+                                        </div>
 
-                                        {config.intervalType !== 'phases' && (
-                                            <div className="absolute inset-0 flex items-center justify-center">
-                                                {miniIcons.length > 0 ? (
-                                                    <div className="flex flex-col gap-0.5 items-center justify-center">
-                                                        {miniIcons.map((icon, idx) => (
-                                                            <span key={idx} className="text-[8px] leading-none">{icon}</span>
-                                                        ))}
-                                                    </div>
-                                                ) : (
-                                                    <span className="text-[6px] text-gray-600 opacity-50">
-                                                        <span className="opacity-0 hover:opacity-100 transition-opacity">+</span>
-                                                    </span>
-                                                )}
-                                            </div>
-                                        )}
-
-                                        {isSelected && (
-                                            <div className="absolute -top-1 -right-1 w-3 h-3 rounded-full border-2 border-white"></div>
-                                        )}
+                                        {/* Bottom: small footer / config indicator */}
+                                        <div className="w-full flex items-center justify-between pt-2">
+                                            <div className="text-xs text-gray-400">{cellData && cellData._meta ? cellData._meta.count : ''}</div>
+                                            {isSelected && (
+                                                <div className="w-3 h-3 rounded-full border-2 border-white"></div>
+                                            )}
+                                        </div>
                                     </motion.div>
                                 </div>
                             );
