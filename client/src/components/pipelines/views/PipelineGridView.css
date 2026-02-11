@@ -31,7 +31,7 @@
 }
 
 /* Optimize cells rendering to minimize repaints */
-[data-testid="pipeline-grid"] > * {
+[data-testid="pipeline-grid"]>* {
     will-change: transform, opacity;
 }
 

@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { toPng, toJpeg } from 'html-to-image';
-import { jsPDF } from 'jspdf';
+// Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
 import { useOrchardStore } from '../../store/orchardStore';
 import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
@@ -169,6 +168,7 @@ export default function ExportModal({ onClose }) {
         setExportStatus('📸 Capture en cours...');
 
         try {
+            const { toPng } = await import('html-to-image');
             const dataUrl = await toPng(target, {
                 cacheBust: true,
                 pixelRatio: pixelRatio,
@@ -256,6 +256,7 @@ export default function ExportModal({ onClose }) {
         console.log('📸 Capturing JPEG with:', { finalWidth, finalHeight, quality: exportOptions.jpegQuality });
 
         try {
+            const { toJpeg } = await import('html-to-image');
             const dataUrl = await toJpeg(target, {
                 cacheBust: true,
                 quality: exportOptions.jpegQuality,
@@ -286,11 +287,13 @@ export default function ExportModal({ onClose }) {
     };
 
     const exportPDF = async (container) => {
+        const { toPng } = await import('html-to-image');
         const dataUrl = await toPng(container, {
             cacheBust: true,
             pixelRatio: 2
         });
 
+        const { jsPDF } = await import('jspdf');
         const pdf = new jsPDF({
             orientation: exportOptions.pdfOrientation,
             unit: 'mm',
@@ -461,7 +464,7 @@ export default function ExportModal({ onClose }) {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => setSelectedFormat(format.id)}
-                                        className={`p-4 rounded-xl text-left transition-all border-2 ${selectedFormat === format.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:' }`}
+                                        className={`p-4 rounded-xl text-left transition-all border-2 ${selectedFormat === format.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:'}`}
                                     >
                                         <div className="flex items-start justify-between mb-2">
                                             <span className="text-3xl">{format.icon}</span>
@@ -519,7 +522,7 @@ export default function ExportModal({ onClose }) {
                                                         key={scale}
                                                         onClick={() => !isDisabled && setExportOptions({ ...exportOptions, pngScale: scale })}
                                                         disabled={isDisabled}
-                                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pngScale === scale ? ' text-white' : isDisabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200' }`}
+                                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pngScale === scale ? ' text-white' : isDisabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
                                                     >
                                                         {scale}x {isDisabled && '🔒'}
                                                     </button>
@@ -586,13 +589,13 @@ export default function ExportModal({ onClose }) {
                                         <div className="flex gap-2">
                                             <button
                                                 onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'portrait' })}
-                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'portrait' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }`}
+                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'portrait' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                                             >
                                                 Portrait
                                             </button>
                                             <button
                                                 onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'landscape' })}
-                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'landscape' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300' }`}
+                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'landscape' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                                             >
                                                 Paysage
                                             </button>
@@ -642,7 +645,7 @@ export default function ExportModal({ onClose }) {
                                 className="space-y-3"
                             >
                                 <div
-                                    className={`p-3 rounded-lg text-sm font-medium text-center ${exportStatus.startsWith('✅') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : exportStatus.startsWith('❌') ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : ' dark: dark:' }`}
+                                    className={`p-3 rounded-lg text-sm font-medium text-center ${exportStatus.startsWith('✅') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : exportStatus.startsWith('❌') ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : ' dark: dark:'}`}
                                 >
                                     {exportStatus}
                                 </div>
