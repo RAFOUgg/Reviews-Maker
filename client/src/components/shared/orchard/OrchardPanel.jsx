@@ -635,7 +635,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                                 className="flex h-full"
                             >
                                 {/* Configuration Pane - Left - Responsive width */}
-                                <div className={`border-r border-white/10 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'}`}>
+                                <div className={`border-r border-white/10 overflow-y-auto flex-shrink-0 min-h-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'}`}>
                                     <ConfigPane />
                                 </div>
 

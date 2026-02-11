@@ -28,6 +28,9 @@
     overflow-x: hidden !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    /* Ensure the scroll wrapper can shrink and won't force parents to expand */
+    min-height: min(var(--min-rows-height, 200px), 70vh) !important;
+    height: 100% !important;
 }
 
 /* Optimize cells rendering to minimize repaints */

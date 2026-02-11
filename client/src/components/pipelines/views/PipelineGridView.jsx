@@ -122,8 +122,11 @@ const PipelineGridView = ({
             // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
             const minRows = 5;
             const minRowsHeight = (minCellFinal * minRows) + (minRows - 1) * gap;
-            scrollRef.current.style.setProperty('--min-rows-height', `${minRowsHeight}px`);
-            scrollRef.current.style.minHeight = `${Math.max(200, minRowsHeight)}px`;
+            // Clamp the computed minRowsHeight to avoid extreme growth on zoom-out
+            const clamped = Math.max(200, Math.min(minRowsHeight, Math.round(window.innerHeight * 0.7)));
+            scrollRef.current.style.setProperty('--min-rows-height', `${clamped}px`);
+            // Do NOT set scrollRef.current.style.minHeight directly (letting CSS handle the cap/prevent layout forcing)
+
 
             // ensure no horizontal scroll on wrapper and protect parents
             scrollRef.current.style.overflowX = 'hidden';
