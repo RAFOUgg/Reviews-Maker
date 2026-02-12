@@ -218,9 +218,10 @@ const PipelineGridView = ({
             return `S${index + 1}`;
         }
 
-        if (config.intervalType === 'months') {
+        if (config.intervalType === 'months' || config.intervalType === 'mois') {
             const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-            return months[index % 12] || `M${index + 1}`;
+            const startIdx = (config && config.startMonth && Number(config.startMonth) >= 1 && Number(config.startMonth) <= 12) ? (Number(config.startMonth) - 1) : 0;
+            return months[(startIdx + index) % 12] || `M${index + 1}`;
         }
 
         return `${index + 1}`;

@@ -93,7 +93,7 @@ test.describe('Pipeline UI responsiveness & sidebar behavior', () => {
         await expect(selectionBadge).toContainText('2');
         // toggle off with cmd/ctrl click again
         await page.click('[data-testid="pipeline-cell-1"]', { modifiers: ['Control'] });
-        await expect(selectionBadge).not.toBeVisible().catch(() => {});
+        await expect(selectionBadge).not.toBeVisible().catch(() => { });
         // Open grouped preset modal and ensure pipeline panel height does not grow significantly
         await page.click('button:has-text("Groupe de préréglages")');
         const modal = page.locator('text=Groupe de préréglages').first();

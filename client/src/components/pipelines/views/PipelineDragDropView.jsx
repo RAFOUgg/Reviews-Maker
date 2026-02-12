@@ -684,6 +684,15 @@ const PipelineDragDropView = ({
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
     const [massAssignMode, setMassAssignMode] = useState(false);
+
+    // --- Start-month picker for 'mois' mode ---
+    const [showStartMonthPicker, setShowStartMonthPicker] = useState(false);
+    const [proposedStartMonth, setProposedStartMonth] = useState(() => (timelineConfig && timelineConfig.startMonth) ? Number(timelineConfig.startMonth) : 1);
+
+    useEffect(() => {
+        // keep proposedStartMonth in sync when timelineConfig changes
+        if (timelineConfig && timelineConfig.startMonth) setProposedStartMonth(Number(timelineConfig.startMonth));
+    }, [timelineConfig]);
     const [selectedCells, setSelectedCells] = useState([]);
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
@@ -1073,6 +1082,12 @@ const PipelineDragDropView = ({
             });
             // Mettre à jour l'ancre
             selectionAnchorRef.current = clickedIdx;
+            return;
+        }
+
+        // Si on est en mode MOIS et c'est la première cellule, ouvrir le picker start-month
+        if (resolveIntervalKey(timelineConfig.type) === 'mois' && clickedIdx === 0) {
+            setShowStartMonthPicker(true);
             return;
         }
 
@@ -1806,15 +1821,16 @@ const PipelineDragDropView = ({
             }));
         }
 
-        // MOIS (affichage par mois)
+        // MOIS (affichage par mois) — support startMonth (1..12)
         if ((intervalType === 'mois' || intervalType === 'months') && timelineConfig.totalMonths) {
             const count = Math.min(timelineConfig.totalMonths || 0, 120);
             const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+            const startIdx = (Number(timelineConfig.startMonth) && timelineConfig.startMonth >= 1 && timelineConfig.startMonth <= 12) ? (Number(timelineConfig.startMonth) - 1) : 0;
             return Array.from({ length: count }, (_, i) => ({
                 id: `month-${i + 1}`,
                 timestamp: `month-${i + 1}`,
-                label: months[i % 12] || `M${i + 1}`,
-                month: i + 1
+                label: months[(startIdx + i) % 12] || `M${i + 1}`,
+                month: ((startIdx + i) % 12) + 1
             }));
         }
 
@@ -2376,15 +2392,27 @@ const PipelineDragDropView = ({
                                     <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Mois (max 120)
                                     </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="120"
-                                        value={timelineConfig.totalMonths || ''}
-                                        onChange={(e) => onConfigChange('totalMonths', parseInt(e.target.value))}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
-                                        placeholder="6"
-                                    />
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="120"
+                                            value={timelineConfig.totalMonths || ''}
+                                            onChange={(e) => onConfigChange('totalMonths', parseInt(e.target.value))}
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
+                                            placeholder="6"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowStartMonthPicker(true)}
+                                            disabled={!timelineConfig.totalMonths}
+                                            className={`px-3 py-2 rounded-md border border-white/20 text-sm bg-white/3 ${!timelineConfig.totalMonths ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-600/20'}`}
+                                            title={timelineConfig.totalMonths ? 'Définir le premier mois de la trame' : 'Définir un nombre de mois d\'abord'}
+                                        >
+                                            Définir
+                                        </button>
+                                    </div>
                                 </div>
                             )}
 
@@ -2768,6 +2796,9 @@ const PipelineDragDropView = ({
                 onFieldDelete={handleFieldDelete}
                 groupedPresets={groupedPresets}
                 selectedCells={selectedCells}
+                // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
+                showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
+                onOpenStartMonth={() => setShowStartMonthPicker(true)}
             />
 
             {/* Modal configuration préréglage complet retirée (CDC) */}
@@ -2779,6 +2810,47 @@ const PipelineDragDropView = ({
                 visible={tooltipData.visible}
                 position={tooltipData.position}
             />
+
+            {/* --- Month picker modal (startMonth) --- */}
+            {showStartMonthPicker && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60">
+                    <div className="w-full max-w-lg bg-gray-800 rounded-xl border border-white/10 p-6 shadow-lg">
+                        <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-bold text-white">Modifier les données</h3>
+                            <div className="flex gap-2">
+                                <button
+                                    className="px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm"
+                                    onClick={() => {
+                                        // Apply selected start month to config
+                                        onConfigChange('startMonth', proposedStartMonth);
+                                        setShowStartMonthPicker(false);
+                                        showToast && showToast(`Premier mois défini : ${['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'][proposedStartMonth - 1]}`);
+                                    }}
+                                >
+                                    Définir le mois
+                                </button>
+                                <button className="px-3 py-1 rounded-md bg-white/5 text-white text-sm" onClick={() => setShowStartMonthPicker(false)}>Annuler</button>
+                            </div>
+                        </div>
+
+                        <p className="text-sm text-gray-300 mb-3">Sélectionnez le premier mois qui sera affiché dans la trame.</p>
+
+                        <div className="grid grid-cols-4 gap-2">
+                            {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'].map((m, i) => (
+                                <button
+                                    key={m}
+                                    onClick={() => setProposedStartMonth(i + 1)}
+                                    className={`px-3 py-2 rounded-md text-sm ${proposedStartMonth === i + 1 ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10'}`}
+                                >
+                                    {m}
+                                </button>
+                            ))}
+                        </div>
+
+                        <div className="mt-4 text-xs text-gray-400">Astuce: vous pouvez aussi ouvrir ce modal depuis l'éditeur de la première cellule.</div>
+                    </div>
+                </div>
+            )}
 
             {/* Menu contextuel stylé pour config individuelle et assignation rapide - Utilise ItemContextMenu */}
             {contextMenu && (
