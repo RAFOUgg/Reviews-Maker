@@ -38,11 +38,12 @@ const PipelineGridView = ({
     const scrollRef = React.useRef(null);
     const [columns, setColumns] = useState(7);
     const [cellSize, setCellSize] = useState(56);
+    const [columnWidthState, setColumnWidth] = useState(56);
+    const [gridWidth, setGridWidth] = useState(0);
+    const [gridHeight, setGridHeight] = useState(0);
     const [zoom, setZoom] = useState(1);
 
     // ResizeObserver : calcule nombre de colonnes, taille des cellules et dimensions du grid pour virtualisation
-    const [gridWidth, setGridWidth] = useState(0);
-    const [gridHeight, setGridHeight] = useState(0);
 
     React.useEffect(() => {
         if (!gridRef.current || !scrollRef.current) return;
@@ -82,10 +83,31 @@ const PipelineGridView = ({
             // If there are fewer cells than bestCols, shrink columns to number of cells
             if (totalCells > 0) bestCols = Math.min(bestCols, totalCells);
 
-            const computed = Math.max(32, bestSize);
+            // compute a base size from width, then refine to fit vertical constraints as well
+            const baseByWidth = Math.max(32, bestSize);
+
+            // Measure padding of the scroll container to get inner available width
+            const scStyle = getComputedStyle(scrollRef.current);
+            const padLeft = parseFloat(scStyle.paddingLeft || '0') || 0;
+            const padRight = parseFloat(scStyle.paddingRight || '0') || 0;
+            const innerWidth = Math.max(0, scrollRef.current.clientWidth - padLeft - padRight);
+
+            // Compute columnWidth strictly from inner width and gap
+            const colWidth = Math.floor((innerWidth - (bestCols - 1) * gap) / Math.max(1, bestCols));
+
+            // Compute vertical constraint: how tall can each row be without overflowing container height
+            const rowsCount = Math.max(1, Math.ceil((totalCells) / Math.max(1, bestCols)));
+            const maxByHeight = Math.floor((Math.max(200, (scrollRef.current.clientHeight || gridHeight) - (rowsCount - 1) * gap)) / rowsCount);
+
+            // Final desired cell size is the maximum that fits both width and height constraints
+            const finalCell = Math.max(32, Math.min(colWidth, maxByHeight));
 
             setColumns(bestCols);
-            setCellSize(computed);
+            setCellSize(finalCell);
+            // also store the computed columnWidth separately to pass to react-window
+            setColumnWidth(finalCell);
+            setGridWidth(innerWidth);
+            setGridHeight(Math.max(200, scrollRef.current.clientHeight || gridHeight));
 
             // compute a robust min cell width depending on mode and zoom
             const baseMinForMode = config && config.intervalType === 'phases' ? 160 : 140;
@@ -413,10 +435,10 @@ const PipelineGridView = ({
                 {gridWidth > 0 && gridHeight > 0 ? (
                     <RVGrid
                         columnCount={columns}
-                        columnWidth={cellSize + 8} /* include gap */
+                        columnWidth={columnWidthState}
                         height={Math.max(200, gridHeight)}
                         rowCount={Math.ceil((cellIndices && cellIndices.length) / Math.max(1, columns))}
-                        rowHeight={cellSize + 8}
+                        rowHeight={columnWidthState}
                         width={gridWidth}
                         itemKey={({ columnIndex, rowIndex }) => rowIndex * columns + columnIndex}
                     >
