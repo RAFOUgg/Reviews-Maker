@@ -124,13 +124,16 @@ const PipelineGridView = ({
             setGridHeight(Math.max(200, scrollRef.current.clientHeight || gridHeight));
 
             // compute a robust min cell width depending on mode and zoom
-            const baseMinForMode = config && config.intervalType === 'phases' ? 160 : 140;
-            let minCellFinal = Math.max(baseMinForMode, minCell);
+            // allow the 'base min' to shrink when user zooms out so the container doesn't grow
+            const rawBaseMin = config && config.intervalType === 'phases' ? 160 : 140;
+            const baseMinForMode = Math.max(48, Math.round(rawBaseMin * Math.min(1, zoom)));
+            // prefer the computed minCell but never go below a sane floor
+            let minCellFinal = Math.max(48, Math.min(baseMinForMode, minCell));
 
             // Mobile scale: make cells smaller on narrow viewports for better fit
             const isMobileView = (scrollRef.current && scrollRef.current.clientWidth) ? scrollRef.current.clientWidth < 640 : (window.innerWidth < 640);
             const mobileScale = isMobileView ? 0.6 : 1;
-            minCellFinal = Math.max(48, Math.round(minCellFinal * mobileScale));
+            minCellFinal = Math.max(32, Math.round(minCellFinal * mobileScale));
 
             // Ensure we prefer fewer columns if that increases the cell size (avoid many tiny cells)
             // If computed size is smaller than desired base, attempt to reduce columns until acceptable or reach minColumns
@@ -155,11 +158,11 @@ const PipelineGridView = ({
                 gridRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
                 gridRef.current.style.setProperty('--computed-cell', `${finalCell}px`);
             }
-            // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
-            const minRows = 5;
+            // ensure a minimum rows height (visible rows) but make it adaptive to available rows and zoom
+            const minRows = Math.max(3, Math.min(5, rowsCount));
             const minRowsHeight = (minCellFinal * minRows) + (minRows - 1) * gap;
-            // Clamp the computed minRowsHeight to avoid extreme growth on zoom-out
-            const clamped = Math.max(200, Math.min(minRowsHeight, Math.round(window.innerHeight * 0.7)));
+            // Clamp the computed minRowsHeight to avoid extreme growth on zoom-out; reduce max viewport fraction
+            const clamped = Math.max(200, Math.min(minRowsHeight, Math.round(window.innerHeight * 0.6)));
             scrollRef.current.style.setProperty('--min-rows-height', `${clamped}px`);
             // Do NOT set scrollRef.current.style.minHeight directly (letting CSS handle the cap/prevent layout forcing)
 
@@ -209,6 +212,14 @@ const PipelineGridView = ({
             const cellDate = new Date(start);
             cellDate.setDate(cellDate.getDate() + index);
             return `J+${index}`;
+        }
+
+        // Mois: prendre en compte config.startMonth (1-12), défaut Janvier
+        if (config.intervalType === 'mois' || config.intervalType === 'months') {
+            const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+            const startIdx = config.startMonth ? (Number(config.startMonth) - 1) : 0;
+            const idx = (startIdx + index) % 12;
+            return months[idx] || `M${index + 1}`;
         }
 
         if (config.intervalType === 'weeks') {

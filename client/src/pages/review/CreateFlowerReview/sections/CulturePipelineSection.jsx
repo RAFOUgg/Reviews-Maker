@@ -50,6 +50,7 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
         totalWeeks: cultureData.cultureTimelineConfig?.totalWeeks || null,
         totalMonths: cultureData.cultureTimelineConfig?.totalMonths || null,
         totalYears: cultureData.cultureTimelineConfig?.totalYears || null,
+        startMonth: cultureData.cultureTimelineConfig?.startMonth || null,
         // Valeurs par défaut pour culture
         cultureMode: cultureData.cultureMode || 'indoor',
         propagation: cultureData.propagation || 'seed'

@@ -657,6 +657,10 @@ const PipelineDragDropView = ({
     const [selectedCell, setSelectedCell] = useState(null);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
 
+    // Month picker state (for 'months' timeline)
+    const [showMonthPicker, setShowMonthPicker] = useState(false);
+    const [monthPickerSelection, setMonthPickerSelection] = useState(Number(timelineConfig?.startMonth) || 1);
+
     // Empêcher la sélection automatique de la première case
     useEffect(() => {
         setSelectedCells([]); // Clear selection on mount
@@ -666,6 +670,15 @@ const PipelineDragDropView = ({
     useEffect(() => {
         setSelectedCells([]);
     }, [timelineConfig]);
+
+    // Si l'utilisateur définit totalMonths et qu'aucun startMonth n'existe, ouvrir le MonthPicker
+    useEffect(() => {
+        const canonicalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
+        if ((canonicalType === 'mois' || canonicalType === 'months') && timelineConfig.totalMonths && !timelineConfig.startMonth) {
+            setMonthPickerSelection(1);
+            setShowMonthPicker(true);
+        }
+    }, [timelineConfig.totalMonths, timelineConfig.type, timelineConfig.startMonth]);
 
     // État pour détecter le mode mobile
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
@@ -1010,13 +1023,26 @@ const PipelineDragDropView = ({
     };
 
     // Ouvrir modal cellule - Sélection style Windows Explorer
-    const handleCellClick = (e, cellId) => {
+    const handleCellClick = (arg1, arg2) => {
+        // normalize arguments: PipelineGridView may call handleCellClick(cellIndex, options) while other callers pass (event, cellId)
+        let e = null;
+        let cellId = null;
+        let options = null;
+
+        if (arg1 && typeof arg1 === 'object' && (arg1.nativeEvent || arg1.target || arg1.ctrlKey !== undefined)) {
+            e = arg1;
+            cellId = arg2;
+        } else {
+            cellId = arg1;
+            options = arg2 || {};
+        }
+
         // Trouver l'index de la cellule cliquée
         const clickedIdx = cells.findIndex(c => c.timestamp === cellId);
         if (clickedIdx === -1) return;
 
-        const isCtrl = e.ctrlKey || e.metaKey;
-        const isShift = e.shiftKey;
+        const isCtrl = e ? (e.ctrlKey || e.metaKey) : !!options.multi;
+        const isShift = e ? e.shiftKey : false;
 
         console.log('🖱️ Clic sur cellule:', cellId, '(idx:', clickedIdx, ')');
         console.log('📊 Ctrl:', isCtrl, '| Shift:', isShift);
@@ -1025,7 +1051,7 @@ const PipelineDragDropView = ({
 
         // === SHIFT + CLIC : Sélection de plage ===
         if (isShift && selectionAnchorRef.current !== null) {
-            e.preventDefault();
+            e && e.preventDefault();
             setSelectedCell(null);
 
             const anchorIdx = selectionAnchorRef.current;
@@ -1076,7 +1102,15 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // === CLIC SIMPLE : Ouvrir la modal ===
+        // === CLIC SIMPLE : special handling for months' first cell -> open month picker ===
+        const canonicalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
+        if ((canonicalType === 'mois' || canonicalType === 'months') && clickedIdx === 0) {
+            // open month picker to set startMonth
+            setMonthPickerSelection(Number(timelineConfig.startMonth) || 1);
+            setShowMonthPicker(true);
+            return;
+        }
+
         console.log('📝 Ouverture modal pour:', cellId);
 
         // Si plusieurs cellules sont sélectionnées, les garder pour action groupée
@@ -1738,7 +1772,7 @@ const PipelineDragDropView = ({
     const generateCells = () => {
         // normalize interval type (accept aliases like 'phase' -> 'phases')
         const intervalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
-        const { start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
+        const { start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks, totalMonths, totalYears, startMonth } = timelineConfig;
 
         // SECONDES (max 900s avec pagination)
         if (intervalType === 'seconde' && totalSeconds) {
@@ -1806,16 +1840,21 @@ const PipelineDragDropView = ({
             }));
         }
 
-        // MOIS (affichage par mois)
+        // MOIS (affichage par mois) - prend en compte timelineConfig.startMonth (1..12)
         if ((intervalType === 'mois' || intervalType === 'months') && timelineConfig.totalMonths) {
             const count = Math.min(timelineConfig.totalMonths || 0, 120);
             const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-            return Array.from({ length: count }, (_, i) => ({
-                id: `month-${i + 1}`,
-                timestamp: `month-${i + 1}`,
-                label: months[i % 12] || `M${i + 1}`,
-                month: i + 1
-            }));
+            const startIdx = (Number(timelineConfig.startMonth) ? (Number(timelineConfig.startMonth) - 1) : 0);
+            return Array.from({ length: count }, (_, i) => {
+                const idx = (startIdx + i) % 12;
+                return {
+                    id: `month-${i + 1}`,
+                    timestamp: `month-${i + 1}`,
+                    label: months[idx] || `M${i + 1}`,
+                    month: idx + 1,
+                    ordinal: i + 1
+                };
+            });
         }
 
         // ANNÉES (affichage par année, compte en années)
@@ -2381,7 +2420,15 @@ const PipelineDragDropView = ({
                                         min="1"
                                         max="120"
                                         value={timelineConfig.totalMonths || ''}
-                                        onChange={(e) => onConfigChange('totalMonths', parseInt(e.target.value))}
+                                        onChange={(e) => {
+                                            const v = parseInt(e.target.value);
+                                            onConfigChange('totalMonths', v);
+                                            // open month picker when user defines months (if no startMonth)
+                                            if (v && !timelineConfig.startMonth) {
+                                                setMonthPickerSelection(1);
+                                                setShowMonthPicker(true);
+                                            }
+                                        }}
                                         className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                         placeholder="6"
                                     />
