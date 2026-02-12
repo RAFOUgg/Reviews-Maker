@@ -1086,11 +1086,9 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // Si on est en mode MOIS et c'est la première cellule, ouvrir le picker start-month
-        if (resolveIntervalKey(timelineConfig.type) === 'mois' && clickedIdx === 0) {
-            setShowStartMonthPicker(true);
-            return;
-        }
+        // Note: l'ouverture du picker "start-month" ne doit PLUS se faire automatiquement
+        // en cliquant sur la première case — l'utilisateur doit cliquer sur le bouton "Définir"
+        // (ou utiliser le bouton présent dans l'éditeur de la 1re case).
 
         // === CLIC SIMPLE : Ouvrir la modal ===
         console.log('📝 Ouverture modal pour:', cellId);
