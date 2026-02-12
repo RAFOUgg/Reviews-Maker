@@ -1736,7 +1736,9 @@ const PipelineDragDropView = ({
     // IMPORTANT: Utiliser des IDs stables, pas Date.now() qui change à chaque render!
 
     const generateCells = () => {
-        const { type: intervalType, start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
+        // normalize interval type (accept aliases like 'phase' -> 'phases')
+        const intervalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
+        const { start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
 
         // SECONDES (max 900s avec pagination)
         if (intervalType === 'seconde' && totalSeconds) {
@@ -1805,8 +1807,8 @@ const PipelineDragDropView = ({
         }
 
         // MOIS (affichage par mois)
-        if ((intervalType === 'mois' || intervalType === 'months') && (timelineConfig.totalMonths || totalMonths)) {
-            const count = Math.min(timelineConfig.totalMonths || totalMonths || 0, 120);
+        if ((intervalType === 'mois' || intervalType === 'months') && timelineConfig.totalMonths) {
+            const count = Math.min(timelineConfig.totalMonths || 0, 120);
             const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
             return Array.from({ length: count }, (_, i) => ({
                 id: `month-${i + 1}`,
@@ -1817,8 +1819,8 @@ const PipelineDragDropView = ({
         }
 
         // ANNÉES (affichage par année, compte en années)
-        if ((intervalType === 'annee' || intervalType === 'years') && (timelineConfig.totalYears || totalYears)) {
-            const count = Math.min(timelineConfig.totalYears || totalYears || 0, 100);
+        if ((intervalType === 'annee' || intervalType === 'years') && timelineConfig.totalYears) {
+            const count = Math.min(timelineConfig.totalYears || 0, 100);
             return Array.from({ length: count }, (_, i) => ({
                 id: `year-${i + 1}`,
                 timestamp: `year-${i + 1}`,
@@ -2209,7 +2211,7 @@ const PipelineDragDropView = ({
                                     Type intervalle
                                 </label>
                                 <select
-                                    value={timelineConfig.type || 'jour'}
+                                    value={resolveIntervalKey(timelineConfig.type) || timelineConfig.type || 'jour'}
                                     onChange={(e) => onConfigChange('type', e.target.value)}
                                     disabled={timelineData.length > 0}
                                     className={`w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white focus:ring-2 focus:ring-blue-500 outline-none appearance-none cursor-pointer ${timelineData.length > 0 ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -2405,7 +2407,7 @@ const PipelineDragDropView = ({
                             )}
 
                             {/* PHASES - Prédéfinies selon type de pipeline */}
-                            {timelineConfig.type === 'phase' && (
+                            {(resolveIntervalKey(timelineConfig.type) === 'phases') && (
                                 <div className="col-span-2 md:col-span-3">
                                     <label className="text-xs font-medium text-white/70 mb-1 block">
                                         Phases prédéfinies

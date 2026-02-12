@@ -27,7 +27,7 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
     // Construire la config timeline
     // DEFAULT: use 'phase' mode by default for all pipelines (system-wide default)
     const timelineConfig = useMemo(() => ({
-        type: data.curingTimelineConfig?.type || 'phase',
+        type: data.curingTimelineConfig?.type || 'phases',
         mode: data.curingTimelineConfig?.mode || 'phases',
         startDate: data.curingTimelineConfig?.startDate || '',
         endDate: data.curingTimelineConfig?.endDate || '',
