@@ -38,7 +38,10 @@ function PipelineDataModal({
     onDrop = null,
     groupedPresets = [],
     preConfiguredItems = {},
-    selectedCells = []  // Array of selected cell timestamps for apply-to-selection
+    selectedCells = [],  // Array of selected cell timestamps for apply-to-selection
+    // New: show a button to set the timeline start-month from within the data modal
+    showSetStartMonthButton = false,
+    onOpenStartMonth = null
 }) {
     const [formData, setFormData] = useState({});
     const [activeTab, setActiveTab] = useState('data');
@@ -884,6 +887,17 @@ function PipelineDataModal({
 
                         {/* Footer */}
                         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
+                            {/* Bouton pour définir le 1er mois (visible uniquement pour la 1re cellule en mode MOIS) */}
+                            {showSetStartMonthButton && typeof onOpenStartMonth === 'function' && (
+                                <button
+                                    type="button"
+                                    onClick={onOpenStartMonth}
+                                    className="px-3 py-2 bg-yellow-600 hover:bg-yellow-500 text-white rounded-lg mr-2 text-sm"
+                                >
+                                    Définir 1er mois
+                                </button>
+                            )}
+
                             <button
                                 type="button"
                                 onClick={onClose}

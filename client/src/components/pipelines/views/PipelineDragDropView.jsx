@@ -671,14 +671,7 @@ const PipelineDragDropView = ({
         setSelectedCells([]);
     }, [timelineConfig]);
 
-    // Si l'utilisateur définit totalMonths et qu'aucun startMonth n'existe, ouvrir le MonthPicker
-    useEffect(() => {
-        const canonicalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
-        if ((canonicalType === 'mois' || canonicalType === 'months') && timelineConfig.totalMonths && !timelineConfig.startMonth) {
-            setMonthPickerSelection(1);
-            setShowMonthPicker(true);
-        }
-    }, [timelineConfig.totalMonths, timelineConfig.type, timelineConfig.startMonth]);
+
 
     // État pour détecter le mode mobile
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
@@ -1102,15 +1095,7 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // === CLIC SIMPLE : special handling for months' first cell -> open month picker ===
-        const canonicalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
-        if ((canonicalType === 'mois' || canonicalType === 'months') && clickedIdx === 0) {
-            // open month picker to set startMonth
-            setMonthPickerSelection(Number(timelineConfig.startMonth) || 1);
-            setShowMonthPicker(true);
-            return;
-        }
-
+        // === CLIC SIMPLE : default behavior (ouvrir modal d'édition)
         console.log('📝 Ouverture modal pour:', cellId);
 
         // Si plusieurs cellules sont sélectionnées, les garder pour action groupée
@@ -2425,11 +2410,6 @@ const PipelineDragDropView = ({
                                             onChange={(e) => {
                                                 const v = parseInt(e.target.value);
                                                 onConfigChange('totalMonths', v);
-                                                // open month picker when user defines months (if no startMonth)
-                                                if (v && !timelineConfig.startMonth) {
-                                                    setMonthPickerSelection(1);
-                                                    setShowMonthPicker(true);
-                                                }
                                             }}
                                             className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                             placeholder="6"
@@ -2835,6 +2815,9 @@ const PipelineDragDropView = ({
                 onFieldDelete={handleFieldDelete}
                 groupedPresets={groupedPresets}
                 selectedCells={selectedCells}
+                /* show 'Définir 1er mois' when this is the first month cell */
+                showSetStartMonthButton={((resolveIntervalKey(timelineConfig.type) === 'mois' || resolveIntervalKey(timelineConfig.type) === 'months') && cells[0] && cells[0].timestamp === currentCellTimestamp)}
+                onOpenStartMonth={() => { setMonthPickerSelection(Number(timelineConfig.startMonth) || 1); setShowMonthPicker(true); }}
             />
 
             {/* MonthPicker modal - permet de définir le 1er mois pour une timeline en mois */}
