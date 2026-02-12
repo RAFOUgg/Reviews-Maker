@@ -71,6 +71,8 @@ test.describe('Pipeline UI responsiveness & sidebar behavior', () => {
         // Panel height should NOT grow when de-zooming (tolerance 40px)
         const panelHeightAfter = await pipelinePanel.evaluate((el) => el.getBoundingClientRect().height);
         expect(panelHeightAfter).toBeLessThanOrEqual(panelHeightBefore + 40);
+        // And ensure panel is capped (CSS cap 720px)
+        expect(panelHeightAfter).toBeLessThanOrEqual(720);
 
         // Resize viewport to mobile and assert cell width changes (smaller)
         const firstCell = page.locator('[data-testid="pipeline-cell-0"]');

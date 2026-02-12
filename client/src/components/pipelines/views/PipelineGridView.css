@@ -32,8 +32,19 @@
     min-height: 0 !important;
     height: auto !important;
     /* keep the timeline visually bounded and scrollable to prevent growth on browser zoom */
-    max-height: 72vh !important;
+    max-height: 100% !important;
     overflow-y: auto !important;
+}
+
+/* Lock the pipeline panel height so browser zoom can't make it grow unexpectedly */
+[data-testid="pipeline-panel"] {
+    /* use viewport-based height but cap it in pixels to avoid zoom-driven growth */
+    height: min(72vh, 720px) !important;
+    max-height: 720px !important;
+    min-height: 420px !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
 }
 
 /* Ensure the virtualized grid wrapper cannot overflow horizontally */
