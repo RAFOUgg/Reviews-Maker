@@ -120,7 +120,7 @@ const PipelineGridView = ({
 
             // Ensure we prefer fewer columns if that increases the cell size (avoid many tiny cells)
             // If computed size is smaller than desired base, attempt to reduce columns until acceptable or reach minColumns
-            if (computed < baseMinForMode * mobileScale) {
+            if (finalCell < baseMinForMode * mobileScale) {
                 let k = bestCols;
                 while (k > minColumns) {
                     k--;
@@ -135,11 +135,11 @@ const PipelineGridView = ({
 
             // publish CSS variables used by the grid (auto-fit minmax)
             scrollRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
-            scrollRef.current.style.setProperty('--computed-cell', `${computed}px`);
+            scrollRef.current.style.setProperty('--computed-cell', `${finalCell}px`);
             // Also set on the grid element itself to ensure CSS fallback works even if outer styles are overridden
             if (gridRef.current) {
                 gridRef.current.style.setProperty('--min-cell', `${Math.round(minCellFinal)}px`);
-                gridRef.current.style.setProperty('--computed-cell', `${computed}px`);
+                gridRef.current.style.setProperty('--computed-cell', `${finalCell}px`);
             }
             // ensure a minimum rows height (5 rows visible) so the grid isn't visually tiny
             const minRows = 5;
