@@ -2415,23 +2415,43 @@ const PipelineDragDropView = ({
                                     <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Mois (max 120)
                                     </label>
-                                    <input
-                                        type="number"
-                                        min="1"
-                                        max="120"
-                                        value={timelineConfig.totalMonths || ''}
-                                        onChange={(e) => {
-                                            const v = parseInt(e.target.value);
-                                            onConfigChange('totalMonths', v);
-                                            // open month picker when user defines months (if no startMonth)
-                                            if (v && !timelineConfig.startMonth) {
-                                                setMonthPickerSelection(1);
-                                                setShowMonthPicker(true);
-                                            }
-                                        }}
-                                        className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
-                                        placeholder="6"
-                                    />
+
+                                    <div className="flex gap-2 items-center">
+                                        <input
+                                            type="number"
+                                            min="1"
+                                            max="120"
+                                            value={timelineConfig.totalMonths || ''}
+                                            onChange={(e) => {
+                                                const v = parseInt(e.target.value);
+                                                onConfigChange('totalMonths', v);
+                                                // open month picker when user defines months (if no startMonth)
+                                                if (v && !timelineConfig.startMonth) {
+                                                    setMonthPickerSelection(1);
+                                                    setShowMonthPicker(true);
+                                                }
+                                            }}
+                                            className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
+                                            placeholder="6"
+                                        />
+
+                                        {/* Current start-month indicator + edit */}
+                                        <div className="flex items-center gap-2">
+                                            <div className="text-xs text-white/60 bg-white/5 px-2 py-1 rounded-md border border-white/10">
+                                                Début: {timelineConfig.startMonth ? (['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][Number(timelineConfig.startMonth) - 1] || `M${timelineConfig.startMonth}`) : '-'}
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setMonthPickerSelection(Number(timelineConfig.startMonth) || 1);
+                                                    setShowMonthPicker(true);
+                                                }}
+                                                className="text-xs px-2 py-1 bg-purple-600 hover:bg-purple-500 rounded-md font-medium"
+                                            >
+                                                Définir
+                                            </button>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
@@ -2816,6 +2836,50 @@ const PipelineDragDropView = ({
                 groupedPresets={groupedPresets}
                 selectedCells={selectedCells}
             />
+
+            {/* MonthPicker modal - permet de définir le 1er mois pour une timeline en mois */}
+            {showMonthPicker && (
+                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60">
+                    <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-xl p-6">
+                        <div className="mb-4 text-lg font-semibold text-white">Choisir le 1er mois</div>
+                        <div className="grid grid-cols-3 gap-2 mb-4">
+                            {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'].map((m, idx) => {
+                                const val = idx + 1;
+                                const active = monthPickerSelection === val;
+                                return (
+                                    <button
+                                        key={m}
+                                        onClick={() => setMonthPickerSelection(val)}
+                                        className={`px-3 py-2 rounded-md text-sm font-medium ${active ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/70'}`}
+                                    >
+                                        {m}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                        <div className="flex justify-end gap-3">
+                            <button
+                                type="button"
+                                onClick={() => { setShowMonthPicker(false); }}
+                                className="px-3 py-2 rounded-md bg-white/5 text-white/70"
+                            >
+                                Annuler
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    console.log('✅ MonthPicker: save startMonth =', monthPickerSelection);
+                                    try { onConfigChange('startMonth', monthPickerSelection); } catch (e) { console.error(e); }
+                                    setShowMonthPicker(false);
+                                }}
+                                className="px-3 py-2 rounded-md bg-purple-600 text-white font-semibold"
+                            >
+                                Valider
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Modal configuration préréglage complet retirée (CDC) */}
 
