@@ -1830,7 +1830,7 @@ const PipelineDragDropView = ({
         }
 
         // PHASES prédéfinies selon type de pipeline
-        if (intervalType === 'phase') {
+        if (intervalType === 'phases') {
             // Phases prédéfinies pour culture (CDC)
             let defaultPhases;
             switch (type) {

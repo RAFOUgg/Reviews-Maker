@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, Trash2, Copy } from 'lucide-react';
 import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea } from '@/components/ui/LiquidUI';
 import { CULTURE_VALUES } from '../../../data/formValues';
+import { resolveIntervalKey } from '../../../config/intervalTypes';
 
 const PipelineCellModal = ({
     isOpen,
@@ -30,7 +31,7 @@ const PipelineCellModal = ({
     const getCellLabel = () => {
         if (!config) return `Étape ${cellIndex + 1}`;
 
-        if (config.intervalType === 'phases' || config.type === 'phase') {
+        if (config.intervalType === 'phases' || resolveIntervalKey(config.type) === 'phases' || config.type === 'phase') {
             const phase = config.customPhases?.[cellIndex] || config.phases?.[cellIndex];
             return `${phase?.icon || '📍'} ${phase?.name}` || `Phase ${cellIndex + 1}`;
         }
@@ -297,8 +298,8 @@ const PipelineCellModal = ({
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 className={`flex items-center gap-2 px-4 py-2 rounded-xl whitespace-nowrap transition-all border ${activeTab === idx
-                                        ? 'bg-green-500/20 border-green-500/50 text-white shadow-lg shadow-green-500/20'
-                                        : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
+                                    ? 'bg-green-500/20 border-green-500/50 text-white shadow-lg shadow-green-500/20'
+                                    : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10 hover:text-white'
                                     }`}
                             >
                                 <span>{content.icon || '📍'}</span>
