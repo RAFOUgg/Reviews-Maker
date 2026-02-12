@@ -28,11 +28,12 @@
     overflow-x: hidden !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    /* Ensure the scroll wrapper can shrink and won't force parents to expand */
-    min-height: min(var(--min-rows-height, 200px), 70vh) !important;
-    /* let the container expand naturally while keeping a sensible minimum */
+    /* Do not force a large minimum height — allow the parent panel to limit via max-height */
+    min-height: 0 !important;
     height: auto !important;
-    max-height: 100% !important;
+    /* keep the timeline visually bounded and scrollable to prevent growth on browser zoom */
+    max-height: 72vh !important;
+    overflow-y: auto !important;
 }
 
 /* Ensure the virtualized grid wrapper cannot overflow horizontally */
@@ -40,6 +41,15 @@
     width: 100% !important;
     overflow-x: hidden !important;
     box-sizing: border-box !important;
+    /* make sure the react-window canvas cannot exceed the available width */
+    max-width: 100% !important;
+}
+
+/* Small safety: ensure last column's right edge remains visible (prevents '+' from being clipped) */
+.pipeline-cell {
+    box-sizing: border-box;
+    padding-right: 6px;
+    /* small extra spacing inside cells */
 }
 
 /* Optimize cells rendering to minimize repaints */
@@ -67,4 +77,12 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+}
+
+/* Marquee selection (click-drag depuis le vide) */
+.pipeline-marquee {
+    box-shadow: 0 8px 30px rgba(2, 6, 23, 0.6), inset 0 0 0 1px rgba(130, 180, 255, 0.08);
+    backdrop-filter: blur(2px);
+    -webkit-backdrop-filter: blur(2px);
+    transition: none !important;
 }

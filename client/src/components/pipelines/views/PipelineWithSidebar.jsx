@@ -207,20 +207,45 @@ const PipelineWithSidebar = ({
     };
 
     // Handler: Clic sur une case
-    const handleCellClick = (cellIndex) => {
+    // Signature étendue: handleCellClick(cellIndex, options)
+    // - options.multi: bool (sélection multiple)
+    // - options.selected: tableau d'indices sélectionnés (contrôlé depuis l'enfant)
+    const handleCellClick = (cellIndex, options = {}) => {
         if (readonly) return;
 
-        // Si mode multi-sélection actif (Ctrl/Cmd)
+        // Multi-sélection explicitement demandée depuis le composant enfant
+        if (options.multi) {
+            if (Array.isArray(options.selected)) {
+                setSelectedCells(options.selected);
+            } else if (cellIndex == null) {
+                // si aucun index fourni et pas de selected explicite -> clear
+                setSelectedCells([]);
+            } else {
+                // fallback: toggle single index
+                setSelectedCells(prev => (prev.includes(cellIndex) ? prev.filter(i => i !== cellIndex) : [...prev, cellIndex]));
+            }
+            return;
+        }
+
+        // Si on a déjà une sélection (mode multi) et qu'on clique sur une case sans modifier -> basculer l'index
         if (selectedCells.length > 0) {
-            if (selectedCells.includes(cellIndex)) {
+            if (cellIndex == null) {
+                setSelectedCells([]);
+            } else if (selectedCells.includes(cellIndex)) {
                 setSelectedCells(selectedCells.filter(i => i !== cellIndex));
             } else {
                 setSelectedCells([...selectedCells, cellIndex]);
             }
-        } else {
-            // Ouvrir modal d'édition
+            return;
+        }
+
+        // Mode normal: ouvrir modal d'édition pour la case cliquée
+        if (cellIndex != null) {
             setSelectedCell(cellIndex);
             setIsModalOpen(true);
+        } else {
+            // clic dans le vide sans selection -> effacer la sélection
+            setSelectedCells([]);
         }
     };
 

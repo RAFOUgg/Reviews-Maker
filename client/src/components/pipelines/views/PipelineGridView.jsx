@@ -33,6 +33,113 @@ const PipelineGridView = ({
     const [hoveredCell, setHoveredCell] = useState(null);
     const [dragOverCell, setDragOverCell] = useState(null);
 
+    // Marquee / drag-to-select states (permettre de démarrer la sélection depuis le vide)
+    const [isSelecting, setIsSelecting] = useState(false);
+    const [marqueeBox, setMarqueeBox] = useState(null); // { x, y, width, height } relative à scrollRef
+    const marqueeStartRef = useRef(null); // { x, y } start coords relative to scrollRef
+    const marqueeSelectedRef = useRef([]); // cache des indices sélectionnés pendant le drag
+
+    // Helper: calcule les cellules visibles intersectant un rectangle absolu
+    const computeCellsInRect = (rect) => {
+        const results = [];
+        if (!scrollRef.current) return results;
+        // examiner uniquement les cellules rendues (react-window)
+        const nodes = scrollRef.current.querySelectorAll('[data-testid^="pipeline-cell-"]');
+        nodes.forEach(node => {
+            const br = node.getBoundingClientRect();
+            const intersects = !(br.right < rect.left || br.left > rect.right || br.bottom < rect.top || br.top > rect.bottom);
+            if (intersects) {
+                const idMatch = node.getAttribute('data-testid')?.match(/pipeline-cell-(\d+)/);
+                if (idMatch) results.push(Number(idMatch[1]));
+            }
+        });
+        return results.sort((a, b) => a - b);
+    };
+
+    // --- Marquee selection handlers (démarrer la sélection depuis le vide)
+    const stopMarquee = () => {
+        setIsSelecting(false);
+        setMarqueeBox(null);
+        marqueeStartRef.current = null;
+        marqueeSelectedRef.current = [];
+    };
+
+    const onGridPointerMove = (ev) => {
+        if (!isSelecting || !marqueeStartRef.current || !scrollRef.current) return;
+        const clientX = ev.clientX != null ? ev.clientX : (ev.touches && ev.touches[0]?.clientX);
+        const clientY = ev.clientY != null ? ev.clientY : (ev.touches && ev.touches[0]?.clientY);
+        const containerRect = scrollRef.current.getBoundingClientRect();
+        const x = Math.min(clientX - containerRect.left, containerRect.width);
+        const y = Math.min(clientY - containerRect.top, containerRect.height);
+
+        const sx = Math.max(0, Math.min(marqueeStartRef.current.x, x));
+        const sy = Math.max(0, Math.min(marqueeStartRef.current.y, y));
+        const w = Math.abs(x - marqueeStartRef.current.x);
+        const h = Math.abs(y - marqueeStartRef.current.y);
+
+        const absRect = {
+            left: containerRect.left + sx,
+            top: containerRect.top + sy,
+            right: containerRect.left + sx + w,
+            bottom: containerRect.top + sy + h
+        };
+
+        setMarqueeBox({ x: sx, y: sy, width: w, height: h });
+
+        // calculer cellules intersectées et remonter la sélection
+        const intersects = computeCellsInRect(absRect);
+        marqueeSelectedRef.current = intersects;
+        if (onCellClick) onCellClick(null, { multi: true, selected: intersects });
+    };
+
+    const onGridPointerUp = () => {
+        if (!isSelecting) return;
+        // laisser la sélection persistante (user peut appliquer une action)
+        setIsSelecting(false);
+        setMarqueeBox(null);
+        // selection déjà propagée via onCellClick pendant le drag
+        marqueeStartRef.current = null;
+    };
+
+    const onGridPointerDown = (ev) => {
+        // ne rien faire si clic sur une cellule (la cellule gérera l'événement)
+        if (ev.target.closest && ev.target.closest('.pipeline-cell')) return;
+        // only left button
+        if (ev.button && ev.button !== 0) return;
+        if (!scrollRef.current) return;
+
+        const containerRect = scrollRef.current.getBoundingClientRect();
+        const clientX = ev.clientX != null ? ev.clientX : (ev.touches && ev.touches[0]?.clientX);
+        const clientY = ev.clientY != null ? ev.clientY : (ev.touches && ev.touches[0]?.clientY);
+        const relX = clientX - containerRect.left;
+        const relY = clientY - containerRect.top;
+
+        // si clic sans Ctrl/Cmd -> vider sélection (comportement attendu)
+        if (!ev.ctrlKey && !ev.metaKey) {
+            if (onCellClick) onCellClick(null, { multi: true, selected: [] });
+        }
+
+        marqueeStartRef.current = { x: Math.max(0, relX), y: Math.max(0, relY) };
+        setIsSelecting(true);
+        setMarqueeBox({ x: relX, y: relY, width: 0, height: 0 });
+
+        // attach global listeners pour couvrir tout l'écran pendant le drag
+        window.addEventListener('mousemove', onGridPointerMove);
+        window.addEventListener('touchmove', onGridPointerMove, { passive: false });
+        window.addEventListener('mouseup', onGridPointerUp, { once: true });
+        window.addEventListener('touchend', onGridPointerUp, { once: true });
+    };
+
+    // cleanup listeners when component unmounts or selection stops
+    useEffect(() => {
+        return () => {
+            window.removeEventListener('mousemove', onGridPointerMove);
+            window.removeEventListener('touchmove', onGridPointerMove);
+            window.removeEventListener('mouseup', onGridPointerUp);
+            window.removeEventListener('touchend', onGridPointerUp);
+        };
+    }, []);
+
     // Responsive grid control
     const gridRef = React.useRef(null);
     const scrollRef = React.useRef(null);
@@ -106,20 +213,38 @@ const PipelineGridView = ({
             const padRight = parseFloat(scStyle.paddingRight || '0') || 0;
             const innerWidth = Math.max(0, scrollRef.current.clientWidth - padLeft - padRight);
 
-            // Compute columnWidth strictly from inner width and gap
-            const colWidth = Math.floor((innerWidth - (bestCols - 1) * gap) / Math.max(1, bestCols));
+            // Safety: use a slightly reduced inner width to avoid 1px/rounding overflow on some viewports
+            const safeInner = Math.max(0, innerWidth - 2);
+
+            // Compute columnWidth strictly from safeInner and gap
+            const colWidth = Math.floor((safeInner - (bestCols - 1) * gap) / Math.max(1, bestCols));
 
             // Compute vertical constraint: how tall can each row be without overflowing container height
-            const rowsCount = Math.max(1, Math.ceil((totalCells) / Math.max(1, bestCols)));
+            let rowsCount = Math.max(1, Math.ceil((totalCells) / Math.max(1, bestCols)));
             const maxByHeight = Math.floor((Math.max(200, (scrollRef.current.clientHeight || gridHeight) - (rowsCount - 1) * gap)) / rowsCount);
 
             // Final desired cell size is the maximum that fits both width and height constraints
-            const finalCell = Math.max(32, Math.min(colWidth, maxByHeight));
+            let finalCell = Math.max(32, Math.min(colWidth, maxByHeight));
+
+            // SAFETY: ensure columns actually fit into innerWidth (prevent off-screen partial cells)
+            // If rounding or padding causes overflow, reduce columns until fit
+            const totalNeeded = (bestCols * finalCell) + ((bestCols - 1) * gap);
+            if (totalNeeded > innerWidth) {
+                // compute the maximum columns that can fit with finalCell size
+                const fitCols = Math.max(1, Math.floor((innerWidth + gap) / (finalCell + gap)));
+                if (fitCols < bestCols) {
+                    bestCols = fitCols;
+                    rowsCount = Math.max(1, Math.ceil((totalCells) / bestCols));
+                    // recompute finalCell to better use available width for the reduced columns
+                    finalCell = Math.floor((innerWidth - (bestCols - 1) * gap) / bestCols);
+                }
+            }
 
             setColumns(bestCols);
             setCellSize(finalCell);
             // also store the computed columnWidth separately to pass to react-window
             setColumnWidth(finalCell);
+            // use innerWidth (exclude paddings) so react-window sizing matches calculation
             setGridWidth(innerWidth);
             setGridHeight(Math.max(200, scrollRef.current.clientHeight || gridHeight));
 
@@ -161,8 +286,10 @@ const PipelineGridView = ({
             // ensure a minimum rows height (visible rows) but make it adaptive to available rows and zoom
             const minRows = Math.max(3, Math.min(5, rowsCount));
             const minRowsHeight = (minCellFinal * minRows) + (minRows - 1) * gap;
-            // Clamp the computed minRowsHeight to avoid extreme growth on zoom-out; reduce max viewport fraction
-            const clamped = Math.max(200, Math.min(minRowsHeight, Math.round(window.innerHeight * 0.6)));
+            // Clamp the computed minRowsHeight to avoid extreme growth on zoom-out;
+            // cap to the actual scroll container height (safer than window.innerHeight)
+            const containerH = scrollRef.current ? (scrollRef.current.clientHeight || window.innerHeight) : window.innerHeight;
+            const clamped = Math.max(200, Math.min(minRowsHeight, Math.round(containerH * 0.6)));
             scrollRef.current.style.setProperty('--min-rows-height', `${clamped}px`);
             // Do NOT set scrollRef.current.style.minHeight directly (letting CSS handle the cap/prevent layout forcing)
 
@@ -178,8 +305,8 @@ const PipelineGridView = ({
                 p.style.minWidth = '0';
             }
 
-            // Publish measured grid width/height for react-window
-            setGridWidth(scrollRef.current.clientWidth);
+            // publish measured grid width/height for react-window (use innerWidth already computed)
+            // keep gridWidth consistent (do NOT overwrite with clientWidth which includes paddings)
             // reserve space for zoom controls + labels + info box (approx 120px)
             const reserved = 120 + ((config.intervalType === 'days' || config.intervalType === 'dates') ? 28 : 0);
             setGridHeight(Math.max(200, scrollRef.current.clientHeight - reserved));
@@ -438,7 +565,13 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0 overscroll-contain" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
+        <div
+            className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0 overscroll-contain"
+            data-testid="pipeline-scroll"
+            ref={scrollRef}
+            onMouseDown={onGridPointerDown}
+            onTouchStart={onGridPointerDown}
+            style={{ minWidth: 0 }}>
             {/* Zoom controls */}
             <div className="flex items-center justify-end gap-2 mb-2">
                 <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>
@@ -534,6 +667,25 @@ const PipelineGridView = ({
                     </RVGrid>
                 ) : (
                     <div className="w-full h-48 flex items-center justify-center text-sm text-gray-400">Chargement...</div>
+                )}
+
+                {/* Marquee selection overlay (visible pendant un drag depuis le vide) */}
+                {isSelecting && marqueeBox && (
+                    <div
+                        className="pipeline-marquee"
+                        style={{
+                            position: 'absolute',
+                            left: marqueeBox.x,
+                            top: marqueeBox.y,
+                            width: marqueeBox.width,
+                            height: marqueeBox.height,
+                            border: '2px dashed rgba(128,180,255,0.9)',
+                            background: 'linear-gradient(90deg, rgba(128,180,255,0.06), rgba(128,180,255,0.02))',
+                            pointerEvents: 'none',
+                            zIndex: 50,
+                            borderRadius: 6
+                        }}
+                    />
                 )}
 
                 {/* Bouton + pour ajouter des cases (sous la grille) */}
