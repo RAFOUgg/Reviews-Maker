@@ -694,6 +694,16 @@ const PipelineDragDropView = ({
         // keep proposedStartMonth in sync when timelineConfig changes
         if (timelineConfig && timelineConfig.startMonth) setProposedStartMonth(Number(timelineConfig.startMonth));
     }, [timelineConfig]);
+
+    // Guarded opener — only allow explicit sources to open the picker (prevents accidental auto-open)
+    const openStartMonthPicker = (source = 'unknown') => {
+        if (source === 'button' || source === 'editor') {
+            setShowStartMonthPicker(true);
+            return;
+        }
+        // reject/ignore other callers
+        console.warn('[Pipeline] start-month picker open rejected — source:', source);
+    };
     const [selectedCells, setSelectedCells] = useState([]);
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
@@ -2398,13 +2408,14 @@ const PipelineDragDropView = ({
                                             max="120"
                                             value={timelineConfig.totalMonths || ''}
                                             onChange={(e) => onConfigChange('totalMonths', parseInt(e.target.value))}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
                                             className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                             placeholder="6"
                                         />
 
                                         <button
                                             type="button"
-                                            onClick={() => setShowStartMonthPicker(true)}
+                                            onClick={() => openStartMonthPicker('button')}
                                             disabled={!timelineConfig.totalMonths}
                                             className={`px-3 py-2 rounded-md border border-white/20 text-sm bg-white/3 ${!timelineConfig.totalMonths ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-600/20'}`}
                                             title={timelineConfig.totalMonths ? 'Définir le premier mois de la trame' : 'Définir un nombre de mois d\'abord'}
@@ -2797,10 +2808,10 @@ const PipelineDragDropView = ({
                 selectedCells={selectedCells}
                 // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
                 showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
-                onOpenStartMonth={() => setShowStartMonthPicker(true)}
-            />
+                onOpenStartMonth={() => openStartMonthPicker('editor')
+                    />
 
-            {/* Modal configuration préréglage complet retirée (CDC) */}
+                    {/* Modal configuration préréglage complet retirée (CDC) */ }
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip
