@@ -216,7 +216,16 @@ const PipelineWithSidebar = ({
         // Multi-sélection explicitement demandée depuis le composant enfant
         if (options.multi) {
             if (Array.isArray(options.selected)) {
-                setSelectedCells(options.selected);
+                // Si additive=true alors ajouter la sélection demandée à l'existante (union),
+                // sinon remplacer (comportement par défaut).
+                if (options.additive) {
+                    setSelectedCells(prev => {
+                        const merged = Array.from(new Set([...(prev || []), ...options.selected]));
+                        return merged;
+                    });
+                } else {
+                    setSelectedCells(options.selected);
+                }
             } else if (cellIndex == null) {
                 // si aucun index fourni et pas de selected explicite -> clear
                 setSelectedCells([]);

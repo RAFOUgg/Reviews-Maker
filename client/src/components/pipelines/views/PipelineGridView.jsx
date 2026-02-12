@@ -89,7 +89,8 @@ const PipelineGridView = ({
         // calculer cellules intersectées et remonter la sélection
         const intersects = computeCellsInRect(absRect);
         marqueeSelectedRef.current = intersects;
-        if (onCellClick) onCellClick(null, { multi: true, selected: intersects });
+        const isAdditive = ev.ctrlKey || ev.metaKey;
+        if (onCellClick) onCellClick(null, { multi: true, selected: intersects, additive: isAdditive });
     };
 
     const onGridPointerUp = () => {
@@ -622,7 +623,7 @@ const PipelineGridView = ({
                                                 const newSelection = isSelected
                                                     ? selectedCells.filter(i => i !== cellIndex)
                                                     : [...selectedCells, cellIndex];
-                                                onCellClick(cellIndex, { multi: true, selected: newSelection });
+                                                onCellClick(cellIndex, { multi: true, selected: newSelection, additive: true });
                                             } else {
                                                 onCellClick(cellIndex);
                                             }
