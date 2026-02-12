@@ -39,7 +39,6 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
         totalWeeks: data.curingTimelineConfig?.totalWeeks || null,
         totalMonths: data.curingTimelineConfig?.totalMonths || null,
         totalYears: data.curingTimelineConfig?.totalYears || null,
-        startMonth: data.curingTimelineConfig?.startMonth || null,
         phases: (data.curingTimelineConfig?.phases && data.curingTimelineConfig.phases.length) ? data.curingTimelineConfig.phases : CURING_PHASES.phases,
         curingType: data.curingType || 'cold',
         temperature: data.temperature || 5,
