@@ -83,6 +83,20 @@ const PipelineGridView = ({
             // If there are fewer cells than bestCols, shrink columns to number of cells
             if (totalCells > 0) bestCols = Math.min(bestCols, totalCells);
 
+            // --- NEW: limit columns using available vertical space so cells wrap into more rows
+            // Desired minimum cell height we want to preserve when wrapping
+            const desiredMinRow = config && config.intervalType === 'phases' ? 120 : 80;
+            const reservedForControls = 120; // same reserve used below
+            const availableHeight = Math.max(200, (scrollRef.current.clientHeight || gridHeight) - reservedForControls);
+            // Calculate the maximum number of rows that can comfortably fit at desiredMinRow height
+            const maxComfortRows = Math.max(1, Math.floor((availableHeight + gap) / (desiredMinRow + gap)));
+            // If we can show more than one row, prefer fewer columns so items wrap vertically instead of creating a single long row
+            if (totalCells > 0 && maxComfortRows > 1) {
+                const colsForComfort = Math.ceil(totalCells / maxComfortRows);
+                // never increase columns beyond bestCols, only reduce when it helps vertical layout
+                bestCols = Math.min(bestCols, Math.max(1, colsForComfort));
+            }
+
             // compute a base size from width, then refine to fit vertical constraints as well
             const baseByWidth = Math.max(32, bestSize);
 

@@ -30,7 +30,16 @@
     box-sizing: border-box !important;
     /* Ensure the scroll wrapper can shrink and won't force parents to expand */
     min-height: min(var(--min-rows-height, 200px), 70vh) !important;
-    height: 100% !important;
+    /* let the container expand naturally while keeping a sensible minimum */
+    height: auto !important;
+    max-height: 100% !important;
+}
+
+/* Ensure the virtualized grid wrapper cannot overflow horizontally */
+[data-testid="pipeline-grid-wrapper"] {
+    width: 100% !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
 }
 
 /* Optimize cells rendering to minimize repaints */
