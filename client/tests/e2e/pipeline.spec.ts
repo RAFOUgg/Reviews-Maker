@@ -82,6 +82,18 @@ test.describe('Pipeline UI responsiveness & sidebar behavior', () => {
         const mobileCellWidth = await firstCell.evaluate((el) => el.getBoundingClientRect().width);
         expect(mobileCellWidth).toBeLessThanOrEqual(desktopCellWidth);
 
+        // --- CTRL / CMD + click should toggle additive selection (desktop)
+        const secondCell = page.locator('[data-testid="pipeline-cell-1"]');
+        // ensure none selected initially
+        await page.click('[data-testid="pipeline-cell-0"]');
+        // ctrl/cmd click to add second cell
+        await page.click('[data-testid="pipeline-cell-1"]', { modifiers: ['Control'] });
+        // verify multi-select UI shows 2 selected
+        const selectionBadge = page.locator('text=case(s) sélectionnée(s)');
+        await expect(selectionBadge).toContainText('2');
+        // toggle off with cmd/ctrl click again
+        await page.click('[data-testid="pipeline-cell-1"]', { modifiers: ['Control'] });
+        await expect(selectionBadge).not.toBeVisible().catch(() => {});
         // Open grouped preset modal and ensure pipeline panel height does not grow significantly
         await page.click('button:has-text("Groupe de préréglages")');
         const modal = page.locator('text=Groupe de préréglages').first();

@@ -476,7 +476,18 @@ const PipelineGridView = ({
                                         data-testid={`pipeline-cell-${cellIndex}`}
                                         whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.12, zIndex: 10 }}
                                         whileTap={{ scale: 0.98 }}
+                                        onPointerDown={(e) => {
+                                            // pointerdown is more reliable than click for detecting modifier keys
+                                            if ((e.ctrlKey || e.metaKey) && e.button === 0) {
+                                                e.preventDefault();
+                                                const newSelection = isSelected
+                                                    ? selectedCells.filter(i => i !== cellIndex)
+                                                    : [...selectedCells, cellIndex];
+                                                onCellClick(cellIndex, { multi: true, selected: newSelection });
+                                            }
+                                        }}
                                         onClick={(e) => {
+                                            // keep existing click behaviour (open modal / single select)
                                             if (e.ctrlKey || e.metaKey) {
                                                 const newSelection = isSelected
                                                     ? selectedCells.filter(i => i !== cellIndex)
