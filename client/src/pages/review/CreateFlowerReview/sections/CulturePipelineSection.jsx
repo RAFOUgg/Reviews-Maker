@@ -43,6 +43,13 @@ const CulturePipelineSection = ({ data = {}, onChange, formData, handleChange })
         startDate: cultureData.cultureTimelineConfig?.startDate || '',
         endDate: cultureData.cultureTimelineConfig?.endDate || '',
         duration: cultureData.cultureTimelineConfig?.duration || null,
+        // numeric timeline values (enable days/weeks/months/years inputs)
+        totalSeconds: cultureData.cultureTimelineConfig?.totalSeconds || null,
+        totalHours: cultureData.cultureTimelineConfig?.totalHours || null,
+        totalDays: cultureData.cultureTimelineConfig?.totalDays || null,
+        totalWeeks: cultureData.cultureTimelineConfig?.totalWeeks || null,
+        totalMonths: cultureData.cultureTimelineConfig?.totalMonths || null,
+        totalYears: cultureData.cultureTimelineConfig?.totalYears || null,
         // Valeurs par défaut pour culture
         cultureMode: cultureData.cultureMode || 'indoor',
         propagation: cultureData.propagation || 'seed'
