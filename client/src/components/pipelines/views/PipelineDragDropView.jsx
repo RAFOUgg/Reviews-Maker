@@ -22,6 +22,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
+import { LiquidModal } from '@/components/ui/LiquidUI';
 import CellContextMenu from './CellContextMenu';
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
@@ -2811,46 +2812,46 @@ const PipelineDragDropView = ({
                 position={tooltipData.position}
             />
 
-            {/* --- Month picker modal (startMonth) --- */}
-            {showStartMonthPicker && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60">
-                    <div className="w-full max-w-lg bg-gray-800 rounded-xl border border-white/10 p-6 shadow-lg">
-                        <div className="flex items-center justify-between mb-4">
-                            <h3 className="text-lg font-bold text-white">Modifier les données</h3>
-                            <div className="flex gap-2">
-                                <button
-                                    className="px-3 py-1 rounded-md bg-green-600 hover:bg-green-700 text-white text-sm"
-                                    onClick={() => {
-                                        // Apply selected start month to config
-                                        onConfigChange('startMonth', proposedStartMonth);
-                                        setShowStartMonthPicker(false);
-                                        showToast && showToast(`Premier mois défini : ${['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'][proposedStartMonth - 1]}`);
-                                    }}
-                                >
-                                    Définir le mois
-                                </button>
-                                <button className="px-3 py-1 rounded-md bg-white/5 text-white text-sm" onClick={() => setShowStartMonthPicker(false)}>Annuler</button>
-                            </div>
-                        </div>
+            {/* --- Month picker modal (startMonth) - converted to LiquidModal for glass + liquid effect --- */}
+            <LiquidModal isOpen={showStartMonthPicker} onClose={() => setShowStartMonthPicker(false)} size="md">
+                <LiquidModal.Header>
+                    <LiquidModal.Title>Choisir le 1er mois</LiquidModal.Title>
+                </LiquidModal.Header>
 
-                        <p className="text-sm text-gray-300 mb-3">Sélectionnez le premier mois qui sera affiché dans la trame.</p>
+                <LiquidModal.Body className="pt-2">
+                    <p className="text-sm text-gray-300 mb-4">Sélectionnez le premier mois qui sera affiché dans la trame.</p>
 
-                        <div className="grid grid-cols-4 gap-2">
-                            {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'].map((m, i) => (
-                                <button
-                                    key={m}
-                                    onClick={() => setProposedStartMonth(i + 1)}
-                                    className={`px-3 py-2 rounded-md text-sm ${proposedStartMonth === i + 1 ? 'bg-purple-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10'}`}
-                                >
-                                    {m}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div className="mt-4 text-xs text-gray-400">Astuce: vous pouvez aussi ouvrir ce modal depuis l'éditeur de la première cellule.</div>
+                    <div className="grid grid-cols-4 gap-2">
+                        {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'].map((m, i) => (
+                            <button
+                                key={m}
+                                onClick={() => setProposedStartMonth(i + 1)}
+                                className={`liquid-glass px-3 py-2 rounded-xl text-sm font-medium w-full text-center ${proposedStartMonth === i + 1 ? 'bg-purple-600 text-white shadow-glass-lg' : 'bg-white/5 text-gray-200 hover:bg-white/10'}`}
+                            >
+                                {m}
+                            </button>
+                        ))}
                     </div>
-                </div>
-            )}
+
+                    <div className="mt-4 text-xs text-gray-400">Astuce: vous pouvez aussi ouvrir ce modal depuis l'éditeur de la première cellule.</div>
+                </LiquidModal.Body>
+
+                <LiquidModal.Footer>
+                    <div className="flex gap-3 justify-end w-full">
+                        <button className="liquid-glass px-4 py-2 rounded-lg text-sm text-gray-200" onClick={() => setShowStartMonthPicker(false)}>Annuler</button>
+                        <button
+                            className="liquid-glass px-4 py-2 rounded-lg text-sm bg-purple-600 text-white hover:brightness-105"
+                            onClick={() => {
+                                onConfigChange('startMonth', proposedStartMonth);
+                                setShowStartMonthPicker(false);
+                                showToast && showToast(`Premier mois défini : ${['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'][proposedStartMonth - 1]}`);
+                            }}
+                        >
+                            Définir le mois
+                        </button>
+                    </div>
+                </LiquidModal.Footer>
+            </LiquidModal>
 
             {/* Menu contextuel stylé pour config individuelle et assignation rapide - Utilise ItemContextMenu */}
             {contextMenu && (
