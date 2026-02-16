@@ -240,6 +240,7 @@ export default function CreateFlowerReview() {
             subtitle="Documentez votre variété en détail"
             sectionEmojis={sectionEmojis}
             showProgress={true}
+            onOpenPreview={() => setShowOrchard(true)}
         >
             {/* Orchard Preview Button - Mobile optimized */}
             <div className="flex justify-end mb-4 gap-3">
