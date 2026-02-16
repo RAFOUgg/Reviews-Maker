@@ -22,6 +22,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
+import { LiquidModal } from '@/components/ui/LiquidUI';
 import CellContextMenu from './CellContextMenu';
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
@@ -657,10 +658,6 @@ const PipelineDragDropView = ({
     const [selectedCell, setSelectedCell] = useState(null);
     const [showResetConfirm, setShowResetConfirm] = useState(false);
 
-    // Month picker state (for 'months' timeline)
-    const [showMonthPicker, setShowMonthPicker] = useState(false);
-    const [monthPickerSelection, setMonthPickerSelection] = useState(Number(timelineConfig?.startMonth) || 1);
-
     // Empêcher la sélection automatique de la première case
     useEffect(() => {
         setSelectedCells([]); // Clear selection on mount
@@ -670,15 +667,6 @@ const PipelineDragDropView = ({
     useEffect(() => {
         setSelectedCells([]);
     }, [timelineConfig]);
-
-    // Si l'utilisateur définit totalMonths et qu'aucun startMonth n'existe, ouvrir le MonthPicker
-    useEffect(() => {
-        const canonicalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
-        if ((canonicalType === 'mois' || canonicalType === 'months') && timelineConfig.totalMonths && !timelineConfig.startMonth) {
-            setMonthPickerSelection(1);
-            setShowMonthPicker(true);
-        }
-    }, [timelineConfig.totalMonths, timelineConfig.type, timelineConfig.startMonth]);
 
     // État pour détecter le mode mobile
     const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' && window.innerWidth < 768);
@@ -697,6 +685,25 @@ const PipelineDragDropView = ({
     const [currentCellTimestamp, setCurrentCellTimestamp] = useState(null);
     const [tooltipData, setTooltipData] = useState({ visible: false, cellData: null, position: { x: 0, y: 0 }, section: '' });
     const [massAssignMode, setMassAssignMode] = useState(false);
+
+    // --- Start-month picker for 'mois' mode ---
+    const [showStartMonthPicker, setShowStartMonthPicker] = useState(false);
+    const [proposedStartMonth, setProposedStartMonth] = useState(() => (timelineConfig && timelineConfig.startMonth) ? Number(timelineConfig.startMonth) : 1);
+
+    useEffect(() => {
+        // keep proposedStartMonth in sync when timelineConfig changes
+        if (timelineConfig && timelineConfig.startMonth) setProposedStartMonth(Number(timelineConfig.startMonth));
+    }, [timelineConfig]);
+
+    // Guarded opener — only allow explicit sources to open the picker (prevents accidental auto-open)
+    const openStartMonthPicker = (source = 'unknown') => {
+        if (source === 'button' || source === 'editor') {
+            setShowStartMonthPicker(true);
+            return;
+        }
+        // reject/ignore other callers
+        console.warn('[Pipeline] start-month picker open rejected — source:', source);
+    };
     const [selectedCells, setSelectedCells] = useState([]);
     const [showMassAssignModal, setShowMassAssignModal] = useState(false);
     const [sourceCellForMassAssign, setSourceCellForMassAssign] = useState(null);
@@ -1023,26 +1030,13 @@ const PipelineDragDropView = ({
     };
 
     // Ouvrir modal cellule - Sélection style Windows Explorer
-    const handleCellClick = (arg1, arg2) => {
-        // normalize arguments: PipelineGridView may call handleCellClick(cellIndex, options) while other callers pass (event, cellId)
-        let e = null;
-        let cellId = null;
-        let options = null;
-
-        if (arg1 && typeof arg1 === 'object' && (arg1.nativeEvent || arg1.target || arg1.ctrlKey !== undefined)) {
-            e = arg1;
-            cellId = arg2;
-        } else {
-            cellId = arg1;
-            options = arg2 || {};
-        }
-
+    const handleCellClick = (e, cellId) => {
         // Trouver l'index de la cellule cliquée
         const clickedIdx = cells.findIndex(c => c.timestamp === cellId);
         if (clickedIdx === -1) return;
 
-        const isCtrl = e ? (e.ctrlKey || e.metaKey) : !!options.multi;
-        const isShift = e ? e.shiftKey : false;
+        const isCtrl = e.ctrlKey || e.metaKey;
+        const isShift = e.shiftKey;
 
         console.log('🖱️ Clic sur cellule:', cellId, '(idx:', clickedIdx, ')');
         console.log('📊 Ctrl:', isCtrl, '| Shift:', isShift);
@@ -1051,7 +1045,7 @@ const PipelineDragDropView = ({
 
         // === SHIFT + CLIC : Sélection de plage ===
         if (isShift && selectionAnchorRef.current !== null) {
-            e && e.preventDefault();
+            e.preventDefault();
             setSelectedCell(null);
 
             const anchorIdx = selectionAnchorRef.current;
@@ -1102,15 +1096,11 @@ const PipelineDragDropView = ({
             return;
         }
 
-        // === CLIC SIMPLE : special handling for months' first cell -> open month picker ===
-        const canonicalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
-        if ((canonicalType === 'mois' || canonicalType === 'months') && clickedIdx === 0) {
-            // open month picker to set startMonth
-            setMonthPickerSelection(Number(timelineConfig.startMonth) || 1);
-            setShowMonthPicker(true);
-            return;
-        }
+        // Note: l'ouverture du picker "start-month" ne doit PLUS se faire automatiquement
+        // en cliquant sur la première case — l'utilisateur doit cliquer sur le bouton "Définir"
+        // (ou utiliser le bouton présent dans l'éditeur de la 1re case).
 
+        // === CLIC SIMPLE : Ouvrir la modal ===
         console.log('📝 Ouverture modal pour:', cellId);
 
         // Si plusieurs cellules sont sélectionnées, les garder pour action groupée
@@ -1772,7 +1762,7 @@ const PipelineDragDropView = ({
     const generateCells = () => {
         // normalize interval type (accept aliases like 'phase' -> 'phases')
         const intervalType = resolveIntervalKey(timelineConfig.type) || timelineConfig.type;
-        const { start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks, totalMonths, totalYears, startMonth } = timelineConfig;
+        const { start, end, duration, totalSeconds, totalHours, totalDays, totalWeeks } = timelineConfig;
 
         // SECONDES (max 900s avec pagination)
         if (intervalType === 'seconde' && totalSeconds) {
@@ -1840,21 +1830,17 @@ const PipelineDragDropView = ({
             }));
         }
 
-        // MOIS (affichage par mois) - prend en compte timelineConfig.startMonth (1..12)
+        // MOIS (affichage par mois) — support startMonth (1..12)
         if ((intervalType === 'mois' || intervalType === 'months') && timelineConfig.totalMonths) {
             const count = Math.min(timelineConfig.totalMonths || 0, 120);
             const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
-            const startIdx = (Number(timelineConfig.startMonth) ? (Number(timelineConfig.startMonth) - 1) : 0);
-            return Array.from({ length: count }, (_, i) => {
-                const idx = (startIdx + i) % 12;
-                return {
-                    id: `month-${i + 1}`,
-                    timestamp: `month-${i + 1}`,
-                    label: months[idx] || `M${i + 1}`,
-                    month: idx + 1,
-                    ordinal: i + 1
-                };
-            });
+            const startIdx = (Number(timelineConfig.startMonth) && timelineConfig.startMonth >= 1 && timelineConfig.startMonth <= 12) ? (Number(timelineConfig.startMonth) - 1) : 0;
+            return Array.from({ length: count }, (_, i) => ({
+                id: `month-${i + 1}`,
+                timestamp: `month-${i + 1}`,
+                label: months[(startIdx + i) % 12] || `M${i + 1}`,
+                month: ((startIdx + i) % 12) + 1
+            }));
         }
 
         // ANNÉES (affichage par année, compte en années)
@@ -2415,42 +2401,27 @@ const PipelineDragDropView = ({
                                     <label className="text-xs font-medium text-white/70 mb-1 block truncate">
                                         Mois (max 120)
                                     </label>
-
                                     <div className="flex gap-2 items-center">
                                         <input
                                             type="number"
                                             min="1"
                                             max="120"
                                             value={timelineConfig.totalMonths || ''}
-                                            onChange={(e) => {
-                                                const v = parseInt(e.target.value);
-                                                onConfigChange('totalMonths', v);
-                                                // open month picker when user defines months (if no startMonth)
-                                                if (v && !timelineConfig.startMonth) {
-                                                    setMonthPickerSelection(1);
-                                                    setShowMonthPicker(true);
-                                                }
-                                            }}
-                                            className="flex-1 px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
+                                            onChange={(e) => onConfigChange('totalMonths', parseInt(e.target.value))}
+                                            onKeyDown={(e) => { if (e.key === 'Enter') e.preventDefault(); }}
+                                            className="w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-xs md:text-sm text-white focus:ring-2 focus:ring-blue-500"
                                             placeholder="6"
                                         />
 
-                                        {/* Current start-month indicator + edit */}
-                                        <div className="flex items-center gap-2">
-                                            <div className="text-xs text-white/60 bg-white/5 px-2 py-1 rounded-md border border-white/10">
-                                                Début: {timelineConfig.startMonth ? (['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'][Number(timelineConfig.startMonth) - 1] || `M${timelineConfig.startMonth}`) : '-'}
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={() => {
-                                                    setMonthPickerSelection(Number(timelineConfig.startMonth) || 1);
-                                                    setShowMonthPicker(true);
-                                                }}
-                                                className="text-xs px-2 py-1 bg-purple-600 hover:bg-purple-500 rounded-md font-medium"
-                                            >
-                                                Définir
-                                            </button>
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => openStartMonthPicker('button')}
+                                            disabled={!timelineConfig.totalMonths}
+                                            className={`px-3 py-2 rounded-md border border-white/20 text-sm bg-white/3 ${!timelineConfig.totalMonths ? 'opacity-40 cursor-not-allowed' : 'hover:bg-blue-600/20'}`}
+                                            title={timelineConfig.totalMonths ? 'Définir le premier mois de la trame' : 'Définir un nombre de mois d\'abord'}
+                                        >
+                                            Définir
+                                        </button>
                                     </div>
                                 </div>
                             )}
@@ -2835,53 +2806,12 @@ const PipelineDragDropView = ({
                 onFieldDelete={handleFieldDelete}
                 groupedPresets={groupedPresets}
                 selectedCells={selectedCells}
-            />
+                // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
+                showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
+                onOpenStartMonth={() => openStartMonthPicker('editor')
+                    />
 
-            {/* MonthPicker modal - permet de définir le 1er mois pour une timeline en mois */}
-            {showMonthPicker && (
-                <div className="fixed inset-0 z-60 flex items-center justify-center bg-black/60">
-                    <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-xl p-6">
-                        <div className="mb-4 text-lg font-semibold text-white">Choisir le 1er mois</div>
-                        <div className="grid grid-cols-3 gap-2 mb-4">
-                            {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'].map((m, idx) => {
-                                const val = idx + 1;
-                                const active = monthPickerSelection === val;
-                                return (
-                                    <button
-                                        key={m}
-                                        onClick={() => setMonthPickerSelection(val)}
-                                        className={`px-3 py-2 rounded-md text-sm font-medium ${active ? 'bg-purple-600 text-white' : 'bg-white/5 text-white/70'}`}
-                                    >
-                                        {m}
-                                    </button>
-                                );
-                            })}
-                        </div>
-                        <div className="flex justify-end gap-3">
-                            <button
-                                type="button"
-                                onClick={() => { setShowMonthPicker(false); }}
-                                className="px-3 py-2 rounded-md bg-white/5 text-white/70"
-                            >
-                                Annuler
-                            </button>
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    console.log('✅ MonthPicker: save startMonth =', monthPickerSelection);
-                                    try { onConfigChange('startMonth', monthPickerSelection); } catch (e) { console.error(e); }
-                                    setShowMonthPicker(false);
-                                }}
-                                className="px-3 py-2 rounded-md bg-purple-600 text-white font-semibold"
-                            >
-                                Valider
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Modal configuration préréglage complet retirée (CDC) */}
+                    {/* Modal configuration préréglage complet retirée (CDC) */ }
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip
@@ -2890,6 +2820,47 @@ const PipelineDragDropView = ({
                 visible={tooltipData.visible}
                 position={tooltipData.position}
             />
+
+            {/* --- Month picker modal (startMonth) - converted to LiquidModal for glass + liquid effect --- */}
+            <LiquidModal isOpen={showStartMonthPicker} onClose={() => setShowStartMonthPicker(false)} size="md">
+                <LiquidModal.Header>
+                    <LiquidModal.Title>Choisir le 1er mois</LiquidModal.Title>
+                </LiquidModal.Header>
+
+                <LiquidModal.Body className="pt-2">
+                    <p className="text-sm text-gray-300 mb-4">Sélectionnez le premier mois qui sera affiché dans la trame.</p>
+
+                    <div className="grid grid-cols-4 gap-2">
+                        {['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'].map((m, i) => (
+                            <button
+                                key={m}
+                                onClick={() => setProposedStartMonth(i + 1)}
+                                className={`liquid-glass px-3 py-2 rounded-xl text-sm font-medium w-full text-center ${proposedStartMonth === i + 1 ? 'bg-purple-600 text-white shadow-glass-lg' : 'bg-white/5 text-gray-200 hover:bg-white/10'}`}
+                            >
+                                {m}
+                            </button>
+                        ))}
+                    </div>
+
+                    <div className="mt-4 text-xs text-gray-400">Astuce: vous pouvez aussi ouvrir ce modal depuis l'éditeur de la première cellule.</div>
+                </LiquidModal.Body>
+
+                <LiquidModal.Footer>
+                    <div className="flex gap-3 justify-end w-full">
+                        <button className="liquid-glass px-4 py-2 rounded-lg text-sm text-gray-200" onClick={() => setShowStartMonthPicker(false)}>Annuler</button>
+                        <button
+                            className="liquid-glass px-4 py-2 rounded-lg text-sm bg-purple-600 text-white hover:brightness-105"
+                            onClick={() => {
+                                onConfigChange('startMonth', proposedStartMonth);
+                                setShowStartMonthPicker(false);
+                                showToast && showToast(`Premier mois défini : ${['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'][proposedStartMonth - 1]}`);
+                            }}
+                        >
+                            Définir le mois
+                        </button>
+                    </div>
+                </LiquidModal.Footer>
+            </LiquidModal>
 
             {/* Menu contextuel stylé pour config individuelle et assignation rapide - Utilise ItemContextMenu */}
             {contextMenu && (

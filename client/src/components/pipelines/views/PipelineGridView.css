@@ -1,18 +1,21 @@
 /* Overrides to ensure pipeline grid uses a clear min cell and prevents overflow */
 [data-testid="pipeline-grid"] {
-    grid-template-columns: repeat(auto-fit, minmax(var(--min-cell, 120px), 1fr)) !important;
-    grid-auto-rows: var(--min-cell, 120px) !important;
+    /* prefer the JS-computed --min-cell; fallback uses clamp so it scales with viewport
+       clamp(min, preferred, max) keeps cells usable across sizes */
+    --min-cell: var(--min-cell, clamp(64px, 6vw, 160px));
+    grid-template-columns: repeat(auto-fit, minmax(var(--min-cell), 1fr)) !important;
+    grid-auto-rows: var(--min-cell) !important;
     gap: 8px !important;
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
 }
 
-/* Ensure each cell fills its grid area */
+/* Ensure each cell fills its grid area and adapts to --min-cell */
 [data-testid="pipeline-grid"]>* {
     width: 100% !important;
-    height: var(--min-cell, 120px) !important;
-    min-height: var(--min-cell, 120px) !important;
+    height: var(--min-cell) !important;
+    min-height: var(--min-cell) !important;
     box-sizing: border-box !important;
 }
 
@@ -38,13 +41,24 @@
 
 /* Lock the pipeline panel height so browser zoom can't make it grow unexpectedly */
 [data-testid="pipeline-panel"] {
-    /* use viewport-based height but cap it in pixels to avoid zoom-driven growth */
-    height: min(72vh, 720px) !important;
-    max-height: 720px !important;
-    min-height: 420px !important;
+    /* responsive height: adapt to viewport while leaving room for header/footer
+       - use calc so the panel grows/shrinks with the window
+       - keep a reasonable min-height for small screens */
+    height: calc(100vh - 220px) !important;
+    max-height: calc(100vh - 120px) !important;
+    min-height: 320px !important;
     overflow: hidden !important;
     display: flex !important;
     flex-direction: column !important;
+}
+
+/* Ensure panel remains usable on very small screens */
+@media (max-height: 720px) {
+    [data-testid="pipeline-panel"] {
+        height: calc(100vh - 180px) !important;
+        max-height: calc(100vh - 120px) !important;
+        min-height: 280px !important;
+    }
 }
 
 /* Ensure the virtualized grid wrapper cannot overflow horizontally */

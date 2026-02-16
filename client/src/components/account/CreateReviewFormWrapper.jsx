@@ -80,6 +80,7 @@ const CreateReviewFormWrapper = ({
             onSave={onSave}
             onSubmit={onSubmit}
             isSaving={saving}
+            onOpenPreview={() => setShowOrchard(true)}
         >
             {/* Bouton Aperçu - Ouvre OrchardPanel (système complet: templates, export, partage) */}
             <div className="flex justify-end mb-4">
