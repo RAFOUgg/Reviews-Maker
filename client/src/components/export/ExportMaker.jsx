@@ -263,7 +263,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
         // Vérifier qu'il y a au moins un pipeline dans la review
         const hasPipeline = reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
-            reviewData?.pipelineExtraction || reviewData?.pipelineCuring;
+            reviewData?.pipelineExtraction || reviewData?.pipelinePurification || reviewData?.fertilizationPipeline || reviewData?.pipelineCuring;
 
         if (!hasPipeline) {
             alert('Cette review ne contient aucun pipeline à exporter en GIF.');
@@ -274,10 +274,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         setGifProgress(0);
 
         try {
-            // Récupérer le premier pipeline disponible
+            // Récupérer le premier pipeline disponible (supporter plus de types)
             const pipelineData = reviewData.pipelineGlobal ||
                 reviewData.pipelineSeparation ||
                 reviewData.pipelineExtraction ||
+                reviewData.pipelinePurification ||
+                reviewData.fertilizationPipeline ||
                 reviewData.pipelineCuring;
 
             const blob = await exportPipelineToGIF(pipelineData, exportRef.current, {
@@ -299,86 +301,123 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // Helper to resolve common field ids into actual review fields
     const resolveReviewField = (id) => {
-        const f = reviewData || {}
-        const flower = f.flowerData || {}
+        const f = reviewData || {};
+        const flower = f.flowerData || {};
+
+        // small lookup helper that checks top-level, flower.*, then extraData
+        const lookup = (...keys) => {
+            for (const k of keys) {
+                if (!k) continue;
+                if (f[k] !== undefined && f[k] !== null && f[k] !== '') return f[k];
+                if (flower[k] !== undefined && flower[k] !== null && flower[k] !== '') return flower[k];
+                if (f.extraData && typeof f.extraData === 'object' && f.extraData[k] !== undefined && f.extraData[k] !== null && f.extraData[k] !== '') return f.extraData[k];
+            }
+            return undefined;
+        };
 
         switch (id) {
             case 'productName':
             case 'product_name':
-                return flower.nomCommercial || f.holderName || f.name || '-'
+                return lookup('productName', 'name', 'holderName', 'title', 'nomCommercial') || '-';
+
             case 'photo':
             case 'mainImage':
-                return f.images?.[0] || flower.mainImage || f.mainImageUrl || null
+                return lookup('images', 'mainImageUrl', 'imageUrl', 'image') || null;
+
             case 'photos':
             case 'gallery':
-                return f.images || flower.images || []
+                return lookup('images', 'gallery', 'photos') || [];
+
             case 'genetics':
             case 'breeder':
-                return [flower.breeder, flower.variety].filter(Boolean).join(' • ') || '-'
+                return lookup('breeder', 'variety', 'cultivar') || lookup('cultivarsList') || '-';
+
             case 'thc':
-                return flower.thcPercent ?? f.thc ?? '-'
+            case 'thcPercent':
+                return lookup('thc', 'thcLevel', 'thcPercent') ?? '-';
+
             case 'cbd':
-                return flower.cbdPercent ?? f.cbd ?? '-'
+            case 'cbdPercent':
+                return lookup('cbd', 'cbdLevel', 'cbdPercent') ?? '-';
+
             case 'analytics':
             case 'terpeneProfile':
-                return flower.terpeneProfile || f.terpeneProfile || []
+            case 'terpenes':
+                return lookup('terpeneProfile', 'terpenes', 'analytics') || [];
+
             case 'visual':
                 return {
-                    densite: flower.densiteVisuelle ?? f.densiteVisuelle,
-                    trichomes: flower.trichomesScore ?? f.trichomesScore,
-                    pistils: flower.pistilsScore ?? f.pistilsScore,
-                    manucure: flower.manucureScore ?? f.manucureScore
-                }
+                    densite: lookup('densiteVisuelle', 'densite') ?? null,
+                    trichomes: lookup('trichome', 'trichomes', 'trichomesScore') ?? null,
+                    pistils: lookup('pistil', 'pistils', 'pistilsScore') ?? null,
+                    manucure: lookup('manucure', 'manucureScore') ?? null
+                };
+
             case 'odor':
             case 'odors':
                 return {
-                    dominant: flower.notesOdeursDominantes || [],
-                    secondary: flower.notesOdeursSecondaires || [],
-                    intensity: flower.intensiteAromatique ?? f.intensiteAromatique
-                }
+                    dominant: lookup('aromas', 'notesOdeursDominantes', 'notesDominantesOdeur') || [],
+                    secondary: lookup('notesSecondairesOdeur', 'aromasSecondary', 'notesOdeursSecondaires') || [],
+                    intensity: lookup('aromasIntensity', 'intensiteAromatique') ?? null
+                };
+
             case 'taste':
             case 'tastes':
                 return {
-                    intensity: flower.intensiteGoutScore ?? f.intensiteGoutScore,
-                    aggressiveness: flower.agressiviteScore ?? f.agressiviteScore,
-                    dryPuff: flower.dryPuffNotes || [],
-                    inhalation: flower.inhalationNotes || [],
-                    expiration: flower.expirationNotes || []
-                }
-            case 'effects':
-                return {
-                    selected: flower.effetsChoisis || [],
-                    intensity: flower.intensiteEffetScore ?? f.intensiteEffetScore,
-                    onset: flower.monteeScore ?? f.monteeScore
-                }
+                    intensity: lookup('intensiteGout', 'tastesIntensity', 'intensiteGustative') ?? null,
+                    aggressiveness: lookup('agressivite', 'agressiviteScore') ?? null,
+                    dryPuff: lookup('dryPuff', 'dryPuffNotes') || [],
+                    inhalation: lookup('inhalationNotes', 'inhalation') || [],
+                    expiration: lookup('expirationNotes', 'expiration') || []
+                };
+
+            case 'effects': {
+                const arr = lookup('effects', 'effetsChoisis', 'selectedEffects');
+                if (Array.isArray(arr)) return { selected: arr, intensity: lookup('intensiteEffet', 'effectsIntensity') ?? null, onset: lookup('montee') ?? null };
+                return { selected: [], intensity: lookup('intensiteEffet', 'effectsIntensity') ?? null, onset: lookup('montee') ?? null };
+            }
+
+            case 'cultivarsList':
+            case 'cultivars':
+                return lookup('cultivarsList', 'cultivars', 'cultivar') || [];
+
+            case 'substratMix':
+                return lookup('substratMix', 'substrat') || [];
+
+            case 'categoryRatings':
+                return lookup('categoryRatings', 'ratings') || undefined;
+
             case 'culture':
                 return {
-                    config: flower.cultureTimelineConfig || f.cultureTimelineConfig,
-                    data: flower.cultureTimelineData || f.cultureTimelineData
-                }
+                    config: lookup('cultureTimelineConfig'),
+                    data: lookup('cultureTimelineData')
+                };
+
             case 'curing':
                 return {
-                    config: flower.curingTimelineConfig || f.curingTimelineConfig,
-                    data: flower.curingTimelineData || f.curingTimelineData
-                }
+                    config: lookup('curingTimelineConfig'),
+                    data: lookup('curingTimelineData')
+                };
+
             case 'recolte':
                 return {
-                    fenetre: flower.fenetreRecolte || f.fenetreRecolte || null,
-                    trichomesTranslucides: flower.trichomesTranslucides || f.trichomesTranslucides || 0,
-                    trichomesLaiteux: flower.trichomesLaiteux || f.trichomesLaiteux || 0,
-                    trichomesAmbres: flower.trichomesAmbres || f.trichomesAmbres || 0,
-                    modeRecolte: flower.modeRecolte || f.modeRecolte || null,
-                    poidsBrut: flower.poidsBrut || f.poidsBrut || null,
-                    poidsNet: flower.poidsNet || f.poidsNet || null
-                }
+                    fenetre: lookup('fenetreRecolte') || null,
+                    trichomesTranslucides: lookup('trichomesTranslucides') || 0,
+                    trichomesLaiteux: lookup('trichomesLaiteux') || 0,
+                    trichomesAmbres: lookup('trichomesAmbres') || 0,
+                    modeRecolte: lookup('modeRecolte') || null,
+                    poidsBrut: lookup('poidsBrut') || null,
+                    poidsNet: lookup('poidsNet') || null
+                };
+
             case 'notes':
             case 'description':
-                return f.description || flower.notes || '-'
+                return lookup('description', 'notes', 'notesDetailed') || '-';
+
             default:
-                // Fallback: try direct field at top-level or in flowerData
-                return f[id] ?? flower[id] ?? undefined
+                return lookup(id) ?? flower[id] ?? undefined;
         }
-    }
+    };
 
     // Helper to render a review field value for export
     const renderFieldValue = (fieldId) => {
