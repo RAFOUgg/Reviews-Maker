@@ -2810,7 +2810,7 @@ const PipelineDragDropView = ({
                 showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
                 onOpenStartMonth={() => openStartMonthPicker('editor')}
 
-            {/* Modal configuration préréglage complet retirée (CDC) */ }
+{/* Modal configuration préréglage complet retirée (CDC) */}
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip
