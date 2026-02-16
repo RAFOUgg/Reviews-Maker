@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="fr" class="dark">
+
+<head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/branding_logo.png" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Terpologie - Cannabis Reviews</title>
+    <meta name="description" content="Application de gestion de reviews cannabis avec roue des terpènes interactive" />
+
+    <!-- FORCE RESET ORCHARD STORAGE - EXECUTES BEFORE REACT -->
+    <script>
+        // ULTRA AGGRESSIVE STORAGE MONITOR - Prevents bad storage from being saved
+        (function () {
+            const STORAGE_KEY = 'orchard-storage';
+            const REQUIRED_VERSION = 7;
+            const MIN_MODULES = 70;
+
+            // Force delete bad storage
+            function forceReset() {
+                try {
+                    const stored = localStorage.getItem(STORAGE_KEY);
+                    if (stored) {
+                        const parsed = JSON.parse(stored);
+                        const version = parsed?.version ?? 0;
+                        const modulesCount = Object.keys(parsed?.state?.config?.contentModules || parsed?.config?.contentModules || {}).length;
+
+                        console.warn('🔍 PRE-LOAD Storage Check:', { version, modulesCount, needsReset: version < REQUIRED_VERSION || modulesCount < MIN_MODULES });
+
+                        if (version < REQUIRED_VERSION || modulesCount < MIN_MODULES) {
+                            console.warn('🗑️ FORCING IMMEDIATE RESET');
+                            console.warn('   Expected: v7+ with 70+ modules | Got: v' + version + ' with ' + modulesCount + ' modules');
+                            localStorage.removeItem(STORAGE_KEY);
+                            console.warn('✅ Storage DELETED');
+                            return true;
+                        }
+                    }
+                    return false;
+                } catch (e) {
+                    console.error('Pre-load check failed:', e);
+                    localStorage.removeItem(STORAGE_KEY);
+                    return true;
+                }
+            }
+
+            // Initial reset
+            const wasReset = forceReset();
+            if (wasReset) {
+                console.warn('⚠️ Storage was bad - waiting for app to recreate it properly');
+            }
+
+            // INTERCEPT setItem to block bad saves
+            const originalSetItem = Storage.prototype.setItem;
+            Storage.prototype.setItem = function (key, value) {
+                if (key === STORAGE_KEY) {
+                    try {
+                        const parsed = JSON.parse(value);
+                        const version = parsed?.version ?? 0;
+                        const modulesCount = Object.keys(parsed?.state?.config?.contentModules || parsed?.config?.contentModules || {}).length;
+
+                        if (version < REQUIRED_VERSION || modulesCount < MIN_MODULES) {
+                            console.error('🚫 BLOCKED bad orchard-storage save!');
+                            console.error('   Rejected: v' + version + ' with ' + modulesCount + ' modules');
+                            console.error('   This storage would break the app - ignoring save');
+                            return; // Block the save completely
+                        }
+                        console.log('✅ Allowing storage save: v' + version + ' with ' + modulesCount + ' modules');
+                    } catch (e) { }
+                }
+                return originalSetItem.call(this, key, value);
+            };
+        })();
+    </script>
+  <script type="module" crossorigin src="/assets/index-B7OxGEI9.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/react-vendor-C_ykEpAW.js">
+  <link rel="modulepreload" crossorigin href="/assets/ui-vendor-B2ZHYkmH.js">
+  <link rel="modulepreload" crossorigin href="/assets/export-vendor-CJhsbtKE.js">
+  <link rel="modulepreload" crossorigin href="/assets/i18n-vendor-CdAOG4TA.js">
+  <link rel="modulepreload" crossorigin href="/assets/state-vendor-DhlYhKNZ.js">
+  <link rel="stylesheet" crossorigin href="/assets/index-DSXV8D2o.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <div id="datepicker-portal"></div>
+</body>
+
+</html>
