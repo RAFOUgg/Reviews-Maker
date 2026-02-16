@@ -2808,9 +2808,9 @@ const PipelineDragDropView = ({
                 selectedCells={selectedCells}
                 // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
                 showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
-                onOpenStartMonth={() => openStartMonthPicker('editor')}
+                onOpenStartMonth={() => openStartMonthPicker('editor')} />
 
-{/* Modal configuration préréglage complet retirée (CDC) */}
+            {/* Modal configuration préréglage complet retirée (CDC) */}
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip
