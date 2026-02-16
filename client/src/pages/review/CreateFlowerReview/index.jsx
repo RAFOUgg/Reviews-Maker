@@ -1,10 +1,12 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Save, Eye, Lock } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Save, Eye, Lock, Download } from 'lucide-react'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
+import LiquidModal from '../../../components/ui/LiquidModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
@@ -64,6 +66,7 @@ export default function CreateFlowerReview() {
 
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const [showExportMaker, setShowExportMaker] = useState(false)
     const scrollContainerRef = useRef(null)
 
     // Synchroniser les photos avec formData
@@ -239,13 +242,24 @@ export default function CreateFlowerReview() {
             showProgress={true}
         >
             {/* Orchard Preview Button - Mobile optimized */}
-            <div className="flex justify-end mb-4">
+            <div className="flex justify-end mb-4 gap-3">
                 <button
                     onClick={() => setShowOrchard(!showOrchard)}
                     className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm font-medium transition-all"
+                    title="Ouvrir l'aperçu (Orchard)"
                 >
                     <Eye className="w-4 h-4 inline mr-2" />
                     Aperçu
+                </button>
+
+                {/* Nouveau: bouton visible desktop + mobile pour ouvrir ExportMaker directement */}
+                <button
+                    onClick={() => setShowExportMaker(true)}
+                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-95 transition-all"
+                    title="Ouvrir Export Maker (prévisualiser / exporter)"
+                >
+                    <Download className="w-4 h-4 inline mr-2" />
+                    Exporter
                 </button>
             </div>
 
@@ -342,6 +356,22 @@ export default function CreateFlowerReview() {
                     <OrchardPanel reviewData={formData} onClose={() => setShowOrchard(false)} />
                 </Suspense>
             )}
+
+            {/* Export Maker modal (direct access from the create form) */}
+            <LiquidModal
+                isOpen={showExportMaker}
+                onClose={() => setShowExportMaker(false)}
+                title="Exporter la review"
+                size="xl"
+            >
+                <Suspense fallback={<div className="p-6 text-center">Chargement de l'Export Maker…</div>}>
+                    <ExportMaker
+                        reviewData={formData}
+                        productType="flower"
+                        onClose={() => setShowExportMaker(false)}
+                    />
+                </Suspense>
+            </LiquidModal>
         </ResponsiveCreateReviewLayout>
     )
 }
