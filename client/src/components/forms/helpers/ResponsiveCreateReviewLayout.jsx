@@ -132,13 +132,19 @@ export const ResponsiveCreateReviewLayout = ({
 
     React.useEffect(() => {
         if (!carouselRef.current) return;
-        // center the active item when index changes
+        // Lock scroll detection while we programmatically center the active item
+        // This prevents handleScroll from overriding the arrow navigation
+        scrollLockRef.current = true;
         scrollToIndex(currentSection);
+        // Release lock after scroll animation completes (~350ms for smooth scroll)
+        const unlockTimer = setTimeout(() => { scrollLockRef.current = false; }, 350);
+        return () => clearTimeout(unlockTimer);
     }, [currentSection]);
 
     // Apply calculated scrollPosition to the container (smooth)
+    // Only when NOT locked by a programmatic scrollToIndex call
     React.useEffect(() => {
-        if (!carouselRef.current) return;
+        if (!carouselRef.current || scrollLockRef.current) return;
         try {
             carouselRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
         } catch (e) {
@@ -468,19 +474,21 @@ export const ResponsiveCreateReviewLayout = ({
                                     </div>
                                 </div>
 
-                                {/* Secondary Preview button (hotfix) - rendered only when parent passes handler */}
+                                {/* Preview button - visible on all screens */}
                                 {onOpenPreview && (
-                                    <div className="flex-shrink-0 ml-3 hidden md:block">
+                                    <div className="flex-shrink-0 ml-1">
                                         <button
                                             onClick={onOpenPreview}
-                                            className="px-3 py-2 rounded-xl bg-white/5 text-white/70 hover:bg-white/10 transition-all text-sm font-medium"
+                                            className={`rounded-xl bg-white/5 text-white/70 hover:bg-white/10 transition-all font-medium flex items-center gap-1.5 ${
+                                                layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'
+                                            }`}
                                             title="Aperçu"
                                         >
-                                            <svg className="w-4 h-4 inline mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
-                                            Aperçu
+                                            {!layout.isMobile && <span>Aperçu</span>}
                                         </button>
                                     </div>
                                 )}

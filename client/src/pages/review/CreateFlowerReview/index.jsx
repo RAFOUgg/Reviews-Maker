@@ -6,7 +6,6 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
-import LiquidModal from '../../../components/ui/LiquidModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
@@ -338,21 +337,16 @@ export default function CreateFlowerReview() {
                 </Suspense>
             )}
 
-            {/* Export Maker modal (direct access from the create form) */}
-            <LiquidModal
-                isOpen={showExportMaker}
-                onClose={() => setShowExportMaker(false)}
-                title="Exporter la review"
-                size="xl"
-            >
-                <Suspense fallback={<div className="p-6 text-center">Chargement de l'Export Maker…</div>}>
+            {/* Export Maker – standalone full-screen overlay (manages its own backdrop) */}
+            {showExportMaker && (
+                <Suspense fallback={null}>
                     <ExportMaker
                         reviewData={formData}
                         productType="flower"
                         onClose={() => setShowExportMaker(false)}
                     />
                 </Suspense>
-            </LiquidModal>
+            )}
         </ResponsiveCreateReviewLayout>
     )
 }

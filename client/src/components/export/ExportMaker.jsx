@@ -696,6 +696,63 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <Save className="w-4 h-4" />
                                 Sauvegarder dans la bibliothèque
                             </button>
+
+                            {/* Partage — Web Share API (mobile) ou copie du lien */}
+                            <button
+                                onClick={async () => {
+                                    try {
+                                        // Générer le PNG depuis la preview
+                                        const { toPng } = await import('html-to-image');
+                                        const dataUrl = await toPng(exportRef.current, {
+                                            cacheBust: true,
+                                            pixelRatio: highQuality ? 3 : 2,
+                                            backgroundColor: null,
+                                        });
+
+                                        // Web Share API (mobile / Chrome Android / Safari iOS 15+)
+                                        if (navigator.share) {
+                                            const imgResp = await fetch(dataUrl);
+                                            const blob = await imgResp.blob();
+                                            const file = new File([blob], `review-${reviewData.name || 'export'}.png`, { type: 'image/png' });
+                                            const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
+                                            if (canShareFiles) {
+                                                await navigator.share({
+                                                    title: `Review ${reviewData.name || ''}`,
+                                                    text: `Découvrez cette review sur Terpologie`,
+                                                    files: [file],
+                                                });
+                                            } else {
+                                                await navigator.share({
+                                                    title: `Review ${reviewData.name || ''}`,
+                                                    text: `Découvrez cette review sur Terpologie`,
+                                                    url: window.location.href,
+                                                });
+                                            }
+                                        } else {
+                                            // Fallback: copier l'image en base64 dans le presse-papier ou télécharger
+                                            if (navigator.clipboard && window.ClipboardItem) {
+                                                const imgResp = await fetch(dataUrl);
+                                                const blob = await imgResp.blob();
+                                                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                                                alert('Image copiée dans le presse-papier !');
+                                            } else {
+                                                // Dernier recours : copier l'URL
+                                                await navigator.clipboard.writeText(window.location.href);
+                                                alert('Lien de la review copié dans le presse-papier !');
+                                            }
+                                        }
+                                    } catch (err) {
+                                        if (err.name !== 'AbortError') {
+                                            console.error('[ExportMaker] Share failed:', err);
+                                            alert('Partage non disponible. Utilisez le bouton "Exporter" pour télécharger l\'image.');
+                                        }
+                                    }
+                                }}
+                                className="w-full py-3 bg-white/5 rounded-xl text-white font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
+                            >
+                                <Share2 className="w-4 h-4" />
+                                Partager
+                            </button>
                         </div>
                     </div>
                 </div>
