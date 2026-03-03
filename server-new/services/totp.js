@@ -1,9 +1,10 @@
 /**
  * Service TOTP pour l'authentification à deux facteurs (2FA)
+ * ESM module — utilise import au lieu de require (package.json: "type": "module")
  */
 
-const speakeasy = require('speakeasy');
-const QRCode = require('qrcode');
+import speakeasy from 'speakeasy';
+import QRCode from 'qrcode';
 
 /**
  * Génère un secret TOTP pour un utilisateur
@@ -98,7 +99,7 @@ function verifyUserTOTP(user, token) {
     return verifyTOTPToken(user.totpSecret, token);
 }
 
-module.exports = {
+export {
     generateTOTPSecret,
     generateQRCode,
     verifyTOTPToken,

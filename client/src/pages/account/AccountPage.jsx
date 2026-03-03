@@ -31,7 +31,8 @@ import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 const SUPPORTED_LANGUAGES = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
   { code: 'en', name: 'English', flag: '🇬🇧' },
-  { code: 'es', name: 'Español', flag: '🇪🇸' }
+  { code: 'es', name: 'Español', flag: '🇪🇸' },
+  { code: 'de', name: 'Deutsch', flag: '🇩🇪' }
 ]
 
 // Génère les onglets dynamiquement selon le type de compte
@@ -411,6 +412,45 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
 }
 
 function SecuritySection({ t }) {
+  const toast = useToast()
+  const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
+  const [pwLoading, setPwLoading] = useState(false)
+
+  const handleChangePassword = async () => {
+    if (!pwForm.current || !pwForm.next || !pwForm.confirm) {
+      toast.error('Veuillez remplir tous les champs')
+      return
+    }
+    if (pwForm.next !== pwForm.confirm) {
+      toast.error('Les mots de passe ne correspondent pas')
+      return
+    }
+    if (pwForm.next.length < 8) {
+      toast.error('Le mot de passe doit contenir au moins 8 caractères')
+      return
+    }
+    try {
+      setPwLoading(true)
+      const response = await fetch('/api/user/change-password', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ currentPassword: pwForm.current, newPassword: pwForm.next })
+      })
+      if (response.ok) {
+        toast.success('Mot de passe mis à jour avec succès')
+        setPwForm({ current: '', next: '', confirm: '' })
+      } else {
+        const err = await response.json().catch(() => ({}))
+        toast.error(err.error || 'Erreur lors du changement de mot de passe')
+      }
+    } catch {
+      toast.error('Erreur de connexion au serveur')
+    } finally {
+      setPwLoading(false)
+    }
+  }
+
   return (
     <div>
       <h3 className="text-2xl font-bold mb-6 text-white">{t('account.security') || 'Sécurité'}</h3>
@@ -427,17 +467,29 @@ function SecuritySection({ t }) {
             <LiquidInput
               type="password"
               placeholder="Mot de passe actuel"
+              value={pwForm.current}
+              onChange={(e) => setPwForm(p => ({ ...p, current: e.target.value }))}
             />
             <LiquidInput
               type="password"
-              placeholder="Nouveau mot de passe"
+              placeholder="Nouveau mot de passe (min. 8 caractères)"
+              value={pwForm.next}
+              onChange={(e) => setPwForm(p => ({ ...p, next: e.target.value }))}
             />
             <LiquidInput
               type="password"
-              placeholder="Confirmer le mot de passe"
+              placeholder="Confirmer le nouveau mot de passe"
+              value={pwForm.confirm}
+              onChange={(e) => setPwForm(p => ({ ...p, confirm: e.target.value }))}
             />
-            <LiquidButton variant="primary" glow="purple" fullWidth>
-              Mettre à jour le mot de passe
+            <LiquidButton
+              variant="primary"
+              glow="purple"
+              fullWidth
+              onClick={handleChangePassword}
+              disabled={pwLoading}
+            >
+              {pwLoading ? 'Mise à jour...' : 'Mettre à jour le mot de passe'}
             </LiquidButton>
           </div>
         </LiquidCard>

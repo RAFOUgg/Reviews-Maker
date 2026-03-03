@@ -85,6 +85,8 @@ export function getUserAccountType(user) {
 
     // Rétrocompatibilité avec anciens types
     if (roles.includes('producer')) return ACCOUNT_TYPES.PRODUCER;
+    // 'influencer' plain (stocké par changeAccountType via ACCOUNT_TYPES.INFLUENCER)
+    if (roles.includes('influencer')) return ACCOUNT_TYPES.INFLUENCER;
     if (roles.includes('influencer_pro') || roles.includes('influencer_basic')) {
         return ACCOUNT_TYPES.INFLUENCER;
     }

@@ -1,10 +1,22 @@
 /**
  * Service d'envoi d'emails avec Resend
+ * ESM module — utilise import au lieu de require (package.json: "type": "module")
  */
 
-const { Resend } = require('resend');
+import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazily initialised: évite le crash au démarrage si RESEND_API_KEY est absente
+let _resend = null;
+function getResend() {
+    if (!process.env.RESEND_API_KEY) {
+        throw new Error('[email] RESEND_API_KEY non configurée. Ajoutez-la dans le fichier .env du serveur.');
+    }
+    if (!_resend) {
+        _resend = new Resend(process.env.RESEND_API_KEY);
+    }
+    return _resend;
+}
+
 const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@reviews-maker.app';
 
 /**
@@ -38,7 +50,7 @@ async function sendVerificationCode(email, code, locale = 'fr') {
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
         from: FROM_EMAIL,
         to: email,
         subject,
@@ -91,7 +103,7 @@ async function sendWelcomeEmail(email, username, locale = 'fr') {
       <p>See you soon,<br>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
         from: FROM_EMAIL,
         to: email,
         subject,
@@ -139,7 +151,7 @@ async function sendSubscriptionConfirmation(email, plan, locale = 'fr') {
       <p>Thank you for your trust,<br>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
         from: FROM_EMAIL,
         to: email,
         subject,
@@ -185,7 +197,7 @@ async function sendModerationNotification(email, reason, status, locale = 'fr') 
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
         from: FROM_EMAIL,
         to: email,
         subject,
@@ -232,7 +244,7 @@ async function sendPasswordResetEmail(email, resetLink, locale = 'fr') {
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
         from: FROM_EMAIL,
         to: email,
         subject,
@@ -246,10 +258,11 @@ async function sendPasswordResetEmail(email, resetLink, locale = 'fr') {
     return data;
 }
 
-module.exports = {
+export {
     sendVerificationCode,
     sendWelcomeEmail,
     sendSubscriptionConfirmation,
     sendModerationNotification,
     sendPasswordResetEmail,
 };
+

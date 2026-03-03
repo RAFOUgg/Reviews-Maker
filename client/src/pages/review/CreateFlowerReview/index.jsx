@@ -165,29 +165,9 @@ export default function CreateFlowerReview() {
         try {
             setSaving(true)
 
-            // Préparer les données pour l'upload
-            const reviewFormData = new FormData()
-
-            // Ajouter toutes les données du formulaire
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
-
-            // Ajouter les photos
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
-
-            reviewFormData.append('status', 'published')
+            // Utiliser le même pipeline que handleSave pour garantir la cohérence de sérialisation
+            const flatData = flattenFlowerFormData(formData)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published')
 
             if (id) {
                 await flowerReviewsService.update(id, reviewFormData)

@@ -66,9 +66,15 @@ export function flattenCommonFormData(data) {
     }
 
     // Section Curing & Maturation
+    // Nouvelle structure : UnifiedPipeline stocke dans formData.curingPipeline = { timelineConfig, timelineData }
+    if (data.curingPipeline) {
+        if (data.curingPipeline.timelineConfig) flat.curingTimelineConfig = data.curingPipeline.timelineConfig
+        if (data.curingPipeline.timelineData) flat.curingTimelineData = data.curingPipeline.timelineData
+    }
+    // Compatibilité ancienne structure data.curing
     if (data.curing) {
-        if (data.curing.curingTimelineConfig) flat.curingTimelineConfig = data.curing.curingTimelineConfig
-        if (data.curing.curingTimeline) flat.curingTimelineData = data.curing.curingTimeline
+        if (!flat.curingTimelineConfig && data.curing.curingTimelineConfig) flat.curingTimelineConfig = data.curing.curingTimelineConfig
+        if (!flat.curingTimelineData && data.curing.curingTimeline) flat.curingTimelineData = data.curing.curingTimeline
         if (data.curing.curingType) flat.curingType = data.curing.curingType
         if (data.curing.temperature !== undefined) flat.curingTemperature = data.curing.temperature
         if (data.curing.humidity !== undefined) flat.curingHumidity = data.curing.humidity
@@ -102,9 +108,15 @@ export function flattenFlowerFormData(data) {
     }
 
     // Section 3 - Culture Pipeline
+    // Nouvelle structure : UnifiedPipeline stocke dans formData.culturePipeline = { timelineConfig, timelineData }
+    if (data.culturePipeline) {
+        if (data.culturePipeline.timelineConfig) flat.cultureTimelineConfig = data.culturePipeline.timelineConfig
+        if (data.culturePipeline.timelineData) flat.cultureTimelineData = data.culturePipeline.timelineData
+    }
+    // Compatibilité ancienne structure data.culture
     if (data.culture) {
-        if (data.culture.cultureTimelineConfig) flat.cultureTimelineConfig = data.culture.cultureTimelineConfig
-        if (data.culture.cultureTimelineData) flat.cultureTimelineData = data.culture.cultureTimelineData
+        if (!flat.cultureTimelineConfig && data.culture.cultureTimelineConfig) flat.cultureTimelineConfig = data.culture.cultureTimelineConfig
+        if (!flat.cultureTimelineData && data.culture.cultureTimelineData) flat.cultureTimelineData = data.culture.cultureTimelineData
         if (data.culture.mode) flat.cultureMode = data.culture.mode
         if (data.culture.spaceType) flat.cultureSpaceType = data.culture.spaceType
         if (data.culture.substrat) flat.cultureSubstrat = data.culture.substrat
