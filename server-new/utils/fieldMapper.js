@@ -1,8 +1,10 @@
 import fs from 'fs'
 import path from 'path'
+import { fileURLToPath } from 'url'
 
-const __dirname = path.resolve()
-const mappingPath = path.resolve(__dirname, './server-new/config/field-mapping.json')
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const mappingPath = path.resolve(__dirname, '../config/field-mapping.json')
 let mapping = {}
 try {
     mapping = JSON.parse(fs.readFileSync(mappingPath, 'utf8'))
