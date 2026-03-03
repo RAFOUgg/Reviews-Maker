@@ -7,7 +7,7 @@ import { useToast } from '../../../../components/shared/ToastContainer'
  */
 export function useFlowerForm(reviewId = null) {
     const toast = useToast()
-    const [formData, setFormData] = useState({})
+    const [formData, setFormData] = useState({ type: 'flower' })
     const [loading, setLoading] = useState(!!reviewId)
     const [saving, setSaving] = useState(false)
 

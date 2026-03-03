@@ -333,7 +333,7 @@ export default function CreateFlowerReview() {
             {/* Orchard Preview Panel (lazy-loaded) */}
             {showOrchard && (
                 <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
-                    <OrchardPanel reviewData={formData} onClose={() => setShowOrchard(false)} />
+                    <OrchardPanel reviewData={formData} productType="flower" onClose={() => setShowOrchard(false)} />
                 </Suspense>
             )}
 
