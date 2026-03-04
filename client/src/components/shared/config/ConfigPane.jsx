@@ -9,10 +9,8 @@ import PresetManager from './PresetManager';
 
 const PANELS = [
     { id: 'template', name: 'Template', icon: 'template' },
-    { id: 'typography', name: 'Typographie', icon: 'text' },
-    { id: 'colors', name: 'Couleurs', icon: 'palette' },
     { id: 'content', name: 'Contenu', icon: 'list' },
-    { id: 'image', name: 'Image & Logo', icon: 'image' },
+    { id: 'apparence', name: 'Apparence', icon: 'apparence' },
     { id: 'presets', name: 'Préréglages', icon: 'bookmark' }
 ];
 
@@ -25,6 +23,9 @@ const ICONS = {
     ),
     palette: (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
+    ),
+    apparence: (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z" />
     ),
     list: (
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 10h16M4 14h16M4 18h16" />
@@ -71,10 +72,23 @@ export default function ConfigPane() {
                     transition={{ duration: 0.2 }}
                 >
                     {activePanel === 'template' && <TemplateSelector />}
-                    {activePanel === 'typography' && <TypographyControls />}
-                    {activePanel === 'colors' && <ColorPaletteControls />}
                     {activePanel === 'content' && <ContentModuleControls />}
-                    {activePanel === 'image' && <ImageBrandingControls />}
+                    {activePanel === 'apparence' && (
+                        <div className="space-y-6">
+                            <div>
+                                <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3 px-1">Typographie</h4>
+                                <TypographyControls />
+                            </div>
+                            <div className="border-t border-white/10 pt-5">
+                                <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3 px-1">Couleurs</h4>
+                                <ColorPaletteControls />
+                            </div>
+                            <div className="border-t border-white/10 pt-5">
+                                <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40 mb-3 px-1">Image & Logo</h4>
+                                <ImageBrandingControls />
+                            </div>
+                        </div>
+                    )}
                     {activePanel === 'presets' && <PresetManager />}
                 </motion.div>
             </div>

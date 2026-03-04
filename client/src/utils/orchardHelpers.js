@@ -162,23 +162,50 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
         // Définition des champs par catégorie pour reconstruction
         const categoryFields = {
             visual: {
-                fields: ['densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'couleurTransparence'],
+                fields: [
+                    // Actual form field names (from normalizeByType section merge)
+                    'colorRating', 'transparency', 'density', 'trichomes', 'mold', 'seeds',
+                    // Legacy flat names
+                    'densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
+                    'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'couleurTransparence'
+                ],
                 labels: {
+                    // Actual form field labels
+                    colorRating: 'Couleur / Nuancier', transparency: 'Transparence',
+                    density: 'Densité visuelle', trichomes: 'Trichomes',
+                    mold: 'Moisissures', seeds: 'Graines',
+                    // Legacy
                     densiteVisuelle: 'Densité visuelle', trichome: 'Trichomes', pistil: 'Pistils', manucure: 'Manucure',
                     moisissure: 'Moisissure', graines: 'Graines', couleur: 'Couleur', pureteVisuelle: 'Pureté',
                     viscosite: 'Viscosité', melting: 'Melting', residus: 'Résidus', couleurTransparence: 'Couleur/transparence'
                 }
             },
             smell: {
-                fields: ['aromasIntensity', 'fideliteCultivars', 'complexiteAromas', 'intensiteAromatique'],
+                fields: [
+                    'aromasIntensity', 'complexiteAromas', 'fideliteCultivars',
+                    'intensiteAromatique'
+                ],
                 labels: {
-                    aromasIntensity: 'Intensité', fideliteCultivars: 'Fidélité cultivar',
+                    aromasIntensity: 'Intensité aromatique', fideliteCultivars: 'Fidélité cultivar',
                     complexiteAromas: 'Complexité', intensiteAromatique: 'Intensité aromatique'
                 }
             },
             texture: {
-                fields: ['durete', 'densiteTactile', 'elasticite', 'collant', 'friabilite', 'friabiliteViscosite', 'viscositeTexture', 'granularite', 'homogeneite', 'meltingResidus', 'aspectCollantGras'],
+                fields: [
+                    // Actual form field names
+                    'hardness', 'elasticity', 'stickiness', 'melting', 'residue',
+                    'malleability', 'friability', 'viscosity',
+                    // Legacy
+                    'durete', 'densiteTactile', 'elasticite', 'collant', 'friabilite',
+                    'friabiliteViscosite', 'viscositeTexture', 'granularite', 'homogeneite',
+                    'meltingResidus', 'aspectCollantGras'
+                ],
                 labels: {
+                    // Actual form field labels
+                    hardness: 'Dureté', elasticity: 'Élasticité', stickiness: 'Collant',
+                    melting: 'Melting', residue: 'Résidus', malleability: 'Malléabilité',
+                    friability: 'Friabilité', viscosity: 'Viscosité',
+                    // Legacy
                     durete: 'Dureté', densiteTactile: 'Densité tactile', elasticite: 'Élasticité',
                     collant: 'Collant', friabilite: 'Friabilité', friabiliteViscosite: 'Friabilité/Viscosité',
                     viscositeTexture: 'Viscosité', granularite: 'Granularité', homogeneite: 'Homogénéité',
@@ -186,10 +213,18 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
                 }
             },
             taste: {
-                fields: ['intensiteFumee', 'intensiteFumeeDab', 'agressivite', 'agressivitePiquant', 'cendre', 'cendreFumee', 'douceur', 'persistanceGout', 'tastesIntensity', 'goutIntensity', 'intensiteGout', 'intensiteGustative', 'textureBouche'],
+                fields: [
+                    // Actual form field names (mapped in normalizeByType: gouts.intensity→intensiteFumee, aggressiveness→agressivite)
+                    'intensiteFumee', 'agressivite',
+                    // Legacy
+                    'intensiteFumeeDab', 'agressivitePiquant', 'cendre', 'cendreFumee',
+                    'douceur', 'persistanceGout', 'tastesIntensity', 'goutIntensity',
+                    'intensiteGout', 'intensiteGustative', 'textureBouche'
+                ],
                 labels: {
-                    intensiteFumee: 'Intensité fumée', intensiteFumeeDab: 'Intensité fumée/dab',
-                    agressivite: 'Agressivité', agressivitePiquant: 'Agressivité/piquant',
+                    intensiteFumee: 'Intensité', agressivite: 'Agressivité / Piquant',
+                    intensiteFumeeDab: 'Intensité fumée/dab',
+                    agressivitePiquant: 'Agressivité/piquant',
                     cendre: 'Cendre', cendreFumee: 'Cendre fumée',
                     douceur: 'Douceur', persistanceGout: 'Persistance',
                     tastesIntensity: 'Intensité goût', goutIntensity: 'Intensité',

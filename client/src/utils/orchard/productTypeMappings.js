@@ -8,45 +8,46 @@
 // FLOWER (FLEUR) MAPPINGS
 // ============================================================================
 export const FLOWER_CATEGORY_FIELDS = {
-  // Use flattened field names (backend/frontend canonical) used across forms and flattener
-  visual: ['couleurNuancier', 'densiteVisuelle', 'trichomesScore', 'pistilsScore', 'manucureScore', 'moisissureScore', 'grainesScore'],
-  smell: ['intensiteAromeScore', 'notesOdeursDominantes', 'notesOdeursSecondaires', 'fideliteCultivars', 'complexiteAromeScore'],
-  texture: ['dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore'],
-  taste: ['intensiteGoutScore', 'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'expirationNotes'],
-  effects: ['monteeScore', 'intensiteEffetScore', 'effectDuration', 'effetsChoisis', 'effectProfiles', 'sideEffects']
+  // Field names matching the flat output of normalizeReviewDataByType
+  // visual.* merged to top-level, explicit mappings in normalizeByType.js
+  visual: ['colorRating', 'density', 'trichomes', 'mold', 'seeds'],
+  smell: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'],
+  texture: ['hardness', 'elasticity', 'stickiness'],
+  taste: ['intensiteFumee', 'agressivite'],
+  effects: ['montee', 'intensiteEffet', 'dureeEffet']
 };
 
 // ============================================================================
 // HASH (HASH, KIEF, ICE-O-LATOR, DRY-SIFT) MAPPINGS
 // ============================================================================
 export const HASH_CATEGORY_FIELDS = {
-  visual: ['couleurTransparence', 'pureteVisuelle', 'densiteVisuelle', 'pistils', 'moisissure', 'graines', 'viscosite', 'meltingScore', 'residuScore'],
-  smell: ['intensiteAromatique', 'fideliteCultivars'],
-  texture: ['dureteScore', 'friabiliteScore', 'viscositeScore', 'meltingScore'],
-  taste: ['intensiteFumee', 'agressiviteScore', 'cendre'],
-  effects: ['monteeScore', 'intensiteEffetScore', 'effectDuration']
+  visual: ['colorRating', 'transparency', 'density', 'mold', 'seeds'],
+  smell: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'],
+  texture: ['hardness', 'melting', 'residue', 'friability'],
+  taste: ['intensiteFumee', 'agressivite'],
+  effects: ['montee', 'intensiteEffet', 'dureeEffet']
 };
 
 // ============================================================================
 // CONCENTRATE (ROSIN, BHO, etc.) MAPPINGS
 // ============================================================================
 export const CONCENTRATE_CATEGORY_FIELDS = {
-  visual: ['couleurTransparence', 'viscositeVisuelle', 'pureteVisuelle', 'meltingScore', 'residuScore', 'pistils', 'moisissure'],
-  smell: ['intensiteAromatique', 'fideliteCultivars'],
-  texture: ['dureteScore', 'friabiliteScore', 'viscositeScore', 'meltingScore'],
-  taste: ['intensiteFumee', 'agressiviteScore', 'cendre'],
-  effects: ['monteeScore', 'intensiteEffetScore', 'effectDuration']
+  visual: ['colorRating', 'transparency', 'density', 'melting', 'residue', 'mold'],
+  smell: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'],
+  texture: ['hardness', 'friability', 'viscosity', 'melting'],
+  taste: ['intensiteFumee', 'agressivite'],
+  effects: ['montee', 'intensiteEffet', 'dureeEffet']
 };
 
 // ============================================================================
 // EDIBLE (COMESTIBLE) MAPPINGS
 // ============================================================================
 export const EDIBLE_CATEGORY_FIELDS = {
-  visual: [], // Edibles don't have visual ratings
-  smell: [],  // Edibles don't have smell ratings typically
-  texture: [], // Edibles don't have texture ratings typically
-  taste: ['intensiteGoutScore', 'agressiviteScore', 'saveursDominantes'],
-  effects: ['monteeScore', 'intensiteEffetScore', 'dureeEffet']
+  visual: [],
+  smell: [],
+  texture: [],
+  taste: ['intensiteFumee', 'agressivite'],
+  effects: ['montee', 'intensiteEffet', 'dureeEffet']
 };
 
 // ============================================================================
