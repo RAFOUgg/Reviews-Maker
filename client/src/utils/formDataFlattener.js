@@ -192,9 +192,9 @@ export function flattenHashFormData(data) {
     if (data.couleurTransparence !== undefined) flat.couleurTransparence = data.couleurTransparence
     if (data.pureteVisuelle !== undefined) flat.pureteVisuelle = data.pureteVisuelle
     if (data.densiteVisuelle !== undefined) flat.densiteVisuelle = data.densiteVisuelle
-    if (data.pistils !== undefined) flat.pistils = data.pistils
-    if (data.moisissure !== undefined) flat.moisissure = data.moisissure
-    if (data.graines !== undefined) flat.graines = data.graines
+    if (data.pistils !== undefined) flat.pistilsScore = data.pistils
+    if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
+    if (data.graines !== undefined) flat.grainesScore = data.graines
 
     return flat
 }
@@ -236,8 +236,8 @@ export function flattenConcentrateFormData(data) {
     if (data.pureteVisuelle !== undefined) flat.pureteVisuelle = data.pureteVisuelle
     if (data.meltingScore !== undefined) flat.meltingScore = data.meltingScore
     if (data.residuScore !== undefined) flat.residuScore = data.residuScore
-    if (data.pistils !== undefined) flat.pistils = data.pistils
-    if (data.moisissure !== undefined) flat.moisissure = data.moisissure
+    if (data.pistils !== undefined) flat.pistilsScore = data.pistils
+    if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
 
     return flat
 }

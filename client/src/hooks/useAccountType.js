@@ -60,8 +60,8 @@ export function useAccountType() {
       formats: {
         png: true,
         jpeg: true,
-        pdf: isPremium,
-        svg: isPremium,
+        pdf: true,          // TOUS (spec: Consumer = PNG/JPEG/PDF)
+        svg: isPremium,     // Influenceur + Producteur
         csv: isProducer,
         json: isProducer,
         html: isProducer,
@@ -71,24 +71,24 @@ export function useAccountType() {
         high: isPremium, // 300dpi
       },
       templates: {
-        compact: true,    // Accessible à tous
-        detailed: isPremium,   // Réservé aux comptes premium
-        complete: isPremium,
+        compact: true,     // Tous
+        detailed: true,    // Tous (spec: Amateur = Compact + Standard + Détaillé)
+        complete: true,    // Tous
         influencer: isInfluencer || isProducer,
         custom: isProducer,
       },
       features: {
         watermark: isPremium,
-        dragDrop: isPremium,
+        dragDrop: isProducer, // Producteur uniquement
         customFonts: isProducer,
-        formatChoice: isPremium, // Choix libre du format - réservé premium
+        formatChoice: isPremium,
       },
     },
 
     // Bibliothèque
     library: {
       reviews: true,
-      templates: isPremium,
+      templates: true,      // Tous peuvent sauvegarder (limite: 3 Consumer, 20 Influencer, ∞ Producer)
       watermarks: isPremium,
       savedData: true,
     },
@@ -96,7 +96,7 @@ export function useAccountType() {
     // Galerie publique
     gallery: {
       view: true,
-      publish: isPremium,
+      publish: true,        // Tous peuvent publier (limite: 5 reviews pour Consumer)
       like: true,
       comment: true,
       share: true,

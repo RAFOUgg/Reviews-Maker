@@ -89,7 +89,7 @@ export default function CreateFlowerReview() {
         { id: 'texture', icon: '🤚', title: 'Texture', access: 'all' },
         { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
         { id: 'effects-experience', icon: '💥', title: 'Effets & Expérience', access: 'all' },
-        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'paid' },
+        { id: 'curing', icon: '🔥', title: 'Curing & Maturation', access: 'all' },
     ]
 
     // Filtrer les sections selon le type de compte

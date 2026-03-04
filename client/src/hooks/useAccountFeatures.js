@@ -36,7 +36,7 @@ export function useAccountFeatures() {
         canCreateWatermarks: isProducer,
         canExportCSV: isProducer,
         canExportJSON: isProducer,
-        canExportSVG: isProducer,
+        canExportSVG: isProducer || isInfluencer, // SVG = Influenceur + Producteur (spec + serveur)
         canExportHTML: isProducer,
         canAccessDragDropExport: isProducer,
         canConfigurePipeline: isProducer,
@@ -82,23 +82,28 @@ export function useAccountFeatures() {
  */
 export function useAccountLimits() {
     const { accountType } = useStore()
+    const normalized = String(accountType || '').toLowerCase()
+    const isProducer = ['producteur', 'producer'].includes(normalized)
+    const isInfluencer = ['influenceur', 'influencer'].includes(normalized)
 
     return {
-        // Limites d'export
-        monthlyExportLimit: accountType === 'amateur' ? 5 : accountType === 'producteur' ? 999 : 50,
+        // Limites d'export — alignées sur EXPORT_LIMITS serveur
+        // Consumer=3/jour, Influencer=50/jour, Producer=illimité (-1)
+        dailyExportLimit: isProducer ? -1 : isInfluencer ? 50 : 3,
+        monthlyExportLimit: isProducer ? -1 : isInfluencer ? 999 : 90,
 
-        // Limites templates
-        maxCustomTemplates: accountType === 'producteur' ? 20 : 0,
-        maxWatermarks: accountType === 'producteur' ? 10 : 0,
+        // Limites templates sauvegardés — Consumer=3, Influencer=20, Producer=∞
+        maxCustomTemplates: isProducer ? -1 : isInfluencer ? 20 : 3,
+        maxWatermarks: isProducer ? -1 : isInfluencer ? 10 : 0,
 
-        // Limites reviews publiques
-        maxPublicReviews: accountType === 'amateur' ? 10 : 999,
+        // Limites reviews publiques — Consumer=5, Influencer/Producer=∞
+        maxPublicReviews: (isProducer || isInfluencer) ? -1 : 5,
 
         // Export quality
-        exportDPI: accountType === 'producteur' ? 300 : accountType === 'influenceur' ? 300 : 150,
+        exportDPI: (isProducer || isInfluencer) ? 300 : 150,
 
         // Features disponibles
-        supportedFormats: getExportFormats(accountType),
+        supportedFormats: getExportFormats(normalized),
     }
 }
 
@@ -108,12 +113,12 @@ export function useAccountLimits() {
 function getExportFormats(accountType) {
     const baseFormats = ['PNG', 'JPEG', 'PDF']
 
-    if (accountType === 'producteur') {
-        return [...baseFormats, 'SVG', 'CSV', 'JSON', 'HTML']
+    if (['producteur', 'producer'].includes(accountType)) {
+        return [...baseFormats, 'SVG', 'GIF', 'CSV', 'JSON', 'HTML']
     }
 
-    if (accountType === 'influenceur') {
-        return [...baseFormats, 'SVG']
+    if (['influenceur', 'influencer'].includes(accountType)) {
+        return [...baseFormats, 'SVG', 'GIF']
     }
 
     return baseFormats
