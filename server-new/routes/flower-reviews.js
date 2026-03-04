@@ -606,7 +606,7 @@ router.post('/',
             const flowerReviewData = {
                 reviewId: review.id,
                 ...validation.cleaned,
-                analyticsPdfUrl
+                labReportUrl: analyticsPdfUrl
             }
 
             // Convertir les champs JSON en strings pour Prisma
@@ -849,7 +849,7 @@ router.put('/:id',
 
         // Gérer le PDF analytics
         const pdfFile = req.files?.analyticsPdf?.[0]
-        const analyticsPdfUrl = pdfFile ? pdfFile.filename : (review.flowerData?.analyticsPdfUrl || null)
+        const analyticsPdfUrl = pdfFile ? pdfFile.filename : (review.flowerData?.labReportUrl || null)
 
         // Mettre à jour dans une transaction
         const result = await prisma.$transaction(async (tx) => {
@@ -878,7 +878,7 @@ router.put('/:id',
             // 2. Mettre à jour la FlowerReview
             const flowerReviewData = {
                 ...validation.cleaned,
-                analyticsPdfUrl
+                labReportUrl: analyticsPdfUrl
             }
 
             // Convertir les champs JSON en strings
@@ -984,7 +984,7 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
             review.flowerData?.photo2,
             review.flowerData?.photo3,
             review.flowerData?.photo4,
-            review.flowerData?.analyticsPdfUrl
+            review.flowerData?.labReportUrl
         ].filter(Boolean)
 
         for (const filename of imagesToDelete) {
