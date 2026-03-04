@@ -174,15 +174,16 @@ export default function Genetiques({ formData, handleChange }) {
                 await loadTree(treeResult.data.id)
 
                 // 3. Ajouter le nœud de la fleur actuelle
-                await addNode(treeResult.data.id, {
+                // Note: addNode(nodeData) uses state.selectedTreeId internally
+                await addNode({
                     cultivarName: flowerName,
-                    position: JSON.stringify({ x: 300, y: 200 }),
+                    position: { x: 300, y: 200 },
                     color: '#FF6B9D',
-                    genetics: JSON.stringify({
+                    genetics: {
                         breeder: genetics.breeder || '',
                         type: genetics.type || 'hybrid',
                         indicaRatio: genetics.indicaRatio || 50
-                    }),
+                    },
                     notes: `Créé depuis la review`
                 })
             }
@@ -672,11 +673,10 @@ export default function Genetiques({ formData, handleChange }) {
                                             key={tag}
                                             type="button"
                                             onClick={() => toggleRelationTag(tag)}
-                                            className={`px-3 py-1.5 text-xs rounded-full transition-all border ${
-                                                isActive
+                                            className={`px-3 py-1.5 text-xs rounded-full transition-all border ${isActive
                                                     ? 'bg-violet-500/40 text-white border-violet-400'
                                                     : 'bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border-white/10'
-                                            }`}
+                                                }`}
                                         >
                                             {tag}
                                         </button>

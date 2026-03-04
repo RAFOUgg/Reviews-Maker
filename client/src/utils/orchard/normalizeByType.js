@@ -84,6 +84,39 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
       if (ef.duration !== undefined && normalized.dureeEffet === undefined) normalized.dureeEffet = ef.duration;
       if (Array.isArray(ef.effects) && (!normalized.effects || normalized.effects.length === 0)) normalized.effects = ef.effects;
     }
+
+    // Visual section (English keys from form -> French keys for extractExtraData)
+    // The sectionKeys merge copies visual.* to top level as English keys (mold, trichomes, etc.)
+    // We map them to the French keys that extractExtraData expects
+    const visualFieldMap = {
+      mold: 'moisissure',
+      trichomes: 'trichome',
+      seeds: 'graines',
+      density: 'densiteVisuelle',
+      colorRating: 'couleur',
+      transparency: 'couleurTransparence',
+      viscosity: 'viscosite',
+      purity: 'pureteVisuelle',
+    };
+    const textureFieldMap = {
+      hardness: 'durete',
+      elasticity: 'elasticite',
+      stickiness: 'collant',
+      friability: 'friabilite',
+      melting: 'melting',
+      residue: 'residus',
+      density: 'densiteTactile',
+    };
+    for (const [engKey, frKey] of Object.entries(visualFieldMap)) {
+      if (normalized[engKey] !== undefined && normalized[frKey] === undefined) {
+        normalized[frKey] = normalized[engKey];
+      }
+    }
+    for (const [engKey, frKey] of Object.entries(textureFieldMap)) {
+      if (normalized[engKey] !== undefined && normalized[frKey] === undefined) {
+        normalized[frKey] = normalized[engKey];
+      }
+    }
   } catch (e) {
     // non-fatal mapping errors
     console.warn('Orchard: french-key mappings failed', e);
