@@ -31,7 +31,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         categoryRatings: reviewData?.categoryRatings,
         aromas: reviewData?.aromas,
         effects: reviewData?.effects,
-        contentModulesEnabled: config?.contentModules ? 
+        contentModulesEnabled: config?.contentModules ?
             Object.entries(config.contentModules).filter(([k, v]) => v).map(([k]) => k) : [],
     });
 
@@ -44,7 +44,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    
+
     // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isPortrait, isA4, fontSize, padding, spacing, limits, grid } = responsive;
@@ -60,7 +60,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
+    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
         (Array.isArray(reviewData.images) && reviewData.images[0]);
 
     // Composants réutilisables
@@ -68,11 +68,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         if (!children || (React.Children.count(children) === 0)) return null;
         return (
             <div style={{ marginBottom: `${spacing.section}px` }} className={className}>
-                <h3 
-                    style={{ 
-                        fontSize: `${fontSize.section}px`, 
-                        fontWeight: '600', 
-                        color: colors.title, 
+                <h3
+                    style={{
+                        fontSize: `${fontSize.section}px`,
+                        fontWeight: '600',
+                        color: colors.title,
                         marginBottom: `${spacing.element}px`,
                         display: 'flex',
                         alignItems: 'center',
@@ -93,8 +93,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         if (!value) return null;
         const isSmall = size === 'small';
         return (
-            <div 
-                style={{ 
+            <div
+                style={{
                     padding: `${padding.card}px`,
                     borderRadius: `${isSquare ? 8 : 12}px`,
                     backgroundColor: colorWithOpacity(colors.accent, 10),
@@ -104,10 +104,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>
                     {icon && <span className="mr-1">{icon}</span>}{label}
                 </div>
-                <div style={{ 
-                    fontSize: `${isSmall ? fontSize.text : fontSize.text}px`, 
-                    fontWeight: '600', 
-                    color: colors.accent 
+                <div style={{
+                    fontSize: `${isSmall ? fontSize.text : fontSize.text}px`,
+                    fontWeight: '600',
+                    color: colors.accent
                 }}>
                     {value}
                 </div>
@@ -147,11 +147,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 <span style={{ width: isSquare ? '70px' : '90px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
                     {icon} {label}
                 </span>
-                <div 
+                <div
                     className="flex-1 rounded-full overflow-hidden"
-                    style={{ 
+                    style={{
                         height: isSquare ? '8px' : '12px',
-                        backgroundColor: colorWithOpacity(colors.accent, 15) 
+                        backgroundColor: colorWithOpacity(colors.accent, 15)
                     }}
                 >
                     <motion.div
@@ -170,7 +170,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     };
 
     const PipelineFlow = ({ pipeline }) => (
-        <div 
+        <div
             className="p-4 rounded-xl mb-3"
             style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}
         >
@@ -182,7 +182,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     <React.Fragment key={i}>
                         <span
                             className="px-3 py-1.5 rounded-lg"
-                            style={{ 
+                            style={{
                                 backgroundColor: colorWithOpacity(colors.accent, 20),
                                 color: colors.textPrimary,
                                 fontSize: `${fontSize.small}px`,
@@ -208,7 +208,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         <span style={{ width: '120px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
                             {s.name}
                         </span>
-                        <div 
+                        <div
                             className="flex-1 h-4 rounded-full overflow-hidden"
                             style={{ backgroundColor: colorWithOpacity(colors.accent, 10) }}
                         >
@@ -240,7 +240,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
         };
         const sizeMap = { small: '50px', medium: '70px', large: '90px' };
-        
+
         return (
             <div
                 className="absolute pointer-events-none"
@@ -272,15 +272,15 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 className="w-full h-full flex flex-col"
             >
                 {/* Header avec image et infos principales */}
-                <div 
+                <div
                     className={`flex ${isSquare ? 'gap-3' : 'gap-6'} ${isSquare ? 'mb-3' : 'mb-6'} ${isPortrait || isSquare ? 'flex-col' : 'flex-row'}`}
                     style={{ flexShrink: 0 }}
                 >
                     {/* Image */}
                     {contentModules.image && mainImage && (
-                        <div 
+                        <div
                             className="flex-shrink-0 overflow-hidden shadow-lg"
-                            style={{ 
+                            style={{
                                 borderRadius: `${responsive.image.borderRadius}px`,
                                 width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
                                 height: responsive.image.maxHeight,
@@ -294,10 +294,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.element}px` }}>
                         {/* Type badge */}
                         {contentModules.type && reviewData.type && (
-                            <span 
-                                style={{ 
-                                    fontSize: `${fontSize.small}px`, 
-                                    color: colors.accent, 
+                            <span
+                                style={{
+                                    fontSize: `${fontSize.small}px`,
+                                    color: colors.accent,
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.15em',
                                     fontWeight: '600',
@@ -321,8 +321,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     {[...Array(5)].map((_, i) => {
                                         const { filled } = formatRating(reviewData.rating, 5);
                                         return (
-                                            <svg key={i} width="28" height="28" viewBox="0 0 24 24" 
-                                                fill={i < filled ? colors.accent : 'none'} 
+                                            <svg key={i} width="28" height="28" viewBox="0 0 24 24"
+                                                fill={i < filled ? colors.accent : 'none'}
                                                 stroke={colors.accent} strokeWidth="1.5"
                                             >
                                                 <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
@@ -349,8 +349,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Description */}
                 {contentModules.description && reviewData.description && (
-                    <div 
-                        style={{ 
+                    <div
+                        style={{
                             padding: `${padding.card}px`,
                             borderRadius: `${isSquare ? 12 : 16}px`,
                             marginBottom: `${spacing.section}px`,
@@ -358,10 +358,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             flexShrink: 0
                         }}
                     >
-                        <p 
-                            style={{ 
-                                fontSize: `${fontSize.small}px`, 
-                                color: colors.textSecondary, 
+                        <p
+                            style={{
+                                fontSize: `${fontSize.small}px`,
+                                color: colors.textSecondary,
                                 lineHeight: isSquare ? '1.4' : '1.6',
                                 display: '-webkit-box',
                                 WebkitLineClamp: limits.descriptionLines,
@@ -375,9 +375,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 )}
 
                 {/* Grid layout pour les sections */}
-                <div 
+                <div
                     className={`grid ${isPortrait || isSquare ? 'grid-cols-1' : 'grid-cols-2'}`}
-                    style={{ 
+                    style={{
                         gap: `${spacing.section}px`,
                         flex: 1,
                         overflow: 'hidden'
@@ -491,9 +491,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 )}
 
                 {/* Footer */}
-                <div 
+                <div
                     className="flex justify-between items-center"
-                    style={{ 
+                    style={{
                         borderTop: `${isSquare ? 1 : 2}px solid ${colorWithOpacity(colors.accent, 20)}`,
                         paddingTop: `${spacing.element}px`,
                         marginTop: `${spacing.section}px`,
@@ -508,7 +508,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             </span>
                         </div>
                     )}
-                    
+
                     {contentModules.date && reviewData.date && (
                         <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
                             {formatDate(reviewData.date)}

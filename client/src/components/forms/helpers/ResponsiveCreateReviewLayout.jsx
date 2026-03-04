@@ -488,13 +488,11 @@ export const ResponsiveCreateReviewLayout = ({
                                         <button
                                             onClick={() => setShowSaveModal(true)}
                                             disabled={isSaving}
-                                            className={`rounded-xl font-semibold transition-all flex items-center gap-1.5 ${
-                                                layout.isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'
-                                            } ${
-                                                isSaving
+                                            className={`rounded-xl font-semibold transition-all flex items-center gap-1.5 ${layout.isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'
+                                                } ${isSaving
                                                     ? 'bg-emerald-700/40 text-emerald-400/60 cursor-not-allowed'
                                                     : 'bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 active:scale-95'
-                                            }`}
+                                                }`}
                                             title="Sauvegarder la review"
                                         >
                                             {isSaving ? (
@@ -552,7 +550,7 @@ export const ResponsiveCreateReviewLayout = ({
                         onClose={() => setShowSaveModal(false)}
                         onSaveDraft={onSave}
                         onPublish={onSubmit || onSave}
-                        onOpenPreview={onOpenPreview || (() => {})}
+                        onOpenPreview={onOpenPreview || (() => { })}
                         isSaving={isSaving}
                         reviewId={reviewId}
                         hasPreview={reviewHasPreview}

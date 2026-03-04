@@ -674,8 +674,8 @@ export default function Genetiques({ formData, handleChange }) {
                                             type="button"
                                             onClick={() => toggleRelationTag(tag)}
                                             className={`px-3 py-1.5 text-xs rounded-full transition-all border ${isActive
-                                                    ? 'bg-violet-500/40 text-white border-violet-400'
-                                                    : 'bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border-white/10'
+                                                ? 'bg-violet-500/40 text-white border-violet-400'
+                                                : 'bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border-white/10'
                                                 }`}
                                         >
                                             {tag}
