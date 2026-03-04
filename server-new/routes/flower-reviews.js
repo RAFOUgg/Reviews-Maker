@@ -61,16 +61,19 @@ const requireAuth = (req, res, next) => {
  * @param {Object} data - Données à valider
  * @returns {Object} { valid: boolean, errors: string[], cleaned: Object }
  */
-function validateFlowerReviewData(data) {
+function validateFlowerReviewData(data, options = {}) {
+    const { isDraft = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
-    // nomCommercial* (obligatoire)
-    if (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0) {
+    // nomCommercial* (obligatoire sauf brouillon)
+    if (!isDraft && (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0)) {
         errors.push('nomCommercial is required')
-    } else {
+    } else if (data.nomCommercial && typeof data.nomCommercial === 'string' && data.nomCommercial.trim().length > 0) {
         cleaned.nomCommercial = data.nomCommercial.trim()
+    } else if (isDraft) {
+        cleaned.nomCommercial = 'Brouillon'
     }
 
     // cultivars (optionnel - peut être string ou JSON array)
@@ -544,7 +547,8 @@ router.post('/',
         }
 
         // Valider les données FlowerReview
-        const validation = validateFlowerReviewData(req.body)
+        const isDraft = req.body.status === 'draft'
+        const validation = validateFlowerReviewData(req.body, { isDraft })
 
         if (!validation.valid) {
             throw Errors.VALIDATION_ERROR(validation.errors)
@@ -554,8 +558,8 @@ router.post('/',
         const imageFiles = req.files?.images || []
         const imageFilenames = imageFiles.map(file => file.filename)
 
-        // Au moins une image requise
-        if (imageFilenames.length === 0) {
+        // Au moins une image requise (sauf pour les brouillons)
+        if (imageFilenames.length === 0 && !isDraft) {
             throw Errors.MISSING_FIELD('images')
         }
 
@@ -574,8 +578,8 @@ router.post('/',
             holderName: validation.cleaned.nomCommercial, // Map nomCommercial vers holderName
             type: 'Fleurs', // Type de produit
             description: req.body.description || '', // Description générale (optionnel)
-            images: imageFilenames,
-            mainImage: imageFilenames[0],
+            images: JSON.stringify(imageFilenames),
+            mainImage: imageFilenames[0] || null,
             authorId: req.user.id,
             isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : false,
             extraData: JSON.stringify({}) // Peut contenir orchardConfig/orchardPreset si besoin
@@ -786,7 +790,8 @@ router.put('/:id',
         }
 
         // Valider les données FlowerReview
-        const validation = validateFlowerReviewData(req.body)
+        const isDraftUpdate = req.body.status === 'draft'
+        const validation = validateFlowerReviewData(req.body, { isDraft: isDraftUpdate })
 
         if (!validation.valid) {
             throw Errors.VALIDATION_ERROR(validation.errors)
@@ -852,9 +857,9 @@ router.put('/:id',
             const updatedReview = await tx.review.update({
                 where: { id: req.params.id },
                 data: {
-                    holderName: validation.cleaned.nomCommercial,
+                    holderName: validation.cleaned.nomCommercial || review.holderName,
                     description: req.body.description || review.description,
-                    images: allImages,
+                    images: JSON.stringify(allImages),
                     mainImage: allImages[0] || review.mainImage,
                     isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic
                 },
