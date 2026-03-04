@@ -1033,6 +1033,7 @@ export default function EditReviewPage() {
 
                     return (
                         <OrchardPanel
+                            productType={formData.type || 'flower'}
                             reviewData={{
                                 // ✅ Infos de base complètes
                                 title: formData.holderName || 'Aperçu de la review',

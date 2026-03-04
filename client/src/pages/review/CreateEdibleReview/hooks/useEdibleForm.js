@@ -4,7 +4,7 @@ import { useToast } from '../../../../components/shared/ToastContainer'
 
 export function useEdibleForm(reviewId = null) {
     const toast = useToast()
-    const [formData, setFormData] = useState({})
+    const [formData, setFormData] = useState({ type: 'edible' })
     const [loading, setLoading] = useState(!!reviewId)
     const [saving, setSaving] = useState(false)
 

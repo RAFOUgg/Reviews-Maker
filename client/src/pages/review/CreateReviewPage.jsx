@@ -500,6 +500,7 @@ export default function CreateReviewPage() {
 
                     return (
                         <OrchardPanel
+                            productType={typeFromUrl}
                             reviewData={{
                                 // ✅ Infos de base complètes
                                 title: formData.holderName || 'Aperçu de la review',

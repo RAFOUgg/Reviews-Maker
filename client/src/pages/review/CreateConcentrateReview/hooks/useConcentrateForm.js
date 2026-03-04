@@ -4,7 +4,7 @@ import { useToast } from '../../../../components/shared/ToastContainer'
 
 export function useConcentrateForm(reviewId = null) {
     const toast = useToast()
-    const [formData, setFormData] = useState({})
+    const [formData, setFormData] = useState({ type: 'concentrate' })
     const [loading, setLoading] = useState(!!reviewId)
     const [saving, setSaving] = useState(false)
 
