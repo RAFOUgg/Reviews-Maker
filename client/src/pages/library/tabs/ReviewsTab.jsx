@@ -119,6 +119,17 @@ export default function ReviewsTab() {
 
     // Actions
     const toggleVisibility = async (reviewId, currentVisibility) => {
+        // Gate : pour publier publiquement, un aperçu (orchardPreset) est obligatoire
+        if (!currentVisibility) {
+            const review = reviews.find(r => r.id === reviewId)
+            if (review && !review.orchardPreset) {
+                toast.error(
+                    '⚠️ Un aperçu est requis pour publier. Ouvrez la review en édition et définissez un aperçu via "Créer aperçu".'
+                )
+                return
+            }
+        }
+
         try {
             const response = await fetch(`/api/reviews/${reviewId}/visibility`, {
                 method: 'PATCH',
@@ -203,6 +214,11 @@ export default function ReviewsTab() {
                                         }`}>
                                         {review.isPublic ? 'Publique' : 'Privée'}
                                     </span>
+                                    {!review.isPublic && !review.orchardPreset && (
+                                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400" title="Aperçu requis pour publier">
+                                            📸 Aperçu requis
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-white/50">
                                     <span className={`flex items-center gap-1 text-${typeConfig?.color || 'purple'}-400`}>
@@ -325,6 +341,14 @@ export default function ReviewsTab() {
                             }`}>
                             {review.isPublic ? 'Publique' : 'Privée'}
                         </div>
+
+                        {/* Badge aperçu (manquant = avertissement) */}
+                        {!review.isPublic && !review.orchardPreset && (
+                            <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-amber-500/80 backdrop-blur text-white text-xs font-bold"
+                                title="Aperçu requis pour publier">
+                                📸 Aperçu
+                            </div>
+                        )}
                     </div>
 
                     {/* Info */}

@@ -95,6 +95,12 @@ export function flattenFlowerFormData(data) {
     if (data.farm) flat.farm = data.farm
     if (data.varietyType) flat.varietyType = data.varietyType
 
+    // Aperçu / Orchard preset — doit être persisté dans extraData côté serveur
+    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
+    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
+    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
+    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+
     // Section 2 - Génétiques
     if (data.genetics) {
         if (data.genetics.breeder) flat.breeder = data.genetics.breeder

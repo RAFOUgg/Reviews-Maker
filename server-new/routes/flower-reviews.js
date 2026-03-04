@@ -585,7 +585,12 @@ router.post('/',
             // Store cultivars and farm on base Review for library card queries
             cultivars: validation.cleaned.cultivars || null,
             farm: validation.cleaned.farm || null,
-            extraData: JSON.stringify({}) // Peut contenir orchardConfig/orchardPreset si besoin
+            extraData: JSON.stringify({
+                ...(req.body.orchardPreset ? { orchardPreset: req.body.orchardPreset } : {}),
+                ...(req.body.orchardConfig ? { orchardConfig: req.body.orchardConfig } : {}),
+                ...(req.body.orchardCustomLayout ? { orchardCustomLayout: req.body.orchardCustomLayout } : {}),
+                ...(req.body.orchardLayoutMode ? { orchardLayoutMode: req.body.orchardLayoutMode } : {}),
+            })
         }
 
         // Créer la Review + FlowerReview dans une transaction
@@ -867,7 +872,18 @@ router.put('/:id',
                     // Keep cultivars/farm in sync on base Review for library card queries
                     cultivars: validation.cleaned.cultivars || review.cultivars || null,
                     farm: validation.cleaned.farm || review.farm || null,
-                    isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic
+                    isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic,
+                    // Merge orchard/aperçu data into extraData
+                    extraData: (() => {
+                        let existing = {}
+                        try { existing = JSON.parse(review.extraData || '{}') } catch (e) {}
+                        const updated = { ...existing }
+                        if (req.body.orchardPreset) updated.orchardPreset = req.body.orchardPreset
+                        if (req.body.orchardConfig) updated.orchardConfig = req.body.orchardConfig
+                        if (req.body.orchardCustomLayout) updated.orchardCustomLayout = req.body.orchardCustomLayout
+                        if (req.body.orchardLayoutMode) updated.orchardLayoutMode = req.body.orchardLayoutMode
+                        return JSON.stringify(updated)
+                    })()
                 },
                 include: {
                     author: {

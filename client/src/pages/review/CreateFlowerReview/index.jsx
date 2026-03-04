@@ -68,6 +68,9 @@ export default function CreateFlowerReview() {
     const [showExportMaker, setShowExportMaker] = useState(false)
     const scrollContainerRef = useRef(null)
 
+    // Tracker l'aperçu : depuis formData (mode édition) ou défini durant la session
+    const hasPreview = !!(formData.orchardPreset)
+
     // Synchroniser les photos avec formData
     useEffect(() => {
         if (photos.length > 0) {
@@ -170,6 +173,12 @@ export default function CreateFlowerReview() {
             return
         }
 
+        // Un aperçu est requis pour publier dans la galerie publique
+        if (!formData.orchardPreset) {
+            toast.error('Un aperçu est requis pour publier publiquement. Cliquez sur "Aperçu" pour en définir un.')
+            return
+        }
+
         try {
             setSaving(true)
 
@@ -233,17 +242,20 @@ export default function CreateFlowerReview() {
             onSubmit={handleSubmit}
             isSaving={saving}
             reviewId={id || null}
-            reviewHasPreview={false}
+            reviewHasPreview={hasPreview}
         >
             {/* Orchard Preview Button - Mobile optimized */}
             <div className="flex justify-end mb-4 gap-3">
                 <button
                     onClick={() => setShowOrchard(!showOrchard)}
-                    className="px-4 py-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg text-sm font-medium transition-all"
+                    className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all ${hasPreview
+                        ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/50 text-green-300'
+                        : 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/50 text-purple-300'
+                    }`}
                     title="Ouvrir l'aperçu (Orchard)"
                 >
                     <Eye className="w-4 h-4 inline mr-2" />
-                    Aperçu
+                    {hasPreview ? '✅ Aperçu défini' : 'Créer aperçu'}
                 </button>
 
                 {/* Nouveau: bouton visible desktop + mobile pour ouvrir ExportMaker directement */}
@@ -347,7 +359,19 @@ export default function CreateFlowerReview() {
             {/* Orchard Preview Panel (lazy-loaded) */}
             {showOrchard && (
                 <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
-                    <OrchardPanel reviewData={formData} productType="flower" onClose={() => setShowOrchard(false)} />
+                    <OrchardPanel
+                        reviewData={formData}
+                        productType="flower"
+                        onClose={() => setShowOrchard(false)}
+                        onPresetApplied={(orchardData) => {
+                            handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
+                            handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
+                            if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
+                            if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
+                            toast.success('✅ Aperçu défini ! Vous pouvez maintenant publier.')
+                            setShowOrchard(false)
+                        }}
+                    />
                 </Suspense>
             )}
 
