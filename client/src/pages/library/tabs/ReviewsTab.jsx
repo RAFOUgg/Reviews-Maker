@@ -20,14 +20,23 @@ import {
     Flower2, Hash, FlaskConical, Cookie, Plus, MoreVertical, FileText
 } from 'lucide-react'
 
-// Types de produits avec icônes
+// Types de produits avec icônes (IDs = valeurs exactes stockées en DB)
 const PRODUCT_TYPES = [
     { id: 'all', label: 'Tous', icon: null },
-    { id: 'flower', label: 'Fleurs', icon: Flower2, color: 'green' },
-    { id: 'hash', label: 'Hash', icon: Hash, color: 'amber' },
-    { id: 'concentrate', label: 'Concentrés', icon: FlaskConical, color: 'purple' },
-    { id: 'edible', label: 'Comestibles', icon: Cookie, color: 'pink' },
+    { id: 'Fleurs', label: 'Fleurs', icon: Flower2, color: 'green' },
+    { id: 'Hash', label: 'Hash', icon: Hash, color: 'amber' },
+    { id: 'Concentrés', label: 'Concentrés', icon: FlaskConical, color: 'purple' },
+    { id: 'Comestibles', label: 'Comestibles', icon: Cookie, color: 'pink' },
 ]
+
+// Mapping DB type → slug de route d'édition
+const TYPE_TO_ROUTE = {
+    'Fleurs': 'flower',
+    'Hash': 'hash',
+    'Concentrés': 'concentrate',
+    'Comestibles': 'edible',
+    'Concentré': 'concentrate',
+}
 
 const VIEW_MODES = [
     { id: 'grid', icon: Grid3X3, label: 'Grille' },
@@ -66,14 +75,15 @@ export default function ReviewsTab() {
                 const data = await response.json()
                 setReviews(data)
             } else {
-                toast.error('Erreur lors du chargement des reviews')
+                console.error('Failed to load reviews:', response.status)
             }
         } catch (error) {
-            toast.error('Erreur de connexion au serveur')
+            console.error('Error fetching reviews:', error)
         } finally {
             setLoading(false)
         }
-    }, [toast])
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []) // deps vides : ne jamais re-créer cette fonction
 
     useEffect(() => {
         fetchReviews()
@@ -216,7 +226,7 @@ export default function ReviewsTab() {
                                     <ExternalLink className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => navigate(`/edit/${review.type.toLowerCase()}/${review.id}`)}
+                                    onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}`)}
                                     className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-amber-400 transition-colors"
                                     title="Modifier"
                                 >
@@ -284,7 +294,7 @@ export default function ReviewsTab() {
                                     <ExternalLink className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => navigate(`/edit/${review.type.toLowerCase()}/${review.id}`)}
+                                    onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}`)}
                                     className="p-2 rounded-lg bg-white/10 backdrop-blur text-white hover:bg-amber-500/50 transition-colors"
                                 >
                                     <Edit className="w-4 h-4" />
