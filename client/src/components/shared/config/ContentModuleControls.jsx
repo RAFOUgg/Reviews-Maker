@@ -4,17 +4,79 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
-import { getCategoryFieldsByType, getExportSectionsByType } from '../../../utils/orchard/productTypeMappings';
 import { getModulesByProductType, getModuleSectionsByProductType } from '../../../utils/orchard/moduleMappings';
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// CONFIGURATION COMPLÈTE DES MODULES PAR CATÉGORIE
-// ═══════════════════════════════════════════════════════════════════════════════
-
-
-// `MODULE_LABELS` has been migrated to runtime metadata built from
-// the authoritative `moduleMappings.js` sections. Humanized fallbacks
-// are used when no explicit label/icon is available.
+// ── Labels français pour chaque module (clé = field ID de moduleMappings) ────
+const FRENCH_LABELS = {
+    // Infos générales
+    nomCommercial: 'Nom commercial',
+    hashmaker: 'Hashmaker / Producteur',
+    laboratoire: 'Laboratoire',
+    cultivars: 'Cultivars',
+    cultivar: 'Cultivar',
+    cultivarsList: 'Liste des cultivars',
+    breeder: 'Breeder',
+    strainType: 'Type génétique',
+    genetics: 'Généalogie',
+    farm: 'Farm / Source',
+    mainImage: 'Photo principale',
+    images: 'Photos',
+    type: 'Type de produit',
+    // Pipelines production
+    pipelineSeparation: 'Pipeline Séparation',
+    pipelinePurification: 'Pipeline Purification',
+    pipelineExtraction: 'Pipeline Extraction',
+    pipelineCulture: 'Pipeline Culture',
+    fertilizationPipeline: 'Fertilisation',
+    substratMix: 'Substrat',
+    processing: 'Traitement',
+    yield: 'Rendement',
+    harvestDate: 'Date de récolte',
+    recipe: 'Recette',
+    ingredients: 'Ingrédients',
+    curing: 'Curing / Maturation',
+    // Analytiques
+    'analytics.thcLevel': 'THC (%)',
+    'analytics.cbdLevel': 'CBD (%)',
+    'analytics.terpeneProfile': 'Profil terpénique',
+    // Visuel – fleur
+    'visual.colorRating': 'Couleur / Nuancier',
+    'visual.trichomes': 'Trichomes',
+    'visual.density': 'Densité visuelle',
+    'visual.mold': 'Moisissures',
+    'visual.seeds': 'Graines',
+    // Visuel – hash / concentré (ajout)
+    'visual.transparency': 'Transparence',
+    'visual.viscosity': 'Viscosité',
+    // Odeurs
+    'odeurs.intensity': 'Intensité aromatique',
+    'odeurs.complexity': 'Complexité',
+    'odeurs.fidelity': 'Fidélité au cultivar',
+    'odeurs.dominantNotes': 'Notes dominantes',
+    'odeurs.secondaryNotes': 'Notes secondaires',
+    // Texture – fleur
+    'texture.hardness': 'Dureté',
+    'texture.density': 'Densité tactile',
+    'texture.elasticity': 'Élasticité',
+    'texture.stickiness': 'Collant',
+    // Texture – hash / concentré
+    'texture.malleability': 'Malléabilité',
+    'texture.friability': 'Friabilité',
+    'texture.melting': 'Melting',
+    'texture.residue': 'Résidus',
+    'texture.viscosity': 'Viscosité tactile',
+    // Effets
+    'effets.onset': 'Montée (rapidité)',
+    'effets.intensity': 'Intensité',
+    'effets.effects': 'Effets choisis',
+    'effets.duration': 'Durée des effets',
+    // Goûts
+    'gouts.intensity': 'Intensité gustative',
+    'gouts.aggressiveness': 'Agressivité / Piquant',
+    'gouts.dryPuffNotes': 'Dry puff / Tirage à sec',
+    'gouts.inhalationNotes': 'Inhalation',
+    'gouts.exhalationNotes': 'Expiration / Arrière-goût',
+};
 
 
 
@@ -271,7 +333,17 @@ export default function ContentModuleControls() {
 
     // Helper to produce humanized labels when metadata is missing
     const humanize = (id) => {
-        if (!id) return id;
+        // 1. Check French labels map first (dot-notation keys included)
+        if (FRENCH_LABELS[id]) return FRENCH_LABELS[id];
+        // 2. For dot-notation like 'visual.density' → check sub-key too
+        if (id && id.includes('.')) {
+            const [, sub] = id.split('.');
+            if (FRENCH_LABELS[id]) return FRENCH_LABELS[id]; // already checked above
+            // fallback: humanize the sub-key
+            const s = (sub || id).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
+            return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+        }
+        // 3. CamelCase to words
         const s = id.replace(/\./g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
         return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
     };
@@ -340,7 +412,7 @@ export default function ContentModuleControls() {
         const sectionCategories = sections.map(sec => ({
             key: `sec_${sec.id}`,
             name: sec.label || sec.name || sec.id,
-            description: sec.access || '',
+            description: sec.access === 'all' ? '' : (sec.access || ''),
             color: 'gray',
             modules: (sec.fields || []).filter(f => relevantModulesSet.has(f))
         })).filter(c => c.modules && c.modules.length > 0);

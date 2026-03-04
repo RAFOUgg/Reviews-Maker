@@ -1,105 +1,228 @@
 // Centralized module mappings per product type
 // Used by ContentModuleControls, ExportMaker, TemplateRenderer
+// Fields use the actual formData key paths:
+//   - Top-level string fields: 'hashmaker', 'cultivars', etc.
+//   - Nested section objects: 'visual.density', 'odeurs.intensity', etc.
+//     (dot-notation allows ContentModuleControls to display sub-items per category)
 
-import { FLOWER_CATEGORY_FIELDS, HASH_CATEGORY_FIELDS, CONCENTRATE_CATEGORY_FIELDS, EDIBLE_CATEGORY_FIELDS } from './productTypeMappings';
-
-// New structured sections per product type
-// Each section has: id, label, access ('all'|'influenceur'|'producteur'), fields[]
+// ── FLOWER SECTIONS ──────────────────────────────────────────────────────────
 const FLOWER_SECTIONS = [
     {
         id: 'infos_generales',
         label: 'Infos générales',
         access: 'all',
-        fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type', 'date', 'author']
+        fields: ['nomCommercial', 'cultivar', 'farm', 'mainImage', 'images']
     },
     {
         id: 'genetique',
         label: 'Génétique',
         access: 'producteur',
-        fields: ['cultivar', 'cultivarsList', 'breeder', 'strainType']
+        fields: ['cultivar', 'breeder', 'strainType', 'genetics']
     },
     {
         id: 'culture',
         label: 'Culture',
         access: 'producteur',
-        fields: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'floweringTime', 'harvestDate', 'yield']
-    },
-    {
-        id: 'recolte',
-        label: 'Récolte',
-        access: 'all',
-        fields: ['trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+        fields: ['pipelineCulture', 'substratMix', 'fertilizationPipeline', 'yield', 'harvestDate']
     },
     {
         id: 'analytiques',
         label: 'Analytiques',
         access: 'all',
-        fields: ['thcLevel', 'cbdLevel', 'labResults']
+        fields: ['analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile']
     },
     {
         id: 'visuel',
         label: 'Visuel',
         access: 'all',
-        fields: [...FLOWER_CATEGORY_FIELDS.visual]
+        // visual object from VisualSection: { colors, colorRating, density, trichomes, mold, seeds }
+        fields: ['visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds']
     },
     {
         id: 'odeurs',
         label: 'Odeurs',
         access: 'all',
-        fields: [...FLOWER_CATEGORY_FIELDS.smell]
+        // odeurs object from OdorSection: { dominantNotes, secondaryNotes, intensity, complexity, fidelity }
+        fields: ['odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes']
     },
     {
         id: 'texture',
         label: 'Texture',
         access: 'all',
-        fields: [...FLOWER_CATEGORY_FIELDS.texture]
+        // texture object from TextureSection (flower): { hardness, density, elasticity, stickiness }
+        fields: ['texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness']
     },
     {
         id: 'effets',
         label: 'Effets',
         access: 'all',
-        fields: [...FLOWER_CATEGORY_FIELDS.effects]
+        // effets object from EffectsSection: { onset, intensity, effects, duration }
+        fields: ['effets.onset', 'effets.intensity', 'effets.effects']
     },
     {
         id: 'gout',
         label: 'Goût',
         access: 'all',
-        fields: [...FLOWER_CATEGORY_FIELDS.taste]
+        // gouts object from TasteSection: { intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes }
+        fields: ['gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes']
     },
     {
         id: 'maturation',
         label: 'Maturation',
         access: 'influenceur',
-        fields: ['curing', 'pipelineCuring']
+        fields: ['curing']
     }
 ];
 
+// ── HASH SECTIONS ────────────────────────────────────────────────────────────
 const HASH_SECTIONS = [
-    { id: 'infos_generales', label: 'Infos générales', access: 'all', fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type', 'date', 'author'] },
-    { id: 'production', label: 'Production', access: 'producteur', fields: ['hashmaker', 'cultivarsList', 'pipelineSeparation', 'pipelinePurification', 'processing'] },
-    { id: 'analytiques', label: 'Analytiques', access: 'all', fields: ['thcLevel', 'cbdLevel', 'labResults'] },
-    { id: 'visuel', label: 'Visuel', access: 'all', fields: [...HASH_CATEGORY_FIELDS.visual] },
-    { id: 'odeurs', label: 'Odeurs', access: 'all', fields: [...HASH_CATEGORY_FIELDS.smell] },
-    { id: 'texture', label: 'Texture', access: 'all', fields: [...HASH_CATEGORY_FIELDS.texture] },
-    { id: 'effets', label: 'Effets', access: 'all', fields: [...HASH_CATEGORY_FIELDS.effects] },
-    { id: 'gout', label: 'Goût', access: 'all', fields: [...HASH_CATEGORY_FIELDS.taste] },
-    { id: 'maturation', label: 'Maturation', access: 'influenceur', fields: ['curing'] }
+    {
+        id: 'infos_generales',
+        label: 'Infos générales',
+        access: 'all',
+        fields: ['nomCommercial', 'hashmaker', 'laboratoire', 'cultivars', 'mainImage', 'images']
+    },
+    {
+        id: 'production',
+        label: 'Production',
+        access: 'producteur',
+        // top-level form keys from CreateHashReview
+        fields: ['hashmaker', 'cultivarsList', 'pipelineSeparation', 'pipelinePurification', 'processing']
+    },
+    {
+        id: 'analytiques',
+        label: 'Analytiques',
+        access: 'all',
+        fields: ['analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile']
+    },
+    {
+        id: 'visuel',
+        label: 'Visuel',
+        access: 'all',
+        // visual object from VisualSection (hash): { colors, colorRating, density, transparency, mold, seeds }
+        fields: ['visual.colorRating', 'visual.transparency', 'visual.density', 'visual.mold', 'visual.seeds']
+    },
+    {
+        id: 'odeurs',
+        label: 'Odeurs',
+        access: 'all',
+        // odeurs object: { intensity, fidelity, dominantNotes, secondaryNotes }
+        fields: ['odeurs.intensity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes']
+    },
+    {
+        id: 'texture',
+        label: 'Texture',
+        access: 'all',
+        // texture object (hash): { hardness, density, malleability, melting, residue, friability, stickiness }
+        fields: ['texture.hardness', 'texture.density', 'texture.melting', 'texture.residue']
+    },
+    {
+        id: 'effets',
+        label: 'Effets',
+        access: 'all',
+        fields: ['effets.onset', 'effets.intensity', 'effets.effects']
+    },
+    {
+        id: 'gout',
+        label: 'Goût',
+        access: 'all',
+        // gouts object from TasteSection: { intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes }
+        fields: ['gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes']
+    },
+    {
+        id: 'maturation',
+        label: 'Maturation',
+        access: 'influenceur',
+        fields: ['curing']
+    }
 ];
 
+// ── CONCENTRATE SECTIONS ─────────────────────────────────────────────────────
 const CONCENTRATE_SECTIONS = [
-    { id: 'infos_generales', label: 'Infos générales', access: 'all', fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type'] },
-    { id: 'extraction', label: 'Extraction', access: 'producteur', fields: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'processing'] },
-    { id: 'analytiques', label: 'Analytiques', access: 'all', fields: ['thcLevel', 'cbdLevel', 'labResults'] },
-    { id: 'visuel', label: 'Visuel', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.visual] },
-    { id: 'odeurs', label: 'Odeurs', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.smell] },
-    { id: 'texture', label: 'Texture', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.texture] },
-    { id: 'effets', label: 'Effets', access: 'all', fields: [...CONCENTRATE_CATEGORY_FIELDS.effects] }
+    {
+        id: 'infos_generales',
+        label: 'Infos générales',
+        access: 'all',
+        fields: ['nomCommercial', 'hashmaker', 'laboratoire', 'cultivars', 'mainImage', 'images']
+    },
+    {
+        id: 'extraction',
+        label: 'Extraction',
+        access: 'producteur',
+        fields: ['hashmaker', 'cultivarsList', 'pipelineExtraction', 'pipelinePurification', 'processing']
+    },
+    {
+        id: 'analytiques',
+        label: 'Analytiques',
+        access: 'all',
+        fields: ['analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile']
+    },
+    {
+        id: 'visuel',
+        label: 'Visuel',
+        access: 'all',
+        // visual object (concentrate): { colors, colorRating, density (purity), transparency, mold, seeds }
+        fields: ['visual.colorRating', 'visual.transparency', 'visual.density', 'visual.mold', 'visual.seeds']
+    },
+    {
+        id: 'odeurs',
+        label: 'Odeurs',
+        access: 'all',
+        fields: ['odeurs.intensity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes']
+    },
+    {
+        id: 'texture',
+        label: 'Texture',
+        access: 'all',
+        // texture object (concentrate): { hardness, density, viscosity, melting, residue, stickiness }
+        fields: ['texture.hardness', 'texture.density', 'texture.viscosity', 'texture.melting', 'texture.residue']
+    },
+    {
+        id: 'effets',
+        label: 'Effets',
+        access: 'all',
+        fields: ['effets.onset', 'effets.intensity', 'effets.effects']
+    },
+    {
+        id: 'gout',
+        label: 'Goût',
+        access: 'all',
+        fields: ['gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes']
+    },
+    {
+        id: 'maturation',
+        label: 'Maturation',
+        access: 'influenceur',
+        fields: ['curing']
+    }
 ];
 
+// ── EDIBLE SECTIONS ──────────────────────────────────────────────────────────
 const EDIBLE_SECTIONS = [
-    { id: 'infos_generales', label: 'Infos générales', access: 'all', fields: ['holderName', 'title', 'mainImage', 'images', 'description', 'type'] },
-    { id: 'recette', label: 'Recette', access: 'producteur', fields: ['recipe', 'ingredients'] },
-    { id: 'gout_effets', label: 'Goûts & Effets', access: 'all', fields: [...EDIBLE_CATEGORY_FIELDS.taste, ...EDIBLE_CATEGORY_FIELDS.effects] }
+    {
+        id: 'infos_generales',
+        label: 'Infos générales',
+        access: 'all',
+        fields: ['nomCommercial', 'mainImage', 'images', 'type']
+    },
+    {
+        id: 'recette',
+        label: 'Recette',
+        access: 'producteur',
+        fields: ['recipe', 'ingredients']
+    },
+    {
+        id: 'gout',
+        label: 'Goût',
+        access: 'all',
+        fields: ['gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes']
+    },
+    {
+        id: 'effets',
+        label: 'Effets',
+        access: 'all',
+        fields: ['effets.onset', 'effets.intensity', 'effets.effects']
+    }
 ];
 
 export function getModuleSectionsByProductType(productType = 'flower') {
