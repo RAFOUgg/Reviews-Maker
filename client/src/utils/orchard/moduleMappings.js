@@ -11,13 +11,13 @@ const FLOWER_SECTIONS = [
         id: 'infos_generales',
         label: 'Infos générales',
         access: 'all',
-        fields: ['nomCommercial', 'cultivar', 'farm', 'mainImage', 'images']
+        fields: ['nomCommercial', 'cultivar', 'farm', 'images']
     },
     {
         id: 'genetique',
         label: 'Génétique',
         access: 'producteur',
-        fields: ['cultivar', 'breeder', 'strainType', 'genetics']
+        fields: ['breeder', 'strainType', 'genetics']
     },
     {
         id: 'culture',
@@ -80,14 +80,14 @@ const HASH_SECTIONS = [
         id: 'infos_generales',
         label: 'Infos générales',
         access: 'all',
-        fields: ['nomCommercial', 'hashmaker', 'laboratoire', 'cultivars', 'mainImage', 'images']
+        fields: ['nomCommercial', 'hashmaker', 'laboratoire', 'cultivars', 'images']
     },
     {
         id: 'production',
         label: 'Production',
         access: 'producteur',
         // top-level form keys from CreateHashReview
-        fields: ['hashmaker', 'cultivarsList', 'pipelineSeparation', 'pipelinePurification', 'processing']
+        fields: ['cultivarsList', 'pipelineSeparation', 'pipelinePurification', 'processing']
     },
     {
         id: 'analytiques',
@@ -143,13 +143,13 @@ const CONCENTRATE_SECTIONS = [
         id: 'infos_generales',
         label: 'Infos générales',
         access: 'all',
-        fields: ['nomCommercial', 'hashmaker', 'laboratoire', 'cultivars', 'mainImage', 'images']
+        fields: ['nomCommercial', 'hashmaker', 'laboratoire', 'cultivars', 'images']
     },
     {
         id: 'extraction',
         label: 'Extraction',
         access: 'producteur',
-        fields: ['hashmaker', 'cultivarsList', 'pipelineExtraction', 'pipelinePurification', 'processing']
+        fields: ['cultivarsList', 'pipelineExtraction', 'pipelinePurification', 'processing']
     },
     {
         id: 'analytiques',
@@ -203,7 +203,7 @@ const EDIBLE_SECTIONS = [
         id: 'infos_generales',
         label: 'Infos générales',
         access: 'all',
-        fields: ['nomCommercial', 'mainImage', 'images', 'type']
+        fields: ['nomCommercial', 'images', 'type']
     },
     {
         id: 'recette',

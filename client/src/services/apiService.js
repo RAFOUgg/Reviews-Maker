@@ -240,7 +240,7 @@ export const flowerReviewsService = {
      * @param {FormData} formData - Données du formulaire avec images
      */
     async create(formData) {
-        return fetchAPI(`${API_BASE}/reviews/flower`, {
+        return fetchAPI(`${API_BASE}/flower-reviews`, {
             method: 'POST',
             body: formData
         })
@@ -250,7 +250,7 @@ export const flowerReviewsService = {
      * Mettre à jour une review Fleur
      */
     async update(id, formData) {
-        return fetchAPI(`${API_BASE}/reviews/flower/${id}`, {
+        return fetchAPI(`${API_BASE}/flower-reviews/${id}`, {
             method: 'PUT',
             body: formData
         })
@@ -260,7 +260,7 @@ export const flowerReviewsService = {
      * Récupérer une review Fleur par ID
      */
     async getById(id) {
-        return fetchAPI(`${API_BASE}/reviews/flower/${id}`)
+        return fetchAPI(`${API_BASE}/flower-reviews/${id}`)
     },
 
     /**
@@ -271,7 +271,7 @@ export const flowerReviewsService = {
             ...formData,
             status: 'draft'
         }
-        return fetchAPI(`${API_BASE}/reviews/flower`, {
+        return fetchAPI(`${API_BASE}/flower-reviews`, {
             method: 'POST',
             body: JSON.stringify(reviewData),
             headers: { 'Content-Type': 'application/json' }
@@ -284,21 +284,21 @@ export const flowerReviewsService = {
  */
 export const hashReviewsService = {
     async create(formData) {
-        return fetchAPI(`${API_BASE}/reviews/hash`, {
+        return fetchAPI(`${API_BASE}/hash-reviews`, {
             method: 'POST',
             body: formData
         })
     },
 
     async update(id, formData) {
-        return fetchAPI(`${API_BASE}/reviews/hash/${id}`, {
+        return fetchAPI(`${API_BASE}/hash-reviews/${id}`, {
             method: 'PUT',
             body: formData
         })
     },
 
     async getById(id) {
-        return fetchAPI(`${API_BASE}/reviews/hash/${id}`)
+        return fetchAPI(`${API_BASE}/hash-reviews/${id}`)
     }
 }
 
@@ -307,21 +307,21 @@ export const hashReviewsService = {
  */
 export const concentrateReviewsService = {
     async create(formData) {
-        return fetchAPI(`${API_BASE}/reviews/concentrate`, {
+        return fetchAPI(`${API_BASE}/concentrate-reviews`, {
             method: 'POST',
             body: formData
         })
     },
 
     async update(id, formData) {
-        return fetchAPI(`${API_BASE}/reviews/concentrate/${id}`, {
+        return fetchAPI(`${API_BASE}/concentrate-reviews/${id}`, {
             method: 'PUT',
             body: formData
         })
     },
 
     async getById(id) {
-        return fetchAPI(`${API_BASE}/reviews/concentrate/${id}`)
+        return fetchAPI(`${API_BASE}/concentrate-reviews/${id}`)
     }
 }
 
@@ -330,21 +330,21 @@ export const concentrateReviewsService = {
  */
 export const edibleReviewsService = {
     async create(formData) {
-        return fetchAPI(`${API_BASE}/reviews/edible`, {
+        return fetchAPI(`${API_BASE}/edible-reviews`, {
             method: 'POST',
             body: formData
         })
     },
 
     async update(id, formData) {
-        return fetchAPI(`${API_BASE}/reviews/edible/${id}`, {
+        return fetchAPI(`${API_BASE}/edible-reviews/${id}`, {
             method: 'PUT',
             body: formData
         })
     },
 
     async getById(id) {
-        return fetchAPI(`${API_BASE}/reviews/edible/${id}`)
+        return fetchAPI(`${API_BASE}/edible-reviews/${id}`)
     }
 }
 
