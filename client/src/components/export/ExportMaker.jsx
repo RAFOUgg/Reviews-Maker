@@ -1052,7 +1052,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                     try {
                                                         // Render canvas and upload
                                                         if (!exportRef.current) throw new Error('Aucune preview disponible')
-                                                        const dataUrl = await toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
+                                                        const { toPng: _toPng } = await import('html-to-image')
+                                                        const dataUrl = await _toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
                                                         const imgResp = await fetch(dataUrl)
                                                         const blob = await imgResp.blob()
                                                         const filename = `export-${(reviewData.name || 'review').replace(/\s+/g, '-')}-${Date.now()}.png`
@@ -1076,8 +1077,26 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                         }
 
                                                         const json = await resp.json()
+
+                                                        // Si publication publique → marquer la review comme publique aussi
+                                                        if (savePublic && reviewData?.id) {
+                                                            try {
+                                                                await fetch(`/api/reviews/${reviewData.id}/visibility`, {
+                                                                    method: 'PATCH',
+                                                                    headers: { 'Content-Type': 'application/json' },
+                                                                    body: JSON.stringify({ isPublic: true }),
+                                                                    credentials: 'include'
+                                                                })
+                                                            } catch (visErr) {
+                                                                console.warn('[ExportMaker] Failed to update review visibility:', visErr)
+                                                            }
+                                                        }
+
                                                         setSavingToLibrary(false)
-                                                        alert('Export enregistré dans votre bibliothèque')
+                                                        alert(savePublic
+                                                            ? 'Export enregistré et review publiée dans la galerie !'
+                                                            : 'Export enregistré dans votre bibliothèque'
+                                                        )
                                                     } catch (err) {
                                                         console.error(err)
                                                         setSaveError(err.message)

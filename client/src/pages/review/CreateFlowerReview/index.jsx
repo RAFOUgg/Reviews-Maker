@@ -220,6 +220,11 @@ export default function CreateFlowerReview() {
             sectionEmojis={sectionEmojis}
             showProgress={true}
             onOpenPreview={() => setShowOrchard(true)}
+            onSave={handleSave}
+            onSubmit={handleSubmit}
+            isSaving={saving}
+            reviewId={id || null}
+            reviewHasPreview={false}
         >
             {/* Orchard Preview Button - Mobile optimized */}
             <div className="flex justify-end mb-4 gap-3">

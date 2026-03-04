@@ -139,6 +139,7 @@ export default function CreateEdibleReview() {
             subtitle="Documentez votre produit comestible"
             loading={loading}
             saving={saving}
+            reviewId={id || null}
         />
     )
 }

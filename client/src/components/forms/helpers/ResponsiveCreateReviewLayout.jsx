@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
+import SaveReviewModal from '../../shared/SaveReviewModal';
 
 /**
  * ResponsiveCreateReviewLayout - Layout responsive pour pages de création
@@ -28,8 +29,12 @@ export const ResponsiveCreateReviewLayout = ({
     showProgress = true,
     sectionEmojis = [], // Array d'émojis pour chaque section
     // Optional callback to open a global preview/orchard panel from the footer
-    onOpenPreview,
-}) => {
+    onOpenPreview,    // Save / Publish callbacks
+    onSave,               // async () => void  — save as draft
+    onSubmit,             // async () => void  — publish (public)
+    isSaving = false,     // bool
+    reviewId = null,      // string|null (null = not yet persisted)
+    reviewHasPreview = false, // bool (true = a render has been created)}) => {
     const layout = useResponsiveLayout();
     const [scrollPosition, setScrollPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
@@ -38,6 +43,7 @@ export const ResponsiveCreateReviewLayout = ({
     const [shouldUseCarousel, setShouldUseCarousel] = useState(false);
     const carouselRef = useRef(null);
     const containerRef = useRef(null);
+    const [showSaveModal, setShowSaveModal] = useState(false);
 
     // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
@@ -467,16 +473,46 @@ export const ResponsiveCreateReviewLayout = ({
                                 </button>
 
                                 {/* Section Indicator */}
-                                <div className="text-center flex-1">
+                                <div className="text-center flex-1 min-w-0">
                                     <div className={`font-medium ${layout.isMobile ? 'text-xs text-white/50' : 'text-sm text-white/50'
                                         }`}>
                                         {currentSection + 1}/{totalSections}
                                     </div>
                                 </div>
 
-                                {/* Preview button - visible on all screens */}
+                                {/* === BOUTON SAUVEGARDER === */}
+                                {onSave && (
+                                    <div className="flex-shrink-0">
+                                        <button
+                                            onClick={() => setShowSaveModal(true)}
+                                            disabled={isSaving}
+                                            className={`rounded-xl font-semibold transition-all flex items-center gap-1.5 ${
+                                                layout.isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'
+                                            } ${
+                                                isSaving
+                                                    ? 'bg-emerald-700/40 text-emerald-400/60 cursor-not-allowed'
+                                                    : 'bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 active:scale-95'
+                                            }`}
+                                            title="Sauvegarder la review"
+                                        >
+                                            {isSaving ? (
+                                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <circle cx="12" cy="12" r="10" strokeWidth="2" className="opacity-20" />
+                                                    <path strokeLinecap="round" d="M12 2a10 10 0 0 1 10 10" strokeWidth="2" />
+                                                </svg>
+                                            ) : (
+                                                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                                                </svg>
+                                            )}
+                                            {!layout.isMobile && <span>{isSaving ? 'Enregistrement…' : 'Sauvegarder'}</span>}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Preview button */}
                                 {onOpenPreview && (
-                                    <div className="flex-shrink-0 ml-1">
+                                    <div className="flex-shrink-0">
                                         <button
                                             onClick={onOpenPreview}
                                             className={`rounded-xl bg-white/5 text-white/70 hover:bg-white/10 transition-all font-medium flex items-center gap-1.5 ${layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'
@@ -507,6 +543,19 @@ export const ResponsiveCreateReviewLayout = ({
                         </div>
                     </div>
                 </div>
+
+                {/* Save Review Modal */}
+                {showSaveModal && onSave && (
+                    <SaveReviewModal
+                        onClose={() => setShowSaveModal(false)}
+                        onSaveDraft={onSave}
+                        onPublish={onSubmit || onSave}
+                        onOpenPreview={onOpenPreview || (() => {})}
+                        isSaving={isSaving}
+                        reviewId={reviewId}
+                        hasPreview={reviewHasPreview}
+                    />
+                )}
             </div >
         </div >
     );

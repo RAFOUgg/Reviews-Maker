@@ -498,20 +498,83 @@ export function extractPipelines(reviewData) {
     const pipelines = [];
 
     const pipelineTypes = [
+        // Culture / Production (Flowers)
+        { key: 'pipelineGlobal', name: 'Culture', icon: '🌱' },
+        // Curing / Maturation (all types)
+        { key: 'pipelineCuring', name: 'Curing & Maturation', icon: '🔥' },
+        // Extraction (Concentrates)
         { key: 'pipelineExtraction', name: 'Extraction', icon: '⚗️' },
+        // Separation (Hash)
         { key: 'pipelineSeparation', name: 'Séparation', icon: '🔬' },
+        // Purification
         { key: 'pipelinePurification', name: 'Purification', icon: '✨' },
+        // Fertilization
         { key: 'fertilizationPipeline', name: 'Fertilisation', icon: '🌱' },
     ];
 
     for (const { key, name, icon } of pipelineTypes) {
-        const data = asArray(reviewData[key]);
+        const raw = reviewData[key];
+        const data = asArray(raw);
         if (data.length > 0) {
             pipelines.push({
                 key,
                 name,
                 icon,
-                steps: data.map(step => extractLabel(step))
+                steps: data.map(step => {
+                    if (typeof step === 'object' && step !== null) {
+                        // Rich step object: extract label + optional date/metrics
+                        const label = extractLabel(step);
+                        const date = step.date || step.semaine || step.phase || step.jour || '';
+                        const note = step.note || step.comment || '';
+                        return date ? `${date}: ${label}${note ? ' — ' + note : ''}` : label;
+                    }
+                    return extractLabel(step);
+                })
+            });
+        }
+    }
+
+    // Also try nested formats produced by normalizeByType:
+    // formData.curing → { curingTimeline: [...] } gets flattened to reviewData.curingTimeline
+    const curingTimeline = reviewData.curingTimeline ||
+        (typeof reviewData.curing === 'object' && reviewData.curing?.curingTimeline);
+    if (curingTimeline) {
+        const arr = asArray(curingTimeline);
+        if (arr.length > 0 && !pipelines.find(p => p.key === 'pipelineCuring')) {
+            pipelines.push({
+                key: 'curingTimeline',
+                name: 'Curing & Maturation',
+                icon: '🔥',
+                steps: arr.map(step => {
+                    if (typeof step === 'object' && step !== null) {
+                        const date = step.date || step.semaine || step.phase || step.jour || '';
+                        const note = step.note || step.comment || extractLabel(step);
+                        return date ? `${date}: ${note}` : note;
+                    }
+                    return extractLabel(step);
+                })
+            });
+        }
+    }
+
+    // formData.culture → { cultureTimelineData: [...] } → reviewData.cultureTimelineData
+    const cultureTimeline = reviewData.cultureTimelineData ||
+        (typeof reviewData.culture === 'object' && reviewData.culture?.cultureTimelineData);
+    if (cultureTimeline) {
+        const arr = asArray(cultureTimeline);
+        if (arr.length > 0 && !pipelines.find(p => p.key === 'pipelineGlobal')) {
+            pipelines.push({
+                key: 'cultureTimeline',
+                name: 'Culture',
+                icon: '🌱',
+                steps: arr.map(step => {
+                    if (typeof step === 'object' && step !== null) {
+                        const date = step.date || step.semaine || step.phase || step.jour || '';
+                        const note = step.note || step.comment || extractLabel(step);
+                        return date ? `${date}: ${note}` : note;
+                    }
+                    return extractLabel(step);
+                })
             });
         }
     }

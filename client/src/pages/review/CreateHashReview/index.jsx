@@ -154,6 +154,7 @@ export default function CreateHashReview() {
             subtitle="Documentez votre hash, kief ou ice-o-lator"
             loading={loading}
             saving={saving}
+            reviewId={id || null}
         />
     )
 }

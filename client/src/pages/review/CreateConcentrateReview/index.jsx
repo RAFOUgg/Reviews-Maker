@@ -152,6 +152,7 @@ export default function CreateConcentrateReview() {
             subtitle="Documentez votre rosin, BHO ou autre concentré"
             loading={loading}
             saving={saving}
+            reviewId={id || null}
         />
     )
 }

@@ -34,7 +34,9 @@ const CreateReviewFormWrapper = ({
     loading = false,
     saving = false,
     onLoadingChange = () => { },
-    onSavingChange = () => { }
+    onSavingChange = () => { },
+    reviewId = null,          // string|null — ID de la review si déjà sauvegardée
+    reviewHasPreview = false, // bool — un rendu a-t-il déjà été créé ?
 }) => {
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
@@ -80,6 +82,8 @@ const CreateReviewFormWrapper = ({
             onSave={onSave}
             onSubmit={onSubmit}
             isSaving={saving}
+            reviewId={reviewId}
+            reviewHasPreview={reviewHasPreview}
             onOpenPreview={() => setShowOrchard(true)}
         >
             {/* Bouton Aperçu - Ouvre OrchardPanel (système complet: templates, export, partage) */}

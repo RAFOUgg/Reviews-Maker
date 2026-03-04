@@ -471,7 +471,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 </div>
 
                 {/* Pipelines (full width) */}
-                {pipelines.length > 0 && (contentModules.pipelineExtraction || contentModules.pipelineSeparation || contentModules.pipelinePurification || contentModules.fertilizationPipeline) && (
+                {pipelines.length > 0 && (contentModules.pipelineExtraction || contentModules.pipelineSeparation || contentModules.pipelinePurification || contentModules.fertilizationPipeline || contentModules.pipelineCuring || contentModules.pipelineGlobal || contentModules.pipelines === true || contentModules.curing) && (
                     <Section title="Processus de Production" icon="⚗️">
                         <div className="space-y-3">
                             {pipelines.map((p, i) => <PipelineFlow key={i} pipeline={p} />)}
