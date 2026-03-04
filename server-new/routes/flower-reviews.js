@@ -526,7 +526,8 @@ function validateFlowerReviewData(data) {
 // ===== POST /api/reviews/flower - Créer une review Fleur complète =====
 router.post('/',
     requireAuth,
-    requireSectionAccess('info'),  // Check: can access basic sections
+    // Note: 'info' is not in sectionRestrictions so requireSectionAccess('info') blocked EVERYONE.
+    // Basic review creation is open to all authenticated users.
     upload.fields([
         { name: 'images', maxCount: 4 }, // Photos produit (max 4)
         { name: 'analyticsPdf', maxCount: 1 } // PDF analytics (optionnel)

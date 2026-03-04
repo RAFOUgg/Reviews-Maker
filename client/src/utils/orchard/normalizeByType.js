@@ -91,8 +91,10 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     const visualFieldMap = {
       mold: 'moisissure',
       trichomes: 'trichome',
+      pistils: 'pistil',       // flower form uses plural 'pistils'
       seeds: 'graines',
-      density: 'densiteVisuelle',
+      densite: 'densiteVisuelle', // flower form uses French 'densite' (not English 'density')
+      density: 'densiteVisuelle', // fallback for English key
       colorRating: 'couleur',
       transparency: 'couleurTransparence',
       viscosity: 'viscosite',
