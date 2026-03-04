@@ -252,11 +252,11 @@ const SECTIONS_BY_TYPE = {
         { id: 'genetics', name: 'Génétiques', modules: ['cultivar', 'cultivarsList', 'breeder', 'farm'] },
         { id: 'culture', name: 'Pipeline Culture', modules: ['fertilizationPipeline', 'substratMix', 'yield', 'floweringTime', 'harvestDate'] },
         { id: 'analytics', name: 'Analytiques', modules: ['thcLevel', 'cbdLevel', 'labResults'] },
-        { id: 'visual', name: 'Visuel & Technique', modules: FLOWER_CATEGORY_FIELDS.visual },
-        { id: 'odors', name: 'Odeurs', modules: FLOWER_CATEGORY_FIELDS.smell },
-        { id: 'texture', name: 'Texture', modules: FLOWER_CATEGORY_FIELDS.texture },
-        { id: 'tastes', name: 'Goûts', modules: FLOWER_CATEGORY_FIELDS.taste },
-        { id: 'effects', name: 'Effets', modules: FLOWER_CATEGORY_FIELDS.effects },
+        { id: 'visual', name: 'Visuel & Technique', modules: ['colorRating', 'density', 'trichomes', 'mold', 'seeds'] },
+        { id: 'odors', name: 'Odeurs', modules: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'] },
+        { id: 'texture', name: 'Texture', modules: ['hardness', 'elasticity', 'stickiness'] },
+        { id: 'tastes', name: 'Goûts', modules: ['intensiteFumee', 'agressivite'] },
+        { id: 'effects', name: 'Effets', modules: ['montee', 'intensiteEffet', 'dureeEffet'] },
         { id: 'recolte', name: 'Récolte & Post-Récolte', modules: ['trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet'] },
         { id: 'curing', name: 'Curing & Maturation', modules: ['curing', 'drying', 'processing', 'purgevide'] }
     ],
@@ -264,28 +264,28 @@ const SECTIONS_BY_TYPE = {
         { id: 'general', name: 'Informations générales', modules: ['holderName', 'title', 'image', 'images', 'description', 'type'] },
         { id: 'separation', name: 'Pipeline Séparation', modules: ['pipelineSeparation'] },
         { id: 'purification', name: 'Purification', modules: ['pipelinePurification'] },
-        { id: 'visual', name: 'Visuel & Technique', modules: HASH_CATEGORY_FIELDS.visual },
-        { id: 'odors', name: 'Odeurs', modules: HASH_CATEGORY_FIELDS.smell },
-        { id: 'texture', name: 'Texture', modules: HASH_CATEGORY_FIELDS.texture },
-        { id: 'tastes', name: 'Goûts', modules: HASH_CATEGORY_FIELDS.taste },
-        { id: 'effects', name: 'Effets', modules: HASH_CATEGORY_FIELDS.effects },
+        { id: 'visual', name: 'Visuel & Technique', modules: ['colorRating', 'transparency', 'density', 'mold', 'seeds'] },
+        { id: 'odors', name: 'Odeurs', modules: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'] },
+        { id: 'texture', name: 'Texture', modules: ['hardness', 'melting', 'residue', 'friability'] },
+        { id: 'tastes', name: 'Goûts', modules: ['intensiteFumee', 'agressivite'] },
+        { id: 'effects', name: 'Effets', modules: ['montee', 'intensiteEffet', 'dureeEffet'] },
         { id: 'curing', name: 'Curing', modules: ['curing'] }
     ],
     concentrate: [
         { id: 'general', name: 'Informations générales', modules: ['holderName', 'title', 'image', 'images', 'description', 'type'] },
         { id: 'extraction', name: 'Pipeline Extraction', modules: ['pipelineExtraction'] },
         { id: 'purification', name: 'Purification', modules: ['pipelinePurification'] },
-        { id: 'visual', name: 'Visuel & Technique', modules: CONCENTRATE_CATEGORY_FIELDS.visual },
-        { id: 'odors', name: 'Odeurs', modules: CONCENTRATE_CATEGORY_FIELDS.smell },
-        { id: 'texture', name: 'Texture', modules: CONCENTRATE_CATEGORY_FIELDS.texture },
-        { id: 'tastes', name: 'Goûts', modules: CONCENTRATE_CATEGORY_FIELDS.taste },
-        { id: 'effects', name: 'Effets', modules: CONCENTRATE_CATEGORY_FIELDS.effects }
+        { id: 'visual', name: 'Visuel & Technique', modules: ['colorRating', 'transparency', 'density', 'melting', 'residue', 'mold'] },
+        { id: 'odors', name: 'Odeurs', modules: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'] },
+        { id: 'texture', name: 'Texture', modules: ['hardness', 'friability', 'viscosity', 'melting'] },
+        { id: 'tastes', name: 'Goûts', modules: ['intensiteFumee', 'agressivite'] },
+        { id: 'effects', name: 'Effets', modules: ['montee', 'intensiteEffet', 'dureeEffet'] }
     ],
     edible: [
         { id: 'general', name: 'Informations générales', modules: ['holderName', 'title', 'image', 'images', 'description', 'type'] },
         { id: 'recipe', name: 'Recette', modules: ['tastes', 'tastesIntensity'] },
-        { id: 'tastes', name: 'Goûts', modules: EDIBLE_CATEGORY_FIELDS.taste },
-        { id: 'effects', name: 'Effets', modules: EDIBLE_CATEGORY_FIELDS.effects }
+        { id: 'tastes', name: 'Goûts', modules: ['intensiteFumee', 'agressivite'] },
+        { id: 'effects', name: 'Effets', modules: ['montee', 'intensiteEffet', 'dureeEffet'] }
     ]
 };
 
