@@ -577,7 +577,7 @@ router.post('/',
             images: imageFilenames,
             mainImage: imageFilenames[0],
             authorId: req.user.id,
-            isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : true,
+            isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : false,
             extraData: JSON.stringify({}) // Peut contenir orchardConfig/orchardPreset si besoin
         }
 

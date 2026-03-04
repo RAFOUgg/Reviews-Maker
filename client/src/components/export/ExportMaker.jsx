@@ -71,6 +71,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     const { user } = useAuth()
 
+    // Résolution du nom de la review (plusieurs champs possibles selon le type de produit)
+    const reviewName = (reviewData?.holderName || reviewData?.nomCommercial || reviewData?.name || '').trim() || 'export';
+
     // Templates prédéfinis — utiliser les templates par type de produit si présents
     const productKey = productType || 'Fleurs';
     const predefined = PREDEFINED_TEMPLATES[productKey] || PREDEFINED_TEMPLATES['Fleurs'];
@@ -86,10 +89,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const icon = key === 'detailed' ? Layout : key === 'minimal' ? Grid : Maximize2;
 
         // Check template availability based on account type permissions
-        const isAvailable = key === 'minimal' || // compact always available
-            (key === 'standard' && isPremium) || // detailed for premium
-            (key === 'detailed' && isPremium) || // detailed for premium  
-            (key === 'custom' && isProducer); // custom for producer only
+        // Spec: Consumer has Compact + Standard + Détaillé; only Personnalisé requires Producer
+        const isAvailable = key === 'minimal' || // Compact — toujours disponible
+            key === 'standard' || // Standard — disponible pour tous
+            key === 'detailed' || // Détaillé — disponible pour tous
+            (key === 'custom' && isProducer); // Personnalisé — Producteur uniquement
 
         return {
             id: key,
@@ -157,7 +161,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     style: { transform: 'none' }
                 });
                 const link = document.createElement('a');
-                link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
+                link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
                 link.href = dataUrl;
                 link.click();
                 return;
@@ -173,7 +177,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     style: { transform: 'none' }
                 });
                 const link = document.createElement('a');
-                link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.jpg`;
+                link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.jpg`;
                 link.href = dataUrl;
                 link.click();
                 return;
@@ -190,7 +194,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement('a');
-                link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.svg`;
+                link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.svg`;
                 link.href = url;
                 link.click();
                 setTimeout(() => URL.revokeObjectURL(url), 20000);
@@ -236,17 +240,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                 pdf.addImage(dataUrl, 'PNG', x, y, imgWidth, imgHeight);
                 pdf.setProperties({
-                    title: reviewData.name || 'Review',
+                    title: reviewName || 'Review',
                     author: reviewData.author?.username || reviewData.author || 'Reviews-Maker'
                 });
-                pdf.save(`review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.pdf`);
+                pdf.save(`review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.pdf`);
                 return;
             }
 
             // default fallback to png
             const fallbackDataUrl = await toPng(node, { cacheBust: true, pixelRatio: scale, backgroundColor: null, style: { transform: 'none' } });
             const link = document.createElement('a');
-            link.download = `review-${(reviewData.name || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
+            link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
             link.href = fallbackDataUrl;
             link.click();
 
@@ -288,7 +292,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 onProgress: (percent) => setGifProgress(percent)
             });
 
-            const filename = `review-${reviewData.name || 'export'}-pipeline-${Date.now()}.gif`;
+            const filename = `review-${reviewName}-pipeline-${Date.now()}.gif`;
             downloadGIF(blob, filename);
         } catch (error) {
             console.error('❌ Export GIF failed:', error);
@@ -713,17 +717,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         if (navigator.share) {
                                             const imgResp = await fetch(dataUrl);
                                             const blob = await imgResp.blob();
-                                            const file = new File([blob], `review-${reviewData.name || 'export'}.png`, { type: 'image/png' });
+                                            const file = new File([blob], `review-${reviewName}.png`, { type: 'image/png' });
                                             const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
                                             if (canShareFiles) {
                                                 await navigator.share({
-                                                    title: `Review ${reviewData.name || ''}`,
+                                                    title: `Review ${reviewName}`,
                                                     text: `Découvrez cette review sur Terpologie`,
                                                     files: [file],
                                                 });
                                             } else {
                                                 await navigator.share({
-                                                    title: `Review ${reviewData.name || ''}`,
+                                                    title: `Review ${reviewName}`,
                                                     text: `Découvrez cette review sur Terpologie`,
                                                     url: window.location.href,
                                                 });
@@ -781,7 +785,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             <div className="flex justify-between items-start mb-8">
                                 <div>
                                     <div className="text-sm font-bold tracking-widest uppercase mb-1">{reviewData.typeName || productType}</div>
-                                    <h1 className="text-4xl font-black text-white mb-2">{reviewData.name || 'Produit sans nom'}</h1>
+                                    <h1 className="text-4xl font-black text-white mb-2">{reviewName || 'Produit sans nom'}</h1>
                                     <div className="flex flex-col gap-2">
                                         <div className="flex gap-2">
                                             <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">
@@ -1056,7 +1060,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                         const dataUrl = await _toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
                                                         const imgResp = await fetch(dataUrl)
                                                         const blob = await imgResp.blob()
-                                                        const filename = `export-${(reviewData.name || 'review').replace(/\s+/g, '-')}-${Date.now()}.png`
+                                                        const filename = `export-${reviewName.replace(/\s+/g, '-')}-${Date.now()}.png`
                                                         const form = new FormData()
                                                         form.append('file', blob, filename)
                                                         if (reviewData?.id) form.append('reviewId', reviewData.id)
