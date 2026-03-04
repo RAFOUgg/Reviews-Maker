@@ -479,9 +479,8 @@ export const ResponsiveCreateReviewLayout = ({
                                     <div className="flex-shrink-0 ml-1">
                                         <button
                                             onClick={onOpenPreview}
-                                            className={`rounded-xl bg-white/5 text-white/70 hover:bg-white/10 transition-all font-medium flex items-center gap-1.5 ${
-                                                layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'
-                                            }`}
+                                            className={`rounded-xl bg-white/5 text-white/70 hover:bg-white/10 transition-all font-medium flex items-center gap-1.5 ${layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'
+                                                }`}
                                             title="Aperçu"
                                         >
                                             <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">

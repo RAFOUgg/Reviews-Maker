@@ -176,11 +176,10 @@ export default function PhenoHuntPage() {
                                             <button
                                                 key={tree.id}
                                                 onClick={() => handleSelectTree(tree.id)}
-                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                                                    store.selectedTreeId === tree.id
+                                                className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${store.selectedTreeId === tree.id
                                                         ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
                                                         : 'text-slate-300 hover:bg-slate-700/50'
-                                                }`}
+                                                    }`}
                                             >
                                                 {tree.name}
                                             </button>
