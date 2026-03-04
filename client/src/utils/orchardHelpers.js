@@ -462,7 +462,13 @@ export function extractExtraData(extraData, reviewData = null) {
     ];
 
     const results = fieldDefs
-        .filter(({ key }) => merged[key] !== undefined && merged[key] !== null && merged[key] !== '')
+        .filter(({ key }) => {
+            const v = merged[key];
+            if (v === undefined || v === null || v === '') return false;
+            // Skip complex objects and arrays — they can't be rendered as InfoCard values
+            if (typeof v === 'object') return false;
+            return true;
+        })
         .map(({ key, label, icon, category }) => {
             let displayValue = merged[key];
             // Si c'est un nombre, formater
