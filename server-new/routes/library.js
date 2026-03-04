@@ -8,6 +8,7 @@
 import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
+import { canAccessFeature } from '../middleware/permissions.js';
 import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -123,6 +124,18 @@ router.post('/templates', requireAuth, asyncHandler(async (req, res) => {
         return res.status(400).json({
             error: 'invalid_config',
             message: 'Configuration invalide',
+        });
+    }
+
+    // Vérifier quota templates selon le type de compte
+    const currentCount = await prisma.savedTemplate.count({ where: { userId: req.user.id } });
+    const quotaCheck = canAccessFeature(req.user, 'library_templates', { currentCount });
+    if (!quotaCheck.allowed) {
+        return res.status(403).json({
+            error: 'quota_exceeded',
+            message: quotaCheck.reason,
+            limit: quotaCheck.limit,
+            current: currentCount,
         });
     }
 

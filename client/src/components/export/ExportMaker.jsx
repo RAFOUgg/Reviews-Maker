@@ -17,6 +17,7 @@ import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
 import { getMaxElements } from '../../data/exportTemplates';
 import { CANNABIS_COLORS } from '../../data/cannabisColors';
+import { useOrchardStore } from '../../store/orchardStore';
 import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
 import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/exportElementMappings';
@@ -70,6 +71,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     }, [permissions]);
 
     const { user } = useAuth()
+
+    // Lire la config de présentation depuis le store OrchardPanel (couleurs, typo)
+    const orchardConfig = useOrchardStore((s) => s.config);
+    const previewBackground = orchardConfig?.colors?.background || 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+    const previewFont = orchardConfig?.typography?.fontFamily || 'Inter';
+    const previewAccent = orchardConfig?.colors?.accent || '#ffd700';
+    const previewTextColor = orchardConfig?.colors?.textPrimary || '#ffffff';
 
     // Résolution du nom de la review (plusieurs champs possibles selon le type de produit)
     const reviewName = (reviewData?.holderName || reviewData?.nomCommercial || reviewData?.name || '').trim() || 'export';
@@ -767,11 +775,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     <div
                         ref={exportRef}
-                        className="bg-gradient-to-br from-gray-900 to-black rounded-none shadow-2xl relative overflow-hidden"
+                        className="rounded-none shadow-2xl relative overflow-hidden"
                         style={{
                             width: format === '9:16' ? '450px' : '800px',
                             minHeight: format === '16:9' ? '450px' : '800px',
-                            aspectRatio: format.replace(':', '/')
+                            aspectRatio: format.replace(':', '/'),
+                            background: previewBackground,
+                            fontFamily: `"${previewFont}", Inter, sans-serif`,
+                            color: previewTextColor,
+                            '--accent': previewAccent,
                         }}
                     >
                         {/* Background Theme */}
