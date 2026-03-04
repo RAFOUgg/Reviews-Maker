@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle, Dna } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
@@ -39,11 +39,61 @@ export default function Genetiques({ formData, handleChange }) {
         createTree,
         deleteTree: deleteTreeApi,
         addNode,
+        updateNode,
         clearTree
     } = useGeneticsStore()
 
     // Trouver le nœud sélectionné
     const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null
+
+    // Local state pour le panneau métadonnées du nœud sélectionné
+    const [nodeEditMeta, setNodeEditMeta] = useState({ breeder: '', type: '', relations: [], phenotypeCode: '' })
+    const nodeUpdateTimerRef = useRef(null)
+
+    // Synchroniser le state local quand le nœud sélectionné change
+    useEffect(() => {
+        if (selectedNode) {
+            const g = selectedNode.genetics || {}
+            setNodeEditMeta({
+                breeder: g.breeder || '',
+                type: g.type || '',
+                relations: Array.isArray(g.relations) ? g.relations : [],
+                phenotypeCode: g.phenotypeCode || selectedNode.data?.codePheno || ''
+            })
+        }
+    }, [selectedNodeId])
+
+    // Met à jour le state local et déclenche la sauvegarde API avec debounce
+    const handleNodeMetaUpdate = useCallback((updates) => {
+        if (!selectedNode) return
+        setNodeEditMeta(prev => {
+            const newMeta = { ...prev, ...updates }
+            if (nodeUpdateTimerRef.current) clearTimeout(nodeUpdateTimerRef.current)
+            nodeUpdateTimerRef.current = setTimeout(() => {
+                updateNode(selectedNode.id, {
+                    genetics: JSON.stringify({ ...(selectedNode.genetics || {}), ...newMeta })
+                })
+            }, 600)
+            return newMeta
+        })
+    }, [selectedNode, updateNode])
+
+    // Toggle d'un tag de relation généalogique
+    const toggleRelationTag = useCallback((tag) => {
+        setNodeEditMeta(prev => {
+            const current = prev.relations || []
+            const updated = current.includes(tag) ? current.filter(r => r !== tag) : [...current, tag]
+            const newMeta = { ...prev, relations: updated }
+            if (nodeUpdateTimerRef.current) clearTimeout(nodeUpdateTimerRef.current)
+            nodeUpdateTimerRef.current = setTimeout(() => {
+                if (!selectedNode) return
+                updateNode(selectedNode.id, {
+                    genetics: JSON.stringify({ ...(selectedNode.genetics || {}), ...newMeta })
+                })
+            }, 600)
+            return newMeta
+        })
+    }, [selectedNode, updateNode])
 
     // Charger les arbres et reviews au montage
     useEffect(() => {
@@ -589,7 +639,8 @@ export default function Genetiques({ formData, handleChange }) {
                                 <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Breeder</label>
                                 <input
                                     type="text"
-                                    defaultValue={selectedNode.genetics?.breeder || selectedNode.data?.breeder || ''}
+                                    value={nodeEditMeta.breeder}
+                                    onChange={(e) => handleNodeMetaUpdate({ breeder: e.target.value })}
                                     className="liquid-input w-full text-sm"
                                     placeholder="DNA Genetics..."
                                 />
@@ -598,7 +649,8 @@ export default function Genetiques({ formData, handleChange }) {
                             <div className="space-y-2">
                                 <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Type</label>
                                 <select
-                                    defaultValue={selectedNode.genetics?.type || selectedNode.data?.type || ''}
+                                    value={nodeEditMeta.type}
+                                    onChange={(e) => handleNodeMetaUpdate({ type: e.target.value })}
                                     className="liquid-input liquid-select w-full text-sm"
                                 >
                                     <option value="" className="bg-[#12121a] text-white">Sélectionner...</option>
@@ -613,23 +665,31 @@ export default function Genetiques({ formData, handleChange }) {
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Relation Généalogique</label>
                             <div className="flex flex-wrap gap-2">
-                                {['clone élite', 'seed run', 'selfed (S1)', 'BX1', 'BX2', 'polyhybride'].map(tag => (
-                                    <button
-                                        key={tag}
-                                        type="button"
-                                        className="px-3 py-1.5 text-xs rounded-full transition-all bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border border-white/10"
-                                    >
-                                        {tag}
-                                    </button>
-                                ))}
+                                {['clone élite', 'seed run', 'selfed (S1)', 'BX1', 'BX2', 'polyhybride'].map(tag => {
+                                    const isActive = (nodeEditMeta.relations || []).includes(tag)
+                                    return (
+                                        <button
+                                            key={tag}
+                                            type="button"
+                                            onClick={() => toggleRelationTag(tag)}
+                                            className={`px-3 py-1.5 text-xs rounded-full transition-all border ${
+                                                isActive
+                                                    ? 'bg-violet-500/40 text-white border-violet-400'
+                                                    : 'bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border-white/10'
+                                            }`}
+                                        >
+                                            {tag}
+                                        </button>
+                                    )
+                                })}
                             </div>
                         </div>
 
                         {/* Pheno Code */}
                         <div className="pt-3 border-t border-white/10">
                             <PhenoCodeGenerator
-                                value={selectedNode.genetics?.phenotypeCode || selectedNode.data?.codePheno || ''}
-                                onChange={(code) => { }}
+                                value={nodeEditMeta.phenotypeCode}
+                                onChange={(code) => handleNodeMetaUpdate({ phenotypeCode: code })}
                                 userId={user?.id}
                             />
                         </div>
