@@ -29,12 +29,14 @@ export const ResponsiveCreateReviewLayout = ({
     showProgress = true,
     sectionEmojis = [], // Array d'émojis pour chaque section
     // Optional callback to open a global preview/orchard panel from the footer
-    onOpenPreview,    // Save / Publish callbacks
+    onOpenPreview,
+    // Save / Publish callbacks
     onSave,               // async () => void  — save as draft
     onSubmit,             // async () => void  — publish (public)
     isSaving = false,     // bool
     reviewId = null,      // string|null (null = not yet persisted)
-    reviewHasPreview = false, // bool (true = a render has been created)}) => {
+    reviewHasPreview = false, // bool (true = a render has been created)
+}) => {
     const layout = useResponsiveLayout();
     const [scrollPosition, setScrollPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
