@@ -108,10 +108,9 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
                     discordId: true
                 }
             },
-            // Include flowerData so we can surface cultivars/farm in library cards
+            // Include flowerData so we can surface the farm in library cards
             flowerData: {
                 select: {
-                    cultivars: true,
                     farm: true
                 }
             }
@@ -127,7 +126,8 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
         ownerName: review.author?.username,
         ownerId: review.author?.id,
         // Surface flowerData fields for library card display
-        cultivars: review.flowerData?.cultivars || null,
+        // cultivars is on the base Review model; farm comes from flowerData if not on base
+        cultivars: review.cultivars || null,
         farm: review.flowerData?.farm || review.farm || null
     }))
 

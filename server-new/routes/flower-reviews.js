@@ -582,6 +582,9 @@ router.post('/',
             mainImage: imageFilenames[0] || null,
             authorId: req.user.id,
             isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : false,
+            // Store cultivars and farm on base Review for library card queries
+            cultivars: validation.cleaned.cultivars || null,
+            farm: validation.cleaned.farm || null,
             extraData: JSON.stringify({}) // Peut contenir orchardConfig/orchardPreset si besoin
         }
 
@@ -861,6 +864,9 @@ router.put('/:id',
                     description: req.body.description || review.description,
                     images: JSON.stringify(allImages),
                     mainImage: allImages[0] || review.mainImage,
+                    // Keep cultivars/farm in sync on base Review for library card queries
+                    cultivars: validation.cleaned.cultivars || review.cultivars || null,
+                    farm: validation.cleaned.farm || review.farm || null,
                     isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic
                 },
                 include: {
