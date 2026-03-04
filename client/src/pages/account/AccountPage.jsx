@@ -431,7 +431,7 @@ function SecuritySection({ t }) {
     }
     try {
       setPwLoading(true)
-      const response = await fetch('/api/user/change-password', {
+      const response = await fetch('/api/user/settings/change-password', {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
