@@ -107,6 +107,13 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
                     avatar: true,
                     discordId: true
                 }
+            },
+            // Include flowerData so we can surface cultivars/farm in library cards
+            flowerData: {
+                select: {
+                    cultivars: true,
+                    farm: true
+                }
             }
         },
         orderBy: { createdAt: 'desc' }
@@ -117,8 +124,11 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
     // Ajouter les métadonnées spécifiques pour "mes reviews"
     const reviewsWithMeta = formattedReviews.map(review => ({
         ...review,
-        ownerName: review.author.username,
-        ownerId: review.author.id
+        ownerName: review.author?.username,
+        ownerId: review.author?.id,
+        // Surface flowerData fields for library card display
+        cultivars: review.flowerData?.cultivars || null,
+        farm: review.flowerData?.farm || review.farm || null
     }))
 
     // Map DB field names to API-friendly English keys

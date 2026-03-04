@@ -278,10 +278,11 @@ export function flattenEdibleFormData(data) {
 /**
  * Crée un FormData à partir des données aplaties
  * @param {Object} flatData - Données aplaties
- * @param {Array} photos - Photos à uploader
+ * @param {Array} photos - Photos à uploader (nouveaux fichiers)
  * @param {string} status - 'draft' ou 'published'
+ * @param {Array} existingImages - Noms de fichiers d'images existantes à conserver
  */
-export function createFormDataFromFlat(flatData, photos = [], status = 'draft') {
+export function createFormDataFromFlat(flatData, photos = [], status = 'draft', existingImages = []) {
     const formData = new FormData()
 
     // Ajouter toutes les données aplaties
@@ -296,7 +297,12 @@ export function createFormDataFromFlat(flatData, photos = [], status = 'draft') 
         }
     })
 
-    // Ajouter les photos
+    // Ajouter les images existantes à conserver (pour PUT/update)
+    if (existingImages && existingImages.length > 0) {
+        formData.append('existingImages', JSON.stringify(existingImages))
+    }
+
+    // Ajouter les nouvelles photos
     if (photos && photos.length > 0) {
         photos.forEach((photo) => {
             if (photo.file) {

@@ -127,11 +127,15 @@ export default function CreateFlowerReview() {
             // Aplatir les données du formulaire avec l'utilitaire
             const flatData = flattenFlowerFormData(formData)
 
-            // Créer le FormData avec les données aplaties
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft')
+            // Récupérer les images existantes depuis formData (chargées depuis l'API en mode édition)
+            const existingImages = Array.isArray(formData.images) ? formData.images
+                : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+
+            // Créer le FormData avec les données aplaties et les images existantes
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
 
             // Debug: log les données envoyées
-            console.log('📤 Sending flattened data:', flatData)
+            console.log('📤 Sending flattened data:', flatData, 'existingImages:', existingImages)
 
             let savedReview
             if (id) {
@@ -155,7 +159,12 @@ export default function CreateFlowerReview() {
 
     const handleSubmit = async () => {
         // Validation des champs requis
-        if (!formData.nomCommercial || !photos || photos.length === 0) {
+        // En mode édition, les images existantes comptent aussi (pas besoin de nouvelles photos)
+        const existingImagesForValidation = Array.isArray(formData.images) ? formData.images
+            : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+        const hasImages = photos.length > 0 || existingImagesForValidation.length > 0
+
+        if (!formData.nomCommercial || !hasImages) {
             toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
             setCurrentSection(0) // Retour à la première section
             return
@@ -166,7 +175,7 @@ export default function CreateFlowerReview() {
 
             // Utiliser le même pipeline que handleSave pour garantir la cohérence de sérialisation
             const flatData = flattenFlowerFormData(formData)
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published')
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImagesForValidation)
 
             if (id) {
                 await flowerReviewsService.update(id, reviewFormData)

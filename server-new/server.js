@@ -80,6 +80,12 @@ const prisma = new PrismaClient()
 // Build session options
 const sessionOptions = buildSessionOptions(session)
 
+// Serve uploaded images statically
+// Files are stored in db/review_images/ and served under /api/images/ and /images/
+const reviewImagesDir = path.resolve(__dirname, '../db/review_images')
+app.use('/api/images', express.static(reviewImagesDir))
+app.use('/images', express.static(reviewImagesDir))
+
 // Set up middleware
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))

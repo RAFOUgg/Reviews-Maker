@@ -21,7 +21,22 @@ export function useFlowerForm(reviewId = null) {
         try {
             setLoading(true)
             const review = await flowerReviewsService.getById(id)
-            setFormData(review)
+
+            // Map the API response structure to form expected structure:
+            // - Review model fields: holderName, images, mainImage, type, etc.
+            // - FlowerReview model fields are nested under review.flowerData
+            const { flowerData, ...baseReview } = review
+
+            const mappedFormData = {
+                ...baseReview,
+                // Map holderName (Review model) → nomCommercial (form field)
+                nomCommercial: baseReview.holderName || '',
+                // Merge flowerData fields into top-level form state
+                // so fields like cultivars, farm, thcPercent etc. are accessible directly
+                ...(flowerData || {}),
+            }
+
+            setFormData(mappedFormData)
         } catch (error) {
             toast.error('Impossible de charger la review')
             console.error(error)
