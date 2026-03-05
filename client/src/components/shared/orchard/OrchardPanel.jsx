@@ -49,6 +49,18 @@ function normalizeReviewData(reviewData) {
     // ============================================================================
     const dataSource = { ...parsedExtra, ...normalized };
 
+    // Merge nested 'visual' sub-object into dataSource for field lookups
+    // VisualSection stores scores under formData.visual.* in-session (before API save)
+    if (reviewData?.visual && typeof reviewData.visual === 'object') {
+        const vd = reviewData.visual;
+        if (vd.density !== undefined && dataSource.densite === undefined) dataSource.densite = vd.density;
+        if (vd.trichomes !== undefined && dataSource.trichome === undefined) dataSource.trichome = vd.trichomes;
+        if (vd.mold !== undefined && dataSource.moisissure === undefined) dataSource.moisissure = vd.mold;
+        if (vd.seeds !== undefined && dataSource.graines === undefined) dataSource.graines = vd.seeds;
+        if (vd.colorRating !== undefined && dataSource.couleur === undefined) dataSource.couleur = vd.colorRating;
+        if (vd.transparency !== undefined && dataSource.pureteVisuelle === undefined) dataSource.pureteVisuelle = vd.transparency;
+    }
+
     // Définition des champs par catégorie
     const categoryFieldsMap = {
         visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],

@@ -149,13 +149,26 @@ export function flattenFlowerFormData(data) {
     }
 
     // Section 5 - Visuel & Technique
-    if (data.selectedColors) flat.couleurNuancier = data.selectedColors
-    if (data.densite !== undefined) flat.densiteVisuelle = data.densite
-    if (data.trichomes !== undefined) flat.trichomesScore = data.trichomes
-    if (data.pistils !== undefined) flat.pistilsScore = data.pistils
-    if (data.manucure !== undefined) flat.manucureScore = data.manucure
-    if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
-    if (data.graines !== undefined) flat.grainesScore = data.graines
+    // Primary: VisualSection stores scores under formData.visual.* (nested object)
+    if (data.visual) {
+        if (data.visual.colors) flat.couleurNuancier = data.visual.colors
+        if (data.visual.colorRating !== undefined) flat.couleurRating = data.visual.colorRating
+        if (data.visual.density !== undefined) flat.densiteVisuelle = data.visual.density
+        if (data.visual.trichomes !== undefined) flat.trichomesScore = data.visual.trichomes
+        if (data.visual.transparency !== undefined) flat.transparenceScore = data.visual.transparency
+        if (data.visual.mold !== undefined) flat.moisissureScore = data.visual.mold
+        if (data.visual.seeds !== undefined) flat.grainesScore = data.visual.seeds
+        if (data.visual.pistils !== undefined) flat.pistilsScore = data.visual.pistils
+        if (data.visual.manucure !== undefined) flat.manucureScore = data.visual.manucure
+    }
+    // Legacy fallback: direct top-level fields (older reviews / other code paths)
+    if (!flat.couleurNuancier && data.selectedColors) flat.couleurNuancier = data.selectedColors
+    if (!flat.densiteVisuelle && data.densite !== undefined) flat.densiteVisuelle = data.densite
+    if (!flat.trichomesScore && data.trichomes !== undefined) flat.trichomesScore = data.trichomes
+    if (!flat.pistilsScore && data.pistils !== undefined) flat.pistilsScore = data.pistils
+    if (!flat.manucureScore && data.manucure !== undefined) flat.manucureScore = data.manucure
+    if (!flat.moisissureScore && data.moisissure !== undefined) flat.moisissureScore = data.moisissure
+    if (!flat.grainesScore && data.graines !== undefined) flat.grainesScore = data.graines
 
     return flat
 }

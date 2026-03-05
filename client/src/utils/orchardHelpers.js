@@ -395,7 +395,21 @@ export function extractExtraData(extraData, reviewData = null) {
                 merged[f] = reviewData[f];
             }
         });
-    }
+
+        // Also check nested 'visual' sub-object (VisualSection stores scores here in-session,
+        // before flattenFlowerFormData runs on save: formData.visual = { density, trichomes, mold, seeds })
+        if (reviewData.visual && typeof reviewData.visual === 'object') {
+            const vd = reviewData.visual;
+            if (merged.densiteVisuelle === undefined && vd.density !== undefined) merged.densiteVisuelle = vd.density;
+            if (merged.densite === undefined && vd.density !== undefined) merged.densite = vd.density;
+            if (merged.trichomes === undefined && vd.trichomes !== undefined) merged.trichomes = vd.trichomes;
+            if (merged.trichome === undefined && vd.trichomes !== undefined) merged.trichome = vd.trichomes;
+            if (merged.moisissure === undefined && vd.mold !== undefined) merged.moisissure = vd.mold;
+            if (merged.graines === undefined && vd.seeds !== undefined) merged.graines = vd.seeds;
+            if (merged.couleur === undefined && vd.colorRating !== undefined) merged.couleur = vd.colorRating;
+            if (merged.transparenceScore === undefined && vd.transparency !== undefined) merged.transparenceScore = vd.transparency;
+        }
+    }  // end if (reviewData)
 
     const fieldDefs = [
         // Culture

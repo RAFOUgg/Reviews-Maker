@@ -35,8 +35,8 @@ const upload = multer({
     storage,
     limits: {
         fileSize: 20 * 1024 * 1024,   // 20 MB par fichier
-        fieldSize: 10 * 1024 * 1024,   // 10 MB par champ texte (pipeline JSON, etc.)
-        fields: 100,                    // max 100 champs texte
+        fieldSize: 100 * 1024 * 1024,  // 100 MB par champ texte (orchardConfig, pipeline JSON, etc.)
+        fields: 1000,                   // max 1000 champs texte
         files: 10                       // max 10 fichiers
     },
     fileFilter: (req, file, cb) => {
@@ -57,7 +57,10 @@ const handleMulterError = (err, req, res, next) => {
         return res.status(413).json({ error: 'Image trop grande (max 20 MB par fichier)' })
     }
     if (err && err.code === 'LIMIT_FIELD_VALUE') {
-        return res.status(413).json({ error: 'Données de formulaire trop volumineuses (champ dépasse 10 MB)' })
+        return res.status(413).json({ error: 'Données de formulaire trop volumineuses (champ dépasse 100 MB)' })
+    }
+    if (err && err.code === 'LIMIT_FIELD_COUNT') {
+        return res.status(400).json({ error: 'Trop de champs dans le formulaire (max 1000)' })
     }
     if (err && err.code === 'LIMIT_UNEXPECTED_FILE') {
         return res.status(400).json({ error: 'Fichier inattendu : ' + err.field })
