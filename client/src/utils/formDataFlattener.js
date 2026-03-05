@@ -124,7 +124,9 @@ export function flattenFlowerFormData(data) {
     // Compatibilité ancienne structure data.culture
     if (data.culture) {
         if (!flat.cultureTimelineConfig && data.culture.cultureTimelineConfig) flat.cultureTimelineConfig = data.culture.cultureTimelineConfig
+        // CulturePipelineSection écrit 'cultureTimeline', le backend attend 'cultureTimelineData'
         if (!flat.cultureTimelineData && data.culture.cultureTimelineData) flat.cultureTimelineData = data.culture.cultureTimelineData
+        if (!flat.cultureTimelineData && data.culture.cultureTimeline) flat.cultureTimelineData = data.culture.cultureTimeline
         if (data.culture.mode) flat.cultureMode = data.culture.mode
         if (data.culture.spaceType) flat.cultureSpaceType = data.culture.spaceType
         if (data.culture.substrat) flat.cultureSubstrat = data.culture.substrat

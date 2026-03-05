@@ -47,6 +47,26 @@ export function useFlowerForm(reviewId = null) {
                 seeds: fd.grainesScore ?? 10,
             }
 
+            // Reconstruct culture sub-object so CulturePipelineSection receives
+            // its expected structure: { cultureTimeline, cultureTimelineConfig, ... }
+            const culture = {
+                cultureTimeline: fd.cultureTimelineData ?? [],
+                cultureTimelineConfig: fd.cultureTimelineConfig ?? {},
+                mode: fd.cultureMode ?? null,
+                spaceType: fd.cultureSpaceType ?? null,
+                substrat: fd.cultureSubstrat ?? null,
+            }
+
+            // Reconstruct curing sub-object so CuringMaturationSection receives
+            // its expected structure: { curingTimeline, curingTimelineConfig, curingType, ... }
+            const curing = {
+                curingTimeline: fd.curingTimelineData ?? [],
+                curingTimelineConfig: fd.curingTimelineConfig ?? {},
+                curingType: fd.curingType ?? null,
+                temperature: fd.curingTemperature ?? null,
+                humidity: fd.curingHumidity ?? null,
+            }
+
             const mappedFormData = {
                 ...baseReview,
                 // Map holderName (Review model) → nomCommercial (form field)
@@ -56,6 +76,9 @@ export function useFlowerForm(reviewId = null) {
                 ...fd,
                 // Nested visual object required by VisualSection + normalizeReviewDataByType
                 visual,
+                // Nested pipeline objects required by CulturePipelineSection + CuringMaturationSection
+                culture,
+                curing,
             }
 
             setFormData(mappedFormData)
