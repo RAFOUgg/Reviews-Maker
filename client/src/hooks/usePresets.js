@@ -5,7 +5,8 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+// Empty fallback → relative URLs in production (nginx proxies /api → backend)
+const API_BASE = import.meta.env.VITE_API_URL || '';
 
 /**
  * Vérifier si l'utilisateur est authentifié
