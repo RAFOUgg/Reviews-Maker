@@ -4,7 +4,7 @@
  * Compatible tous types de produits (Fleurs, Hash, Concentrés, Comestibles)
  */
 
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import PipelineDragDropView from '../pipelines/views/PipelineDragDropView';
 import { CURING_SIDEBAR_CONTENT } from '../../config/curingSidebarContent';
 import { CURING_PHASES } from '../../config/pipelinePhases';
@@ -17,13 +17,16 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
     });
 
     // Sync avec parent quand timelineData change
+    // Use a ref for `data` so it doesn't trigger the effect — only timelineData changes matter
+    const dataRef = useRef(data);
+    useEffect(() => { dataRef.current = data; }); // keep ref always current
     useEffect(() => {
         if (!onChange) return;
         onChange({
-            ...data,
+            ...dataRef.current,
             curingTimeline: timelineData
         });
-    }, [timelineData, data]);
+    }, [timelineData]); // eslint-disable-line react-hooks/exhaustive-deps
     // Construire la config timeline
     // DEFAULT: use 'phase' mode by default for all pipelines (system-wide default)
     const timelineConfig = useMemo(() => ({

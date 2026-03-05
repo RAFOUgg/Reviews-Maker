@@ -370,8 +370,8 @@ export function extractExtraData(extraData, reviewData = null) {
     if (reviewData) {
         // Copier les champs directs de reviewData qui ne sont pas dans extra
         const directFields = [
-            // Visuel
-            'densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
+            // Visuel — both form field names (densite/trichomes/pistils) AND normalized names
+            'densiteVisuelle', 'densite', 'trichome', 'trichomes', 'pistil', 'manucure', 'moisissure', 'graines',
             'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'pistils', 'couleurTransparence',
             // Texture
             'durete', 'elasticite', 'collant', 'friabilite', 'granularite', 'densiteTactile', 'homogeneite',
@@ -404,9 +404,12 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'techniquesPropagation', label: 'Propagation', icon: '🌱', category: 'culture' },
         // Visuel
         { key: 'densiteVisuelle', label: 'Densité visuelle', icon: '📊', category: 'visual' },
+        { key: 'densite', label: 'Densité visuelle', icon: '📊', category: 'visual' },
         { key: 'couleurTransparence', label: 'Couleur/transparence', icon: '🎨', category: 'visual' },
         { key: 'trichome', label: 'Trichomes', icon: '✨', category: 'visual' },
+        { key: 'trichomes', label: 'Trichomes', icon: '✨', category: 'visual' },
         { key: 'pistil', label: 'Pistils', icon: '🌺', category: 'visual' },
+        { key: 'pistils', label: 'Pistils', icon: '🌺', category: 'visual' },
         { key: 'manucure', label: 'Manucure', icon: '✂️', category: 'visual' },
         { key: 'couleur', label: 'Couleur', icon: '🎨', category: 'visual' },
         { key: 'pureteVisuelle', label: 'Pureté visuelle', icon: '🔍', category: 'visual' },
@@ -547,6 +550,7 @@ export function extractPipelines(reviewData) {
     // Also try nested formats produced by normalizeByType:
     // formData.curing → { curingTimeline: [...] } gets flattened to reviewData.curingTimeline
     const curingTimeline = reviewData.curingTimeline ||
+        reviewData.curingTimelineData ||  // key used after API load (flattenFlowerFormData)
         (typeof reviewData.curing === 'object' && reviewData.curing?.curingTimeline);
     if (curingTimeline) {
         const arr = asArray(curingTimeline);
