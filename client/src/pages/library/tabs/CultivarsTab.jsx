@@ -487,11 +487,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             <div className="flex gap-4 border-b border-white/10 pb-4">
                 <button
                     onClick={() => setActiveTab('library')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                        activeTab === 'library'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'library'
                             ? 'bg-green-500/20 text-green-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
+                        }`}
                 >
                     <FolderTree className="w-4 h-4" />
                     Bibliothèque
@@ -499,11 +498,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 </button>
                 <button
                     onClick={() => setActiveTab('phenohunt')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                        activeTab === 'phenohunt'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'phenohunt'
                             ? 'bg-amber-500/20 text-amber-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
+                        }`}
                 >
                     <Beaker className="w-4 h-4" />
                     Projets PhenoHunt
@@ -511,11 +509,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 </button>
                 <button
                     onClick={() => setActiveTab('arbres')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
-                        activeTab === 'arbres'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'arbres'
                             ? 'bg-violet-500/20 text-violet-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                    }`}
+                        }`}
                 >
                     <Dna className="w-4 h-4" />
                     Arbres Généalogiques
@@ -540,8 +537,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                         key={type.id}
                                         onClick={() => setTypeFilter(type.id)}
                                         className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
-                                                ? `bg-${type.color}-500/20 text-${type.color}-400 border border-${type.color}-500/30`
-                                                : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
+                                            ? `bg-${type.color}-500/20 text-${type.color}-400 border border-${type.color}-500/30`
+                                            : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
                                             }`}
                                     >
                                         <span className="text-sm font-medium">{type.label}</span>
