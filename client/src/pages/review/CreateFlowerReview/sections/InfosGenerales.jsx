@@ -86,18 +86,16 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             <button
                                 type="button"
                                 onClick={() => handleChange('isOurReview', !formData.isOurReview)}
-                                className={`w-full relative overflow-hidden rounded-xl border transition-all duration-300 flex items-center gap-4 px-5 py-4 group ${
-                                    formData.isOurReview
+                                className={`w-full relative overflow-hidden rounded-xl border transition-all duration-300 flex items-center gap-4 px-5 py-4 group ${formData.isOurReview
                                         ? 'bg-gradient-to-r from-emerald-600/30 to-teal-600/30 border-emerald-500/60 shadow-lg shadow-emerald-500/20'
                                         : 'bg-white/4 border-white/15 hover:border-violet-500/40 hover:bg-violet-500/8'
-                                }`}
+                                    }`}
                             >
                                 {/* Indicateur gauche */}
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${
-                                    formData.isOurReview
+                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${formData.isOurReview
                                         ? 'bg-emerald-500/30 text-emerald-400 shadow-md shadow-emerald-500/20'
                                         : 'bg-white/8 text-white/40 group-hover:bg-violet-500/20 group-hover:text-violet-400'
-                                }`}>
+                                    }`}>
                                     {formData.isOurReview
                                         ? <ShieldCheck className="w-5 h-5" />
                                         : <Store className="w-5 h-5" />
@@ -106,14 +104,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
 
                                 {/* Texte */}
                                 <div className="flex-1 text-left">
-                                    <div className={`font-semibold text-sm transition-colors ${
-                                        formData.isOurReview ? 'text-emerald-300' : 'text-white/70 group-hover:text-white/90'
-                                    }`}>
+                                    <div className={`font-semibold text-sm transition-colors ${formData.isOurReview ? 'text-emerald-300' : 'text-white/70 group-hover:text-white/90'
+                                        }`}>
                                         {formData.isOurReview ? 'Notre production ✓' : 'C\'est notre production'}
                                     </div>
-                                    <div className={`text-xs mt-0.5 transition-colors ${
-                                        formData.isOurReview ? 'text-emerald-400/70' : 'text-white/35'
-                                    }`}>
+                                    <div className={`text-xs mt-0.5 transition-colors ${formData.isOurReview ? 'text-emerald-400/70' : 'text-white/35'
+                                        }`}>
                                         {formData.isOurReview
                                             ? 'Vous êtes le producteur de ce cultivar'
                                             : 'Déclarez cette review comme votre propre production'}
@@ -121,14 +117,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 </div>
 
                                 {/* Toggle pill */}
-                                <div className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${
-                                    formData.isOurReview ? 'bg-emerald-500' : 'bg-white/15'
-                                }`}>
-                                    <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${
-                                        formData.isOurReview
+                                <div className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${formData.isOurReview ? 'bg-emerald-500' : 'bg-white/15'
+                                    }`}>
+                                    <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${formData.isOurReview
                                             ? 'translate-x-6 bg-white'
                                             : 'translate-x-0.5 bg-white/50'
-                                    }`} />
+                                        }`} />
                                 </div>
 
                                 {/* Badge Producteur */}

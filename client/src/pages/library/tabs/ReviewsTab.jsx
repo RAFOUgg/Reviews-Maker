@@ -448,11 +448,10 @@ export default function ReviewsTab() {
                         <button
                             key={type.id}
                             onClick={() => setTypeFilter(type.id)}
-                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 ${
-                                isActive
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 ${isActive
                                     ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                     : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
-                            }`}
+                                }`}
                         >
                             {Icon && <Icon className="w-3.5 h-3.5" />}
                             <span className="text-sm font-medium">{type.label}</span>

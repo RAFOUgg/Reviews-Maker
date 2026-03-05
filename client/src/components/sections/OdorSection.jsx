@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Flower2 } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
@@ -23,25 +23,40 @@ export default function OdorSection({ productType, data: directData, onChange, f
     const [complexity, setComplexity] = useState(data?.complexity ?? 0);
     const [fidelity, setFidelity] = useState(data?.fidelity ?? 0);
 
-    // Synchroniser l'état LOCAL quand les props changent (revenir à la section)
-    useEffect(() => {
-        setDominantNotes(data?.dominantNotes || []);
-        setSecondaryNotes(data?.secondaryNotes || []);
-        setIntensity(data?.intensity ?? 0);
-        setComplexity(data?.complexity ?? 0);
-        setFidelity(data?.fidelity ?? 0);
-    }, [data]);
+    // Ref pour suivre le dernier payload envoyé au parent — évite la boucle
+    // Effect2 → safeUpdate → parent re-render → data new ref → Effect1 → reset state
+    const sentToParentRef = useRef(null);
 
-    // Synchroniser avec parent quand l'état LOCAL change
+    // Synchroniser avec parent quand l'état LOCAL change (user interaction)
     useEffect(() => {
-        safeUpdate({
-            dominantNotes,
-            secondaryNotes,
-            intensity,
-            complexity,
-            fidelity
-        })
+        const payload = { dominantNotes, secondaryNotes, intensity, complexity, fidelity };
+        sentToParentRef.current = payload;
+        safeUpdate(payload);
     }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
+
+    // Synchroniser l'état LOCAL depuis les props UNIQUEMENT si les valeurs
+    // ont réellement changé (ex: chargement edit mode). On ignore le retour
+    // de notre propre Effect précédent pour casser la boucle.
+    useEffect(() => {
+        const d = data || {};
+        const sent = sentToParentRef.current;
+
+        // Si ces données correspondent à ce qu'on vient d'envoyer → boucle détectée, on ignore
+        if (
+            sent &&
+            sent.dominantNotes === d.dominantNotes &&
+            sent.secondaryNotes === d.secondaryNotes &&
+            sent.intensity === d.intensity &&
+            sent.complexity === d.complexity &&
+            sent.fidelity === d.fidelity
+        ) return;
+
+        setDominantNotes(d.dominantNotes || []);
+        setSecondaryNotes(d.secondaryNotes || []);
+        setIntensity(d.intensity ?? 0);
+        setComplexity(d.complexity ?? 0);
+        setFidelity(d.fidelity ?? 0);
+    }, [data]);
 
     return (
         <LiquidCard glow="green" padding="lg" className="space-y-8">
