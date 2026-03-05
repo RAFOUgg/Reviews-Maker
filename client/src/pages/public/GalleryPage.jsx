@@ -158,7 +158,7 @@ export default function GalleryPage() {
     return result;
   }, [reviews, searchQuery, selectedType, sortBy]);
 
-  const handleViewReview = (id) => navigate(`/reviews/${id}`);
+  const handleViewReview = (id) => navigate(`/review/${id}`);
   const handleLike = (id, liked) => console.log('Like:', id, liked);
 
   return (
