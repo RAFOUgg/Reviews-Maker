@@ -4,6 +4,7 @@
  */
 
 import { create } from 'zustand';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle, XCircle, AlertTriangle, Info, Loader2, X } from 'lucide-react';
 
@@ -123,8 +124,11 @@ export default function ToastContainer() {
 
     if (toasts.length === 0) return null;
 
-    return (
-        <div className="fixed top-14 right-4 z-[999999] space-y-2 max-w-sm w-80">
+    // createPortal renders directly into document.body, completely outside any
+    // React stacking context (overflow:hidden, transform, opacity, etc.)
+    // This guarantees toasts are always above every fixed/sticky element.
+    return createPortal(
+        <div className="fixed top-14 right-4 z-[999999] space-y-2 w-80 pointer-events-none">
             <AnimatePresence>
                 {toasts.map((toast) => {
                     const styles = getStyles(toast.type);
@@ -136,7 +140,7 @@ export default function ToastContainer() {
                             animate={{ opacity: 1, x: 0, scale: 1 }}
                             exit={{ opacity: 0, x: 50, scale: 0.9 }}
                             transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-                            className={`flex items-start gap-3 p-4 rounded-xl border backdrop-blur-xl ${styles.bg} ${styles.border}`}
+                            className={`pointer-events-auto flex items-start gap-3 p-4 rounded-xl border backdrop-blur-xl ${styles.bg} ${styles.border}`}
                             style={{ boxShadow: styles.glow }}
                             onClick={() => removeToast(toast.id)}
                         >
@@ -168,7 +172,8 @@ export default function ToastContainer() {
                     );
                 })}
             </AnimatePresence>
-        </div>
+        </div>,
+        document.body
     );
 }
 
