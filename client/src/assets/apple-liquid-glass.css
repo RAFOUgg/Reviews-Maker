@@ -463,6 +463,16 @@ textarea.liquid-input:focus {
         0 0 0 3px rgba(139, 92, 246, 0.15) !important;
 }
 
+.liquid-input:disabled,
+input.liquid-input:disabled,
+textarea.liquid-input:disabled {
+    opacity: 0.38;
+    cursor: not-allowed;
+    pointer-events: none;
+    border-color: rgba(255, 255, 255, 0.06) !important;
+    background: rgba(255, 255, 255, 0.02) !important;
+}
+
 /* === LIQUID GLASS RANGE SLIDER === */
 .liquid-range,
 input[type="range"].liquid-range,
