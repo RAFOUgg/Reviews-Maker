@@ -192,7 +192,7 @@ export default function ReviewsTab() {
                     <LiquidCard glow="none" padding="sm" className="hover:border-purple-500/30 transition-all">
                         <div className="flex items-center gap-4">
                             {/* Image */}
-                            <div className="w-16 h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
+                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
                                 {review.mainImage ? (
                                     <img
                                         src={`/api/images/${review.mainImage}`}
@@ -353,10 +353,41 @@ export default function ReviewsTab() {
 
                     {/* Info */}
                     <div className="p-3">
-                        <h3 className="font-bold text-white truncate mb-1">{review.holderName}</h3>
-                        <div className="flex items-center justify-between text-xs text-white/50">
-                            <span>{review.cultivars || 'Non spécifié'}</span>
-                            <span>{new Date(review.createdAt).toLocaleDateString('fr-FR')}</span>
+                        <h3 className="font-bold text-white truncate text-sm mb-0.5">{review.holderName}</h3>
+                        <div className="flex items-center justify-between text-xs text-white/50 mb-0">
+                            <span className="truncate mr-1">{review.cultivars || 'Non spécifié'}</span>
+                            <span className="shrink-0">{new Date(review.createdAt).toLocaleDateString('fr-FR')}</span>
+                        </div>
+                        {/* Actions visibles en permanence sur mobile (pas de hover tactile) */}
+                        <div className="flex items-center justify-around gap-0.5 mt-2 pt-2 border-t border-white/10 md:hidden">
+                            <button
+                                onClick={() => navigate(`/review/${review.id}`)}
+                                className="p-1.5 rounded-lg bg-white/5 text-white/60 active:bg-white/15 text-xs flex flex-col items-center gap-0.5"
+                                title="Voir"
+                            >
+                                <ExternalLink className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}`)}
+                                className="p-1.5 rounded-lg bg-white/5 text-amber-400/70 active:bg-amber-500/20 text-xs flex flex-col items-center gap-0.5"
+                                title="Modifier"
+                            >
+                                <Edit className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                                onClick={() => toggleVisibility(review.id, review.isPublic)}
+                                className="p-1.5 rounded-lg bg-white/5 text-purple-400/70 active:bg-purple-500/20 text-xs flex flex-col items-center gap-0.5"
+                                title={review.isPublic ? 'Rendre privée' : 'Rendre publique'}
+                            >
+                                {review.isPublic ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
+                                onClick={() => deleteReview(review.id)}
+                                className="p-1.5 rounded-lg bg-white/5 text-red-400/70 active:bg-red-500/20 text-xs flex flex-col items-center gap-0.5"
+                                title="Supprimer"
+                            >
+                                <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                         </div>
                     </div>
                 </LiquidCard>
@@ -403,84 +434,79 @@ export default function ReviewsTab() {
     }
 
     return (
-        <div className="space-y-6">
-            {/* Toolbar */}
-            <div className="flex flex-col lg:flex-row gap-4">
-                {/* Filtres par type */}
-                <div className="flex flex-wrap gap-2">
-                    {PRODUCT_TYPES.map((type) => {
-                        const Icon = type.icon
-                        const isActive = typeFilter === type.id
-                        const count = type.id === 'all'
-                            ? reviews.length
-                            : reviews.filter(r => r.type === type.id).length
+        <div className="space-y-4">
+            {/* ── Filtres par type – défilants sur mobile ── */}
+            <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-1 px-1">
+                {PRODUCT_TYPES.map((type) => {
+                    const Icon = type.icon
+                    const isActive = typeFilter === type.id
+                    const count = type.id === 'all'
+                        ? reviews.length
+                        : reviews.filter(r => r.type === type.id).length
 
-                        return (
-                            <button
-                                key={type.id}
-                                onClick={() => setTypeFilter(type.id)}
-                                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
+                    return (
+                        <button
+                            key={type.id}
+                            onClick={() => setTypeFilter(type.id)}
+                            className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-all whitespace-nowrap shrink-0 ${
+                                isActive
                                     ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                     : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
+                            }`}
+                        >
+                            {Icon && <Icon className="w-3.5 h-3.5" />}
+                            <span className="text-sm font-medium">{type.label}</span>
+                            <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? 'bg-purple-500/30' : 'bg-white/10'}`}>
+                                {count}
+                            </span>
+                        </button>
+                    )
+                })}
+            </div>
+
+            {/* ── Barre de recherche + contrôles ── */}
+            <div className="flex items-center gap-2">
+                {/* Recherche – pleine largeur sur mobile */}
+                <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                    <input
+                        type="text"
+                        placeholder="Rechercher..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="w-full pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500/50"
+                    />
+                </div>
+
+                {/* Visibilité */}
+                <select
+                    value={visibilityFilter}
+                    onChange={(e) => setVisibilityFilter(e.target.value)}
+                    className="py-2 px-2 bg-white/5 border border-white/10 rounded-xl text-white/80 text-sm focus:outline-none focus:border-purple-500/50 shrink-0"
+                >
+                    {VISIBILITY_FILTERS.map(f => (
+                        <option key={f.id} value={f.id} className="bg-[#1a1a2e]">{f.label}</option>
+                    ))}
+                </select>
+
+                {/* Vue */}
+                <div className="flex bg-white/5 rounded-xl p-1 border border-white/10 shrink-0">
+                    {VIEW_MODES.map((mode) => {
+                        const Icon = mode.icon
+                        return (
+                            <button
+                                key={mode.id}
+                                onClick={() => setViewMode(mode.id)}
+                                className={`p-2 rounded-lg transition-colors ${viewMode === mode.id
+                                    ? 'bg-purple-500 text-white'
+                                    : 'text-white/50 hover:text-white'
                                     }`}
+                                title={mode.label}
                             >
-                                {Icon && <Icon className="w-4 h-4" />}
-                                <span className="text-sm font-medium">{type.label}</span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? 'bg-purple-500/30' : 'bg-white/10'}`}>
-                                    {count}
-                                </span>
+                                <Icon className="w-4 h-4" />
                             </button>
                         )
                     })}
-                </div>
-
-                {/* Spacer */}
-                <div className="flex-1" />
-
-                {/* Filtres secondaires */}
-                <div className="flex items-center gap-3">
-                    {/* Recherche */}
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input
-                            type="text"
-                            placeholder="Rechercher..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-9 pr-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 text-sm w-48 focus:outline-none focus:border-purple-500/50"
-                        />
-                    </div>
-
-                    {/* Visibilité */}
-                    <select
-                        value={visibilityFilter}
-                        onChange={(e) => setVisibilityFilter(e.target.value)}
-                        className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white/80 text-sm focus:outline-none focus:border-purple-500/50"
-                    >
-                        {VISIBILITY_FILTERS.map(f => (
-                            <option key={f.id} value={f.id} className="bg-[#1a1a2e]">{f.label}</option>
-                        ))}
-                    </select>
-
-                    {/* Vue */}
-                    <div className="flex bg-white/5 rounded-xl p-1 border border-white/10">
-                        {VIEW_MODES.map((mode) => {
-                            const Icon = mode.icon
-                            return (
-                                <button
-                                    key={mode.id}
-                                    onClick={() => setViewMode(mode.id)}
-                                    className={`p-2 rounded-lg transition-colors ${viewMode === mode.id
-                                        ? 'bg-purple-500 text-white'
-                                        : 'text-white/50 hover:text-white'
-                                        }`}
-                                    title={mode.label}
-                                >
-                                    <Icon className="w-4 h-4" />
-                                </button>
-                            )
-                        })}
-                    </div>
                 </div>
             </div>
 
@@ -515,7 +541,7 @@ export default function ReviewsTab() {
                 renderTimeline()
             ) : (
                 <div className={viewMode === 'grid'
-                    ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                    ? 'grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3'
                     : 'space-y-2'
                 }>
                     <AnimatePresence>

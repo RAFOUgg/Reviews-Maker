@@ -1,22 +1,27 @@
 /**
  * LibraryPage.jsx - Page Bibliothèque Utilisateur Refactorisée
- * 
+ *
  * Conforme au CDC:
  * - Onglets: Reviews, Cultivars (Producteur), Templates, Filigranes, Données (Producteur), Stats
  * - Filtres par type de produit (Fleur, Hash, Concentré, Comestible)
  * - Vue Grid/List/Timeline pour les reviews
  * - Partage templates par code unique
+ *
+ * Mobile:
+ * - Sidebar masquée, remplacée par une barre de navigation inférieure fixe
+ * - FAB "Nouvelle Review" flottant au-dessus de la barre de navigation
+ * - Header compact affichant uniquement la section courante
+ * - Padding réduit pour maximiser l'espace d'affichage
  */
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
-import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Library, FileText, Leaf, Palette, Database, BarChart3,
-    Grid3X3, List, Calendar, Plus, Settings, Download, Upload,
+    Plus, Settings, Download, Upload,
     ChevronRight
 } from 'lucide-react'
 
@@ -33,6 +38,7 @@ const TABS = [
     {
         id: 'reviews',
         label: 'Mes Reviews',
+        mobileLabel: 'Reviews',
         icon: FileText,
         all: true,
         description: 'Gérez vos reviews sauvegardées'
@@ -40,6 +46,7 @@ const TABS = [
     {
         id: 'cultivars',
         label: 'Cultivars & Génétiques',
+        mobileLabel: 'Cultivars',
         icon: Leaf,
         producerOnly: true,
         description: 'Bibliothèque de cultivars et arbres généalogiques'
@@ -47,6 +54,7 @@ const TABS = [
     {
         id: 'templates',
         label: 'Templates Export',
+        mobileLabel: 'Templates',
         icon: Palette,
         all: true,
         description: 'Templates d\'export prédéfinis et personnalisés'
@@ -54,6 +62,7 @@ const TABS = [
     {
         id: 'watermarks',
         label: 'Filigranes',
+        mobileLabel: 'Filigranes',
         icon: Settings,
         all: true,
         description: 'Gérez vos filigranes personnalisés'
@@ -61,6 +70,7 @@ const TABS = [
     {
         id: 'data',
         label: 'Données Récurrentes',
+        mobileLabel: 'Données',
         icon: Database,
         producerOnly: true,
         description: 'Substrats, engrais, techniques sauvegardés'
@@ -68,6 +78,7 @@ const TABS = [
     {
         id: 'stats',
         label: 'Statistiques',
+        mobileLabel: 'Stats',
         icon: BarChart3,
         all: true,
         description: 'Statistiques de votre bibliothèque'
@@ -90,7 +101,6 @@ export default function LibraryPage() {
 
     // Déterminer les onglets disponibles selon le type de compte
     const isProducer = user?.accountType === 'producer'
-    const isInfluencer = user?.accountType === 'influencer' || user?.accountType === 'influencer_basic' || user?.accountType === 'influencer_pro'
     const availableTabs = TABS.filter(t => t.all || (t.producerOnly && isProducer))
 
     // Rendu de l'onglet actif
@@ -126,18 +136,18 @@ export default function LibraryPage() {
     return (
         <div className="min-h-screen bg-[#07070f]">
             <div className="flex">
-                {/* Sidebar */}
-                <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-white/[0.02] border-r border-white/10 transition-all duration-300 flex flex-col`}>
+                {/* ─── Sidebar – Desktop uniquement ─── */}
+                <aside className={`hidden md:flex ${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-white/[0.02] border-r border-white/10 transition-all duration-300 flex-col`}>
                     {/* Header Sidebar */}
                     <div className="p-4 border-b border-white/10">
                         <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30 shrink-0">
                                 <Library className="w-5 h-5 text-white" />
                             </div>
                             {!sidebarCollapsed && (
-                                <div>
+                                <div className="min-w-0">
                                     <h1 className="text-lg font-bold text-white">Bibliothèque</h1>
-                                    <p className="text-xs text-white/50">{user?.username}</p>
+                                    <p className="text-xs text-white/50 truncate">{user?.username}</p>
                                 </div>
                             )}
                         </div>
@@ -148,23 +158,22 @@ export default function LibraryPage() {
                         {availableTabs.map((tab) => {
                             const Icon = tab.icon
                             const isActive = activeTab === tab.id
-
                             return (
                                 <button
                                     key={tab.id}
                                     onClick={() => setActiveTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
-                                            ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
-                                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                                        ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                        : 'text-white/60 hover:text-white hover:bg-white/5'
                                         }`}
                                     title={sidebarCollapsed ? tab.label : undefined}
                                 >
-                                    <Icon className={`w-5 h-5 ${isActive ? 'text-purple-400' : ''}`} />
+                                    <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-purple-400' : ''}`} />
                                     {!sidebarCollapsed && (
                                         <>
-                                            <span className="flex-1 text-left text-sm font-medium">{tab.label}</span>
+                                            <span className="flex-1 text-left text-sm font-medium truncate">{tab.label}</span>
                                             {tab.producerOnly && (
-                                                <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded">PRO</span>
+                                                <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded shrink-0">PRO</span>
                                             )}
                                         </>
                                     )}
@@ -213,11 +222,23 @@ export default function LibraryPage() {
                     </div>
                 </aside>
 
-                {/* Main Content */}
-                <main className="flex-1 min-h-screen">
-                    {/* Header de la section */}
-                    <header className="sticky top-0 z-10 bg-[#07070f]/80 backdrop-blur-xl border-b border-white/10 px-6 py-4">
-                        <div className="flex items-center justify-between">
+                {/* ─── Contenu principal ─── */}
+                <main className="flex-1 min-h-screen pb-20 md:pb-0">
+                    {/* Header */}
+                    <header className="sticky top-0 z-10 bg-[#07070f]/90 backdrop-blur-xl border-b border-white/10">
+                        {/* Mobile : titre compact centré */}
+                        <div className="flex md:hidden items-center gap-3 px-4 py-3">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow shadow-purple-500/30 shrink-0">
+                                <Library className="w-4 h-4 text-white" />
+                            </div>
+                            <div className="min-w-0">
+                                <h1 className="text-sm font-semibold text-white leading-tight truncate">{currentTab?.label}</h1>
+                                <p className="text-[11px] text-white/40 truncate">{user?.username}</p>
+                            </div>
+                        </div>
+
+                        {/* Desktop : breadcrumb + description */}
+                        <div className="hidden md:flex items-center justify-between px-6 py-4">
                             <div>
                                 <div className="flex items-center gap-2 text-white/50 text-sm mb-1">
                                     <Library className="w-4 h-4" />
@@ -231,14 +252,14 @@ export default function LibraryPage() {
                     </header>
 
                     {/* Contenu de l'onglet */}
-                    <div className="p-6">
+                    <div className="p-3 md:p-6">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
+                                exit={{ opacity: 0, y: -8 }}
+                                transition={{ duration: 0.18 }}
                             >
                                 {renderTab()}
                             </motion.div>
@@ -246,6 +267,60 @@ export default function LibraryPage() {
                     </div>
                 </main>
             </div>
+
+            {/* ─── FAB Nouvelle Review – Mobile ─── */}
+            <motion.button
+                onClick={() => navigate('/create')}
+                className="md:hidden fixed bottom-[72px] right-4 z-50 w-13 h-13 flex items-center justify-center bg-gradient-to-br from-violet-500 to-purple-600 rounded-full shadow-lg shadow-purple-500/40 active:scale-95 transition-transform"
+                whileTap={{ scale: 0.92 }}
+                aria-label="Nouvelle Review"
+                style={{ width: 52, height: 52 }}
+            >
+                <Plus className="w-6 h-6 text-white" />
+            </motion.button>
+
+            {/* ─── Barre de navigation inférieure – Mobile ─── */}
+            <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0d0d1a]/95 backdrop-blur-xl border-t border-white/10">
+                <div className="flex items-stretch overflow-x-auto scrollbar-none">
+                    {availableTabs.map((tab) => {
+                        const Icon = tab.icon
+                        const isActive = activeTab === tab.id
+                        return (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                className={`flex-1 min-w-[60px] flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 transition-all relative ${isActive
+                                    ? 'text-purple-400'
+                                    : 'text-white/40 active:text-white/70'
+                                    }`}
+                            >
+                                {/* Indicateur actif */}
+                                {isActive && (
+                                    <motion.div
+                                        layoutId="bottomNavIndicator"
+                                        className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-purple-400 rounded-full"
+                                        transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                                    />
+                                )}
+                                <div className={`relative flex items-center justify-center w-7 h-7 rounded-lg transition-all ${isActive ? 'bg-purple-500/20' : ''}`}>
+                                    <Icon className="w-4 h-4" />
+                                    {/* Badge PRO */}
+                                    {tab.producerOnly && (
+                                        <span className="absolute -top-1 -right-1 w-3 h-3 flex items-center justify-center bg-amber-500 rounded-full">
+                                            <span className="text-[6px] font-bold text-black leading-none">P</span>
+                                        </span>
+                                    )}
+                                </div>
+                                <span className={`text-[10px] font-medium leading-none ${isActive ? 'text-purple-400' : 'text-white/40'}`}>
+                                    {tab.mobileLabel}
+                                </span>
+                            </button>
+                        )
+                    })}
+                </div>
+                {/* Safe area iOS */}
+                <div className="h-safe-bottom bg-transparent" style={{ height: 'env(safe-area-inset-bottom, 0px)' }} />
+            </nav>
         </div>
     )
 }
