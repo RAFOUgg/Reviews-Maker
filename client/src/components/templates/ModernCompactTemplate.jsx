@@ -38,7 +38,10 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = extractPipelines(reviewData);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
+    const secondaryAromas = asArray(reviewData.secondaryAromas).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
+    const dryPuffNotes = asArray(reviewData.dryPuffNotes).slice(0, limits.maxTags);
+    const inhalationNotes = asArray(reviewData.inhalationNotes).slice(0, limits.maxTags);
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
@@ -297,11 +300,71 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 </div>
             )}
 
+            {/* Secondary Aromas */}
+            {contentModules.aromas && secondaryAromas.length > 0 && (
+                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🎶 Arômes secondaires</div>
+                    {renderTags(secondaryAromas)}
+                </div>
+            )}
+
+            {/* Tastes — show dry puff / inhalation if available, else generic */}
+            {contentModules.tastes !== false && (dryPuffNotes.length > 0 || inhalationNotes.length > 0 || tastes.length > 0) && (
+                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>👅 Goûts</div>
+                    {dryPuffNotes.length > 0
+                        ? renderTags(dryPuffNotes)
+                        : inhalationNotes.length > 0
+                            ? renderTags(inhalationNotes)
+                            : renderTags(tastes)}
+                </div>
+            )}
+
             {/* Terpenes */}
             {contentModules.terpenes && terpenes.length > 0 && (
                 <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🧪 Terpènes</div>
                     {renderTags(terpenes)}
+                </div>
+            )}
+
+            {/* Pipelines — compact list of step-count chips per pipeline */}
+            {pipelines.length > 0 && (contentModules.pipelines !== false) && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
+                    {pipelines.map((p, pi) => {
+                        const steps = p.rawSteps || p.steps.map(s => ({ label: s }));
+                        // Compact: show pipeline name + mini grid of step indicators
+                        return (
+                            <div key={pi} style={{ padding: `${spacing.gap}px ${spacing.element}px`, borderRadius: isSquare ? 10 : 14, backgroundColor: colorWithOpacity(colors.accent, 10) }}>
+                                <div style={{ fontSize: `${fontSize.small}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: `${spacing.gap}px` }}>
+                                    {p.icon} {p.name} <span style={{ color: colors.textSecondary, fontWeight: '400' }}>({steps.length})</span>
+                                </div>
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                                    {steps.slice(0, limits.maxTags + 2).map((step, si) => {
+                                        const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
+                                        return (
+                                            <span key={si} style={{
+                                                padding: `2px ${spacing.gap}px`,
+                                                borderRadius: 6,
+                                                backgroundColor: colorWithOpacity(colors.accent, 20 + si * 4),
+                                                color: colors.textPrimary,
+                                                fontSize: `${fontSize.small * 0.85}px`,
+                                                fontWeight: '600',
+                                            }}>
+                                                {String(label).slice(0, 5)}
+                                            </span>
+                                        );
+                                    })}
+                                    {steps.length > limits.maxTags + 2 && (
+                                        <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary, alignSelf: 'center' }}>
+                                            +{steps.length - limits.maxTags - 2}
+                                        </span>
+                                    )}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 

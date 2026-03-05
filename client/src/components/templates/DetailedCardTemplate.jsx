@@ -53,7 +53,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = extractPipelines(reviewData);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
+    const secondaryAromas = asArray(reviewData.secondaryAromas).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
+    const dryPuffNotes = asArray(reviewData.dryPuffNotes).slice(0, limits.maxTags);
+    const inhalationNotes = asArray(reviewData.inhalationNotes).slice(0, limits.maxTags);
+    const exhalationNotes = asArray(reviewData.exhalationNotes).slice(0, limits.maxTags);
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
@@ -169,35 +173,123 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
-    const PipelineFlow = ({ pipeline }) => (
-        <div
-            className="p-4 rounded-xl mb-3"
-            style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}
-        >
-            <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '10px' }}>
-                {pipeline.icon} {pipeline.name}
+    // Render rich step metrics badges
+    const renderStepMetrics = (step) => {
+        if (!step || typeof step !== 'object') return [];
+        const metrics = [];
+        const temp = step.temperature ?? step.temp;
+        const humidity = step.humidity ?? step.humidite ?? step.hr;
+        if (temp != null) metrics.push(`🌡️ ${temp}°C`);
+        if (humidity != null) metrics.push(`💧 ${humidity}%`);
+        if (step.container || step.recipient) metrics.push(`🫙 ${step.container || step.recipient}`);
+        if (step.packaging || step.emballage) metrics.push(`📦 ${step.packaging || step.emballage}`);
+        if (step.method || step.methode) metrics.push(`⚙️ ${step.method || step.methode}`);
+        return metrics;
+    };
+
+    const PipelineTimeline = ({ pipeline }) => {
+        // Prefer rawSteps (objects) over stringified steps
+        const rawSteps = pipeline.rawSteps || pipeline.steps.map(s => ({ label: s }));
+        const isGrid = rawSteps.length > 6;
+
+        return (
+            <div
+                style={{ padding: `${padding.card}px`, borderRadius: isSquare ? 10 : 14, marginBottom: `${spacing.element}px`, backgroundColor: colorWithOpacity(colors.accent, 8) }}
+            >
+                {/* Pipeline Header */}
+                <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: `${spacing.gap + 2}px`, display: 'flex', alignItems: 'center', gap: `${spacing.gap}px` }}>
+                    <span>{pipeline.icon}</span>
+                    <span>{pipeline.name}</span>
+                    <span style={{ fontSize: `${fontSize.small * 0.9}px`, color: colors.textSecondary }}>
+                        ({rawSteps.length} étape{rawSteps.length > 1 ? 's' : ''})
+                    </span>
+                </div>
+
+                {isGrid ? (
+                    /* GitHub-style compact grid for many steps */
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                        {rawSteps.map((step, i) => {
+                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${i + 1}`;
+                            const note = step.note || step.comment || step.commentaire || '';
+                            const metrics = renderStepMetrics(step);
+                            const tooltip = [label, ...metrics, note].filter(Boolean).join(' · ');
+                            return (
+                                <div
+                                    key={i}
+                                    title={tooltip}
+                                    style={{
+                                        width: isSquare ? 30 : 38,
+                                        height: isSquare ? 30 : 38,
+                                        borderRadius: 6,
+                                        backgroundColor: colorWithOpacity(colors.accent, 20 + Math.min(i * 4, 45)),
+                                        border: `1px solid ${colorWithOpacity(colors.accent, 35)}`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: `${fontSize.small * 0.82}px`,
+                                        color: colors.textPrimary,
+                                        fontWeight: '700',
+                                    }}
+                                >
+                                    {String(label).slice(0, 3)}
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    /* Linear flow with metrics for few steps */
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${spacing.gap}px`, alignItems: 'flex-start' }}>
+                        {rawSteps.map((step, i) => {
+                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `Étape ${i + 1}`;
+                            const note = step.note || step.comment || step.commentaire || '';
+                            const metrics = renderStepMetrics(step);
+                            const action = step.action || step.event || step.evenement || '';
+                            return (
+                                <React.Fragment key={i}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: isSquare ? 80 : 110 }}>
+                                        {/* Step identifier */}
+                                        <span style={{
+                                            padding: `${spacing.gap}px ${spacing.element}px`,
+                                            borderRadius: isSquare ? 10 : 14,
+                                            backgroundColor: colorWithOpacity(colors.accent, 20),
+                                            color: colors.textPrimary,
+                                            fontSize: `${fontSize.small}px`,
+                                            fontWeight: '600',
+                                            textAlign: 'center',
+                                        }}>
+                                            {label}
+                                        </span>
+                                        {/* Action / event */}
+                                        {action && (
+                                            <span style={{ fontSize: `${fontSize.small * 0.85}px`, color: colors.accent, textAlign: 'center', fontWeight: '500' }}>{action}</span>
+                                        )}
+                                        {/* Env metrics (temp, humidity, etc.) */}
+                                        {metrics.length > 0 && (
+                                            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
+                                                {metrics.map((m, mi) => (
+                                                    <span key={mi} style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>{m}</span>
+                                                ))}
+                                            </div>
+                                        )}
+                                        {/* Note (trimmed) */}
+                                        {note && !isSquare && (
+                                            <span style={{ fontSize: `${fontSize.small * 0.8}px`, color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>
+                                                {note}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {/* Arrow connector */}
+                                    {i < rawSteps.length - 1 && (
+                                        <span style={{ color: colors.accent, fontSize: `${fontSize.text}px`, alignSelf: 'flex-start', marginTop: `${spacing.gap + 4}px` }}>→</span>
+                                    )}
+                                </React.Fragment>
+                            );
+                        })}
+                    </div>
+                )}
             </div>
-            <div className="flex flex-wrap gap-2 items-center">
-                {pipeline.steps.map((step, i) => (
-                    <React.Fragment key={i}>
-                        <span
-                            className="px-3 py-1.5 rounded-lg"
-                            style={{
-                                backgroundColor: colorWithOpacity(colors.accent, 20),
-                                color: colors.textPrimary,
-                                fontSize: `${fontSize.small}px`,
-                            }}
-                        >
-                            {step}
-                        </span>
-                        {i < pipeline.steps.length - 1 && (
-                            <span style={{ color: colors.accent }}>→</span>
-                        )}
-                    </React.Fragment>
-                ))}
-            </div>
-        </div>
-    );
+        );
+    };
 
     const SubstratChart = ({ data }) => (
         <div className="space-y-2">
@@ -336,11 +428,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             </div>
                         )}
 
-                        {/* Category Ratings bars */}
+                        {/* Category Ratings bars — with expandable sub-scores */}
                         {contentModules.categoryRatings && categoryRatings.length > 0 && (
                             <div className="space-y-1 mt-4">
                                 {categoryRatings.map((r, i) => (
-                                    <RatingBar key={i} label={r.label} value={r.value} icon={r.icon} />
+                                    <div key={i}>
+                                        <RatingBar label={r.label} value={r.value} icon={r.icon} />
+                                        {/* Sub-score bars (individual fields) — skip on tiny square format */}
+                                        {r.subDetails && r.subDetails.length > 1 && !isSquare && (
+                                            <div style={{ marginLeft: 14, marginTop: 2, marginBottom: `${spacing.gap}px` }}>
+                                                {r.subDetails.map((sub, si) => (
+                                                    <RatingBar key={si} label={sub.label} value={sub.value} />
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
                                 ))}
                             </div>
                         )}
@@ -431,17 +533,56 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     {/* Colonne 2 */}
                     <div>
                         {/* Profil sensoriel */}
-                        {((contentModules.aromas && aromas.length > 0) || (contentModules.tastes && tastes.length > 0)) && (
+                        {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) ||
+                          (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
                             <Section title="Profil Sensoriel" icon="🌸">
+                                {/* Primary aromas */}
                                 {contentModules.aromas && aromas.length > 0 && (
                                     <div style={{ marginBottom: `${spacing.element}px` }}>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes</div>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes dominants</div>
                                         <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                                             {aromas.map((a, i) => <Tag key={i}>{extractLabel(a)}</Tag>)}
                                         </div>
                                     </div>
                                 )}
-                                {contentModules.tastes && tastes.length > 0 && (
+                                {/* Secondary aromas */}
+                                {contentModules.aromas && secondaryAromas.length > 0 && (
+                                    <div style={{ marginBottom: `${spacing.element}px` }}>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes secondaires</div>
+                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                            {secondaryAromas.map((a, i) => <Tag key={i} variant="subtle">{extractLabel(a)}</Tag>)}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Dry puff notes */}
+                                {contentModules.tastes && dryPuffNotes.length > 0 && (
+                                    <div style={{ marginBottom: `${spacing.gap}px` }}>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>💨 Tirage à sec</div>
+                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                            {dryPuffNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Inhalation notes */}
+                                {contentModules.tastes && inhalationNotes.length > 0 && (
+                                    <div style={{ marginBottom: `${spacing.gap}px` }}>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>🌬️ Inhalation</div>
+                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                            {inhalationNotes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Exhalation notes */}
+                                {contentModules.tastes && exhalationNotes.length > 0 && (
+                                    <div>
+                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>↩️ Expiration / Arrière-goût</div>
+                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                            {exhalationNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                        </div>
+                                    </div>
+                                )}
+                                {/* Fallback: generic tastes */}
+                                {contentModules.tastes && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
                                     <div>
                                         <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Goûts</div>
                                         <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
@@ -467,17 +608,49 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 <SubstratChart data={substrat} />
                             </Section>
                         )}
+
+                        {/* Texture — individual sub-score bars */}
+                        {contentModules.categoryRatings && (() => {
+                            const textureCat = categoryRatings.find(r => r.key === 'texture');
+                            if (!textureCat?.subDetails || textureCat.subDetails.length === 0) return null;
+                            return (
+                                <Section title="Texture" icon="✋">
+                                    <div className="space-y-1">
+                                        {textureCat.subDetails.map((sub, si) => (
+                                            <RatingBar key={si} label={sub.label} value={sub.value} />
+                                        ))}
+                                    </div>
+                                </Section>
+                            );
+                        })()}
                     </div>
                 </div>
 
                 {/* Pipelines (full width) */}
-                {pipelines.length > 0 && (contentModules.pipelineExtraction || contentModules.pipelineSeparation || contentModules.pipelinePurification || contentModules.fertilizationPipeline || contentModules.pipelineCuring || contentModules.pipelineGlobal || contentModules.pipelines === true || contentModules.curing) && (
-                    <Section title="Processus de Production" icon="⚗️">
-                        <div className="space-y-3">
-                            {pipelines.map((p, i) => <PipelineFlow key={i} pipeline={p} />)}
-                        </div>
-                    </Section>
-                )}
+                {(() => {
+                    // Determine which pipelines to show based on enabled contentModules
+                    const visiblePipelines = pipelines.filter(p => {
+                        // If pipelines flag is explicitly true, show all
+                        if (contentModules.pipelines === true) return true;
+                        // Explicit key match in contentModules
+                        if (contentModules[p.key] === true) return true;
+                        // Curing-related pipelines
+                        if (p.key === 'pipelineCuring' || p.key === 'curingTimeline') return contentModules.curing !== false;
+                        // Culture-related pipelines
+                        if (p.key === 'pipelineGlobal' || p.key === 'cultureTimeline') return contentModules.fertilizationPipeline !== false;
+                        // Explicit pipeline module keys
+                        const explicitKeys = ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline'];
+                        return explicitKeys.some(k => k === p.key && contentModules[k]);
+                    });
+                    if (visiblePipelines.length === 0) return null;
+                    return (
+                        <Section title="Processus de Production" icon="⚗️">
+                            <div>
+                                {visiblePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} />)}
+                            </div>
+                        </Section>
+                    );
+                })()}
 
                 {/* Extra Data */}
                 {contentModules.extraData && extraData.length > 0 && (

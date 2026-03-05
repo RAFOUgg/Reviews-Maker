@@ -61,7 +61,8 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     if (normalized.odeurs && typeof normalized.odeurs === 'object') {
       const o = normalized.odeurs;
       if (Array.isArray(o.dominantNotes) && (!normalized.aromas || normalized.aromas.length === 0)) normalized.aromas = o.dominantNotes;
-      if (Array.isArray(o.secondaryNotes) && (!normalized.tastes || normalized.tastes.length === 0)) normalized.tastes = normalized.tastes || []; // keep tastes untouched
+      // Secondary aroma notes → secondaryAromas (rendered separately in templates)
+      if (Array.isArray(o.secondaryNotes) && !normalized.secondaryAromas) normalized.secondaryAromas = o.secondaryNotes;
       if (o.intensity !== undefined && normalized.aromasIntensity === undefined) normalized.aromasIntensity = o.intensity;
       if (o.complexity !== undefined && normalized.complexiteAromas === undefined) normalized.complexiteAromas = o.complexity;
       if (o.fidelity !== undefined && normalized.fideliteCultivars === undefined) normalized.fideliteCultivars = o.fidelity;
@@ -72,8 +73,15 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
       const g = normalized.gouts;
       if (g.intensity !== undefined && normalized.intensiteFumee === undefined) normalized.intensiteFumee = g.intensity;
       if (g.aggressiveness !== undefined && normalized.agressivite === undefined) normalized.agressivite = g.aggressiveness;
-      if (Array.isArray(g.dryPuffNotes) && (!normalized.tastes || normalized.tastes.length === 0)) normalized.tastes = g.dryPuffNotes;
-      if (Array.isArray(g.inhalationNotes) && normalized.tastes && normalized.tastes.length === 0) normalized.tastes = g.inhalationNotes;
+      // Map dry puff / inhalation / exhalation notes to dedicated keys
+      if (Array.isArray(g.dryPuffNotes) && !normalized.dryPuffNotes) normalized.dryPuffNotes = g.dryPuffNotes;
+      if (Array.isArray(g.inhalationNotes) && !normalized.inhalationNotes) normalized.inhalationNotes = g.inhalationNotes;
+      if (Array.isArray(g.exhalationNotes) && !normalized.exhalationNotes) normalized.exhalationNotes = g.exhalationNotes;
+      // tastes: prefer dryPuffNotes as primary taste tag list, fall back to inhalation
+      if (!normalized.tastes || normalized.tastes.length === 0) {
+        if (Array.isArray(g.dryPuffNotes) && g.dryPuffNotes.length > 0) normalized.tastes = g.dryPuffNotes;
+        else if (Array.isArray(g.inhalationNotes) && g.inhalationNotes.length > 0) normalized.tastes = g.inhalationNotes;
+      }
     }
 
     // Effets -> map to effects keys
@@ -233,7 +241,8 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
 
   // Parse JSON string fields
   const jsonFields = [
-    'aromas', 'tastes', 'effects', 'terpenes', 'cultivarsList',
+    'aromas', 'secondaryAromas', 'tastes', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
+    'effects', 'terpenes', 'cultivarsList',
     'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification',
     'pipelineCulture', 'pipelineCuring', 'pipelineRecipe',
     'fertilizationPipeline', 'substratMix', 'categoryRatings', 'tags'

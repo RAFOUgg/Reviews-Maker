@@ -164,15 +164,16 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
             visual: {
                 fields: [
                     // Actual form field names (from normalizeByType section merge)
-                    'colorRating', 'transparency', 'density', 'trichomes', 'mold', 'seeds',
+                    'colorRating', 'transparency', 'density', 'trichomes', 'pistils', 'manucure', 'mold', 'seeds',
                     // Legacy flat names
-                    'densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
+                    'densiteVisuelle', 'trichome', 'pistil', 'moisissure', 'graines',
                     'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'couleurTransparence'
                 ],
                 labels: {
                     // Actual form field labels
                     colorRating: 'Couleur / Nuancier', transparency: 'Transparence',
                     density: 'Densité visuelle', trichomes: 'Trichomes',
+                    pistils: 'Pistils', manucure: 'Manucure',
                     mold: 'Moisissures', seeds: 'Graines',
                     // Legacy
                     densiteVisuelle: 'Densité visuelle', trichome: 'Trichomes', pistil: 'Pistils', manucure: 'Manucure',
@@ -512,6 +513,19 @@ export function extractPipelines(reviewData) {
         { key: 'fertilizationPipeline', name: 'Fertilisation', icon: '🌱' },
     ];
 
+    /**
+     * Stringify a single step for compact display
+     * @param {*} step - Step object or string
+     * @returns {string}
+     */
+    function stepToString(step) {
+        if (typeof step !== 'object' || step === null) return extractLabel(step);
+        const label = extractLabel(step);
+        const date = step.date || step.semaine || step.phase || step.jour || '';
+        const note = step.note || step.comment || '';
+        return date ? `${date}: ${label}${note ? ' — ' + note : ''}` : label;
+    }
+
     for (const { key, name, icon } of pipelineTypes) {
         const raw = reviewData[key];
         const data = asArray(raw);
@@ -520,16 +534,12 @@ export function extractPipelines(reviewData) {
                 key,
                 name,
                 icon,
-                steps: data.map(step => {
-                    if (typeof step === 'object' && step !== null) {
-                        // Rich step object: extract label + optional date/metrics
-                        const label = extractLabel(step);
-                        const date = step.date || step.semaine || step.phase || step.jour || '';
-                        const note = step.note || step.comment || '';
-                        return date ? `${date}: ${label}${note ? ' — ' + note : ''}` : label;
-                    }
-                    return extractLabel(step);
-                })
+                // String summaries for backward-compat
+                steps: data.map(stepToString),
+                // Raw step objects for rich rendering
+                rawSteps: data.map(step =>
+                    (typeof step === 'object' && step !== null) ? step : { label: String(step) }
+                ),
             });
         }
     }
@@ -552,7 +562,10 @@ export function extractPipelines(reviewData) {
                         return date ? `${date}: ${note}` : note;
                     }
                     return extractLabel(step);
-                })
+                }),
+                rawSteps: arr.map(step =>
+                    (typeof step === 'object' && step !== null) ? step : { label: String(step) }
+                ),
             });
         }
     }
@@ -574,7 +587,10 @@ export function extractPipelines(reviewData) {
                         return date ? `${date}: ${note}` : note;
                     }
                     return extractLabel(step);
-                })
+                }),
+                rawSteps: arr.map(step =>
+                    (typeof step === 'object' && step !== null) ? step : { label: String(step) }
+                ),
             });
         }
     }

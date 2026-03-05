@@ -10,9 +10,9 @@
 export const FLOWER_CATEGORY_FIELDS = {
   // Field names matching the flat output of normalizeReviewDataByType
   // visual.* merged to top-level, explicit mappings in normalizeByType.js
-  visual: ['colorRating', 'density', 'trichomes', 'mold', 'seeds'],
+  visual: ['colorRating', 'density', 'trichomes', 'pistils', 'manucure', 'mold', 'seeds'],
   smell: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'],
-  texture: ['hardness', 'elasticity', 'stickiness'],
+  texture: ['hardness', 'elasticity', 'stickiness', 'density'],
   taste: ['intensiteFumee', 'agressivite'],
   effects: ['montee', 'intensiteEffet', 'dureeEffet']
 };
