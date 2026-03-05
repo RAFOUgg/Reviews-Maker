@@ -127,7 +127,7 @@ export default function ReviewFullDisplay({ review }) {
                             <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2">
                                 <User className="w-4 h-4 text-pink-400" />
                                 <span className="text-white/50">Auteur:</span>
-                                <span className="text-white">{review.author || review.ownerName || 'Anonyme'}</span>
+                                <span className="text-white">{(typeof review.author === 'object' ? review.author?.username : review.author) || review.ownerName || 'Anonyme'}</span>
                             </div>
                         </div>
                     </div>
