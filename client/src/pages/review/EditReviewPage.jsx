@@ -16,6 +16,7 @@ import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../../utils/productStructures';
 import { parseImages } from '../../utils/imageUtils';
 import { calculateCategoryRatings as calcCategoryRatings, CATEGORY_DISPLAY_ORDER } from '../../utils/categoryMappings';
+import { reviewsService } from '../../services/apiService';
 
 export default function EditReviewPage() {
     const navigate = useNavigate();
@@ -1034,6 +1035,7 @@ export default function EditReviewPage() {
                     return (
                         <OrchardPanel
                             productType={formData.type || 'flower'}
+                            reviewId={id}
                             reviewData={{
                                 // ✅ Infos de base complètes
                                 title: formData.holderName || 'Aperçu de la review',
@@ -1069,9 +1071,19 @@ export default function EditReviewPage() {
                                     orchardConfig: JSON.stringify(orchardData.orchardConfig),
                                     orchardPreset: orchardData.orchardPreset || 'custom',
                                     orchardCustomLayout: orchardData.customLayout || null,
-                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template')
+                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template'),
+                                    ...(orchardData.previewUrl ? { orchardPreviewUrl: orchardData.previewUrl } : {})
                                 }));
                                 toast.success('✅ Aperçu défini avec succès !');
+                            }}
+                            onPublish={async () => {
+                                // Publication directe depuis l'OrchardPanel (préview déjà uploadé)
+                                try {
+                                    await reviewsService.updateVisibility(id, true);
+                                    toast.success('🎉 Review publiée dans la galerie !');
+                                } catch (err) {
+                                    toast.error('Erreur lors de la publication : ' + (err?.message || ''));
+                                }
                             }}
                         />
                     );

@@ -656,6 +656,57 @@ router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
     res.json(formattedReview)
 }))
 
+// PATCH /api/reviews/:id/preview - Définir l'image d'aperçu galerie (thumbnail)
+router.patch('/:id/preview', requireAuth, asyncHandler(async (req, res) => {
+    const { id } = req.params
+    const { previewDataUrl } = req.body
+
+    if (!validateReviewId(id)) throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+
+    if (!previewDataUrl || typeof previewDataUrl !== 'string' || !previewDataUrl.startsWith('data:image/')) {
+        throw Errors.MISSING_FIELD('previewDataUrl')
+    }
+
+    const review = await prisma.review.findUnique({ where: { id } })
+    if (!review) throw Errors.REVIEW_NOT_FOUND()
+
+    await requireOwnershipOrThrow(review.authorId, req, 'review')
+
+    // Decode base64 et sauvegarder comme fichier
+    const matches = previewDataUrl.match(/^data:image\/(\w+);base64,(.+)$/s)
+    if (!matches) throw Errors.INVALID_FIELD('previewDataUrl', 'Invalid data URL format')
+
+    const ext = matches[1] === 'jpeg' ? 'jpg' : (matches[1] || 'png')
+    const buffer = Buffer.from(matches[2], 'base64')
+    const filename = `preview_${id}_${Date.now()}.${ext}`
+    const uploadDir = path.join(__dirname, '../../db/review_images')
+    await fs.mkdir(uploadDir, { recursive: true })
+    await fs.writeFile(path.join(uploadDir, filename), buffer)
+
+    // Supprimer l'ancien aperçu si existant + merger previewUrl dans extraData
+    let parsedExisting = {}
+    try { parsedExisting = review.extraData ? JSON.parse(review.extraData) : {} } catch { parsedExisting = {} }
+    if (parsedExisting.previewUrl) {
+        try {
+            const oldFile = parsedExisting.previewUrl.replace('/images/', '')
+            await fs.unlink(path.join(uploadDir, oldFile))
+        } catch { /* ignore si déjà supprimé */ }
+    }
+
+    const previewUrl = `/images/${filename}`
+    const merged = { ...parsedExisting, previewUrl }
+    const updated = await prisma.review.update({
+        where: { id },
+        data: { extraData: JSON.stringify(merged) },
+        include: { author: { select: { id: true, username: true, avatar: true, discordId: true } } }
+    })
+
+    let formattedReview = formatReview(updated, req.user)
+    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = mapToApi('Review', formattedReview)
+    res.json({ previewUrl, review: formattedReview })
+}))
+
 // POST /api/reviews/:id/like - Ajouter un like à une review
 router.post('/:id/like', requireAuth, asyncHandler(async (req, res) => {
     const { id } = req.params

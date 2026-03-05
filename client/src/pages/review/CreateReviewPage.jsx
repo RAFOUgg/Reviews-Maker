@@ -70,6 +70,8 @@ export default function CreateReviewPage() {
     const [isLoading, setIsLoading] = useState(isEditing);
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [saveModalData, setSaveModalData] = useState({ title: '', isPublic: false });
+    // publishIntent: si true, réouvrir la save modal en mode public après fermeture de l'OrchardPanel
+    const [pendingPublishAfterPreview, setPendingPublishAfterPreview] = useState(false);
 
     // Fonction pour obtenir l'URL d'une image (pour preview)
     // Pour éviter d'appeler createObjectURL à chaque rendu, on met en cache
@@ -501,6 +503,7 @@ export default function CreateReviewPage() {
                     return (
                         <OrchardPanel
                             productType={typeFromUrl}
+                            reviewId={isEditing ? editId : null}
                             reviewData={{
                                 // ✅ Infos de base complètes
                                 title: formData.holderName || 'Aperçu de la review',
@@ -528,7 +531,16 @@ export default function CreateReviewPage() {
                                 breeder: formData.breeder || formData.hashmaker || '',
                                 farm: formData.farm || ''
                             }}
-                            onClose={() => setShowOrchardStudio(false)}
+                            onClose={() => {
+                                setShowOrchardStudio(false);
+                                // Si l'utilisateur voulait publier, réouvrir la save modal en mode public
+                                if (pendingPublishAfterPreview && formData.orchardPreset) {
+                                    setPendingPublishAfterPreview(false);
+                                    const defaultTitle = `${formData.holderName || 'Review'} - ${formData.type || 'Produit'}`;
+                                    setSaveModalData({ title: defaultTitle, isPublic: true });
+                                    setShowSaveModal(true);
+                                }
+                            }}
                             onPresetApplied={(orchardData) => {
                                 // ✅ Sauvegarder la configuration Orchard dans formData
                                 setFormData(prev => ({
@@ -536,9 +548,16 @@ export default function CreateReviewPage() {
                                     orchardConfig: JSON.stringify(orchardData.orchardConfig),
                                     orchardPreset: orchardData.orchardPreset || 'custom',
                                     orchardCustomLayout: orchardData.customLayout || null,
-                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template')
+                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template'),
+                                    ...(orchardData.previewUrl ? { orchardPreviewUrl: orchardData.previewUrl } : {})
                                 }));
                                 toast.success('✅ Aperçu défini avec succès !');
+                            }}
+                            onPublish={() => {
+                                // Déclencher la save modal en mode public après application de l'aperçu
+                                const defaultTitle = `${formData.holderName || 'Review'} - ${formData.type || 'Produit'}`;
+                                setSaveModalData({ title: defaultTitle, isPublic: true });
+                                setShowSaveModal(true);
                             }}
                         />
                     );
@@ -591,9 +610,22 @@ export default function CreateReviewPage() {
                                             <span className="text-white">Publique (visible par tous)</span>
                                         </label>
                                         {!formData.orchardPreset && (
-                                            <p className="text-red-400 text-sm ml-7">
-                                                Vous devez définir un aperçu pour publier en public
-                                            </p>
+                                            <div className="ml-7 space-y-2">
+                                                <p className="text-amber-400 text-sm">
+                                                    ⚠️ Un aperçu visuel est requis pour la galerie publique.
+                                                </p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setPendingPublishAfterPreview(true);
+                                                        setShowSaveModal(false);
+                                                        setShowOrchardStudio(true);
+                                                    }}
+                                                    className="text-xs px-3 py-1.5 bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/40 text-violet-300 rounded-lg transition-all"
+                                                >
+                                                    🎨 Définir l'aperçu maintenant
+                                                </button>
+                                            </div>
                                         )}
                                     </div>
                                 </div>

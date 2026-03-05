@@ -196,6 +196,17 @@ export const reviewsService = {
     },
 
     /**
+     * Définir l'image d'aperçu galerie (thumbnail capturé depuis OrchardPanel)
+     */
+    async setPreview(id, previewDataUrl) {
+        return fetchAPI(`${API_BASE}/reviews/${id}/preview`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ previewDataUrl })
+        })
+    },
+
+    /**
      * Changer la visibilité d'une review
      */
     async updateVisibility(id, isPublic) {

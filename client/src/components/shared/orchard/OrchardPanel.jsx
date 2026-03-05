@@ -13,6 +13,7 @@ import ContentPanel from '../config/ContentPanel';
 import PageManager from './PageManager';
 import ExportModal from '../../export/ExportModal';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
+import { reviewsService } from '../../../services/apiService';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -196,14 +197,16 @@ function normalizeReviewData(reviewData) {
     return normalized;
 }
 
-export default function OrchardPanel({ reviewData, onClose, onPresetApplied, productType = 'flower' }) {
+export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onPublish, reviewId = null, productType = 'flower' }) {
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
     const [isCustomMode, setIsCustomMode] = useState(false); // Nouveau: mode template vs custom
     const [customLayout, setCustomLayout] = useState([]); // Layout custom pour drag & drop
     const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
+    const [isApplying, setIsApplying] = useState(false); // En cours de capture/upload thumbnail
     const canvasRef = useRef(null);
+    const thumbnailRef = useRef(null); // Ref sur la zone de préview template (pour capture thumbnail)
     const setReviewData = useOrchardStore((state) => state.setReviewData);
     const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
     const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
@@ -290,16 +293,49 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
         setShowExportModal(true);
     };
 
-    const handleApplyPreset = () => {
+    // Capture un thumbnail de la préview et l'uploade si reviewId dispo, puis applique le preset
+    const handleApplyPreset = async (publishAfter = false) => {
+        setIsApplying(true);
+        let previewUrl = null;
+
+        // Tenter de capturer le thumbnail de la zone de préview visible
+        if (reviewId) {
+            try {
+                const captureEl = isCustomMode ? canvasRef.current : thumbnailRef.current;
+                if (captureEl) {
+                    const { toPng } = await import('html-to-image');
+                    const dataUrl = await toPng(captureEl, {
+                        cacheBust: true,
+                        pixelRatio: 1,
+                        backgroundColor: '#0e0e1a',
+                        style: { transform: 'none' }
+                    });
+                    const result = await reviewsService.setPreview(reviewId, dataUrl);
+                    previewUrl = result?.previewUrl || null;
+                }
+            } catch (err) {
+                console.warn('[OrchardPanel] Thumbnail capture/upload failed (non-bloquant):', err);
+            }
+        }
+
         // Sauvegarder la configuration Orchard dans le formData
         if (onPresetApplied) {
             onPresetApplied({
                 orchardConfig: config,
                 orchardPreset: activePreset,
                 customLayout: isCustomMode ? customLayout : null, // Sauvegarder le layout custom
-                layoutMode: isCustomMode ? 'custom' : 'template'
+                layoutMode: isCustomMode ? 'custom' : 'template',
+                previewUrl // URL de l'aperçu uploadé (ou null si non dispo)
             });
         }
+
+        setIsApplying(false);
+
+        // Si mode "Appliquer & Publier", déclencher la publication
+        if (publishAfter && onPublish) {
+            onPublish();
+        }
+
         onClose();
     };
 
@@ -492,15 +528,36 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                         {/* Bouton Appliquer */}
                         {onPresetApplied && (
                             <motion.button
-                                whileHover={{ scale: 1.02 }}
+                                whileHover={{ scale: isApplying ? 1 : 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={handleApplyPreset}
-                                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all flex items-center gap-2 text-sm"
+                                onClick={() => handleApplyPreset(false)}
+                                disabled={isApplying}
+                                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all flex items-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {isApplying ? (
+                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
+                                ) : (
+                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    </svg>
+                                )}
+                                {isApplying ? 'Sauvegarde...' : 'Appliquer'}
+                            </motion.button>
+                        )}
+
+                        {/* Bouton Appliquer & Publier */}
+                        {onPresetApplied && onPublish && (
+                            <motion.button
+                                whileHover={{ scale: isApplying ? 1 : 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => handleApplyPreset(true)}
+                                disabled={isApplying}
+                                className="px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-700 text-white rounded-lg font-semibold shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 004 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
                                 </svg>
-                                Appliquer
+                                Appliquer &amp; Publier
                             </motion.button>
                         )}
 
@@ -617,6 +674,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                         ) : isPreviewFullscreen ? (
                             // MODE TEMPLATE PLEIN ÉCRAN
                             <motion.div
+                                ref={thumbnailRef}
                                 key="fullscreen"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
@@ -647,7 +705,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, pro
                                 )}
 
                                 {/* Preview Pane - Right */}
-                                <div className="flex-1 overflow-hidden min-w-0">
+                                <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0">
                                     {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                                 </div>
                             </motion.div>

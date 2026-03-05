@@ -1,4 +1,5 @@
 {
+  "Review.mainImageUrl": "imageUrl",
   "Review.purgevide": "vacuumPurge",
   "Review.toucheDensite": "touchdensity",
   "Review.toucheFriabilite": "touchfriability",

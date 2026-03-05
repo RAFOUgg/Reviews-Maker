@@ -62,7 +62,7 @@ const ReviewCard = ({ review, onLike, onView }) => {
       <LiquidCard glow="purple" padding="none">
         <div className="relative aspect-square overflow-hidden rounded-t-2xl">
           <img
-            src={review.imageUrl || '/placeholder-review.jpg'}
+            src={review.imageUrl || review.mainImageUrl || '/placeholder-review.jpg'}
             alt={review.name}
             className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
           />
@@ -71,6 +71,13 @@ const ReviewCard = ({ review, onLike, onView }) => {
             <span>{getTypeIcon(review.type)}</span>
             {review.typeName || 'Produit'}
           </div>
+
+          {/* Badge aperçu visuel défini */}
+          {review.orchardPreset && (
+            <div className="absolute bottom-3 left-3 px-2 py-0.5 bg-violet-600/70 backdrop-blur-sm rounded-full text-white text-xs font-medium flex items-center gap-1">
+              🎨 Aperçu
+            </div>
+          )}
 
           <div className="absolute top-3 right-3 w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
             {review.rating?.toFixed(1) || '-'}
