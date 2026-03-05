@@ -67,6 +67,20 @@ export default function CreateFlowerReview() {
     const [showOrchard, setShowOrchard] = useState(false)
     const [showExportMaker, setShowExportMaker] = useState(false)
     const scrollContainerRef = useRef(null)
+    // Curing section: optionnelle, activée seulement si l'utilisateur le souhaite
+    // Auto-activée en édition si des données curing existent déjà
+    const [curingEnabled, setCuringEnabled] = useState(false)
+
+    // Auto-enable curing when editing a review that already has curing data (loaded async)
+    useEffect(() => {
+        const hasCuringData = !!(
+            formData?.curing?.curingTimeline?.length ||
+            formData?.curingTimelineData?.length ||
+            formData?.curingType ||
+            formData?.curingTemperature
+        )
+        if (hasCuringData) setCuringEnabled(true)
+    }, [formData?.curing, formData?.curingTimelineData, formData?.curingType])
 
     // Tracker l'aperçu : depuis formData (mode édition) ou défini durant la session
     const hasPreview = !!(formData.orchardPreset)
@@ -124,6 +138,7 @@ export default function CreateFlowerReview() {
     }, [currentSection, formData])
 
     const handleSave = async () => {
+        let savedReview
         try {
             setSaving(true)
 
@@ -131,30 +146,75 @@ export default function CreateFlowerReview() {
             const flatData = flattenFlowerFormData(formData)
 
             // Récupérer les images existantes depuis formData (chargées depuis l'API en mode édition)
-            const existingImages = Array.isArray(formData.images) ? formData.images
-                : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+            let existingImages = []
+            try {
+                existingImages = Array.isArray(formData.images) ? formData.images
+                    : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+            } catch {
+                existingImages = []
+            }
 
             // Créer le FormData avec les données aplaties et les images existantes
             const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
 
-            // Debug: log les données envoyées
-            console.log('📤 Sending flattened data:', flatData, 'existingImages:', existingImages)
+            console.log('📤 Sending flattened data:', flatData)
 
-            let savedReview
             if (id) {
                 savedReview = await flowerReviewsService.update(id, reviewFormData)
             } else {
                 savedReview = await flowerReviewsService.create(reviewFormData)
             }
 
-            toast.success('Brouillon sauvegardé')
+            toast.success('Brouillon sauvegardé ✅')
 
             if (!id && savedReview?.id) {
                 navigate(`/edit/flower/${savedReview.id}`)
             }
         } catch (error) {
-            toast.error('Erreur lors de la sauvegarde: ' + (error.message || 'Erreur inconnue'))
+            const msg = error?.message || 'Erreur inconnue'
+            toast.error('Erreur lors de la sauvegarde : ' + msg)
             console.error('Save error:', error)
+            throw error   // re-throw pour que SaveReviewModal puisse afficher l'erreur inline
+        } finally {
+            setSaving(false)
+        }
+        return savedReview
+    }
+
+    // Publier avec les données orchardData passées directement (évite la race-condition setState)
+    const handleSubmitWithOrchardData = async (orchardData = {}) => {
+        const orchardPreset = orchardData.orchardPreset || formData.orchardPreset
+        if (!orchardPreset) {
+            toast.error('Un aperçu est requis pour publier publiquement.')
+            return
+        }
+        try {
+            setSaving(true)
+            let existingImages = []
+            try {
+                existingImages = Array.isArray(formData.images) ? formData.images
+                    : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+            } catch { existingImages = [] }
+
+            const mergedData = {
+                ...formData,
+                orchardPreset,
+                orchardConfig: orchardData.orchardConfig ? JSON.stringify(orchardData.orchardConfig) : formData.orchardConfig,
+            }
+            const flatData = flattenFlowerFormData(mergedData)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImages)
+
+            if (id) {
+                await flowerReviewsService.update(id, reviewFormData)
+            } else {
+                await flowerReviewsService.create(reviewFormData)
+            }
+            toast.success('Review publiée ✅')
+            navigate('/library')
+        } catch (error) {
+            toast.error('Erreur lors de la publication : ' + (error?.message || 'Erreur inconnue'))
+            console.error(error)
+            throw error
         } finally {
             setSaving(false)
         }
@@ -163,13 +223,16 @@ export default function CreateFlowerReview() {
     const handleSubmit = async () => {
         // Validation des champs requis
         // En mode édition, les images existantes comptent aussi (pas besoin de nouvelles photos)
-        const existingImagesForValidation = Array.isArray(formData.images) ? formData.images
-            : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+        let existingImagesForValidation = []
+        try {
+            existingImagesForValidation = Array.isArray(formData.images) ? formData.images
+                : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
+        } catch { existingImagesForValidation = [] }
         const hasImages = photos.length > 0 || existingImagesForValidation.length > 0
 
         if (!formData.nomCommercial || !hasImages) {
             toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
-            setCurrentSection(0) // Retour à la première section
+            setCurrentSection(0)
             return
         }
 
@@ -181,23 +244,22 @@ export default function CreateFlowerReview() {
 
         try {
             setSaving(true)
-
-            // Utiliser le même pipeline que handleSave pour garantir la cohérence de sérialisation
             const flatData = flattenFlowerFormData(formData)
             const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImagesForValidation)
 
             if (id) {
                 await flowerReviewsService.update(id, reviewFormData)
-                toast.success('Review mise à jour et publiée')
+                toast.success('Review publiée ✅')
             } else {
                 await flowerReviewsService.create(reviewFormData)
-                toast.success('Review publiée avec succès')
+                toast.success('Review publiée ✅')
             }
 
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de la publication')
+            toast.error('Erreur lors de la publication : ' + (error?.message || 'Erreur inconnue'))
             console.error(error)
+            throw error
         } finally {
             setSaving(false)
         }
@@ -347,11 +409,47 @@ export default function CreateFlowerReview() {
                         />
                     )}
                     {currentSectionData.id === 'curing' && (
-                        <CuringMaturationSection
-                            data={formData.curing || {}}
-                            onChange={(curingData) => handleChange('curing', curingData)}
-                            productType="flower"
-                        />
+                        <div className="space-y-4">
+                            {/* Section optionnelle — peut être ignorée */}
+                            {!curingEnabled ? (
+                                <div className="rounded-2xl border border-dashed border-white/20 bg-white/3 p-6 text-center space-y-3">
+                                    <div className="text-4xl">🔥</div>
+                                    <div>
+                                        <p className="text-white font-medium text-sm">Section optionnelle</p>
+                                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">
+                                            Le curing & maturation est facultatif. Activez-le uniquement si vous
+                                            souhaitez documenter votre processus de conservation.
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setCuringEnabled(true)}
+                                        className="px-5 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 text-orange-300 rounded-xl text-sm font-medium transition-all"
+                                    >
+                                        + Activer le curing
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2 text-orange-400 text-xs font-medium">
+                                            <span>🔥</span>
+                                            <span>Section optionnelle</span>
+                                        </div>
+                                        <button
+                                            onClick={() => setCuringEnabled(false)}
+                                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                                        >
+                                            Passer cette section
+                                        </button>
+                                    </div>
+                                    <CuringMaturationSection
+                                        data={formData.curing || {}}
+                                        onChange={(curingData) => handleChange('curing', curingData)}
+                                        productType="flower"
+                                    />
+                                </div>
+                            )}
+                        </div>
                     )}
                 </motion.div>
             </AnimatePresence>
@@ -362,15 +460,16 @@ export default function CreateFlowerReview() {
                     <OrchardPanel
                         reviewData={formData}
                         productType="flower"
+                        reviewId={id || null}
                         onClose={() => setShowOrchard(false)}
                         onPresetApplied={(orchardData) => {
                             handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
                             handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
                             if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
                             if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
-                            toast.success('✅ Aperçu défini ! Vous pouvez maintenant publier.')
                             setShowOrchard(false)
                         }}
+                        onPublish={handleSubmitWithOrchardData}
                     />
                 </Suspense>
             )}

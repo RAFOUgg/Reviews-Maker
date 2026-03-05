@@ -39,7 +39,53 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     console.warn('Orchard: merging nested sections failed', e);
   }
 
-  // --- Map common French form keys to Orchard expected keys ---
+  // Reverse mappings: API / backend field names → OrchardPanel expected names
+  // When loading from API, flatterned field names differ from form field names
+  try {
+    const reverseVisualMap = {
+      // flattenFlowerFormData stores form.densite → densiteVisuelle
+      // OrchardPanel categoryRatings looks for 'densite'
+      densiteVisuelle: 'densite',
+      trichomesScore: 'trichome',
+      pistilsScore: 'pistil',
+      manucureScore: 'manucure',
+      moisissureScore: 'moisissure',
+      grainesScore: 'graines',
+      // Hash/Concentré specific
+      couleurTransparence: 'couleur',
+      viscositeVisuelle: 'viscosite',
+      meltingScore: 'melting',
+      residuScore: 'residus',
+      // Taste fields
+      intensiteGoutScore: 'intensiteFumee',
+      agressiviteScore: 'agressivite',
+      // Effect fields
+      monteeScore: 'montee',
+      intensiteEffetScore: 'intensiteEffet',
+      // Odeur fields
+      intensiteAromeScore: 'aromasIntensity',
+      complexiteAromeScore: 'complexiteAromas',
+      fideliteAromeScore: 'fideliteCultivars',
+      // Flat taste notes arrays
+      dryPuffNotes: 'dryPuffNotes',
+      inhalationNotes: 'inhalationNotes',
+      expirationNotes: 'exhalationNotes',
+      // Flat effects arrays
+      effetsChoisis: 'effects',
+      // Flat odeur note arrays
+      notesOdeursDominantes: 'aromas',
+      notesOdeursSecondaires: 'secondaryAromas',
+    };
+    for (const [apiKey, orchardKey] of Object.entries(reverseVisualMap)) {
+      if (normalized[apiKey] !== undefined && normalized[orchardKey] === undefined) {
+        normalized[orchardKey] = normalized[apiKey];
+      }
+    }
+  } catch (e) {
+    console.warn('Orchard: reverse field name mappings failed', e);
+  }
+
+  // Map common French form keys to Orchard expected keys
   try {
     // Photos from the form use `photos` (with {file, preview}) — map to `images` and `mainImage` for preview
     if (Array.isArray(normalized.photos) && (!normalized.images || normalized.images.length === 0)) {

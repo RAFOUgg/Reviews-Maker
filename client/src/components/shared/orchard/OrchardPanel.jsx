@@ -319,21 +319,23 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
         }
 
         // Sauvegarder la configuration Orchard dans le formData
+        const orchardPayload = {
+            orchardConfig: config,
+            orchardPreset: activePreset,
+            customLayout: isCustomMode ? customLayout : null,
+            layoutMode: isCustomMode ? 'custom' : 'template',
+            previewUrl
+        };
         if (onPresetApplied) {
-            onPresetApplied({
-                orchardConfig: config,
-                orchardPreset: activePreset,
-                customLayout: isCustomMode ? customLayout : null, // Sauvegarder le layout custom
-                layoutMode: isCustomMode ? 'custom' : 'template',
-                previewUrl // URL de l'aperçu uploadé (ou null si non dispo)
-            });
+            onPresetApplied(orchardPayload);
         }
 
         setIsApplying(false);
 
-        // Si mode "Appliquer & Publier", déclencher la publication
+        // Si mode "Appliquer & Publier", déclencher la publication en passant les données orchardPayload
+        // directement pour éviter la race-condition React setState
         if (publishAfter && onPublish) {
-            onPublish();
+            onPublish(orchardPayload);
         }
 
         onClose();
