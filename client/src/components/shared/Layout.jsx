@@ -2,8 +2,8 @@
  * Layout - Composant de mise en page principale
  * Liquid Glass UI Design System
  */
-import { useState } from 'react';
-import { Outlet, Link, NavLink } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Outlet, Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
 import { usePermissions } from '../../hooks/usePermissions';
@@ -15,6 +15,12 @@ export default function Layout() {
     const { user, isAuthenticated } = useAuth();
     const { hasFeature } = usePermissions();
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const location = useLocation();
+
+    // Fermer le menu mobile à chaque changement de route
+    useEffect(() => {
+        setMobileMenuOpen(false);
+    }, [location.pathname]);
 
     // Navigation items - Only public pages in navbar (user links are in profile dropdown)
     const navItems = [
