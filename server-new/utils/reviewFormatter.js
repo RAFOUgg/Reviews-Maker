@@ -258,7 +258,9 @@ export function formatReviews(reviews, currentUser = null) {
         return []
     }
 
-    return reviews.map(review => formatReview(review, currentUser))
+    // liftOrchardFromExtra ensures orchardPreset / orchardConfig from extraData
+    // are exposed at top level on every review (library cards, visibility toggles, etc.)
+    return reviews.map(review => liftOrchardFromExtra(formatReview(review, currentUser)))
 }
 
 /**
