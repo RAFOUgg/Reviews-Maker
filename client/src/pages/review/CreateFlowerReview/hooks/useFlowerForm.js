@@ -7,7 +7,12 @@ import { useToast } from '../../../../components/shared/ToastContainer'
  */
 export function useFlowerForm(reviewId = null) {
     const toast = useToast()
-    const [formData, setFormData] = useState({ type: 'flower' })
+    const [formData, setFormData] = useState({
+        type: 'flower',
+        // Pre-initialize visual defaults so extractExtraData finds scores even if
+        // the user opens OrchardPanel before navigating to the Visual section
+        visual: { colors: [], colorRating: 5, density: 5, trichomes: 5, mold: 10, seeds: 10 }
+    })
     const [loading, setLoading] = useState(!!reviewId)
     const [saving, setSaving] = useState(false)
 
@@ -27,13 +32,30 @@ export function useFlowerForm(reviewId = null) {
             // - FlowerReview model fields are nested under review.flowerData
             const { flowerData, ...baseReview } = review
 
+            const fd = flowerData || {}
+
+            // Reconstruct visual sub-object from flat API fields so VisualSection
+            // and normalizeReviewDataByType receive proper nested state on edit
+            const visual = {
+                colors:      fd.couleurNuancier   ?? [],
+                colorRating: fd.couleurRating      ?? 5,
+                density:     fd.densiteVisuelle    ?? 5,
+                trichomes:   fd.trichomesScore     ?? 5,
+                pistils:     fd.pistilsScore       ?? 5,
+                manucure:    fd.manucureScore      ?? 5,
+                mold:        fd.moisissureScore    ?? 10,
+                seeds:       fd.grainesScore       ?? 10,
+            }
+
             const mappedFormData = {
                 ...baseReview,
                 // Map holderName (Review model) → nomCommercial (form field)
                 nomCommercial: baseReview.holderName || '',
                 // Merge flowerData fields into top-level form state
                 // so fields like cultivars, farm, thcPercent etc. are accessible directly
-                ...(flowerData || {}),
+                ...fd,
+                // Nested visual object required by VisualSection + normalizeReviewDataByType
+                visual,
             }
 
             setFormData(mappedFormData)
