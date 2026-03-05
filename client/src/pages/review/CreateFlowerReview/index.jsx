@@ -251,7 +251,7 @@ export default function CreateFlowerReview() {
                     className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all ${hasPreview
                         ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/50 text-green-300'
                         : 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/50 text-purple-300'
-                    }`}
+                        }`}
                     title="Ouvrir l'aperçu (Orchard)"
                 >
                     <Eye className="w-4 h-4 inline mr-2" />

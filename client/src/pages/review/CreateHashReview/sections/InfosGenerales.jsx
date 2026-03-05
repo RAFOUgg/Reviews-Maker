@@ -1,5 +1,5 @@
 import React from 'react'
-import { Camera, Info } from 'lucide-react'
+import { Camera, Info, Check, X } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
@@ -57,6 +57,24 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             onChange={(e) => handleChange('cultivars', e.target.value)}
                             placeholder="Cultivars utilisés"
                         />
+                    </div>
+
+                    {/* C'est notre review - Toggle Button */}
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => handleChange('isOurReview', !formData.isOurReview)}
+                            className={`w-full px-4 py-3 rounded-lg border-2 font-semibold transition-all flex items-center justify-center gap-2 ${formData.isOurReview
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-400 text-white shadow-lg shadow-green-500/30'
+                                    : 'bg-white/5 border-white/20 text-white/70 hover:border-amber-500/50 hover:bg-amber-500/10'
+                                }`}
+                        >
+                            {formData.isOurReview && <Check className="w-5 h-5" />}
+                            <span>{formData.isOurReview ? '✓ C\'est notre review' : 'C\'est notre review'}</span>
+                        </button>
+                        <p className="text-xs text-white/40 mt-2">
+                            {formData.isOurReview ? 'Cette review est marquée comme personnelle' : 'Cliquez pour affirmer que c\'est votre review'}
+                        </p>
                     </div>
                 </div>
             </LiquidCard>

@@ -876,7 +876,7 @@ router.put('/:id',
                     // Merge orchard/aperçu data into extraData
                     extraData: (() => {
                         let existing = {}
-                        try { existing = JSON.parse(review.extraData || '{}') } catch (e) {}
+                        try { existing = JSON.parse(review.extraData || '{}') } catch (e) { }
                         const updated = { ...existing }
                         if (req.body.orchardPreset) updated.orchardPreset = req.body.orchardPreset
                         if (req.body.orchardConfig) updated.orchardConfig = req.body.orchardConfig

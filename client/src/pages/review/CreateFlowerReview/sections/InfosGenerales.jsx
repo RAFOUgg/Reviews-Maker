@@ -1,5 +1,5 @@
 import React from 'react'
-import { Camera, X, Info } from 'lucide-react'
+import { Camera, X, Info, Check } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider, LiquidChip, LiquidButton } from '@/components/ui/LiquidUI'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
@@ -69,6 +69,24 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             placeholder="Nom du producteur"
                         />
                         <p className="text-xs text-white/40 mt-1">(Auto-complete depuis base de données)</p>
+                    </div>
+
+                    {/* C'est notre review - Toggle Button */}
+                    <div>
+                        <button
+                            type="button"
+                            onClick={() => handleChange('isOurReview', !formData.isOurReview)}
+                            className={`w-full px-4 py-3 rounded-lg border-2 font-semibold transition-all flex items-center justify-center gap-2 ${formData.isOurReview
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-400 text-white shadow-lg shadow-green-500/30'
+                                    : 'bg-white/5 border-white/20 text-white/70 hover:border-violet-500/50 hover:bg-violet-500/10'
+                                }`}
+                        >
+                            {formData.isOurReview && <Check className="w-5 h-5" />}
+                            <span>{formData.isOurReview ? '✓ C\'est notre review' : 'C\'est notre review'}</span>
+                        </button>
+                        <p className="text-xs text-white/40 mt-2">
+                            {formData.isOurReview ? 'Cette review est marquée comme personnelle' : 'Cliquez pour affirmer que c\'est votre review'}
+                        </p>
                     </div>
 
                     {/* Photos avec système de tags CDC conforme */}

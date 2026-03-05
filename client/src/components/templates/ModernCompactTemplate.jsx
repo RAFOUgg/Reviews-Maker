@@ -29,7 +29,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    
+
     // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isPortrait, isLandscape, fontSize, padding, spacing, limits } = responsive;
@@ -60,7 +60,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     });
 
     // Image principale
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl || 
+    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
         (Array.isArray(reviewData.images) && reviewData.images[0]);
 
     // Styles dynamiques
@@ -107,7 +107,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         const starsCount = 5;
         const filledStars = Math.round((ratingValue / 10) * starsCount);
         const emptyStars = starsCount - filledStars;
-        
+
         return (
             <div className="flex items-center gap-3">
                 <div className="flex gap-0.5">
@@ -132,7 +132,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     // Render tags génériques - pas de maxItems car déjà limité dans les données
     const renderTags = (items) => {
         if (!items || items.length === 0) return null;
-        
+
         return (
             <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
                 {items.map((item, i) => (
@@ -165,7 +165,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
         };
         const sizeMap = { small: '40px', medium: '60px', large: '80px' };
-        
+
         return (
             <div
                 className="absolute pointer-events-none"
@@ -198,7 +198,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             </div>
                         </div>
                     )}
-                    
+
                     {/* Contenu */}
                     <div className="flex-1 flex flex-col justify-center overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                         {renderContent()}
@@ -206,7 +206,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 </div>
             );
         }
-        
+
         // Layout portrait/carré : vertical
         return (
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
@@ -214,7 +214,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 {contentModules.image && mainImage && (
                     <div
                         className="w-full flex-shrink-0 overflow-hidden"
-                        style={{ 
+                        style={{
                             borderRadius: `${responsive.image.borderRadius}px`,
                             maxHeight: responsive.image.maxHeight,
                         }}
@@ -222,7 +222,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         <img src={mainImage} alt="" className="w-full h-full object-cover" />
                     </div>
                 )}
-                
+
                 {/* Contenu */}
                 <div className="flex-1 flex flex-col justify-center overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                     {renderContent()}
@@ -370,7 +370,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Description */}
             {contentModules.description && reviewData.description && (
-                <p 
+                <p
                     style={{
                         ...styles.text,
                         textAlign: 'center',

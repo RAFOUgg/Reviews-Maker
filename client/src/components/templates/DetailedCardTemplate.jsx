@@ -534,64 +534,64 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     <div>
                         {/* Profil sensoriel */}
                         {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) ||
-                          (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
-                            <Section title="Profil Sensoriel" icon="🌸">
-                                {/* Primary aromas */}
-                                {contentModules.aromas && aromas.length > 0 && (
-                                    <div style={{ marginBottom: `${spacing.element}px` }}>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes dominants</div>
-                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                            {aromas.map((a, i) => <Tag key={i}>{extractLabel(a)}</Tag>)}
+                            (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
+                                <Section title="Profil Sensoriel" icon="🌸">
+                                    {/* Primary aromas */}
+                                    {contentModules.aromas && aromas.length > 0 && (
+                                        <div style={{ marginBottom: `${spacing.element}px` }}>
+                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes dominants</div>
+                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                                {aromas.map((a, i) => <Tag key={i}>{extractLabel(a)}</Tag>)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {/* Secondary aromas */}
-                                {contentModules.aromas && secondaryAromas.length > 0 && (
-                                    <div style={{ marginBottom: `${spacing.element}px` }}>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes secondaires</div>
-                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                            {secondaryAromas.map((a, i) => <Tag key={i} variant="subtle">{extractLabel(a)}</Tag>)}
+                                    )}
+                                    {/* Secondary aromas */}
+                                    {contentModules.aromas && secondaryAromas.length > 0 && (
+                                        <div style={{ marginBottom: `${spacing.element}px` }}>
+                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes secondaires</div>
+                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                                {secondaryAromas.map((a, i) => <Tag key={i} variant="subtle">{extractLabel(a)}</Tag>)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {/* Dry puff notes */}
-                                {contentModules.tastes && dryPuffNotes.length > 0 && (
-                                    <div style={{ marginBottom: `${spacing.gap}px` }}>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>💨 Tirage à sec</div>
-                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                            {dryPuffNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                    )}
+                                    {/* Dry puff notes */}
+                                    {contentModules.tastes && dryPuffNotes.length > 0 && (
+                                        <div style={{ marginBottom: `${spacing.gap}px` }}>
+                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>💨 Tirage à sec</div>
+                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                                {dryPuffNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {/* Inhalation notes */}
-                                {contentModules.tastes && inhalationNotes.length > 0 && (
-                                    <div style={{ marginBottom: `${spacing.gap}px` }}>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>🌬️ Inhalation</div>
-                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                            {inhalationNotes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
+                                    )}
+                                    {/* Inhalation notes */}
+                                    {contentModules.tastes && inhalationNotes.length > 0 && (
+                                        <div style={{ marginBottom: `${spacing.gap}px` }}>
+                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>🌬️ Inhalation</div>
+                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                                {inhalationNotes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {/* Exhalation notes */}
-                                {contentModules.tastes && exhalationNotes.length > 0 && (
-                                    <div>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>↩️ Expiration / Arrière-goût</div>
-                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                            {exhalationNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                    )}
+                                    {/* Exhalation notes */}
+                                    {contentModules.tastes && exhalationNotes.length > 0 && (
+                                        <div>
+                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>↩️ Expiration / Arrière-goût</div>
+                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                                {exhalationNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                                {/* Fallback: generic tastes */}
-                                {contentModules.tastes && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
-                                    <div>
-                                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Goûts</div>
-                                        <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                            {tastes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
+                                    )}
+                                    {/* Fallback: generic tastes */}
+                                    {contentModules.tastes && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
+                                        <div>
+                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Goûts</div>
+                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+                                                {tastes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
+                                            </div>
                                         </div>
-                                    </div>
-                                )}
-                            </Section>
-                        )}
+                                    )}
+                                </Section>
+                            )}
 
                         {/* Terpènes */}
                         {contentModules.terpenes && terpenes.length > 0 && (
