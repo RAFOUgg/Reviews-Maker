@@ -368,7 +368,12 @@ function validateFlowerReviewData(data, options = {}) {
         dureteScore: 'dureteScore',
         densiteTactileScore: 'densiteTactileScore',
         elasticiteScore: 'elasticiteScore',
-        collantScore: 'collantScore'
+        collantScore: 'collantScore',
+        malleabiliteScore: 'malleabiliteScore',
+        friabiliteScore: 'friabiliteScore',
+        viscositeScore: 'viscositeScore',
+        meltingScore: 'meltingScore',
+        residuScore: 'residuScore'
     }
     Object.keys(textureScoreFields).forEach(field => {
         if (data[field] !== undefined && data[field] !== null && data[field] !== '') {

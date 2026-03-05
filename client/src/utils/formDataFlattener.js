@@ -29,6 +29,7 @@ export function flattenCommonFormData(data) {
         if (data.texture.density !== undefined) flat.densiteTactileScore = data.texture.density
         if (data.texture.elasticity !== undefined) flat.elasticiteScore = data.texture.elasticity
         if (data.texture.stickiness !== undefined) flat.collantScore = data.texture.stickiness
+        if (data.texture.malleability !== undefined) flat.malleabiliteScore = data.texture.malleability
         // Champs additionnels pour Hash/Concentré
         if (data.texture.friability !== undefined) flat.friabiliteScore = data.texture.friability
         if (data.texture.viscosity !== undefined) flat.viscositeScore = data.texture.viscosity
@@ -144,9 +145,16 @@ export function flattenFlowerFormData(data) {
 
     // Section 4 - Analytics
     if (data.analytics) {
+        // Primary keys (thcPercent etc. from AnalyticsSection)
         if (data.analytics.thcPercent !== undefined) flat.thcPercent = data.analytics.thcPercent
         if (data.analytics.cbdPercent !== undefined) flat.cbdPercent = data.analytics.cbdPercent
         if (data.analytics.cbgPercent !== undefined) flat.cbgPercent = data.analytics.cbgPercent
+        if (data.analytics.cbcPercent !== undefined) flat.cbcPercent = data.analytics.cbcPercent
+        // Legacy fallback (old key names)
+        if (flat.thcPercent === undefined && data.analytics.thc !== undefined) flat.thcPercent = data.analytics.thc
+        if (flat.cbdPercent === undefined && data.analytics.cbd !== undefined) flat.cbdPercent = data.analytics.cbd
+        if (flat.cbgPercent === undefined && data.analytics.cbg !== undefined) flat.cbgPercent = data.analytics.cbg
+        if (flat.cbcPercent === undefined && data.analytics.cbc !== undefined) flat.cbcPercent = data.analytics.cbc
         if (data.analytics.terpeneProfile) flat.terpeneProfile = data.analytics.terpeneProfile
     }
 

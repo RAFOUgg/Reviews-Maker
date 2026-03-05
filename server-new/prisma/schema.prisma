@@ -714,6 +714,11 @@ model FlowerReview {
   densiteTactileScore Float?  // Densité tactile/10
   elasticiteScore     Float?  // Élasticité/10
   collantScore        Float?  // Collant/10
+  malleabiliteScore   Float?  // Malléabilité/10
+  friabiliteScore     Float?  // Friabilité/10
+  viscositeScore      Float?  // Viscosité/10
+  meltingScore        Float?  // Melting/10
+  residuScore         Float?  // Résidus/10
   
   // ===== GOÛTS =====
   intensiteGoutScore  Float?  // Intensité/10

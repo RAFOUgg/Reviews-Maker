@@ -27,17 +27,24 @@ export function useFlowerForm(reviewId = null) {
             setLoading(true)
             const review = await flowerReviewsService.getById(id)
 
-            // Map the API response structure to form expected structure:
-            // - Review model fields: holderName, images, mainImage, type, etc.
-            // - FlowerReview model fields are nested under review.flowerData
             const { flowerData, ...baseReview } = review
-
             const fd = flowerData || {}
 
-            // Reconstruct visual sub-object from flat API fields so VisualSection
-            // and normalizeReviewDataByType receive proper nested state on edit
+            // Helper: parse a JSON string or return array/value as-is
+            const parseArr = (v, def = []) => {
+                if (!v) return def
+                if (Array.isArray(v)) return v
+                try { return JSON.parse(v) } catch { return def }
+            }
+            const parseObj = (v, def = {}) => {
+                if (!v) return def
+                if (typeof v === 'object' && !Array.isArray(v)) return v
+                try { return JSON.parse(v) } catch { return def }
+            }
+
+            // ── Section 5: Visuel ──────────────────────────────────────────────
             const visual = {
-                colors: fd.couleurNuancier ?? [],
+                colors: parseArr(fd.couleurNuancier, []),
                 colorRating: fd.couleurRating ?? 5,
                 density: fd.densiteVisuelle ?? 5,
                 trichomes: fd.trichomesScore ?? 5,
@@ -47,21 +54,91 @@ export function useFlowerForm(reviewId = null) {
                 seeds: fd.grainesScore ?? 10,
             }
 
-            // Reconstruct culture sub-object so CulturePipelineSection receives
-            // its expected structure: { cultureTimeline, cultureTimelineConfig, ... }
+            // ── Section 4: Analytics ──────────────────────────────────────────
+            const analytics = {
+                thcPercent: fd.thcPercent ?? null,
+                cbdPercent: fd.cbdPercent ?? null,
+                cbgPercent: fd.cbgPercent ?? null,
+                cbcPercent: fd.cbcPercent ?? null,
+                terpeneProfile: fd.terpeneProfile ? parseArr(fd.terpeneProfile, null) : null,
+            }
+
+            // ── Section 6: Odeurs ─────────────────────────────────────────────
+            const odeurs = {
+                dominantNotes: parseArr(fd.notesOdeursDominantes, []),
+                secondaryNotes: parseArr(fd.notesOdeursSecondaires, []),
+                intensity: fd.intensiteAromeScore ?? 0,
+                complexity: fd.complexiteAromeScore ?? 0,
+                fidelity: fd.fideliteAromeScore ?? 0,
+            }
+
+            // ── Section 7: Texture ────────────────────────────────────────────
+            const texture = {
+                hardness: fd.dureteScore ?? 0,
+                density: fd.densiteTactileScore ?? 0,
+                elasticity: fd.elasticiteScore ?? 0,
+                stickiness: fd.collantScore ?? 0,
+                malleability: fd.malleabiliteScore ?? 0,
+                friability: fd.friabiliteScore ?? 0,
+                viscosity: fd.viscositeScore ?? 0,
+                melting: fd.meltingScore ?? 0,
+                residue: fd.residuScore ?? 10,
+            }
+
+            // ── Section 8: Goûts ──────────────────────────────────────────────
+            const gouts = {
+                intensity: fd.intensiteGoutScore ?? 0,
+                aggressiveness: fd.agressiviteScore ?? 0,
+                dryPuffNotes: parseArr(fd.dryPuffNotes, []),
+                inhalationNotes: parseArr(fd.inhalationNotes, []),
+                exhalationNotes: parseArr(fd.expirationNotes, []),
+            }
+
+            // ── Section 9: Effets & Expérience ────────────────────────────────
+            // Reconstruct HH/MM from stored effectDurationMinutes
+            const durationMins = fd.effectDurationMinutes != null ? parseInt(fd.effectDurationMinutes) : null
+            const effets = {
+                onset: fd.monteeScore ?? 5,
+                intensity: fd.intensiteEffetScore ?? 5,
+                duration: fd.effectDuration ?? '1-2h',
+                effects: parseArr(fd.effetsChoisis, []),
+                methodeConsommation: fd.consumptionMethod ?? '',
+                dosageUtilise: fd.dosage ?? '',
+                dosageUnite: fd.dosageUnit ?? 'g',
+                dureeEffetsHeures: durationMins != null ? String(Math.floor(durationMins / 60)) : '',
+                dureeEffetsMinutes: durationMins != null ? String(durationMins % 60) : '',
+                debutEffets: fd.effectOnset ?? '',
+                dureeEffetsCategorie: fd.effectLength ?? 'moyenne',
+                profilsEffets: parseArr(fd.effectProfiles, []),
+                effetsSecondaires: parseArr(fd.sideEffects, []),
+                usagesPreferes: parseArr(fd.preferredUse, []),
+            }
+
+            // ── Section 2: Génétiques ─────────────────────────────────────────
+            const genetics = {
+                breeder: fd.breeder ?? '',
+                variety: fd.variety ?? '',
+                geneticType: fd.geneticType ?? '',
+                indicaPercent: fd.indicaPercent ?? null,
+                sativaPercent: fd.sativaPercent ?? null,
+                parentage: parseArr(fd.parentage, []),
+                phenotypeCode: fd.phenotypeCode ?? '',
+                treeId: fd.geneticTreeId ?? null,
+            }
+
+            // ── Section 3: Culture Pipeline ───────────────────────────────────
             const culture = {
-                cultureTimeline: fd.cultureTimelineData ?? [],
-                cultureTimelineConfig: fd.cultureTimelineConfig ?? {},
+                cultureTimeline: parseArr(fd.cultureTimelineData, []),
+                cultureTimelineConfig: parseObj(fd.cultureTimelineConfig, {}),
                 mode: fd.cultureMode ?? null,
                 spaceType: fd.cultureSpaceType ?? null,
                 substrat: fd.cultureSubstrat ?? null,
             }
 
-            // Reconstruct curing sub-object so CuringMaturationSection receives
-            // its expected structure: { curingTimeline, curingTimelineConfig, curingType, ... }
+            // ── Section 10: Curing ────────────────────────────────────────────
             const curing = {
-                curingTimeline: fd.curingTimelineData ?? [],
-                curingTimelineConfig: fd.curingTimelineConfig ?? {},
+                curingTimeline: parseArr(fd.curingTimelineData, []),
+                curingTimelineConfig: parseObj(fd.curingTimelineConfig, {}),
                 curingType: fd.curingType ?? null,
                 temperature: fd.curingTemperature ?? null,
                 humidity: fd.curingHumidity ?? null,
@@ -69,14 +146,18 @@ export function useFlowerForm(reviewId = null) {
 
             const mappedFormData = {
                 ...baseReview,
-                // Map holderName (Review model) → nomCommercial (form field)
                 nomCommercial: baseReview.holderName || '',
-                // Merge flowerData fields into top-level form state
-                // so fields like cultivars, farm, thcPercent etc. are accessible directly
+                // Flat FlowerReview fields at top-level (for compatibility with
+                // legacy code that still reads fd.xxx directly)
                 ...fd,
-                // Nested visual object required by VisualSection + normalizeReviewDataByType
+                // Nested sub-objects — override any flat value from ...fd above
                 visual,
-                // Nested pipeline objects required by CulturePipelineSection + CuringMaturationSection
+                analytics,
+                odeurs,
+                texture,
+                gouts,
+                effets,
+                genetics,
                 culture,
                 curing,
             }

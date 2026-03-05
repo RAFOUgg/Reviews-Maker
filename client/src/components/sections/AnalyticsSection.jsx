@@ -8,26 +8,46 @@ import { LiquidCard, LiquidInput, LiquidDivider, LiquidButton } from '@/componen
  * Liquid Glass UI Design System
  * Props: productType, formData, handleChange
  */
-export default function AnalyticsSection({ productType, formData = {}, handleChange }) {
-    const data = formData.analytics || {};
-    const [thc, setThc] = useState(data?.thc || '');
-    const [cbd, setCbd] = useState(data?.cbd || '');
-    const [cbg, setCbg] = useState(data?.cbg || '');
-    const [cbc, setCbc] = useState(data?.cbc || '');
+export default function AnalyticsSection({ productType, data: directData, onChange, formData = {}, handleChange }) {
+    // Support both prop patterns: data/onChange (used by CreateFlowerReview) OR formData/handleChange
+    const data = directData || formData.analytics || {};
+    const safeUpdate = (payload) => {
+        if (typeof onChange === 'function') return onChange(payload);
+        if (typeof handleChange === 'function') return handleChange('analytics', payload);
+    };
+
+    // Use thcPercent / cbdPercent keys to match the flattener & DB
+    const [thc, setThc] = useState(String(data?.thcPercent ?? data?.thc ?? ''));
+    const [cbd, setCbd] = useState(String(data?.cbdPercent ?? data?.cbd ?? ''));
+    const [cbg, setCbg] = useState(String(data?.cbgPercent ?? data?.cbg ?? ''));
+    const [cbc, setCbc] = useState(String(data?.cbcPercent ?? data?.cbc ?? ''));
     const [uploadedFile, setUploadedFile] = useState(data?.certificateFile || null);
     const [terpeneFile, setTerpeneFile] = useState(data?.terpeneFile || null);
     const [uploadError, setUploadError] = useState('');
     const [showPreview, setShowPreview] = useState(false);
     const [previewType, setPreviewType] = useState(null); // 'cannabinoid' or 'terpene'
 
-    // Synchroniser avec parent
+    // Re-sync from props when data is loaded from API (edit mode)
+    const prevDataRef = React.useRef(null);
     useEffect(() => {
-        if (!handleChange) return;
-        handleChange('analytics', {
-            thc: thc ? parseFloat(thc) : null,
-            cbd: cbd ? parseFloat(cbd) : null,
-            cbg: cbg ? parseFloat(cbg) : null,
-            cbc: cbc ? parseFloat(cbc) : null,
+        // Only re-sync when the incoming data object is genuinely new (not a round-trip of our own update)
+        if (!data || data === prevDataRef.current) return;
+        const hasValues = data.thcPercent != null || data.cbdPercent != null || data.thc != null;
+        if (!hasValues) return;
+        prevDataRef.current = data;
+        setThc(String(data.thcPercent ?? data.thc ?? ''));
+        setCbd(String(data.cbdPercent ?? data.cbd ?? ''));
+        setCbg(String(data.cbgPercent ?? data.cbg ?? ''));
+        setCbc(String(data.cbcPercent ?? data.cbc ?? ''));
+    }, [data]);
+
+    // Synchroniser avec parent — emit thcPercent keys to match flattener
+    useEffect(() => {
+        safeUpdate({
+            thcPercent: thc ? parseFloat(thc) : null,
+            cbdPercent: cbd ? parseFloat(cbd) : null,
+            cbgPercent: cbg ? parseFloat(cbg) : null,
+            cbcPercent: cbc ? parseFloat(cbc) : null,
             certificateFile: uploadedFile,
             terpeneFile: terpeneFile
         });

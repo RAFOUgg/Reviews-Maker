@@ -59,6 +59,7 @@ export default function CreateFlowerReview() {
 
     const {
         photos,
+        setPhotos,
         handlePhotoUpload,
         removePhoto
     } = usePhotoUpload()
@@ -70,6 +71,28 @@ export default function CreateFlowerReview() {
     // Curing section: optionnelle, activée seulement si l'utilisateur le souhaite
     // Auto-activée en édition si des données curing existent déjà
     const [curingEnabled, setCuringEnabled] = useState(false)
+
+    // Load existing images into photos state when editing a review
+    useEffect(() => {
+        if (!id || !formData.images) return
+        let imgs = []
+        try {
+            imgs = Array.isArray(formData.images)
+                ? formData.images
+                : JSON.parse(formData.images)
+        } catch { imgs = [] }
+        if (!imgs.length) return
+        // Only set once when photos are still empty (don't overwrite new uploads)
+        setPhotos(prev => {
+            if (prev.length > 0) return prev
+            return imgs.map(img => {
+                const src = typeof img === 'string'
+                    ? (img.startsWith('http') || img.startsWith('/') ? img : `/images/${img}`)
+                    : (img.url || img.preview || '')
+                return { url: src, preview: src, existing: true, name: typeof img === 'string' ? img : '' }
+            })
+        })
+    }, [id, formData.images])
 
     // Auto-enable curing when editing a review that already has curing data (loaded async)
     useEffect(() => {
