@@ -37,14 +37,14 @@ export function useFlowerForm(reviewId = null) {
             // Reconstruct visual sub-object from flat API fields so VisualSection
             // and normalizeReviewDataByType receive proper nested state on edit
             const visual = {
-                colors:      fd.couleurNuancier   ?? [],
-                colorRating: fd.couleurRating      ?? 5,
-                density:     fd.densiteVisuelle    ?? 5,
-                trichomes:   fd.trichomesScore     ?? 5,
-                pistils:     fd.pistilsScore       ?? 5,
-                manucure:    fd.manucureScore      ?? 5,
-                mold:        fd.moisissureScore    ?? 10,
-                seeds:       fd.grainesScore       ?? 10,
+                colors: fd.couleurNuancier ?? [],
+                colorRating: fd.couleurRating ?? 5,
+                density: fd.densiteVisuelle ?? 5,
+                trichomes: fd.trichomesScore ?? 5,
+                pistils: fd.pistilsScore ?? 5,
+                manucure: fd.manucureScore ?? 5,
+                mold: fd.moisissureScore ?? 10,
+                seeds: fd.grainesScore ?? 10,
             }
 
             const mappedFormData = {
