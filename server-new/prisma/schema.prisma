@@ -649,7 +649,9 @@ model FlowerReview {
   sativaPercent   Int?     // 0-100
   parentage       String?  // JSON: Généalogie (parents, lignée)
   phenotypeCode   String?  // Code phénotype (ex: "Pheno #2")
-  
+  geneticTreeId   String?  // FK → GeneticTree (arbre généalogique associé)
+  geneticTree     GeneticTree? @relation("flowerReviewTree", fields: [geneticTreeId], references: [id], onDelete: SetNull)
+
   // ===== PIPELINE CULTURE (Producteurs) =====
   // Stocké comme JSON dans une table séparée PipelineStep
   // Référencé par: culturePipelineId
@@ -1286,6 +1288,7 @@ model GeneticTree {
   // Relations
   nodes        GenNode[]
   edges        GenEdge[]
+  flowerReviews FlowerReview[] @relation("flowerReviewTree")
   
   // Metadata
   createdAt    DateTime @default(now())

@@ -110,6 +110,13 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }, [trees, selectedTreeId])
 
+    // Synchroniser geneticTreeId dans formData quand l'arbre sélectionné change
+    useEffect(() => {
+        if (selectedTreeId !== undefined) {
+            handleChange('geneticTreeId', selectedTreeId || null)
+        }
+    }, [selectedTreeId])
+
     // Si pas d'arbres et pas de chargement, proposer d'en créer un
     useEffect(() => {
         if (!treeLoading && trees.length === 0) {

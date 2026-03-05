@@ -181,6 +181,9 @@ const DEFAULT_CONFIG = {
         indicaRatio: true,
         sativaRatio: true,
         strainRatio: true,
+        parentage: true,
+        phenotypeCode: true,
+        geneticTreeId: true,
 
         // === PIPELINES & CULTURE ===
         pipelineExtraction: true,
@@ -249,7 +252,7 @@ const DEFAULT_CONFIG = {
         'cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker',
 
         // === NIVEAUX ===
-        'thcLevel', 'cbdLevel', 'strainType', 'indicaRatio',
+        'thcLevel', 'cbdLevel', 'strainType', 'indicaRatio', 'parentage', 'phenotypeCode',
 
         // === PIPELINES ===
         'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification',

@@ -506,7 +506,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 {contentModules.breeder && reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🧬" />}
                                 {contentModules.farm && reviewData.farm && <InfoCard label="Farm" value={reviewData.farm} icon="🏡" />}
                                 {contentModules.hashmaker && reviewData.hashmaker && <InfoCard label="Hash Maker" value={reviewData.hashmaker} icon="👨‍🔬" />}
+                                {contentModules.phenotypeCode && reviewData.phenotypeCode && <InfoCard label="Phénotype" value={reviewData.phenotypeCode} icon="🔬" />}
                             </div>
+                            {/* Parentage / Lignée */}
+                            {contentModules.parentage && reviewData.parentage && (() => {
+                                const p = reviewData.parentage;
+                                const parentageText = typeof p === 'object'
+                                    ? [p.female, p.male].filter(Boolean).join(' ♀ × ♂ ')
+                                    : String(p);
+                                return parentageText ? (
+                                    <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}` }}>
+                                        <div style={{ fontSize: `${typography.textSize - 1}px`, color: colors.textSecondary || '#9ca3af', marginBottom: '2px' }}>Lignée</div>
+                                        <div style={{ fontSize: `${typography.textSize}px`, color: colors.textPrimary || '#fff', fontStyle: 'italic' }}>🌿 {parentageText}</div>
+                                    </div>
+                                ) : null;
+                            })()}
                         </Section>
 
                         {/* Cultivars */}

@@ -22,7 +22,7 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
   // the top-level normalized object so downstream templates and the Orchard
   // UI read the actual form values instead of empty flattened fields.
   try {
-    const sectionKeys = ['gouts', 'odeurs', 'texture', 'effets', 'visual', 'visuel', 'analytics', 'culture', 'genetique', 'genetics', 'recipe', 'curing', 'pipeline', 'pipelineCuring'];
+    const sectionKeys = ['gouts', 'odeurs', 'texture', 'effets', 'visual', 'visuel', 'analytics', 'culture', 'genetique', 'genetics', 'recipe', 'curing', 'pipeline', 'pipelineCuring', 'flowerData'];
     sectionKeys.forEach(sk => {
       const section = reviewData[sk] || reviewData[sk === 'visuel' ? 'visual' : sk];
       if (section && typeof section === 'object' && !Array.isArray(section)) {
@@ -127,6 +127,16 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
         normalized[frKey] = normalized[engKey];
       }
     }
+
+    // Genetics field mappings: Prisma/form keys → template keys
+    // geneticType (Prisma/form) → strainType (template)
+    if (!normalized.strainType && normalized.geneticType) normalized.strainType = normalized.geneticType;
+    // indicaPercent (Prisma/form) → indicaRatio (template)
+    if (normalized.indicaRatio === undefined && normalized.indicaPercent !== undefined) normalized.indicaRatio = normalized.indicaPercent;
+    // variety (Prisma/form) → cultivar (template)
+    if (!normalized.cultivar && normalized.variety) normalized.cultivar = normalized.variety;
+    // nomCommercial (Prisma/form) → cultivar fallback if still empty
+    if (!normalized.cultivar && normalized.nomCommercial) normalized.cultivar = normalized.nomCommercial;
   } catch (e) {
     // non-fatal mapping errors
     console.warn('Orchard: french-key mappings failed', e);
@@ -242,7 +252,7 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
   // Parse JSON string fields
   const jsonFields = [
     'aromas', 'secondaryAromas', 'tastes', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
-    'effects', 'terpenes', 'cultivarsList',
+    'effects', 'terpenes', 'cultivarsList', 'parentage',
     'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification',
     'pipelineCulture', 'pipelineCuring', 'pipelineRecipe',
     'fertilizationPipeline', 'substratMix', 'categoryRatings', 'tags'

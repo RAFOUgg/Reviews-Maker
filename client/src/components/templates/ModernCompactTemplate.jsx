@@ -262,14 +262,28 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             )}
 
             {/* Provenance */}
-            {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker) && (
+            {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker || contentModules.phenotypeCode) && (
                 <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     {contentModules.cultivar && reviewData.cultivar && renderInfoCard('Cultivar', reviewData.cultivar, '🌱')}
                     {contentModules.breeder && reviewData.breeder && renderInfoCard('Breeder', reviewData.breeder, '🧬')}
                     {contentModules.farm && reviewData.farm && renderInfoCard('Farm', reviewData.farm, '🏡')}
                     {contentModules.hashmaker && reviewData.hashmaker && renderInfoCard('Hash Maker', reviewData.hashmaker, '👨‍🔬')}
+                    {contentModules.phenotypeCode && reviewData.phenotypeCode && renderInfoCard('Phénotype', reviewData.phenotypeCode, '🔬')}
                 </div>
             )}
+
+            {/* Parentage / Lignée */}
+            {contentModules.parentage && reviewData.parentage && (() => {
+                const p = reviewData.parentage;
+                const parentageText = typeof p === 'object'
+                    ? [p.female, p.male].filter(Boolean).join(' ♀ × ♂ ')
+                    : String(p);
+                return parentageText ? (
+                    <div style={{ textAlign: 'center', fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontStyle: 'italic', flexShrink: 0 }}>
+                        🌿 {parentageText}
+                    </div>
+                ) : null;
+            })()}
 
             {/* Category Ratings */}
             {contentModules.categoryRatings && categoryRatings.length > 0 && (

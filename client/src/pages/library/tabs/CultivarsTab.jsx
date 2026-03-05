@@ -9,14 +9,16 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Flower2, Plus, Trash2, Edit, Eye, GitBranch, Search,
     Filter, Grid3X3, List, FolderTree, Dna, Beaker,
-    X, Check, ChevronRight, Tag, Calendar, User
+    X, Check, ChevronRight, Tag, Calendar, User, ExternalLink, RefreshCw
 } from 'lucide-react'
+import useGeneticsStore from '../../../store/useGeneticsStore'
 
 // Types de cultivars
 const CULTIVAR_TYPES = [
@@ -29,11 +31,12 @@ const CULTIVAR_TYPES = [
 
 export default function CultivarsTab({ userTier = 'producer' }) {
     const toast = useToast()
+    const navigate = useNavigate()
 
     const [cultivars, setCultivars] = useState([])
     const [phenoHuntProjects, setPhenoHuntProjects] = useState([])
     const [loading, setLoading] = useState(true)
-    const [activeTab, setActiveTab] = useState('library') // 'library' ou 'phenohunt'
+    const [activeTab, setActiveTab] = useState('library') // 'library', 'phenohunt', 'arbres'
     const [viewMode, setViewMode] = useState('grid')
     const [typeFilter, setTypeFilter] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
@@ -56,6 +59,16 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         description: '',
         tags: []
     })
+
+    // Génétiques store
+    const {
+        trees,
+        treeLoading: treesLoading,
+        fetchTrees,
+        createTree,
+        deleteTree: deleteTreeApi,
+        loadTree
+    } = useGeneticsStore()
 
     // Charger les données
     const fetchData = useCallback(async () => {
@@ -88,6 +101,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
     useEffect(() => {
         fetchData()
+        fetchTrees()
     }, [fetchData])
 
     // Filtrer les cultivars
@@ -331,6 +345,91 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         )
     }
 
+    // Créer un arbre depuis la bibliothèque
+    const handleCreateTree = async () => {
+        try {
+            const result = await createTree({
+                name: `Arbre Généalogique ${trees.length + 1}`,
+                description: 'Créé depuis la bibliothèque',
+                projectType: 'selection'
+            })
+            if (result?.data) {
+                await loadTree(result.data.id)
+                navigate('/phenohunt')
+            }
+        } catch (error) {
+            toast.error('Erreur lors de la création de l\'arbre')
+        }
+    }
+
+    // Supprimer un arbre
+    const handleDeleteTree = async (treeId, e) => {
+        e?.stopPropagation()
+        if (!window.confirm('Supprimer cet arbre généalogique ? Cette action est irréversible.')) return
+        await deleteTreeApi(treeId)
+        toast.success('Arbre supprimé')
+    }
+
+    // Rendu d'un arbre généalogique
+    const renderTreeCard = (tree, index) => (
+        <motion.div
+            key={tree.id}
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: index * 0.04 }}
+        >
+            <LiquidCard glow="none" padding="md" className="hover:border-violet-500/30 transition-all group">
+                <div className="flex items-start gap-3 mb-4">
+                    <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
+                        <Dna className="w-6 h-6 text-violet-400" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                        <h3 className="font-bold text-white truncate">{tree.name}</h3>
+                        <p className="text-sm text-white/50">
+                            {tree._count?.nodes ?? tree.nodes?.length ?? 0} nœuds •{' '}
+                            {tree._count?.edges ?? tree.edges?.length ?? 0} liens
+                        </p>
+                    </div>
+                    <span className="px-2 py-1 rounded-lg bg-violet-500/20 text-violet-400 text-xs font-bold">
+                        {tree.projectType || 'selection'}
+                    </span>
+                </div>
+
+                {tree.description && (
+                    <p className="text-sm text-white/60 mb-3 line-clamp-2">{tree.description}</p>
+                )}
+
+                <div className="flex items-center justify-between text-xs text-white/40 mb-4">
+                    <span className="flex items-center gap-1">
+                        <Calendar className="w-3 h-3" />
+                        {new Date(tree.updatedAt).toLocaleDateString('fr-FR')}
+                    </span>
+                    {tree.isPublic && (
+                        <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400">Public</span>
+                    )}
+                </div>
+
+                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <LiquidButton
+                        onClick={() => navigate('/phenohunt')}
+                        variant="primary"
+                        size="sm"
+                        className="flex-1"
+                        leftIcon={<ExternalLink className="w-3 h-3" />}
+                    >
+                        Ouvrir l'éditeur
+                    </LiquidButton>
+                    <button
+                        onClick={(e) => handleDeleteTree(tree.id, e)}
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                    >
+                        <Trash2 className="w-4 h-4" />
+                    </button>
+                </div>
+            </LiquidCard>
+        </motion.div>
+    )
+
     // Rendu d'un projet PhenoHunt
     const renderPhenoHuntCard = (project, index) => {
         return (
@@ -384,14 +483,15 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
     return (
         <div className="space-y-6">
-            {/* Tabs Bibliothèque / PhenoHunt */}
+            {/* Tabs Bibliothèque / PhenoHunt / Arbres */}
             <div className="flex gap-4 border-b border-white/10 pb-4">
                 <button
                     onClick={() => setActiveTab('library')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'library'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
+                        activeTab === 'library'
                             ? 'bg-green-500/20 text-green-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                        }`}
+                    }`}
                 >
                     <FolderTree className="w-4 h-4" />
                     Bibliothèque
@@ -399,14 +499,27 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 </button>
                 <button
                     onClick={() => setActiveTab('phenohunt')}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'phenohunt'
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
+                        activeTab === 'phenohunt'
                             ? 'bg-amber-500/20 text-amber-400'
                             : 'text-white/60 hover:text-white hover:bg-white/5'
-                        }`}
+                    }`}
                 >
                     <Beaker className="w-4 h-4" />
                     Projets PhenoHunt
                     <span className="text-xs px-1.5 py-0.5 rounded bg-white/10">{phenoHuntProjects.length}</span>
+                </button>
+                <button
+                    onClick={() => setActiveTab('arbres')}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${
+                        activeTab === 'arbres'
+                            ? 'bg-violet-500/20 text-violet-400'
+                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                    }`}
+                >
+                    <Dna className="w-4 h-4" />
+                    Arbres Généalogiques
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-white/10">{trees.length}</span>
                 </button>
             </div>
 
@@ -636,6 +749,65 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         }>
                             <AnimatePresence>
                                 {filteredCultivars.map((cultivar, index) => renderCultivarCard(cultivar, index))}
+                            </AnimatePresence>
+                        </div>
+                    )}
+                </>
+            ) : activeTab === 'arbres' ? (
+                /* Tab Arbres Généalogiques */
+                <>
+                    <div className="flex justify-between items-center">
+                        <p className="text-white/60">
+                            Vos arbres généalogiques de cultivars. Editez-les dans l'éditeur PhenoHunt complet.
+                        </p>
+                        <div className="flex gap-3">
+                            <LiquidButton
+                                onClick={() => navigate('/phenohunt')}
+                                variant="ghost"
+                                size="sm"
+                                leftIcon={<ExternalLink className="w-4 h-4" />}
+                            >
+                                Ouvrir PhenoHunt
+                            </LiquidButton>
+                            <LiquidButton
+                                onClick={handleCreateTree}
+                                variant="primary"
+                                size="sm"
+                                leftIcon={<Plus className="w-4 h-4" />}
+                            >
+                                Nouvel arbre
+                            </LiquidButton>
+                        </div>
+                    </div>
+
+                    {treesLoading ? (
+                        <div className="flex items-center justify-center py-20">
+                            <RefreshCw className="w-8 h-8 animate-spin text-violet-400" />
+                        </div>
+                    ) : trees.length === 0 ? (
+                        <LiquidCard glow="none" padding="lg">
+                            <div className="text-center py-12">
+                                <div className="w-16 h-16 mx-auto bg-violet-500/10 rounded-full flex items-center justify-center mb-4 border border-violet-500/20">
+                                    <Dna className="w-8 h-8 text-violet-400/50" />
+                                </div>
+                                <h3 className="text-lg font-bold text-white mb-2">Aucun arbre généalogique</h3>
+                                <p className="text-white/50 mb-6">
+                                    Créez votre premier arbre ou utilisez le canvas PhenoHunt
+                                </p>
+                                <div className="flex gap-3 justify-center">
+                                    <LiquidButton onClick={handleCreateTree} variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+                                        Créer un arbre
+                                    </LiquidButton>
+                                    <LiquidButton onClick={() => navigate('/phenohunt')} variant="ghost" leftIcon={<ExternalLink className="w-4 h-4" />}>
+                                        Ouvrir PhenoHunt
+                                    </LiquidButton>
+                                </div>
+                            </div>
+                        </LiquidCard>
+                    ) : (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                            <AnimatePresence>
+                                {trees.map((tree, index) => renderTreeCard(tree, index))}
                             </AnimatePresence>
                         </div>
                     )}

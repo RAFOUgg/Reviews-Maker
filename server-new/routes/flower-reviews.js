@@ -140,8 +140,11 @@ function validateFlowerReviewData(data, options = {}) {
     if (data.phenotypeCode && typeof data.phenotypeCode === 'string') {
         cleaned.phenotypeCode = data.phenotypeCode.trim()
     }
-    if (data.geneticTreeId && typeof data.geneticTreeId === 'string') {
-        cleaned.geneticTreeId = data.geneticTreeId.trim()
+    if (data.geneticTreeId !== undefined) {
+        // Allow explicit null/empty to clear the relation
+        cleaned.geneticTreeId = (data.geneticTreeId && typeof data.geneticTreeId === 'string')
+            ? data.geneticTreeId.trim() || null
+            : null
     }
 
     // ===== SECTION 3: Pipeline Culture =====

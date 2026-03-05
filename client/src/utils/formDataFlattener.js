@@ -112,6 +112,8 @@ export function flattenFlowerFormData(data) {
         if (data.genetics.phenotypeCode) flat.phenotypeCode = data.genetics.phenotypeCode
         if (data.genetics.treeId) flat.geneticTreeId = data.genetics.treeId
     }
+    // Top-level geneticTreeId (set directly via Genetiques section handleChange)
+    if (data.geneticTreeId !== undefined && !flat.geneticTreeId) flat.geneticTreeId = data.geneticTreeId || null
 
     // Section 3 - Culture Pipeline
     // Nouvelle structure : UnifiedPipeline stocke dans formData.culturePipeline = { timelineConfig, timelineData }
