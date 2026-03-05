@@ -29,7 +29,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    limits: {
+        fileSize: 20 * 1024 * 1024,   // 20 MB par fichier
+        fieldSize: 10 * 1024 * 1024,   // 10 MB par champ texte (pipeline JSON, etc.)
+        fields: 100,                    // max 100 champs texte
+        files: 10                       // max 10 fichiers
+    },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp/
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
@@ -873,6 +878,15 @@ router.get('/:id/likes', async (req, res) => {
         console.error('Error fetching likes:', error)
         res.status(500).json({ error: 'Failed to fetch likes' })
     }
+})
+
+// Multer error handler (LIMIT_FILE_SIZE, LIMIT_FIELD_VALUE, etc.)
+router.use((err, req, res, next) => {
+    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'Image trop grande (max 20 MB)' })
+    if (err?.code === 'LIMIT_FIELD_VALUE') return res.status(413).json({ error: 'Données trop volumineuses (champ dépasse 10 MB)' })
+    if (err?.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ error: 'Fichier inattendu : ' + err.field })
+    if (err) return res.status(400).json({ error: err.message || 'Erreur upload' })
+    next()
 })
 
 export default router

@@ -33,7 +33,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    limits: {
+        fileSize: 20 * 1024 * 1024,   // 20 MB par fichier
+        fieldSize: 10 * 1024 * 1024,   // 10 MB par champ texte (pipeline JSON, etc.)
+        fields: 100,                    // max 100 champs texte
+        files: 10                       // max 10 fichiers
+    },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp|pdf/
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
@@ -45,6 +50,23 @@ const upload = multer({
         }
     }
 })
+
+// Gestion des erreurs multer (413, field overflow, etc.)
+const handleMulterError = (err, req, res, next) => {
+    if (err && err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'Image trop grande (max 20 MB par fichier)' })
+    }
+    if (err && err.code === 'LIMIT_FIELD_VALUE') {
+        return res.status(413).json({ error: 'Données de formulaire trop volumineuses (champ dépasse 10 MB)' })
+    }
+    if (err && err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ error: 'Fichier inattendu : ' + err.field })
+    }
+    if (err) {
+        return res.status(400).json({ error: err.message || 'Erreur upload' })
+    }
+    next()
+}
 
 // Middleware pour vérifier l'authentification
 const requireAuth = (req, res, next) => {
@@ -1026,5 +1048,8 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
     console.log('✅ FlowerReview deleted successfully:', req.params.id)
     res.json({ success: true, message: 'FlowerReview deleted successfully' })
 }))
+
+// Multer error handler (LIMIT_FILE_SIZE, LIMIT_FIELD_VALUE, etc.)
+router.use(handleMulterError)
 
 export default router
