@@ -23,40 +23,32 @@ export default function OdorSection({ productType, data: directData, onChange, f
     const [complexity, setComplexity] = useState(data?.complexity ?? 0);
     const [fidelity, setFidelity] = useState(data?.fidelity ?? 0);
 
-    // Ref pour suivre le dernier payload envoyé au parent — évite la boucle
-    // Effect2 → safeUpdate → parent re-render → data new ref → Effect1 → reset state
-    const sentToParentRef = useRef(null);
+    // Refs anti-boucle : comparaison par valeur (JSON) pour éviter les faux positifs sur les refs de tableaux
+    const lastSentStrRef = useRef(null);
+    const lastLoadedStrRef = useRef(null);
 
-    // Synchroniser avec parent quand l'état LOCAL change (user interaction)
+    // Remonter les changements locaux vers le parent
     useEffect(() => {
         const payload = { dominantNotes, secondaryNotes, intensity, complexity, fidelity };
-        sentToParentRef.current = payload;
+        const str = JSON.stringify(payload);
+        lastSentStrRef.current = str;
         safeUpdate(payload);
     }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);
 
-    // Synchroniser l'état LOCAL depuis les props UNIQUEMENT si les valeurs
-    // ont réellement changé (ex: chargement edit mode). On ignore le retour
-    // de notre propre Effect précédent pour casser la boucle.
+    // Synchroniser depuis les props (edit mode) — uniquement si le contenu a vraiment changé
+    // et ne correspond pas à ce qu'on vient d'émettre nous-mêmes
+    const dataStr = JSON.stringify({ dominantNotes: data?.dominantNotes, secondaryNotes: data?.secondaryNotes, intensity: data?.intensity, complexity: data?.complexity, fidelity: data?.fidelity });
     useEffect(() => {
+        if (lastLoadedStrRef.current === dataStr) return; // même contenu, rien à faire
+        if (lastSentStrRef.current === dataStr) return;   // c'est notre propre mise à jour qui revient
+        lastLoadedStrRef.current = dataStr;
         const d = data || {};
-        const sent = sentToParentRef.current;
-
-        // Si ces données correspondent à ce qu'on vient d'envoyer → boucle détectée, on ignore
-        if (
-            sent &&
-            sent.dominantNotes === d.dominantNotes &&
-            sent.secondaryNotes === d.secondaryNotes &&
-            sent.intensity === d.intensity &&
-            sent.complexity === d.complexity &&
-            sent.fidelity === d.fidelity
-        ) return;
-
         setDominantNotes(d.dominantNotes || []);
         setSecondaryNotes(d.secondaryNotes || []);
         setIntensity(d.intensity ?? 0);
         setComplexity(d.complexity ?? 0);
         setFidelity(d.fidelity ?? 0);
-    }, [data]);
+    }, [dataStr]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
         <LiquidCard glow="green" padding="lg" className="space-y-8">
