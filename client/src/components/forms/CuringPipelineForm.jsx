@@ -109,7 +109,7 @@ const CuringPipelineForm = ({ onSave }) => {
             label={`Durée totale (${config.intervalType})`}
             type="number"
             value={config.duration || ''}
-            onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || null)}
+            onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || undefined)}
             hint="Durée totale du curing"
           />
         </div>

@@ -126,7 +126,7 @@ const CulturePipelineForm = ({ onSave }) => {
               label={`Durée (${config.intervalType === 'days' ? 'jours' : 'semaines'})`}
               type="number"
               value={config.duration || ''}
-              onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || null)}
+              onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || undefined)}
               hint="Optionnel si vous avez défini les dates"
             />
 

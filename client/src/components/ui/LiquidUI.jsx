@@ -658,7 +658,12 @@ export function LiquidModal({
     useEffect(() => {
         if (!closeOnEsc) return
         const handleEsc = (e) => {
-            if (e.key === 'Escape' && isOpen) onClose?.()
+            if (e.key === 'Escape' && isOpen) {
+                // Don't close modal when user is typing in an input/select/textarea
+                const tag = document.activeElement?.tagName?.toUpperCase();
+                if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
+                onClose?.();
+            }
         }
         document.addEventListener('keydown', handleEsc)
         return () => document.removeEventListener('keydown', handleEsc)

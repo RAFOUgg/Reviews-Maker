@@ -1,4 +1,4 @@
-import React, { useEffect, useState, Suspense } from 'react'
+import React, { useEffect, useState, useRef, Suspense } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../../utils/imageUtils'
 import TemplateRenderer from '../../components/export/TemplateRenderer'
@@ -6,11 +6,56 @@ import { getModulesByProductType } from '../../utils/orchard/moduleMappings'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
+import { RATIO_DIMENSIONS } from '../../utils/orchardHelpers'
 const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
 import { templatesService } from '../../services/apiService'
 import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2 } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
 import LiquidModal from '../../components/ui/LiquidModal'
+
+// Sub-component: renders an Orchard template preview with proper scale-to-fit
+function OrchardPreview({ orchardConfig, reviewData, productType }) {
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+    const dims = RATIO_DIMENSIONS[orchardConfig?.ratio] || RATIO_DIMENSIONS['1:1'];
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el || !dims?.width) return;
+        const ro = new ResizeObserver(() => {
+            const { width } = el.getBoundingClientRect();
+            const availW = width - 64;
+            if (availW > 0) setScale(Math.min(availW / dims.width, 1));
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [dims.width]);
+
+    const scaledW = Math.round(dims.width * scale);
+    const scaledH = Math.round(dims.height * scale);
+
+    return (
+        <div ref={containerRef} className="w-full flex items-center justify-center py-8 overflow-hidden">
+            <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
+                <div style={{
+                    width: dims.width,
+                    height: dims.height,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                }}>
+                    <TemplateRenderer
+                        config={orchardConfig}
+                        reviewData={reviewData}
+                        activeModules={getModulesByProductType(productType)}
+                    />
+                </div>
+            </div>
+        </div>
+    );
+}
 
 export default function ReviewDetailPage() {
     const { id } = useParams()
@@ -174,15 +219,12 @@ export default function ReviewDetailPage() {
                 {/* Orchard Template Preview */}
                 {viewMode === 'orchard' && review.orchardConfig ? (
                     <LiquidCard glow="cyan" padding="lg">
-                        <TemplateRenderer
-                            config={typeof review.orchardConfig === 'string' ? (() => {
+                        <OrchardPreview
+                            orchardConfig={typeof review.orchardConfig === 'string' ? (() => {
                                 try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
                             })() : review.orchardConfig}
                             reviewData={{
-                                // Start from raw review so fields like mainImageUrl are present
                                 ...review,
-
-                                // Mapping des données de review aux propriétés attendues par les templates (override)
                                 title: review.holderName,
                                 rating: review.overallRating || review.note || 0,
                                 imageUrl: review.mainImageUrl || (review.images && review.images.length > 0 ? review.images[0] : null),
@@ -192,7 +234,7 @@ export default function ReviewDetailPage() {
                                     ...(review.aromas || []),
                                     ...(review.tastes || []),
                                     ...(review.effects || [])
-                                ].slice(0, 10), // Limiter à 10 tags
+                                ].slice(0, 10),
                                 category: review.type,
                                 description: review.description,
                                 ownerName: review.ownerName || review.author?.username || 'Anonyme',
@@ -201,7 +243,7 @@ export default function ReviewDetailPage() {
                                 breeder: review.breeder || review.hashmaker,
                                 farm: review.farm
                             }}
-                            activeModules={getModulesByProductType(review.type)}
+                            productType={review.type}
                         />
                     </LiquidCard>
                 ) : (
