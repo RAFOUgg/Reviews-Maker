@@ -4,6 +4,7 @@ import { X, Save, BookmarkPlus, Bookmark, CheckSquare, Square } from 'lucide-rea
 import ConfirmModal from '../../shared/ConfirmModal';
 import usePresets from '../../../hooks/usePresets';
 import { GroupedPresetModal } from '../views/PipelineDragDropView';
+import { useEscapeClose } from '../../ui/LiquidUI';
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -49,6 +50,9 @@ function PipelineDataModal({
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
     const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
     const [createGroupedPrefill, setCreateGroupedPrefill] = useState(null);
+
+    // Close on Escape (only when no child modal is open — GroupedPresetModal handles its own)
+    useEscapeClose(isOpen && !showCreateGroupedModal && !confirmState.open, onClose);
 
     // Hook pour gérer les préréglages (localStorage + serveur)
     const { presets, createPreset, deletePreset, loadPresets } = usePresets(pipelineType);

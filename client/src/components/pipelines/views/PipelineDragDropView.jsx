@@ -22,7 +22,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
-import { LiquidModal } from '@/components/ui/LiquidUI';
+import { LiquidModal, useEscapeClose } from '@/components/ui/LiquidUI';
 import CellContextMenu from './CellContextMenu';
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
@@ -42,6 +42,9 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedSections, setExpandedSections] = useState({});
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+    // Close on Escape (topmost modal only)
+    useEscapeClose(isOpen, onClose);
 
     // Reset when opening
     useEffect(() => {
@@ -294,8 +297,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-[800px] max-w-[95vw] max-h-[85vh] border border-white/10 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
+            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] max-h-[95vh] sm:max-h-[88vh] my-auto border border-white/10 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
@@ -411,7 +414,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                         </div>
                                     )}
                                 </div>
-                                <div className="flex-1 grid grid-cols-2 gap-3">
+                                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
                                     <input
                                         type="text"
                                         value={groupName}

@@ -638,6 +638,30 @@ export function LiquidDivider({ className = '' }) {
 // Global stack so only the topmost open LiquidModal handles the Escape key
 const _liquidModalStack = [];
 
+/**
+ * Reusable hook: register any modal (LiquidModal or custom) into the global
+ * escape stack so only the frontmost modal closes on Escape.
+ */
+export function useEscapeClose(isOpen, onClose, enabled = true) {
+    useEffect(() => {
+        if (!enabled || !isOpen) return;
+        const handler = () => onClose?.();
+        _liquidModalStack.push(handler);
+        const handleEsc = (e) => {
+            if (e.key === 'Escape' && _liquidModalStack[_liquidModalStack.length - 1] === handler) {
+                _liquidModalStack.pop();
+                onClose?.();
+            }
+        };
+        document.addEventListener('keydown', handleEsc);
+        return () => {
+            document.removeEventListener('keydown', handleEsc);
+            const idx = _liquidModalStack.indexOf(handler);
+            if (idx !== -1) _liquidModalStack.splice(idx, 1);
+        };
+    }, [isOpen, onClose, enabled]);
+}
+
 const ModalContext = createContext(null)
 
 export function LiquidModal({
