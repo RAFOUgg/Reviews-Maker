@@ -635,6 +635,9 @@ export function LiquidDivider({ className = '' }) {
 // LIQUID MODAL
 // ============================================
 
+// Global stack so only the topmost open LiquidModal handles the Escape key
+const _liquidModalStack = [];
+
 const ModalContext = createContext(null)
 
 export function LiquidModal({
@@ -654,19 +657,23 @@ export function LiquidModal({
         full: 'max-w-4xl w-full'
     }
 
-    // Handle ESC key
+    // Handle ESC key — only the topmost open LiquidModal closes
     useEffect(() => {
-        if (!closeOnEsc) return
+        if (!closeOnEsc || !isOpen) return
+        const handler = () => { onClose?.() }
+        _liquidModalStack.push(handler)
         const handleEsc = (e) => {
-            if (e.key === 'Escape' && isOpen) {
-                // Don't close modal when user is typing in an input/select/textarea
-                const tag = document.activeElement?.tagName?.toUpperCase();
-                if (tag === 'INPUT' || tag === 'SELECT' || tag === 'TEXTAREA') return;
-                onClose?.();
+            if (e.key === 'Escape' && _liquidModalStack[_liquidModalStack.length - 1] === handler) {
+                _liquidModalStack.pop()
+                onClose?.()
             }
         }
         document.addEventListener('keydown', handleEsc)
-        return () => document.removeEventListener('keydown', handleEsc)
+        return () => {
+            document.removeEventListener('keydown', handleEsc)
+            const idx = _liquidModalStack.indexOf(handler)
+            if (idx !== -1) _liquidModalStack.splice(idx, 1)
+        }
     }, [isOpen, onClose, closeOnEsc])
 
     // Prevent body scroll when open

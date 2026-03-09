@@ -175,7 +175,17 @@ export function useFlowerForm(reviewId = null) {
                 curing,
             }
 
-            setFormData(mappedFormData)
+            // Sanitize any top-level text fields that may have been stored as the string "null"
+            // (caused by FormData.append(key, null) coercing null → "null" string in old saves)
+            const sanitizeNullStrings = (obj) => {
+                const result = { ...obj }
+                Object.keys(result).forEach(k => {
+                    if (typeof result[k] === 'string' && result[k] === 'null') result[k] = ''
+                })
+                return result
+            }
+
+            setFormData(sanitizeNullStrings(mappedFormData))
         } catch (error) {
             toast.error('Impossible de charger la review')
             console.error(error)
@@ -187,7 +197,9 @@ export function useFlowerForm(reviewId = null) {
     const handleChange = (field, value) => {
         // Debug: trace every change routed to the centralized form state
         try { console.debug('[useFlowerForm] handleChange', { field, value }) } catch (e) { }
-        setFormData(prev => ({ ...prev, [field]: value }))
+        // Sanitize: FormData.append(key, null) produces the string "null" on the server-round-trip
+        const sanitized = (typeof value === 'string' && value === 'null') ? '' : value
+        setFormData(prev => ({ ...prev, [field]: sanitized }))
     }
 
     const saveReview = async () => {
