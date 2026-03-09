@@ -455,7 +455,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     className={`flex ${isSquare ? 'gap-3' : 'gap-6'} ${isSquare ? 'mb-3' : 'mb-6'} ${isPortrait || isSquare ? 'flex-col' : 'flex-row'}`}
                     style={{ flexShrink: 0 }}
                 >
-                {/* Image — single or gallery */}
+                    {/* Image — single or gallery */}
                     {contentModules.image && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
                         const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
                         const galleryImages = reviewData.images || [];
