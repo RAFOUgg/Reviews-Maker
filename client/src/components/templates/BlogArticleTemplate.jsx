@@ -44,8 +44,10 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
-        (Array.isArray(reviewData.images) && reviewData.images[0]);
+    const selectedImgIndex = config.image?.selectedIndex ?? 0;
+    const mainImage = (Array.isArray(reviewData.images) && reviewData.images.length > 0)
+        ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+        : (reviewData.mainImageUrl || reviewData.imageUrl || null);
 
     // Styles
     const styles = {

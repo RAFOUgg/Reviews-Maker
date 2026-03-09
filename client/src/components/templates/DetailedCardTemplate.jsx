@@ -20,21 +20,6 @@ import {
  * Optimisé pour l'impression et le partage professionnel
  */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
-    // 🔍 Debug - Afficher les données reçues
-    console.log('📋 DetailedCardTemplate - Données reçues:', {
-        hasConfig: !!config,
-        hasReviewData: !!reviewData,
-        reviewDataKeys: reviewData ? Object.keys(reviewData) : [],
-        title: reviewData?.title,
-        holderName: reviewData?.holderName,
-        rating: reviewData?.rating,
-        categoryRatings: reviewData?.categoryRatings,
-        aromas: reviewData?.aromas,
-        effects: reviewData?.effects,
-        contentModulesEnabled: config?.contentModules ?
-            Object.entries(config.contentModules).filter(([k, v]) => v).map(([k]) => k) : [],
-    });
-
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
@@ -64,8 +49,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
-        (Array.isArray(reviewData.images) && reviewData.images[0]);
+    const selectedImgIndex = config.image?.selectedIndex ?? 0;
+    const mainImage = (Array.isArray(reviewData.images) && reviewData.images.length > 0)
+        ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+        : (reviewData.mainImageUrl || reviewData.imageUrl || null);
 
     // Composants réutilisables
     const Section = ({ title, icon, children, className = '' }) => {

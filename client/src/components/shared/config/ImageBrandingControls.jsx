@@ -27,7 +27,15 @@ export default function ImageBrandingControls() {
     const config = useOrchardStore((state) => state.config);
     const updateImage = useOrchardStore((state) => state.updateImage);
     const updateBranding = useOrchardStore((state) => state.updateBranding);
+    const reviewData = useOrchardStore((state) => state.reviewData);
     const [logoInput, setLogoInput] = useState(config.branding.logoUrl || '');
+
+    // Collect all available images from reviewData
+    const availableImages = Array.isArray(reviewData?.images) && reviewData.images.length > 0
+        ? reviewData.images
+        : (reviewData?.mainImageUrl ? [reviewData.mainImageUrl] : []);
+
+    const selectedIdx = config.image?.selectedIndex ?? 0;
 
     const handleLogoUpload = (e) => {
         const file = e.target.files?.[0];
@@ -59,6 +67,35 @@ export default function ImageBrandingControls() {
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
                     Image principale
                 </h4>
+
+                {/* Sélecteur d'image si plusieurs photos disponibles */}
+                {availableImages.length > 1 && (
+                    <div>
+                        <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
+                            Photo affichée ({selectedIdx + 1}/{availableImages.length})
+                        </label>
+                        <div className="flex gap-2 flex-wrap">
+                            {availableImages.map((imgUrl, idx) => (
+                                <motion.button
+                                    key={idx}
+                                    whileHover={{ scale: 1.05 }}
+                                    whileTap={{ scale: 0.97 }}
+                                    onClick={() => updateImage({ selectedIndex: idx })}
+                                    className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-purple-500 shadow-lg shadow-purple-500/30' : 'border-gray-300 dark:border-gray-600 opacity-60 hover:opacity-100'}`}
+                                >
+                                    <img src={imgUrl} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                    {selectedIdx === idx && (
+                                        <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
+                                            <svg className="w-4 h-4 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                        </div>
+                                    )}
+                                </motion.button>
+                            ))}
+                        </div>
+                    </div>
+                )}
 
                 {/* Coins arrondis */}
                 <div>

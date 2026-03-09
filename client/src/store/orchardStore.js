@@ -276,7 +276,8 @@ const DEFAULT_CONFIG = {
         aspectRatio: '1:1',
         borderRadius: 12,
         filter: 'none',
-        opacity: 1
+        opacity: 1,
+        selectedIndex: 0
     },
 
     // Logo/Filigrane

@@ -30,8 +30,10 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
     const effects = asArray(reviewData.effects).slice(0, 3);
     const { filled, value } = formatRating(reviewData.rating || 0, 5);
 
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
-        (Array.isArray(reviewData.images) && reviewData.images[0]);
+    const selectedImgIndex = config.image?.selectedIndex ?? 0;
+    const mainImage = (Array.isArray(reviewData.images) && reviewData.images.length > 0)
+        ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+        : (reviewData.mainImageUrl || reviewData.imageUrl || null);
 
     // Animation variants
     const fadeUp = {

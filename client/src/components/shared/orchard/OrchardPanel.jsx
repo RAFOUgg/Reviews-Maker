@@ -130,14 +130,29 @@ function normalizeReviewData(reviewData) {
         normalized.holderName = normalized.title || normalized.productName || normalized.name || 'Sans nom';
     }
 
-    // Normaliser l'image principale
+    // Helper to resolve raw filenames to proper URLs
+    const resolveImgUrl = (img) => {
+        if (!img) return null;
+        if (typeof img === 'object') return img.preview || img.url || img.src || null;
+        const s = String(img);
+        if (s.startsWith('http') || s.startsWith('/') || s.startsWith('blob:') || s.startsWith('data:')) return s;
+        return `/images/${s}`;
+    };
+
+    // Resolve all images array entries
+    if (Array.isArray(normalized.images)) {
+        normalized.images = normalized.images.map(resolveImgUrl).filter(Boolean);
+    }
+
+    // Normaliser l'image principale — résoudre les noms de fichiers bruts
     if (!normalized.mainImageUrl) {
         if (normalized.imageUrl) {
-            normalized.mainImageUrl = normalized.imageUrl;
+            normalized.mainImageUrl = resolveImgUrl(normalized.imageUrl) || normalized.imageUrl;
         } else if (Array.isArray(normalized.images) && normalized.images.length > 0) {
-            const firstImg = normalized.images[0];
-            normalized.mainImageUrl = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
+            normalized.mainImageUrl = resolveImgUrl(normalized.images[0]);
         }
+    } else {
+        normalized.mainImageUrl = resolveImgUrl(normalized.mainImageUrl) || normalized.mainImageUrl;
     }
     // Aussi dans l'autre sens
     if (!normalized.imageUrl && normalized.mainImageUrl) {
@@ -217,6 +232,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
     const [isApplying, setIsApplying] = useState(false); // En cours de capture/upload thumbnail
+    const [isPaginationRequired, setIsPaginationRequired] = useState(false); // Pagination forcée par le contenu
     const canvasRef = useRef(null);
     const thumbnailRef = useRef(null); // Ref sur la zone de préview template (pour capture thumbnail)
     const setReviewData = useOrchardStore((state) => state.setReviewData);
@@ -291,6 +307,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             const needsPagination = hasRichContent || (
                 config.template === 'detailedCard' || config.template === 'blogArticle'
             );
+
+            // Mettre à jour l'état de verrouillage de la pagination
+            setIsPaginationRequired(needsPagination);
 
             // Auto-activer si nécessaire et pas encore activé
             if (needsPagination && !pagesEnabled) {
@@ -501,22 +520,29 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                     <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
                         {/* Bouton Toggle Mode Pages - TOUJOURS VISIBLE */}
                         <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
+                            whileHover={{ scale: isPaginationRequired ? 1 : 1.02 }}
+                            whileTap={{ scale: isPaginationRequired ? 1 : 0.98 }}
                             onClick={() => {
+                                if (isPaginationRequired) return;
                                 console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
                                 togglePagesMode();
                             }}
-                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border ${pagesEnabled ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg border-indigo-400/50' : 'bg-white/5 text-white hover:bg-white/10 border-white/10'}`}
-                            title={pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
+                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border ${pagesEnabled ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg border-indigo-400/50' : 'bg-white/5 text-white hover:bg-white/10 border-white/10'} ${isPaginationRequired ? 'cursor-not-allowed opacity-80' : ''}`}
+                            title={isPaginationRequired ? 'Pagination requise par le contenu (non désactivable)' : pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
                         >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                {pagesEnabled ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                )}
-                            </svg>
+                            {isPaginationRequired ? (
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            ) : (
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {pagesEnabled ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                    )}
+                                </svg>
+                            )}
                             <span>{pagesEnabled ? '📄 ON' : '📄 OFF'}</span>
                         </motion.button>
 

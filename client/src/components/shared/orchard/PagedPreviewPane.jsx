@@ -175,35 +175,6 @@ export default function PagedPreviewPane() {
                         id="orchard-preview-container"
                         className="relative"
                     >
-                        {/* Page info badge */}
-                        <motion.div
-                            initial={{ opacity: 0, y: -20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="absolute -top-14 left-1/2 -translate-x-1/2 flex items-center gap-3"
-                        >
-                            <div className="px-5 py-3 bg-gradient-to-br from-white via-gray-50 to-white dark:from-gray-800 dark:via-gray-900 dark:to-gray-800 rounded-2xl shadow-2xl border-2 dark: flex items-center gap-3 backdrop-blur-xl">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg">
-                                        <span className="text-2xl filter drop-shadow-lg">{currentPage.icon}</span>
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-sm font-black text-gray-900 dark:text-white uppercase tracking-wide">
-                                            {currentPage.label}
-                                        </span>
-                                        <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">
-                                            {currentPage.modules.length} modules actifs
-                                        </span>
-                                    </div>
-                                </div>
-                                <div className="h-8 w-px bg-gradient-to-b from-transparent to-transparent" />
-                                <div className="flex items-center gap-2">
-                                    <div className="px-3 py-1.5 bg-gradient-to-r rounded-xl text-sm font-black text-white shadow-lg shadow-purple-500/50 min-w-[60px] text-center">
-                                        {currentPageIndex + 1} / {pages.length}
-                                    </div>
-                                </div>
-                            </div>
-                        </motion.div>
-
                         {/* Template renderer avec modules filtrés selon la page */}
                         <div ref={previewRef}>
                             {renderScaledCanvas({ config, reviewData, activeModules: currentPage.modules, pageMode: true })}

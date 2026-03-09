@@ -85,14 +85,35 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     console.warn('Orchard: reverse field name mappings failed', e);
   }
 
+  // Helper to resolve raw filenames to proper URLs (adds /images/ prefix if needed)
+  const resolveImgUrl = (img) => {
+    if (!img) return null;
+    if (typeof img === 'object') return img.preview || img.url || img.src || null;
+    const s = String(img);
+    if (s.startsWith('http') || s.startsWith('/') || s.startsWith('blob:') || s.startsWith('data:')) return s;
+    return `/images/${s}`;
+  };
+
   // Map common French form keys to Orchard expected keys
   try {
     // Photos from the form use `photos` (with {file, preview}) — map to `images` and `mainImage` for preview
-    if (Array.isArray(normalized.photos) && (!normalized.images || normalized.images.length === 0)) {
+    if (Array.isArray(normalized.photos) && normalized.photos.length > 0) {
       // Convert objects with preview to simple URL strings for the preview
-      normalized.images = normalized.photos.map(p => (p && typeof p === 'object') ? (p.preview || p.url || p.src || p.path || p.file?.name || p) : p);
+      const photoUrls = normalized.photos.map(resolveImgUrl).filter(Boolean);
+      if (!normalized.images || normalized.images.length === 0) {
+        normalized.images = photoUrls;
+      }
+      // If images has only raw filenames but photos has proper URLs, prefer photos
+      else if (photoUrls.length > 0 && normalized.images.every(img => typeof img === 'string' && !img.startsWith('/') && !img.startsWith('http') && !img.startsWith('blob:'))) {
+        normalized.images = photoUrls;
+      }
       if (!normalized.mainImage && normalized.images.length > 0) normalized.mainImage = normalized.images[0];
       if (!normalized.mainImageUrl && normalized.images.length > 0) normalized.mainImageUrl = normalized.images[0];
+    }
+
+    // Resolve all image entries to proper URLs (raw filenames → /images/filename)
+    if (Array.isArray(normalized.images)) {
+      normalized.images = normalized.images.map(resolveImgUrl).filter(Boolean);
     }
 
     // nomCommercial used in forms -> map to title/holderName/productName
@@ -292,14 +313,16 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     normalized.type = productType;
   }
 
-  // Normalize main image
+  // Normalize main image — resolve raw filenames to proper /images/ URLs
   if (!normalized.mainImageUrl) {
     if (normalized.imageUrl) {
-      normalized.mainImageUrl = normalized.imageUrl;
+      normalized.mainImageUrl = resolveImgUrl(normalized.imageUrl) || normalized.imageUrl;
     } else if (Array.isArray(normalized.images) && normalized.images.length > 0) {
-      const firstImg = normalized.images[0];
-      normalized.mainImageUrl = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
+      normalized.mainImageUrl = resolveImgUrl(normalized.images[0]);
     }
+  } else {
+    // Ensure existing mainImageUrl is also resolved
+    normalized.mainImageUrl = resolveImgUrl(normalized.mainImageUrl) || normalized.mainImageUrl;
   }
   if (!normalized.imageUrl && normalized.mainImageUrl) {
     normalized.imageUrl = normalized.mainImageUrl;
