@@ -492,11 +492,13 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className="fixed z-[9999] bg-[#0a0a12]/95 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-white/10"
+                className={`fixed z-[9999] bg-[#0a0a12]/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col border border-white/10 ${isPreviewFullscreen ? 'rounded-none' : 'rounded-2xl'}`}
                 style={
-                    showPreview
-                        ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
-                        : { left: '50%', top: '50%', width: '600px', maxHeight: '80vh', marginLeft: '-300px', marginTop: '-40vh' }
+                    isPreviewFullscreen
+                        ? { left: 0, right: 0, top: 0, bottom: 0 }
+                        : showPreview
+                            ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
+                            : { left: '50%', top: '50%', width: '600px', maxHeight: '80vh', marginLeft: '-300px', marginTop: '-40vh' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
@@ -599,41 +601,22 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                             Exporter
                         </motion.button>
 
-                        {/* Bouton Toggle Preview */}
+                        {/* Bouton Plein écran */}
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowPreview(!showPreview)}
-                            className={`p-2 rounded-lg transition-colors ${showPreview ? 'bg-purple-500/20 text-purple-400' : 'bg-white/10 text-white/70'}`}
-                            title={showPreview ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}
+                            onClick={togglePreviewFullscreen}
+                            className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
+                            title={isPreviewFullscreen ? 'Mode divisé' : 'Plein écran'}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                {showPreview ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+                                {isPreviewFullscreen ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
                                 ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
                                 )}
                             </svg>
                         </motion.button>
-
-                        {/* Bouton Plein écran */}
-                        {showPreview && (
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={togglePreviewFullscreen}
-                                className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
-                                title={isPreviewFullscreen ? 'Mode divisé' : 'Plein écran'}
-                            >
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    {isPreviewFullscreen ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
-                                    ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
-                                    )}
-                                </svg>
-                            </motion.button>
-                        )}
 
                         {/* Bouton Fermer */}
                         <motion.button
