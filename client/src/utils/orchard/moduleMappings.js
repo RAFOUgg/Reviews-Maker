@@ -23,7 +23,7 @@ const FLOWER_SECTIONS = [
         id: 'culture',
         label: 'Culture',
         access: 'producteur',
-        fields: ['pipelineCulture', 'substratMix', 'fertilizationPipeline', 'yield', 'harvestDate']
+        fields: ['cultureTimelineData', 'cultureTimelineConfig']
     },
     {
         id: 'analytiques',
@@ -250,7 +250,7 @@ const SECTIONS_BY_TYPE = {
     flower: [
         { id: 'general', name: 'Informations générales', modules: ['holderName', 'title', 'image', 'images', 'mainImage', 'imageUrl', 'description', 'type', 'category', 'author', 'date'] },
         { id: 'genetics', name: 'Génétiques', modules: ['cultivar', 'cultivarsList', 'breeder', 'farm'] },
-        { id: 'culture', name: 'Pipeline Culture', modules: ['fertilizationPipeline', 'substratMix', 'yield', 'floweringTime', 'harvestDate'] },
+        { id: 'culture', name: 'Pipeline Culture', modules: ['culture'] },
         { id: 'analytics', name: 'Analytiques', modules: ['thcLevel', 'cbdLevel', 'labResults'] },
         { id: 'visual', name: 'Visuel & Technique', modules: ['colorRating', 'density', 'trichomes', 'mold', 'seeds'] },
         { id: 'odors', name: 'Odeurs', modules: ['aromasIntensity', 'complexiteAromas', 'fideliteCultivars'] },
@@ -258,7 +258,7 @@ const SECTIONS_BY_TYPE = {
         { id: 'tastes', name: 'Goûts', modules: ['intensiteFumee', 'agressivite'] },
         { id: 'effects', name: 'Effets', modules: ['montee', 'intensiteEffet', 'dureeEffet'] },
         { id: 'recolte', name: 'Récolte & Post-Récolte', modules: ['trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet'] },
-        { id: 'curing', name: 'Curing & Maturation', modules: ['curing', 'drying', 'processing', 'purgevide'] }
+        { id: 'curing', name: 'Curing & Maturation', modules: ['curing'] }
     ],
     hash: [
         { id: 'general', name: 'Informations générales', modules: ['holderName', 'title', 'image', 'images', 'description', 'type'] },

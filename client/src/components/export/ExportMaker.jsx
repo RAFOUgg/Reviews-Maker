@@ -359,6 +359,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
             case 'visual':
                 return {
+                    couleur: lookup('couleurScore') ?? null,
                     densite: lookup('densiteVisuelle', 'densite') ?? null,
                     trichomes: lookup('trichome', 'trichomes', 'trichomesScore') ?? null,
                     pistils: lookup('pistil', 'pistils', 'pistilsScore') ?? null,
@@ -900,9 +901,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {hasElement('visual') && (() => {
                                             const v = resolveReviewField('visual') || {}
                                             const items = []
-                                            if (v.densite !== undefined) items.push({ label: 'Densité', value: v.densite, color: '#8B5CF6' })
-                                            if (v.trichomes !== undefined) items.push({ label: 'Trichomes', value: v.trichomes, color: '#A78BFA' })
-                                            if (v.pistils !== undefined) items.push({ label: 'Pistils', value: v.pistils, color: '#C084FC' })
+                                            if (v.couleur !== undefined && v.couleur !== null) items.push({ label: 'Couleur', value: v.couleur, color: '#F472B6' })
+                                            if (v.densite !== undefined && v.densite !== null) items.push({ label: 'Densité', value: v.densite, color: '#8B5CF6' })
+                                            if (v.trichomes !== undefined && v.trichomes !== null) items.push({ label: 'Trichomes', value: v.trichomes, color: '#A78BFA' })
+                                            if (v.pistils !== undefined && v.pistils !== null) items.push({ label: 'Pistils', value: v.pistils, color: '#C084FC' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
                                                     <div className="text-gray-400 text-xs mb-2">Visuel</div>

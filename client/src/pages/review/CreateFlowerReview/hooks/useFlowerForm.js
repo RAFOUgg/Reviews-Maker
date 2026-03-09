@@ -45,7 +45,7 @@ export function useFlowerForm(reviewId = null) {
             // ── Section 5: Visuel ──────────────────────────────────────────────
             const visual = {
                 colors: parseArr(fd.couleurNuancier, []),
-                colorRating: fd.couleurRating ?? 5,
+                colorRating: fd.couleurScore ?? 5,
                 density: fd.densiteVisuelle ?? 5,
                 trichomes: fd.trichomesScore ?? 5,
                 pistils: fd.pistilsScore ?? 5,
@@ -95,8 +95,8 @@ export function useFlowerForm(reviewId = null) {
             }
 
             // ── Section 9: Effets & Expérience ────────────────────────────────
-            // Reconstruct HH/MM from stored effectDurationMinutes
-            const durationMins = fd.effectDurationMinutes != null ? parseInt(fd.effectDurationMinutes) : null
+            // Reconstruct HH/MM from stored effectDuration (HH:MM string from DB)
+            const [effHH, effMM] = (fd.effectDuration ?? '').split(':')
             const effets = {
                 onset: fd.monteeScore ?? 5,
                 intensity: fd.intensiteEffetScore ?? 5,
@@ -105,8 +105,8 @@ export function useFlowerForm(reviewId = null) {
                 methodeConsommation: fd.consumptionMethod ?? '',
                 dosageUtilise: fd.dosage ?? '',
                 dosageUnite: fd.dosageUnit ?? 'g',
-                dureeEffetsHeures: durationMins != null ? String(Math.floor(durationMins / 60)) : '',
-                dureeEffetsMinutes: durationMins != null ? String(durationMins % 60) : '',
+                dureeEffetsHeures: effHH ? String(parseInt(effHH, 10)) : '',
+                dureeEffetsMinutes: effMM ? String(parseInt(effMM, 10)) : '',
                 debutEffets: fd.effectOnset ?? '',
                 dureeEffetsCategorie: fd.effectLength ?? 'moyenne',
                 profilsEffets: parseArr(fd.effectProfiles, []),
@@ -147,6 +147,7 @@ export function useFlowerForm(reviewId = null) {
             const mappedFormData = {
                 ...baseReview,
                 nomCommercial: baseReview.holderName || '',
+                isOurReview: baseReview.isOurReview ?? false,
                 // Flat FlowerReview fields at top-level (for compatibility with
                 // legacy code that still reads fd.xxx directly)
                 ...fd,

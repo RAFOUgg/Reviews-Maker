@@ -208,6 +208,10 @@ export function liftOrchardFromExtra(formatted) {
         if (extra.orchardLayoutMode) {
             formatted.orchardLayoutMode = extra.orchardLayoutMode
         }
+        // expose isOurReview flag ("notre production")
+        if (extra.isOurReview !== undefined) {
+            formatted.isOurReview = extra.isOurReview === true || extra.isOurReview === 'true'
+        }
 
         // Common preview keys produced by the Orchard editor or legacy naming.
         const previewKeys = [

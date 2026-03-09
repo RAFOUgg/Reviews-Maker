@@ -8,7 +8,7 @@ export const ELEMENT_MODULES_MAP = {
     genetics: ['breeder', 'variety', 'geneticTreeId', 'parentage'],
     breeder: ['breeder'],
     analytics: ['terpeneProfile', 'thcPercent', 'cbdPercent', 'analyticsPdfUrl'],
-    visual: ['densiteVisuelle', 'trichomesScore', 'pistilsScore', 'manucureScore', 'couleurNuancier'],
+    visual: ['couleurScore', 'densiteVisuelle', 'trichomesScore', 'pistilsScore', 'manucureScore', 'couleurNuancier'],
     odor: ['notesOdeursDominantes', 'notesOdeursSecondaires', 'intensiteAromeScore'],
     taste: ['intensiteGoutScore', 'dryPuffNotes', 'inhalationNotes', 'expirationNotes'],
     effects: ['effetsChoisis', 'intensiteEffetScore', 'monteeScore'],

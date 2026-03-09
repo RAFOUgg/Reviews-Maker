@@ -102,6 +102,9 @@ export function flattenFlowerFormData(data) {
     if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
     if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
 
+    // "Notre production" flag — stocké dans extraData côté serveur
+    if (data.isOurReview !== undefined) flat.isOurReview = data.isOurReview
+
     // Section 2 - Génétiques
     if (data.genetics) {
         if (data.genetics.breeder) flat.breeder = data.genetics.breeder
@@ -162,7 +165,7 @@ export function flattenFlowerFormData(data) {
     // Primary: VisualSection stores scores under formData.visual.* (nested object)
     if (data.visual) {
         if (data.visual.colors) flat.couleurNuancier = data.visual.colors
-        if (data.visual.colorRating !== undefined) flat.couleurRating = data.visual.colorRating
+        if (data.visual.colorRating !== undefined) flat.couleurScore = data.visual.colorRating
         if (data.visual.density !== undefined) flat.densiteVisuelle = data.visual.density
         if (data.visual.trichomes !== undefined) flat.trichomesScore = data.visual.trichomes
         if (data.visual.transparency !== undefined) flat.transparenceScore = data.visual.transparency
@@ -343,6 +346,8 @@ export function createFormDataFromFlat(flatData, photos = [], status = 'draft', 
     }
 
     formData.append('status', status)
+    // isPublic : published = visible publiquement, draft = privé
+    formData.append('isPublic', status === 'published' ? 'true' : 'false')
 
     return formData
 }

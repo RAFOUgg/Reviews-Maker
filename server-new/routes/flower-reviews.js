@@ -305,6 +305,7 @@ function validateFlowerReviewData(data, options = {}) {
 
     // Scores visuels (Float 0-10)
     const visualScoreFields = {
+        couleurScore: 'couleurScore',
         densiteVisuelle: 'densiteVisuelle',
         trichomesScore: 'trichomesScore',
         pistilsScore: 'pistilsScore',
@@ -628,6 +629,7 @@ router.post('/',
                 ...(req.body.orchardConfig ? { orchardConfig: req.body.orchardConfig } : {}),
                 ...(req.body.orchardCustomLayout ? { orchardCustomLayout: req.body.orchardCustomLayout } : {}),
                 ...(req.body.orchardLayoutMode ? { orchardLayoutMode: req.body.orchardLayoutMode } : {}),
+                ...(req.body.isOurReview !== undefined ? { isOurReview: req.body.isOurReview === 'true' || req.body.isOurReview === true } : {}),
             })
         }
 
@@ -920,6 +922,7 @@ router.put('/:id',
                         if (req.body.orchardConfig) updated.orchardConfig = req.body.orchardConfig
                         if (req.body.orchardCustomLayout) updated.orchardCustomLayout = req.body.orchardCustomLayout
                         if (req.body.orchardLayoutMode) updated.orchardLayoutMode = req.body.orchardLayoutMode
+                        if (req.body.isOurReview !== undefined) updated.isOurReview = req.body.isOurReview === 'true' || req.body.isOurReview === true
                         return JSON.stringify(updated)
                     })()
                 },
