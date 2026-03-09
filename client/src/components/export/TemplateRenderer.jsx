@@ -68,6 +68,9 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
     const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
 
     return (
+        // Canvas always rendered at TARGET pixel dimensions (no maxWidth/maxHeight clamping).
+        // Preview wrappers (PagedPreviewPane, PreviewPane) apply CSS transform scale-to-fit.
+        // html-to-image captures this element at native resolution for full-quality exports.
         <div
             className="orchard-template-container shadow-2xl rounded-xl"
             id="orchard-template-canvas"
@@ -77,17 +80,13 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             style={{
                 width: `${dimensions.width}px`,
                 height: `${dimensions.height}px`,
-                maxWidth: '100%',
-                maxHeight: '100%',
-                transform: 'scale(1)',
-                transformOrigin: 'center',
                 contain: 'layout style paint',
                 overflow: 'hidden',
                 position: 'relative',
-                isolation: 'isolate' // Crée un nouveau contexte de stacking
+                isolation: 'isolate',
+                flexShrink: 0,
             }}
         >
-            {/* Inner wrapper pour garantir le respect des dimensions */}
             <div
                 className="orchard-template-inner"
                 style={{
