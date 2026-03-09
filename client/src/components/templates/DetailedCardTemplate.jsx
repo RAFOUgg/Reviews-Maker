@@ -54,6 +54,23 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
         : (reviewData.mainImageUrl || reviewData.imageUrl || null);
 
+    // Visibilité des sections Informations et Provenance (évite les titres vides sur les pages paginées)
+    const hasInfoSectionContent =
+        (contentModules?.category && reviewData.category) ||
+        (contentModules?.strainType && reviewData.strainType) ||
+        (contentModules?.indicaRatio && reviewData.indicaRatio !== undefined) ||
+        (contentModules?.thcLevel && reviewData.thcLevel) ||
+        (contentModules?.cbdLevel && reviewData.cbdLevel) ||
+        (contentModules?.dureeEffet && reviewData.dureeEffet);
+
+    const hasProvenanceSectionContent =
+        (contentModules?.cultivar && reviewData.cultivar) ||
+        (contentModules?.breeder && reviewData.breeder) ||
+        (contentModules?.farm && reviewData.farm) ||
+        (contentModules?.hashmaker && reviewData.hashmaker) ||
+        (contentModules?.phenotypeCode && reviewData.phenotypeCode) ||
+        (contentModules?.parentage && reviewData.parentage);
+
     // Composants réutilisables
     const Section = ({ title, icon, children, className = '' }) => {
         if (!children || (React.Children.count(children) === 0)) return null;
@@ -272,8 +289,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const PipelineTimeline = ({ pipeline }) => {
         // Prefer rawSteps (objects) over stringified steps
         const rawSteps = pipeline.rawSteps || pipeline.steps.map(s => ({ label: s }));
-        const isCompact = rawSteps.length > 10;
-        const isMedium = rawSteps.length > 5 && rawSteps.length <= 10;
+        const isCompact = rawSteps.length > 12;
 
         return (
             <div style={{ marginBottom: `${spacing.element}px` }}>
@@ -299,67 +315,89 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 </div>
 
                 {isCompact ? (
-                    /* GitHub-style compact grid for >10 steps — show label in each cell, tooltip if metrics exist */
+                    /* Compact timeline for >10 steps: colored rails + statistics summary */
                     <div>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                            {rawSteps.map((step, i) => {
-                                const label = step.label || step.date || step.semaine || step.phase || step.jour || `${i + 1}`;
-                                const temp = step.temperature ?? step.temp;
-                                const humidity = step.humidity ?? step.humidite ?? step.hr;
-                                const note = step.note || step.comment || step.commentaire || '';
-                                const action = step.action || step.event || '';
-                                // Build tooltip
-                                const tooltipParts = [label];
-                                if (temp != null) tooltipParts.push(`🌡️ ${temp}°C`);
-                                if (humidity != null) tooltipParts.push(`💧 ${humidity}%`);
-                                if (step.container || step.recipient) tooltipParts.push(`🫙 ${step.container || step.recipient}`);
-                                if (action) tooltipParts.push(`⚡ ${action}`);
-                                if (note) tooltipParts.push(`💬 ${note}`);
-                                const cellSize = isSquare ? 28 : 34;
-                                // Color intensity based on temperature (if available) or index
-                                const intensity = temp != null
-                                    ? Math.min(Math.round((temp / 30) * 60) + 15, 75)
-                                    : 20 + Math.min(i * 3, 50);
-                                return (
-                                    <div
-                                        key={i}
-                                        title={tooltipParts.join(' · ')}
-                                        style={{
-                                            width: cellSize, height: cellSize, borderRadius: 5,
-                                            backgroundColor: colorWithOpacity(colors.accent, intensity),
-                                            border: `1px solid ${colorWithOpacity(colors.accent, 35)}`,
-                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                            fontSize: `${fontSize.small * 0.78}px`, color: colors.textPrimary,
-                                            fontWeight: '700', cursor: 'default',
-                                        }}
-                                    >
-                                        {String(label).slice(0, isSquare ? 2 : 3)}
-                                    </div>
-                                );
-                            })}
+                        {/* Timeline rail with cells */}
+                        <div style={{ position: 'relative', paddingBottom: 4 }}>
+                            {/* Connecting line */}
+                            <div style={{
+                                position: 'absolute', top: '50%', left: 0, right: 0, height: 2,
+                                backgroundColor: colorWithOpacity(colors.accent, 18),
+                                transform: 'translateY(-50%)', borderRadius: 1, zIndex: 0,
+                            }} />
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, position: 'relative', zIndex: 1 }}>
+                                {rawSteps.map((step, i) => {
+                                    const label = step.label || step.date || step.semaine || step.phase || step.jour
+                                        || (step.timestamp ? `J${i + 1}` : `${i + 1}`);
+                                    const temp = step.temperature ?? step.temp;
+                                    const humidity = step.humidity ?? step.humidite ?? step.hr;
+                                    const note = step.note || step.comment || step.commentaire || '';
+                                    const action = step.action || step.event || '';
+                                    const hasData = temp != null || humidity != null || step.container || step.recipient || note || action;
+                                    // Tooltip
+                                    const tooltipParts = [label];
+                                    if (temp != null) tooltipParts.push(`🌡️ ${temp}°C`);
+                                    if (humidity != null) tooltipParts.push(`💧 ${humidity}%`);
+                                    if (step.container || step.recipient) tooltipParts.push(`🫙 ${step.container || step.recipient}`);
+                                    if (action) tooltipParts.push(`⚡ ${action}`);
+                                    if (note) tooltipParts.push(`💬 ${note.slice(0, 40)}`);
+                                    const cellSize = isSquare ? 26 : 30;
+                                    // Color: blue-green scale for humidity, orange scale for temp, purple for no data
+                                    const intensity = hasData
+                                        ? (temp != null ? Math.min(Math.round((temp / 35) * 55) + 25, 80) : 45)
+                                        : 15;
+                                    return (
+                                        <div
+                                            key={i}
+                                            title={tooltipParts.join(' · ')}
+                                            style={{
+                                                width: cellSize, height: cellSize, borderRadius: isSquare ? 4 : 5,
+                                                backgroundColor: colorWithOpacity(colors.accent, intensity),
+                                                border: `1px solid ${colorWithOpacity(colors.accent, hasData ? 45 : 25)}`,
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                cursor: 'default',
+                                                boxShadow: hasData ? `0 0 4px ${colorWithOpacity(colors.accent, 20)}` : 'none',
+                                            }}
+                                        />
+                                    );
+                                })}
+                            </div>
                         </div>
-                        {/* Legend for grid: show key metrics from first and last step */}
-                        {rawSteps.length > 0 && (() => {
-                            const first = rawSteps[0];
-                            const last = rawSteps[rawSteps.length - 1];
-                            const firstLabel = first.label || first.date || first.semaine || first.phase || '1';
-                            const lastLabel = last.label || last.date || last.semaine || last.phase || String(rawSteps.length);
-                            const firstTemp = first.temperature ?? first.temp;
-                            const lastTemp = last.temperature ?? last.temp;
-                            const firstHumidity = first.humidity ?? first.humidite ?? first.hr;
-                            const lastHumidity = last.humidity ?? last.humidite ?? last.hr;
-                            const hasEvolution = (firstTemp != null && lastTemp != null) || (firstHumidity != null && lastHumidity != null);
-                            if (!hasEvolution) return null;
+                        {/* Stats summary row */}
+                        {(() => {
+                            const allTemps = rawSteps.map(s => s.temperature ?? s.temp).filter(v => v != null);
+                            const allHumidity = rawSteps.map(s => s.humidity ?? s.humidite ?? s.hr).filter(v => v != null);
+                            const stepsWithData = rawSteps.filter(s => {
+                                const t = s.temperature ?? s.temp;
+                                const h = s.humidity ?? s.humidite ?? s.hr;
+                                return t != null || h != null || s.container || s.note || s.comment || s.action;
+                            }).length;
+                            const avgTemp = allTemps.length ? (allTemps.reduce((a, b) => a + b, 0) / allTemps.length).toFixed(1) : null;
+                            const avgHumidity = allHumidity.length ? (allHumidity.reduce((a, b) => a + b, 0) / allHumidity.length).toFixed(1) : null;
+                            const minTemp = allTemps.length ? Math.min(...allTemps) : null;
+                            const maxTemp = allTemps.length ? Math.max(...allTemps) : null;
+                            const minHum = allHumidity.length ? Math.min(...allHumidity) : null;
+                            const maxHum = allHumidity.length ? Math.max(...allHumidity) : null;
+                            const firstLabel = rawSteps[0]?.label || rawSteps[0]?.date || rawSteps[0]?.semaine || rawSteps[0]?.phase || 'Début';
+                            const lastLabel = rawSteps[rawSteps.length - 1]?.label || rawSteps[rawSteps.length - 1]?.date || rawSteps[rawSteps.length - 1]?.semaine || `J${rawSteps.length}`;
                             return (
-                                <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
-                                    {firstTemp != null && lastTemp != null && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginTop: 6 }}>
+                                    <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>
+                                        📅 {firstLabel} → {lastLabel}
+                                    </span>
+                                    {avgTemp != null && (
                                         <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>
-                                            🌡️ {firstLabel}: {firstTemp}°C → {lastLabel}: {lastTemp}°C
+                                            🌡️ {avgTemp}°C moy.{minTemp !== maxTemp ? ` (${minTemp}–${maxTemp})` : ''}
                                         </span>
                                     )}
-                                    {firstHumidity != null && lastHumidity != null && (
+                                    {avgHumidity != null && (
                                         <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>
-                                            💧 {firstHumidity}% → {lastHumidity}%
+                                            💧 {avgHumidity}% moy.{minHum !== maxHum ? ` (${minHum}–${maxHum})` : ''}
+                                        </span>
+                                    )}
+                                    {stepsWithData < rawSteps.length && (
+                                        <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colorWithOpacity(colors.accent, 70) }}>
+                                            • {stepsWithData}/{rawSteps.length} documentées
                                         </span>
                                     )}
                                 </div>
@@ -598,7 +636,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     {/* Colonne 1 */}
                     <div>
                         {/* Informations générales */}
-                        <Section title="Informations" icon="📋">
+                        {hasInfoSectionContent && <Section title="Informations" icon="📋">
                             <div className={`grid grid-cols-2`} style={{ gap: `${spacing.gap}px` }}>
                                 {contentModules.category && reviewData.category && <InfoCard label="Catégorie" value={reviewData.category} icon="📂" />}
                                 {contentModules.strainType && reviewData.strainType && <InfoCard label="Type de strain" value={reviewData.strainType} icon="🧬" />}
@@ -607,10 +645,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 {contentModules.cbdLevel && reviewData.cbdLevel && <InfoCard label="CBD" value={`${reviewData.cbdLevel}%`} icon="💊" />}
                                 {contentModules.dureeEffet && reviewData.dureeEffet && <InfoCard label="Durée effets" value={reviewData.dureeEffet} icon="⏱️" />}
                             </div>
-                        </Section>
+                        </Section>}
 
                         {/* Provenance */}
-                        <Section title="Provenance" icon="🌱">
+                        {hasProvenanceSectionContent && <Section title="Provenance" icon="🌱">
                             <div className={`grid grid-cols-2`} style={{ gap: `${spacing.gap}px` }}>
                                 {contentModules.cultivar && reviewData.cultivar && <InfoCard label="Cultivar" value={reviewData.cultivar} icon="🌿" />}
                                 {contentModules.breeder && reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🧬" />}
@@ -631,7 +669,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     </div>
                                 ) : null;
                             })()}
-                        </Section>
+                        </Section>}
 
                         {/* Cultivars */}
                         {contentModules.cultivarsList && cultivars.length > 0 && (
