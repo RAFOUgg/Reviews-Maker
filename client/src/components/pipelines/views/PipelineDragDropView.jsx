@@ -297,8 +297,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     };
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4 overflow-y-auto">
-            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] max-h-[95vh] sm:max-h-[88vh] my-auto border border-white/10 flex flex-col overflow-hidden">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
+            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] h-[95vh] sm:h-[88vh] border border-white/10 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
