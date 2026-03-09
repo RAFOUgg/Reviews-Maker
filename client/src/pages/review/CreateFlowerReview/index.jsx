@@ -108,6 +108,11 @@ export default function CreateFlowerReview() {
     // Tracker l'aperçu : depuis formData (mode édition) ou défini durant la session
     const hasPreview = !!(formData.orchardPreset)
 
+    // Visibilité courante de la review (pour le bouton de sauvegarde intelligent)
+    const currentVisibility = id
+        ? (formData.status === 'published' ? 'public' : 'private')
+        : null
+
     // Synchroniser les photos avec formData
     useEffect(() => {
         if (photos.length > 0) {
@@ -325,6 +330,7 @@ export default function CreateFlowerReview() {
             onOpenPreview={() => setShowOrchard(true)}
             onSave={handleSave}
             onSubmit={handleSubmit}
+            reviewVisibility={currentVisibility}
             isSaving={saving}
             reviewId={id || null}
             reviewHasPreview={hasPreview}

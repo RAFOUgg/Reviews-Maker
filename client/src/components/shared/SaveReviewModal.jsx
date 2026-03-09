@@ -1,23 +1,23 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Save, Globe, Lock, Eye, X, CheckCircle, Loader2 } from 'lucide-react'
+import { Save, Globe, Lock, Eye, X, CheckCircle, Loader2, RefreshCw, ChevronRight } from 'lucide-react'
 
 /**
  * SaveReviewModal — Disponible à tout moment depuis le footer de création/édition
  *
- * Deux options :
- *   • Bibliothèque privée  → sauvegarde le brouillon (handleSave)
- *   • Galerie publique     → nécessite un rendu (aperçu) → ouvre OrchardPanel,
- *                            puis publie la review une fois l'aperçu validé
+ * Comportement intelligent :
+ *   • Nouvelle review  → choix immédiat de la visibilité (privée / publique)
+ *   • Review existante → propose d'écraser avec la même visibilité OU de la changer
  *
  * Props :
- *   onClose         ()  → fermer la modale
- *   onSaveDraft     ()  → sauvegarder comme brouillon privé
- *   onPublish       ()  → publier (appelé après que l'aperçu est validé)
- *   onOpenPreview   ()  → ouvre l'OrchardPanel (aperçu + export)
- *   isSaving        bool
- *   reviewId        string|null  (null = pas encore sauvegardé)
- *   hasPreview      bool  (true = un rendu a déjà été créé)
+ *   onClose           ()  → fermer la modale
+ *   onSaveDraft       ()  → sauvegarder comme brouillon privé
+ *   onPublish         ()  → publier (appelé après que l'aperçu est validé)
+ *   onOpenPreview     ()  → ouvre l'OrchardPanel (aperçu + export)
+ *   isSaving          bool
+ *   reviewId          string|null      (null = pas encore sauvegardée)
+ *   hasPreview        bool             (true = un rendu a déjà été créé)
+ *   currentVisibility 'private'|'public'|null  (visibilité actuelle de la review)
  */
 export default function SaveReviewModal({
     onClose,
@@ -27,10 +27,21 @@ export default function SaveReviewModal({
     isSaving = false,
     reviewId = null,
     hasPreview = false,
+    currentVisibility = null,
 }) {
-    const [step, setStep] = useState('choice')   // 'choice' | 'confirm_public' | 'saved'
+    // Existing review → start at update_choice; new review → start at choice
+    const initialStep = reviewId ? 'update_choice' : 'choice'
+    const [step, setStep] = useState(initialStep)   // 'update_choice' | 'choice' | 'confirm_public' | 'saved'
     const [saving, setSaving] = useState(false)
     const [error, setError] = useState(null)
+
+    const handleSaveKeepVisibility = async () => {
+        if (currentVisibility === 'public') {
+            await handlePublish()
+        } else {
+            await handleSaveDraft()
+        }
+    }
 
     const handleSaveDraft = async () => {
         setError(null)
@@ -110,10 +121,17 @@ export default function SaveReviewModal({
                             </div>
                             <div>
                                 <h2 className="text-base font-semibold text-white">
-                                    {step === 'saved' ? 'Sauvegardé ✓' : 'Sauvegarder la review'}
+                                    {step === 'saved'
+                                        ? 'Sauvegardé ✓'
+                                        : step === 'update_choice'
+                                            ? 'Mettre à jour la review'
+                                            : 'Sauvegarder la review'}
                                 </h2>
                                 {step === 'choice' && (
                                     <p className="text-xs text-gray-400 mt-0.5">Choisissez la visibilité</p>
+                                )}
+                                {step === 'update_choice' && (
+                                    <p className="text-xs text-gray-400 mt-0.5">Écraser ou changer la visibilité ?</p>
                                 )}
                             </div>
                         </div>
@@ -128,9 +146,87 @@ export default function SaveReviewModal({
                     {/* Body */}
                     <div className="px-6 py-5">
 
+                        {/* === STEP: update_choice — review existante === */}
+                        {step === 'update_choice' && (
+                            <div className="space-y-3">
+                                {/* Option 1 — Écraser avec même visibilité */}
+                                <button
+                                    onClick={handleSaveKeepVisibility}
+                                    disabled={saving || isSaving}
+                                    className="w-full flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                                        currentVisibility === 'public'
+                                            ? 'bg-purple-600/20 group-hover:bg-purple-600/30'
+                                            : 'bg-slate-700/60 group-hover:bg-slate-700'
+                                    }`}>
+                                        {saving || isSaving ? (
+                                            <Loader2 className="w-5 h-5 text-slate-300 animate-spin" />
+                                        ) : currentVisibility === 'public' ? (
+                                            <Globe className="w-5 h-5 text-purple-400" />
+                                        ) : (
+                                            <Lock className="w-5 h-5 text-slate-300" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-white text-sm flex items-center gap-2">
+                                            <RefreshCw className="w-3.5 h-3.5 text-gray-400" />
+                                            Écraser — même visibilité
+                                        </div>
+                                        <div className="text-xs text-gray-400 mt-0.5 leading-relaxed">
+                                            {currentVisibility === 'public'
+                                                ? 'Met à jour la review et la maintient publiée dans la galerie.'
+                                                : 'Met à jour le brouillon dans votre bibliothèque privée.'}
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0 self-center" />
+                                </button>
+
+                                {/* Option 2 — Changer la visibilité */}
+                                <button
+                                    onClick={() => setStep('choice')}
+                                    disabled={saving || isSaving}
+                                    className="w-full flex items-start gap-4 p-4 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all text-left group disabled:opacity-50 disabled:cursor-not-allowed"
+                                >
+                                    <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center flex-shrink-0 group-hover:bg-white/10">
+                                        {currentVisibility === 'public' ? (
+                                            <Lock className="w-5 h-5 text-gray-400" />
+                                        ) : (
+                                            <Globe className="w-5 h-5 text-gray-400" />
+                                        )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="font-medium text-white text-sm">Changer la visibilité</div>
+                                        <div className="text-xs text-gray-400 mt-0.5 leading-relaxed">
+                                            {currentVisibility === 'public'
+                                                ? 'Remettre en brouillon ou modifier les paramètres de publication.'
+                                                : 'Publier dans la galerie ou modifier la visibilité.'}
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="w-4 h-4 text-gray-500 flex-shrink-0 self-center" />
+                                </button>
+
+                                {error && (
+                                    <div className="text-sm text-rose-400 bg-rose-400/10 rounded-lg px-3 py-2">
+                                        {error}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
                         {/* === STEP: choice === */}
                         {step === 'choice' && (
                             <div className="space-y-3">
+                                {/* Retour si on vient du step update_choice */}
+                                {reviewId && (
+                                    <button
+                                        onClick={() => setStep('update_choice')}
+                                        className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-300 transition-colors mb-1"
+                                    >
+                                        ← Retour
+                                    </button>
+                                )}
+
                                 {/* Option 1 — Brouillon privé */}
                                 <button
                                     onClick={handleSaveDraft}
@@ -240,7 +336,9 @@ export default function SaveReviewModal({
                                     <CheckCircle className="w-7 h-7 text-emerald-400" />
                                 </div>
                                 <div>
-                                    <p className="text-white font-medium">Review sauvegardée</p>
+                                    <p className="text-white font-medium">
+                                        {reviewId ? 'Review mise à jour' : 'Review sauvegardée'}
+                                    </p>
                                     <p className="text-sm text-gray-400 mt-1">
                                         Retrouvez-la dans votre bibliothèque personnelle.
                                     </p>

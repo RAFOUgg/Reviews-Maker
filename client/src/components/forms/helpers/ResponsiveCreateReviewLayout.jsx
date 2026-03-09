@@ -36,6 +36,7 @@ export const ResponsiveCreateReviewLayout = ({
     isSaving = false,     // bool
     reviewId = null,      // string|null (null = not yet persisted)
     reviewHasPreview = false, // bool (true = a render has been created)
+    reviewVisibility = null,  // 'private'|'public'|null — current visibility of existing review
 }) => {
     const layout = useResponsiveLayout();
     const [scrollPosition, setScrollPosition] = useState(0);
@@ -554,6 +555,7 @@ export const ResponsiveCreateReviewLayout = ({
                         isSaving={isSaving}
                         reviewId={reviewId}
                         hasPreview={reviewHasPreview}
+                        currentVisibility={reviewVisibility}
                     />
                 )}
             </div >
