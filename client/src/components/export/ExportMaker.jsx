@@ -326,6 +326,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             }
             return undefined;
         };
+        // Parse JSON strings from DB into arrays/objects
+        const parseJSON = (v, def = []) => {
+            if (!v) return def
+            if (Array.isArray(v)) return v
+            if (typeof v === 'object' && v !== null) return v
+            try { return JSON.parse(v) } catch { return def }
+        }
 
         switch (id) {
             case 'productName':
@@ -355,7 +362,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             case 'analytics':
             case 'terpeneProfile':
             case 'terpenes':
-                return lookup('terpeneProfile', 'terpenes', 'analytics') || [];
+                return parseJSON(lookup('terpeneProfile', 'terpenes', 'analytics'), []);
 
             case 'visual':
                 return {
@@ -369,25 +376,24 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             case 'odor':
             case 'odors':
                 return {
-                    dominant: lookup('aromas', 'notesOdeursDominantes', 'notesDominantesOdeur') || [],
-                    secondary: lookup('notesSecondairesOdeur', 'aromasSecondary', 'notesOdeursSecondaires') || [],
-                    intensity: lookup('aromasIntensity', 'intensiteAromatique') ?? null
+                    dominant: parseJSON(lookup('notesOdeursDominantes', 'aromas', 'notesDominantesOdeur'), []),
+                    secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur', 'aromasSecondary'), []),
+                    intensity: lookup('intensiteAromeScore', 'aromasIntensity', 'intensiteAromatique') ?? null
                 };
 
             case 'taste':
             case 'tastes':
                 return {
-                    intensity: lookup('intensiteGout', 'tastesIntensity', 'intensiteGustative') ?? null,
-                    aggressiveness: lookup('agressivite', 'agressiviteScore') ?? null,
-                    dryPuff: lookup('dryPuff', 'dryPuffNotes') || [],
-                    inhalation: lookup('inhalationNotes', 'inhalation') || [],
-                    expiration: lookup('expirationNotes', 'expiration') || []
+                    intensity: lookup('intensiteGoutScore', 'intensiteGout', 'tastesIntensity') ?? null,
+                    aggressiveness: lookup('agressiviteScore', 'agressivite') ?? null,
+                    dryPuff: parseJSON(lookup('dryPuffNotes', 'dryPuff'), []),
+                    inhalation: parseJSON(lookup('inhalationNotes', 'inhalation'), []),
+                    expiration: parseJSON(lookup('expirationNotes', 'expiration'), [])
                 };
 
             case 'effects': {
-                const arr = lookup('effects', 'effetsChoisis', 'selectedEffects');
-                if (Array.isArray(arr)) return { selected: arr, intensity: lookup('intensiteEffet', 'effectsIntensity') ?? null, onset: lookup('montee') ?? null };
-                return { selected: [], intensity: lookup('intensiteEffet', 'effectsIntensity') ?? null, onset: lookup('montee') ?? null };
+                const arr = parseJSON(lookup('effetsChoisis', 'effects', 'selectedEffects'), []);
+                return { selected: arr, intensity: lookup('intensiteEffetScore', 'intensiteEffet') ?? null, onset: lookup('monteeScore', 'montee') ?? null };
             }
 
             case 'cultivarsList':
@@ -402,14 +408,23 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
             case 'culture':
                 return {
-                    config: lookup('cultureTimelineConfig'),
-                    data: lookup('cultureTimelineData')
+                    config: parseJSON(lookup('cultureTimelineConfig'), {}),
+                    data: parseJSON(lookup('cultureTimelineData'), [])
                 };
 
             case 'curing':
                 return {
-                    config: lookup('curingTimelineConfig'),
-                    data: lookup('curingTimelineData')
+                    config: parseJSON(lookup('curingTimelineConfig'), {}),
+                    data: parseJSON(lookup('curingTimelineData'), [])
+                };
+
+            case 'texture':
+                return {
+                    hardness: lookup('dureteScore') ?? null,
+                    density: lookup('densiteTactileScore') ?? null,
+                    elasticity: lookup('elasticiteScore') ?? null,
+                    stickiness: lookup('collantScore') ?? null,
+                    melting: lookup('meltingScore') ?? null
                 };
 
             case 'recolte':
@@ -861,11 +876,20 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             const items = []
                                             if (Array.isArray(od.dominant) && od.dominant.length) items.push({ label: 'Dominant', value: (od.dominant.length || 0), color: '#84CC16' })
                                             if (Array.isArray(od.secondary) && od.secondary.length) items.push({ label: 'Secondaires', value: (od.secondary.length || 0), color: '#10B981' })
-                                            if (od.intensity !== undefined) items.unshift({ label: 'Intensité', value: od.intensity, color: '#059669' })
+                                            if (od.intensity !== undefined && od.intensity !== null) items.unshift({ label: 'Intensité', value: od.intensity, color: '#059669' })
+                                            const allNotes = [...(od.dominant || []), ...(od.secondary || [])]
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
                                                     <div className="text-gray-400 text-xs mb-2">Odeur</div>
                                                     <MiniBars items={items} max={10} />
+                                                    {allNotes.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-2">
+                                                            {allNotes.slice(0, 6).map((n, i) => (
+                                                                <span key={i} className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded-full">{typeof n === 'object' ? (n.label || n.id || n.name) : n}</span>
+                                                            ))}
+                                                            {allNotes.length > 6 && <span className="text-xs text-gray-500">+{allNotes.length - 6}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )
                                         })()}
@@ -873,13 +897,22 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {hasElement(['taste', 'tasteNotes', 'tastes']) && (() => {
                                             const t = resolveReviewField('taste') || {}
                                             const items = []
-                                            if (t.intensity !== undefined) items.push({ label: 'Intensité', value: t.intensity, color: '#F59E0B' })
-                                            if (t.aggressiveness !== undefined) items.push({ label: 'Agressivité', value: t.aggressiveness, color: '#FB923C' })
-                                            if (Array.isArray(t.dryPuff) && t.dryPuff.length) items.push({ label: 'Dry', value: t.dryPuff.length, color: '#F97316' })
+                                            if (t.intensity !== undefined && t.intensity !== null) items.push({ label: 'Intensité', value: t.intensity, color: '#F59E0B' })
+                                            if (t.aggressiveness !== undefined && t.aggressiveness !== null) items.push({ label: 'Agressivité', value: t.aggressiveness, color: '#FB923C' })
+                                            const allTasteNotes = [...(t.dryPuff || []), ...(t.inhalation || []), ...(t.expiration || [])]
+                                            if (allTasteNotes.length) items.push({ label: 'Notes', value: allTasteNotes.length, color: '#F97316' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
                                                     <div className="text-gray-400 text-xs mb-2">Goût</div>
                                                     <MiniBars items={items} max={10} />
+                                                    {allTasteNotes.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-2">
+                                                            {allTasteNotes.slice(0, 6).map((n, i) => (
+                                                                <span key={i} className="text-xs px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full">{typeof n === 'object' ? (n.label || n.id || n.name) : n}</span>
+                                                            ))}
+                                                            {allTasteNotes.length > 6 && <span className="text-xs text-gray-500">+{allTasteNotes.length - 6}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )
                                         })()}
@@ -887,13 +920,21 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {hasElement('effects') && (() => {
                                             const e = resolveReviewField('effects') || {}
                                             const items = []
-                                            if (e.intensity !== undefined) items.push({ label: 'Intensité', value: e.intensity, color: '#06B6D4' })
-                                            if (e.onset !== undefined) items.push({ label: 'Montée', value: e.onset, color: '#34D399' })
+                                            if (e.intensity !== undefined && e.intensity !== null) items.push({ label: 'Intensité', value: e.intensity, color: '#06B6D4' })
+                                            if (e.onset !== undefined && e.onset !== null) items.push({ label: 'Montée', value: e.onset, color: '#34D399' })
                                             if (Array.isArray(e.selected) && e.selected.length) items.push({ label: 'Choix', value: e.selected.length, color: '#60A5FA' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
                                                     <div className="text-gray-400 text-xs mb-2">Effets</div>
                                                     <MiniBars items={items} max={10} />
+                                                    {Array.isArray(e.selected) && e.selected.length > 0 && (
+                                                        <div className="flex flex-wrap gap-1 mt-2">
+                                                            {e.selected.slice(0, 6).map((eff, i) => (
+                                                                <span key={i} className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded-full">{typeof eff === 'object' ? (eff.label || eff.id || eff.name) : eff}</span>
+                                                            ))}
+                                                            {e.selected.length > 6 && <span className="text-xs text-gray-500">+{e.selected.length - 6}</span>}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             )
                                         })()}
@@ -905,9 +946,26 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             if (v.densite !== undefined && v.densite !== null) items.push({ label: 'Densité', value: v.densite, color: '#8B5CF6' })
                                             if (v.trichomes !== undefined && v.trichomes !== null) items.push({ label: 'Trichomes', value: v.trichomes, color: '#A78BFA' })
                                             if (v.pistils !== undefined && v.pistils !== null) items.push({ label: 'Pistils', value: v.pistils, color: '#C084FC' })
+                                            if (v.manucure !== undefined && v.manucure !== null) items.push({ label: 'Manucure', value: v.manucure, color: '#E879F9' })
                                             return (
                                                 <div className="bg-white/5 p-3 rounded-xl border border-white/5">
                                                     <div className="text-gray-400 text-xs mb-2">Visuel</div>
+                                                    <MiniBars items={items} max={10} />
+                                                </div>
+                                            )
+                                        })()}
+
+                                        {hasElement('texture') && (() => {
+                                            const tx = resolveReviewField('texture') || {}
+                                            const items = []
+                                            if (tx.hardness !== undefined && tx.hardness !== null) items.push({ label: 'Dureté', value: tx.hardness, color: '#FB7185' })
+                                            if (tx.density !== undefined && tx.density !== null) items.push({ label: 'Densité', value: tx.density, color: '#F43F5E' })
+                                            if (tx.elasticity !== undefined && tx.elasticity !== null) items.push({ label: 'Élasticité', value: tx.elasticity, color: '#FDA4AF' })
+                                            if (tx.stickiness !== undefined && tx.stickiness !== null) items.push({ label: 'Collant', value: tx.stickiness, color: '#FB923C' })
+                                            if (items.length === 0) return null
+                                            return (
+                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                    <div className="text-gray-400 text-xs mb-2">Texture</div>
                                                     <MiniBars items={items} max={10} />
                                                 </div>
                                             )
@@ -960,6 +1018,62 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     ))}
                                 </div>
                             </div>
+
+                            {/* Culture / Curing Pipelines */}
+                            {(hasElement('culture') || hasElement('curing') || hasElement('recolte')) && (
+                                <div className="mt-4 space-y-3">
+                                    {hasElement('culture') && (() => {
+                                        const c = resolveReviewField('culture') || {}
+                                        if (!Array.isArray(c.data) || c.data.length === 0) return null
+                                        return (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-2">Pipeline Culture ({c.data.length} étapes)</div>
+                                                <div className="flex gap-1 flex-wrap">
+                                                    {c.data.slice(0, 12).map((step, i) => (
+                                                        <div key={i} className="w-6 h-6 rounded bg-green-500/30 border border-green-500/50 flex items-center justify-center" title={step.label || step.phase || `Étape ${i + 1}`}>
+                                                            <span className="text-green-300" style={{ fontSize: '8px' }}>{i + 1}</span>
+                                                        </div>
+                                                    ))}
+                                                    {c.data.length > 12 && <span className="text-xs text-gray-500 self-center">+{c.data.length - 12}</span>}
+                                                </div>
+                                            </div>
+                                        )
+                                    })()}
+                                    {hasElement('curing') && (() => {
+                                        const c = resolveReviewField('curing') || {}
+                                        if (!Array.isArray(c.data) || c.data.length === 0) return null
+                                        return (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-2">Pipeline Curing ({c.data.length} étapes)</div>
+                                                <div className="flex gap-1 flex-wrap">
+                                                    {c.data.slice(0, 12).map((step, i) => (
+                                                        <div key={i} className="w-6 h-6 rounded bg-amber-500/30 border border-amber-500/50 flex items-center justify-center" title={step.label || `J+${i + 1}`}>
+                                                            <span className="text-amber-300" style={{ fontSize: '8px' }}>{i + 1}</span>
+                                                        </div>
+                                                    ))}
+                                                    {c.data.length > 12 && <span className="text-xs text-gray-500 self-center">+{c.data.length - 12}</span>}
+                                                </div>
+                                            </div>
+                                        )
+                                    })()}
+                                    {hasElement('recolte') && (() => {
+                                        const r = resolveReviewField('recolte') || {}
+                                        if (!r.poidsBrut && !r.poidsNet && !r.trichomesLaiteux) return null
+                                        return (
+                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
+                                                <div className="text-gray-400 text-xs mb-2">Récolte</div>
+                                                <div className="flex gap-4 text-xs text-white">
+                                                    {r.poidsBrut && <span>Brut: <b>{r.poidsBrut}g</b></span>}
+                                                    {r.poidsNet && <span>Net: <b>{r.poidsNet}g</b></span>}
+                                                    {(r.trichomesLaiteux > 0 || r.trichomesAmbres > 0) && (
+                                                        <span>Trichomes: <b>{r.trichomesLaiteux ?? 0}% laiteux / {r.trichomesAmbres ?? 0}% ambrés</b></span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )
+                                    })()}
+                                </div>
+                            )}
 
                             {/* Footer */}
                             <div className="mt-auto pt-6 border-t border-white/10 flex justify-between items-end">

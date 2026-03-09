@@ -9,6 +9,9 @@ export function useFlowerForm(reviewId = null) {
     const toast = useToast()
     const [formData, setFormData] = useState({
         type: 'flower',
+        // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
+        densite: 5, trichomes: 5, pistils: 5, manucure: 5, moisissure: 10, graines: 10,
+        selectedColors: [],
         // Pre-initialize visual defaults so extractExtraData finds scores even if
         // the user opens OrchardPanel before navigating to the Visual section
         visual: { colors: [], colorRating: 5, density: 5, trichomes: 5, mold: 10, seeds: 10 }
@@ -151,6 +154,15 @@ export function useFlowerForm(reviewId = null) {
                 // Flat FlowerReview fields at top-level (for compatibility with
                 // legacy code that still reads fd.xxx directly)
                 ...fd,
+                // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
+                // These MUST come after ...fd to override fd.densiteVisuelle etc.
+                densite: fd.densiteVisuelle ?? 5,
+                trichomes: fd.trichomesScore ?? 5,
+                pistils: fd.pistilsScore ?? 5,
+                manucure: fd.manucureScore ?? 5,
+                moisissure: fd.moisissureScore ?? 10,
+                graines: fd.grainesScore ?? 10,
+                selectedColors: parseArr(fd.couleurNuancier, []),
                 // Nested sub-objects — override any flat value from ...fd above
                 visual,
                 analytics,
