@@ -407,7 +407,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         )}
 
                         {/* Rating */}
-                        {contentModules.rating && reviewData.rating !== undefined && (
+                        {contentModules.rating && reviewData.rating != null && !isNaN(parseFloat(reviewData.rating)) && (
                             <div className="flex items-center gap-4">
                                 <div className="flex gap-1">
                                     {[...Array(5)].map((_, i) => {

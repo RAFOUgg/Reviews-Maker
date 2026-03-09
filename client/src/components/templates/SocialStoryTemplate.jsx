@@ -161,7 +161,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Rating - Big and Bold */}
-                {contentModules.rating && reviewData.rating !== undefined && (
+                {contentModules.rating && reviewData.rating != null && !isNaN(parseFloat(reviewData.rating)) && (
                     <motion.div
                         {...fadeUp}
                         transition={{ delay: 0.3 }}

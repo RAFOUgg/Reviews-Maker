@@ -96,7 +96,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
 
     // Render étoiles inline
     const renderStarsInline = () => {
-        if (!contentModules.rating || reviewData.rating === undefined) return null;
+        if (!contentModules.rating || reviewData.rating == null || isNaN(parseFloat(reviewData.rating))) return null;
         const { filled, value } = formatRating(reviewData.rating, 5);
         return (
             <span className="inline-flex items-center gap-2">
@@ -201,7 +201,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         {contentModules.date && reviewData.date && (
                             <span>📅 {formatDate(reviewData.date)}</span>
                         )}
-                        {contentModules.rating && reviewData.rating !== undefined && renderStarsInline()}
+                        {contentModules.rating && reviewData.rating != null && !isNaN(parseFloat(reviewData.rating)) && renderStarsInline()}
                     </div>
                 </header>
 

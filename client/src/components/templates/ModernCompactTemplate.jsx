@@ -101,7 +101,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     // Render étoiles - Note sur 10, affichée avec 5 étoiles proportionnelles
     const renderStars = () => {
-        if (!contentModules.rating || reviewData.rating === undefined) return null;
+        if (!contentModules.rating || reviewData.rating == null || isNaN(parseFloat(reviewData.rating))) return null;
         const ratingValue = parseFloat(reviewData.rating) || 0;
         // 5 étoiles représentent la note /10 (donc 8/10 = 4 étoiles pleines)
         const starsCount = 5;

@@ -162,23 +162,20 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
         // Définition des champs par catégorie pour reconstruction
         const categoryFields = {
             visual: {
+                // Only canonical French/normalized keys — English form field aliases
+                // (colorRating, density, trichomes, pistils, mold, seeds, transparency)
+                // are all mapped to the French keys by normalizeByType, so using both
+                // would produce duplicate entries in the sub-details breakdown.
                 fields: [
-                    // Actual form field names (from normalizeByType section merge)
-                    'colorRating', 'transparency', 'density', 'trichomes', 'pistils', 'manucure', 'mold', 'seeds',
-                    // Legacy flat names
-                    'densiteVisuelle', 'trichome', 'pistil', 'moisissure', 'graines',
+                    'densiteVisuelle', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines',
                     'couleur', 'pureteVisuelle', 'viscosite', 'melting', 'residus', 'couleurTransparence'
                 ],
                 labels: {
-                    // Actual form field labels
-                    colorRating: 'Couleur / Nuancier', transparency: 'Transparence',
-                    density: 'Densité visuelle', trichomes: 'Trichomes',
-                    pistils: 'Pistils', manucure: 'Manucure',
-                    mold: 'Moisissures', seeds: 'Graines',
-                    // Legacy
-                    densiteVisuelle: 'Densité visuelle', trichome: 'Trichomes', pistil: 'Pistils', manucure: 'Manucure',
-                    moisissure: 'Moisissure', graines: 'Graines', couleur: 'Couleur', pureteVisuelle: 'Pureté',
-                    viscosite: 'Viscosité', melting: 'Melting', residus: 'Résidus', couleurTransparence: 'Couleur/transparence'
+                    densiteVisuelle: 'Densité visuelle', trichome: 'Trichomes', pistil: 'Pistils',
+                    manucure: 'Manucure', moisissure: 'Moisissures', graines: 'Graines',
+                    couleur: 'Couleur / Nuancier', pureteVisuelle: 'Pureté visuelle',
+                    viscosite: 'Viscosité', melting: 'Melting', residus: 'Résidus',
+                    couleurTransparence: 'Couleur/transparence'
                 }
             },
             smell: {
@@ -416,14 +413,13 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'typeCulture', label: 'Type de culture', icon: '🌿', category: 'culture' },
         { key: 'spectre', label: 'Spectre lumineux', icon: '🌈', category: 'culture' },
         { key: 'techniquesPropagation', label: 'Propagation', icon: '🌱', category: 'culture' },
-        // Visuel
+        // Visuel — use canonical normalized keys only; English form aliases (density, trichomes,
+        // pistils, mold, seeds, colorRating) are all mapped to these French keys by normalizeByType.
+        // Keeping both would show duplicate rows for the same metric.
         { key: 'densiteVisuelle', label: 'Densité visuelle', icon: '📊', category: 'visual' },
-        { key: 'densite', label: 'Densité visuelle', icon: '📊', category: 'visual' },
         { key: 'couleurTransparence', label: 'Couleur/transparence', icon: '🎨', category: 'visual' },
         { key: 'trichome', label: 'Trichomes', icon: '✨', category: 'visual' },
-        { key: 'trichomes', label: 'Trichomes', icon: '✨', category: 'visual' },
         { key: 'pistil', label: 'Pistils', icon: '🌺', category: 'visual' },
-        { key: 'pistils', label: 'Pistils', icon: '🌺', category: 'visual' },
         { key: 'manucure', label: 'Manucure', icon: '✂️', category: 'visual' },
         { key: 'couleur', label: 'Couleur', icon: '🎨', category: 'visual' },
         { key: 'pureteVisuelle', label: 'Pureté visuelle', icon: '🔍', category: 'visual' },

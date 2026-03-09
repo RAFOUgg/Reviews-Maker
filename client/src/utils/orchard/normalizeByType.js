@@ -250,15 +250,32 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
   }
 
   // Normalize rating field
-  if (normalized.rating === undefined) {
-    if (normalized.overallRating !== undefined) {
+  if (normalized.rating == null || normalized.rating === '') {
+    if (normalized.overallRating != null) {
       normalized.rating = normalized.overallRating;
-    } else if (normalized.note !== undefined) {
+    } else if (normalized.note != null) {
       normalized.rating = normalized.note;
-    } else if (normalized.score !== undefined) {
+    } else if (normalized.score != null) {
       normalized.rating = normalized.score;
-    } else if (normalized.categoryRatings?.overall !== undefined) {
+    } else if (normalized.categoryRatings?.overall != null) {
       normalized.rating = normalized.categoryRatings.overall;
+    }
+  }
+
+  // If rating is still absent or NaN, compute it as the mean of category averages
+  if (normalized.rating == null || isNaN(parseFloat(normalized.rating))) {
+    const cats = normalized.categoryRatings ? Object.values(normalized.categoryRatings) : [];
+    const avgs = cats.map(c => {
+      if (typeof c === 'number' && !isNaN(c) && c > 0) return c;
+      if (typeof c === 'string' && !isNaN(parseFloat(c)) && parseFloat(c) > 0) return parseFloat(c);
+      if (typeof c === 'object' && c !== null) {
+        const vals = Object.values(c).map(v => parseFloat(v)).filter(v => !isNaN(v) && v > 0);
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+      }
+      return null;
+    }).filter(v => v !== null);
+    if (avgs.length > 0) {
+      normalized.rating = Math.round(avgs.reduce((a, b) => a + b, 0) / avgs.length * 10) / 10;
     }
   }
 
