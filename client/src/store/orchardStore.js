@@ -277,7 +277,8 @@ const DEFAULT_CONFIG = {
         borderRadius: 12,
         filter: 'none',
         opacity: 1,
-        selectedIndex: 0
+        selectedIndex: 0,
+        showGallery: false
     },
 
     // Logo/Filigrane

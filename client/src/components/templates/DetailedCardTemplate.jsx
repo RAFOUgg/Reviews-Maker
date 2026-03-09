@@ -171,107 +171,207 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         if (step.container || step.recipient) metrics.push(`🫙 ${step.container || step.recipient}`);
         if (step.packaging || step.emballage) metrics.push(`📦 ${step.packaging || step.emballage}`);
         if (step.method || step.methode) metrics.push(`⚙️ ${step.method || step.methode}`);
+        if (step.co2) metrics.push(`☁️ ${step.co2}ppm`);
+        if (step.ppfd) metrics.push(`☀️ ${step.ppfd}µmol`);
+        if (step.volume || step.volumeRecipient) metrics.push(`📐 ${step.volume || step.volumeRecipient}`);
         return metrics;
+    };
+
+    // Metric badge inline
+    const MetricBadge = ({ icon, value, highlight = false }) => (
+        <span style={{
+            display: 'inline-flex', alignItems: 'center', gap: '2px',
+            padding: '2px 6px', borderRadius: 5,
+            backgroundColor: highlight ? colorWithOpacity(colors.accent, 25) : colorWithOpacity(colors.accent, 12),
+            border: `1px solid ${colorWithOpacity(colors.accent, highlight ? 40 : 20)}`,
+            fontSize: `${fontSize.small * 0.82}px`,
+            color: highlight ? colors.accent : colors.textSecondary,
+            fontWeight: highlight ? '600' : '400',
+            whiteSpace: 'nowrap',
+        }}>
+            {icon} {value}
+        </span>
+    );
+
+    // Rich step card for short pipelines
+    const StepCard = ({ step, index, total }) => {
+        const label = step.label || step.date || step.semaine || step.phase || step.jour || `${index + 1}`;
+        const temp = step.temperature ?? step.temp;
+        const humidity = step.humidity ?? step.humidite ?? step.hr;
+        const co2 = step.co2;
+        const ppfd = step.ppfd;
+        const container = step.container || step.recipient;
+        const packaging = step.packaging || step.emballage;
+        const volume = step.volume || step.volumeRecipient;
+        const curingType = step.curingType || step.typeCuring;
+        const opacity = step.opacite || step.recipientOpacity;
+        const action = step.action || step.event || step.evenement;
+        const method = step.method || step.methode;
+        const note = step.note || step.comment || step.commentaire;
+        const hasMetrics = temp != null || humidity != null || co2 || ppfd || container || packaging;
+
+        return (
+            <div style={{
+                display: 'flex', gap: isSquare ? 6 : 8, alignItems: 'flex-start',
+                padding: `${isSquare ? 6 : 8}px ${isSquare ? 8 : 10}px`,
+                backgroundColor: colorWithOpacity(colors.accent, 6 + (index % 2) * 4),
+                border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
+                borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(index * 5, 40))}`,
+                borderRadius: `0 ${isSquare ? 6 : 8}px ${isSquare ? 6 : 8}px 0`,
+            }}>
+                {/* Step label pill */}
+                <div style={{
+                    flexShrink: 0, minWidth: isSquare ? 32 : 42, textAlign: 'center',
+                    padding: `3px ${isSquare ? 5 : 7}px`,
+                    backgroundColor: colorWithOpacity(colors.accent, 20),
+                    borderRadius: isSquare ? 5 : 7,
+                    fontSize: `${fontSize.small * 0.9}px`, fontWeight: '700',
+                    color: colors.accent,
+                }}>
+                    {String(label).slice(0, isSquare ? 4 : 6)}
+                </div>
+
+                {/* Metrics + note */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {/* Row 1: env metrics */}
+                    {hasMetrics && (
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                            {temp != null && <MetricBadge icon="🌡️" value={`${temp}°C`} highlight />}
+                            {humidity != null && <MetricBadge icon="💧" value={`${humidity}%`} highlight />}
+                            {co2 != null && <MetricBadge icon="☁️" value={`${co2}ppm`} />}
+                            {ppfd != null && <MetricBadge icon="☀️" value={`${ppfd}µ`} />}
+                            {container && <MetricBadge icon="🫙" value={String(container).slice(0, 14)} />}
+                            {packaging && !isSquare && <MetricBadge icon="📦" value={String(packaging).slice(0, 12)} />}
+                            {volume && !isSquare && <MetricBadge icon="📐" value={volume} />}
+                            {curingType && !isSquare && <MetricBadge icon="❄️" value={curingType} />}
+                            {opacity && !isSquare && <MetricBadge icon="🔍" value={opacity} />}
+                        </div>
+                    )}
+                    {/* Row 2: action / method */}
+                    {(action || method) && (
+                        <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap' }}>
+                            {action && <MetricBadge icon="⚡" value={String(action).slice(0, 20)} highlight />}
+                            {method && <MetricBadge icon="⚙️" value={String(method).slice(0, 18)} />}
+                        </div>
+                    )}
+                    {/* Row 3: note */}
+                    {note && (
+                        <div style={{
+                            fontSize: `${fontSize.small * 0.82}px`,
+                            color: colors.textSecondary, fontStyle: 'italic',
+                            lineHeight: '1.3',
+                        }}>
+                            💬 {String(note).slice(0, isSquare ? 60 : 100)}{note.length > (isSquare ? 60 : 100) ? '…' : ''}
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     const PipelineTimeline = ({ pipeline }) => {
         // Prefer rawSteps (objects) over stringified steps
         const rawSteps = pipeline.rawSteps || pipeline.steps.map(s => ({ label: s }));
-        const isGrid = rawSteps.length > 6;
+        const isCompact = rawSteps.length > 10;
+        const isMedium = rawSteps.length > 5 && rawSteps.length <= 10;
 
         return (
-            <div
-                style={{ padding: `${padding.card}px`, borderRadius: isSquare ? 10 : 14, marginBottom: `${spacing.element}px`, backgroundColor: colorWithOpacity(colors.accent, 8) }}
-            >
+            <div style={{ marginBottom: `${spacing.element}px` }}>
                 {/* Pipeline Header */}
-                <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: `${spacing.gap + 2}px`, display: 'flex', alignItems: 'center', gap: `${spacing.gap}px` }}>
-                    <span>{pipeline.icon}</span>
-                    <span>{pipeline.name}</span>
-                    <span style={{ fontSize: `${fontSize.small * 0.9}px`, color: colors.textSecondary }}>
-                        ({rawSteps.length} étape{rawSteps.length > 1 ? 's' : ''})
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: spacing.element,
+                    marginBottom: spacing.gap + 2,
+                    padding: `${isSquare ? 5 : 7}px ${isSquare ? 8 : 12}px`,
+                    backgroundColor: colorWithOpacity(colors.accent, 15),
+                    borderRadius: isSquare ? 8 : 10,
+                }}>
+                    <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{pipeline.icon}</span>
+                    <span style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>
+                        {pipeline.name}
+                    </span>
+                    <span style={{
+                        fontSize: `${fontSize.small * 0.88}px`, color: colors.accent,
+                        backgroundColor: colorWithOpacity(colors.accent, 20),
+                        padding: '2px 7px', borderRadius: 20, fontWeight: '600',
+                    }}>
+                        {rawSteps.length} étape{rawSteps.length > 1 ? 's' : ''}
                     </span>
                 </div>
 
-                {isGrid ? (
-                    /* GitHub-style compact grid for many steps */
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                        {rawSteps.map((step, i) => {
-                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${i + 1}`;
-                            const note = step.note || step.comment || step.commentaire || '';
-                            const metrics = renderStepMetrics(step);
-                            const tooltip = [label, ...metrics, note].filter(Boolean).join(' · ');
+                {isCompact ? (
+                    /* GitHub-style compact grid for >10 steps — show label in each cell, tooltip if metrics exist */
+                    <div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                            {rawSteps.map((step, i) => {
+                                const label = step.label || step.date || step.semaine || step.phase || step.jour || `${i + 1}`;
+                                const temp = step.temperature ?? step.temp;
+                                const humidity = step.humidity ?? step.humidite ?? step.hr;
+                                const note = step.note || step.comment || step.commentaire || '';
+                                const action = step.action || step.event || '';
+                                // Build tooltip
+                                const tooltipParts = [label];
+                                if (temp != null) tooltipParts.push(`🌡️ ${temp}°C`);
+                                if (humidity != null) tooltipParts.push(`💧 ${humidity}%`);
+                                if (step.container || step.recipient) tooltipParts.push(`🫙 ${step.container || step.recipient}`);
+                                if (action) tooltipParts.push(`⚡ ${action}`);
+                                if (note) tooltipParts.push(`💬 ${note}`);
+                                const cellSize = isSquare ? 28 : 34;
+                                // Color intensity based on temperature (if available) or index
+                                const intensity = temp != null
+                                    ? Math.min(Math.round((temp / 30) * 60) + 15, 75)
+                                    : 20 + Math.min(i * 3, 50);
+                                return (
+                                    <div
+                                        key={i}
+                                        title={tooltipParts.join(' · ')}
+                                        style={{
+                                            width: cellSize, height: cellSize, borderRadius: 5,
+                                            backgroundColor: colorWithOpacity(colors.accent, intensity),
+                                            border: `1px solid ${colorWithOpacity(colors.accent, 35)}`,
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontSize: `${fontSize.small * 0.78}px`, color: colors.textPrimary,
+                                            fontWeight: '700', cursor: 'default',
+                                        }}
+                                    >
+                                        {String(label).slice(0, isSquare ? 2 : 3)}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        {/* Legend for grid: show key metrics from first and last step */}
+                        {rawSteps.length > 0 && (() => {
+                            const first = rawSteps[0];
+                            const last = rawSteps[rawSteps.length - 1];
+                            const firstLabel = first.label || first.date || first.semaine || first.phase || '1';
+                            const lastLabel = last.label || last.date || last.semaine || last.phase || String(rawSteps.length);
+                            const firstTemp = first.temperature ?? first.temp;
+                            const lastTemp = last.temperature ?? last.temp;
+                            const firstHumidity = first.humidity ?? first.humidite ?? first.hr;
+                            const lastHumidity = last.humidity ?? last.humidite ?? last.hr;
+                            const hasEvolution = (firstTemp != null && lastTemp != null) || (firstHumidity != null && lastHumidity != null);
+                            if (!hasEvolution) return null;
                             return (
-                                <div
-                                    key={i}
-                                    title={tooltip}
-                                    style={{
-                                        width: isSquare ? 30 : 38,
-                                        height: isSquare ? 30 : 38,
-                                        borderRadius: 6,
-                                        backgroundColor: colorWithOpacity(colors.accent, 20 + Math.min(i * 4, 45)),
-                                        border: `1px solid ${colorWithOpacity(colors.accent, 35)}`,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: `${fontSize.small * 0.82}px`,
-                                        color: colors.textPrimary,
-                                        fontWeight: '700',
-                                    }}
-                                >
-                                    {String(label).slice(0, 3)}
+                                <div style={{ display: 'flex', gap: 6, marginTop: 4, flexWrap: 'wrap' }}>
+                                    {firstTemp != null && lastTemp != null && (
+                                        <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>
+                                            🌡️ {firstLabel}: {firstTemp}°C → {lastLabel}: {lastTemp}°C
+                                        </span>
+                                    )}
+                                    {firstHumidity != null && lastHumidity != null && (
+                                        <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>
+                                            💧 {firstHumidity}% → {lastHumidity}%
+                                        </span>
+                                    )}
                                 </div>
                             );
-                        })}
+                        })()}
                     </div>
                 ) : (
-                    /* Linear flow with metrics for few steps */
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${spacing.gap}px`, alignItems: 'flex-start' }}>
-                        {rawSteps.map((step, i) => {
-                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `Étape ${i + 1}`;
-                            const note = step.note || step.comment || step.commentaire || '';
-                            const metrics = renderStepMetrics(step);
-                            const action = step.action || step.event || step.evenement || '';
-                            return (
-                                <React.Fragment key={i}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: isSquare ? 80 : 110 }}>
-                                        {/* Step identifier */}
-                                        <span style={{
-                                            padding: `${spacing.gap}px ${spacing.element}px`,
-                                            borderRadius: isSquare ? 10 : 14,
-                                            backgroundColor: colorWithOpacity(colors.accent, 20),
-                                            color: colors.textPrimary,
-                                            fontSize: `${fontSize.small}px`,
-                                            fontWeight: '600',
-                                            textAlign: 'center',
-                                        }}>
-                                            {label}
-                                        </span>
-                                        {/* Action / event */}
-                                        {action && (
-                                            <span style={{ fontSize: `${fontSize.small * 0.85}px`, color: colors.accent, textAlign: 'center', fontWeight: '500' }}>{action}</span>
-                                        )}
-                                        {/* Env metrics (temp, humidity, etc.) */}
-                                        {metrics.length > 0 && (
-                                            <div style={{ display: 'flex', gap: 3, flexWrap: 'wrap', justifyContent: 'center' }}>
-                                                {metrics.map((m, mi) => (
-                                                    <span key={mi} style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary }}>{m}</span>
-                                                ))}
-                                            </div>
-                                        )}
-                                        {/* Note (trimmed) */}
-                                        {note && !isSquare && (
-                                            <span style={{ fontSize: `${fontSize.small * 0.8}px`, color: colors.textSecondary, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', textAlign: 'center' }}>
-                                                {note}
-                                            </span>
-                                        )}
-                                    </div>
-                                    {/* Arrow connector */}
-                                    {i < rawSteps.length - 1 && (
-                                        <span style={{ color: colors.accent, fontSize: `${fontSize.text}px`, alignSelf: 'flex-start', marginTop: `${spacing.gap + 4}px` }}>→</span>
-                                    )}
-                                </React.Fragment>
-                            );
-                        })}
+                    /* Detailed step cards for ≤10 steps */
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        {rawSteps.map((step, i) => (
+                            <StepCard key={i} step={step} index={i} total={rawSteps.length} />
+                        ))}
                     </div>
                 )}
             </div>
@@ -355,19 +455,42 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     className={`flex ${isSquare ? 'gap-3' : 'gap-6'} ${isSquare ? 'mb-3' : 'mb-6'} ${isPortrait || isSquare ? 'flex-col' : 'flex-row'}`}
                     style={{ flexShrink: 0 }}
                 >
-                    {/* Image */}
-                    {contentModules.image && mainImage && (
-                        <div
-                            className="flex-shrink-0 overflow-hidden shadow-lg"
-                            style={{
-                                borderRadius: `${responsive.image.borderRadius}px`,
-                                width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
-                                height: responsive.image.maxHeight,
-                            }}
-                        >
-                            <img src={mainImage} alt="" className="w-full h-full object-cover" />
-                        </div>
-                    )}
+                {/* Image — single or gallery */}
+                    {contentModules.image && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
+                        const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                        const galleryImages = reviewData.images || [];
+                        if (showGallery) {
+                            return (
+                                <div
+                                    className="flex-shrink-0 overflow-hidden"
+                                    style={{
+                                        borderRadius: `${responsive.image.borderRadius}px`,
+                                        width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
+                                        display: 'flex', gap: 4,
+                                        height: responsive.image.maxHeight,
+                                    }}
+                                >
+                                    {galleryImages.slice(0, isSquare ? 2 : 4).map((img, ii) => (
+                                        <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden', borderRadius: `${responsive.image.borderRadius}px` }}>
+                                            <img src={img} alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        }
+                        return (
+                            <div
+                                className="flex-shrink-0 overflow-hidden shadow-lg"
+                                style={{
+                                    borderRadius: `${responsive.image.borderRadius}px`,
+                                    width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
+                                    height: responsive.image.maxHeight,
+                                }}
+                            >
+                                <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                            </div>
+                        );
+                    })()}
 
                     {/* Infos principales */}
                     <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.element}px` }}>
@@ -463,13 +586,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </div>
                 )}
 
-                {/* Grid layout pour les sections */}
+                {/* Grid layout pour les sections — adapte le nombre de colonnes si l'une est vide */}
                 <div
                     className={`grid ${isPortrait || isSquare ? 'grid-cols-1' : 'grid-cols-2'}`}
                     style={{
                         gap: `${spacing.section}px`,
-                        flex: 1,
-                        overflow: 'hidden'
+                        flex: isSquare ? 'none' : 1,
+                        overflow: isSquare ? 'visible' : 'hidden'
                     }}
                 >
                     {/* Colonne 1 */}

@@ -172,50 +172,74 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         );
     };
 
-    // Layout adaptatif selon le format
     const renderLayout = () => {
         if (isLandscape) {
             // Layout paysage : image à gauche, contenu à droite
             return (
                 <div className="flex h-full" style={{ gap: `${spacing.section}px` }}>
                     {/* Image */}
-                    {contentModules.image && mainImage && (
-                        <div className="flex-shrink-0 w-2/5 h-full">
-                            <div
-                                className="w-full h-full overflow-hidden"
-                                style={{ borderRadius: `${responsive.image.borderRadius}px` }}
-                            >
-                                <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                    {contentModules.image && mainImage && (() => {
+                        const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                        if (showGallery) {
+                            return (
+                                <div className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
+                                    {reviewData.images.slice(0, 2).map((img, ii) => (
+                                        <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px` }}>
+                                            <img src={img} alt="" className="w-full h-full object-cover" />
+                                        </div>
+                                    ))}
+                                </div>
+                            );
+                        }
+                        return (
+                            <div className="flex-shrink-0 w-2/5 h-full">
+                                <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px` }}>
+                                    <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                                </div>
                             </div>
-                        </div>
-                    )}
+                        );
+                    })()}
 
                     {/* Contenu */}
-                    <div className="flex-1 flex flex-col justify-center overflow-hidden" style={{ gap: `${spacing.element}px` }}>
+                    <div className="flex-1 flex flex-col justify-between overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                         {renderContent()}
                     </div>
                 </div>
             );
         }
 
-        // Layout portrait/carré : vertical
+        // Layout portrait/carré : vertical — adaptatif selon la quantité de contenu
         return (
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                 {/* Image */}
-                {contentModules.image && mainImage && (
-                    <div
-                        className="w-full flex-shrink-0 overflow-hidden"
-                        style={{
-                            borderRadius: `${responsive.image.borderRadius}px`,
-                            maxHeight: responsive.image.maxHeight,
-                        }}
-                    >
-                        <img src={mainImage} alt="" className="w-full h-full object-cover" />
-                    </div>
-                )}
+                {contentModules.image && mainImage && (() => {
+                    const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                    if (showGallery) {
+                        return (
+                            <div className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3 }}>
+                                {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
+                                    <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
+                                        <img src={img} alt="" className="w-full h-full object-cover" />
+                                    </div>
+                                ))}
+                            </div>
+                        );
+                    }
+                    return (
+                        <div
+                            className="w-full flex-shrink-0 overflow-hidden"
+                            style={{
+                                borderRadius: `${responsive.image.borderRadius}px`,
+                                maxHeight: responsive.image.maxHeight,
+                            }}
+                        >
+                            <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                        </div>
+                    );
+                })()}
 
-                {/* Contenu */}
-                <div className="flex-1 flex flex-col justify-center overflow-hidden" style={{ gap: `${spacing.element}px` }}>
+                {/* Contenu — pas de justify-center pour éviter l'espace vide en bas */}
+                <div className="flex flex-col overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                     {renderContent()}
                 </div>
             </div>
@@ -333,40 +357,76 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 </div>
             )}
 
-            {/* Pipelines — compact list of step-count chips per pipeline */}
+            {/* Pipelines — riche avec métriques */}
             {pipelines.length > 0 && (contentModules.pipelines !== false) && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
                     {pipelines.map((p, pi) => {
                         const steps = p.rawSteps || p.steps.map(s => ({ label: s }));
-                        // Compact: show pipeline name + mini grid of step indicators
+                        const maxDisplay = isSquare ? 4 : (isPortrait ? 5 : limits.maxTags + 2);
+                        const isCompact = steps.length > maxDisplay;
                         return (
-                            <div key={pi} style={{ padding: `${spacing.gap}px ${spacing.element}px`, borderRadius: isSquare ? 10 : 14, backgroundColor: colorWithOpacity(colors.accent, 10) }}>
-                                <div style={{ fontSize: `${fontSize.small}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: `${spacing.gap}px` }}>
-                                    {p.icon} {p.name} <span style={{ color: colors.textSecondary, fontWeight: '400' }}>({steps.length})</span>
+                            <div key={pi} style={{ borderRadius: isSquare ? 8 : 10, backgroundColor: colorWithOpacity(colors.accent, 8), overflow: 'hidden' }}>
+                                {/* Pipeline header */}
+                                <div style={{
+                                    padding: `${spacing.gap}px ${spacing.element}px`,
+                                    backgroundColor: colorWithOpacity(colors.accent, 18),
+                                    display: 'flex', alignItems: 'center', gap: spacing.gap,
+                                }}>
+                                    <span style={{ fontSize: isSquare ? '12px' : '14px' }}>{p.icon}</span>
+                                    <span style={{ fontSize: `${fontSize.small}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>{p.name}</span>
+                                    <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.accent, fontWeight: '600' }}>{steps.length}×</span>
                                 </div>
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                                    {steps.slice(0, limits.maxTags + 2).map((step, si) => {
-                                        const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
-                                        return (
-                                            <span key={si} style={{
-                                                padding: `2px ${spacing.gap}px`,
-                                                borderRadius: 6,
-                                                backgroundColor: colorWithOpacity(colors.accent, 20 + si * 4),
-                                                color: colors.textPrimary,
-                                                fontSize: `${fontSize.small * 0.85}px`,
-                                                fontWeight: '600',
-                                            }}>
-                                                {String(label).slice(0, 5)}
+                                {isCompact ? (
+                                    <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                                        {steps.slice(0, maxDisplay + 4).map((step, si) => {
+                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
+                                            const temp = step.temperature ?? step.temp;
+                                            const humidity = step.humidity ?? step.humidite;
+                                            const tooltip = [label, temp != null ? `🌡️${temp}°C` : '', humidity != null ? `💧${humidity}%` : '', step.note || ''].filter(Boolean).join(' ');
+                                            const intensity = temp != null ? Math.min(Math.round((temp / 30) * 55) + 15, 70) : 20 + si * 3;
+                                            return (
+                                                <span key={si} title={tooltip} style={{
+                                                    padding: `2px ${spacing.gap}px`, borderRadius: 5,
+                                                    backgroundColor: colorWithOpacity(colors.accent, intensity),
+                                                    color: colors.textPrimary,
+                                                    fontSize: `${fontSize.small * 0.82}px`, fontWeight: '600',
+                                                }}>
+                                                    {String(label).slice(0, 4)}
+                                                </span>
+                                            );
+                                        })}
+                                        {steps.length > maxDisplay + 4 && (
+                                            <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary, alignSelf: 'center' }}>
+                                                +{steps.length - maxDisplay - 4}
                                             </span>
-                                        );
-                                    })}
-                                    {steps.length > limits.maxTags + 2 && (
-                                        <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary, alignSelf: 'center' }}>
-                                            +{steps.length - limits.maxTags - 2}
-                                        </span>
-                                    )}
-                                </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {steps.map((step, si) => {
+                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
+                                            const temp = step.temperature ?? step.temp;
+                                            const humidity = step.humidity ?? step.humidite ?? step.hr;
+                                            const note = step.note || step.comment || '';
+                                            return (
+                                                <div key={si} style={{
+                                                    display: 'flex', gap: 4, alignItems: 'center',
+                                                    padding: '2px 4px',
+                                                    borderLeft: `2px solid ${colorWithOpacity(colors.accent, 40 + si * 5)}`,
+                                                }}>
+                                                    <span style={{ fontSize: `${fontSize.small * 0.88}px`, fontWeight: '700', color: colors.accent, minWidth: '28px' }}>
+                                                        {String(label).slice(0, 5)}
+                                                    </span>
+                                                    {temp != null && <span style={{ fontSize: `${fontSize.small * 0.78}px`, color: colors.textSecondary }}>🌡️{temp}°</span>}
+                                                    {humidity != null && <span style={{ fontSize: `${fontSize.small * 0.78}px`, color: colors.textSecondary }}>💧{humidity}%</span>}
+                                                    {step.container && <span style={{ fontSize: `${fontSize.small * 0.76}px`, color: colors.textSecondary }}>🫙 {String(step.container).slice(0, 10)}</span>}
+                                                    {note && <span style={{ fontSize: `${fontSize.small * 0.76}px`, color: colors.textSecondary, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>💬 {note.slice(0, 30)}</span>}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                )}
                             </div>
                         );
                     })}

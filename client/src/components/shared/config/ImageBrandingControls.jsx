@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 
 const IMAGE_FILTERS = [
@@ -65,35 +65,71 @@ export default function ImageBrandingControls() {
             {/* Section Image */}
             <div className="space-y-4">
                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white">
-                    Image principale
+                    Images du produit
                 </h4>
 
-                {/* Sélecteur d'image si plusieurs photos disponibles */}
-                {availableImages.length > 1 && (
+                {availableImages.length === 0 && (
+                    <p className="text-xs text-gray-400 dark:text-gray-500 italic">
+                        Aucune photo disponible — ajoutez des photos produit dans le formulaire.
+                    </p>
+                )}
+
+                {/* Sélecteur de photo principale */}
+                {availableImages.length > 0 && (
                     <div>
                         <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
-                            Photo affichée ({selectedIdx + 1}/{availableImages.length})
+                            Photo principale affichée
+                            {availableImages.length > 1 && (
+                                <span className="ml-1 normal-case font-normal text-gray-400">({selectedIdx + 1}/{availableImages.length})</span>
+                            )}
                         </label>
-                        <div className="flex gap-2 flex-wrap">
-                            {availableImages.map((imgUrl, idx) => (
-                                <motion.button
-                                    key={idx}
-                                    whileHover={{ scale: 1.05 }}
-                                    whileTap={{ scale: 0.97 }}
-                                    onClick={() => updateImage({ selectedIndex: idx })}
-                                    className={`relative w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-purple-500 shadow-lg shadow-purple-500/30' : 'border-gray-300 dark:border-gray-600 opacity-60 hover:opacity-100'}`}
-                                >
-                                    <img src={imgUrl} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                                    {selectedIdx === idx && (
-                                        <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                                            <svg className="w-4 h-4 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
-                                            </svg>
-                                        </div>
-                                    )}
-                                </motion.button>
-                            ))}
+                        {availableImages.length === 1 ? (
+                            <div className="relative w-full h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg shadow-purple-500/20">
+                                <img src={availableImages[0]} alt="Photo produit" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-purple-500/10 flex items-end justify-end p-2">
+                                    <span className="text-xs text-white/80 bg-black/40 px-2 py-0.5 rounded-full">Seule photo</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2 flex-wrap">
+                                {availableImages.map((imgUrl, idx) => (
+                                    <motion.button
+                                        key={idx}
+                                        whileHover={{ scale: 1.06 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        onClick={() => updateImage({ selectedIndex: idx })}
+                                        className={`relative rounded-xl overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-purple-500 shadow-lg shadow-purple-500/30' : 'border-gray-300 dark:border-gray-600 opacity-60 hover:opacity-100 hover:border-purple-400'}`}
+                                        style={{ width: '64px', height: '64px' }}
+                                    >
+                                        <img src={imgUrl} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                        {selectedIdx === idx && (
+                                            <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
+                                                <svg className="w-5 h-5 text-white drop-shadow" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                        <span className="absolute bottom-0 right-0 text-[9px] font-bold text-white bg-black/50 px-1">{idx + 1}</span>
+                                    </motion.button>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Toggle galerie multi-photos */}
+                {availableImages.length > 1 && (
+                    <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-800/60 border border-gray-200 dark:border-gray-700">
+                        <div>
+                            <div className="text-sm font-medium text-gray-900 dark:text-white">Galerie photos</div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Afficher toutes les {availableImages.length} photos dans le template</div>
                         </div>
+                        <button
+                            onClick={() => updateImage({ showGallery: !config.image?.showGallery })}
+                            className={`relative w-12 h-6 rounded-full transition-colors ${config.image?.showGallery ? 'bg-purple-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                        >
+                            <span className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full transition-transform shadow ${config.image?.showGallery ? 'translate-x-6' : 'translate-x-0'}`} />
+                        </button>
                     </div>
                 )}
 
@@ -140,7 +176,7 @@ export default function ImageBrandingControls() {
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => updateImage({ filter: filter.id })}
-                                className={`p-3 rounded-lg text-sm font-medium transition-all ${config.image.filter === filter.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                                className={`p-3 rounded-lg text-sm font-medium transition-all ${config.image.filter === filter.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                             >
                                 <span className="mr-2">{filter.preview}</span>
                                 {filter.name}
@@ -236,7 +272,7 @@ export default function ImageBrandingControls() {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => updateBranding({ position: position.id })}
-                                        className={`p-2 rounded-lg text-xs font-medium transition-all ${config.branding.position === position.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                                        className={`p-2 rounded-lg text-xs font-medium transition-all ${config.branding.position === position.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                                     >
                                         <div>{position.icon}</div>
                                         <div className="mt-1">{position.name}</div>
@@ -257,7 +293,7 @@ export default function ImageBrandingControls() {
                                         whileHover={{ scale: 1.02 }}
                                         whileTap={{ scale: 0.98 }}
                                         onClick={() => updateBranding({ size: size.id })}
-                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${config.branding.size === size.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' }`}
+                                        className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${config.branding.size === size.id ? ' text-white shadow-lg' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
                                     >
                                         {size.name}
                                     </motion.button>
