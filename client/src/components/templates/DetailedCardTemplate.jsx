@@ -475,7 +475,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
     return (
         <div
-            className={`relative w-full h-full ${isSquare ? 'overflow-auto' : 'overflow-hidden'}`}
+            className="relative w-full h-full overflow-auto"
             style={{
                 background: colors.background,
                 fontFamily: typography.fontFamily,
@@ -624,9 +624,18 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </div>
                 )}
 
-                {/* Grid layout pour les sections — adapte le nombre de colonnes si l'une est vide */}
+                {/* Grid layout pour les sections — adapte le nombre de colonnes dynamiquement */}
                 <div
-                    className={`grid ${isPortrait || isSquare ? 'grid-cols-1' : 'grid-cols-2'}`}
+                    className={`grid ${(() => {
+                        const hasCol1 = hasInfoSectionContent || hasProvenanceSectionContent
+                            || (contentModules.cultivarsList && cultivars.length > 0)
+                            || (contentModules.effects && effects.length > 0);
+                        const hasCol2 = (contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0))
+                            || (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))
+                            || (contentModules.terpenes && terpenes.length > 0)
+                            || (contentModules.substratMix && substrat.length > 0);
+                        return (isPortrait || isSquare || !hasCol1 || !hasCol2) ? 'grid-cols-1' : 'grid-cols-2';
+                    })()}`}
                     style={{
                         gap: `${spacing.section}px`,
                         flex: isSquare ? 'none' : 1,

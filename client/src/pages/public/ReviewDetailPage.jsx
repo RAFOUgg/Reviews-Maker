@@ -89,6 +89,15 @@ export default function ReviewDetailPage() {
                     if (typeof data.cultivarsList === 'string') data.cultivarsList = JSON.parse(data.cultivarsList)
                     if (typeof data.pipelineExtraction === 'string') data.pipelineExtraction = JSON.parse(data.pipelineExtraction)
                     if (typeof data.pipelineSeparation === 'string') data.pipelineSeparation = JSON.parse(data.pipelineSeparation)
+                    if (typeof data.terpenes === 'string') data.terpenes = JSON.parse(data.terpenes)
+                    if (typeof data.secondaryAromas === 'string') data.secondaryAromas = JSON.parse(data.secondaryAromas)
+                    if (typeof data.dryPuffNotes === 'string') data.dryPuffNotes = JSON.parse(data.dryPuffNotes)
+                    if (typeof data.inhalationNotes === 'string') data.inhalationNotes = JSON.parse(data.inhalationNotes)
+                    if (typeof data.exhalationNotes === 'string') data.exhalationNotes = JSON.parse(data.exhalationNotes)
+                    if (typeof data.substratMix === 'string') data.substratMix = JSON.parse(data.substratMix)
+                    if (typeof data.pipelinePurification === 'string') data.pipelinePurification = JSON.parse(data.pipelinePurification)
+                    if (typeof data.fertilizationPipeline === 'string') data.fertilizationPipeline = JSON.parse(data.fertilizationPipeline)
+                    if (typeof data.extraData === 'string') data.extraData = JSON.parse(data.extraData)
                 } catch (e) {
                     // silent
                 }

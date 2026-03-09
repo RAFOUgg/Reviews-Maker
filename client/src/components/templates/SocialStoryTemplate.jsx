@@ -5,6 +5,7 @@ import {
     extractLabel,
     formatRating,
     extractCategoryRatings,
+    extractPipelines,
     colorWithOpacity,
 } from '../../utils/orchardHelpers';
 
@@ -28,6 +29,7 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
     const aromas = asArray(reviewData.aromas).slice(0, 3);
     const effects = asArray(reviewData.effects).slice(0, 3);
+    const pipelines = extractPipelines(reviewData);
     const { filled, value } = formatRating(reviewData.rating || 0, 5);
 
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
@@ -291,6 +293,59 @@ export default function SocialStoryTemplate({ config, reviewData, dimensions }) 
                                 🌸 {extractLabel(a)}
                             </span>
                         ))}
+                    </motion.div>
+                )}
+
+                {/* Pipelines — compact story view with colored cell grid + stats */}
+                {pipelines.length > 0 && contentModules.pipelines !== false && (
+                    <motion.div
+                        {...fadeUp}
+                        transition={{ delay: 0.58 }}
+                        className="mt-4"
+                        style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
+                    >
+                        {pipelines.slice(0, 2).map((p, pi) => {
+                            const rawSteps = p.rawSteps || p.steps.map(s => ({ label: s }));
+                            if (rawSteps.length === 0) return null;
+                            const allTemps = rawSteps.map(s => s.temperature ?? s.temp).filter(v => v != null);
+                            const allHumidity = rawSteps.map(s => s.humidity ?? s.humidite ?? s.hr).filter(v => v != null);
+                            const avgTemp = allTemps.length ? (allTemps.reduce((a, b) => a + b, 0) / allTemps.length).toFixed(1) : null;
+                            const avgHum = allHumidity.length ? (allHumidity.reduce((a, b) => a + b, 0) / allHumidity.length).toFixed(1) : null;
+                            return (
+                                <div key={pi} style={{ ...glassStyle, borderRadius: 16, padding: '10px 14px', overflow: 'hidden' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                                        <span style={{ fontSize: 16 }}>{p.icon}</span>
+                                        <span style={{ fontSize: `${typography.textSize - 1}px`, fontWeight: '700', color: 'white', flex: 1 }}>{p.name}</span>
+                                        <span style={{ fontSize: `${typography.textSize - 3}px`, color: colors.accent, fontWeight: '600' }}>{rawSteps.length} étapes</span>
+                                    </div>
+                                    {/* Mini cell grid */}
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 2, marginBottom: 6 }}>
+                                        {rawSteps.slice(0, 28).map((step, si) => {
+                                            const temp = step.temperature ?? step.temp;
+                                            const hasData = temp != null || step.humidity != null || step.humidite != null || step.container || step.note;
+                                            const intensity = hasData ? (temp != null ? Math.min(Math.round((temp / 35) * 55) + 25, 80) : 45) : 15;
+                                            return (
+                                                <div key={si} style={{
+                                                    width: 14, height: 14, borderRadius: 3,
+                                                    backgroundColor: colorWithOpacity(colors.accent, intensity),
+                                                    border: `1px solid ${colorWithOpacity(colors.accent, hasData ? 45 : 20)}`,
+                                                }} />
+                                            );
+                                        })}
+                                        {rawSteps.length > 28 && (
+                                            <span style={{ fontSize: `${typography.textSize - 4}px`, color: 'rgba(255,255,255,0.5)', alignSelf: 'center', marginLeft: 2 }}>
+                                                +{rawSteps.length - 28}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {/* Stats row */}
+                                    <div style={{ display: 'flex', gap: 10, fontSize: `${typography.textSize - 3}px`, color: 'rgba(255,255,255,0.6)' }}>
+                                        {avgTemp != null && <span>🌡️ {avgTemp}°C moy.</span>}
+                                        {avgHum != null && <span>💧 {avgHum}% moy.</span>}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </motion.div>
                 )}
 

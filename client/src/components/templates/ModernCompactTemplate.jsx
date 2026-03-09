@@ -201,7 +201,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     })()}
 
                     {/* Contenu */}
-                    <div className="flex-1 flex flex-col justify-between overflow-hidden" style={{ gap: `${spacing.element}px` }}>
+                    <div className="flex-1 flex flex-col overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                         {renderContent()}
                     </div>
                 </div>

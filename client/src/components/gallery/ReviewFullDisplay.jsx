@@ -1,8 +1,12 @@
+import { useState } from 'react'
 import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/orchardHelpers'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
-import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare } from 'lucide-react'
+import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind } from 'lucide-react'
+import InteractivePipelineViewer from './InteractivePipelineViewer'
 
 export default function ReviewFullDisplay({ review }) {
+    const [lightboxImg, setLightboxImg] = useState(null)
+    const [lightboxIdx, setLightboxIdx] = useState(0)
     if (!review) return null
 
     // Parse des données JSON avec protection contre les erreurs
@@ -48,6 +52,30 @@ export default function ReviewFullDisplay({ review }) {
     }
 
     const displayScore = review.computedOverall || review.overallRating || review.note || 0
+
+    // Parse arrays from review (may be JSON strings)
+    const parseArray = (val) => {
+        if (!val) return []
+        if (Array.isArray(val)) return val
+        if (typeof val === 'string') {
+            try { return JSON.parse(val) } catch { return val.split(',').map(s => s.trim()).filter(Boolean) }
+        }
+        return []
+    }
+    const extractLabel = (item) => {
+        if (typeof item === 'string') return item
+        return item?.label || item?.name || item?.value || String(item)
+    }
+
+    const aromas = parseArray(review.aromas)
+    const secondaryAromas = parseArray(review.secondaryAromas)
+    const tastes = parseArray(review.tastes)
+    const dryPuffNotes = parseArray(review.dryPuffNotes)
+    const inhalationNotes = parseArray(review.inhalationNotes)
+    const exhalationNotes = parseArray(review.exhalationNotes)
+    const effects = parseArray(review.effects)
+    const terpenes = parseArray(review.terpenes)
+    const images = parseArray(review.images)
 
     return (
         <div className="space-y-6">
@@ -228,34 +256,26 @@ export default function ReviewFullDisplay({ review }) {
                 </LiquidCard>
             )}
 
-            {/* Pipelines */}
+            {/* Pipelines - Interactive */}
             {pipelines.length > 0 && (
                 <LiquidCard glow="green" padding="lg">
                     <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <FlaskConical className="w-5 h-5 text-green-400" />
                         Pipelines & Processus
                     </h2>
-                    <div className="space-y-4">
-                        {pipelines.map(pipeline => (
-                            <div key={pipeline.key} className="bg-white/5 rounded-xl p-4 border border-white/10">
-                                <div className="flex items-center gap-2 mb-3">
-                                    <span className="text-2xl">{pipeline.icon}</span>
-                                    <h3 className="font-bold text-white">{pipeline.name}</h3>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                    {pipeline.steps.map((step, idx) => (
-                                        <div key={idx} className="flex items-center gap-2">
-                                            <span className="px-3 py-1 bg-green-500/20 text-green-300 rounded-lg text-sm font-medium border border-green-500/30">
-                                                {idx + 1}. {step}
-                                            </span>
-                                            {idx < pipeline.steps.length - 1 && (
-                                                <span className="text-white/40">→</span>
-                                            )}
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        ))}
+                    <div className="space-y-6">
+                        {pipelines.map(pipeline => {
+                            // Get the raw pipeline data for interactive viewer
+                            const rawData = review[pipeline.key] || pipeline;
+                            return (
+                                <InteractivePipelineViewer
+                                    key={pipeline.key}
+                                    pipeline={rawData}
+                                    pipelineName={pipeline.name}
+                                    pipelineIcon={pipeline.icon}
+                                />
+                            );
+                        })}
                     </div>
                 </LiquidCard>
             )}
@@ -296,6 +316,131 @@ export default function ReviewFullDisplay({ review }) {
                 </LiquidCard>
             )}
 
+            {/* Profil Sensoriel - Arômes, Goûts, Effets, Terpènes */}
+            {(aromas.length > 0 || secondaryAromas.length > 0 || tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || effects.length > 0 || terpenes.length > 0) && (
+                <LiquidCard glow="pink" padding="lg">
+                    <h2 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
+                        <Flower2 className="w-5 h-5 text-pink-400" />
+                        Profil Sensoriel
+                    </h2>
+                    <div className="grid sm:grid-cols-2 gap-6">
+                        {/* Arômes */}
+                        {aromas.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    🌸 Arômes dominants
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {aromas.map((a, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-full bg-pink-500/15 text-pink-300 text-sm font-medium border border-pink-500/25">
+                                            {extractLabel(a)}
+                                        </span>
+                                    ))}
+                                </div>
+                                {secondaryAromas.length > 0 && (
+                                    <div className="mt-3">
+                                        <span className="text-xs text-white/40 block mb-2">Arômes secondaires</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {secondaryAromas.map((a, i) => (
+                                                <span key={i} className="px-2.5 py-1 rounded-full bg-white/5 text-white/50 text-xs border border-white/10">
+                                                    {extractLabel(a)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Goûts */}
+                        {(dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || tastes.length > 0) && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    👅 Goûts
+                                </h3>
+                                {dryPuffNotes.length > 0 && (
+                                    <div className="mb-3">
+                                        <span className="text-xs text-white/40 block mb-1.5">💨 Tirage à sec</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {dryPuffNotes.map((t, i) => (
+                                                <span key={i} className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-medium border border-amber-500/25">
+                                                    {extractLabel(t)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {inhalationNotes.length > 0 && (
+                                    <div className="mb-3">
+                                        <span className="text-xs text-white/40 block mb-1.5">🌬️ Inhalation</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {inhalationNotes.map((t, i) => (
+                                                <span key={i} className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-medium border border-amber-500/25">
+                                                    {extractLabel(t)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {exhalationNotes.length > 0 && (
+                                    <div className="mb-3">
+                                        <span className="text-xs text-white/40 block mb-1.5">↩️ Arrière-goût</span>
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {exhalationNotes.map((t, i) => (
+                                                <span key={i} className="px-2.5 py-1 rounded-full bg-white/5 text-white/50 text-xs border border-white/10">
+                                                    {extractLabel(t)}
+                                                </span>
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
+                                {tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {tastes.map((t, i) => (
+                                            <span key={i} className="px-2.5 py-1 rounded-full bg-amber-500/15 text-amber-300 text-xs font-medium border border-amber-500/25">
+                                                {extractLabel(t)}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Effets */}
+                        {effects.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    ⚡ Effets ressentis
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {effects.map((e, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-full bg-violet-500/15 text-violet-300 text-sm font-medium border border-violet-500/25">
+                                            {extractLabel(e)}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+
+                        {/* Terpènes */}
+                        {terpenes.length > 0 && (
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    🧪 Terpènes
+                                </h3>
+                                <div className="flex flex-wrap gap-2">
+                                    {terpenes.map((t, i) => (
+                                        <span key={i} className="px-3 py-1.5 rounded-full bg-cyan-500/15 text-cyan-300 text-sm font-medium border border-cyan-500/25">
+                                            {extractLabel(t)}
+                                        </span>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </LiquidCard>
+            )}
+
             {/* Substrat */}
             {substrat && substrat.length > 0 && (
                 <LiquidCard glow="amber" padding="lg">
@@ -316,26 +461,75 @@ export default function ReviewFullDisplay({ review }) {
                 </LiquidCard>
             )}
 
-            {/* Galerie d'images */}
-            {review.images && review.images.length > 1 && (
+            {/* Galerie d'images - interactive with lightbox */}
+            {images.length > 1 && (
                 <LiquidCard glow="purple" padding="lg">
                     <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                         <ImageIcon className="w-5 h-5 text-purple-400" />
                         Galerie
                     </h2>
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                        {review.images.map((img, idx) => (
-                            <div key={idx} className="aspect-square rounded-xl overflow-hidden border border-white/10 group">
+                        {images.map((img, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => { setLightboxImg(img); setLightboxIdx(idx); }}
+                                className="aspect-square rounded-xl overflow-hidden border border-white/10 group relative cursor-pointer"
+                            >
                                 <img
                                     src={img}
                                     alt={`${review.holderName} - Image ${idx + 1}`}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300 cursor-pointer"
+                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
                                     loading="lazy"
                                 />
-                            </div>
+                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                    <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">
+                                        Agrandir
+                                    </span>
+                                </div>
+                            </button>
                         ))}
                     </div>
                 </LiquidCard>
+            )}
+
+            {/* Lightbox */}
+            {lightboxImg && (
+                <div
+                    className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
+                    onClick={() => setLightboxImg(null)}
+                >
+                    <button
+                        onClick={() => setLightboxImg(null)}
+                        className="absolute top-4 right-4 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+                    >
+                        <X className="w-6 h-6" />
+                    </button>
+                    {images.length > 1 && (
+                        <>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); const prev = (lightboxIdx - 1 + images.length) % images.length; setLightboxIdx(prev); setLightboxImg(images[prev]); }}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+                            >
+                                <ChevronLeft className="w-6 h-6" />
+                            </button>
+                            <button
+                                onClick={(e) => { e.stopPropagation(); const next = (lightboxIdx + 1) % images.length; setLightboxIdx(next); setLightboxImg(images[next]); }}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-full bg-white/10 text-white hover:bg-white/20 transition-colors z-10"
+                            >
+                                <ChevronRight className="w-6 h-6" />
+                            </button>
+                        </>
+                    )}
+                    <img
+                        src={lightboxImg}
+                        alt="Agrandir"
+                        className="max-w-full max-h-[85vh] object-contain rounded-xl shadow-2xl"
+                        onClick={(e) => e.stopPropagation()}
+                    />
+                    <div className="absolute bottom-4 text-white/50 text-sm">
+                        {lightboxIdx + 1} / {images.length}
+                    </div>
+                </div>
             )}
         </div>
     )

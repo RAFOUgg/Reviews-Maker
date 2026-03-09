@@ -37,7 +37,11 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = extractPipelines(reviewData);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags + 2); // Un peu plus pour articles
+    const secondaryAromas = asArray(reviewData.secondaryAromas).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags + 2);
+    const dryPuffNotes = asArray(reviewData.dryPuffNotes).slice(0, limits.maxTags);
+    const inhalationNotes = asArray(reviewData.inhalationNotes).slice(0, limits.maxTags);
+    const exhalationNotes = asArray(reviewData.exhalationNotes).slice(0, limits.maxTags);
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags + 2);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
@@ -317,16 +321,40 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Sensory Profile */}
-                {((contentModules.aromas && aromas.length > 0) || (contentModules.tastes && tastes.length > 0)) && (
+                {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) || (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>🌸 Profil Sensoriel</h2>
                         {contentModules.aromas && aromas.length > 0 && (
                             <div className="mb-6">
-                                <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '12px' }}>Arômes</h3>
+                                <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '12px' }}>Arômes dominants</h3>
                                 {renderTags(aromas)}
                             </div>
                         )}
-                        {contentModules.tastes && tastes.length > 0 && (
+                        {contentModules.aromas && secondaryAromas.length > 0 && (
+                            <div className="mb-6">
+                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>Arômes secondaires</h3>
+                                {renderTags(secondaryAromas)}
+                            </div>
+                        )}
+                        {contentModules.tastes && dryPuffNotes.length > 0 && (
+                            <div className="mb-4">
+                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>💨 Tirage à sec</h3>
+                                {renderTags(dryPuffNotes)}
+                            </div>
+                        )}
+                        {contentModules.tastes && inhalationNotes.length > 0 && (
+                            <div className="mb-4">
+                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>🌬️ Inhalation</h3>
+                                {renderTags(inhalationNotes)}
+                            </div>
+                        )}
+                        {contentModules.tastes && exhalationNotes.length > 0 && (
+                            <div className="mb-4">
+                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>↩️ Expiration / Arrière-goût</h3>
+                                {renderTags(exhalationNotes)}
+                            </div>
+                        )}
+                        {contentModules.tastes && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
                             <div>
                                 <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '12px' }}>Goûts</h3>
                                 {renderTags(tastes)}
