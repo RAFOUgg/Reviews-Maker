@@ -125,7 +125,7 @@ async function fetchAPI(url, options = {}) {
     if (!response.ok) {
         const error = await response.json().catch(() => ({ error: 'unknown', message: 'An error occurred' }))
         throw new APIError(
-            error.message || 'Request failed',
+            error.message || error.error || 'Request failed',
             response.status,
             error.error || 'unknown'
         )

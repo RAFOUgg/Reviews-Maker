@@ -52,15 +52,18 @@ const requireAuth = (req, res, next) => {
 /**
  * Validation des données ConcentrateReview
  */
-function validateConcentrateReviewData(data) {
+function validateConcentrateReviewData(data, options = {}) {
+    const { isDraft = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
-    if (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0) {
+    if (!isDraft && (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0)) {
         errors.push('nomCommercial is required')
-    } else {
+    } else if (data.nomCommercial && typeof data.nomCommercial === 'string') {
         cleaned.nomCommercial = data.nomCommercial.trim()
+    } else if (isDraft) {
+        cleaned.nomCommercial = 'Brouillon'
     }
 
     if (data.hashmaker && typeof data.hashmaker === 'string') {
@@ -94,113 +97,104 @@ function validateConcentrateReviewData(data) {
     }
 
     // ===== SECTION 4: Visuel & Technique =====
-    const visualFields = [
-        'couleurTransparence',
-        'viscosite',
-        'pureteVisuelle',
-        'melting',
-        'residus',
-        'pistils',
-        'moisissure'
-    ]
-
-    visualFields.forEach(field => {
+    // Direct fields
+    ;['couleurTransparence', 'pureteVisuelle'].forEach(field => {
         if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+            const val = parseFloat(data[field]); if (!isNaN(val) && val >= 0 && val <= 10) cleaned[field] = val
+        }
+    })
+
+    // Aliased visual fields: schema ← [frontend candidates]
+    const visualAliasMap = {
+        viscosite: ['viscositeVisuelle', 'viscosite'],
+        melting: ['meltingScore', 'melting'],
+        residus: ['residuScore', 'residus'],
+        pistils: ['pistilsScore', 'pistils'],
+        moisissure: ['moisissureScore', 'moisissure']
+    }
+    Object.entries(visualAliasMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal); if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
     // ===== SECTION 5: Odeurs =====
     if (data.fideliteCultivars !== undefined && data.fideliteCultivars !== null && data.fideliteCultivars !== '') {
-        const val = parseFloat(data.fideliteCultivars)
-        if (!isNaN(val) && val >= 0 && val <= 10) {
-            cleaned.fideliteCultivars = val
-        }
+        const val = parseFloat(data.fideliteCultivars); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.fideliteCultivars = val
     }
 
-    if (data.intensiteAromatique !== undefined && data.intensiteAromatique !== null && data.intensiteAromatique !== '') {
-        const val = parseFloat(data.intensiteAromatique)
-        if (!isNaN(val) && val >= 0 && val <= 10) {
-            cleaned.intensiteAromatique = val
-        }
+    // intensiteAromatique — frontend sends intensiteAromeScore or intensiteAromatique
+    const intensiteArome = data.intensiteAromeScore ?? data.intensiteAromatique
+    if (intensiteArome !== undefined && intensiteArome !== null && intensiteArome !== '') {
+        const val = parseFloat(intensiteArome); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.intensiteAromatique = val
     }
 
-    if (data.notesDominantes) {
-        if (Array.isArray(data.notesDominantes)) {
-            cleaned.notesDominantes = JSON.stringify(data.notesDominantes.slice(0, 7))
-        } else if (typeof data.notesDominantes === 'string') {
-            cleaned.notesDominantes = data.notesDominantes
-        }
+    // Notes dominantes — frontend sends notesOdeursDominantes or notesDominantes
+    const notesDomRaw = data.notesOdeursDominantes || data.notesDominantes
+    if (notesDomRaw) {
+        if (typeof notesDomRaw === 'string') {
+            try { cleaned.notesDominantes = JSON.stringify(JSON.parse(notesDomRaw).slice(0, 7)) } catch { cleaned.notesDominantes = notesDomRaw }
+        } else if (Array.isArray(notesDomRaw)) { cleaned.notesDominantes = JSON.stringify(notesDomRaw.slice(0, 7)) }
     }
 
-    if (data.notesSecondaires) {
-        if (Array.isArray(data.notesSecondaires)) {
-            cleaned.notesSecondaires = JSON.stringify(data.notesSecondaires.slice(0, 7))
-        } else if (typeof data.notesSecondaires === 'string') {
-            cleaned.notesSecondaires = data.notesSecondaires
-        }
+    // Notes secondaires — frontend sends notesOdeursSecondaires or notesSecondaires
+    const notesSec = data.notesOdeursSecondaires || data.notesSecondaires
+    if (notesSec) {
+        if (typeof notesSec === 'string') {
+            try { cleaned.notesSecondaires = JSON.stringify(JSON.parse(notesSec).slice(0, 7)) } catch { cleaned.notesSecondaires = notesSec }
+        } else if (Array.isArray(notesSec)) { cleaned.notesSecondaires = JSON.stringify(notesSec.slice(0, 7)) }
     }
 
     // ===== SECTION 6: Texture =====
-    const textureFields = ['durete', 'densiteTactile', 'friabiliteViscositeMelting', 'meltingResidus']
-
-    textureFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends dureteScore, densiteTactileScore, friabiliteScore; schema: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
+    const textureAliasMap = {
+        durete: ['dureteScore', 'durete'],
+        densiteTactile: ['densiteTactileScore', 'densiteTactile'],
+        friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
+        meltingResidus: ['meltingResidus']
+    }
+    Object.entries(textureAliasMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal); if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
     // ===== SECTION 7: Goûts =====
-    const tasteFields = ['intensite', 'agressivitePiquant']
-
-    tasteFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends intensiteGoutScore, agressiviteScore; schema: intensite, agressivitePiquant
+    const tasteSingleMap = {
+        intensite: ['intensiteGoutScore', 'intensite'],
+        agressivitePiquant: ['agressiviteScore', 'agressivitePiquant']
+    }
+    Object.entries(tasteSingleMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal); if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
-    if (data.dryPuff) {
-        if (Array.isArray(data.dryPuff)) {
-            cleaned.dryPuff = JSON.stringify(data.dryPuff.slice(0, 7))
-        } else if (typeof data.dryPuff === 'string') {
-            cleaned.dryPuff = data.dryPuff
-        }
+    const parseListField = (raw, limit) => {
+        if (!raw) return null
+        if (Array.isArray(raw)) return JSON.stringify(raw.slice(0, limit))
+        if (typeof raw === 'string') { try { return JSON.stringify(JSON.parse(raw).slice(0, limit)) } catch { return raw } }
+        return null
     }
 
-    if (data.inhalation) {
-        if (Array.isArray(data.inhalation)) {
-            cleaned.inhalation = JSON.stringify(data.inhalation.slice(0, 7))
-        } else if (typeof data.inhalation === 'string') {
-            cleaned.inhalation = data.inhalation
-        }
-    }
-
-    if (data.expiration) {
-        if (Array.isArray(data.expiration)) {
-            cleaned.expiration = JSON.stringify(data.expiration.slice(0, 7))
-        } else if (typeof data.expiration === 'string') {
-            cleaned.expiration = data.expiration
-        }
-    }
+    const dp = parseListField(data.dryPuffNotes || data.dryPuff, 7); if (dp) cleaned.dryPuff = dp
+    const inh = parseListField(data.inhalationNotes || data.inhalation, 7); if (inh) cleaned.inhalation = inh
+    const exp = parseListField(data.expirationNotes || data.expiration, 7); if (exp) cleaned.expiration = exp
 
     // ===== SECTION 8: Effets =====
-    const effectFields = ['monteeRapidite', 'intensiteEffets']
-
-    effectFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends monteeScore, intensiteEffetScore; schema: monteeRapidite, intensiteEffets
+    const effectSingleMap = {
+        monteeRapidite: ['monteeScore', 'monteeRapidite'],
+        intensiteEffets: ['intensiteEffetScore', 'intensiteEffets']
+    }
+    Object.entries(effectSingleMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal); if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
@@ -269,9 +263,10 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
         bodyData = req.body
     }
 
-    const validation = validateConcentrateReviewData(bodyData)
+    const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
+    const validation = validateConcentrateReviewData(bodyData, { isDraft })
     if (!validation.valid) {
-        return res.status(400).json({ error: 'Validation failed', details: validation.errors })
+        return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
     const cleanedData = validation.cleaned
@@ -357,9 +352,10 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
         bodyData = req.body
     }
 
-    const validation = validateConcentrateReviewData(bodyData)
+    const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
+    const validation = validateConcentrateReviewData(bodyData, { isDraft })
     if (!validation.valid) {
-        return res.status(400).json({ error: 'Validation failed', details: validation.errors })
+        return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
     const cleanedData = validation.cleaned

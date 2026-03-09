@@ -52,16 +52,19 @@ const requireAuth = (req, res, next) => {
 /**
  * Validation des données HashReview
  */
-function validateHashReviewData(data) {
+function validateHashReviewData(data, options = {}) {
+    const { isDraft = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
-    // nomCommercial* (obligatoire)
-    if (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0) {
+    // nomCommercial* (obligatoire sauf brouillon)
+    if (!isDraft && (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0)) {
         errors.push('nomCommercial is required')
-    } else {
+    } else if (data.nomCommercial && typeof data.nomCommercial === 'string' && data.nomCommercial.trim().length > 0) {
         cleaned.nomCommercial = data.nomCommercial.trim()
+    } else if (isDraft) {
+        cleaned.nomCommercial = 'Brouillon'
     }
 
     // hashmaker (optionnel)
@@ -150,27 +153,32 @@ function validateHashReviewData(data) {
     }
 
     // ===== SECTION 4: Visuel & Technique =====
-    // Tous les champs /10
-    const visualFields = [
-        'couleurTransparence',
-        'pureteVisuelle',
-        'densiteVisuelle',
-        'pistils',
-        'moisissure',
-        'graines'
-    ]
-
-    visualFields.forEach(field => {
+    // Frontend sends: couleurTransparence, pureteVisuelle, densiteVisuelle (direct match)
+    // But also sends pistilsScore, moisissureScore, grainesScore (with suffix)
+    const visualSingleFields = ['couleurTransparence', 'pureteVisuelle', 'densiteVisuelle']
+    visualSingleFields.forEach(field => {
         if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
             const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+            if (!isNaN(val) && val >= 0 && val <= 10) cleaned[field] = val
+        }
+    })
+
+    // Fields where frontend sends <field>Score but schema expects <field>
+    const visualScoreMap = {
+        pistils: ['pistilsScore', 'pistils'],
+        moisissure: ['moisissureScore', 'moisissure'],
+        graines: ['grainesScore', 'graines']
+    }
+    Object.entries(visualScoreMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal)
+            if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
     // ===== SECTION 5: Odeurs =====
-    // Fidélité aux cultivars /10
+    // Fidélité aux cultivars /10 — frontend sends fideliteCultivars
     if (data.fideliteCultivars !== undefined && data.fideliteCultivars !== null && data.fideliteCultivars !== '') {
         const val = parseFloat(data.fideliteCultivars)
         if (!isNaN(val) && val >= 0 && val <= 10) {
@@ -178,92 +186,121 @@ function validateHashReviewData(data) {
         }
     }
 
-    // Intensité aromatique /10
-    if (data.intensiteAromatique !== undefined && data.intensiteAromatique !== null && data.intensiteAromatique !== '') {
-        const val = parseFloat(data.intensiteAromatique)
+    // Intensité aromatique /10 — frontend sends intensiteAromeScore or intensiteAromatique
+    const intensiteArome = data.intensiteAromeScore ?? data.intensiteAromatique
+    if (intensiteArome !== undefined && intensiteArome !== null && intensiteArome !== '') {
+        const val = parseFloat(intensiteArome)
         if (!isNaN(val) && val >= 0 && val <= 10) {
             cleaned.intensiteAromatique = val
         }
     }
 
-    // Notes dominantes (max 7)
-    if (data.notesDominantes) {
-        if (Array.isArray(data.notesDominantes)) {
-            cleaned.notesDominantes = JSON.stringify(data.notesDominantes.slice(0, 7))
-        } else if (typeof data.notesDominantes === 'string') {
-            cleaned.notesDominantes = data.notesDominantes
+    // Notes dominantes (max 7) — frontend sends notesOdeursDominantes or notesDominantes
+    const notesDominantesRaw = data.notesOdeursDominantes || data.notesDominantes
+    if (notesDominantesRaw) {
+        if (typeof notesDominantesRaw === 'string') {
+            try {
+                const arr = JSON.parse(notesDominantesRaw)
+                if (Array.isArray(arr)) cleaned.notesDominantes = JSON.stringify(arr.slice(0, 7))
+            } catch {
+                cleaned.notesDominantes = notesDominantesRaw
+            }
+        } else if (Array.isArray(notesDominantesRaw)) {
+            cleaned.notesDominantes = JSON.stringify(notesDominantesRaw.slice(0, 7))
         }
     }
 
-    // Notes secondaires (max 7)
-    if (data.notesSecondaires) {
-        if (Array.isArray(data.notesSecondaires)) {
-            cleaned.notesSecondaires = JSON.stringify(data.notesSecondaires.slice(0, 7))
-        } else if (typeof data.notesSecondaires === 'string') {
-            cleaned.notesSecondaires = data.notesSecondaires
+    // Notes secondaires (max 7) — frontend sends notesOdeursSecondaires or notesSecondaires
+    const notesSecondairesRaw = data.notesOdeursSecondaires || data.notesSecondaires
+    if (notesSecondairesRaw) {
+        if (typeof notesSecondairesRaw === 'string') {
+            try {
+                const arr = JSON.parse(notesSecondairesRaw)
+                if (Array.isArray(arr)) cleaned.notesSecondaires = JSON.stringify(arr.slice(0, 7))
+            } catch {
+                cleaned.notesSecondaires = notesSecondairesRaw
+            }
+        } else if (Array.isArray(notesSecondairesRaw)) {
+            cleaned.notesSecondaires = JSON.stringify(notesSecondairesRaw.slice(0, 7))
         }
     }
 
     // ===== SECTION 6: Texture =====
-    const textureFields = ['durete', 'densiteTactile', 'friabiliteVisco site', 'meltingResidus']
+    // Frontend sends dureteScore, densiteTactileScore, friabiliteScore, meltingScore, residuScore, etc.
+    // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
+    const textureMap = {
+        durete: ['dureteScore', 'durete'],
+        densiteTactile: ['densiteTactileScore', 'densiteTactile'],
+        friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
+        meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus'],
+        collantScore: ['collantScore']
+    }
 
-    textureFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
+    Object.entries(textureMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal)
             if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
+                cleaned[schemaField] = val
             }
         }
     })
 
     // ===== SECTION 7: Goûts =====
-    const tasteFields = ['intensite', 'agressivitePiquant']
-
-    tasteFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends intensiteGoutScore, agressiviteScore; schema expects intensite, agressivitePiquant
+    const tasteSingleMap = {
+        intensite: ['intensiteGoutScore', 'intensite'],
+        agressivitePiquant: ['agressiviteScore', 'agressivitePiquant']
+    }
+    Object.entries(tasteSingleMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal)
+            if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
-    // Dry puff (max 7)
-    if (data.dryPuff) {
-        if (Array.isArray(data.dryPuff)) {
-            cleaned.dryPuff = JSON.stringify(data.dryPuff.slice(0, 7))
-        } else if (typeof data.dryPuff === 'string') {
-            cleaned.dryPuff = data.dryPuff
+    // Dry puff (max 7) — frontend sends dryPuffNotes or dryPuff
+    const dryPuffRaw = data.dryPuffNotes || data.dryPuff
+    if (dryPuffRaw) {
+        if (Array.isArray(dryPuffRaw)) {
+            cleaned.dryPuff = JSON.stringify(dryPuffRaw.slice(0, 7))
+        } else if (typeof dryPuffRaw === 'string') {
+            try { cleaned.dryPuff = JSON.stringify(JSON.parse(dryPuffRaw).slice(0, 7)) } catch { cleaned.dryPuff = dryPuffRaw }
         }
     }
 
-    // Inhalation (max 7)
-    if (data.inhalation) {
-        if (Array.isArray(data.inhalation)) {
-            cleaned.inhalation = JSON.stringify(data.inhalation.slice(0, 7))
-        } else if (typeof data.inhalation === 'string') {
-            cleaned.inhalation = data.inhalation
+    // Inhalation (max 7) — frontend sends inhalationNotes or inhalation
+    const inhalationRaw = data.inhalationNotes || data.inhalation
+    if (inhalationRaw) {
+        if (Array.isArray(inhalationRaw)) {
+            cleaned.inhalation = JSON.stringify(inhalationRaw.slice(0, 7))
+        } else if (typeof inhalationRaw === 'string') {
+            try { cleaned.inhalation = JSON.stringify(JSON.parse(inhalationRaw).slice(0, 7)) } catch { cleaned.inhalation = inhalationRaw }
         }
     }
 
-    // Expiration (max 7)
-    if (data.expiration) {
-        if (Array.isArray(data.expiration)) {
-            cleaned.expiration = JSON.stringify(data.expiration.slice(0, 7))
-        } else if (typeof data.expiration === 'string') {
-            cleaned.expiration = data.expiration
+    // Expiration (max 7) — frontend sends expirationNotes or expiration
+    const expirationRaw = data.expirationNotes || data.expiration
+    if (expirationRaw) {
+        if (Array.isArray(expirationRaw)) {
+            cleaned.expiration = JSON.stringify(expirationRaw.slice(0, 7))
+        } else if (typeof expirationRaw === 'string') {
+            try { cleaned.expiration = JSON.stringify(JSON.parse(expirationRaw).slice(0, 7)) } catch { cleaned.expiration = expirationRaw }
         }
     }
 
     // ===== SECTION 8: Effets =====
-    const effectFields = ['monteeRapidite', 'intensiteEffets']
-
-    effectFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends monteeScore, intensiteEffetScore; schema expects monteeRapidite, intensiteEffets
+    const effectSingleMap = {
+        monteeRapidite: ['monteeScore', 'monteeRapidite'],
+        intensiteEffets: ['intensiteEffetScore', 'intensiteEffets']
+    }
+    Object.entries(effectSingleMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal)
+            if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
@@ -337,9 +374,10 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
     }
 
     // Validation
-    const validation = validateHashReviewData(bodyData)
+    const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
+    const validation = validateHashReviewData(bodyData, { isDraft })
     if (!validation.valid) {
-        return res.status(400).json({ error: 'Validation failed', details: validation.errors })
+        return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
     const cleanedData = validation.cleaned
@@ -433,9 +471,10 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
     }
 
     // Validation
-    const validation = validateHashReviewData(bodyData)
+    const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
+    const validation = validateHashReviewData(bodyData, { isDraft })
     if (!validation.valid) {
-        return res.status(400).json({ error: 'Validation failed', details: validation.errors })
+        return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
     const cleanedData = validation.cleaned

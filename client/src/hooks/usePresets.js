@@ -14,7 +14,7 @@ const API_BASE = import.meta.env.VITE_API_URL || '';
  */
 const checkAuth = async () => {
     try {
-        const response = await fetch(`${API_BASE}/api/users/me`, {
+        const response = await fetch(`${API_BASE}/api/auth/me`, {
             credentials: 'include',
             headers: {
                 'Content-Type': 'application/json'

@@ -673,16 +673,29 @@ model FlowerReview {
   cultureDuration   Int?      // Durée en jours
   cultureSeason     String?   // JSON: ["Printemps", "Été"] ou null
   
+  // ===== RÉCOLTE =====
+  trichomesTranslucides Float?  // % trichomes translucides au moment de la récolte
+  trichomesLaiteux      Float?  // % trichomes laiteux
+  trichomesAmbres       Float?  // % trichomes ambrés
+  modeRecolte           String? // Mode de récolte (manuelle, mécanique, etc.)
+  poidsBrut             Float?  // Poids brut après récolte (g)
+  poidsNet              Float?  // Poids net après défoliation (g)
+
   // ===== DONNÉES ANALYTIQUES =====
   thcPercent      Float?   // Taux THC (%)
   cbdPercent      Float?   // Taux CBD (%)
-  otherCannabinoids String? // JSON: {CBG: 1.2, CBC: 0.5} (mg/g ou %)
+  cbgPercent      Float?   // Taux CBG (%)
+  cbcPercent      Float?   // Taux CBC (%)
+  cbnPercent      Float?   // Taux CBN (%)
+  thcvPercent     Float?   // Taux THCV (%)
+  otherCannabinoids String? // JSON: autres cannabinoïdes (mg/g ou %)
   terpeneProfile  String?  // JSON: Profil terpénique complet (depuis PDF/image)
   labReportUrl    String?  // URL du certificat d'analyse
   
   // ===== EXPÉRIENCE D'UTILISATION =====
   consumptionMethod String? // "Combustion", "Vapeur", "Infusion"
   dosage            Float?  // Dosage estimé (grammes/mg)
+  dosageUnit        String? // Unité de dosage ("g", "mg", etc.)
   effectDuration    String? // HH:MM format
   effectProfiles    String? // JSON: ["anxiolytique", "relaxant", "énergisant"]
   sideEffects       String? // JSON: ["yeux secs", "faim"]

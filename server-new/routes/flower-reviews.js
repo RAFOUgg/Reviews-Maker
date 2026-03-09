@@ -52,23 +52,28 @@ const upload = multer({
 })
 
 // Gestion des erreurs multer (413, field overflow, etc.)
+// IMPORTANT: only handles multer-specific errors; passes all other errors to the global error handler
 const handleMulterError = (err, req, res, next) => {
-    if (err && err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(413).json({ error: 'Image trop grande (max 20 MB par fichier)' })
+    if (!err) return next()
+
+    if (err.code === 'LIMIT_FILE_SIZE') {
+        return res.status(413).json({ error: 'file_too_large', message: 'Image trop grande (max 20 MB par fichier)' })
     }
-    if (err && err.code === 'LIMIT_FIELD_VALUE') {
-        return res.status(413).json({ error: 'Données de formulaire trop volumineuses (champ dépasse 100 MB)' })
+    if (err.code === 'LIMIT_FIELD_VALUE') {
+        return res.status(413).json({ error: 'field_too_large', message: 'Données de formulaire trop volumineuses (champ dépasse 100 MB)' })
     }
-    if (err && err.code === 'LIMIT_FIELD_COUNT') {
-        return res.status(400).json({ error: 'Trop de champs dans le formulaire (max 1000)' })
+    if (err.code === 'LIMIT_FIELD_COUNT') {
+        return res.status(400).json({ error: 'too_many_fields', message: 'Trop de champs dans le formulaire (max 1000)' })
     }
-    if (err && err.code === 'LIMIT_UNEXPECTED_FILE') {
-        return res.status(400).json({ error: 'Fichier inattendu : ' + err.field })
+    if (err.code === 'LIMIT_UNEXPECTED_FILE') {
+        return res.status(400).json({ error: 'unexpected_file', message: 'Fichier inattendu : ' + err.field })
     }
-    if (err) {
-        return res.status(400).json({ error: err.message || 'Erreur upload' })
+    if (err.name === 'MulterError') {
+        return res.status(400).json({ error: 'upload_error', message: err.message || 'Erreur upload' })
     }
-    next()
+    // Non-multer error: pass to the global error handler so it's properly logged
+    // and returned with the correct status code
+    next(err)
 }
 
 // Middleware pour vérifier l'authentification

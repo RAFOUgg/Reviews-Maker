@@ -52,15 +52,18 @@ const requireAuth = (req, res, next) => {
 /**
  * Validation des données EdibleReview
  */
-function validateEdibleReviewData(data) {
+function validateEdibleReviewData(data, options = {}) {
+    const { isDraft = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
-    if (!data.nomProduit || typeof data.nomProduit !== 'string' || data.nomProduit.trim().length === 0) {
+    if (!isDraft && (!data.nomProduit || typeof data.nomProduit !== 'string' || data.nomProduit.trim().length === 0)) {
         errors.push('nomProduit is required')
-    } else {
+    } else if (data.nomProduit && typeof data.nomProduit === 'string') {
         cleaned.nomProduit = data.nomProduit.trim()
+    } else if (isDraft) {
+        cleaned.nomProduit = 'Brouillon'
     }
 
     if (data.typeComestible && typeof data.typeComestible === 'string') {
@@ -102,14 +105,16 @@ function validateEdibleReviewData(data) {
     }
 
     // ===== SECTION 3: Goûts =====
-    const tasteFields = ['intensite', 'agressivitePiquant']
-
-    tasteFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends intensiteGoutScore, agressiviteScore; schema: intensite, agressivitePiquant
+    const tasteSingleMap = {
+        intensite: ['intensiteGoutScore', 'intensite'],
+        agressivitePiquant: ['agressiviteScore', 'agressivitePiquant']
+    }
+    Object.entries(tasteSingleMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal)
+            if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
@@ -123,14 +128,16 @@ function validateEdibleReviewData(data) {
     }
 
     // ===== SECTION 4: Effets =====
-    const effectFields = ['monteeRapidite', 'intensiteEffets']
-
-    effectFields.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 10) {
-                cleaned[field] = val
-            }
+    // Frontend sends monteeScore, intensiteEffetScore; schema: monteeRapidite, intensiteEffets
+    const effectSingleMap = {
+        monteeRapidite: ['monteeScore', 'monteeRapidite'],
+        intensiteEffets: ['intensiteEffetScore', 'intensiteEffets']
+    }
+    Object.entries(effectSingleMap).forEach(([schemaField, candidates]) => {
+        const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')
+        if (rawVal !== undefined) {
+            const val = parseFloat(rawVal)
+            if (!isNaN(val) && val >= 0 && val <= 10) cleaned[schemaField] = val
         }
     })
 
@@ -174,9 +181,10 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
         bodyData = req.body
     }
 
-    const validation = validateEdibleReviewData(bodyData)
+    const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
+    const validation = validateEdibleReviewData(bodyData, { isDraft })
     if (!validation.valid) {
-        return res.status(400).json({ error: 'Validation failed', details: validation.errors })
+        return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
     const cleanedData = validation.cleaned
@@ -262,9 +270,10 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
         bodyData = req.body
     }
 
-    const validation = validateEdibleReviewData(bodyData)
+    const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
+    const validation = validateEdibleReviewData(bodyData, { isDraft })
     if (!validation.valid) {
-        return res.status(400).json({ error: 'Validation failed', details: validation.errors })
+        return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
     const cleanedData = validation.cleaned
