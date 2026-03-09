@@ -23,7 +23,7 @@ function SortablePage({ page, isActive, onClick, onRemove }) {
             <motion.div
                 whileHover={{ scale: 1.02 }}
                 onClick={onClick}
-                className={`p-3 rounded-lg border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${isActive ? ' bg-gradient-to-br dark:/30 dark:/30 ring-2 dark: shadow-lg shadow-purple-500/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover: dark:hover:' }`}
+                className={`p-3 rounded-lg border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${isActive ? ' bg-gradient-to-br dark:/30 dark:/30 ring-2 dark: shadow-lg shadow-purple-500/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover: dark:hover:'}`}
             >
                 <div className="flex items-center gap-3">
                     {/* Drag Handle */}
