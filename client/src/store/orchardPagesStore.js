@@ -42,13 +42,25 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Page de couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder']
+                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType']
             },
             {
-                id: 'details',
-                label: 'Détails complets',
-                icon: '📊',
-                modules: ['categoryRatings', 'typeCulture', 'substratMix', 'aromas', 'tastes', 'effects', 'description']
+                id: 'evaluation',
+                label: 'Évaluations',
+                icon: '⭐',
+                modules: ['categoryRatings', 'description', 'thcLevel', 'cbdLevel', 'dureeEffet']
+            },
+            {
+                id: 'sensory',
+                label: 'Profil Sensoriel',
+                icon: '🌸',
+                modules: ['aromas', 'tastes', 'effects', 'terpenes', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes']
+            },
+            {
+                id: 'production',
+                label: 'Production & Technique',
+                icon: '⚗️',
+                modules: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'pipelineCuring', 'extraData', 'author', 'date']
             }
         ],
         '9:16': [
@@ -75,6 +87,52 @@ export const PAGE_TEMPLATES = {
                 label: 'Détails',
                 icon: '📝',
                 modules: ['description', 'tastes', 'terpenes', 'author', 'date']
+            }
+        ],
+        '4:3': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm']
+            },
+            {
+                id: 'evaluation',
+                label: 'Évaluations',
+                icon: '⭐',
+                modules: ['categoryRatings', 'aromas', 'tastes', 'effects']
+            },
+            {
+                id: 'production',
+                label: 'Production',
+                icon: '⚗️',
+                modules: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'pipelineCuring', 'description', 'author', 'date']
+            }
+        ],
+        'A4': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType']
+            },
+            {
+                id: 'info-culture',
+                label: 'Infos & Culture',
+                icon: '🌱',
+                modules: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'pipelineCuring', 'extraData']
+            },
+            {
+                id: 'evaluation',
+                label: 'Évaluations',
+                icon: '⭐',
+                modules: ['categoryRatings', 'aromas', 'tastes', 'effects', 'terpenes']
+            },
+            {
+                id: 'details',
+                label: 'Détails complets',
+                icon: '📝',
+                modules: ['description', 'dureeEffet', 'thcLevel', 'cbdLevel', 'author', 'date']
             }
         ]
     },
@@ -104,6 +162,78 @@ export const PAGE_TEMPLATES = {
                 icon: '✨',
                 modules: ['description', 'texture', 'author', 'date']
             }
+        ],
+        '16:9': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList']
+            },
+            {
+                id: 'production',
+                label: 'Production',
+                icon: '⚗️',
+                modules: ['pipelineSeparation', 'pipelinePurification', 'categoryRatings']
+            },
+            {
+                id: 'sensory',
+                label: 'Profil Sensoriel',
+                icon: '🌸',
+                modules: ['aromas', 'tastes', 'effects', 'texture']
+            },
+            {
+                id: 'details',
+                label: 'Détails',
+                icon: '📝',
+                modules: ['description', 'pipelineCuring', 'author', 'date']
+            }
+        ],
+        '9:16': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type']
+            },
+            {
+                id: 'production',
+                label: 'Production',
+                icon: '⚗️',
+                modules: ['hashmaker', 'cultivarsList', 'pipelineSeparation']
+            },
+            {
+                id: 'evaluation',
+                label: 'Évaluation',
+                icon: '⭐',
+                modules: ['categoryRatings', 'aromas', 'effects']
+            },
+            {
+                id: 'details',
+                label: 'Détails',
+                icon: '📝',
+                modules: ['tastes', 'texture', 'description', 'author', 'date']
+            }
+        ],
+        '4:3': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList']
+            },
+            {
+                id: 'evaluation',
+                label: 'Évaluation',
+                icon: '⭐',
+                modules: ['categoryRatings', 'aromas', 'tastes', 'effects', 'texture']
+            },
+            {
+                id: 'details',
+                label: 'Détails',
+                icon: '📝',
+                modules: ['pipelineSeparation', 'pipelineCuring', 'description', 'author', 'date']
+            }
         ]
     },
     'Concentré': {
@@ -132,6 +262,78 @@ export const PAGE_TEMPLATES = {
                 icon: '💎',
                 modules: ['description', 'texture', 'terpenes', 'author', 'date']
             }
+        ],
+        '16:9': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'breeder', 'cultivarsList']
+            },
+            {
+                id: 'extraction',
+                label: 'Extraction',
+                icon: '🔬',
+                modules: ['pipelineExtraction', 'pipelinePurification', 'categoryRatings']
+            },
+            {
+                id: 'sensory',
+                label: 'Profil Sensoriel',
+                icon: '🌸',
+                modules: ['aromas', 'tastes', 'effects', 'terpenes']
+            },
+            {
+                id: 'details',
+                label: 'Détails',
+                icon: '📝',
+                modules: ['description', 'texture', 'pipelineCuring', 'author', 'date']
+            }
+        ],
+        '9:16': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type']
+            },
+            {
+                id: 'extraction',
+                label: 'Extraction',
+                icon: '🔬',
+                modules: ['breeder', 'cultivarsList', 'pipelineExtraction']
+            },
+            {
+                id: 'evaluation',
+                label: 'Évaluation',
+                icon: '⭐',
+                modules: ['categoryRatings', 'aromas', 'effects']
+            },
+            {
+                id: 'details',
+                label: 'Détails',
+                icon: '📝',
+                modules: ['tastes', 'texture', 'description', 'author', 'date']
+            }
+        ],
+        '4:3': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'breeder', 'cultivarsList']
+            },
+            {
+                id: 'evaluation',
+                label: 'Évaluation',
+                icon: '⭐',
+                modules: ['categoryRatings', 'aromas', 'tastes', 'effects', 'terpenes']
+            },
+            {
+                id: 'details',
+                label: 'Détails',
+                icon: '📝',
+                modules: ['pipelineExtraction', 'texture', 'description', 'author', 'date']
+            }
         ]
     },
     'Comestible': {
@@ -159,6 +361,72 @@ export const PAGE_TEMPLATES = {
                 label: 'Expérience',
                 icon: '✨',
                 modules: ['description', 'author', 'date']
+            }
+        ],
+        '16:9': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'breeder']
+            },
+            {
+                id: 'recipe',
+                label: 'Recette',
+                icon: '📖',
+                modules: ['typeProduit', 'recipe', 'goutIntensity']
+            },
+            {
+                id: 'effects',
+                label: 'Effets & Expérience',
+                icon: '💥',
+                modules: ['effects', 'saveursProduit', 'saveursCannabis', 'dureeEffet', 'description', 'author', 'date']
+            }
+        ],
+        '9:16': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type']
+            },
+            {
+                id: 'recipe',
+                label: 'Recette',
+                icon: '📖',
+                modules: ['typeProduit', 'breeder', 'recipe']
+            },
+            {
+                id: 'taste-effects',
+                label: 'Goûts & Effets',
+                icon: '😋',
+                modules: ['goutIntensity', 'saveursProduit', 'effects', 'dureeEffet']
+            },
+            {
+                id: 'experience',
+                label: 'Expérience',
+                icon: '✨',
+                modules: ['saveursCannabis', 'description', 'author', 'date']
+            }
+        ],
+        '4:3': [
+            {
+                id: 'cover',
+                label: 'Couverture',
+                icon: '📸',
+                modules: ['image', 'title', 'rating', 'type', 'breeder']
+            },
+            {
+                id: 'recipe-effects',
+                label: 'Recette & Effets',
+                icon: '📖',
+                modules: ['typeProduit', 'recipe', 'goutIntensity', 'saveursProduit', 'effects', 'dureeEffet']
+            },
+            {
+                id: 'experience',
+                label: 'Expérience',
+                icon: '✨',
+                modules: ['saveursCannabis', 'description', 'author', 'date']
             }
         ]
     }

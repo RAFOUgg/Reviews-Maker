@@ -1,16 +1,43 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { useOrchardStore } from '../../../store/orchardStore';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 import TemplateRenderer from '../../export/TemplateRenderer';
+import { RATIO_DIMENSIONS } from '../../../utils/orchardHelpers';
+
+/**
+ * Hook: measure a ref'd container and return the CSS scale needed to fit
+ * a canvas of (canvasW × canvasH) inside it with `padding` px of breathing room.
+ */
+function useScaleToFit(canvasW, canvasH, padding = 48) {
+    const ref = useRef(null);
+    const [scale, setScale] = useState(1);
+
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const ro = new ResizeObserver(() => {
+            const { width, height } = el.getBoundingClientRect();
+            const availW = width - padding * 2;
+            const availH = height - padding * 2;
+            if (availW > 0 && availH > 0) {
+                setScale(Math.min(availW / canvasW, availH / canvasH, 1));
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [canvasW, canvasH, padding]);
+
+    return { ref, scale };
+}
 
 /**
  * Composant d'affichage avec pagination pour le mode multi-pages
  */
 export default function PagedPreviewPane() {
     const previewRef = useRef(null);
-    const [direction, setDirection] = useState(0); // -1 = gauche, 1 = droite
+    const [direction, setDirection] = useState(0);
 
     const config = useOrchardStore((state) => state.config);
     const reviewData = useOrchardStore((state) => state.reviewData);
@@ -22,33 +49,41 @@ export default function PagedPreviewPane() {
     const nextPage = useOrchardPagesStore((state) => state.nextPage);
     const previousPage = useOrchardPagesStore((state) => state.previousPage);
 
-    // Détecter si la pagination est recommandée
+    // Canvas dimensions for scale-to-fit
+    const dims = RATIO_DIMENSIONS[config?.ratio] || RATIO_DIMENSIONS['1:1'];
+    const { ref: areaRef, scale } = useScaleToFit(dims.width, dims.height);
+    const scaledW = Math.round(dims.width * scale);
+    const scaledH = Math.round(dims.height * scale);
+
+    // Helper: renders the TemplateRenderer inside a scale wrapper
+    const renderScaledCanvas = (canvasProps) => (
+        <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
+            <div style={{
+                position: 'absolute', top: 0, left: 0,
+                transform: `scale(${scale})`,
+                transformOrigin: 'top left',
+            }}>
+                <TemplateRenderer {...canvasProps} />
+            </div>
+        </div>
+    );
+
     const paginationRecommended = pages.length > 1 && !pagesEnabled && (
         config.ratio === '1:1' || config.ratio === '9:16' || config.ratio === '4:3'
     );
 
-    // Si le mode pages n'est pas activé, afficher comme avant
+    // Non-paged render path
     if (!pagesEnabled || pages.length === 0) {
         return (
-            <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-auto relative">
-                <div className="w-full h-full flex items-center justify-center p-8">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ duration: 0.3 }}
-                        ref={previewRef}
-                        id="orchard-preview-container"
-                        className="relative"
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            width: 'fit-content',
-                            height: 'fit-content'
-                        }}
-                    >
-                        <TemplateRenderer config={config} reviewData={reviewData} />
-                    </motion.div>
-                </div>
+            <div ref={areaRef} className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden relative flex items-center justify-center">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3 }}
+                    id="orchard-preview-container"
+                >
+                    {renderScaledCanvas({ config, reviewData })}
+                </motion.div>
 
                 {/* Suggestion de pagination si recommandé */}
                 {paginationRecommended && (
@@ -115,12 +150,13 @@ export default function PagedPreviewPane() {
 
     return (
         <div
-            className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden relative"
+            ref={areaRef}
+            className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden relative flex items-center justify-center"
             tabIndex={0}
             onKeyDown={handleKeyDown}
         >
             {/* Preview area with pagination */}
-            <div className="w-full h-full flex items-center justify-center p-8 relative">
+            <div className="w-full h-full flex items-center justify-center p-12 relative">
                 <AnimatePresence initial={false} custom={direction} mode="wait">
                     <motion.div
                         key={currentPageIndex}
@@ -136,17 +172,10 @@ export default function PagedPreviewPane() {
                             mass: 1,
                             duration: 0.5
                         }}
-                        ref={previewRef}
                         id="orchard-preview-container"
                         className="relative"
-                        style={{
-                            maxWidth: '100%',
-                            maxHeight: '100%',
-                            width: 'fit-content',
-                            height: 'fit-content'
-                        }}
                     >
-                        {/* Page info badge - PROFESSIONAL REDESIGN */}
+                        {/* Page info badge */}
                         <motion.div
                             initial={{ opacity: 0, y: -20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -176,12 +205,9 @@ export default function PagedPreviewPane() {
                         </motion.div>
 
                         {/* Template renderer avec modules filtrés selon la page */}
-                        <TemplateRenderer
-                            config={config}
-                            reviewData={reviewData}
-                            activeModules={currentPage.modules}
-                            pageMode={true}
-                        />
+                        <div ref={previewRef}>
+                            {renderScaledCanvas({ config, reviewData, activeModules: currentPage.modules, pageMode: true })}
+                        </div>
                     </motion.div>
                 </AnimatePresence>
 

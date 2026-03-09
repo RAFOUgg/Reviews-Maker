@@ -275,20 +275,21 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
 
     // Effet séparé pour auto-activer le mode pages après chargement
     useEffect(() => {
-        if (reviewData && config.ratio && pages.length > 0) {
+        if (reviewData && config.ratio && pages.length > 1) {
             // Analyser si le contenu nécessite la pagination
-            const needsPagination = (
-                // Formats compacts avec beaucoup de contenu
-                (config.ratio === '1:1' || config.ratio === '9:16' || config.ratio === '4:3') &&
-                (
-                    // Vérifier la quantité de données
-                    (reviewData.categoryRatings && Object.keys(reviewData.categoryRatings).length > 0) ||
-                    (reviewData.aromas?.length > 3) ||
-                    (reviewData.effects?.length > 3) ||
-                    (reviewData.tastes?.length > 3) ||
-                    (reviewData.description?.length > 200) ||
-                    (reviewData.cultivarsList?.length > 1)
-                )
+            const hasRichContent = (
+                (reviewData.categoryRatings && Object.keys(reviewData.categoryRatings).length > 0) ||
+                (reviewData.aromas?.length > 3) ||
+                (reviewData.effects?.length > 3) ||
+                (reviewData.tastes?.length > 3) ||
+                (reviewData.description?.length > 200) ||
+                (reviewData.cultivarsList?.length > 1)
+            );
+
+            // Activer la pagination pour tous les formats quand le contenu est riche,
+            // et toujours pour les templates detailedCard/blogArticle
+            const needsPagination = hasRichContent || (
+                config.template === 'detailedCard' || config.template === 'blogArticle'
             );
 
             // Auto-activer si nécessaire et pas encore activé
@@ -299,7 +300,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 return () => clearTimeout(timer);
             }
         }
-    }, [config.ratio, togglePagesMode, pagesEnabled, pages.length, reviewData?.type, reviewData?.categoryRatings, reviewData?.aromas, reviewData?.effects]);
+    }, [config.ratio, config.template, togglePagesMode, pagesEnabled, pages.length, reviewData?.type, reviewData?.categoryRatings, reviewData?.aromas, reviewData?.effects]);
 
     const handleExport = () => {
         setShowExportModal(true);

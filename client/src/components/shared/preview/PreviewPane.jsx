@@ -1,13 +1,39 @@
-import { useRef } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 import TemplateRenderer from '../../export/TemplateRenderer';
+import { RATIO_DIMENSIONS } from '../../../utils/orchardHelpers';
+
+function useScaleToFit(canvasW, canvasH, padding = 64) {
+    const ref = useRef(null);
+    const [scale, setScale] = useState(1);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const ro = new ResizeObserver(() => {
+            const { width, height } = el.getBoundingClientRect();
+            const availW = width - padding * 2;
+            const availH = height - padding * 2;
+            if (availW > 0 && availH > 0) {
+                setScale(Math.min(availW / canvasW, availH / canvasH, 1));
+            }
+        });
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, [canvasW, canvasH, padding]);
+    return { ref, scale };
+}
 
 export default function PreviewPane() {
     const previewRef = useRef(null);
     const config = useOrchardStore((state) => state.config);
     const reviewData = useOrchardStore((state) => state.reviewData);
     const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
+
+    const dims = RATIO_DIMENSIONS[config?.ratio] || RATIO_DIMENSIONS['1:1'];
+    const { ref: areaRef, scale } = useScaleToFit(dims.width, dims.height);
+    const scaledW = Math.round(dims.width * scale);
+    const scaledH = Math.round(dims.height * scale);
 
     // Validation des données
     if (!reviewData || !config) {
@@ -34,45 +60,45 @@ export default function PreviewPane() {
     }
 
     return (
-        <div className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-auto">
-            <div className={`w-full h-full flex items-center justify-center p-8 ${isPreviewFullscreen ? 'p-12' : 'p-8'}`}>
-                <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    transition={{ duration: 0.3 }}
+        <div
+            ref={areaRef}
+            className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden flex items-center justify-center"
+        >
+            <div className="relative flex items-center justify-center">
+                {/* Preview info badge */}
+                <div className="absolute -top-8 left-0 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400" style={{ zIndex: 10, pointerEvents: 'none' }}>
+                    <div className="px-2 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        {config.template}
+                    </div>
+                    <div className="px-2 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                        {config.ratio}
+                    </div>
+                </div>
+
+                {/* Scale wrapper — outer box takes scaled display size */}
+                <div
                     ref={previewRef}
                     id="orchard-preview-container"
-                    className="relative"
-                    style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        width: 'fit-content',
-                        height: 'fit-content'
-                    }}
+                    style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}
                 >
-                    {/* Preview Info Badge */}
-                    <div className="absolute -top-8 left-0 flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
-                        <div className="px-2 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                            {config.template}
-                        </div>
-                        <div className="px-2 py-1 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-                            {config.ratio}
-                        </div>
+                    {/* Inner — native resolution, scaled via CSS transform */}
+                    <div style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'top left',
+                    }}>
+                        <TemplateRenderer config={config} reviewData={reviewData} />
                     </div>
+                </div>
 
-                    {/* Template Renderer */}
-                    <TemplateRenderer
-                        config={config}
-                        reviewData={reviewData}
-                    />
-
-                    {/* Watermark indicator (if enabled) */}
-                    {config.branding.enabled && (
-                        <div className="absolute -bottom-8 right-0 text-xs text-gray-400 dark:text-gray-500">
-                            Filigrane activé
-                        </div>
-                    )}
-                </motion.div>
+                {/* Watermark indicator */}
+                {config.branding?.enabled && (
+                    <div className="absolute -bottom-8 right-0 text-xs text-gray-400 dark:text-gray-500">
+                        Filigrane activé
+                    </div>
+                )}
             </div>
         </div>
     );
