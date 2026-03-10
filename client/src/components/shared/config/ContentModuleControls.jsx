@@ -128,10 +128,57 @@ function buildComputedCategories(productType) {
 
 
 // ═══════════════════════════════════════════════════════════════════════════════
+// UTILITAIRE — VÉRIFIER SI UN MODULE A DES DONNÉES
+// ═══════════════════════════════════════════════════════════════════════════════
+
+/**
+ * Checks if reviewData contains meaningful data for a given module field.
+ * Supports dot-notation (e.g. 'visual.density') and top-level keys.
+ */
+function moduleHasData(reviewData, moduleId) {
+    if (!reviewData) return false;
+
+    // Helper: check if a value is "filled" (not null/undefined/empty)
+    const isFilled = (v) => {
+        if (v === undefined || v === null || v === '') return false;
+        if (typeof v === 'number') return true;
+        if (typeof v === 'string') return v.trim().length > 0;
+        if (Array.isArray(v)) return v.length > 0;
+        if (typeof v === 'object') return Object.keys(v).length > 0;
+        return Boolean(v);
+    };
+
+    // Dot-notation: e.g. 'visual.density' → check reviewData.visual?.density
+    if (moduleId.includes('.')) {
+        const [section, field] = moduleId.split('.');
+        // Check nested path
+        if (reviewData[section] && typeof reviewData[section] === 'object') {
+            if (isFilled(reviewData[section][field])) return true;
+        }
+        // Also check flattened version (some normalizers flatten)
+        if (isFilled(reviewData[field])) return true;
+        // Check combined key (e.g. analytics.thcLevel → thcLevel, analyticsThcLevel)
+        const camelKey = section + field.charAt(0).toUpperCase() + field.slice(1);
+        if (isFilled(reviewData[camelKey])) return true;
+        return false;
+    }
+
+    // Top-level key
+    if (isFilled(reviewData[moduleId])) return true;
+
+    // Check in extraData
+    if (reviewData.extraData && typeof reviewData.extraData === 'object') {
+        if (isFilled(reviewData.extraData[moduleId])) return true;
+    }
+
+    return false;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT MODULE DRAGGABLE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
+function SortableModule({ id, module, isVisible, onToggle, hasData = null, compact = false }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
 
     const style = {
@@ -154,6 +201,13 @@ function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
                 className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? ' dark: border dark:' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-60'}`}
                 onClick={onToggle}
             >
+                {/* Data availability indicator */}
+                {hasData !== null && (
+                    <span
+                        className={`w-2 h-2 rounded-full flex-shrink-0 ${hasData ? 'bg-green-400' : 'bg-gray-500/40'}`}
+                        title={hasData ? 'Données disponibles' : 'Aucune donnée'}
+                    />
+                )}
                 <span className="text-sm">{module.icon}</span>
                 <span className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
                     {module.name}
@@ -188,6 +242,12 @@ function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
             {/* Icon et label */}
             <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
+                    {hasData !== null && (
+                        <span
+                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${hasData ? 'bg-green-400 shadow-sm shadow-green-400/50' : 'bg-gray-500/30'}`}
+                            title={hasData ? 'Données disponibles' : 'Aucune donnée'}
+                        />
+                    )}
                     <span className="text-lg flex-shrink-0">{module.icon}</span>
                     <span className="font-medium text-gray-900 dark:text-white text-sm truncate">
                         {module.name}
@@ -221,9 +281,10 @@ function SortableModule({ id, module, isVisible, onToggle, compact = false }) {
 // COMPOSANT CATÉGORIE PLIABLE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-function CategorySection({ category, categoryKey, modules, contentModules, onToggle, expanded, onExpandToggle }) {
+function CategorySection({ category, categoryKey, modules, contentModules, onToggle, expanded, onExpandToggle, reviewData }) {
     const activeCount = category.modules.filter(m => contentModules[m]).length;
     const totalCount = category.modules.length;
+    const dataCount = reviewData ? category.modules.filter(m => moduleHasData(reviewData, m)).length : null;
     const colorClass = CATEGORY_COLORS[category.color] || CATEGORY_COLORS.gray;
 
     const toggleAll = (enable) => {
@@ -254,6 +315,12 @@ function CategorySection({ category, categoryKey, modules, contentModules, onTog
                 </div>
                 <div className="flex items-center gap-2">
                     <span className="text-xs opacity-75">{category.description}</span>
+                    {dataCount !== null && (
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${dataCount > 0 ? 'bg-green-500/20 text-green-300' : 'bg-black/10 dark:bg-white/5 text-gray-400'}`}
+                              title={`${dataCount} champ(s) avec données`}>
+                            {dataCount > 0 ? `📊${dataCount}` : '∅'}
+                        </span>
+                    )}
                     <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeCount > 0 ? 'bg-white/50 dark:bg-black/30' : 'bg-black/10 dark:bg-white/10'}`}>
                         {activeCount}/{totalCount}
                     </span>
@@ -298,6 +365,7 @@ function CategorySection({ category, categoryKey, modules, contentModules, onTog
                                             module={module}
                                             isVisible={contentModules[moduleName]}
                                             onToggle={() => onToggle(moduleName)}
+                                            hasData={reviewData ? moduleHasData(reviewData, moduleName) : null}
                                             compact
                                         />
                                     );
@@ -441,6 +509,7 @@ export default function ContentModuleControls() {
 
     const visibleCount = Object.keys(config.contentModules).filter(k => relevantModulesSet.has(k) && config.contentModules[k]).length;
     const totalCount = Array.from(relevantModulesSet).filter(k => k && (config.contentModules.hasOwnProperty(k) || moduleMeta[k])).length;
+    const dataFilledCount = reviewData ? Array.from(relevantModulesSet).filter(k => moduleHasData(reviewData, k)).length : null;
 
     // `moduleMeta` and `humanize` are defined earlier to provide runtime
     // metadata for modules (labels/icons) with sensible fallbacks.
@@ -458,6 +527,11 @@ export default function ContentModuleControls() {
                     </p>
                 </div>
                 <div className="flex items-center gap-2">
+                    {dataFilledCount !== null && (
+                        <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-400 text-xs font-bold" title="Champs avec données">
+                            📊 {dataFilledCount}
+                        </span>
+                    )}
                     <span className="px-3 py-1 rounded-full dark: dark: text-sm font-bold">
                         {visibleCount}/{totalCount}
                     </span>
@@ -523,6 +597,7 @@ export default function ContentModuleControls() {
                                 onToggle={toggleContentModule}
                                 expanded={expandedCategories[category.key] || false}
                                 onExpandToggle={() => toggleCategory(category.key)}
+                                reviewData={reviewData}
                             />
                         );
                     })}
@@ -554,6 +629,7 @@ export default function ContentModuleControls() {
                                         module={moduleMeta[moduleName] || { name: humanize(moduleName), icon: '📦', desc: '' }}
                                         isVisible={config.contentModules[moduleName]}
                                         onToggle={() => toggleContentModule(moduleName)}
+                                        hasData={reviewData ? moduleHasData(reviewData, moduleName) : null}
                                     />
                                 ))}
                             </div>

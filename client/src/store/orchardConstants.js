@@ -53,6 +53,100 @@ export const COLOR_PALETTES = {
     }
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// MODULE PRESETS PAR TEMPLATE — modules auto-activés/désactivés à la sélection
+// ═══════════════════════════════════════════════════════════════════════════════
+export const TEMPLATE_MODULE_PRESETS = {
+    modernCompact: {
+        // Essentiel seulement — aperçu compact
+        enable: [
+            'nomCommercial', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'farm', 'hashmaker', 'type',
+            'analytics.thcLevel', 'analytics.cbdLevel',
+            'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
+            'odeurs.intensity', 'odeurs.dominantNotes',
+            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
+            'gouts.intensity', 'gouts.aggressiveness',
+            'effets.onset', 'effets.intensity', 'effets.effects',
+            'curing',
+        ],
+        disable: [
+            'breeder', 'strainType', 'genetics',
+            'cultureTimelineData', 'cultureTimelineConfig',
+            'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
+            'fertilizationPipeline', 'substratMix', 'processing',
+            'recipe', 'ingredients',
+            'odeurs.complexity', 'odeurs.fidelity', 'odeurs.secondaryNotes',
+            'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
+            'effets.duration',
+            'analytics.terpeneProfile',
+        ],
+    },
+    detailedCard: {
+        // Tout activé — fiche technique complète
+        enable: [
+            'nomCommercial', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'farm', 'hashmaker', 'type', 'breeder', 'strainType', 'genetics',
+            'analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile',
+            'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
+            'visual.transparency', 'visual.viscosity',
+            'odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes',
+            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
+            'texture.malleability', 'texture.friability', 'texture.melting', 'texture.residue', 'texture.viscosity',
+            'gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
+            'effets.onset', 'effets.intensity', 'effets.effects', 'effets.duration',
+            'curing',
+            'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
+            'fertilizationPipeline', 'substratMix', 'processing',
+            'cultureTimelineData', 'cultureTimelineConfig',
+            'recipe', 'ingredients',
+        ],
+        disable: [],
+    },
+    blogArticle: {
+        // Tout activé comme detailedCard
+        enable: [
+            'nomCommercial', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'farm', 'hashmaker', 'type', 'breeder', 'strainType', 'genetics',
+            'analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile',
+            'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
+            'odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes',
+            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
+            'gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
+            'effets.onset', 'effets.intensity', 'effets.effects', 'effets.duration',
+            'curing',
+            'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
+            'cultureTimelineData', 'cultureTimelineConfig',
+        ],
+        disable: [],
+    },
+    socialStory: {
+        // Visuels + impactant — format story
+        enable: [
+            'nomCommercial', 'mainImage', 'images', 'cultivar', 'farm', 'hashmaker', 'type',
+            'analytics.thcLevel', 'analytics.cbdLevel',
+            'visual.colorRating', 'visual.density', 'visual.trichomes',
+            'odeurs.intensity', 'odeurs.dominantNotes',
+            'gouts.intensity',
+            'effets.onset', 'effets.intensity', 'effets.effects',
+            'curing',
+        ],
+        disable: [
+            'breeder', 'strainType', 'genetics',
+            'cultureTimelineData', 'cultureTimelineConfig',
+            'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
+            'fertilizationPipeline', 'substratMix', 'processing',
+            'recipe', 'ingredients',
+            'odeurs.complexity', 'odeurs.fidelity', 'odeurs.secondaryNotes',
+            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
+            'texture.malleability', 'texture.friability', 'texture.melting', 'texture.residue',
+            'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
+            'effets.duration',
+            'analytics.terpeneProfile',
+        ],
+    },
+};
+
 // Templates de base avec leurs configurations
 export const DEFAULT_TEMPLATES = {
     modernCompact: {

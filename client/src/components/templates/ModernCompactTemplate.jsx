@@ -133,6 +133,22 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         );
     };
 
+    // Render empty state hint — subtle placeholder when module is enabled but data is missing
+    const renderEmptyHint = (icon, text) => (
+        <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${spacing.gap}px`,
+            padding: `${padding.card * 0.6}px ${padding.card}px`,
+            borderRadius: `${isSquare ? 6 : 8}px`,
+            border: `1px dashed ${colorWithOpacity(colors.textSecondary, 25)}`,
+            backgroundColor: colorWithOpacity(colors.textSecondary, 5),
+        }}>
+            <span style={{ fontSize: `${fontSize.small}px`, opacity: 0.5 }}>{icon}</span>
+            <span style={{ fontSize: `${fontSize.small * 0.85}px`, color: colors.textSecondary, opacity: 0.45, fontStyle: 'italic' }}>
+                {text}
+            </span>
+        </div>
+    );
+
     // Render info card
     const renderInfoCard = (label, value, icon = '') => (
         <div style={styles.infoCard} className="text-center">
@@ -212,7 +228,23 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         return (
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                 {/* Image */}
-                {contentModules.image && mainImage && (() => {
+                {contentModules.image && (() => {
+                    if (!mainImage) {
+                        return (
+                            <div
+                                className="w-full flex-shrink-0 flex items-center justify-center"
+                                style={{
+                                    borderRadius: `${responsive.image.borderRadius}px`,
+                                    maxHeight: responsive.image.maxHeight,
+                                    height: '120px',
+                                    background: colorWithOpacity(colors.textSecondary, 8),
+                                    border: `1px dashed ${colorWithOpacity(colors.textSecondary, 20)}`,
+                                }}
+                            >
+                                <span style={{ fontSize: '24px', opacity: 0.3 }}>📸</span>
+                            </div>
+                        );
+                    }
                     const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
                     if (showGallery) {
                         return (
@@ -264,7 +296,12 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Rating */}
             {contentModules.rating && (
-                <div className="flex justify-center">{renderStars()}</div>
+                <div className="flex justify-center">
+                    {reviewData.rating != null && !isNaN(parseFloat(reviewData.rating))
+                        ? renderStars()
+                        : renderEmptyHint('⭐', 'Note globale')
+                    }
+                </div>
             )}
 
             {/* Infos principales (THC, CBD, Category) */}
@@ -301,32 +338,38 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             })()}
 
             {/* Category Ratings */}
-            {contentModules.categoryRatings && categoryRatings.length > 0 && (
-                <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.element}px`, flexShrink: 0 }}>
-                    {categoryRatings.map((r, i) => (
-                        <div key={i} className="text-center">
-                            <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{r.icon}</span>
-                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>{r.label}</div>
-                            <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
-                        </div>
-                    ))}
-                </div>
+            {contentModules.categoryRatings && (
+                categoryRatings.length > 0 ? (
+                    <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.element}px`, flexShrink: 0 }}>
+                        {categoryRatings.map((r, i) => (
+                            <div key={i} className="text-center">
+                                <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{r.icon}</span>
+                                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>{r.label}</div>
+                                <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
+                            </div>
+                        ))}
+                    </div>
+                ) : renderEmptyHint('📊', 'Notes par catégorie')
             )}
 
             {/* Effects */}
-            {contentModules.effects && effects.length > 0 && (
-                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
-                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>⚡ Effets</div>
-                    {renderTags(effects)}
-                </div>
+            {contentModules.effects && (
+                effects.length > 0 ? (
+                    <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>⚡ Effets</div>
+                        {renderTags(effects)}
+                    </div>
+                ) : renderEmptyHint('⚡', 'Effets ressentis')
             )}
 
             {/* Aromas */}
-            {contentModules.aromas && aromas.length > 0 && (
-                <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
-                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🌸 Arômes</div>
-                    {renderTags(aromas)}
-                </div>
+            {contentModules.aromas && (
+                aromas.length > 0 ? (
+                    <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🌸 Arômes</div>
+                        {renderTags(aromas)}
+                    </div>
+                ) : renderEmptyHint('🌸', 'Arômes')
             )}
 
             {/* Secondary Aromas */}

@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { COLOR_PALETTES, DEFAULT_TEMPLATES } from './orchardConstants';
+import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS } from './orchardConstants';
 
 // Note: COLOR_PALETTES et DEFAULT_TEMPLATES sont maintenant importés depuis orchardConstants.js
 // pour éviter les problèmes de références circulaires et les re-renders infinis
 
 // Les constantes sont maintenant réexportées pour maintenir la compatibilité
-export { COLOR_PALETTES, DEFAULT_TEMPLATES };
+export { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FORCE RESET: Supprimer localStorage obsolète AVANT que zustand ne charge
@@ -312,13 +312,30 @@ export const useOrchardStore = create(
             reviewData: null,
 
             // Actions pour modifier la configuration
-            setTemplate: (templateId) => set((state) => ({
-                config: {
-                    ...state.config,
-                    template: templateId,
-                    ratio: (get().templates[templateId]?.defaultRatio || DEFAULT_TEMPLATES[templateId]?.defaultRatio || '1:1')
+            setTemplate: (templateId) => set((state) => {
+                const newRatio = (get().templates[templateId]?.defaultRatio || DEFAULT_TEMPLATES[templateId]?.defaultRatio || '1:1');
+                
+                // Auto-configure contentModules based on template preset
+                const preset = TEMPLATE_MODULE_PRESETS[templateId];
+                let newModules = { ...state.config.contentModules };
+                if (preset) {
+                    if (preset.enable) {
+                        preset.enable.forEach(m => { newModules[m] = true; });
+                    }
+                    if (preset.disable) {
+                        preset.disable.forEach(m => { newModules[m] = false; });
+                    }
                 }
-            })),
+                
+                return {
+                    config: {
+                        ...state.config,
+                        template: templateId,
+                        ratio: newRatio,
+                        contentModules: newModules,
+                    }
+                };
+            }),
 
             setRatio: (ratio) => set((state) => ({
                 config: { ...state.config, ratio }
