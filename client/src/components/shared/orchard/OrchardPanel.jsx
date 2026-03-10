@@ -12,6 +12,55 @@ import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
 import { reviewsService } from '../../../services/apiService';
 
+// Must match InteractiveReviewCard RATIO_DIMENSIONS
+const RATIO_DIMS = {
+    '1:1': { width: 800, height: 800 },
+    '16:9': { width: 1920, height: 1080 },
+    '9:16': { width: 1080, height: 1920 },
+    '4:3': { width: 1600, height: 1200 },
+    'A4': { width: 1754, height: 2480 },
+};
+
+/** Renders InteractiveReviewCard at export dimensions, scaled to fit inside the preview area */
+function RatioPreviewWrapper({ ratio, children }) {
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(0.5);
+    const dims = RATIO_DIMS[ratio] || RATIO_DIMS['1:1'];
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(entries => {
+            const { width, height } = entries[0].contentRect;
+            if (width && height) {
+                const s = Math.min(width / dims.width, height / dims.height, 1);
+                setScale(s * 0.95); // 95% to leave some margin
+            }
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [dims.width, dims.height]);
+
+    return (
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center overflow-hidden relative">
+            <div
+                style={{
+                    width: dims.width,
+                    height: dims.height,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'center center',
+                    flexShrink: 0,
+                    borderRadius: 12,
+                    overflow: 'hidden',
+                    boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+                }}
+            >
+                {children}
+            </div>
+        </div>
+    );
+}
+
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
  * sont accessibles de manière cohérente dans les templates
@@ -585,7 +634,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 </div>
                             </motion.div>
                         ) : isPreviewFullscreen ? (
-                            // MODE PLEIN ÉCRAN — HTML interactif
+                            // MODE PLEIN ÉCRAN — aperçu format réel
                             <motion.div
                                 ref={thumbnailRef}
                                 key="fullscreen"
@@ -594,9 +643,11 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
-                                    <InteractiveReviewCard mode="preview" />
-                                </Suspense>
+                                <RatioPreviewWrapper ratio={config.ratio || '1:1'}>
+                                    <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
+                                        <InteractiveReviewCard mode="preview-export" />
+                                    </Suspense>
+                                </RatioPreviewWrapper>
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT — Config à gauche, HTML interactif à droite
@@ -612,15 +663,17 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                     <ConfigPane />
                                 </div>
 
-                                {/* Preview Pane - Right — HTML interactif */}
+                                {/* Preview Pane - Right — aperçu format réel */}
                                 <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0 relative">
                                     {/* Format indicator badge */}
                                     <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] font-mono text-white/60">
                                         {config.ratio || '1:1'}
                                     </div>
-                                    <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
-                                        <InteractiveReviewCard mode="preview" />
-                                    </Suspense>
+                                    <RatioPreviewWrapper ratio={config.ratio || '1:1'}>
+                                        <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
+                                            <InteractiveReviewCard mode="preview-export" />
+                                        </Suspense>
+                                    </RatioPreviewWrapper>
                                 </div>
                             </motion.div>
                         )}

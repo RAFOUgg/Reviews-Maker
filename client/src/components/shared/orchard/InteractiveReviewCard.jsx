@@ -400,6 +400,7 @@ function ExportDataSections({ isVisible, categoryRatings, aromas, secondaryAroma
 }
 
 export default function InteractiveReviewCard({ mode = 'preview' }) {
+    // mode: 'preview' = fluid scrollable, 'export' = fixed pixels with canvas ID, 'preview-export' = fixed pixels without canvas ID
     const config = useOrchardStore(s => s.config);
     const reviewData = useOrchardStore(s => s.reviewData);
 
@@ -426,7 +427,8 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const ratio = config?.ratio || '1:1';
     const rDims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     const rStyle = RATIO_STYLES[ratio] || RATIO_STYLES['1:1'];
-    const isExport = mode === 'export';
+    const isExportLike = mode === 'export' || mode === 'preview-export';
+    const isCanvasCapture = mode === 'export'; // only true export gets the ID for html-to-image
 
     if (!reviewData) return (
         <div className="flex items-center justify-center h-full text-white/30">
@@ -452,15 +454,15 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
     return (
         <div
-            id={isExport ? 'orchard-template-canvas' : undefined}
-            data-width={isExport ? rDims.width : undefined}
-            data-height={isExport ? rDims.height : undefined}
-            data-ratio={isExport ? ratio : undefined}
-            className={isExport ? '' : 'w-full h-full overflow-y-auto custom-scrollbar'}
+            id={isCanvasCapture ? 'orchard-template-canvas' : undefined}
+            data-width={isExportLike ? rDims.width : undefined}
+            data-height={isExportLike ? rDims.height : undefined}
+            data-ratio={isExportLike ? ratio : undefined}
+            className={isExportLike ? '' : 'w-full h-full overflow-y-auto custom-scrollbar'}
             style={{
                 fontFamily: typo.fontFamily || 'Inter, system-ui, sans-serif',
                 '--accent': colors.accent || '#a855f7',
-                ...(isExport ? {
+                ...(isExportLike ? {
                     width: `${rDims.width}px`,
                     height: `${rDims.height}px`,
                     overflow: 'hidden',
@@ -471,10 +473,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                 } : {}),
             }}
         >
-            <div className={isExport ? `w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap}` : `${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
+            <div className={isExportLike ? `w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap}` : `${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
 
                 {/* Two-column wrapper for landscape export ratios */}
-                {isExport && rStyle.cols === 2 ? (
+                {isExportLike && rStyle.cols === 2 ? (
                     <div className="flex gap-6 h-full">
                         {/* Left column: header + image */}
                         <div className={`flex-shrink-0 ${ratio === '16:9' ? 'w-[45%]' : 'w-[40%]'} flex flex-col ${rStyle.gap}`}>
