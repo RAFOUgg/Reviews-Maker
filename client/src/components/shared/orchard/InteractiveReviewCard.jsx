@@ -11,7 +11,7 @@
  * curing details, separation/extraction, recipe/ingredients, pipelines,
  * description, conclusion, and branding.
  */
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 import {
@@ -313,11 +313,11 @@ const RATIO_DIMENSIONS = {
 
 // Responsive style adjustments per ratio
 const RATIO_STYLES = {
-    '1:1':  { cols: 1, fontSize: 'text-sm',  pad: 'p-5',  gap: 'space-y-3', headerSize: 'text-xl',  compact: true },
-    '16:9': { cols: 2, fontSize: 'text-sm',  pad: 'p-6',  gap: 'space-y-3', headerSize: 'text-2xl', compact: false },
-    '9:16': { cols: 1, fontSize: 'text-xs',  pad: 'p-4',  gap: 'space-y-2', headerSize: 'text-lg',  compact: true },
-    '4:3':  { cols: 2, fontSize: 'text-sm',  pad: 'p-5',  gap: 'space-y-3', headerSize: 'text-xl',  compact: false },
-    'A4':   { cols: 1, fontSize: 'text-sm',  pad: 'p-8',  gap: 'space-y-4', headerSize: 'text-2xl', compact: false },
+    '1:1': { cols: 1, fontSize: 'text-sm', pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', compact: true },
+    '16:9': { cols: 2, fontSize: 'text-sm', pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', compact: false },
+    '9:16': { cols: 1, fontSize: 'text-xs', pad: 'p-4', gap: 'space-y-2', headerSize: 'text-lg', compact: true },
+    '4:3': { cols: 2, fontSize: 'text-sm', pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', compact: false },
+    'A4': { cols: 1, fontSize: 'text-sm', pad: 'p-8', gap: 'space-y-4', headerSize: 'text-2xl', compact: false },
 };
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -462,20 +462,55 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const isCanvasCapture = mode === 'export';
     const isCompact = isExportLike ? rStyle.compact : tStyle.compact;
 
-    // ── Pagination (export overflow detection) ───────────────────────────────
-    const contentRef = useRef(null);
-    const [totalPages, setTotalPages] = useState(1);
+    // ── Pagination (export capture mode only: distribute sections across pages) ──
+    const measureRef = useRef(null);
+    const [pages, setPages] = useState([]);
+    const [paginationReady, setPaginationReady] = useState(false);
+
+    // Measure sections and distribute into pages after initial render
+    const paginateSections = useCallback(() => {
+        if (!isCanvasCapture || !measureRef.current) return;
+        const container = measureRef.current;
+        const children = Array.from(container.children);
+        if (children.length === 0) return;
+
+        const pageH = rDims.height;
+        // Account for padding (parse rStyle.pad e.g. 'p-5' → ~20px, 'p-6' → ~24px, 'p-8' → ~32px)
+        const padMap = { 'p-4': 16, 'p-5': 20, 'p-6': 24, 'p-8': 32 };
+        const padPx = (padMap[rStyle.pad] || 20) * 2;
+        const usableH = pageH - padPx;
+        // Gap between sections (parse rStyle.gap e.g. 'space-y-2' → 8, 'space-y-3' → 12, 'space-y-4' → 16)
+        const gapMap = { 'space-y-2': 8, 'space-y-3': 12, 'space-y-4': 16 };
+        const gapPx = gapMap[rStyle.gap] || 12;
+
+        const result = [[]];
+        let currentH = 0;
+        let pageIdx = 0;
+
+        children.forEach((child, i) => {
+            const h = child.getBoundingClientRect().height;
+            const gap = i > 0 ? gapPx : 0;
+            if (currentH + h + gap > usableH && result[pageIdx].length > 0) {
+                // Start new page
+                pageIdx++;
+                result.push([]);
+                currentH = 0;
+            }
+            result[pageIdx].push(i);
+            currentH += h + gap;
+        });
+
+        setPages(result);
+        setPaginationReady(true);
+    }, [isCanvasCapture, rDims.height, rStyle.pad, rStyle.gap]);
 
     useEffect(() => {
-        if (!isExportLike || !contentRef.current) return;
-        const check = () => {
-            const scrollH = contentRef.current.scrollHeight;
-            const pages = Math.max(1, Math.ceil(scrollH / rDims.height));
-            setTotalPages(pages);
-        };
-        const timer = setTimeout(check, 300);
+        if (!isCanvasCapture) return;
+        setPaginationReady(false);
+        // Wait for sections to render in the hidden measure container
+        const timer = setTimeout(paginateSections, 400);
         return () => clearTimeout(timer);
-    }, [isExportLike, reviewData, config, rDims.height]);
+    }, [isCanvasCapture, allSections, paginateSections]);
 
     // ── Early return if no data ──────────────────────────────────────────────
     if (!reviewData) return (
@@ -900,6 +935,49 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         '--accent': colors.accent || '#a855f7',
     };
 
+    // ── Helper: render a single export page ────────────────────────────────
+    const renderPage = (sectionIndices, pageNum, totalPgs, extraProps = {}) => {
+        const pageSections = sectionIndices.map(i => allSections[i]).filter(Boolean);
+        return (
+            <div
+                key={`page-${pageNum}`}
+                id={isCanvasCapture ? `orchard-template-canvas${pageNum === 1 ? '' : `-${pageNum}`}` : undefined}
+                data-width={rDims.width}
+                data-height={rDims.height}
+                data-ratio={ratio}
+                data-page={pageNum}
+                data-total-pages={totalPgs}
+                className="orchard-export-page"
+                style={{
+                    ...rootStyle,
+                    width: `${rDims.width}px`,
+                    height: `${rDims.height}px`,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                    contain: 'layout style paint',
+                    flexShrink: 0,
+                }}
+            >
+                <div className={`w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap} ${extraProps.className || ''}`} style={extraProps.style}>
+                    {extraProps.renderContent ? extraProps.renderContent(pageSections) : pageSections}
+                </div>
+                {/* Page number indicator */}
+                {totalPgs > 1 && (
+                    <div className="absolute bottom-2 right-3 px-2 py-0.5 rounded-full bg-black/40 text-white/60 text-[10px] font-mono">
+                        {pageNum}/{totalPgs}
+                    </div>
+                )}
+                {/* Watermark */}
+                {config?.branding?.showWatermark && config?.branding?.watermarkText && (
+                    <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
+                        {config.branding.watermarkText}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
     /* ══════════════════════════════════════════════════════════════════════════
        EXPORT TWO-COLUMN LAYOUT (16:9, 4:3)
        ══════════════════════════════════════════════════════════════════════════ */
@@ -915,6 +993,9 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                 data-width={rDims.width}
                 data-height={rDims.height}
                 data-ratio={ratio}
+                data-page="1"
+                data-total-pages="1"
+                className="orchard-export-page"
                 style={{
                     ...rootStyle,
                     width: `${rDims.width}px`,
@@ -934,16 +1015,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         {imageSection}
                     </div>
                     {/* Right column */}
-                    <div className={`flex-1 overflow-hidden ${rStyle.gap}`} ref={contentRef}>
+                    <div className={`flex-1 overflow-hidden ${rStyle.gap}`}>
                         {dataSections}
                     </div>
                 </div>
-                {/* Page indicator */}
-                {totalPages > 1 && (
-                    <div className="absolute bottom-2 right-3 px-2 py-0.5 rounded-full bg-black/40 text-white/60 text-[10px] font-mono">
-                        1/{totalPages}
-                    </div>
-                )}
                 {/* Watermark */}
                 {config?.branding?.showWatermark && config?.branding?.watermarkText && (
                     <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
@@ -955,12 +1030,11 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     }
 
     /* ══════════════════════════════════════════════════════════════════════════
-       EXPORT SINGLE-COLUMN LAYOUT (1:1, 9:16, A4)
+       PREVIEW-EXPORT SINGLE-COLUMN (for RatioPreviewWrapper / MiniPreview)
        ══════════════════════════════════════════════════════════════════════════ */
-    if (isExportLike) {
+    if (mode === 'preview-export' && rStyle.cols !== 2) {
         return (
             <div
-                id={isCanvasCapture ? 'orchard-template-canvas' : undefined}
                 data-width={rDims.width}
                 data-height={rDims.height}
                 data-ratio={ratio}
@@ -975,20 +1049,54 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                     flexShrink: 0,
                 }}
             >
-                <div className={`w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap}`} ref={contentRef}>
+                <div className={`w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap}`}>
                     {allSections}
                 </div>
-                {totalPages > 1 && (
-                    <div className="absolute bottom-2 right-3 px-2 py-0.5 rounded-full bg-black/40 text-white/60 text-[10px] font-mono">
-                        1/{totalPages}
-                    </div>
-                )}
                 {config?.branding?.showWatermark && config?.branding?.watermarkText && (
                     <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
                         {config.branding.watermarkText}
                     </div>
                 )}
             </div>
+        );
+    }
+
+    /* ══════════════════════════════════════════════════════════════════════════
+       EXPORT SINGLE-COLUMN LAYOUT (1:1, 9:16, A4) — WITH PAGINATION
+       ══════════════════════════════════════════════════════════════════════════ */
+    if (isExportLike) {
+        const totalPgs = paginationReady ? pages.length : 1;
+
+        return (
+            <>
+                {/* Hidden container to measure section heights for pagination */}
+                <div
+                    ref={measureRef}
+                    style={{
+                        ...rootStyle,
+                        width: `${rDims.width}px`,
+                        position: 'absolute',
+                        left: '-99999px',
+                        top: 0,
+                        visibility: 'hidden',
+                        pointerEvents: 'none',
+                    }}
+                    className={`${rStyle.pad} ${rStyle.gap}`}
+                >
+                    {allSections}
+                </div>
+
+                {/* Render paginated pages */}
+                {paginationReady && pages.length > 0
+                    ? pages.map((sectionIndices, pIdx) =>
+                        renderPage(sectionIndices, pIdx + 1, totalPgs)
+                    )
+                    : (
+                        /* Fallback: single page until pagination is calculated */
+                        renderPage(allSections.map((_, i) => i), 1, 1)
+                    )
+                }
+            </>
         );
     }
 

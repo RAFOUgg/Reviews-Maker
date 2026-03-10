@@ -107,27 +107,27 @@ export default function ExportModal({ onClose }) {
 
         try {
             setExportProgress(10);
-            // Always use the template canvas for exact dimensions
-            let container = document.getElementById('orchard-template-canvas');
 
-            if (!container) {
-                // Fallback to preview container if canvas not found
-                container = document.getElementById('orchard-preview-container');
-            }
+            // Gather all export pages (pagination support)
+            const allPages = Array.from(document.querySelectorAll('.orchard-export-page'));
 
-            if (!container) {
-                throw new Error('Conteneur d\'aperçu introuvable');
+            // Fallback: single canvas element
+            if (allPages.length === 0) {
+                let container = document.getElementById('orchard-template-canvas')
+                    || document.getElementById('orchard-preview-container');
+                if (!container) throw new Error('Conteneur d\'aperçu introuvable');
+                allPages.push(container);
             }
 
             switch (selectedFormat) {
                 case 'png':
-                    await exportPNG(container);
+                    await exportPNG(allPages);
                     break;
                 case 'jpeg':
-                    await exportJPEG(container);
+                    await exportJPEG(allPages);
                     break;
                 case 'pdf':
-                    await exportPDF(container);
+                    await exportPDF(allPages);
                     break;
                 case 'markdown':
                     await exportMarkdown();
@@ -147,242 +147,199 @@ export default function ExportModal({ onClose }) {
         }
     };
 
-    const exportPNG = async (container) => {
-        // Get original dimensions from the template canvas
+    /** Clone a page element into an off-screen container and return [target, cleanup] */
+    const prepareCapture = (container) => {
         const originalWidth = parseInt(container.dataset.width || container.style.width) || container.offsetWidth;
         const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
 
-        console.log('📸 Export PNG - Original dimensions:', { originalWidth, originalHeight });
+        const exportContainer = document.createElement('div');
+        exportContainer.style.cssText = 'position:fixed;left:-99999px;top:0;z-index:-1;opacity:0;pointer-events:none;';
+        document.body.appendChild(exportContainer);
+
+        const target = container.cloneNode(true);
+        if (!exportOptions.includeBranding) {
+            target.querySelectorAll('.orchard-branding').forEach(b => b.remove());
+        }
+
+        const w = selectedScope === 'openGraph' ? 1200 : originalWidth;
+        const h = selectedScope === 'openGraph' ? 630 : originalHeight;
+
+        Object.assign(target.style, {
+            width: `${w}px`, height: `${h}px`,
+            maxWidth: 'none', maxHeight: 'none', minWidth: 'none', minHeight: 'none',
+            transform: 'none', position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
+        });
+
+        exportContainer.appendChild(target);
+        return { target, exportContainer, width: w, height: h };
+    };
+
+    /** Preload fonts and wait for render */
+    const waitForRender = async (target) => {
+        await preloadFonts();
+        if (config?.typography?.fontFamily) await preloadSpecificFont(config.typography.fontFamily);
+        await document.fonts.ready;
+        target.offsetHeight; // force reflow
+        await new Promise(resolve => setTimeout(resolve, 600));
+    };
+
+    const exportPNG = async (pages) => {
         setExportProgress(20);
         setExportStatus('📦 Préparation du contenu...');
 
-        // Create a dedicated export container that won't be scaled
-        const exportContainer = document.createElement('div');
-        exportContainer.style.position = 'fixed';
-        exportContainer.style.left = '-99999px';
-        exportContainer.style.top = '0';
-        exportContainer.style.zIndex = '-1';
-        exportContainer.style.opacity = '0';
-        exportContainer.style.pointerEvents = 'none';
-        document.body.appendChild(exportContainer);
-
-        // Clone the template with all styles
-        const target = container.cloneNode(true);
-
-        // Remove branding if needed
-        if (!exportOptions.includeBranding) {
-            const brands = target.querySelectorAll('.orchard-branding');
-            brands.forEach(b => b.remove());
-        }
-
-        // Force EXACT dimensions without any scaling or constraints
-        target.style.width = selectedScope === 'openGraph' ? '1200px' : `${originalWidth}px`;
-        target.style.height = selectedScope === 'openGraph' ? '630px' : `${originalHeight}px`;
-        target.style.maxWidth = 'none';
-        target.style.maxHeight = 'none';
-        target.style.minWidth = 'none';
-        target.style.minHeight = 'none';
-        target.style.transform = 'none';
-        target.style.position = 'relative';
-        target.style.overflow = 'hidden'; // Prevent any overflow
-        target.style.boxSizing = 'border-box';
-
-        exportContainer.appendChild(target);
-
-        setExportProgress(40);
-        setExportStatus('🔤 Chargement des polices...');
-
-        // Preload fonts - CRITICAL for professional export
-        await preloadFonts();
-        if (config?.typography?.fontFamily) {
-            await preloadSpecificFont(config.typography.fontFamily);
-        }
-
-        setExportProgress(60);
-        setExportStatus('🖼️ Chargement des images...');
-
-        // Wait for all fonts, images and resources
-        await document.fonts.ready;        // Force multiple reflows to ensure everything is rendered
-        target.offsetHeight;
-        target.scrollHeight;
-
-        // Extra time for images and heavy content to render
-        await new Promise(resolve => setTimeout(resolve, 800)); const finalWidth = selectedScope === 'openGraph' ? 1200 : originalWidth;
-        const finalHeight = selectedScope === 'openGraph' ? 630 : originalHeight;
+        const { toPng } = await import('html-to-image');
         const pixelRatio = selectedScope === 'openGraph' ? 3 : exportOptions.pngScale;
+        const results = [];
 
-        console.log('📸 Capturing with:', { finalWidth, finalHeight, pixelRatio, transparent: exportOptions.pngTransparent });
+        for (let i = 0; i < pages.length; i++) {
+            setExportStatus(`📸 Capture page ${i + 1}/${pages.length}...`);
+            setExportProgress(20 + Math.round((i / pages.length) * 60));
 
-        setExportProgress(80);
-        setExportStatus('📸 Capture en cours...');
+            const { target, exportContainer, width, height } = prepareCapture(pages[i]);
+            await waitForRender(target);
 
-        try {
-            const { toPng } = await import('html-to-image');
-            const dataUrl = await toPng(target, {
-                cacheBust: true,
-                pixelRatio: pixelRatio,
-                backgroundColor: exportOptions.pngTransparent ? 'transparent' : '#ffffff',
-                width: finalWidth,
-                height: finalHeight,
-                style: {
-                    width: `${finalWidth}px`,
-                    height: `${finalHeight}px`,
-                    transform: 'none'
-                },
-                // Include all fonts and styles
-                fontEmbedCSS: true,
-                skipAutoScale: true
-            });
+            try {
+                const dataUrl = await toPng(target, {
+                    cacheBust: true,
+                    pixelRatio,
+                    backgroundColor: exportOptions.pngTransparent ? 'transparent' : undefined,
+                    width, height,
+                    style: { width: `${width}px`, height: `${height}px`, transform: 'none' },
+                    fontEmbedCSS: true,
+                    skipAutoScale: true,
+                });
+                results.push(dataUrl);
+            } finally {
+                setTimeout(() => exportContainer.remove(), 500);
+            }
+        }
 
-            setExportProgress(95);
-            setExportStatus('💾 Téléchargement...');
+        setExportProgress(90);
+        setExportStatus('💾 Téléchargement...');
 
+        if (results.length === 1) {
+            // Single page — direct download
             const link = document.createElement('a');
             link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.png`;
-            link.href = dataUrl;
+            link.href = results[0];
             link.click();
-
-            setExportProgress(100);
-            console.log('✅ Export PNG success');
-        } catch (error) {
-            console.error('❌ Export PNG failed:', error);
-            throw error;
-        } finally {
-            // Cleanup
-            setTimeout(() => exportContainer.remove(), 1000);
+        } else {
+            // Multiple pages — download each individually
+            for (let i = 0; i < results.length; i++) {
+                const link = document.createElement('a');
+                link.download = `review-${reviewData.title || 'export'}-p${i + 1}-${Date.now()}.png`;
+                link.href = results[i];
+                link.click();
+                await new Promise(r => setTimeout(r, 300));
+            }
         }
+
+        setExportProgress(100);
+        console.log(`✅ Export PNG success (${results.length} page(s))`);
     };
 
-    const exportJPEG = async (container) => {
-        const originalWidth = parseInt(container.dataset.width || container.style.width) || container.offsetWidth;
-        const originalHeight = parseInt(container.dataset.height || container.style.height) || container.offsetHeight;
+    const exportJPEG = async (pages) => {
+        const { toJpeg } = await import('html-to-image');
+        const results = [];
 
-        console.log('📸 Export JPEG - Original dimensions:', { originalWidth, originalHeight });
+        for (let i = 0; i < pages.length; i++) {
+            setExportStatus(`📸 Capture page ${i + 1}/${pages.length}...`);
+            setExportProgress(20 + Math.round((i / pages.length) * 60));
 
-        const exportContainer = document.createElement('div');
-        exportContainer.style.position = 'fixed';
-        exportContainer.style.left = '-99999px';
-        exportContainer.style.top = '0';
-        exportContainer.style.zIndex = '-1';
-        exportContainer.style.opacity = '0';
-        exportContainer.style.pointerEvents = 'none';
-        document.body.appendChild(exportContainer);
+            const { target, exportContainer, width, height } = prepareCapture(pages[i]);
+            await waitForRender(target);
 
-        const target = container.cloneNode(true);
-
-        if (!exportOptions.includeBranding) {
-            const brands = target.querySelectorAll('.orchard-branding');
-            brands.forEach(b => b.remove());
+            try {
+                const dataUrl = await toJpeg(target, {
+                    cacheBust: true,
+                    quality: exportOptions.jpegQuality,
+                    backgroundColor: '#ffffff',
+                    width, height,
+                    style: { width: `${width}px`, height: `${height}px`, transform: 'none' },
+                    fontEmbedCSS: true,
+                    skipAutoScale: true,
+                });
+                results.push(dataUrl);
+            } finally {
+                setTimeout(() => exportContainer.remove(), 500);
+            }
         }
 
-        target.style.width = selectedScope === 'openGraph' ? '1200px' : `${originalWidth}px`;
-        target.style.height = selectedScope === 'openGraph' ? '630px' : `${originalHeight}px`;
-        target.style.maxWidth = 'none';
-        target.style.maxHeight = 'none';
-        target.style.minWidth = 'none';
-        target.style.minHeight = 'none';
-        target.style.transform = 'none';
-        target.style.position = 'relative';
-        target.style.overflow = 'hidden';
-        target.style.boxSizing = 'border-box';
+        setExportProgress(90);
+        setExportStatus('💾 Téléchargement...');
 
-        exportContainer.appendChild(target);
-
-        // Preload fonts for JPEG too
-        await preloadFonts();
-        if (config?.typography?.fontFamily) {
-            await preloadSpecificFont(config.typography.fontFamily);
-        }
-
-        await document.fonts.ready;
-        target.offsetHeight;
-        target.scrollHeight;
-        await new Promise(resolve => setTimeout(resolve, 800));
-
-        const finalWidth = selectedScope === 'openGraph' ? 1200 : originalWidth;
-        const finalHeight = selectedScope === 'openGraph' ? 630 : originalHeight;
-
-        console.log('📸 Capturing JPEG with:', { finalWidth, finalHeight, quality: exportOptions.jpegQuality });
-
-        try {
-            const { toJpeg } = await import('html-to-image');
-            const dataUrl = await toJpeg(target, {
-                cacheBust: true,
-                quality: exportOptions.jpegQuality,
-                backgroundColor: '#ffffff',
-                width: finalWidth,
-                height: finalHeight,
-                style: {
-                    width: `${finalWidth}px`,
-                    height: `${finalHeight}px`,
-                    transform: 'none'
-                },
-                fontEmbedCSS: true,
-                skipAutoScale: true
-            });
-
+        for (let i = 0; i < results.length; i++) {
             const link = document.createElement('a');
-            link.download = `review-${reviewData.title || 'export'}-${selectedScope === 'openGraph' ? 'og-' : ''}${Date.now()}.jpg`;
-            link.href = dataUrl;
+            const suffix = results.length > 1 ? `-p${i + 1}` : '';
+            link.download = `review-${reviewData.title || 'export'}${suffix}-${Date.now()}.jpg`;
+            link.href = results[i];
             link.click();
-
-            console.log('✅ Export JPEG success');
-        } catch (error) {
-            console.error('❌ Export JPEG failed:', error);
-            throw error;
-        } finally {
-            setTimeout(() => exportContainer.remove(), 1000);
+            if (results.length > 1) await new Promise(r => setTimeout(r, 300));
         }
+
+        setExportProgress(100);
+        console.log(`✅ Export JPEG success (${results.length} page(s))`);
     };
 
-    const exportPDF = async (container) => {
+    const exportPDF = async (pages) => {
         const { toPng } = await import('html-to-image');
-        const dataUrl = await toPng(container, {
-            cacheBust: true,
-            pixelRatio: 2
-        });
-
         const { jsPDF } = await import('jspdf');
+
         const pdf = new jsPDF({
             orientation: exportOptions.pdfOrientation,
             unit: 'mm',
-            format: exportOptions.pdfFormat
+            format: exportOptions.pdfFormat,
         });
-
         const pageWidth = pdf.internal.pageSize.getWidth();
         const pageHeight = pdf.internal.pageSize.getHeight();
 
-        // Calculer les dimensions de l'image pour qu'elle rentre dans la page
-        const img = new Image();
-        img.src = dataUrl;
-        await img.decode();
+        for (let i = 0; i < pages.length; i++) {
+            setExportStatus(`📸 Capture page ${i + 1}/${pages.length}...`);
+            setExportProgress(20 + Math.round((i / pages.length) * 60));
 
-        const imgRatio = img.width / img.height;
-        const pageRatio = pageWidth / pageHeight;
+            const { target, exportContainer } = prepareCapture(pages[i]);
+            await waitForRender(target);
 
-        let imgWidth, imgHeight;
-        if (imgRatio > pageRatio) {
-            imgWidth = pageWidth - 20;
-            imgHeight = imgWidth / imgRatio;
-        } else {
-            imgHeight = pageHeight - 20;
-            imgWidth = imgHeight * imgRatio;
+            let dataUrl;
+            try {
+                dataUrl = await toPng(target, { cacheBust: true, pixelRatio: 2 });
+            } finally {
+                setTimeout(() => exportContainer.remove(), 500);
+            }
+
+            const img = new Image();
+            img.src = dataUrl;
+            await img.decode();
+
+            const imgRatio = img.width / img.height;
+            const pdfRatio = pageWidth / pageHeight;
+            let imgW, imgH;
+            if (imgRatio > pdfRatio) {
+                imgW = pageWidth - 20;
+                imgH = imgW / imgRatio;
+            } else {
+                imgH = pageHeight - 20;
+                imgW = imgH * imgRatio;
+            }
+            const x = (pageWidth - imgW) / 2;
+            const y = (pageHeight - imgH) / 2;
+
+            if (i > 0) pdf.addPage();
+            pdf.addImage(dataUrl, 'PNG', x, y, imgW, imgH);
         }
 
-        const x = (pageWidth - imgWidth) / 2;
-        const y = (pageHeight - imgHeight) / 2;
-
-        pdf.addImage(dataUrl, 'PNG', x, y, imgWidth, imgHeight);
-
-        // Ajouter les métadonnées
         pdf.setProperties({
             title: reviewData.title || 'Review',
             author: reviewData.author || 'Orchard Studio',
             subject: 'Review Export',
-            creator: 'Reviews-Maker Orchard Studio'
+            creator: 'Reviews-Maker Orchard Studio',
         });
 
+        setExportProgress(95);
+        setExportStatus('💾 Téléchargement...');
         pdf.save(`review-${reviewData.title || 'export'}-${Date.now()}.pdf`);
+        setExportProgress(100);
+        console.log(`✅ Export PDF success (${pages.length} page(s))`);
     };
 
     const exportMarkdown = async () => {
@@ -502,246 +459,246 @@ export default function ExportModal({ onClose }) {
                         </div>
                         {/* Right: options */}
                         <div className="flex-1 space-y-6 overflow-y-auto">
-                        {/* Scope selection (what to export) */}
-                        <div>
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
-                            <div className="flex gap-2">
-                                <button onClick={() => setSelectedScope('full')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'full' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Entrée complète</button>
-                                <button onClick={() => setSelectedScope('canvas')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'canvas' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Canvas uniquement</button>
-                                <button onClick={() => setSelectedScope('openGraph')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'openGraph' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Social (Open Graph)</button>
+                            {/* Scope selection (what to export) */}
+                            <div>
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
+                                <div className="flex gap-2">
+                                    <button onClick={() => setSelectedScope('full')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'full' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Entrée complète</button>
+                                    <button onClick={() => setSelectedScope('canvas')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'canvas' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Canvas uniquement</button>
+                                    <button onClick={() => setSelectedScope('openGraph')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'openGraph' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Social (Open Graph)</button>
+                                </div>
+                                <p className="text-xs text-gray-400 mt-2">Choisissez si vous voulez exporter l'aperçu complet, le rendu (canvas) seulement, ou optimiser l'export pour les réseaux sociaux.</p>
                             </div>
-                            <p className="text-xs text-gray-400 mt-2">Choisissez si vous voulez exporter l'aperçu complet, le rendu (canvas) seulement, ou optimiser l'export pour les réseaux sociaux.</p>
-                        </div>
-                        {/* Format selection */}
-                        <div>
-                            <div className="flex items-center justify-between mb-3">
-                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Format d'export</h4>
-                                <span className="text-xs px-2 py-1 rounded-full dark: dark:">
-                                    {accountFeatures.name || 'Amateur'}
-                                </span>
+                            {/* Format selection */}
+                            <div>
+                                <div className="flex items-center justify-between mb-3">
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Format d'export</h4>
+                                    <span className="text-xs px-2 py-1 rounded-full dark: dark:">
+                                        {accountFeatures.name || 'Amateur'}
+                                    </span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-3">
+                                    {availableFormats.map((format) => (
+                                        <motion.button
+                                            key={format.id}
+                                            whileHover={{ scale: 1.02 }}
+                                            whileTap={{ scale: 0.98 }}
+                                            onClick={() => setSelectedFormat(format.id)}
+                                            className={`p-4 rounded-xl text-left transition-all border-2 ${selectedFormat === format.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:'}`}
+                                        >
+                                            <div className="flex items-start justify-between mb-2">
+                                                <span className="text-3xl">{format.icon}</span>
+                                                <div className="flex items-center gap-1">
+                                                    {format.premium && (
+                                                        <span className="text-xs px-1.5 py-0.5 rounded bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold">
+                                                            PRO
+                                                        </span>
+                                                    )}
+                                                    {selectedFormat === format.id && (
+                                                        <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                                                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                                                        </svg>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
+                                                {format.name}
+                                            </h4>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                                                {format.description}
+                                            </p>
+                                        </motion.button>
+                                    ))}
+                                </div>
+
+                                {/* Message d'upgrade si format premium */}
+                                {accountType === ACCOUNT_TYPES.CONSUMER && (
+                                    <div className="mt-3 p-3 rounded-lg bg-gradient-to-r dark:/20 dark:/20 border dark:">
+                                        <p className="text-xs dark:">
+                                            💎 <strong>Passez Premium</strong> pour débloquer SVG, CSV, JSON et HTML avec exports haute qualité (300 DPI)
+                                        </p>
+                                    </div>
+                                )}
                             </div>
-                            <div className="grid grid-cols-2 gap-3">
-                                {availableFormats.map((format) => (
-                                    <motion.button
-                                        key={format.id}
-                                        whileHover={{ scale: 1.02 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onClick={() => setSelectedFormat(format.id)}
-                                        className={`p-4 rounded-xl text-left transition-all border-2 ${selectedFormat === format.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:'}`}
-                                    >
-                                        <div className="flex items-start justify-between mb-2">
-                                            <span className="text-3xl">{format.icon}</span>
-                                            <div className="flex items-center gap-1">
-                                                {format.premium && (
-                                                    <span className="text-xs px-1.5 py-0.5 rounded bg-gradient-to-r from-yellow-400 to-orange-500 text-white font-semibold">
-                                                        PRO
-                                                    </span>
-                                                )}
-                                                {selectedFormat === format.id && (
-                                                    <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                                                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                                    </svg>
-                                                )}
+
+                            {/* Options spécifiques au format */}
+                            <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
+                                    Options d'export
+                                </h4>
+
+                                {selectedFormat === 'png' && (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                                Résolution: {exportOptions.pngScale}x (max {maxQuality} DPI)
+                                            </label>
+                                            <div className="flex gap-2">
+                                                {[1, 2, 3].map((scale) => {
+                                                    const dpi = scale * 72;
+                                                    const isDisabled = dpi > maxQuality;
+                                                    return (
+                                                        <button
+                                                            key={scale}
+                                                            onClick={() => !isDisabled && setExportOptions({ ...exportOptions, pngScale: scale })}
+                                                            disabled={isDisabled}
+                                                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pngScale === scale ? ' text-white' : isDisabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
+                                                        >
+                                                            {scale}x {isDisabled && '🔒'}
+                                                        </button>
+                                                    )
+                                                })}
+                                            </div>
+                                            {maxQuality < 216 && (
+                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                                                    💡 Passez Premium pour débloquer les exports haute résolution (300 DPI)
+                                                </p>
+                                            )}
+                                        </div>
+                                        <label className="flex items-center gap-2 cursor-pointer">
+                                            <input
+                                                type="checkbox"
+                                                checked={exportOptions.pngTransparent}
+                                                onChange={(e) => setExportOptions({ ...exportOptions, pngTransparent: e.target.checked })}
+                                                className="w-4 h-4 rounded border-gray-300 focus:"
+                                            />
+                                            <span className="text-sm text-gray-700 dark:text-gray-300">
+                                                Fond transparent
+                                            </span>
+                                        </label>
+                                    </div>
+                                )}
+
+                                {selectedFormat === 'jpeg' && (
+                                    <div>
+                                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                            Qualité: {Math.round(exportOptions.jpegQuality * 100)}%
+                                        </label>
+                                        <input
+                                            type="range"
+                                            min="0.5"
+                                            max="1"
+                                            step="0.1"
+                                            value={exportOptions.jpegQuality}
+                                            onChange={(e) => setExportOptions({ ...exportOptions, jpegQuality: parseFloat(e.target.value) })}
+                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                                        />
+                                    </div>
+                                )}
+
+                                {selectedFormat === 'pdf' && (
+                                    <div className="space-y-3">
+                                        <div>
+                                            <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                                Format de page
+                                            </label>
+                                            <select
+                                                value={exportOptions.pdfFormat}
+                                                onChange={(e) => setExportOptions({ ...exportOptions, pdfFormat: e.target.value })}
+                                                className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+                                            >
+                                                <option value="a4">A4</option>
+                                                <option value="letter">Lettre (US)</option>
+                                                <option value="a3">A3</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
+                                                Orientation
+                                            </label>
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'portrait' })}
+                                                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'portrait' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                                                >
+                                                    Portrait
+                                                </button>
+                                                <button
+                                                    onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'landscape' })}
+                                                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'landscape' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                                                >
+                                                    Paysage
+                                                </button>
                                             </div>
                                         </div>
-                                        <h4 className="font-semibold text-gray-900 dark:text-white mb-1">
-                                            {format.name}
-                                        </h4>
-                                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                                            {format.description}
-                                        </p>
-                                    </motion.button>
-                                ))}
-                            </div>
-
-                            {/* Message d'upgrade si format premium */}
-                            {accountType === ACCOUNT_TYPES.CONSUMER && (
-                                <div className="mt-3 p-3 rounded-lg bg-gradient-to-r dark:/20 dark:/20 border dark:">
-                                    <p className="text-xs dark:">
-                                        💎 <strong>Passez Premium</strong> pour débloquer SVG, CSV, JSON et HTML avec exports haute qualité (300 DPI)
-                                    </p>
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Options spécifiques au format */}
-                        <div className="p-4 rounded-xl bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">
-                                Options d'export
-                            </h4>
-
-                            {selectedFormat === 'png' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                                            Résolution: {exportOptions.pngScale}x (max {maxQuality} DPI)
-                                        </label>
-                                        <div className="flex gap-2">
-                                            {[1, 2, 3].map((scale) => {
-                                                const dpi = scale * 72;
-                                                const isDisabled = dpi > maxQuality;
-                                                return (
-                                                    <button
-                                                        key={scale}
-                                                        onClick={() => !isDisabled && setExportOptions({ ...exportOptions, pngScale: scale })}
-                                                        disabled={isDisabled}
-                                                        className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pngScale === scale ? ' text-white' : isDisabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
-                                                    >
-                                                        {scale}x {isDisabled && '🔒'}
-                                                    </button>
-                                                )
-                                            })}
-                                        </div>
-                                        {maxQuality < 216 && (
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                                                💡 Passez Premium pour débloquer les exports haute résolution (300 DPI)
-                                            </p>
-                                        )}
                                     </div>
-                                    <label className="flex items-center gap-2 cursor-pointer">
+                                )}
+
+                                {selectedFormat === 'markdown' && (
+                                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                                        Le fichier Markdown contiendra tous les détails textuels de la review dans un format portable et réutilisable.
+                                    </p>
+                                )}
+
+                                {/* Option: include branding in export */}
+                                <div className="mt-4 border-t pt-4">
+                                    <label className={`flex items-center gap-2 ${accountFeatures.brandingRemoval ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
                                         <input
                                             type="checkbox"
-                                            checked={exportOptions.pngTransparent}
-                                            onChange={(e) => setExportOptions({ ...exportOptions, pngTransparent: e.target.checked })}
-                                            className="w-4 h-4 rounded border-gray-300 focus:"
+                                            checked={exportOptions.includeBranding}
+                                            onChange={(e) => accountFeatures.brandingRemoval && setExportOptions({ ...exportOptions, includeBranding: e.target.checked })}
+                                            disabled={!accountFeatures.brandingRemoval}
+                                            className="w-4 h-4 rounded border-gray-300 focus: disabled:opacity-50"
                                         />
                                         <span className="text-sm text-gray-700 dark:text-gray-300">
-                                            Fond transparent
+                                            Inclure le logo/filigrane
                                         </span>
+                                        {!accountFeatures.brandingRemoval && (
+                                            <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+                                                Obligatoire
+                                            </span>
+                                        )}
                                     </label>
-                                </div>
-                            )}
-
-                            {selectedFormat === 'jpeg' && (
-                                <div>
-                                    <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                                        Qualité: {Math.round(exportOptions.jpegQuality * 100)}%
-                                    </label>
-                                    <input
-                                        type="range"
-                                        min="0.5"
-                                        max="1"
-                                        step="0.1"
-                                        value={exportOptions.jpegQuality}
-                                        onChange={(e) => setExportOptions({ ...exportOptions, jpegQuality: parseFloat(e.target.value) })}
-                                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
-                                    />
-                                </div>
-                            )}
-
-                            {selectedFormat === 'pdf' && (
-                                <div className="space-y-3">
-                                    <div>
-                                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                                            Format de page
-                                        </label>
-                                        <select
-                                            value={exportOptions.pdfFormat}
-                                            onChange={(e) => setExportOptions({ ...exportOptions, pdfFormat: e.target.value })}
-                                            className="w-full px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
-                                        >
-                                            <option value="a4">A4</option>
-                                            <option value="letter">Lettre (US)</option>
-                                            <option value="a3">A3</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-sm text-gray-700 dark:text-gray-300 mb-2">
-                                            Orientation
-                                        </label>
-                                        <div className="flex gap-2">
-                                            <button
-                                                onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'portrait' })}
-                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'portrait' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
-                                            >
-                                                Portrait
-                                            </button>
-                                            <button
-                                                onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'landscape' })}
-                                                className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'landscape' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
-                                            >
-                                                Paysage
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
-
-                            {selectedFormat === 'markdown' && (
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                    Le fichier Markdown contiendra tous les détails textuels de la review dans un format portable et réutilisable.
-                                </p>
-                            )}
-
-                            {/* Option: include branding in export */}
-                            <div className="mt-4 border-t pt-4">
-                                <label className={`flex items-center gap-2 ${accountFeatures.brandingRemoval ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
-                                    <input
-                                        type="checkbox"
-                                        checked={exportOptions.includeBranding}
-                                        onChange={(e) => accountFeatures.brandingRemoval && setExportOptions({ ...exportOptions, includeBranding: e.target.checked })}
-                                        disabled={!accountFeatures.brandingRemoval}
-                                        className="w-4 h-4 rounded border-gray-300 focus: disabled:opacity-50"
-                                    />
-                                    <span className="text-sm text-gray-700 dark:text-gray-300">
-                                        Inclure le logo/filigrane
-                                    </span>
                                     {!accountFeatures.brandingRemoval && (
-                                        <span className="ml-auto text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
-                                            Obligatoire
-                                        </span>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-6">
+                                            💎 Le retrait du branding Reviews-Maker nécessite un compte Influenceur ou Producteur
+                                        </p>
                                     )}
-                                </label>
-                                {!accountFeatures.brandingRemoval && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-6">
-                                        💎 Le retrait du branding Reviews-Maker nécessite un compte Influenceur ou Producteur
-                                    </p>
-                                )}
-                            </div>
-                        </div>
-
-                        {/* Status with Progress Bar */}
-                        {exportStatus && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="space-y-3"
-                            >
-                                <div
-                                    className={`p-3 rounded-lg text-sm font-medium text-center ${exportStatus.startsWith('✅') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : exportStatus.startsWith('❌') ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : ' dark: dark:'}`}
-                                >
-                                    {exportStatus}
                                 </div>
+                            </div>
 
-                                {/* Progress Bar */}
-                                {isExporting && exportProgress < 100 && (
-                                    <div className="relative h-3 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden border border-gray-400 dark:border-gray-500 shadow-inner">
-                                        <motion.div
-                                            className="absolute inset-y-0 left-0 bg-gradient-to-r rounded-full shadow-lg"
-                                            initial={{ width: '0%' }}
-                                            animate={{ width: `${exportProgress}%` }}
-                                            transition={{ duration: 0.3, ease: 'easeOut' }}
-                                        />
-                                        {/* Shimmer effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
-                                            style={{
-                                                backgroundSize: '200% 100%',
-                                                animation: 'shimmer 2s infinite'
-                                            }}
-                                        />
+                            {/* Status with Progress Bar */}
+                            {exportStatus && (
+                                <motion.div
+                                    initial={{ opacity: 0, y: -10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="space-y-3"
+                                >
+                                    <div
+                                        className={`p-3 rounded-lg text-sm font-medium text-center ${exportStatus.startsWith('✅') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : exportStatus.startsWith('❌') ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : ' dark: dark:'}`}
+                                    >
+                                        {exportStatus}
                                     </div>
-                                )}
 
-                                {/* Percentage */}
-                                {isExporting && (
-                                    <div className="text-center">
-                                        <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
-                                            {exportProgress}%
-                                        </span>
-                                    </div>
-                                )}
-                            </motion.div>
-                        )}
+                                    {/* Progress Bar */}
+                                    {isExporting && exportProgress < 100 && (
+                                        <div className="relative h-3 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden border border-gray-400 dark:border-gray-500 shadow-inner">
+                                            <motion.div
+                                                className="absolute inset-y-0 left-0 bg-gradient-to-r rounded-full shadow-lg"
+                                                initial={{ width: '0%' }}
+                                                animate={{ width: `${exportProgress}%` }}
+                                                transition={{ duration: 0.3, ease: 'easeOut' }}
+                                            />
+                                            {/* Shimmer effect */}
+                                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/40 to-transparent animate-shimmer"
+                                                style={{
+                                                    backgroundSize: '200% 100%',
+                                                    animation: 'shimmer 2s infinite'
+                                                }}
+                                            />
+                                        </div>
+                                    )}
+
+                                    {/* Percentage */}
+                                    {isExporting && (
+                                        <div className="text-center">
+                                            <span className="text-xs font-bold text-gray-600 dark:text-gray-400">
+                                                {exportProgress}%
+                                            </span>
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )}
 
                         </div>{/* end right column */}
                     </div>{/* end flex container */}
