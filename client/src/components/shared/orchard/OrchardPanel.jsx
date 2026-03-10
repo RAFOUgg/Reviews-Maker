@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
@@ -6,8 +6,8 @@ import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestC
 import { useOrchardStore } from '../../../store/orchardStore';
 import { normalizeReviewDataByType } from '../../../utils/orchard/normalizeByType';
 import ConfigPane from '../config/ConfigPane';
-import InteractiveReviewCard from './InteractiveReviewCard';
-import TemplateRenderer from '../../export/TemplateRenderer';
+const InteractiveReviewCard = React.lazy(() => import('./InteractiveReviewCard'));
+const TemplateRenderer = React.lazy(() => import('../../export/TemplateRenderer'));
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
@@ -618,7 +618,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                <InteractiveReviewCard mode="preview" />
+                                <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
+                                    <InteractiveReviewCard mode="preview" />
+                                </Suspense>
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT — Config à gauche, HTML interactif à droite
@@ -636,7 +638,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
 
                                 {/* Preview Pane - Right — HTML interactif */}
                                 <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0">
-                                    <InteractiveReviewCard mode="preview" />
+                                    <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
+                                        <InteractiveReviewCard mode="preview" />
+                                    </Suspense>
                                 </div>
                             </motion.div>
                         )}
@@ -647,7 +651,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             {/* Hidden offscreen TemplateRenderer for image export only */}
             {showExportModal && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }}>
-                    <TemplateRenderer config={config} reviewData={normalizedData} />
+                    <Suspense fallback={null}>
+                        <TemplateRenderer config={config} reviewData={normalizedData} />
+                    </Suspense>
                 </div>
             )}
 

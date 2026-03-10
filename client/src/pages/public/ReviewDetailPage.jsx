@@ -134,17 +134,17 @@ export default function ReviewDetailPage() {
                         <span>Retour à la galerie</span>
                     </button>
 
-                    <div className="flex items-center gap-3">
-                        <LiquidButton
-                            onClick={() => { console.debug('[ReviewDetailPage] Export button clicked'); setShowExportModal(true); }}
-                            variant="primary"
-                            size="sm"
-                        >
-                            <Download className="w-4 h-4" />
-                            <span>Exporter</span>
-                        </LiquidButton>
+                    {isAuthenticated && user?.id === review?.authorId && (
+                        <div className="flex items-center gap-3">
+                            <LiquidButton
+                                onClick={() => { setShowExportModal(true); }}
+                                variant="primary"
+                                size="sm"
+                            >
+                                <Download className="w-4 h-4" />
+                                <span>Exporter</span>
+                            </LiquidButton>
 
-                        {isAuthenticated && user?.id === review?.authorId && (
                             <LiquidButton
                                 onClick={() => navigate(`/edit/${id}`)}
                                 variant="secondary"
@@ -153,8 +153,8 @@ export default function ReviewDetailPage() {
                                 <Edit3 className="w-4 h-4" />
                                 <span>Éditer</span>
                             </LiquidButton>
-                        )}
-                    </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* View Mode Switcher - Only show if Orchard config exists */}
