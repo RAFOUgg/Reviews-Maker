@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 // Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
 import { useOrchardStore } from '../../store/orchardStore';
@@ -11,6 +11,55 @@ import {
     getAccountFeatures,
     ACCOUNT_TYPES
 } from '../../config/exportConfig';
+import InteractiveReviewCard from '../shared/orchard/InteractiveReviewCard';
+
+// Ratio dimensions must match InteractiveReviewCard
+const RATIO_DIMS = {
+    '1:1': { width: 800, height: 800 },
+    '16:9': { width: 1920, height: 1080 },
+    '9:16': { width: 1080, height: 1920 },
+    '4:3': { width: 1600, height: 1200 },
+    'A4': { width: 1754, height: 2480 },
+};
+
+/** Mini scaled preview that fits export-sized card into a small container */
+function MiniPreview({ ratio }) {
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(0.15);
+    const dims = RATIO_DIMS[ratio] || RATIO_DIMS['1:1'];
+
+    useEffect(() => {
+        const el = containerRef.current;
+        if (!el) return;
+        const observer = new ResizeObserver(entries => {
+            const { width, height } = entries[0].contentRect;
+            if (width && height) {
+                setScale(Math.min(width / dims.width, height / dims.height, 1) * 0.92);
+            }
+        });
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [dims.width, dims.height]);
+
+    return (
+        <div ref={containerRef} className="w-full h-full flex items-center justify-center overflow-hidden bg-black/20 rounded-xl">
+            <div
+                style={{
+                    width: dims.width,
+                    height: dims.height,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'center center',
+                    flexShrink: 0,
+                    borderRadius: 8,
+                    overflow: 'hidden',
+                    boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+                }}
+            >
+                <InteractiveReviewCard mode="preview-export" />
+            </div>
+        </div>
+    );
+}
 
 export default function ExportModal({ onClose }) {
     const reviewData = useOrchardStore((state) => state.reviewData);
@@ -413,7 +462,7 @@ export default function ExportModal({ onClose }) {
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="w-full max-w-2xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+                    className="w-full max-w-5xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
                 >
                     {/* Header */}
                     <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
@@ -437,8 +486,22 @@ export default function ExportModal({ onClose }) {
                         </div>
                     </div>
 
-                    {/* Content */}
-                    <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
+                    {/* Content: two-column layout with preview */}
+                    <div className="p-6 flex gap-6 max-h-[65vh]">
+                        {/* Left: live preview */}
+                        <div className="hidden md:flex flex-col flex-shrink-0 w-[340px]">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Aperçu de l'export</h4>
+                            <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                                <MiniPreview ratio={config?.ratio || '1:1'} />
+                            </div>
+                            <div className="mt-2 text-center">
+                                <span className="text-[11px] text-gray-500 dark:text-gray-400">
+                                    Format : <strong>{config?.ratio || '1:1'}</strong>
+                                </span>
+                            </div>
+                        </div>
+                        {/* Right: options */}
+                        <div className="flex-1 space-y-6 overflow-y-auto">
                         {/* Scope selection (what to export) */}
                         <div>
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
@@ -679,7 +742,9 @@ export default function ExportModal({ onClose }) {
                                 )}
                             </motion.div>
                         )}
-                    </div>
+
+                        </div>{/* end right column */}
+                    </div>{/* end flex container */}
 
                     {/* Footer */}
                     <div className="p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 flex gap-3">
