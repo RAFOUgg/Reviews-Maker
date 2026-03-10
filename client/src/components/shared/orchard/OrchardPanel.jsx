@@ -6,13 +6,11 @@ import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestC
 import { useOrchardStore } from '../../../store/orchardStore';
 import { normalizeReviewDataByType } from '../../../utils/orchard/normalizeByType';
 import ConfigPane from '../config/ConfigPane';
-import PreviewPane from '../preview/PreviewPane';
-import PagedPreviewPane from './PagedPreviewPane';
+import InteractiveReviewCard from './InteractiveReviewCard';
+import TemplateRenderer from '../../export/TemplateRenderer';
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
-import PageManager from './PageManager';
 import ExportModal from '../../export/ExportModal';
-import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 import { reviewsService } from '../../../services/apiService';
 
 /**
@@ -232,7 +230,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
     const [isApplying, setIsApplying] = useState(false); // En cours de capture/upload thumbnail
-    const [isPaginationRequired, setIsPaginationRequired] = useState(false); // Pagination forcée par le contenu
     const canvasRef = useRef(null);
     const thumbnailRef = useRef(null); // Ref sur la zone de préview template (pour capture thumbnail)
     const setReviewData = useOrchardStore((state) => state.setReviewData);
@@ -240,12 +237,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
-
-    // Pages store
-    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const pages = useOrchardPagesStore((state) => state.pages);
-    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
-    const togglePagesMode = useOrchardPagesStore((state) => state.togglePagesMode);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -281,45 +272,11 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             if (reviewData.orchardLayoutMode === 'custom') {
                 setIsCustomMode(true);
             }
-
-            // Charger les pages par défaut
-            if (reviewData.type && config.ratio) {
-                loadDefaultPages(reviewData.type, config.ratio);
-            }
         }
-    }, [reviewData, setReviewData, loadDefaultPages, config.ratio]);
+    }, [reviewData, setReviewData, config.ratio]);
 
-    // Effet séparé pour auto-activer le mode pages après chargement
-    useEffect(() => {
-        if (reviewData && config.ratio && pages.length > 1) {
-            // Analyser si le contenu nécessite la pagination
-            const hasRichContent = (
-                (reviewData.categoryRatings && Object.keys(reviewData.categoryRatings).length > 0) ||
-                (reviewData.aromas?.length > 3) ||
-                (reviewData.effects?.length > 3) ||
-                (reviewData.tastes?.length > 3) ||
-                (reviewData.description?.length > 200) ||
-                (reviewData.cultivarsList?.length > 1)
-            );
-
-            // Activer la pagination pour tous les formats quand le contenu est riche,
-            // et toujours pour les templates detailedCard/blogArticle
-            const needsPagination = hasRichContent || (
-                config.template === 'detailedCard' || config.template === 'blogArticle'
-            );
-
-            // Mettre à jour l'état de verrouillage de la pagination
-            setIsPaginationRequired(needsPagination);
-
-            // Auto-activer si nécessaire et pas encore activé
-            if (needsPagination && !pagesEnabled) {
-                const timer = setTimeout(() => {
-                    togglePagesMode();
-                }, 150);
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [config.ratio, config.template, togglePagesMode, pagesEnabled, pages.length, reviewData?.type, reviewData?.categoryRatings, reviewData?.aromas, reviewData?.effects]);
+    // Pages are no longer used for preview (HTML scrolls naturally).
+    // The pages store is kept available for potential future export-specific pagination.
 
     const handleExport = () => {
         setShowExportModal(true);
@@ -520,34 +477,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                     </div>
 
                     <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
-                        {/* Bouton Toggle Mode Pages - TOUJOURS VISIBLE */}
-                        <motion.button
-                            whileHover={{ scale: isPaginationRequired ? 1 : 1.02 }}
-                            whileTap={{ scale: isPaginationRequired ? 1 : 0.98 }}
-                            onClick={() => {
-                                if (isPaginationRequired) return;
-                                console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
-                                togglePagesMode();
-                            }}
-                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border ${pagesEnabled ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-lg border-indigo-400/50' : 'bg-white/5 text-white hover:bg-white/10 border-white/10'} ${isPaginationRequired ? 'cursor-not-allowed opacity-80' : ''}`}
-                            title={isPaginationRequired ? 'Pagination requise par le contenu (non désactivable)' : pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
-                        >
-                            {isPaginationRequired ? (
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-                                </svg>
-                            ) : (
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    {pagesEnabled ? (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    ) : (
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                    )}
-                                </svg>
-                            )}
-                            <span>{pagesEnabled ? '📄 ON' : '📄 OFF'}</span>
-                        </motion.button>
-
                         {/* Bouton Toggle Mode Template/Custom */}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -680,7 +609,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 </div>
                             </motion.div>
                         ) : isPreviewFullscreen ? (
-                            // MODE TEMPLATE PLEIN ÉCRAN
+                            // MODE PLEIN ÉCRAN — HTML interactif
                             <motion.div
                                 ref={thumbnailRef}
                                 key="fullscreen"
@@ -689,10 +618,10 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
+                                <InteractiveReviewCard mode="preview" />
                             </motion.div>
                         ) : (
-                            // MODE TEMPLATE SPLIT
+                            // MODE TEMPLATE SPLIT — Config à gauche, HTML interactif à droite
                             <motion.div
                                 key="split"
                                 initial={{ opacity: 0 }}
@@ -700,27 +629,27 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 exit={{ opacity: 0 }}
                                 className="flex h-full"
                             >
-                                {/* Configuration Pane - Left - Responsive width */}
-                                <div className={`border-r border-white/10 overflow-y-auto flex-shrink-0 min-h-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'}`}>
+                                {/* Configuration Pane - Left */}
+                                <div className="w-96 xl:w-[28rem] border-r border-white/10 overflow-y-auto flex-shrink-0 min-h-0">
                                     <ConfigPane />
                                 </div>
 
-                                {/* Page Manager - Middle (shown when pages enabled) */}
-                                {pagesEnabled && (
-                                    <div className="w-72 xl:w-80 border-r border-white/10 overflow-hidden bg-gradient-to-b from-white/5 to-transparent flex-shrink-0 min-h-0">
-                                        <PageManager />
-                                    </div>
-                                )}
-
-                                {/* Preview Pane - Right */}
+                                {/* Preview Pane - Right — HTML interactif */}
                                 <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0">
-                                    {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
+                                    <InteractiveReviewCard mode="preview" />
                                 </div>
                             </motion.div>
                         )}
                     </AnimatePresence>
                 </div>
             </motion.div>
+
+            {/* Hidden offscreen TemplateRenderer for image export only */}
+            {showExportModal && (
+                <div style={{ position: 'fixed', left: '-99999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }}>
+                    <TemplateRenderer config={config} reviewData={normalizedData} />
+                </div>
+            )}
 
             {/* Export Modal */}
             <AnimatePresence>
