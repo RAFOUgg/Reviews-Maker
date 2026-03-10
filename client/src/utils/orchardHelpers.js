@@ -509,6 +509,7 @@ export function extractExtraData(extraData, reviewData = null) {
  * @returns {Array} Liste des pipelines
  */
 export function extractPipelines(reviewData) {
+    if (!reviewData) return [];
     const pipelines = [];
 
     const pipelineTypes = [

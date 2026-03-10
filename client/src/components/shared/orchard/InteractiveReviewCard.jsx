@@ -274,8 +274,8 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const config = useOrchardStore(s => s.config);
     const reviewData = useOrchardStore(s => s.reviewData);
 
-    // Extract data using existing helpers
-    const categoryRatings = useMemo(() => extractCategoryRatings(reviewData?.categoryRatings, reviewData), [reviewData]);
+    // Extract data using existing helpers (all guarded for null reviewData)
+    const categoryRatings = useMemo(() => reviewData ? extractCategoryRatings(reviewData?.categoryRatings, reviewData) : [], [reviewData]);
     const pipelines = useMemo(() => extractPipelines(reviewData), [reviewData]);
 
     const aromas = useMemo(() => asArray(reviewData?.aromas).map(extractLabel).filter(Boolean), [reviewData]);
