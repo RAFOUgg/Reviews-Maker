@@ -313,16 +313,18 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     // Helper to resolve common field ids into actual review fields
+    // Searches: top-level reviewData → type-specific sub-object (flowerData/hashData/etc.) → extraData
     const resolveReviewField = (id) => {
         const f = reviewData || {};
-        const flower = f.flowerData || {};
+        // Type-specific sub-object
+        const sub = f.flowerData || f.hashData || f.concentrateData || f.edibleData || {};
 
-        // small lookup helper that checks top-level, flower.*, then extraData
+        // Lookup helper: checks top-level, sub-object, then extraData
         const lookup = (...keys) => {
             for (const k of keys) {
                 if (!k) continue;
                 if (f[k] !== undefined && f[k] !== null && f[k] !== '') return f[k];
-                if (flower[k] !== undefined && flower[k] !== null && flower[k] !== '') return flower[k];
+                if (sub[k] !== undefined && sub[k] !== null && sub[k] !== '') return sub[k];
                 if (f.extraData && typeof f.extraData === 'object' && f.extraData[k] !== undefined && f.extraData[k] !== null && f.extraData[k] !== '') return f.extraData[k];
             }
             return undefined;
@@ -338,113 +340,169 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         switch (id) {
             case 'productName':
             case 'product_name':
-                return lookup('productName', 'name', 'holderName', 'title', 'nomCommercial') || '-';
+                return lookup('holderName', 'nomCommercial', 'productName', 'name', 'title') || '-';
 
             case 'photo':
             case 'mainImage':
-                return lookup('images', 'mainImageUrl', 'imageUrl', 'image') || null;
+            case 'mainImageUrl':
+                // Prefer pre-resolved mainImageUrl from API, then build from images array
+                return lookup('mainImageUrl') || null;
 
             case 'photos':
             case 'gallery':
-                return lookup('images', 'gallery', 'photos') || [];
+            case 'images':
+                return parseJSON(lookup('images', 'gallery', 'photos'), []);
 
             case 'genetics':
+                return lookup('breeder', 'variety', 'cultivar', 'geneticType') || '-';
+
             case 'breeder':
-                return lookup('breeder', 'variety', 'cultivar') || lookup('cultivarsList') || '-';
+                return lookup('breeder') || '-';
+
+            case 'farm':
+                return lookup('farm') || '-';
+
+            case 'cultivar':
+                return lookup('cultivar', 'cultivars', 'variety') || '-';
+
+            case 'varietyType':
+                return lookup('varietyType', 'strainType') || null;
 
             case 'thc':
             case 'thcPercent':
-                return lookup('thc', 'thcLevel', 'thcPercent') ?? '-';
+                return lookup('thcPercent', 'thcLevel', 'thc') ?? '-';
 
             case 'cbd':
             case 'cbdPercent':
-                return lookup('cbd', 'cbdLevel', 'cbdPercent') ?? '-';
+                return lookup('cbdPercent', 'cbdLevel', 'cbd') ?? '-';
+
+            case 'cbg':
+                return lookup('cbgPercent', 'cbg') ?? null;
 
             case 'analytics':
             case 'terpeneProfile':
             case 'terpenes':
-                return parseJSON(lookup('terpeneProfile', 'terpenes', 'analytics'), []);
+                return parseJSON(lookup('terpeneProfile', 'terpenes'), []);
 
             case 'visual':
                 return {
-                    couleur: lookup('couleurScore') ?? null,
-                    densite: lookup('densiteVisuelle', 'densite') ?? null,
-                    trichomes: lookup('trichome', 'trichomes', 'trichomesScore') ?? null,
-                    pistils: lookup('pistil', 'pistils', 'pistilsScore') ?? null,
-                    manucure: lookup('manucure', 'manucureScore') ?? null
+                    couleur: lookup('couleurScore', 'couleur', 'couleurTransparence') ?? null,
+                    densite: lookup('densiteVisuelle', 'densite', 'pureteVisuelle') ?? null,
+                    trichomes: lookup('trichomesScore', 'trichome') ?? null,
+                    pistils: lookup('pistilsScore', 'pistil') ?? null,
+                    manucure: lookup('manucureScore', 'manucure') ?? null,
+                    moisissure: lookup('moisissureScore', 'moisissure') ?? null,
+                    graines: lookup('grainesScore', 'graines') ?? null,
+                    // Hash/Concentrate specific
+                    transparence: lookup('couleurTransparence') ?? null,
+                    viscosite: lookup('viscosite') ?? null,
+                    melting: lookup('melting') ?? null,
+                    residus: lookup('residus') ?? null,
                 };
 
             case 'odor':
             case 'odors':
                 return {
-                    dominant: parseJSON(lookup('notesOdeursDominantes', 'aromas', 'notesDominantesOdeur'), []),
-                    secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur', 'aromasSecondary'), []),
-                    intensity: lookup('intensiteAromeScore', 'aromasIntensity', 'intensiteAromatique') ?? null
+                    dominant: parseJSON(lookup('notesOdeursDominantes', 'notesDominantesOdeur', 'aromas'), []),
+                    secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur'), []),
+                    intensity: lookup('intensiteAromeScore', 'aromasIntensity', 'intensiteAromatique') ?? null,
+                    complexity: lookup('complexiteAromeScore') ?? null,
+                    fidelity: lookup('fideliteAromeScore', 'fideliteCultivars') ?? null,
                 };
 
             case 'taste':
             case 'tastes':
                 return {
-                    intensity: lookup('intensiteGoutScore', 'intensiteGout', 'tastesIntensity') ?? null,
+                    intensity: lookup('intensiteGoutScore', 'intensiteFumee', 'tastesIntensity', 'goutIntensity', 'intensiteGout') ?? null,
                     aggressiveness: lookup('agressiviteScore', 'agressivite') ?? null,
                     dryPuff: parseJSON(lookup('dryPuffNotes', 'dryPuff'), []),
                     inhalation: parseJSON(lookup('inhalationNotes', 'inhalation'), []),
-                    expiration: parseJSON(lookup('expirationNotes', 'expiration'), [])
+                    expiration: parseJSON(lookup('expirationNotes', 'expiration'), []),
                 };
 
             case 'effects': {
                 const arr = parseJSON(lookup('effetsChoisis', 'effects', 'selectedEffects'), []);
-                return { selected: arr, intensity: lookup('intensiteEffetScore', 'intensiteEffet') ?? null, onset: lookup('monteeScore', 'montee') ?? null };
+                return {
+                    selected: arr,
+                    intensity: lookup('intensiteEffetScore', 'intensiteEffet', 'effectsIntensity') ?? null,
+                    onset: lookup('monteeScore', 'montee') ?? null,
+                    duration: lookup('dureeEffet') || null,
+                };
             }
 
             case 'cultivarsList':
             case 'cultivars':
-                return lookup('cultivarsList', 'cultivars', 'cultivar') || [];
+                return parseJSON(lookup('cultivarsList', 'cultivars'), []);
 
             case 'substratMix':
-                return lookup('substratMix', 'substrat') || [];
+                return parseJSON(lookup('substratMix', 'substrat', 'cultureSubstrat'), []);
 
             case 'categoryRatings':
-                return lookup('categoryRatings', 'ratings') || undefined;
+                return lookup('categoryRatings', 'sectionScores', 'ratings') || undefined;
+
+            case 'overallRating':
+            case 'rating':
+                return lookup('computedOverall', 'overallRating', 'note', 'rating') ?? null;
 
             case 'culture':
                 return {
                     config: parseJSON(lookup('cultureTimelineConfig'), {}),
-                    data: parseJSON(lookup('cultureTimelineData'), [])
+                    data: parseJSON(lookup('cultureTimelineData'), []),
+                    mode: lookup('cultureMode') || null,
                 };
 
             case 'curing':
                 return {
                     config: parseJSON(lookup('curingTimelineConfig'), {}),
-                    data: parseJSON(lookup('curingTimelineData'), [])
+                    data: parseJSON(lookup('curingTimelineData', 'cureTimelineData'), []),
                 };
 
             case 'texture':
                 return {
-                    hardness: lookup('dureteScore') ?? null,
-                    density: lookup('densiteTactileScore') ?? null,
-                    elasticity: lookup('elasticiteScore') ?? null,
-                    stickiness: lookup('collantScore') ?? null,
-                    melting: lookup('meltingScore') ?? null
+                    hardness: lookup('dureteScore', 'durete') ?? null,
+                    density: lookup('densiteTactileScore', 'densiteTexture') ?? null,
+                    elasticity: lookup('elasticiteScore', 'elasticite') ?? null,
+                    stickiness: lookup('collantScore', 'collant') ?? null,
+                    melting: lookup('meltingScore', 'meltingResidus') ?? null,
+                    friability: lookup('friabiliteScore', 'friabiliteViscosite') ?? null,
+                    viscosity: lookup('viscositeScore', 'viscositeTexture') ?? null,
+                    residue: lookup('residuScore', 'residus') ?? null,
                 };
 
             case 'recolte':
                 return {
-                    fenetre: lookup('fenetreRecolte') || null,
                     trichomesTranslucides: lookup('trichomesTranslucides') || 0,
                     trichomesLaiteux: lookup('trichomesLaiteux') || 0,
                     trichomesAmbres: lookup('trichomesAmbres') || 0,
                     modeRecolte: lookup('modeRecolte') || null,
                     poidsBrut: lookup('poidsBrut') || null,
-                    poidsNet: lookup('poidsNet') || null
+                    poidsNet: lookup('poidsNet') || null,
+                };
+
+            case 'experience':
+                return {
+                    method: lookup('consumptionMethod') || null,
+                    dosage: lookup('dosage') || null,
+                    dosageUnit: lookup('dosageUnit') || null,
+                    effectDuration: lookup('effectDuration') || null,
+                    effectProfiles: parseJSON(lookup('effectProfiles'), []),
+                    sideEffects: parseJSON(lookup('sideEffects'), []),
+                    effectOnset: lookup('effectOnset') || null,
+                    preferredUse: parseJSON(lookup('preferredUse'), []),
                 };
 
             case 'notes':
             case 'description':
-                return lookup('description', 'notes', 'notesDetailed') || '-';
+                return lookup('description', 'notes') || '-';
+
+            case 'hashmaker':
+                return lookup('hashmaker') || '-';
+
+            case 'laboratoire':
+                return lookup('laboratoire') || null;
 
             default:
-                return lookup(id) ?? flower[id] ?? undefined;
+                return lookup(id) ?? sub[id] ?? undefined;
         }
     };
 
@@ -561,12 +619,155 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     )
 
     const getMainImage = () => {
-        const raw = resolveReviewField('photo') || resolveReviewField('mainImage') || resolveReviewField('images')
-        let url = Array.isArray(raw) ? raw[0] : raw
-        if (url && typeof url === 'object') url = url.url || url.filename || url.path
-        if (url && typeof url === 'string' && !url.startsWith('http')) url = `/images/${url.replace(/^\//, '')}`
-        return url || null
+        // 1. Pre-resolved URL from API (most reliable)
+        if (reviewData?.mainImageUrl) return reviewData.mainImageUrl
+        // 2. Try images array
+        const imgs = resolveReviewField('images')
+        const raw = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : null
+        if (!raw) return null
+        let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path) : raw
+        if (!url || typeof url !== 'string') return null
+        if (url.startsWith('http') || url.startsWith('/images/')) return url
+        return `/images/${url.replace(/^\//, '')}`
     }
+
+    // Get all images as resolved URLs
+    const getAllImages = () => {
+        const imgs = resolveReviewField('images')
+        if (!Array.isArray(imgs) || imgs.length === 0) return []
+        return imgs.map(raw => {
+            let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path) : raw
+            if (!url || typeof url !== 'string') return null
+            if (url.startsWith('http') || url.startsWith('/images/')) return url
+            return `/images/${url.replace(/^\//, '')}`
+        }).filter(Boolean)
+    }
+
+    // Content module visibility — read from orchardStore
+    const contentModules = orchardConfig?.contentModules || {};
+
+    // Check if a section/category has any visible field in the export
+    // Maps section IDs to the data resolver IDs and orchardStore keys
+    const SECTION_VISIBILITY = {
+        photo: ['image', 'images', 'mainImage', 'imageUrl'],
+        infos: ['holderName', 'title', 'type', 'cultivar', 'breeder', 'farm', 'hashmaker'],
+        analytics: ['thcLevel', 'cbdLevel', 'terpenes'],
+        visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'couleurTransparence', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
+        odor: ['aromasIntensity', 'intensiteAromatique', 'fideliteCultivars', 'aromas'],
+        taste: ['intensiteFumee', 'agressivite', 'intensiteGout', 'goutIntensity', 'tastes'],
+        effects: ['montee', 'intensiteEffet', 'dureeEffet', 'effects'],
+        texture: ['durete', 'elasticite', 'collant', 'densiteTexture', 'friabiliteViscosite', 'meltingResidus'],
+        culture: ['fertilizationPipeline', 'substratMix', 'curing'],
+        recolte: ['poidsBrut', 'poidsNet', 'trichomesTranslucides'],
+        terpenes: ['terpenes'],
+        pipeline: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'curing'],
+    };
+
+    const isSectionVisible = (sectionKey) => {
+        const keys = SECTION_VISIBILITY[sectionKey];
+        if (!keys) return true; // unknown sections are visible by default
+        return keys.some(k => contentModules[k] !== false);
+    };
+
+    // Check if a specific field is visible (false only if explicitly disabled)
+    const isFieldVisible = (fieldKey) => {
+        return contentModules[fieldKey] !== false;
+    };
+
+    // ========== FLEXIBLE DATA RENDERERS ==========
+    // Each renderer can display scores, lists, and text in multiple visual styles.
+    // The orchardConfig.renderMode controls which style is used per section.
+    const renderModes = orchardConfig?.renderModes || {};
+
+    // Score renderer — supports: 'gauge', 'bar', 'pill', 'number'
+    const renderScore = (value, label, color = '#A78BFA', mode) => {
+        const resolvedMode = mode || renderModes.scores || 'bar';
+        if (value == null || value === undefined) return null;
+        const num = Number(value);
+        if (isNaN(num)) return null;
+
+        switch (resolvedMode) {
+            case 'gauge':
+                return <ScoreGauge score={num} size={40} label={label} showMax={false} />;
+            case 'pill':
+                return (
+                    <span style={{
+                        padding: '2px 8px', borderRadius: '12px',
+                        background: `${color}20`, fontSize: '10px', fontWeight: 700,
+                        color: color, border: `1px solid ${color}30`,
+                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    }}>
+                        {label && <span style={{ fontSize: '8px', opacity: 0.7 }}>{label}</span>}
+                        {num}/10
+                    </span>
+                );
+            case 'number':
+                return (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
+                        <span style={{ fontSize: '18px', fontWeight: 900, color }}>{num}</span>
+                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>/10</span>
+                        {label && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginLeft: '4px' }}>{label}</span>}
+                    </div>
+                );
+            case 'bar':
+            default:
+                return <MiniBars items={[{ label: label || '', value: num, color }]} max={10} compact />;
+        }
+    };
+
+    // Multi-score renderer — for section with multiple score bars
+    const renderScoreGroup = (items, mode) => {
+        const resolvedMode = mode || renderModes.scores || 'bar';
+        const validItems = items.filter(Boolean);
+        if (!validItems.length) return null;
+
+        if (resolvedMode === 'bar') {
+            return <MiniBars items={validItems.map(i => ({ label: i.label, value: i.value, color: i.color }))} max={10} compact />;
+        }
+
+        return (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: resolvedMode === 'gauge' ? '8px' : '4px' }}>
+                {validItems.map((item, i) => (
+                    <div key={i}>{renderScore(item.value, item.label, item.color, resolvedMode)}</div>
+                ))}
+            </div>
+        );
+    };
+
+    // List renderer — supports: 'pills', 'comma', 'grid'
+    const renderList = (items, color = 'rgba(139,92,246,0.15)', textColor = '#A78BFA', mode, max = 6) => {
+        const resolvedMode = mode || renderModes.lists || 'pills';
+        const normalized = (items || []).map(item =>
+            typeof item === 'object' ? (item.label || item.name || item.id || String(item)) : String(item)
+        ).filter(Boolean);
+        if (!normalized.length) return null;
+
+        switch (resolvedMode) {
+            case 'comma':
+                return (
+                    <span style={{ fontSize: '10px', color: textColor, lineHeight: 1.5 }}>
+                        {normalized.slice(0, max).join(', ')}
+                        {normalized.length > max && <span style={{ color: 'rgba(255,255,255,0.3)' }}> +{normalized.length - max}</span>}
+                    </span>
+                );
+            case 'grid':
+                return (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '3px' }}>
+                        {normalized.slice(0, max).map((item, i) => (
+                            <div key={i} style={{
+                                padding: '3px 6px', borderRadius: '6px',
+                                background: color, fontSize: '8px', fontWeight: 600,
+                                color: textColor, textAlign: 'center',
+                                border: `1px solid ${textColor}15`,
+                            }}>{item}</div>
+                        ))}
+                    </div>
+                );
+            case 'pills':
+            default:
+                return <ExportPills items={normalized} color={color} textColor={textColor} max={max} />;
+        }
+    };
 
     const avgScore = (obj) => {
         if (!obj || typeof obj !== 'object') return null
@@ -668,10 +869,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== COMPACT TEMPLATE (minimal) ======
     const renderCompactCanvas = () => {
-        const rating = reviewData.rating || reviewData.overallRating || null
+        const rating = resolveReviewField('overallRating') || reviewData.rating || reviewData.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
-        const categories = getCategoryScores().slice(0, 4)
+        const categories = getCategoryScores().filter(c => isSectionVisible(c.key)).slice(0, 4)
         const pad = isPortrait ? '20px 18px' : '24px 28px'
 
         return (
@@ -690,47 +891,51 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     {/* Hero */}
                     <div style={{ flex: 1, display: 'flex', flexDirection: isLandscape ? 'row' : 'column', gap: '16px', minHeight: 0 }}>
                         {/* Image */}
-                        <div style={{
-                            flex: isLandscape ? '0 0 50%' : '1 1 55%',
-                            borderRadius: '14px', overflow: 'hidden', position: 'relative',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            background: 'rgba(0,0,0,0.2)', minHeight: 0,
-                        }}>
-                            {imgUrl ? (
-                                <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
-                            ) : (
-                                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
-                            )}
-                            {rating && (
-                                <div style={{
-                                    position: 'absolute', bottom: '10px', right: '10px',
-                                    background: 'rgba(0,0,0,0.65)',
-                                    borderRadius: '12px', padding: '6px 10px',
-                                    border: '1px solid rgba(139,92,246,0.25)',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                }}>
-                                    <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{rating}</span>
-                                    <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginTop: '1px' }}>/10</span>
-                                </div>
-                            )}
-                        </div>
+                        {isSectionVisible('photo') && (
+                            <div style={{
+                                flex: isLandscape ? '0 0 50%' : '1 1 55%',
+                                borderRadius: '14px', overflow: 'hidden', position: 'relative',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                background: 'rgba(0,0,0,0.2)', minHeight: 0,
+                            }}>
+                                {imgUrl ? (
+                                    <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
+                                )}
+                                {rating && (
+                                    <div style={{
+                                        position: 'absolute', bottom: '10px', right: '10px',
+                                        background: 'rgba(0,0,0,0.65)',
+                                        borderRadius: '12px', padding: '6px 10px',
+                                        border: '1px solid rgba(139,92,246,0.25)',
+                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
+                                    }}>
+                                        <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{rating}</span>
+                                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginTop: '1px' }}>/10</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Info */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: isLandscape ? '0 0 48%' : undefined, justifyContent: 'center' }}>
-                            <div>
-                                <h1 style={{ fontSize: isPortrait ? '22px' : '26px', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
-                                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '8px' }}>
-                                    {reviewData.varietyType && (
-                                        <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: '9px', fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>
-                                    )}
-                                    {resolveReviewField('thc') && resolveReviewField('thc') !== '-' && (
-                                        <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: '9px', fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>
-                                    )}
-                                    {resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && (
-                                        <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: '9px', fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>
-                                    )}
+                            {isSectionVisible('infos') && (
+                                <div>
+                                    <h1 style={{ fontSize: isPortrait ? '22px' : '26px', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
+                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '8px' }}>
+                                        {reviewData.varietyType && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: '9px', fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>
+                                        )}
+                                        {isSectionVisible('analytics') && resolveReviewField('thc') && resolveReviewField('thc') !== '-' && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: '9px', fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>
+                                        )}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: '9px', fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
+                            )}
                             {categories.length > 0 && (
                                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(categories.length, isLandscape ? 2 : 4)}, 1fr)`, gap: '6px' }}>
                                     {categories.map((cat, i) => (
@@ -757,10 +962,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== STANDARD TEMPLATE ======
     const renderStandardCanvas = () => {
-        const rating = reviewData.rating || reviewData.overallRating || null
+        const rating = resolveReviewField('overallRating') || reviewData.rating || reviewData.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
-        const categories = getCategoryScores()
+        const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
         const odor = resolveReviewField('odor') || {}
         const taste = resolveReviewField('taste') || {}
         const effects = resolveReviewField('effects') || {}
@@ -789,76 +994,82 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Hero */}
                     <div style={{ display: 'flex', flexDirection: isPortrait ? 'column' : 'row', gap: '14px' }}>
-                        <div style={{
-                            flex: isPortrait ? undefined : '0 0 42%',
-                            height: isPortrait ? '180px' : undefined,
-                            borderRadius: '14px', overflow: 'hidden', position: 'relative',
-                            border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)',
-                        }}>
-                            {imgUrl ? (
-                                <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
-                            ) : (
-                                <div style={{ width: '100%', height: '100%', minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
-                            )}
-                        </div>
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            <div>
-                                <h1 style={{ fontSize: `${24 * fs}px`, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
-                                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
-                                    {reviewData.varietyType && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>}
-                                    {resolveReviewField('thc') && resolveReviewField('thc') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>}
-                                    {resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
-                                </div>
-                                {genetics && genetics !== '-' && (
-                                    <div style={{ fontSize: `${10 * fs}px`, color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>{typeof genetics === 'string' ? genetics : JSON.stringify(genetics)}</div>
+                        {isSectionVisible('photo') && (
+                            <div style={{
+                                flex: isPortrait ? undefined : '0 0 42%',
+                                height: isPortrait ? '180px' : undefined,
+                                borderRadius: '14px', overflow: 'hidden', position: 'relative',
+                                border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)',
+                            }}>
+                                {imgUrl ? (
+                                    <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
+                                ) : (
+                                    <div style={{ width: '100%', height: '100%', minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
                                 )}
                             </div>
+                        )}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {isSectionVisible('infos') && (
+                                <div>
+                                    <h1 style={{ fontSize: `${24 * fs}px`, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
+                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
+                                        {reviewData.varietyType && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>}
+                                        {isSectionVisible('analytics') && resolveReviewField('thc') && resolveReviewField('thc') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
+                                    </div>
+                                    {genetics && genetics !== '-' && (
+                                        <div style={{ fontSize: `${10 * fs}px`, color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>{typeof genetics === 'string' ? genetics : JSON.stringify(genetics)}</div>
+                                    )}
+                                </div>
+                            )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                 {rating && <ScoreGauge score={rating} size={56} label="Note" />}
-                                <div style={{ flex: 1 }}>
-                                    <MiniBars items={categories.slice(0, 4).map(c => ({ label: c.label, value: c.score, color: c.color }))} max={10} compact />
-                                </div>
+                                {categories.length > 0 && (
+                                    <div style={{ flex: 1 }}>
+                                        {renderScoreGroup(categories.slice(0, 4).map(c => ({ label: c.label, value: c.score, color: c.color })))}
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
 
                     {/* Sensorial */}
                     <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : 'repeat(3, 1fr)', gap: '8px' }}>
-                        {(odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
+                        {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
                             <SectionCard title="Odeur" icon="👃">
-                                {odor.intensity && <MiniBars items={[{ label: 'Intensité', value: odor.intensity, color: '#22C55E' }]} max={10} compact />}
-                                <div style={{ marginTop: '4px' }}><ExportPills items={[...(odor.dominant || []), ...(odor.secondary || [])]} color="rgba(34,197,94,0.12)" textColor="#22C55E" /></div>
+                                {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
+                                <div style={{ marginTop: '4px' }}>{renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}</div>
                             </SectionCard>
                         ) : null}
-                        {(taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
+                        {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
                             <SectionCard title="Goût" icon="😋">
-                                <MiniBars items={[
+                                {renderScoreGroup([
                                     taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
                                     taste.aggressiveness && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
-                                ].filter(Boolean)} max={10} compact />
-                                <div style={{ marginTop: '4px' }}><ExportPills items={[...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])]} color="rgba(245,158,11,0.12)" textColor="#F59E0B" /></div>
+                                ].filter(Boolean))}
+                                <div style={{ marginTop: '4px' }}>{renderList([...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])], 'rgba(245,158,11,0.12)', '#F59E0B')}</div>
                             </SectionCard>
                         ) : null}
-                        {(effects.intensity || effects.onset || effects.selected?.length) ? (
+                        {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
                             <SectionCard title="Effets" icon="💥">
-                                <MiniBars items={[
+                                {renderScoreGroup([
                                     effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
                                     effects.onset && { label: 'Montée', value: effects.onset, color: '#34D399' },
-                                ].filter(Boolean)} max={10} compact />
-                                <div style={{ marginTop: '4px' }}><ExportPills items={effects.selected || []} color="rgba(6,182,212,0.12)" textColor="#06B6D4" /></div>
+                                ].filter(Boolean))}
+                                <div style={{ marginTop: '4px' }}>{renderList(effects.selected || [], 'rgba(6,182,212,0.12)', '#06B6D4')}</div>
                             </SectionCard>
                         ) : null}
                     </div>
 
                     {/* Terpenes & Pipelines */}
-                    {(terps.length > 0 || curingData.data?.length > 0 || cultureData.data?.length > 0) && (
-                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : (terps.length > 0 ? '1fr 1fr' : '1fr'), gap: '8px' }}>
-                            {terps.length > 0 && (
+                    {((isSectionVisible('terpenes') && terps.length > 0) || (isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : ((isSectionVisible('terpenes') && terps.length > 0) ? '1fr 1fr' : '1fr'), gap: '8px' }}>
+                            {isSectionVisible('terpenes') && terps.length > 0 && (
                                 <SectionCard title="Profil Terpénique" icon="🧬">
                                     <TerpeneBar profile={terps} compact />
                                 </SectionCard>
                             )}
-                            {(curingData.data?.length > 0 || cultureData.data?.length > 0) && (
+                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
                                 <SectionCard title="Pipeline" icon="⚗️">
                                     {cultureData.data?.length > 0 && (
                                         <div style={{ marginBottom: '6px' }}>
@@ -895,10 +1106,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== DETAILED TEMPLATE ======
     const renderDetailedCanvas = () => {
-        const rating = reviewData.rating || reviewData.overallRating || null
+        const rating = resolveReviewField('overallRating') || reviewData.rating || reviewData.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
-        const categories = getCategoryScores()
+        const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
         const odor = resolveReviewField('odor') || {}
         const taste = resolveReviewField('taste') || {}
         const effects = resolveReviewField('effects') || {}
@@ -960,22 +1171,22 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : '1fr 1fr', gap: '8px', minHeight: 0, overflow: 'hidden' }}>
                         {/* Left */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {imgUrl && (
+                            {isSectionVisible('photo') && imgUrl && (
                                 <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', maxHeight: isPortrait ? '140px' : '180px' }}>
                                     <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
                                 </div>
                             )}
-                            {visualBars.length > 0 && (
+                            {isSectionVisible('visual') && visualBars.length > 0 && (
                                 <SectionCard title="Visuel" icon="👁">
-                                    <MiniBars items={visualBars} max={10} compact />
+                                    {renderScoreGroup(visualBars)}
                                 </SectionCard>
                             )}
-                            {textureBars.length > 0 && (
+                            {isSectionVisible('texture') && textureBars.length > 0 && (
                                 <SectionCard title="Texture" icon="🤚">
-                                    <MiniBars items={textureBars} max={10} compact />
+                                    {renderScoreGroup(textureBars)}
                                 </SectionCard>
                             )}
-                            {terps.length > 0 && (
+                            {isSectionVisible('terpenes') && terps.length > 0 && (
                                 <SectionCard title="Terpènes" icon="🧬">
                                     <TerpeneBar profile={terps} compact />
                                 </SectionCard>
@@ -984,54 +1195,52 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                         {/* Right */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {(odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
+                            {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
                                 <SectionCard title="Odeur" icon="👃">
-                                    <MiniBars items={[
-                                        odor.intensity && { label: 'Intensité', value: odor.intensity, color: '#22C55E' },
-                                    ].filter(Boolean)} max={10} compact />
+                                    {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
                                     {(odor.dominant?.length > 0 || odor.secondary?.length > 0) && (
                                         <div style={{ marginTop: '4px' }}>
-                                            <ExportPills items={[...(odor.dominant || []), ...(odor.secondary || [])]} color="rgba(34,197,94,0.12)" textColor="#22C55E" />
+                                            {renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}
                                         </div>
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {(taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
+                            {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
                                 <SectionCard title="Goût" icon="😋">
-                                    <MiniBars items={[
+                                    {renderScoreGroup([
                                         taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
                                         taste.aggressiveness && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
-                                    ].filter(Boolean)} max={10} compact />
+                                    ].filter(Boolean))}
                                     {(taste.dryPuff?.length > 0 || taste.inhalation?.length > 0 || taste.expiration?.length > 0) && (
                                         <div style={{ marginTop: '4px' }}>
                                             <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: '3px' }}>Dry Puff</div>
-                                            <ExportPills items={taste.dryPuff || []} color="rgba(245,158,11,0.10)" textColor="#F59E0B" max={4} />
+                                            {renderList(taste.dryPuff || [], 'rgba(245,158,11,0.10)', '#F59E0B', undefined, 4)}
                                             {taste.inhalation?.length > 0 && <>
                                                 <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', margin: '3px 0' }}>Inhalation</div>
-                                                <ExportPills items={taste.inhalation} color="rgba(251,146,60,0.10)" textColor="#FB923C" max={4} />
+                                                {renderList(taste.inhalation, 'rgba(251,146,60,0.10)', '#FB923C', undefined, 4)}
                                             </>}
                                             {taste.expiration?.length > 0 && <>
                                                 <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', margin: '3px 0' }}>Expiration</div>
-                                                <ExportPills items={taste.expiration} color="rgba(249,115,22,0.10)" textColor="#F97316" max={4} />
+                                                {renderList(taste.expiration, 'rgba(249,115,22,0.10)', '#F97316', undefined, 4)}
                                             </>}
                                         </div>
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {(effects.intensity || effects.onset || effects.selected?.length) ? (
+                            {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
                                 <SectionCard title="Effets" icon="💥">
-                                    <MiniBars items={[
+                                    {renderScoreGroup([
                                         effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
                                         effects.onset && { label: 'Montée', value: effects.onset, color: '#34D399' },
-                                    ].filter(Boolean)} max={10} compact />
+                                    ].filter(Boolean))}
                                     {effects.selected?.length > 0 && (
                                         <div style={{ marginTop: '4px' }}>
-                                            <ExportPills items={effects.selected} color="rgba(6,182,212,0.12)" textColor="#06B6D4" />
+                                            {renderList(effects.selected, 'rgba(6,182,212,0.12)', '#06B6D4')}
                                         </div>
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {(curingData.data?.length > 0 || cultureData.data?.length > 0) && (
+                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
                                 <SectionCard title="Pipeline" icon="⚗️">
                                     {cultureData.data?.length > 0 && (
                                         <div style={{ marginBottom: '6px' }}>
@@ -1057,7 +1266,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             )}
-                            {(recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
+                            {isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
                                 <SectionCard title="Récolte" icon="🌾">
                                     <div style={{ display: 'flex', gap: '8px', fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>
                                         {recolte.poidsBrut && <span>Brut: <b>{recolte.poidsBrut}g</b></span>}
@@ -1110,165 +1319,225 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         </button>
                     </div>
 
-                    {/* Navigation Modes */}
-                    <div className="flex p-2 gap-1 bg-black/20">
-                        <button
-                            onClick={() => setMode('templates')}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'templates' ? ' text-white' : 'text-gray-400 hover:text-white'}`}
-                        >
-                            Templates
-                        </button>
-                        <button
-                            onClick={() => canUseCustomLayout && setMode('custom')}
-                            disabled={!canUseCustomLayout}
-                            title={!canUseCustomLayout ? 'Réservé aux comptes Producteur' : ''}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'custom' ? ' text-white' : 'text-gray-400 hover:text-white'} ${!canUseCustomLayout ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            Personnalisé
-                        </button>
-                        <button
-                            onClick={() => (permissions.export?.features?.watermark ? setMode('watermark') : null)}
-                            disabled={!permissions.export?.features?.watermark}
-                            title={!permissions.export?.features?.watermark ? 'La personnalisation du filigrane est réservée aux comptes payants' : ''}
-                            className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${mode === 'watermark' ? ' text-white' : 'text-gray-400 hover:text-white'} ${!permissions.export?.features?.watermark ? 'opacity-50 cursor-not-allowed' : ''}`}
-                        >
-                            Filigrane
-                        </button>
-                    </div>
-
-                    <div className="flex-1 overflow-y-auto p-4 space-y-6">
-                        {mode === 'templates' && (
-                            <div className="space-y-4">
-                                {/* Template Selection */}
-                                <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Template</h3>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {templates.map(t => {
-                                            const locked = !!t.premium;
-                                            const active = selectedTemplate === t.id;
-                                            const previewColors = {
-                                                minimal: ['#8B5CF6', '#22C55E', '#F59E0B'],
-                                                standard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
-                                                detailed: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
-                                                custom: ['#A78BFA'],
-                                            };
-                                            const colors = previewColors[t.id] || previewColors.standard;
-                                            return (
-                                                <button
-                                                    key={t.id}
-                                                    onClick={() => !locked && setSelectedTemplate(t.id)}
-                                                    disabled={locked}
-                                                    title={locked ? 'Réservé aux comptes Producteur / Influenceur' : ''}
-                                                    className={`w-full text-left p-3 rounded-xl border transition-all ${active ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'} ${locked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        {/* Mini preview */}
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${active ? 'bg-purple-500/20' : 'bg-white/5'}`}>
-                                                            <div className="flex gap-[2px]">
-                                                                {colors.slice(0, 3).map((c, ci) => (
-                                                                    <div key={ci} style={{ width: '3px', height: `${10 + ci * 4}px`, borderRadius: '1px', background: active ? c : 'rgba(255,255,255,0.2)' }} />
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-semibold text-sm text-white flex items-center gap-2">
-                                                                {t.name}
-                                                                {t.premium && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
-                                                            </div>
-                                                            <div className="text-[11px] text-gray-500 mt-0.5">{t.description}</div>
-                                                        </div>
-                                                        {active && <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(139,92,246,0.5)]" />}
+                    {/* Unified sidebar content — no more 3-tab split */}
+                    <div className="flex-1 overflow-y-auto p-4 space-y-5">
+                        {/* Template Selection */}
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Template</h3>
+                            <div className="grid grid-cols-1 gap-2">
+                                {templates.map(t => {
+                                    const locked = !!t.premium;
+                                    const active = selectedTemplate === t.id;
+                                    const previewColors = {
+                                        minimal: ['#8B5CF6', '#22C55E', '#F59E0B'],
+                                        standard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
+                                        detailed: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
+                                        custom: ['#A78BFA'],
+                                    };
+                                    const colors = previewColors[t.id] || previewColors.standard;
+                                    return (
+                                        <button
+                                            key={t.id}
+                                            onClick={() => !locked && setSelectedTemplate(t.id)}
+                                            disabled={locked}
+                                            title={locked ? 'Réservé aux comptes Producteur / Influenceur' : ''}
+                                            className={`w-full text-left p-3 rounded-xl border transition-all ${active ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'} ${locked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${active ? 'bg-purple-500/20' : 'bg-white/5'}`}>
+                                                    <div className="flex gap-[2px]">
+                                                        {colors.slice(0, 3).map((c, ci) => (
+                                                            <div key={ci} style={{ width: '3px', height: `${10 + ci * 4}px`, borderRadius: '1px', background: active ? c : 'rgba(255,255,255,0.2)' }} />
+                                                        ))}
                                                     </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="font-semibold text-sm text-white flex items-center gap-2">
+                                                        {t.name}
+                                                        {t.premium && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
+                                                    </div>
+                                                    <div className="text-[11px] text-gray-500 mt-0.5">{t.description}</div>
+                                                </div>
+                                                {active && <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(139,92,246,0.5)]" />}
+                                            </div>
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
 
-                                {/* Format Selection */}
+                        {/* Format Selection */}
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Format</h3>
+                            <div className="grid grid-cols-4 gap-2">
+                                {[
+                                    { id: '1:1', label: 'Carré', w: 20, h: 20 },
+                                    { id: '16:9', label: 'Paysage', w: 24, h: 14 },
+                                    { id: '9:16', label: 'Portrait', w: 14, h: 24 },
+                                    { id: 'A4', label: 'A4', w: 16, h: 22 },
+                                ].map(f => (
+                                    <button
+                                        key={f.id}
+                                        onClick={() => setFormat(f.id)}
+                                        className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${format === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'}`}
+                                    >
+                                        <div
+                                            className={`rounded-sm border ${format === f.id ? 'border-purple-400/60' : 'border-white/10'}`}
+                                            style={{ width: `${f.w}px`, height: `${f.h}px`, background: format === f.id ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)' }}
+                                        />
+                                        <span className={`text-[10px] font-medium ${format === f.id ? 'text-purple-300' : 'text-gray-500'}`}>{f.label}</span>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Content Visibility (section toggles) */}
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Contenu visible</h3>
+                            <div className="space-y-1">
+                                {[
+                                    { key: 'photo', label: 'Photo', icon: '📷' },
+                                    { key: 'infos', label: 'Informations', icon: '📋' },
+                                    { key: 'analytics', label: 'Analytiques', icon: '🔬' },
+                                    { key: 'visual', label: 'Visuel', icon: '👁' },
+                                    { key: 'odor', label: 'Odeurs', icon: '👃' },
+                                    { key: 'texture', label: 'Texture', icon: '🤚' },
+                                    { key: 'taste', label: 'Goûts', icon: '😋' },
+                                    { key: 'effects', label: 'Effets', icon: '💥' },
+                                    { key: 'terpenes', label: 'Terpènes', icon: '🧬' },
+                                    { key: 'pipeline', label: 'Pipelines', icon: '⚗️' },
+                                    { key: 'recolte', label: 'Récolte', icon: '🌾' },
+                                ].map(section => {
+                                    const sectionKeys = SECTION_VISIBILITY[section.key] || [];
+                                    const allVisible = sectionKeys.every(k => contentModules[k] !== false);
+                                    const someVisible = sectionKeys.some(k => contentModules[k] !== false);
+                                    return (
+                                        <button
+                                            key={section.key}
+                                            onClick={() => {
+                                                const newModules = { ...contentModules };
+                                                const target = allVisible ? false : true;
+                                                sectionKeys.forEach(k => { newModules[k] = target; });
+                                                useOrchardStore.getState().setConfig({ ...orchardConfig, contentModules: newModules });
+                                            }}
+                                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${allVisible ? 'bg-white/[0.04] border border-white/10' : 'bg-transparent border border-transparent opacity-50'}`}
+                                        >
+                                            <span className="text-sm">{section.icon}</span>
+                                            <span className="text-xs font-medium text-white flex-1">{section.label}</span>
+                                            <div className={`w-3 h-3 rounded-sm border transition-all ${allVisible ? 'bg-purple-500 border-purple-400' : someVisible ? 'bg-purple-500/40 border-purple-400/50' : 'border-white/20'}`} />
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+
+                        {/* Render Style */}
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Style de rendu</h3>
+                            <div className="space-y-2">
                                 <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Format</h3>
-                                    <div className="grid grid-cols-4 gap-2">
+                                    <div className="text-[10px] text-gray-500 mb-1.5">Notes / Scores</div>
+                                    <div className="grid grid-cols-4 gap-1">
                                         {[
-                                            { id: '1:1', label: 'Carré', w: 20, h: 20 },
-                                            { id: '16:9', label: 'Paysage', w: 24, h: 14 },
-                                            { id: '9:16', label: 'Portrait', w: 14, h: 24 },
-                                            { id: 'A4', label: 'A4', w: 16, h: 22 },
-                                        ].map(f => (
+                                            { id: 'bar', label: 'Barres' },
+                                            { id: 'gauge', label: 'Jauges' },
+                                            { id: 'pill', label: 'Pilules' },
+                                            { id: 'number', label: 'Nombres' },
+                                        ].map(s => (
                                             <button
-                                                key={f.id}
-                                                onClick={() => setFormat(f.id)}
-                                                className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${format === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'}`}
-                                            >
-                                                <div
-                                                    className={`rounded-sm border ${format === f.id ? 'border-purple-400/60' : 'border-white/10'}`}
-                                                    style={{ width: `${f.w}px`, height: `${f.h}px`, background: format === f.id ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)' }}
-                                                />
-                                                <span className={`text-[10px] font-medium ${format === f.id ? 'text-purple-300' : 'text-gray-500'}`}>{f.label}</span>
-                                            </button>
+                                                key={s.id}
+                                                onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, scores: s.id } })}
+                                                className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.scores || 'bar') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
+                                            >{s.label}</button>
                                         ))}
                                     </div>
                                 </div>
-
-                                {/* Pagination Controls */}
-                                {totalPages > 1 && (
-                                    <div>
-                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Pages</h3>
-                                        <div className="flex items-center justify-center gap-2">
+                                <div>
+                                    <div className="text-[10px] text-gray-500 mb-1.5">Arômes / Effets</div>
+                                    <div className="grid grid-cols-3 gap-1">
+                                        {[
+                                            { id: 'pills', label: 'Pilules' },
+                                            { id: 'comma', label: 'Texte' },
+                                            { id: 'grid', label: 'Grille' },
+                                        ].map(s => (
                                             <button
-                                                onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                                                disabled={currentPage === 0}
-                                                className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
-                                            >
-                                                <ChevronsRight className="w-3.5 h-3.5 rotate-180" />
-                                            </button>
-                                            <div className="flex gap-1.5">
-                                                {Array.from({ length: totalPages }).map((_, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => setCurrentPage(i)}
-                                                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
-                                                    >
-                                                        {i + 1}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <button
-                                                onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                                                disabled={currentPage === totalPages - 1}
-                                                className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
-                                            >
-                                                <ChevronsRight className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
+                                                key={s.id}
+                                                onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, lists: s.id } })}
+                                                className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.lists || 'pills') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
+                                            >{s.label}</button>
+                                        ))}
                                     </div>
-                                )}
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Pagination Controls */}
+                        {totalPages > 1 && (
+                            <div>
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Pages</h3>
+                                <div className="flex items-center justify-center gap-2">
+                                    <button
+                                        onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                                        disabled={currentPage === 0}
+                                        className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                                    >
+                                        <ChevronsRight className="w-3.5 h-3.5 rotate-180" />
+                                    </button>
+                                    <div className="flex gap-1.5">
+                                        {Array.from({ length: totalPages }).map((_, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => setCurrentPage(i)}
+                                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
+                                            >
+                                                {i + 1}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    <button
+                                        onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
+                                        disabled={currentPage === totalPages - 1}
+                                        className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                                    >
+                                        <ChevronsRight className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
                             </div>
                         )}
 
-                        {mode === 'custom' && (
-                            <FeatureGate hasAccess={canUseCustomLayout} upgradeType="producer">
+                        {/* Watermark section (collapsible, premium) */}
+                        <div>
+                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                Filigrane
+                                {!permissions.export?.features?.watermark && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
+                            </h3>
+                            {permissions.export?.features?.watermark ? (
+                                <WatermarkEditor
+                                    watermark={watermark}
+                                    onWatermarkChange={setWatermark}
+                                />
+                            ) : (
+                                <div className="p-3 bg-white/5 rounded-lg">
+                                    <div className="text-xs text-gray-400">Le filigrane Terpologie est appliqué automatiquement.</div>
+                                    <div className="text-[10px] text-gray-600 mt-1">Personnalisez-le avec un compte Producteur ou Influenceur.</div>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Custom Layout (premium, with DragDrop) */}
+                        {canUseCustomLayout && (
+                            <div>
+                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                    Agencement personnalisé
+                                    <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
+                                </h3>
                                 <DragDropExport
                                     productType={productType}
                                     selectedSections={customSections}
                                     onSectionsChange={setCustomSections}
                                     allowedModules={relevantModules}
                                 />
-                            </FeatureGate>
-                        )}
-
-                        {mode === 'watermark' && (
-                            permissions.export?.features?.watermark ? (
-                                <WatermarkEditor
-                                    watermark={watermark}
-                                    onWatermarkChange={setWatermark}
-                                />
-                            ) : (
-                                <div className="p-4 bg-white/5 rounded">
-                                    <div className="text-sm text-gray-300">La personnalisation avancée des filigranes est réservée aux comptes payants.</div>
-                                    <div className="text-xs text-gray-500 mt-2">Votre export inclura automatiquement le filigrane Terpologie.</div>
-                                </div>
-                            )
+                            </div>
                         )}
                     </div>
 
