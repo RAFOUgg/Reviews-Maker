@@ -213,16 +213,22 @@ export function liftOrchardFromExtra(formatted) {
             formatted.isOurReview = extra.isOurReview === true || extra.isOurReview === 'true'
         }
 
-        // Common preview keys produced by the Orchard editor or legacy naming.
-        const previewKeys = [
-            'apercu_definit', 'apercuDefinit', 'previewUrl', 'preview', 'orchardPreview', 'orchardFinalPreview', 'finalPreview', 'mainImageUrl'
-        ]
+        // Resolve actual main image URL from extraData (product photo, NOT template screenshot)
+        if (extra.mainImageUrl) {
+            const resolved = resolvePreviewUrl(extra.mainImageUrl)
+            if (resolved) formatted.mainImageUrl = resolved
+        }
 
-        for (const key of previewKeys) {
+        // Store orchard/template preview thumbnails separately — NOT as mainImageUrl
+        const orchardPreviewKeys = [
+            'apercu_definit', 'apercuDefinit', 'previewUrl', 'preview',
+            'orchardPreview', 'orchardFinalPreview', 'finalPreview'
+        ]
+        for (const key of orchardPreviewKeys) {
             if (extra[key]) {
                 const resolved = resolvePreviewUrl(extra[key])
                 if (resolved) {
-                    formatted.mainImageUrl = resolved
+                    formatted.orchardPreviewUrl = resolved
                     break
                 }
             }

@@ -7,7 +7,6 @@
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom'
 import { parseImages } from '../../utils/imageUtils'
-import TemplateRenderer from '../export/TemplateRenderer'
 
 export default function HomeReviewCard({
     review,
@@ -18,22 +17,6 @@ export default function HomeReviewCard({
     const navigate = useNavigate()
     const images = parseImages(review.images)
     const rating = review.overallRating || review.note || 0
-
-    // Parser orchardConfig si c'est une string JSON
-    const getOrchardConfig = () => {
-        if (!review.orchardConfig) return null
-        if (typeof review.orchardConfig === 'string') {
-            try {
-                return JSON.parse(review.orchardConfig)
-            } catch {
-                return null
-            }
-        }
-        return review.orchardConfig
-    }
-
-    const orchardConfig = getOrchardConfig()
-    const hasOrchardPreview = !!orchardConfig && (review.orchardPreset || review.orchardLayoutMode)
 
     const getTypeIcon = (type) => {
         switch (type) {
@@ -46,43 +29,6 @@ export default function HomeReviewCard({
 
     const handleCardClick = () => {
         navigate(`/review/${review.id}`)
-    }
-
-    // Préparer les données pour le template Orchard
-    const getOrchardReviewData = () => {
-        // Parser les champs JSON si nécessaire
-        const safeParseJSON = (value) => {
-            if (!value) return []
-            if (Array.isArray(value)) return value
-            if (typeof value === 'string') {
-                try { return JSON.parse(value) } catch { return [] }
-            }
-            return []
-        }
-
-        return {
-            ...review,
-            title: review.holderName,
-            rating: review.overallRating || review.note || 0,
-            imageUrl: review.mainImageUrl || (images && images.length > 0 ? images[0] : null),
-            images: images || [],
-            terpenes: safeParseJSON(review.terpenes),
-            aromas: safeParseJSON(review.aromas),
-            tastes: safeParseJSON(review.tastes),
-            effects: safeParseJSON(review.effects),
-            tags: [
-                ...safeParseJSON(review.terpenes),
-                ...safeParseJSON(review.aromas),
-                ...safeParseJSON(review.tastes),
-                ...safeParseJSON(review.effects)
-            ].slice(0, 10),
-            category: review.type,
-            ownerName: review.ownerName || review.author?.username || 'Anonyme',
-            date: review.createdAt,
-            cultivar: review.cultivars,
-            breeder: review.breeder || review.hashmaker,
-            farm: review.farm
-        }
     }
 
     return (

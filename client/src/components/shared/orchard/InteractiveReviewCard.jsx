@@ -270,6 +270,35 @@ function CategoryCard({ cat }) {
 // ═════════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═════════════════════════════════════════════════════════════════════════════
+
+// Map broad section keys used in this component to granular template preset keys
+// A section is visible when at least one of its mapped preset keys is enabled
+const SECTION_PRESET_MAP = {
+    title: ['nomCommercial'],
+    image: ['mainImage', 'images'],
+    categoryRatings: [
+        'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
+        'visual.transparency', 'visual.viscosity',
+        'odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity',
+        'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
+        'gouts.intensity', 'gouts.aggressiveness',
+        'effets.onset', 'effets.intensity',
+    ],
+    aromas: ['odeurs.dominantNotes', 'odeurs.secondaryNotes', 'odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity'],
+    terpenes: ['analytics.terpeneProfile'],
+    tastes: ['gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes'],
+    effects: ['effets.onset', 'effets.intensity', 'effets.effects', 'effets.duration'],
+    curing: ['curing'],
+};
+
+// Template-specific visual style presets
+const TEMPLATE_STYLES = {
+    modernCompact: { spacing: 'space-y-3', sectionDefault: false, imageAspect: 'aspect-square', maxWidth: 'max-w-xl', headerSize: 'text-xl', compact: true },
+    detailedCard: { spacing: 'space-y-5', sectionDefault: true, imageAspect: 'aspect-video', maxWidth: 'max-w-3xl', headerSize: 'text-2xl', compact: false },
+    blogArticle: { spacing: 'space-y-6', sectionDefault: true, imageAspect: 'aspect-video', maxWidth: 'max-w-3xl', headerSize: 'text-3xl', compact: false },
+    socialStory: { spacing: 'space-y-3', sectionDefault: false, imageAspect: 'aspect-[3/4]', maxWidth: 'max-w-sm mx-auto', headerSize: 'text-lg', compact: true },
+};
+
 export default function InteractiveReviewCard({ mode = 'preview' }) {
     const config = useOrchardStore(s => s.config);
     const reviewData = useOrchardStore(s => s.reviewData);
@@ -292,6 +321,8 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const cm = config?.contentModules || {};
     const colors = config?.colors || {};
     const typo = config?.typography || {};
+    const templateId = config?.template || 'modernCompact';
+    const tStyle = TEMPLATE_STYLES[templateId] || TEMPLATE_STYLES.modernCompact;
 
     if (!reviewData) return (
         <div className="flex items-center justify-center h-full text-white/30">
@@ -307,8 +338,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const typeLabels = { flower: 'Fleurs', hash: 'Hash', concentrate: 'Concentré', edible: 'Comestible' };
     const mainImageUrl = reviewData.mainImageUrl || reviewData.imageUrl;
 
-    // Check module visibility
-    const isVisible = (key) => cm[key] !== false;
+    // Check module visibility — bridges granular preset keys to broad section keys
+    const isVisible = (key) => {
+        if (cm[key] === false) return false;
+        const mapped = SECTION_PRESET_MAP[key];
+        if (mapped && mapped.length > 0) return mapped.some(pk => cm[pk] !== false);
+        return true;
+    };
 
     return (
         <div
@@ -318,7 +354,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                 '--accent': colors.accent || '#a855f7',
             }}
         >
-            <div className="max-w-3xl mx-auto px-4 py-6 space-y-4">
+            <div className={`${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
 
                 {/* ─── HEADER ─────────────────────────────────────────── */}
                 <div className="space-y-4">
@@ -331,7 +367,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                     {isVisible('title') && (
                         <h1
-                            className="text-2xl font-bold text-white leading-tight"
+                            className={`${tStyle.headerSize} font-bold text-white leading-tight`}
                             style={{
                                 fontFamily: typo.fontFamily,
                                 fontWeight: typo.titleWeight || '700',
@@ -388,7 +424,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                 {/* ─── CATEGORY RATINGS ────────────────────────────────── */}
                 {isVisible('categoryRatings') && categoryRatings.length > 0 && (
-                    <Section title="Notes par catégorie" icon="📊" badge={`${categoryRatings.length} cat.`}>
+                    <Section title="Notes par catégorie" icon="📊" badge={`${categoryRatings.length} cat.`} defaultOpen={tStyle.sectionDefault}>
                         <div className="space-y-2">
                             {categoryRatings.map(cat => (
                                 <CategoryCard key={cat.key} cat={cat} />
@@ -399,7 +435,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                 {/* ─── AROMAS / ODEURS ────────────────────────────────── */}
                 {isVisible('aromas') && (aromas.length > 0 || secondaryAromas.length > 0) && (
-                    <Section title="Arômes" icon="👃" badge={`${aromas.length + secondaryAromas.length}`}>
+                    <Section title="Arômes" icon="👃" badge={`${aromas.length + secondaryAromas.length}`} defaultOpen={tStyle.sectionDefault}>
                         {aromas.length > 0 && (
                             <div>
                                 <span className="text-xs text-white/40 mb-1.5 block">Notes dominantes</span>
@@ -421,7 +457,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                 {/* ─── TERPENES ────────────────────────────────────────── */}
                 {isVisible('terpenes') && terpenes.length > 0 && (
-                    <Section title="Terpènes" icon="🧬" badge={`${terpenes.length}`}>
+                    <Section title="Terpènes" icon="🧬" badge={`${terpenes.length}`} defaultOpen={tStyle.sectionDefault}>
                         <div className="flex flex-wrap gap-1.5">
                             {terpenes.map((t, i) => <TagPill key={i} label={t} color="cyan" />)}
                         </div>
@@ -430,7 +466,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                 {/* ─── TASTES / GOÛTS ─────────────────────────────────── */}
                 {(isVisible('tastes') && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0)) && (
-                    <Section title="Goûts" icon="👅" badge={`${tastes.length + dryPuffNotes.length + inhalationNotes.length + exhalationNotes.length}`}>
+                    <Section title="Goûts" icon="👅" badge={`${tastes.length + dryPuffNotes.length + inhalationNotes.length + exhalationNotes.length}`} defaultOpen={tStyle.sectionDefault}>
                         {dryPuffNotes.length > 0 && (
                             <div>
                                 <span className="text-xs text-white/40 mb-1.5 block">Tirage à sec</span>
@@ -468,7 +504,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                 {/* ─── EFFECTS ────────────────────────────────────────── */}
                 {isVisible('effects') && effects.length > 0 && (
-                    <Section title="Effets ressentis" icon="⚡" badge={`${effects.length}`}>
+                    <Section title="Effets ressentis" icon="⚡" badge={`${effects.length}`} defaultOpen={tStyle.sectionDefault}>
                         <div className="flex flex-wrap gap-1.5">
                             {effects.map((e, i) => <TagPill key={i} label={e} color="purple" />)}
                         </div>
@@ -509,7 +545,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                 {/* ─── PIPELINES (Interactive!) ───────────────────────── */}
                 {pipelines.length > 0 && (
-                    <Section title="Pipelines" icon="⚗️" badge={`${pipelines.length}`}>
+                    <Section title="Pipelines" icon="⚗️" badge={`${pipelines.length}`} defaultOpen={tStyle.sectionDefault}>
                         <div className="space-y-4">
                             {pipelines.map((pl, i) => (
                                 <InteractivePipelineViewer
