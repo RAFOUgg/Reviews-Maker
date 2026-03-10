@@ -173,14 +173,12 @@ export default function CreateFlowerReview() {
             // Aplatir les données du formulaire avec l'utilitaire
             const flatData = flattenFlowerFormData(formData)
 
-            // Récupérer les images existantes depuis formData (chargées depuis l'API en mode édition)
-            let existingImages = []
-            try {
-                existingImages = Array.isArray(formData.images) ? formData.images
-                    : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
-            } catch {
-                existingImages = []
-            }
+            // Dériver existingImages depuis l'état photos courant (pas depuis formData.images)
+            // → si l'utilisateur a supprimé une photo existante, elle ne sera plus dans photos
+            const existingImages = photos
+                .filter(p => p.existing)
+                .map(p => p.name || p.url || p.preview)
+                .filter(Boolean)
 
             // Créer le FormData avec les données aplaties et les images existantes
             const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
@@ -218,11 +216,11 @@ export default function CreateFlowerReview() {
         }
         try {
             setSaving(true)
-            let existingImages = []
-            try {
-                existingImages = Array.isArray(formData.images) ? formData.images
-                    : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
-            } catch { existingImages = [] }
+
+            const existingImages = photos
+                .filter(p => p.existing)
+                .map(p => p.name || p.url || p.preview)
+                .filter(Boolean)
 
             const mergedData = {
                 ...formData,
@@ -251,12 +249,11 @@ export default function CreateFlowerReview() {
     const handleSubmit = async () => {
         // Validation des champs requis
         // En mode édition, les images existantes comptent aussi (pas besoin de nouvelles photos)
-        let existingImagesForValidation = []
-        try {
-            existingImagesForValidation = Array.isArray(formData.images) ? formData.images
-                : (typeof formData.images === 'string' ? JSON.parse(formData.images) : [])
-        } catch { existingImagesForValidation = [] }
-        const hasImages = photos.length > 0 || existingImagesForValidation.length > 0
+        const existingImagesForValidation = photos
+            .filter(p => p.existing)
+            .map(p => p.name || p.url || p.preview)
+            .filter(Boolean)
+        const hasImages = photos.length > 0
 
         if (!formData.nomCommercial || !hasImages) {
             toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
