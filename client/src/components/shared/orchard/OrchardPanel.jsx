@@ -7,7 +7,6 @@ import { useOrchardStore } from '../../../store/orchardStore';
 import { normalizeReviewDataByType } from '../../../utils/orchard/normalizeByType';
 import ConfigPane from '../config/ConfigPane';
 const InteractiveReviewCard = React.lazy(() => import('./InteractiveReviewCard'));
-const TemplateRenderer = React.lazy(() => import('../../export/TemplateRenderer'));
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
@@ -614,7 +613,11 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 </div>
 
                                 {/* Preview Pane - Right — HTML interactif */}
-                                <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0">
+                                <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0 relative">
+                                    {/* Format indicator badge */}
+                                    <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] font-mono text-white/60">
+                                        {config.ratio || '1:1'}
+                                    </div>
                                     <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
                                         <InteractiveReviewCard mode="preview" />
                                     </Suspense>
@@ -625,11 +628,11 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 </div>
             </motion.div>
 
-            {/* Hidden offscreen TemplateRenderer for image export only */}
+            {/* Hidden offscreen InteractiveReviewCard in export mode for image capture */}
             {showExportModal && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }}>
                     <Suspense fallback={null}>
-                        <TemplateRenderer config={config} reviewData={normalizedData} />
+                        <InteractiveReviewCard mode="export" />
                     </Suspense>
                 </div>
             )}

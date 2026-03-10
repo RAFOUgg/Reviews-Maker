@@ -299,6 +299,106 @@ const TEMPLATE_STYLES = {
     socialStory: { spacing: 'space-y-3', sectionDefault: false, imageAspect: 'aspect-[3/4]', maxWidth: 'max-w-sm mx-auto', headerSize: 'text-lg', compact: true },
 };
 
+// Fixed pixel dimensions for export mode
+const RATIO_DIMENSIONS = {
+    '1:1': { width: 800, height: 800 },
+    '16:9': { width: 1920, height: 1080 },
+    '9:16': { width: 1080, height: 1920 },
+    '4:3': { width: 1600, height: 1200 },
+    'A4': { width: 1754, height: 2480 },
+};
+
+// Responsive style adjustments per ratio
+const RATIO_STYLES = {
+    '1:1':  { cols: 1, fontSize: 'text-sm', pad: 'px-5 py-5', gap: 'space-y-3', headerSize: 'text-xl',  imageAspect: 'aspect-square' },
+    '16:9': { cols: 2, fontSize: 'text-base', pad: 'px-8 py-6', gap: 'space-y-4', headerSize: 'text-2xl', imageAspect: 'aspect-video' },
+    '9:16': { cols: 1, fontSize: 'text-xs',  pad: 'px-4 py-4', gap: 'space-y-2', headerSize: 'text-lg',  imageAspect: 'aspect-[3/4]' },
+    '4:3':  { cols: 2, fontSize: 'text-sm', pad: 'px-6 py-5', gap: 'space-y-3', headerSize: 'text-xl',  imageAspect: 'aspect-video' },
+    'A4':   { cols: 1, fontSize: 'text-base', pad: 'px-8 py-8', gap: 'space-y-5', headerSize: 'text-2xl', imageAspect: 'aspect-video' },
+};
+
+// ─── Export-only sub-components for two-column layouts ──────────────────────
+function ExportHeader({ isVisible, type, typeLabels, title, author, reviewData, cultivars, rating, rStyle, typo, colors, tStyle }) {
+    return (
+        <div className="space-y-2">
+            {(isVisible('type') || isVisible('category')) && type && (
+                <span className="inline-flex items-center text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-semibold uppercase tracking-wider">
+                    {typeLabels[type] || type}
+                </span>
+            )}
+            {isVisible('title') && (
+                <h1 className={`${rStyle.headerSize} font-bold text-white leading-tight`} style={{ fontFamily: typo.fontFamily, fontWeight: typo.titleWeight || '700', color: typo.titleColor || '#fff' }}>
+                    {title}
+                </h1>
+            )}
+            <div className="flex flex-wrap items-center gap-2 text-xs text-white/50">
+                {isVisible('author') && author && <span>{author}</span>}
+                {isVisible('date') && reviewData.createdAt && <span>· {new Date(reviewData.createdAt).toLocaleDateString('fr-FR')}</span>}
+                {isVisible('farm') && reviewData.farm && <span>· 🌾 {reviewData.farm}</span>}
+            </div>
+            {isVisible('cultivarsList') && cultivars.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                    {cultivars.map((c, i) => <TagPill key={i} label={c} color="green" />)}
+                </div>
+            )}
+            {isVisible('rating') && rating > 0 && (
+                <div className="flex items-center gap-2">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-yellow-500/30 to-amber-600/30 border border-yellow-500/30 flex items-center justify-center">
+                        <span className="text-sm font-black text-yellow-400">{rating.toFixed(1)}</span>
+                    </div>
+                    <Stars value={rating} />
+                </div>
+            )}
+        </div>
+    );
+}
+
+function ExportDataSections({ isVisible, categoryRatings, aromas, secondaryAromas, terpenes, tastes, dryPuffNotes, inhalationNotes, exhalationNotes, effects, pipelines, reviewData, config, tStyle, rStyle }) {
+    return (
+        <div className={rStyle.gap}>
+            {isVisible('categoryRatings') && categoryRatings.length > 0 && (
+                <Section title="Notes" icon="📊" badge={`${categoryRatings.length}`} defaultOpen={true}>
+                    <div className="space-y-1.5">
+                        {categoryRatings.map(cat => <CategoryCard key={cat.key} cat={cat} />)}
+                    </div>
+                </Section>
+            )}
+            {isVisible('aromas') && (aromas.length > 0 || secondaryAromas.length > 0) && (
+                <Section title="Arômes" icon="👃" defaultOpen={true}>
+                    <div className="flex flex-wrap gap-1">
+                        {aromas.map((a, i) => <TagPill key={i} label={a} color="pink" />)}
+                        {secondaryAromas.map((a, i) => <TagPill key={`s${i}`} label={a} color="purple" />)}
+                    </div>
+                </Section>
+            )}
+            {isVisible('terpenes') && terpenes.length > 0 && (
+                <Section title="Terpènes" icon="🧬" defaultOpen={true}>
+                    <div className="flex flex-wrap gap-1">
+                        {terpenes.map((t, i) => <TagPill key={i} label={t} color="cyan" />)}
+                    </div>
+                </Section>
+            )}
+            {isVisible('tastes') && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0) && (
+                <Section title="Goûts" icon="👅" defaultOpen={true}>
+                    <div className="flex flex-wrap gap-1">
+                        {dryPuffNotes.map((t, i) => <TagPill key={`d${i}`} label={t} color="amber" />)}
+                        {inhalationNotes.map((t, i) => <TagPill key={`i${i}`} label={t} color="blue" />)}
+                        {exhalationNotes.map((t, i) => <TagPill key={`e${i}`} label={t} color="green" />)}
+                        {tastes.map((t, i) => <TagPill key={`t${i}`} label={t} color="amber" />)}
+                    </div>
+                </Section>
+            )}
+            {isVisible('effects') && effects.length > 0 && (
+                <Section title="Effets" icon="⚡" defaultOpen={true}>
+                    <div className="flex flex-wrap gap-1">
+                        {effects.map((e, i) => <TagPill key={i} label={e} color="purple" />)}
+                    </div>
+                </Section>
+            )}
+        </div>
+    );
+}
+
 export default function InteractiveReviewCard({ mode = 'preview' }) {
     const config = useOrchardStore(s => s.config);
     const reviewData = useOrchardStore(s => s.reviewData);
@@ -323,6 +423,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const typo = config?.typography || {};
     const templateId = config?.template || 'modernCompact';
     const tStyle = TEMPLATE_STYLES[templateId] || TEMPLATE_STYLES.modernCompact;
+    const ratio = config?.ratio || '1:1';
+    const rDims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
+    const rStyle = RATIO_STYLES[ratio] || RATIO_STYLES['1:1'];
+    const isExport = mode === 'export';
 
     if (!reviewData) return (
         <div className="flex items-center justify-center h-full text-white/30">
@@ -348,14 +452,42 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
     return (
         <div
-            className="w-full h-full overflow-y-auto custom-scrollbar"
+            id={isExport ? 'orchard-template-canvas' : undefined}
+            data-width={isExport ? rDims.width : undefined}
+            data-height={isExport ? rDims.height : undefined}
+            data-ratio={isExport ? ratio : undefined}
+            className={isExport ? '' : 'w-full h-full overflow-y-auto custom-scrollbar'}
             style={{
                 fontFamily: typo.fontFamily || 'Inter, system-ui, sans-serif',
                 '--accent': colors.accent || '#a855f7',
+                ...(isExport ? {
+                    width: `${rDims.width}px`,
+                    height: `${rDims.height}px`,
+                    overflow: 'hidden',
+                    position: 'relative',
+                    background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                    contain: 'layout style paint',
+                    flexShrink: 0,
+                } : {}),
             }}
         >
-            <div className={`${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
+            <div className={isExport ? `w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap}` : `${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
 
+                {/* Two-column wrapper for landscape export ratios */}
+                {isExport && rStyle.cols === 2 ? (
+                    <div className="flex gap-6 h-full">
+                        {/* Left column: header + image */}
+                        <div className={`flex-shrink-0 ${ratio === '16:9' ? 'w-[45%]' : 'w-[40%]'} flex flex-col ${rStyle.gap}`}>
+                            <ExportHeader {...{ isVisible, type, typeLabels, title, author, reviewData, cultivars, rating, rStyle, typo, colors, tStyle }} />
+                            {isVisible('image') && <ImageGallery images={images} mainImage={mainImageUrl} />}
+                        </div>
+                        {/* Right column: data sections */}
+                        <div className={`flex-1 overflow-hidden ${rStyle.gap}`}>
+                            <ExportDataSections {...{ isVisible, categoryRatings, aromas, secondaryAromas, terpenes, tastes, dryPuffNotes, inhalationNotes, exhalationNotes, effects, pipelines, reviewData, config, tStyle, rStyle }} />
+                        </div>
+                    </div>
+                ) : (
+                <>
                 {/* ─── HEADER ─────────────────────────────────────────── */}
                 <div className="space-y-4">
                     {/* Type badge + title */}
@@ -578,6 +710,8 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                     <div className="text-center py-3 text-xs text-white/20">
                         {config.branding.watermarkText}
                     </div>
+                )}
+                </>
                 )}
             </div>
         </div>
