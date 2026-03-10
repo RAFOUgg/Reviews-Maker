@@ -268,10 +268,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 }
             }
 
-            // Enable custom mode if review was saved in custom mode
-            if (reviewData.orchardLayoutMode === 'custom') {
-                setIsCustomMode(true);
-            }
+            // Custom mode is disabled — old reviews in custom mode will use template mode
         }
     }, [reviewData, setReviewData, config.ratio]);
 
@@ -477,26 +474,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                     </div>
 
                     <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
-                        {/* Bouton Toggle Mode Template/Custom */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => {
-                                setIsCustomMode(!isCustomMode);
-                            }}
-                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border ${isCustomMode ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white shadow-lg border-amber-400/50' : 'bg-white/5 text-white border-white/10'}`}
-                            title={isCustomMode ? 'Mode Template' : 'Mode Personnalisé (Drag & Drop)'}
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                {isCustomMode ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
-                                ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343" />
-                                )}
-                            </svg>
-                            <span>{isCustomMode ? '🎨 Custom' : '📋 Template'}</span>
-                        </motion.button>
-
                         {/* Bouton Appliquer */}
                         {onPresetApplied && (
                             <motion.button

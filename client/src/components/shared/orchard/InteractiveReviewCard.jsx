@@ -299,9 +299,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         </div>
     );
 
-    const title = reviewData.title || reviewData.holderName || 'Sans titre';
+    const title = reviewData.title || reviewData.holderName || reviewData.productName || 'Sans titre';
     const rating = parseFloat(reviewData.rating || reviewData.overallRating || reviewData.note || 0);
-    const author = reviewData.author || reviewData.ownerName || 'Anonyme';
+    const rawAuthor = reviewData.author || reviewData.ownerName || 'Anonyme';
+    const author = (typeof rawAuthor === 'object' && rawAuthor !== null) ? (rawAuthor.username || rawAuthor.name || 'Anonyme') : rawAuthor;
     const type = reviewData.type || reviewData.category || '';
     const typeLabels = { flower: 'Fleurs', hash: 'Hash', concentrate: 'Concentré', edible: 'Comestible' };
     const mainImageUrl = reviewData.mainImageUrl || reviewData.imageUrl;
