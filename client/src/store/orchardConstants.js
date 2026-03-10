@@ -4,52 +4,52 @@
 // Palettes de couleurs harmonieuses prédéfinies
 export const COLOR_PALETTES = {
     modern: {
-        name: 'Moderne',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        name: 'Terpologie',
+        background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
         textPrimary: '#ffffff',
-        textSecondary: '#e0e0e0',
-        accent: '#ffd700',
+        textSecondary: '#94A3B8',
+        accent: '#A78BFA',
         title: '#ffffff'
     },
     nature: {
         name: 'Nature',
-        background: 'linear-gradient(135deg, #2ecc71 0%, #27ae60 100%)',
+        background: 'linear-gradient(135deg, #0A1A0E 0%, #132A17 50%, #1A3620 100%)',
         textPrimary: '#ffffff',
-        textSecondary: '#ecf0f1',
-        accent: '#f39c12',
+        textSecondary: '#A7C4B2',
+        accent: '#22C55E',
         title: '#ffffff'
     },
     ocean: {
         name: 'Océan',
-        background: 'linear-gradient(135deg, #3498db 0%, #2980b9 100%)',
+        background: 'linear-gradient(135deg, #0A1628 0%, #0F2847 50%, #153660 100%)',
         textPrimary: '#ffffff',
-        textSecondary: '#ecf0f1',
-        accent: '#e74c3c',
+        textSecondary: '#93B5D4',
+        accent: '#38BDF8',
         title: '#ffffff'
     },
     sunset: {
-        name: 'Coucher de soleil',
-        background: 'linear-gradient(135deg, #f39c12 0%, #e74c3c 100%)',
+        name: 'Crépuscule',
+        background: 'linear-gradient(135deg, #1A0A0A 0%, #2D1212 50%, #3D1515 100%)',
         textPrimary: '#ffffff',
-        textSecondary: '#ecf0f1',
-        accent: '#3498db',
+        textSecondary: '#D4A093',
+        accent: '#F97316',
         title: '#ffffff'
     },
     elegant: {
         name: 'Élégant',
-        background: 'linear-gradient(135deg, #2c3e50 0%, #34495e 100%)',
-        textPrimary: '#ecf0f1',
-        textSecondary: '#bdc3c7',
-        accent: '#e67e22',
+        background: 'linear-gradient(135deg, #1A1A1A 0%, #2D2D2D 50%, #3D3D3D 100%)',
+        textPrimary: '#F0F0F0',
+        textSecondary: '#999999',
+        accent: '#CFB991',
         title: '#ffffff'
     },
     minimal: {
         name: 'Minimaliste',
-        background: '#ffffff',
-        textPrimary: '#2c3e50',
-        textSecondary: '#7f8c8d',
-        accent: '#3498db',
-        title: '#2c3e50'
+        background: '#F8FAFC',
+        textPrimary: '#1E293B',
+        textSecondary: '#64748B',
+        accent: '#8B5CF6',
+        title: '#0F172A'
     }
 };
 
