@@ -504,29 +504,14 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         setPaginationReady(true);
     }, [isCanvasCapture, rDims.height, rStyle.pad, rStyle.gap]);
 
-    useEffect(() => {
-        if (!isCanvasCapture) return;
-        setPaginationReady(false);
-        // Wait for sections to render in the hidden measure container
-        const timer = setTimeout(paginateSections, 400);
-        return () => clearTimeout(timer);
-    }, [isCanvasCapture, allSections, paginateSections]);
-
-    // ── Early return if no data ──────────────────────────────────────────────
-    if (!reviewData) return (
-        <div className="flex items-center justify-center h-full text-white/30">
-            <p>Aucune donnée de review</p>
-        </div>
-    );
-
-    // ── Resolved primitives ──────────────────────────────────────────────────
-    const title = reviewData.title || reviewData.holderName || reviewData.productName || reviewData.nomCommercial || 'Sans titre';
-    const rating = parseFloat(reviewData.rating || reviewData.overallRating || reviewData.note || 0);
-    const rawAuthor = reviewData.author || reviewData.ownerName || 'Anonyme';
+    // ── Resolved primitives (safe for null reviewData) ────────────────────
+    const title = reviewData?.title || reviewData?.holderName || reviewData?.productName || reviewData?.nomCommercial || 'Sans titre';
+    const rating = parseFloat(reviewData?.rating || reviewData?.overallRating || reviewData?.note || 0);
+    const rawAuthor = reviewData?.author || reviewData?.ownerName || 'Anonyme';
     const author = (typeof rawAuthor === 'object' && rawAuthor !== null) ? (rawAuthor.username || rawAuthor.name || 'Anonyme') : rawAuthor;
-    const type = reviewData.type || reviewData.category || '';
+    const type = reviewData?.type || reviewData?.category || '';
     const typeLabels = { flower: 'Fleurs', hash: 'Hash', concentrate: 'Concentré', edible: 'Comestible' };
-    const mainImageUrl = reviewData.mainImageUrl || reviewData.imageUrl || reviewData.mainImage;
+    const mainImageUrl = reviewData?.mainImageUrl || reviewData?.imageUrl || reviewData?.mainImage;
 
     // ── Module visibility check ──────────────────────────────────────────────
     const isVisible = (key) => {
@@ -543,6 +528,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
        SECTION BUILDERS — collected as an array for potential pagination
        ══════════════════════════════════════════════════════════════════════════ */
     const buildSections = () => {
+        if (!reviewData) return [];
         const secs = [];
 
         // ── HEADER: type badge + title + meta + cultivars + rating ────────
@@ -928,6 +914,21 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         separationInfo, extractionInfo, recipeInfo, isExportLike, isCompact, rStyle, tStyle,
         ratio, gridCols
     ]);
+
+    // ── Pagination useEffect (must be after allSections definition) ─────────
+    useEffect(() => {
+        if (!isCanvasCapture) return;
+        setPaginationReady(false);
+        const timer = setTimeout(paginateSections, 400);
+        return () => clearTimeout(timer);
+    }, [isCanvasCapture, allSections, paginateSections]);
+
+    // ── Early return if no data (after ALL hooks) ────────────────────────────
+    if (!reviewData) return (
+        <div className="flex items-center justify-center h-full text-white/30">
+            <p>Aucune donnée de review</p>
+        </div>
+    );
 
     // ── Common style props ───────────────────────────────────────────────────
     const rootStyle = {
