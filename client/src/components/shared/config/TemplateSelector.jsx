@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore';
+import CreateTemplateModal from './CreateTemplateModal';
 
 export default function TemplateSelector() {
     const config = useOrchardStore((state) => state.config);
@@ -8,6 +10,7 @@ export default function TemplateSelector() {
     const registerTemplate = useOrchardStore((state) => state.registerTemplate);
     const templates = useOrchardStore((state) => state.templates);
     const unregisterTemplate = useOrchardStore((state) => state.unregisterTemplate);
+    const [showCreateModal, setShowCreateModal] = useState(false);
 
     const ratios = [
         { id: '1:1', name: 'Carré (1:1)', icon: '⬜' },
@@ -32,19 +35,16 @@ export default function TemplateSelector() {
             {/* Galerie de templates */}
             <div className="flex items-center justify-between">
                 <div />
-                <button onClick={() => {
-                    const id = prompt('ID du template (ex: my-custom-template)');
-                    if (!id) return;
-                    const name = prompt('Nom du template (ex: Ma mise en page)') || id;
-                    registerTemplate(id, {
-                        name,
-                        description: 'Template personnalisé',
-                        layout: 'custom',
-                        defaultRatio: '1:1',
-                        supportedRatios: ['1:1', '16:9']
-                    });
-                }} className="px-3 py-2 text-white rounded-lg text-sm">➕ Créer Template</button>
+                <button onClick={() => setShowCreateModal(true)} className="px-3 py-2 text-white rounded-lg text-sm">➕ Créer Template</button>
             </div>
+            <CreateTemplateModal
+                isOpen={showCreateModal}
+                onClose={() => setShowCreateModal(false)}
+                onCreateTemplate={(id, data) => {
+                    registerTemplate(id, data);
+                    setTemplate(id);
+                }}
+            />
             <div className="grid grid-cols-1 gap-2">
                 {Object.values(templates).map((template) => (
                     <motion.button

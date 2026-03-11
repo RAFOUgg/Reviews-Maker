@@ -10,6 +10,7 @@ const InteractiveReviewCard = React.lazy(() => import('./InteractiveReviewCard')
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
+import OrchardContextMenu from './OrchardContextMenu';
 import { reviewsService } from '../../../services/apiService';
 
 // Must match InteractiveReviewCard RATIO_DIMENSIONS
@@ -285,6 +286,17 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
+
+    const toggleContentModule = useOrchardStore((state) => state.toggleContentModule);
+    const handleContextMenuStyle = useCallback((sectionKey, styleKey, value) => {
+        if (styleKey === 'visible' && value === false) {
+            // Hide the module via the store
+            toggleContentModule(sectionKey);
+        }
+        // Other style keys (displayStyle, fontSize, accentColor) can be stored in a per-element config
+        // For now, log and store in orchardStore elementStyles (future extension)
+        console.log('[ContextMenu] Apply:', sectionKey, styleKey, value);
+    }, [toggleContentModule]);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -696,6 +708,9 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                     <ExportModal onClose={() => setShowExportModal(false)} />
                 )}
             </AnimatePresence>
+
+            {/* Context Menu for right-click on preview elements */}
+            <OrchardContextMenu onApplyStyle={handleContextMenuStyle} />
 
             {/* Drag Overlay - Affiche l'élément en cours de drag */}
             <DragOverlay>

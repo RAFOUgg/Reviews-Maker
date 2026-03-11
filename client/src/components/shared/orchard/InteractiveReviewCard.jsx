@@ -26,10 +26,10 @@ import { Star, ChevronDown, Eye, Image as ImageIcon, X, ChevronLeft, ChevronRigh
    ══════════════════════════════════════════════════════════════════════════════ */
 
 // ─── Section wrapper with expand/collapse ────────────────────────────────────
-function Section({ title, icon, children, defaultOpen = true, badge, compact }) {
+function Section({ title, icon, children, defaultOpen = true, badge, compact, sectionKey }) {
     const [open, setOpen] = useState(defaultOpen);
     return (
-        <div className="rounded-xl border border-white/10 overflow-hidden transition-colors hover:border-white/15">
+        <div data-orchard-section={sectionKey || title} data-orchard-label={title} className="rounded-xl border border-white/10 overflow-hidden transition-colors hover:border-white/15">
             <button
                 onClick={() => setOpen(!open)}
                 className={`w-full flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-3'} bg-white/[0.04] hover:bg-white/[0.07] transition-colors`}
@@ -82,7 +82,7 @@ function Stars({ value, max = 10, compact }) {
 function ScoreBar({ label, value, icon, compact }) {
     const percentage = Math.min(100, (value / 10) * 100);
     return (
-        <div className="flex items-center gap-2">
+        <div data-orchard-score={label} data-orchard-label={label} className="flex items-center gap-2">
             {icon && <span className={`${compact ? 'text-[10px]' : 'text-xs'} w-4 text-center`}>{icon}</span>}
             <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-white/60 ${compact ? 'w-20' : 'w-28'} truncate`}>{label}</span>
             <div className={`flex-1 ${compact ? 'h-1.5' : 'h-2'} rounded-full bg-white/10 overflow-hidden`}>
@@ -311,7 +311,55 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 },
 };
 
-// Responsive style adjustments per ratio
+// ═══════════════════════════════════════════════════════════════════════════
+// LAYOUT STRATEGIES — per template × ratio combination
+// Each entry controls: layout type, font sizes, padding, columns, compactness
+// ═══════════════════════════════════════════════════════════════════════════
+const FALLBACK_LAYOUT = { layout: 'single', cols: 1, pad: 'p-6', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'top' };
+
+const LAYOUT_STRATEGIES = {
+    // ── MODERNE COMPACT ──────────────────────────────────────────────────
+    modernCompact: {
+        '1:1': { layout: 'hero', cols: 1, pad: 'p-6', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 15, compact: true, imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '45%' },
+        '9:16': { layout: 'story', cols: 1, pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 18, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 'p-7', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '40%' },
+        'A4': { layout: 'single', cols: 1, pad: 'p-10', gap: 'space-y-5', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+    },
+    // ── FICHE TECHNIQUE DÉTAILLÉE ────────────────────────────────────────
+    detailedCard: {
+        '1:1': { layout: 'grid', cols: 1, pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'inline' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '38%' },
+        '9:16': { layout: 'single', cols: 1, pad: 'p-7', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 'p-7', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '42%' },
+        'A4': { layout: 'single', cols: 1, pad: 'p-10', gap: 'space-y-5', headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'top' },
+    },
+    // ── ARTICLE DE BLOG ──────────────────────────────────────────────────
+    blogArticle: {
+        '1:1': { layout: 'single', cols: 1, pad: 'p-6', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 15, compact: false, imagePos: 'top' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 'p-10', gap: 'space-y-5', headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'left', leftWidth: '45%' },
+        '9:16': { layout: 'single', cols: 1, pad: 'p-8', gap: 'space-y-5', headerSize: 'text-3xl', baseFontPx: 20, compact: false, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '40%' },
+        'A4': { layout: 'single', cols: 1, pad: 'p-12', gap: 'space-y-6', headerSize: 'text-5xl', baseFontPx: 22, compact: false, imagePos: 'top' },
+    },
+    // ── STORY SOCIAL MEDIA ───────────────────────────────────────────────
+    socialStory: {
+        '1:1': { layout: 'hero', cols: 1, pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'left', leftWidth: '50%' },
+        '9:16': { layout: 'story', cols: 1, pad: 'p-5', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 20, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'hero', cols: 1, pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'hero' },
+        'A4': { layout: 'single', cols: 1, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+    },
+};
+
+/** Resolve layout strategy for the current template + ratio */
+function getLayoutStrategy(templateId, ratio) {
+    return LAYOUT_STRATEGIES[templateId]?.[ratio]
+        || LAYOUT_STRATEGIES[templateId]?.['1:1']
+        || FALLBACK_LAYOUT;
+}
+
+// Keep RATIO_STYLES for backward compat (pagination measurement still uses pad/gap)
 const RATIO_STYLES = {
     '1:1': { cols: 1, fontSize: 'text-sm', pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', compact: true },
     '16:9': { cols: 2, fontSize: 'text-sm', pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', compact: false },
@@ -458,9 +506,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const ratio = config?.ratio || '1:1';
     const rDims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     const rStyle = RATIO_STYLES[ratio] || RATIO_STYLES['1:1'];
+    const ls = getLayoutStrategy(templateId, ratio); // layout strategy for this template+ratio
     const isExportLike = mode === 'export' || mode === 'preview-export';
     const isCanvasCapture = mode === 'export';
-    const isCompact = isExportLike ? rStyle.compact : tStyle.compact;
+    const isCompact = isExportLike ? ls.compact : tStyle.compact;
 
     // ── Pagination (export capture mode only: distribute sections across pages) ──
     const measureRef = useRef(null);
@@ -475,13 +524,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         if (children.length === 0) return;
 
         const pageH = rDims.height;
-        // Account for padding (parse rStyle.pad e.g. 'p-5' → ~20px, 'p-6' → ~24px, 'p-8' → ~32px)
-        const padMap = { 'p-4': 16, 'p-5': 20, 'p-6': 24, 'p-8': 32 };
-        const padPx = (padMap[rStyle.pad] || 20) * 2;
+        // Use layout strategy numeric values directly
+        const padPx = ls.pad * 2;
         const usableH = pageH - padPx;
-        // Gap between sections (parse rStyle.gap e.g. 'space-y-2' → 8, 'space-y-3' → 12, 'space-y-4' → 16)
-        const gapMap = { 'space-y-2': 8, 'space-y-3': 12, 'space-y-4': 16 };
-        const gapPx = gapMap[rStyle.gap] || 12;
+        const gapPx = ls.gap;
 
         const result = [[]];
         let currentH = 0;
@@ -502,7 +548,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
         setPages(result);
         setPaginationReady(true);
-    }, [isCanvasCapture, rDims.height, rStyle.pad, rStyle.gap]);
+    }, [isCanvasCapture, rDims.height, ls.pad, ls.gap]);
 
     // ── Resolved primitives (safe for null reviewData) ────────────────────
     const title = reviewData?.title || reviewData?.holderName || reviewData?.productName || reviewData?.nomCommercial || 'Sans titre';
@@ -911,7 +957,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         reviewData, config, categoryRatings, pipelines, aromas, secondaryAromas,
         tastes, dryPuffNotes, inhalationNotes, exhalationNotes, effects, terpenes,
         cultivars, images, consumption, analytics, curingInfo, cultureInfo,
-        separationInfo, extractionInfo, recipeInfo, isExportLike, isCompact, rStyle, tStyle,
+        separationInfo, extractionInfo, recipeInfo, isExportLike, isCompact, ls, tStyle,
         ratio, gridCols
     ]);
 
@@ -934,7 +980,12 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const rootStyle = {
         fontFamily: typo.fontFamily || 'Inter, system-ui, sans-serif',
         '--accent': colors.accent || '#a855f7',
+        fontSize: isExportLike ? `${ls.baseFontPx}px` : undefined,
     };
+
+    // ── Layout-strategy inline styles (numeric px) ──────────────────────────
+    const lsPad = `${ls.pad}px`;
+    const lsGap = `${ls.gap}px`;
 
     // ── Helper: render a single export page ────────────────────────────────
     const renderPage = (sectionIndices, pageNum, totalPgs, extraProps = {}) => {
@@ -960,7 +1011,16 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                     flexShrink: 0,
                 }}
             >
-                <div className={`w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap} ${extraProps.className || ''}`} style={extraProps.style}>
+                <div
+                    className="w-full h-full overflow-hidden"
+                    style={{
+                        padding: lsPad,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: lsGap,
+                        ...(extraProps.style || {}),
+                    }}
+                >
                     {extraProps.renderContent ? extraProps.renderContent(pageSections) : pageSections}
                 </div>
                 {/* Page number indicator */}
@@ -980,122 +1040,286 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     };
 
     /* ══════════════════════════════════════════════════════════════════════════
-       EXPORT TWO-COLUMN LAYOUT (16:9, 4:3)
-       ══════════════════════════════════════════════════════════════════════════ */
-    if (isExportLike && rStyle.cols === 2) {
-        const headerSection = allSections.find(s => s.key === 'header');
-        const imageSection = allSections.find(s => s.key === 'image');
-        const analyticsSection = allSections.find(s => s.key === 'analytics');
-        const dataSections = allSections.filter(s => !['header', 'image', 'analytics'].includes(s.key));
-
-        return (
-            <div
-                id={isCanvasCapture ? 'orchard-template-canvas' : undefined}
-                data-width={rDims.width}
-                data-height={rDims.height}
-                data-ratio={ratio}
-                data-page="1"
-                data-total-pages="1"
-                className="orchard-export-page"
-                style={{
-                    ...rootStyle,
-                    width: `${rDims.width}px`,
-                    height: `${rDims.height}px`,
-                    overflow: 'hidden',
-                    position: 'relative',
-                    background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                    contain: 'layout style paint',
-                    flexShrink: 0,
-                }}
-            >
-                <div className={`w-full h-full overflow-hidden ${rStyle.pad} flex gap-5`}>
-                    {/* Left column */}
-                    <div className={`flex-shrink-0 ${ratio === '16:9' ? 'w-[42%]' : 'w-[40%]'} flex flex-col ${rStyle.gap} overflow-hidden`}>
-                        {headerSection}
-                        {analyticsSection}
-                        {imageSection}
-                    </div>
-                    {/* Right column */}
-                    <div className={`flex-1 overflow-hidden ${rStyle.gap}`}>
-                        {dataSections}
-                    </div>
-                </div>
-                {/* Watermark */}
-                {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                    <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                        {config.branding.watermarkText}
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       PREVIEW-EXPORT SINGLE-COLUMN (for RatioPreviewWrapper / MiniPreview)
-       ══════════════════════════════════════════════════════════════════════════ */
-    if (mode === 'preview-export' && rStyle.cols !== 2) {
-        return (
-            <div
-                data-width={rDims.width}
-                data-height={rDims.height}
-                data-ratio={ratio}
-                style={{
-                    ...rootStyle,
-                    width: `${rDims.width}px`,
-                    height: `${rDims.height}px`,
-                    overflow: 'hidden',
-                    position: 'relative',
-                    background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                    contain: 'layout style paint',
-                    flexShrink: 0,
-                }}
-            >
-                <div className={`w-full h-full overflow-hidden ${rStyle.pad} ${rStyle.gap}`}>
-                    {allSections}
-                </div>
-                {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                    <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                        {config.branding.watermarkText}
-                    </div>
-                )}
-            </div>
-        );
-    }
-
-    /* ══════════════════════════════════════════════════════════════════════════
-       EXPORT SINGLE-COLUMN LAYOUT (1:1, 9:16, A4) — WITH PAGINATION
+       EXPORT LAYOUT — strategy-based branching
        ══════════════════════════════════════════════════════════════════════════ */
     if (isExportLike) {
-        const totalPgs = paginationReady ? pages.length : 1;
+        const layout = ls.layout; // 'hero' | 'two-col' | 'story' | 'grid' | 'single'
 
-        return (
-            <>
-                {/* Hidden container to measure section heights for pagination */}
+        // ── TWO-COLUMN layout (16:9 / 4:3 wide formats) ────────────────────
+        if (layout === 'two-col') {
+            const headerSection = allSections.find(s => s.key === 'header');
+            const imageSection = allSections.find(s => s.key === 'image');
+            const analyticsSection = allSections.find(s => s.key === 'analytics');
+            const dataSections = allSections.filter(s => !['header', 'image', 'analytics'].includes(s.key));
+            const leftW = ls.leftWidth || '42%';
+
+            const renderTwoCol = () => (
                 <div
-                    ref={measureRef}
+                    id={isCanvasCapture ? 'orchard-template-canvas' : undefined}
+                    data-width={rDims.width}
+                    data-height={rDims.height}
+                    data-ratio={ratio}
+                    data-page="1"
+                    data-total-pages="1"
+                    className="orchard-export-page"
                     style={{
                         ...rootStyle,
                         width: `${rDims.width}px`,
-                        position: 'absolute',
-                        left: '-99999px',
-                        top: 0,
-                        visibility: 'hidden',
-                        pointerEvents: 'none',
+                        height: `${rDims.height}px`,
+                        overflow: 'hidden',
+                        position: 'relative',
+                        background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                        contain: 'layout style paint',
+                        flexShrink: 0,
                     }}
-                    className={`${rStyle.pad} ${rStyle.gap}`}
                 >
-                    {allSections}
+                    <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                        {/* Left column */}
+                        <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                            {headerSection}
+                            {analyticsSection}
+                            {imageSection}
+                        </div>
+                        {/* Right column */}
+                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                            {dataSections}
+                        </div>
+                    </div>
+                    {config?.branding?.showWatermark && config?.branding?.watermarkText && (
+                        <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
+                            {config.branding.watermarkText}
+                        </div>
+                    )}
                 </div>
+            );
 
-                {/* Render paginated pages */}
+            // For preview-export (miniature), identical but no canvas id
+            return renderTwoCol();
+        }
+
+        // ── HERO layout (large hero image on top, content below — 1:1) ──────
+        if (layout === 'hero') {
+            const headerSection = allSections.find(s => s.key === 'header');
+            const imageSection = allSections.find(s => s.key === 'image');
+            const restSections = allSections.filter(s => !['header', 'image'].includes(s.key));
+
+            // Hero mode: image takes ~35% of height, data grid fills the rest
+            if (mode === 'preview-export') {
+                return (
+                    <div
+                        data-width={rDims.width}
+                        data-height={rDims.height}
+                        data-ratio={ratio}
+                        style={{
+                            ...rootStyle,
+                            width: `${rDims.width}px`,
+                            height: `${rDims.height}px`,
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                            contain: 'layout style paint',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                            {headerSection}
+                            {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '12px' }}>{imageSection}</div>}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                                {restSections}
+                            </div>
+                        </div>
+                        {config?.branding?.showWatermark && config?.branding?.watermarkText && (
+                            <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
+                                {config.branding.watermarkText}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Hero mode with pagination (export capture)
+            const totalPgs = paginationReady ? pages.length : 1;
+            return (
+                <>
+                    <div
+                        ref={measureRef}
+                        style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
+                            {allSections}
+                        </div>
+                    </div>
+                    {paginationReady && pages.length > 0
+                        ? pages.map((sectionIndices, pIdx) =>
+                            renderPage(sectionIndices, pIdx + 1, totalPgs)
+                        )
+                        : renderPage(allSections.map((_, i) => i), 1, 1)
+                    }
+                </>
+            );
+        }
+
+        // ── STORY layout (vertical story — 9:16, tall & narrow) ──────────────
+        if (layout === 'story') {
+            const headerSection = allSections.find(s => s.key === 'header');
+            const imageSection = allSections.find(s => s.key === 'image');
+            const restSections = allSections.filter(s => !['header', 'image'].includes(s.key));
+
+            if (mode === 'preview-export') {
+                return (
+                    <div
+                        data-width={rDims.width}
+                        data-height={rDims.height}
+                        data-ratio={ratio}
+                        style={{
+                            ...rootStyle,
+                            width: `${rDims.width}px`,
+                            height: `${rDims.height}px`,
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                            contain: 'layout style paint',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                            {headerSection}
+                            {imageSection && <div style={{ maxHeight: '25%', overflow: 'hidden', borderRadius: '10px' }}>{imageSection}</div>}
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                                {restSections}
+                            </div>
+                        </div>
+                        {config?.branding?.showWatermark && config?.branding?.watermarkText && (
+                            <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
+                                {config.branding.watermarkText}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Story with pagination
+            const totalPgs = paginationReady ? pages.length : 1;
+            return (
+                <>
+                    <div
+                        ref={measureRef}
+                        style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
+                            {allSections}
+                        </div>
+                    </div>
+                    {paginationReady && pages.length > 0
+                        ? pages.map((sectionIndices, pIdx) =>
+                            renderPage(sectionIndices, pIdx + 1, totalPgs)
+                        )
+                        : renderPage(allSections.map((_, i) => i), 1, 1)
+                    }
+                </>
+            );
+        }
+
+        // ── GRID layout (compact dense grid — modernCompact on small/square formats) ──
+        if (layout === 'grid') {
+            if (mode === 'preview-export') {
+                return (
+                    <div
+                        data-width={rDims.width}
+                        data-height={rDims.height}
+                        data-ratio={ratio}
+                        style={{
+                            ...rootStyle,
+                            width: `${rDims.width}px`,
+                            height: `${rDims.height}px`,
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                            contain: 'layout style paint',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                            {allSections}
+                        </div>
+                        {config?.branding?.showWatermark && config?.branding?.watermarkText && (
+                            <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
+                                {config.branding.watermarkText}
+                            </div>
+                        )}
+                    </div>
+                );
+            }
+
+            // Grid with pagination
+            const totalPgs = paginationReady ? pages.length : 1;
+            return (
+                <>
+                    <div
+                        ref={measureRef}
+                        style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
+                            {allSections}
+                        </div>
+                    </div>
+                    {paginationReady && pages.length > 0
+                        ? pages.map((sectionIndices, pIdx) =>
+                            renderPage(sectionIndices, pIdx + 1, totalPgs)
+                        )
+                        : renderPage(allSections.map((_, i) => i), 1, 1)
+                    }
+                </>
+            );
+        }
+
+        // ── SINGLE layout (default fallback — paginated single column) ──────
+        if (mode === 'preview-export') {
+            return (
+                <div
+                    data-width={rDims.width}
+                    data-height={rDims.height}
+                    data-ratio={ratio}
+                    style={{
+                        ...rootStyle,
+                        width: `${rDims.width}px`,
+                        height: `${rDims.height}px`,
+                        overflow: 'hidden',
+                        position: 'relative',
+                        background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                        contain: 'layout style paint',
+                        flexShrink: 0,
+                    }}
+                >
+                    <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                        {allSections}
+                    </div>
+                    {config?.branding?.showWatermark && config?.branding?.watermarkText && (
+                        <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
+                            {config.branding.watermarkText}
+                        </div>
+                    )}
+                </div>
+            );
+        }
+
+        // Paginated single-column export
+        const totalPgs = paginationReady ? pages.length : 1;
+        return (
+            <>
+                <div
+                    ref={measureRef}
+                    style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
+                        {allSections}
+                    </div>
+                </div>
                 {paginationReady && pages.length > 0
                     ? pages.map((sectionIndices, pIdx) =>
                         renderPage(sectionIndices, pIdx + 1, totalPgs)
                     )
-                    : (
-                        /* Fallback: single page until pagination is calculated */
-                        renderPage(allSections.map((_, i) => i), 1, 1)
-                    )
+                    : renderPage(allSections.map((_, i) => i), 1, 1)
                 }
             </>
         );
