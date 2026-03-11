@@ -288,7 +288,19 @@ const DEFAULT_CONFIG = {
         position: 'bottom-right',
         opacity: 0.7,
         size: 'medium'
-    }
+    },
+
+    // Pagination
+    pagination: {
+        enabled: true,       // auto-paginate when content overflows
+        maxPages: 9,         // max pages allowed (1-9)
+        showPageNumbers: true,
+        pageBreakMode: 'auto', // 'auto' | 'manual' — auto distributes, manual uses explicit breaks
+    },
+
+    // Per-section style overrides (keyed by section key e.g. "header", "aromas", etc.)
+    // Each entry: { fontSize, fontWeight, accentColor, displayStyle, borderRadius, padding, layout, columns, visible, opacity, background }
+    sectionStyles: {},
 };
 
 export const useOrchardStore = create(
@@ -314,7 +326,7 @@ export const useOrchardStore = create(
             // Actions pour modifier la configuration
             setTemplate: (templateId) => set((state) => {
                 const newRatio = (get().templates[templateId]?.defaultRatio || DEFAULT_TEMPLATES[templateId]?.defaultRatio || '1:1');
-                
+
                 // Auto-configure contentModules based on template preset
                 const preset = TEMPLATE_MODULE_PRESETS[templateId];
                 let newModules = { ...state.config.contentModules };
@@ -326,7 +338,7 @@ export const useOrchardStore = create(
                         preset.disable.forEach(m => { newModules[m] = false; });
                     }
                 }
-                
+
                 return {
                     config: {
                         ...state.config,
@@ -406,6 +418,29 @@ export const useOrchardStore = create(
                     branding: { ...state.config.branding, ...updates }
                 }
             })),
+
+            updatePagination: (updates) => set((state) => ({
+                config: {
+                    ...state.config,
+                    pagination: { ...state.config.pagination, ...updates }
+                }
+            })),
+
+            // Per-section style override
+            updateSectionStyle: (sectionKey, updates) => set((state) => ({
+                config: {
+                    ...state.config,
+                    sectionStyles: {
+                        ...state.config.sectionStyles,
+                        [sectionKey]: { ...(state.config.sectionStyles?.[sectionKey] || {}), ...updates }
+                    }
+                }
+            })),
+
+            resetSectionStyle: (sectionKey) => set((state) => {
+                const { [sectionKey]: _, ...rest } = state.config.sectionStyles || {};
+                return { config: { ...state.config, sectionStyles: rest } };
+            }),
 
             // Gestion des préréglages
             savePreset: (name, description = '') => {

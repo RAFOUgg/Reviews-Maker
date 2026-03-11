@@ -19,32 +19,86 @@ import {
     extractCategoryRatings, extractPipelines
 } from '../../../utils/orchardHelpers';
 import InteractivePipelineViewer from '../../gallery/InteractivePipelineViewer';
+import GenealogyTree2D from './GenealogyTree2D';
 import { Star, ChevronDown, Eye, Image as ImageIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 /* ══════════════════════════════════════════════════════════════════════════════
    SUB-COMPONENTS
    ══════════════════════════════════════════════════════════════════════════════ */
 
-// ─── Section wrapper with expand/collapse ────────────────────────────────────
-function Section({ title, icon, children, defaultOpen = true, badge, compact, sectionKey }) {
+// Size map for per-section fontSize override
+const SECTION_FONT_SIZE_MAP = { xs: 10, sm: 12, md: 14, lg: 16, xl: 20 };
+
+// ─── Section wrapper with expand/collapse + per-section style overrides ──────
+function Section({ title, icon, children, defaultOpen = true, badge, compact, sectionKey, sectionStyles }) {
     const [open, setOpen] = useState(defaultOpen);
+    const ss = sectionStyles?.[sectionKey || title] || {};
+
+    const wrapperStyle = {};
+    if (ss.borderRadius !== undefined) wrapperStyle.borderRadius = `${ss.borderRadius}px`;
+    if (ss.background) wrapperStyle.background = ss.background;
+    if (ss.opacity !== undefined) wrapperStyle.opacity = ss.opacity;
+    if (ss.padding) wrapperStyle.padding = ss.padding;
+
+    const contentStyle = {};
+    if (ss.fontSize) contentStyle.fontSize = `${SECTION_FONT_SIZE_MAP[ss.fontSize] || 14}px`;
+    if (ss.fontWeight) contentStyle.fontWeight = ss.fontWeight;
+    if (ss.accentColor) contentStyle['--section-accent'] = ss.accentColor;
+
+    const layoutClass = ss.layout === 'grid-2' ? 'grid grid-cols-2 gap-2'
+        : ss.layout === 'grid-3' ? 'grid grid-cols-3 gap-2'
+        : ss.layout === 'compact' ? 'space-y-1.5'
+        : ss.layout === 'expanded' ? 'space-y-4'
+        : compact ? 'space-y-2' : 'space-y-3';
+
     return (
-        <div data-orchard-section={sectionKey || title} data-orchard-label={title} className="rounded-xl border border-white/10 overflow-hidden transition-colors hover:border-white/15">
+        <div
+            data-orchard-section={sectionKey || title}
+            data-orchard-label={title}
+            className="overflow-hidden"
+            style={{
+                borderRadius: ss.borderRadius ? `${ss.borderRadius}px` : '14px',
+                border: '1px solid rgba(255,255,255,0.07)',
+                background: ss.background || 'rgba(255,255,255,0.025)',
+                ...(ss.opacity !== undefined ? { opacity: ss.opacity } : {}),
+                ...(ss.padding ? { padding: ss.padding } : {}),
+            }}
+        >
             <button
                 onClick={() => setOpen(!open)}
-                className={`w-full flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-3'} bg-white/[0.04] hover:bg-white/[0.07] transition-colors`}
+                className={`w-full flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-3'} transition-colors`}
+                style={{
+                    background: open ? 'rgba(139,92,246,0.08)' : 'transparent',
+                    borderBottom: open ? '1px solid rgba(139,92,246,0.12)' : '1px solid transparent',
+                }}
             >
-                <div className="flex items-center gap-2">
-                    <span className={compact ? 'text-sm' : 'text-lg'}>{icon}</span>
-                    <span className={`${compact ? 'text-xs' : 'text-sm'} font-semibold text-white`}>{title}</span>
+                <div className="flex items-center gap-2 min-w-0">
+                    <div
+                        className={`${compact ? 'w-6 h-6 text-xs' : 'w-7 h-7 text-sm'} rounded-lg flex items-center justify-center flex-shrink-0`}
+                        style={{ background: 'rgba(139,92,246,0.18)' }}
+                    >
+                        {icon}
+                    </div>
+                    <span
+                        className={`${compact ? 'text-[11px]' : 'text-[13px]'} font-semibold truncate`}
+                        style={{ color: 'rgba(255,255,255,0.88)' }}
+                    >
+                        {title}
+                    </span>
                     {badge && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-purple-500/25 text-purple-300 font-medium">
+                        <span
+                            className={`${compact ? 'text-[9px] px-1 py-0.5' : 'text-[10px] px-1.5 py-0.5'} rounded-full font-semibold flex-shrink-0`}
+                            style={{ background: 'rgba(139,92,246,0.22)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }}
+                        >
                             {badge}
                         </span>
                     )}
                 </div>
-                <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
-                    <ChevronDown className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} text-white/40`} />
+                <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18 }}>
+                    <ChevronDown
+                        className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`}
+                        style={{ color: 'rgba(255,255,255,0.28)' }}
+                    />
                 </motion.div>
             </button>
             <AnimatePresence initial={false}>
@@ -53,10 +107,15 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
                         initial={{ height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.25 }}
+                        transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                     >
-                        <div className={`${compact ? 'px-3 py-2 space-y-2' : 'px-4 py-3 space-y-3'}`}>{children}</div>
+                        <div
+                            className={`${compact ? 'px-3 py-2.5' : 'px-4 py-3'} ${layoutClass}`}
+                            style={contentStyle}
+                        >
+                            {children}
+                        </div>
                     </motion.div>
                 )}
             </AnimatePresence>
@@ -81,26 +140,34 @@ function Stars({ value, max = 10, compact }) {
 // ─── Score bar for individual metrics ────────────────────────────────────────
 function ScoreBar({ label, value, icon, compact }) {
     const percentage = Math.min(100, (value / 10) * 100);
+    const barColor = percentage > 70
+        ? 'linear-gradient(90deg, #22c55e, #10b981)'
+        : percentage > 40
+            ? 'linear-gradient(90deg, #eab308, #f59e0b)'
+            : 'linear-gradient(90deg, #ef4444, #f87171)';
     return (
         <div data-orchard-score={label} data-orchard-label={label} className="flex items-center gap-2">
-            {icon && <span className={`${compact ? 'text-[10px]' : 'text-xs'} w-4 text-center`}>{icon}</span>}
-            <span className={`${compact ? 'text-[10px]' : 'text-xs'} text-white/60 ${compact ? 'w-20' : 'w-28'} truncate`}>{label}</span>
-            <div className={`flex-1 ${compact ? 'h-1.5' : 'h-2'} rounded-full bg-white/10 overflow-hidden`}>
+            {icon && <span className={`${compact ? 'text-[10px]' : 'text-xs'} w-4 text-center flex-shrink-0`}>{icon}</span>}
+            <span
+                className={`${compact ? 'text-[10px]' : 'text-xs'} truncate flex-shrink-0`}
+                style={{ width: compact ? '72px' : '96px', color: 'rgba(255,255,255,0.5)' }}
+            >{label}</span>
+            <div
+                className={`flex-1 ${compact ? 'h-1.5' : 'h-2'} rounded-full overflow-hidden`}
+                style={{ background: 'rgba(255,255,255,0.08)' }}
+            >
                 <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${percentage}%` }}
-                    transition={{ duration: 0.6, ease: 'easeOut' }}
+                    transition={{ duration: 0.55, ease: 'easeOut' }}
                     className="h-full rounded-full"
-                    style={{
-                        background: percentage > 70
-                            ? 'linear-gradient(90deg, #22c55e, #10b981)'
-                            : percentage > 40
-                                ? 'linear-gradient(90deg, #eab308, #f59e0b)'
-                                : 'linear-gradient(90deg, #ef4444, #f87171)'
-                    }}
+                    style={{ background: barColor }}
                 />
             </div>
-            <span className={`${compact ? 'text-[10px]' : 'text-xs'} font-semibold text-white/80 w-6 text-right`}>{value}</span>
+            <span
+                className={`${compact ? 'text-[10px]' : 'text-xs'} font-bold w-7 text-right flex-shrink-0`}
+                style={{ color: 'rgba(255,255,255,0.72)' }}
+            >{value}</span>
         </div>
     );
 }
@@ -127,11 +194,23 @@ function TagPill({ label, color = 'purple', compact }) {
 function InfoCard({ label, value, icon, compact }) {
     if (!value && value !== 0) return null;
     return (
-        <div className={`bg-white/5 rounded-lg ${compact ? 'p-2' : 'p-3'} border border-white/8`}>
-            <span className={`${compact ? 'text-[9px]' : 'text-xs'} text-white/40 block mb-0.5`}>{icon} {label}</span>
-            <span className={`${compact ? 'text-xs' : 'text-sm'} font-medium text-white`}>
+        <div
+            className={`${compact ? 'p-2' : 'p-2.5'} rounded-xl`}
+            style={{ background: 'rgba(255,255,255,0.045)', border: '1px solid rgba(255,255,255,0.07)' }}
+        >
+            <div
+                className={`${compact ? 'text-[9px]' : 'text-[10px]'} flex items-center gap-0.5 mb-1`}
+                style={{ color: 'rgba(255,255,255,0.38)' }}
+            >
+                {icon && <span className="flex-shrink-0">{icon}</span>}
+                <span className="truncate">{label}</span>
+            </div>
+            <div
+                className={`${compact ? 'text-[11px]' : 'text-[13px]'} font-semibold leading-tight`}
+                style={{ color: 'rgba(255,255,255,0.88)' }}
+            >
                 {typeof value === 'string' || typeof value === 'number' ? value : String(value)}
-            </span>
+            </div>
         </div>
     );
 }
@@ -378,40 +457,41 @@ const RATIO_DIMENSIONS = {
 // LAYOUT STRATEGIES — per template × ratio combination
 // Each entry controls: layout type, font sizes, padding, columns, compactness
 // ═══════════════════════════════════════════════════════════════════════════
-const FALLBACK_LAYOUT = { layout: 'single', cols: 1, pad: 'p-6', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'top' };
+// pad = container padding in px (each side), gap = gap between sections in px
+const FALLBACK_LAYOUT = { layout: 'single', cols: 1, pad: 24, gap: 16, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'top' };
 
 const LAYOUT_STRATEGIES = {
     // ── MODERNE COMPACT ──────────────────────────────────────────────────
     modernCompact: {
-        '1:1': { layout: 'hero', cols: 1, pad: 'p-6', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 15, compact: true, imagePos: 'hero' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '45%' },
-        '9:16': { layout: 'story', cols: 1, pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 18, compact: true, imagePos: 'hero' },
-        '4:3': { layout: 'two-col', cols: 2, pad: 'p-7', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '40%' },
-        'A4': { layout: 'single', cols: 1, pad: 'p-10', gap: 'space-y-5', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+        '1:1':  { layout: 'hero',    cols: 1, pad: 24, gap: 14, headerSize: 'text-2xl', baseFontPx: 15, compact: true,  imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '42%' },
+        '9:16': { layout: 'story',   cols: 1, pad: 24, gap: 12, headerSize: 'text-2xl', baseFontPx: 17, compact: true,  imagePos: 'hero' },
+        '4:3':  { layout: 'two-col', cols: 2, pad: 28, gap: 12, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '38%' },
+        'A4':   { layout: 'single',  cols: 1, pad: 40, gap: 18, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top'  },
     },
     // ── FICHE TECHNIQUE DÉTAILLÉE ────────────────────────────────────────
     detailedCard: {
-        '1:1': { layout: 'grid', cols: 1, pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'inline' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '38%' },
-        '9:16': { layout: 'single', cols: 1, pad: 'p-7', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 18, compact: false, imagePos: 'top' },
-        '4:3': { layout: 'two-col', cols: 2, pad: 'p-7', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '42%' },
-        'A4': { layout: 'single', cols: 1, pad: 'p-10', gap: 'space-y-5', headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'top' },
+        '1:1':  { layout: 'grid',    cols: 1, pad: 20, gap: 10, headerSize: 'text-xl',  baseFontPx: 14, compact: true,  imagePos: 'inline' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 30, gap: 13, headerSize: 'text-3xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '36%' },
+        '9:16': { layout: 'single',  cols: 1, pad: 28, gap: 14, headerSize: 'text-2xl', baseFontPx: 17, compact: false, imagePos: 'top'  },
+        '4:3':  { layout: 'two-col', cols: 2, pad: 28, gap: 13, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '40%' },
+        'A4':   { layout: 'single',  cols: 1, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'top'  },
     },
     // ── ARTICLE DE BLOG ──────────────────────────────────────────────────
     blogArticle: {
-        '1:1': { layout: 'single', cols: 1, pad: 'p-6', gap: 'space-y-4', headerSize: 'text-2xl', baseFontPx: 15, compact: false, imagePos: 'top' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 'p-10', gap: 'space-y-5', headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'left', leftWidth: '45%' },
-        '9:16': { layout: 'single', cols: 1, pad: 'p-8', gap: 'space-y-5', headerSize: 'text-3xl', baseFontPx: 20, compact: false, imagePos: 'hero' },
-        '4:3': { layout: 'two-col', cols: 2, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '40%' },
-        'A4': { layout: 'single', cols: 1, pad: 'p-12', gap: 'space-y-6', headerSize: 'text-5xl', baseFontPx: 22, compact: false, imagePos: 'top' },
+        '1:1':  { layout: 'single',  cols: 1, pad: 24, gap: 16, headerSize: 'text-2xl', baseFontPx: 15, compact: false, imagePos: 'top'  },
+        '16:9': { layout: 'two-col', cols: 2, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 19, compact: false, imagePos: 'left', leftWidth: '44%' },
+        '9:16': { layout: 'single',  cols: 1, pad: 32, gap: 18, headerSize: 'text-3xl', baseFontPx: 20, compact: false, imagePos: 'hero' },
+        '4:3':  { layout: 'two-col', cols: 2, pad: 32, gap: 15, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '40%' },
+        'A4':   { layout: 'single',  cols: 1, pad: 48, gap: 20, headerSize: 'text-5xl', baseFontPx: 22, compact: false, imagePos: 'top'  },
     },
     // ── STORY SOCIAL MEDIA ───────────────────────────────────────────────
     socialStory: {
-        '1:1': { layout: 'hero', cols: 1, pad: 'p-5', gap: 'space-y-3', headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'hero' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'left', leftWidth: '50%' },
-        '9:16': { layout: 'story', cols: 1, pad: 'p-5', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 20, compact: true, imagePos: 'hero' },
-        '4:3': { layout: 'hero', cols: 1, pad: 'p-6', gap: 'space-y-3', headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'hero' },
-        'A4': { layout: 'single', cols: 1, pad: 'p-8', gap: 'space-y-4', headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+        '1:1':  { layout: 'hero',    cols: 1, pad: 20, gap: 10, headerSize: 'text-xl',  baseFontPx: 14, compact: true,  imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true,  imagePos: 'left', leftWidth: '48%' },
+        '9:16': { layout: 'story',   cols: 1, pad: 20, gap: 10, headerSize: 'text-2xl', baseFontPx: 19, compact: true,  imagePos: 'hero' },
+        '4:3':  { layout: 'hero',    cols: 1, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true,  imagePos: 'hero' },
+        'A4':   { layout: 'single',  cols: 1, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top'  },
     },
 };
 
@@ -457,15 +537,21 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const consumption = useMemo(() => {
         if (!reviewData) return null;
         const c = {};
-        if (reviewData.consumptionMethod) c.method = reviewData.consumptionMethod;
+        const method = reviewData.consumptionMethod || reviewData.methodeConsommation;
+        if (method) c.method = method;
         if (reviewData.dosage) c.dosage = `${reviewData.dosage}${reviewData.dosageUnit ? ' ' + reviewData.dosageUnit : ' g'}`;
-        if (reviewData.effectDuration) c.duration = reviewData.effectDuration;
-        if (reviewData.effectOnset) c.onset = reviewData.effectOnset;
-        if (reviewData.effectLength) c.length = reviewData.effectLength;
-        if (reviewData.preferredUse) c.preferredUse = reviewData.preferredUse;
+        const duration = reviewData.effectDuration || reviewData.dureeEffets;
+        if (duration) c.duration = duration;
+        const onset = reviewData.effectOnset || reviewData.debutEffets;
+        if (onset) c.onset = onset;
+        const length = reviewData.effectLength || reviewData.longueurEffets;
+        if (length) c.length = length;
+        const prefUse = reviewData.preferredUse || reviewData.usagePreface || reviewData.usagePrefere;
+        if (prefUse) c.preferredUse = prefUse;
         const profiles = asArray(reviewData.effectProfiles).map(extractLabel).filter(Boolean);
         if (profiles.length) c.profiles = profiles;
-        const sideFx = asArray(reviewData.sideEffects).map(extractLabel).filter(Boolean);
+        const sideFxArr = asArray(reviewData.sideEffects || reviewData.effetsSecondaires);
+        const sideFx = sideFxArr.map(extractLabel).filter(Boolean);
         if (sideFx.length) c.sideEffects = sideFx;
         return Object.keys(c).length > 0 ? c : null;
     }, [reviewData]);
@@ -521,7 +607,58 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         if (reviewData.rendement) c.rendement = reviewData.rendement;
         if (reviewData.modeRecolte || reviewData.harvestMode) c.modeRecolte = reviewData.modeRecolte || reviewData.harvestMode;
         if (reviewData.trichomeColor) c.trichomeColor = reviewData.trichomeColor;
+        // Extended culture fields (environment, irrigation, engrais, light, morphology)
+        if (reviewData.temperatureMoyenne) c.tempMoy = reviewData.temperatureMoyenne;
+        if (reviewData.humiditeMoyenne) c.humMoy = reviewData.humiditeMoyenne;
+        if (reviewData.co2Valeur) c.co2 = reviewData.co2Valeur;
+        if (reviewData.systemeIrrigation) c.irrigation = reviewData.systemeIrrigation;
+        if (reviewData.typeEngrais) c.engraisType = reviewData.typeEngrais;
+        if (reviewData.marqueEngrais) c.engraisMarque = reviewData.marqueEngrais;
+        if (reviewData.dli) c.dli = reviewData.dli;
+        if (reviewData.ppfd) c.ppfd = reviewData.ppfd;
+        if (reviewData.kelvin) c.kelvin = reviewData.kelvin;
+        if (reviewData.photoperiode) c.photoperiode = reviewData.photoperiode;
+        if (reviewData.methodePalissage) c.palissage = reviewData.methodePalissage;
+        if (reviewData.nombrePlantes) c.nbPlantes = reviewData.nombrePlantes;
+        if (reviewData.taillePlante) c.taillePlante = reviewData.taillePlante;
+        if (reviewData.nombreBuds) c.nbBuds = reviewData.nombreBuds;
+        if (reviewData.rendementM2) c.rendementM2 = reviewData.rendementM2;
+        if (reviewData.rendementPlante) c.rendementPlante = reviewData.rendementPlante;
         return Object.keys(c).length > 0 ? c : null;
+    }, [reviewData]);
+
+    // ── Texture data ─────────────────────────────────────────────────────────
+    const textureData = useMemo(() => {
+        if (!reviewData) return null;
+        const t = {};
+        if (reviewData.durete != null || reviewData.hardness != null) t.durete = reviewData.durete ?? reviewData.hardness;
+        if (reviewData.densiteTactile != null || reviewData.density != null) t.densiteTactile = reviewData.densiteTactile ?? reviewData.density;
+        if (reviewData.elasticite != null || reviewData.elasticity != null) t.elasticite = reviewData.elasticite ?? reviewData.elasticity;
+        if (reviewData.collant != null || reviewData.stickiness != null) t.collant = reviewData.collant ?? reviewData.stickiness;
+        if (reviewData.friabilite != null || reviewData.friability != null) t.friabilite = reviewData.friabilite ?? reviewData.friability;
+        if (reviewData.viscosity != null || reviewData.viscosite != null) t.viscosite = reviewData.viscosity ?? reviewData.viscosite;
+        if (reviewData.meltingTexture != null) t.melting = reviewData.meltingTexture;
+        return Object.keys(t).length > 0 ? t : null;
+    }, [reviewData]);
+
+    // ── Visual/Technical data ────────────────────────────────────────────────
+    const visualData = useMemo(() => {
+        if (!reviewData) return null;
+        const v = {};
+        if (reviewData.couleur != null || reviewData.couleurNote != null) v.couleur = reviewData.couleur ?? reviewData.couleurNote;
+        if (reviewData.densiteVisuelle != null) v.densiteVisuelle = reviewData.densiteVisuelle;
+        if (reviewData.trichomes != null || reviewData.trichome != null) v.trichomes = reviewData.trichomes ?? reviewData.trichome;
+        if (reviewData.pistils != null || reviewData.pistil != null) v.pistils = reviewData.pistils ?? reviewData.pistil;
+        if (reviewData.manucure != null) v.manucure = reviewData.manucure;
+        if (reviewData.moisissure != null) v.moisissure = reviewData.moisissure;
+        if (reviewData.graines != null) v.graines = reviewData.graines;
+        if (reviewData.pureteVisuelle != null) v.pureteVisuelle = reviewData.pureteVisuelle;
+        if (reviewData.couleurTransparence != null) v.transparence = reviewData.couleurTransparence;
+        if (reviewData.viscositeVisuelle != null) v.viscosite = reviewData.viscositeVisuelle;
+        if (reviewData.melting != null) v.melting = reviewData.melting;
+        if (reviewData.residus != null) v.residus = reviewData.residus;
+        if (reviewData.selectedColors?.length > 0) v.selectedColors = reviewData.selectedColors;
+        return Object.keys(v).length > 0 ? v : null;
     }, [reviewData]);
 
     // ── Separation details (Hash) ────────────────────────────────────────────
@@ -560,37 +697,57 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         return { ingredients, steps, typeComestible: reviewData.typeComestible, fabricant: reviewData.fabricant };
     }, [reviewData]);
 
+    // ── Genealogy tree data (PhenoHunt) ──────────────────────────────────────
+    const genealogyData = useMemo(() => {
+        if (!reviewData) return null;
+        const tree = reviewData.geneticTree || reviewData.genealogyTree || reviewData.phenoTree;
+        if (!tree) return null;
+        const nodes = tree.nodes || [];
+        const edges = tree.edges || [];
+        if (nodes.length === 0) return null;
+        return { nodes, edges, name: tree.name || 'Arbre généalogique' };
+    }, [reviewData]);
+
     // ── Config & style resolution ────────────────────────────────────────────
     const cm = config?.contentModules || {};
     const colors = config?.colors || {};
     const typo = config?.typography || {};
+    const secStyles = config?.sectionStyles || {};
+    const paginationConfig = config?.pagination || {};
     const templateId = config?.template || 'modernCompact';
     const tStyle = TEMPLATE_STYLES[templateId] || TEMPLATE_STYLES.modernCompact;
     const ratio = config?.ratio || '1:1';
     const rDims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     const rStyle = RATIO_STYLES[ratio] || RATIO_STYLES['1:1'];
-    const ls = getLayoutStrategy(templateId, ratio); // layout strategy for this template+ratio
+    const ls = getLayoutStrategy(templateId, ratio);
     const isExportLike = mode === 'export' || mode === 'preview-export';
     const isCanvasCapture = mode === 'export';
     const isCompact = isExportLike ? ls.compact : tStyle.compact;
 
-    // ── Pagination (export capture mode only: distribute sections across pages) ──
+    // ── Pagination state ─────────────────────────────────────────────────────
     const measureRef = useRef(null);
     const [pages, setPages] = useState([]);
     const [paginationReady, setPaginationReady] = useState(false);
+    const [previewPage, setPreviewPage] = useState(0); // For preview mode pagination
+
+    // Right-column pagination (two-col layouts)
+    const rightMeasureRef = useRef(null);
+    const [rightColPages, setRightColPages] = useState([]);
+    const [rightColReady, setRightColReady] = useState(false);
 
     // Measure sections and distribute into pages after initial render
     const paginateSections = useCallback(() => {
-        if (!isCanvasCapture || !measureRef.current) return;
+        if (!measureRef.current) return;
+        if (!isCanvasCapture && !paginationConfig.enabled) return;
         const container = measureRef.current;
         const children = Array.from(container.children);
         if (children.length === 0) return;
 
         const pageH = rDims.height;
-        // Use layout strategy numeric values directly
         const padPx = ls.pad * 2;
         const usableH = pageH - padPx;
         const gapPx = ls.gap;
+        const maxPg = Math.min(paginationConfig.maxPages || 9, 9);
 
         const result = [[]];
         let currentH = 0;
@@ -599,8 +756,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         children.forEach((child, i) => {
             const h = child.getBoundingClientRect().height;
             const gap = i > 0 ? gapPx : 0;
-            if (currentH + h + gap > usableH && result[pageIdx].length > 0) {
-                // Start new page
+            if (currentH + h + gap > usableH && result[pageIdx].length > 0 && pageIdx < maxPg - 1) {
                 pageIdx++;
                 result.push([]);
                 currentH = 0;
@@ -611,7 +767,37 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
         setPages(result);
         setPaginationReady(true);
-    }, [isCanvasCapture, rDims.height, ls.pad, ls.gap]);
+    }, [isCanvasCapture, rDims.height, ls.pad, ls.gap, paginationConfig.enabled, paginationConfig.maxPages]);
+
+    // Measure right-column dataSections and split into pages for two-col export
+    const paginateRightCol = useCallback(() => {
+        if (!isCanvasCapture || !rightMeasureRef.current) return;
+        const children = Array.from(rightMeasureRef.current.children);
+        if (children.length === 0) return;
+
+        const availableH = rDims.height - ls.pad * 2;
+        const gapPx = ls.gap;
+        const maxPg = Math.min(paginationConfig.maxPages || 9, 9);
+
+        const result = [[]];
+        let currentH = 0;
+        let groupIdx = 0;
+
+        children.forEach((child, i) => {
+            const h = child.getBoundingClientRect().height;
+            const gap = i > 0 ? gapPx : 0;
+            if (currentH + h + gap > availableH && result[groupIdx].length > 0 && groupIdx < maxPg - 1) {
+                groupIdx++;
+                result.push([]);
+                currentH = 0;
+            }
+            result[groupIdx].push(i);
+            currentH += h + gap;
+        });
+
+        setRightColPages(result);
+        setRightColReady(true);
+    }, [isCanvasCapture, rDims.height, ls.pad, ls.gap, paginationConfig.maxPages]);
 
     // ── Resolved primitives (safe for null reviewData) ────────────────────
     const title = reviewData?.title || reviewData?.holderName || reviewData?.productName || reviewData?.nomCommercial || 'Sans titre';
@@ -689,7 +875,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         if (isVisible('analytics') && analytics) {
             const count = Object.keys(analytics).filter(k => k !== 'labUrl').length;
             secs.push(
-                <Section key="analytics" title="Analyses & Cannabinoïdes" icon="🧪" defaultOpen={!isCompact} badge={`${count}`} compact={isCompact}>
+                <Section key="analytics" title="Analyses & Cannabinoïdes" icon="🧪" defaultOpen={!isCompact} badge={`${count}`} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {analytics.thc && <InfoCard label="THC" value={`${analytics.thc}%`} icon="🟢" compact={isCompact} />}
                         {analytics.cbd && <InfoCard label="CBD" value={`${analytics.cbd}%`} icon="🔵" compact={isCompact} />}
@@ -711,7 +897,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── GENETICS ─────────────────────────────────────────────────────
         if (isVisible('genetics') && (reviewData.breeder || reviewData.strainType || reviewData.indicaRatio !== undefined || reviewData.indicaPercent !== undefined || reviewData.variety || reviewData.phenotypeCode)) {
             secs.push(
-                <Section key="genetics" title="Génétique" icon="🧬" defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="genetics" title="Génétique" icon="🧬" defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🌱" compact={isCompact} />}
                         {reviewData.strainType && <InfoCard label="Type" value={reviewData.strainType} icon="🌿" compact={isCompact} />}
@@ -725,10 +911,23 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             );
         }
 
+        // ── GENEALOGY TREE (PhenoHunt) ───────────────────────────────────
+        if (isVisible('genetics') && genealogyData) {
+            secs.push(
+                <Section key="genealogy" title={genealogyData.name} icon="🌳" defaultOpen={!isCompact} badge={`${genealogyData.nodes.length}`} compact={isCompact} sectionStyles={secStyles}>
+                    <GenealogyTree2D
+                        nodes={genealogyData.nodes}
+                        edges={genealogyData.edges}
+                        compact={isCompact}
+                    />
+                </Section>
+            );
+        }
+
         // ── CATEGORY RATINGS ─────────────────────────────────────────────
         if (isVisible('categoryRatings') && categoryRatings.length > 0) {
             secs.push(
-                <Section key="catRatings" title="Notes par catégorie" icon="📊" badge={`${categoryRatings.length} cat.`} defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="catRatings" title="Notes par catégorie" icon="📊" badge={`${categoryRatings.length} cat.`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
                     <div className={isCompact ? 'space-y-1' : 'space-y-2'}>
                         {categoryRatings.map(cat => <CategoryCard key={cat.key} cat={cat} compact={isCompact} />)}
                     </div>
@@ -736,10 +935,79 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             );
         }
 
+        // ── VISUAL / TECHNIQUE ───────────────────────────────────────────
+        if (isVisible('categoryRatings') && visualData) {
+            const vEntries = [
+                visualData.couleur != null && { label: 'Couleur', value: `${visualData.couleur}/10`, icon: '🎨' },
+                visualData.densiteVisuelle != null && { label: 'Densité visuelle', value: `${visualData.densiteVisuelle}/10`, icon: '🔍' },
+                visualData.trichomes != null && { label: 'Trichomes', value: `${visualData.trichomes}/10`, icon: '✨' },
+                visualData.pistils != null && { label: 'Pistils', value: `${visualData.pistils}/10`, icon: '🌾' },
+                visualData.manucure != null && { label: 'Manucure', value: `${visualData.manucure}/10`, icon: '✂️' },
+                visualData.moisissure != null && { label: 'Moisissure', value: `${visualData.moisissure}/10`, icon: '🦠' },
+                visualData.graines != null && { label: 'Graines', value: `${visualData.graines}/10`, icon: '🌰' },
+                visualData.pureteVisuelle != null && { label: 'Pureté', value: `${visualData.pureteVisuelle}/10`, icon: '💎' },
+                visualData.transparence != null && { label: 'Transparence', value: `${visualData.transparence}/10`, icon: '🔮' },
+                visualData.viscosite != null && { label: 'Viscosité', value: `${visualData.viscosite}/10`, icon: '🫗' },
+                visualData.melting != null && { label: 'Melting', value: `${visualData.melting}/10`, icon: '🔥' },
+                visualData.residus != null && { label: 'Résidus', value: `${visualData.residus}/10`, icon: '💨' },
+            ].filter(Boolean);
+            if (vEntries.length > 0) {
+                secs.push(
+                    <Section key="visual" title="Visuel & Technique" icon="👁️" badge={`${vEntries.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                        <div className={`grid ${gridCols} gap-2`}>
+                            {vEntries.map((v, i) => <InfoCard key={i} label={v.label} value={v.value} icon={v.icon} compact={isCompact} />)}
+                        </div>
+                        {visualData.selectedColors?.length > 0 && (
+                            <div className="mt-2">
+                                <span className="text-[10px] text-white/40 mb-1 block">Couleurs observées</span>
+                                <div className="flex gap-1">
+                                    {visualData.selectedColors.map((color, i) => (
+                                        <div key={i} className="w-6 h-6 rounded-md border border-white/20" style={{ backgroundColor: color }} title={color} />
+                                    ))}
+                                </div>
+                            </div>
+                        )}
+                    </Section>
+                );
+            }
+        }
+
+        // ── TEXTURE ──────────────────────────────────────────────────────
+        if (isVisible('categoryRatings') && textureData) {
+            const tEntries = [
+                textureData.durete != null && { label: 'Dureté', value: `${textureData.durete}/10`, icon: '💪' },
+                textureData.densiteTactile != null && { label: 'Densité tactile', value: `${textureData.densiteTactile}/10`, icon: '🤚' },
+                textureData.elasticite != null && { label: 'Élasticité', value: `${textureData.elasticite}/10`, icon: '🔄' },
+                textureData.collant != null && { label: 'Collant', value: `${textureData.collant}/10`, icon: '🍯' },
+                textureData.friabilite != null && { label: 'Friabilité', value: `${textureData.friabilite}/10`, icon: '🪨' },
+                textureData.viscosite != null && { label: 'Viscosité', value: `${textureData.viscosite}/10`, icon: '🫗' },
+                textureData.melting != null && { label: 'Melting/Résidus', value: `${textureData.melting}/10`, icon: '♨️' },
+            ].filter(Boolean);
+            if (tEntries.length > 0) {
+                secs.push(
+                    <Section key="texture" title="Texture" icon="🤚" badge={`${tEntries.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                        <div className={`grid ${gridCols} gap-2`}>
+                            {tEntries.map((t, i) => <InfoCard key={i} label={t.label} value={t.value} icon={t.icon} compact={isCompact} />)}
+                        </div>
+                    </Section>
+                );
+            }
+        }
+
         // ── AROMAS ───────────────────────────────────────────────────────
-        if (isVisible('aromas') && (aromas.length > 0 || secondaryAromas.length > 0)) {
+        if (isVisible('aromas') && (aromas.length > 0 || secondaryAromas.length > 0 || reviewData.intensiteOdeur || reviewData.intensiteAromatique || reviewData.fideliteCultivarsOdeur || reviewData.fideliteCultivars)) {
             secs.push(
-                <Section key="aromas" title="Arômes" icon="👃" badge={`${aromas.length + secondaryAromas.length}`} defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="aromas" title="Arômes" icon="👃" badge={`${aromas.length + secondaryAromas.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                    {(reviewData.intensiteOdeur || reviewData.intensiteAromatique || reviewData.fideliteCultivarsOdeur || reviewData.fideliteCultivars) && (
+                        <div className={`grid ${gridCols} gap-2 mb-2`}>
+                            {(reviewData.intensiteOdeur || reviewData.intensiteAromatique) && (
+                                <InfoCard label="Intensité" value={`${reviewData.intensiteOdeur || reviewData.intensiteAromatique}/10`} icon="📊" compact={isCompact} />
+                            )}
+                            {(reviewData.fideliteCultivarsOdeur || reviewData.fideliteCultivars) && (
+                                <InfoCard label="Fidélité cultivar" value={`${reviewData.fideliteCultivarsOdeur || reviewData.fideliteCultivars}/10`} icon="🎯" compact={isCompact} />
+                            )}
+                        </div>
+                    )}
                     {aromas.length > 0 && (
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Notes dominantes</span>
@@ -763,7 +1031,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── TERPENES ─────────────────────────────────────────────────────
         if (isVisible('terpenes') && terpenes.length > 0) {
             secs.push(
-                <Section key="terpenes" title="Terpènes" icon="🧬" badge={`${terpenes.length}`} defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="terpenes" title="Terpènes" icon="🧬" badge={`${terpenes.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
                     <div className="flex flex-wrap gap-1">
                         {terpenes.map((t, i) => <TagPill key={i} label={t} color="cyan" compact={isCompact} />)}
                     </div>
@@ -772,9 +1040,19 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         }
 
         // ── TASTES / GOÛTS ───────────────────────────────────────────────
-        if (isVisible('tastes') && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0)) {
+        if (isVisible('tastes') && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || reviewData.intensiteGout || reviewData.intensiteFumee || reviewData.agressivite)) {
             secs.push(
-                <Section key="tastes" title="Goûts" icon="👅" badge={`${tastes.length + dryPuffNotes.length + inhalationNotes.length + exhalationNotes.length}`} defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="tastes" title="Goûts" icon="👅" badge={`${tastes.length + dryPuffNotes.length + inhalationNotes.length + exhalationNotes.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                    {(reviewData.intensiteGout || reviewData.intensiteFumee || reviewData.agressivite) && (
+                        <div className={`grid ${gridCols} gap-2 mb-2`}>
+                            {(reviewData.intensiteGout || reviewData.intensiteFumee) && (
+                                <InfoCard label="Intensité" value={`${reviewData.intensiteGout || reviewData.intensiteFumee}/10`} icon="📊" compact={isCompact} />
+                            )}
+                            {reviewData.agressivite && (
+                                <InfoCard label="Agressivité" value={`${reviewData.agressivite}/10`} icon="🌶️" compact={isCompact} />
+                            )}
+                        </div>
+                    )}
                     {dryPuffNotes.length > 0 && (
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Tirage à sec</span>
@@ -804,9 +1082,19 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         }
 
         // ── EFFECTS ──────────────────────────────────────────────────────
-        if (isVisible('effects') && effects.length > 0) {
+        if (isVisible('effects') && (effects.length > 0 || reviewData.montee || reviewData.intensiteEffet || reviewData.intensiteEffets)) {
             secs.push(
-                <Section key="effects" title="Effets ressentis" icon="⚡" badge={`${effects.length}`} defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="effects" title="Effets ressentis" icon="⚡" badge={`${effects.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                    {(reviewData.montee || reviewData.intensiteEffet || reviewData.intensiteEffets) && (
+                        <div className={`grid ${gridCols} gap-2 mb-2`}>
+                            {reviewData.montee && (
+                                <InfoCard label="Montée" value={`${reviewData.montee}/10`} icon="🚀" compact={isCompact} />
+                            )}
+                            {(reviewData.intensiteEffet || reviewData.intensiteEffets) && (
+                                <InfoCard label="Intensité" value={`${reviewData.intensiteEffet || reviewData.intensiteEffets}/10`} icon="💥" compact={isCompact} />
+                            )}
+                        </div>
+                    )}
                     <div className="flex flex-wrap gap-1">
                         {effects.map((e, i) => <TagPill key={i} label={e} color="purple" compact={isCompact} />)}
                     </div>
@@ -817,7 +1105,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CONSUMPTION EXPERIENCE ───────────────────────────────────────
         if (isVisible('consumption') && consumption) {
             secs.push(
-                <Section key="consumption" title="Expérience de consommation" icon="🔥" defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="consumption" title="Expérience de consommation" icon="🔥" defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {consumption.method && <InfoCard label="Méthode" value={consumption.method} icon="💨" compact={isCompact} />}
                         {consumption.dosage && <InfoCard label="Dosage" value={consumption.dosage} icon="⚖️" compact={isCompact} />}
@@ -849,28 +1137,60 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CULTURE METADATA (Flower) ────────────────────────────────────
         if (cultureInfo) {
             secs.push(
-                <Section key="culture" title="Données de culture" icon="🌱" defaultOpen={false} compact={isCompact}>
+                <Section key="culture" title="Données de culture" icon="🌱" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {cultureInfo.mode && <InfoCard label="Mode" value={cultureInfo.mode} icon="🏠" compact={isCompact} />}
                         {cultureInfo.spaceType && <InfoCard label="Espace" value={cultureInfo.spaceType} icon="📐" compact={isCompact} />}
                         {cultureInfo.dimensions && <InfoCard label="Dimensions" value={cultureInfo.dimensions} icon="📏" compact={isCompact} />}
                         {cultureInfo.substrat && <InfoCard label="Substrat" value={cultureInfo.substrat} icon="🪴" compact={isCompact} />}
                         {cultureInfo.propagation && <InfoCard label="Propagation" value={cultureInfo.propagation} icon="🌱" compact={isCompact} />}
+                        {cultureInfo.nbPlantes && <InfoCard label="Nb plantes" value={cultureInfo.nbPlantes} icon="🌿" compact={isCompact} />}
                         {cultureInfo.lightType && <InfoCard label="Lumière" value={cultureInfo.lightType} icon="💡" compact={isCompact} />}
                         {cultureInfo.lightPower && <InfoCard label="Puissance" value={`${cultureInfo.lightPower}W`} icon="⚡" compact={isCompact} />}
+                        {cultureInfo.photoperiode && <InfoCard label="Photopériode" value={cultureInfo.photoperiode} icon="☀️" compact={isCompact} />}
+                        {cultureInfo.ppfd && <InfoCard label="PPFD" value={`${cultureInfo.ppfd} µmol/m²/s`} icon="💡" compact={isCompact} />}
+                        {cultureInfo.dli && <InfoCard label="DLI" value={`${cultureInfo.dli} mol/m²/j`} icon="🔆" compact={isCompact} />}
+                        {cultureInfo.kelvin && <InfoCard label="Kelvin" value={`${cultureInfo.kelvin}K`} icon="🌡️" compact={isCompact} />}
                         {cultureInfo.season && <InfoCard label="Saison" value={cultureInfo.season} icon="🌤️" compact={isCompact} />}
                         {cultureInfo.duration && <InfoCard label="Durée" value={cultureInfo.duration} icon="📅" compact={isCompact} />}
                         {cultureInfo.startDate && <InfoCard label="Début" value={formatDate(cultureInfo.startDate)} icon="🗓️" compact={isCompact} />}
                         {cultureInfo.endDate && <InfoCard label="Fin" value={formatDate(cultureInfo.endDate)} icon="🏁" compact={isCompact} />}
                     </div>
+                    {/* Environment sub-section */}
+                    {(cultureInfo.tempMoy || cultureInfo.humMoy || cultureInfo.co2 || cultureInfo.irrigation || cultureInfo.engraisType || cultureInfo.palissage) && (
+                        <div className="mt-2">
+                            <span className={`${isCompact ? 'text-[10px]' : 'text-xs'} text-white/40 mb-1 block`}>🌡️ Environnement</span>
+                            <div className={`grid ${gridCols} gap-2`}>
+                                {cultureInfo.tempMoy && <InfoCard label="Temp. moy." value={`${cultureInfo.tempMoy}°C`} icon="🌡️" compact={isCompact} />}
+                                {cultureInfo.humMoy && <InfoCard label="Humidité moy." value={`${cultureInfo.humMoy}%`} icon="💧" compact={isCompact} />}
+                                {cultureInfo.co2 && <InfoCard label="CO₂" value={`${cultureInfo.co2} ppm`} icon="💨" compact={isCompact} />}
+                                {cultureInfo.irrigation && <InfoCard label="Irrigation" value={cultureInfo.irrigation} icon="🚿" compact={isCompact} />}
+                                {cultureInfo.engraisType && <InfoCard label="Engrais" value={cultureInfo.engraisType} icon="🧪" compact={isCompact} />}
+                                {cultureInfo.engraisMarque && <InfoCard label="Marque engrais" value={cultureInfo.engraisMarque} icon="🏷️" compact={isCompact} />}
+                                {cultureInfo.palissage && <InfoCard label="Palissage" value={cultureInfo.palissage} icon="🪢" compact={isCompact} />}
+                            </div>
+                        </div>
+                    )}
+                    {/* Morphology sub-section */}
+                    {(cultureInfo.taillePlante || cultureInfo.nbBuds) && (
+                        <div className="mt-2">
+                            <span className={`${isCompact ? 'text-[10px]' : 'text-xs'} text-white/40 mb-1 block`}>🌿 Morphologie</span>
+                            <div className={`grid ${gridCols} gap-2`}>
+                                {cultureInfo.taillePlante && <InfoCard label="Taille" value={cultureInfo.taillePlante} icon="📏" compact={isCompact} />}
+                                {cultureInfo.nbBuds && <InfoCard label="Buds" value={cultureInfo.nbBuds} icon="🌸" compact={isCompact} />}
+                            </div>
+                        </div>
+                    )}
                     {/* Harvest sub-section */}
-                    {(cultureInfo.poidsBrut || cultureInfo.poidsNet || cultureInfo.rendement || cultureInfo.modeRecolte || cultureInfo.trichomeColor) && (
+                    {(cultureInfo.poidsBrut || cultureInfo.poidsNet || cultureInfo.rendement || cultureInfo.modeRecolte || cultureInfo.trichomeColor || cultureInfo.rendementM2 || cultureInfo.rendementPlante) && (
                         <div className="mt-2">
                             <span className={`${isCompact ? 'text-[10px]' : 'text-xs'} text-white/40 mb-1 block`}>🌿 Récolte</span>
                             <div className={`grid ${gridCols} gap-2`}>
                                 {cultureInfo.poidsBrut && <InfoCard label="Poids brut" value={`${cultureInfo.poidsBrut}g`} icon="⚖️" compact={isCompact} />}
                                 {cultureInfo.poidsNet && <InfoCard label="Poids net" value={`${cultureInfo.poidsNet}g`} icon="⚖️" compact={isCompact} />}
                                 {cultureInfo.rendement && <InfoCard label="Rendement" value={cultureInfo.rendement} icon="📊" compact={isCompact} />}
+                                {cultureInfo.rendementM2 && <InfoCard label="g/m²" value={`${cultureInfo.rendementM2}g/m²`} icon="📊" compact={isCompact} />}
+                                {cultureInfo.rendementPlante && <InfoCard label="g/plante" value={`${cultureInfo.rendementPlante}g`} icon="🌿" compact={isCompact} />}
                                 {cultureInfo.modeRecolte && <InfoCard label="Mode récolte" value={cultureInfo.modeRecolte} icon="✂️" compact={isCompact} />}
                                 {cultureInfo.trichomeColor && <InfoCard label="Trichomes" value={cultureInfo.trichomeColor} icon="🔍" compact={isCompact} />}
                             </div>
@@ -883,7 +1203,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CURING SPECIFICS ─────────────────────────────────────────────
         if (curingInfo) {
             secs.push(
-                <Section key="curingInfo" title="Curing & Maturation" icon="🫙" defaultOpen={false} compact={isCompact}>
+                <Section key="curingInfo" title="Curing & Maturation" icon="🫙" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {curingInfo.type && <InfoCard label="Type" value={curingInfo.type} icon="🌡️" compact={isCompact} />}
                         {curingInfo.temp && <InfoCard label="Température" value={`${curingInfo.temp}°C`} icon="🌡️" compact={isCompact} />}
@@ -902,7 +1222,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── SEPARATION (Hash) ────────────────────────────────────────────
         if (separationInfo) {
             secs.push(
-                <Section key="separation" title="Séparation" icon="🔬" defaultOpen={false} compact={isCompact}>
+                <Section key="separation" title="Séparation" icon="🔬" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {separationInfo.method && <InfoCard label="Méthode" value={separationInfo.method} icon="⚙️" compact={isCompact} />}
                         {separationInfo.passes && <InfoCard label="Nb de passes" value={separationInfo.passes} icon="🔄" compact={isCompact} />}
@@ -920,7 +1240,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── EXTRACTION (Concentrate) ─────────────────────────────────────
         if (extractionInfo) {
             secs.push(
-                <Section key="extraction" title="Extraction" icon="⚗️" defaultOpen={false} compact={isCompact}>
+                <Section key="extraction" title="Extraction" icon="⚗️" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {extractionInfo.method && <InfoCard label="Méthode" value={extractionInfo.method} icon="⚙️" compact={isCompact} />}
                         {extractionInfo.solvant && <InfoCard label="Solvant" value={extractionInfo.solvant} icon="🧪" compact={isCompact} />}
@@ -935,7 +1255,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── RECIPE (Edible) ──────────────────────────────────────────────
         if (recipeInfo) {
             secs.push(
-                <Section key="recipe" title="Recette" icon="🍳" defaultOpen={false} compact={isCompact}>
+                <Section key="recipe" title="Recette" icon="🍳" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     {(recipeInfo.typeComestible || recipeInfo.fabricant) && (
                         <div className={`grid ${gridCols} gap-2 mb-2`}>
                             {recipeInfo.typeComestible && <InfoCard label="Type" value={recipeInfo.typeComestible} icon="🍰" compact={isCompact} />}
@@ -979,7 +1299,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── PIPELINES ────────────────────────────────────────────────────
         if (isVisible('pipelines') && pipelines.length > 0) {
             secs.push(
-                <Section key="pipelines" title="Pipelines" icon="⚗️" badge={`${pipelines.length}`} defaultOpen={!isCompact} compact={isCompact}>
+                <Section key="pipelines" title="Pipelines" icon="⚗️" badge={`${pipelines.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
                     <div className={isCompact ? 'space-y-2' : 'space-y-4'}>
                         {pipelines.map((pl, i) => (
                             <InteractivePipelineViewer
@@ -998,7 +1318,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── DESCRIPTION ──────────────────────────────────────────────────
         if (isVisible('description') && reviewData.description) {
             secs.push(
-                <Section key="description" title="Description" icon="📝" defaultOpen={false} compact={isCompact}>
+                <Section key="description" title="Description" icon="📝" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-white/70 leading-relaxed whitespace-pre-wrap`}>{reviewData.description}</p>
                 </Section>
             );
@@ -1007,7 +1327,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CONCLUSION ───────────────────────────────────────────────────
         if (isVisible('conclusion') && reviewData.conclusion) {
             secs.push(
-                <Section key="conclusion" title="Conclusion" icon="🏁" defaultOpen={false} compact={isCompact}>
+                <Section key="conclusion" title="Conclusion" icon="🏁" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
                     <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-white/70 leading-relaxed whitespace-pre-wrap`}>{reviewData.conclusion}</p>
                 </Section>
             );
@@ -1020,8 +1340,9 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         reviewData, config, categoryRatings, pipelines, aromas, secondaryAromas,
         tastes, dryPuffNotes, inhalationNotes, exhalationNotes, effects, terpenes,
         cultivars, images, consumption, analytics, curingInfo, cultureInfo,
-        separationInfo, extractionInfo, recipeInfo, isExportLike, isCompact, ls, tStyle,
-        ratio, gridCols
+        separationInfo, extractionInfo, recipeInfo, genealogyData, textureData, visualData,
+        isExportLike, isCompact, ls, tStyle,
+        ratio, gridCols, secStyles
     ]);
 
     // ── Pagination useEffect (must be after allSections definition) ─────────
@@ -1111,45 +1432,135 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             const analyticsSection = allSections.find(s => s.key === 'analytics');
             const dataSections = allSections.filter(s => !['header', 'image', 'analytics'].includes(s.key));
             const leftW = ls.leftWidth || '42%';
+            const bgColor = colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)';
 
-            const renderTwoCol = () => (
-                <div
-                    id={isCanvasCapture ? 'orchard-template-canvas' : undefined}
-                    data-width={rDims.width}
-                    data-height={rDims.height}
-                    data-ratio={ratio}
-                    data-page="1"
-                    data-total-pages="1"
-                    className="orchard-export-page"
-                    style={{
-                        ...rootStyle,
-                        width: `${rDims.width}px`,
-                        height: `${rDims.height}px`,
-                        overflow: 'hidden',
-                        position: 'relative',
-                        background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                        contain: 'layout style paint',
-                        flexShrink: 0,
-                    }}
-                >
-                    <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
-                        {/* Left column */}
-                        <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
-                            {headerSection}
-                            {analyticsSection}
-                            {imageSection}
+            // preview-export: both columns are scrollable (WYSIWYG preview — no clipping)
+            if (mode === 'preview-export') {
+                return (
+                    <div
+                        data-width={rDims.width}
+                        data-height={rDims.height}
+                        data-ratio={ratio}
+                        className="orchard-export-page"
+                        style={{
+                            ...rootStyle,
+                            width: `${rDims.width}px`,
+                            height: `${rDims.height}px`,
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: bgColor,
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                            <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: 'auto' }}>
+                                {headerSection}
+                                {analyticsSection}
+                                {imageSection}
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: 'auto' }}>
+                                {dataSections}
+                            </div>
                         </div>
-                        {/* Right column */}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
-                            {dataSections}
-                        </div>
+                        <BrandingOverlay branding={config?.branding} />
                     </div>
-                    <BrandingOverlay branding={config?.branding} />
-                </div>
-            );
+                );
+            }
 
-            // For preview-export (miniature), identical but no canvas id
-            return renderTwoCol();
+            // export (canvas capture): paginate right column across multiple pages
+            const totalPages = rightColReady && rightColPages.length > 0 ? rightColPages.length : 1;
+            const leftWidthFrac = parseFloat(leftW) / 100;
+            const rightColWidthPx = Math.floor(rDims.width * (1 - leftWidthFrac) - ls.pad * 2 - ls.gap);
+
+            return (
+                <>
+                    {/* Hidden measure container for right-column sections */}
+                    <div
+                        ref={rightMeasureRef}
+                        style={{
+                            position: 'absolute', left: '-99999px', top: 0,
+                            visibility: 'hidden', pointerEvents: 'none',
+                            width: `${rightColWidthPx}px`,
+                            display: 'flex', flexDirection: 'column', gap: lsGap,
+                        }}
+                    >
+                        {dataSections}
+                    </div>
+
+                    {/* Page 1: classic two-col */}
+                    <div
+                        id="orchard-template-canvas"
+                        data-width={rDims.width}
+                        data-height={rDims.height}
+                        data-ratio={ratio}
+                        data-page="1"
+                        data-total-pages={totalPages}
+                        className="orchard-export-page"
+                        style={{
+                            ...rootStyle,
+                            width: `${rDims.width}px`,
+                            height: `${rDims.height}px`,
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: bgColor,
+                            contain: 'layout style paint',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                            <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                                {headerSection}
+                                {analyticsSection}
+                                {imageSection}
+                            </div>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                                {rightColReady
+                                    ? rightColPages[0]?.map(i => dataSections[i])
+                                    : dataSections
+                                }
+                            </div>
+                        </div>
+                        {totalPages > 1 && (
+                            <div className="absolute bottom-2 right-3 px-2 py-0.5 rounded-full bg-black/40 text-white/60 text-[10px] font-mono">
+                                1/{totalPages}
+                            </div>
+                        )}
+                        <BrandingOverlay branding={config?.branding} />
+                    </div>
+
+                    {/* Pages 2+: single-column overflow for remaining right-col sections */}
+                    {rightColReady && rightColPages.slice(1).map((group, pIdx) => (
+                        <div
+                            key={`twoCol-p${pIdx + 2}`}
+                            id={`orchard-template-canvas-${pIdx + 2}`}
+                            data-width={rDims.width}
+                            data-height={rDims.height}
+                            data-ratio={ratio}
+                            data-page={pIdx + 2}
+                            data-total-pages={totalPages}
+                            className="orchard-export-page"
+                            style={{
+                                ...rootStyle,
+                                width: `${rDims.width}px`,
+                                height: `${rDims.height}px`,
+                                overflow: 'hidden',
+                                position: 'relative',
+                                background: bgColor,
+                                contain: 'layout style paint',
+                                flexShrink: 0,
+                            }}
+                        >
+                            <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, height: '100%', overflow: 'hidden' }}>
+                                {group.map(i => dataSections[i])}
+                            </div>
+                            <div className="absolute bottom-2 right-3 px-2 py-0.5 rounded-full bg-black/40 text-white/60 text-[10px] font-mono">
+                                {pIdx + 2}/{totalPages}
+                            </div>
+                            <BrandingOverlay branding={config?.branding} />
+                        </div>
+                    ))}
+                </>
+            );
         }
 
         // ── HERO layout (large hero image on top, content below — 1:1) ──────
@@ -1172,14 +1583,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             overflow: 'hidden',
                             position: 'relative',
                             background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                            contain: 'layout style paint',
                             flexShrink: 0,
                         }}
                     >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
                             {headerSection}
-                            {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '12px' }}>{imageSection}</div>}
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                            {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '12px', flexShrink: 0 }}>{imageSection}</div>}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
                                 {restSections}
                             </div>
                         </div>
@@ -1229,14 +1639,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             overflow: 'hidden',
                             position: 'relative',
                             background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                            contain: 'layout style paint',
                             flexShrink: 0,
                         }}
                     >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
                             {headerSection}
-                            {imageSection && <div style={{ maxHeight: '25%', overflow: 'hidden', borderRadius: '10px' }}>{imageSection}</div>}
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                            {imageSection && <div style={{ maxHeight: '25%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
                                 {restSections}
                             </div>
                         </div>
@@ -1282,11 +1691,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             overflow: 'hidden',
                             position: 'relative',
                             background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                            contain: 'layout style paint',
                             flexShrink: 0,
                         }}
                     >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
                             {allSections}
                         </div>
                         <BrandingOverlay branding={config?.branding} />
@@ -1330,11 +1738,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         overflow: 'hidden',
                         position: 'relative',
                         background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                        contain: 'layout style paint',
                         flexShrink: 0,
                     }}
                 >
-                    <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                    <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
                         {allSections}
                     </div>
                     <BrandingOverlay branding={config?.branding} />
@@ -1365,8 +1772,63 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     }
 
     /* ══════════════════════════════════════════════════════════════════════════
-       PREVIEW MODE (fluid, scrollable)
+       PREVIEW MODE (fluid, scrollable or paginated)
        ══════════════════════════════════════════════════════════════════════════ */
+    // Paginated preview: split sections into chunks based on paginationConfig
+    if (paginationConfig.enabled && allSections.length > 0) {
+        const perPage = Math.max(1, Math.ceil(allSections.length / Math.min(paginationConfig.maxPages || 9, allSections.length)));
+        const previewPages = [];
+        for (let i = 0; i < allSections.length; i += perPage) {
+            previewPages.push(allSections.slice(i, i + perPage));
+        }
+        const totalPages = Math.min(previewPages.length, paginationConfig.maxPages || 9);
+        const safePage = Math.min(previewPage, totalPages - 1);
+        const currentSections = previewPages[safePage] || previewPages[0] || [];
+
+        return (
+            <div className="w-full h-full flex flex-col" style={rootStyle}>
+                <div className="flex-1 overflow-y-auto custom-scrollbar">
+                    <div className={`${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
+                        {currentSections}
+                    </div>
+                    <div className="relative">
+                        <BrandingOverlay branding={config?.branding} />
+                    </div>
+                </div>
+                {/* Pagination nav bar */}
+                {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 py-2 px-4 bg-[#0a0a12]/80 backdrop-blur-sm border-t border-white/10">
+                        <button
+                            onClick={() => setPreviewPage(Math.max(0, safePage - 1))}
+                            disabled={safePage === 0}
+                            className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                        </button>
+                        <div className="flex gap-1">
+                            {Array.from({ length: totalPages }, (_, i) => (
+                                <button
+                                    key={i}
+                                    onClick={() => setPreviewPage(i)}
+                                    className={`w-7 h-7 rounded-md text-xs font-medium transition-all ${i === safePage ? 'bg-purple-600 text-white shadow-md' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+                                >
+                                    {paginationConfig.showPageNumbers !== false ? i + 1 : ''}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setPreviewPage(Math.min(totalPages - 1, safePage + 1))}
+                            disabled={safePage >= totalPages - 1}
+                            className="p-1.5 rounded-md text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                        </button>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className="w-full h-full overflow-y-auto custom-scrollbar" style={rootStyle}>
             <div className={`${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>

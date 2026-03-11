@@ -287,17 +287,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
 
-    const toggleContentModule = useOrchardStore((state) => state.toggleContentModule);
-    const handleContextMenuStyle = useCallback((sectionKey, styleKey, value) => {
-        if (styleKey === 'visible' && value === false) {
-            // Hide the module via the store
-            toggleContentModule(sectionKey);
-        }
-        // Other style keys (displayStyle, fontSize, accentColor) can be stored in a per-element config
-        // For now, log and store in orchardStore elementStyles (future extension)
-        console.log('[ContextMenu] Apply:', sectionKey, styleKey, value);
-    }, [toggleContentModule]);
-
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
         useSensor(PointerSensor, {
@@ -710,7 +699,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             </AnimatePresence>
 
             {/* Context Menu for right-click on preview elements */}
-            <OrchardContextMenu onApplyStyle={handleContextMenuStyle} />
+            <OrchardContextMenu />
 
             {/* Drag Overlay - Affiche l'élément en cours de drag */}
             <DragOverlay>

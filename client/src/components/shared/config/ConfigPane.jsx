@@ -7,6 +7,64 @@ import ContentModuleControls from './ContentModuleControls';
 import ImageBrandingControls from './ImageBrandingControls';
 import PresetManager from './PresetManager';
 
+function PaginationControls() {
+    const pagination = useOrchardStore((s) => s.config.pagination) || {};
+    const updatePagination = useOrchardStore((s) => s.updatePagination);
+    const { enabled = true, maxPages = 9, showPageNumbers = true, pageBreakMode = 'auto' } = pagination;
+
+    return (
+        <div className="space-y-3 p-3 rounded-lg bg-white/5 border border-white/10">
+            <div className="flex items-center justify-between">
+                <h4 className="text-xs font-semibold uppercase tracking-widest text-white/40">Pagination</h4>
+                <button
+                    onClick={() => updatePagination({ enabled: !enabled })}
+                    className={`relative w-9 h-5 rounded-full transition-colors ${enabled ? 'bg-purple-600' : 'bg-white/20'}`}
+                >
+                    <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${enabled ? 'left-[18px]' : 'left-0.5'}`} />
+                </button>
+            </div>
+            {enabled && (
+                <>
+                    <div>
+                        <label className="text-[11px] text-white/50 block mb-1">Pages max ({maxPages})</label>
+                        <input
+                            type="range" min={1} max={9} value={maxPages}
+                            onChange={(e) => updatePagination({ maxPages: Number(e.target.value) })}
+                            className="w-full accent-purple-500 h-1"
+                        />
+                        <div className="flex justify-between text-[10px] text-white/30 mt-0.5">
+                            <span>1</span><span>5</span><span>9</span>
+                        </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                        <span className="text-[11px] text-white/50">Numéros de page</span>
+                        <button
+                            onClick={() => updatePagination({ showPageNumbers: !showPageNumbers })}
+                            className={`relative w-9 h-5 rounded-full transition-colors ${showPageNumbers ? 'bg-purple-600' : 'bg-white/20'}`}
+                        >
+                            <span className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-transform ${showPageNumbers ? 'left-[18px]' : 'left-0.5'}`} />
+                        </button>
+                    </div>
+                    <div>
+                        <label className="text-[11px] text-white/50 block mb-1">Mode de coupure</label>
+                        <div className="grid grid-cols-2 gap-1">
+                            {['auto', 'section'].map((m) => (
+                                <button
+                                    key={m}
+                                    onClick={() => updatePagination({ pageBreakMode: m })}
+                                    className={`px-2 py-1.5 rounded text-[11px] transition-all ${pageBreakMode === m ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/60 hover:bg-white/15'}`}
+                                >
+                                    {m === 'auto' ? 'Automatique' : 'Par section'}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                </>
+            )}
+        </div>
+    );
+}
+
 const PANELS = [
     { id: 'template', name: 'Template', icon: 'template' },
     { id: 'content', name: 'Contenu', icon: 'list' },
@@ -71,7 +129,12 @@ export default function ConfigPane() {
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
                 >
-                    {activePanel === 'template' && <TemplateSelector />}
+                    {activePanel === 'template' && (
+                        <div className="space-y-5">
+                            <TemplateSelector />
+                            <PaginationControls />
+                        </div>
+                    )}
                     {activePanel === 'content' && <ContentModuleControls />}
                     {activePanel === 'apparence' && (
                         <div className="space-y-6">
