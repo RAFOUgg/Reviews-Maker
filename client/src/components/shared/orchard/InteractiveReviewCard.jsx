@@ -156,8 +156,9 @@ function StrainRatioBar({ indica, sativa, compact }) {
 }
 
 // ─── Image gallery with lightbox ─────────────────────────────────────────────
-function ImageGallery({ images, mainImage, compact }) {
+function ImageGallery({ images, mainImage, compact, imageConfig }) {
     const [lightboxIdx, setLightboxIdx] = useState(null);
+    const [activeIdx, setActiveIdx] = useState(0);
     const allImages = useMemo(() => {
         const imgs = [];
         if (mainImage) imgs.push(mainImage);
@@ -169,6 +170,17 @@ function ImageGallery({ images, mainImage, compact }) {
         }
         return imgs;
     }, [images, mainImage]);
+
+    // Build CSS filter + opacity + borderRadius from imageConfig
+    const imgStyle = useMemo(() => {
+        const s = {};
+        const ic = imageConfig || {};
+        if (ic.borderRadius != null) s.borderRadius = `${ic.borderRadius}px`;
+        if (ic.opacity != null) s.opacity = ic.opacity;
+        const filterMap = { sepia: 'sepia(100%)', grayscale: 'grayscale(100%)', blur: 'blur(3px)' };
+        if (ic.filter && ic.filter !== 'none') s.filter = filterMap[ic.filter] || 'none';
+        return s;
+    }, [imageConfig]);
 
     if (!allImages.length) return (
         <div className={`${compact ? 'aspect-[4/3]' : 'aspect-video'} rounded-xl bg-white/5 border border-dashed border-white/15 flex items-center justify-center`}>
@@ -182,31 +194,47 @@ function ImageGallery({ images, mainImage, compact }) {
     return (
         <>
             <div className="space-y-1.5">
+                {/* Main photo — click opens lightbox */}
                 <div
-                    className={`relative ${compact ? 'aspect-[4/3]' : 'aspect-video'} rounded-xl overflow-hidden border border-white/10 cursor-pointer group`}
-                    onClick={() => setLightboxIdx(0)}
+                    className={`relative ${compact ? 'aspect-[4/3]' : 'aspect-video'} overflow-hidden border border-white/10 cursor-pointer group`}
+                    style={{ borderRadius: imgStyle.borderRadius || '12px' }}
+                    onClick={() => setLightboxIdx(activeIdx)}
                 >
-                    <img src={allImages[0]} alt="Review" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                    <motion.img
+                        key={activeIdx}
+                        src={allImages[activeIdx]} alt="Review"
+                        className="w-full h-full object-cover"
+                        style={imgStyle}
+                        initial={{ opacity: 0, scale: 1.04 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.25 }}
+                    />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                         <Eye className="w-6 h-6 text-white opacity-0 group-hover:opacity-80 transition-opacity" />
                     </div>
                     {allImages.length > 1 && (
                         <span className="absolute bottom-2 right-2 px-2 py-0.5 rounded-full bg-black/60 text-white/80 text-xs font-medium">
-                            1/{allImages.length}
+                            {activeIdx + 1}/{allImages.length}
                         </span>
                     )}
                 </div>
+                {/* Thumbnails — click sets as main photo */}
                 {allImages.length > 1 && (
                     <div className="flex gap-1 overflow-x-auto pb-0.5">
-                        {allImages.slice(1, 5).map((img, i) => (
-                            <div
-                                key={i}
-                                className={`${compact ? 'w-10 h-10' : 'w-14 h-14'} rounded-lg overflow-hidden border border-white/10 flex-shrink-0 cursor-pointer hover:border-purple-500/50 transition-colors`}
-                                onClick={() => setLightboxIdx(i + 1)}
-                            >
-                                <img src={img} alt="" className="w-full h-full object-cover" />
-                            </div>
-                        ))}
+                        {allImages.map((img, i) => {
+                            if (i === activeIdx) return null;
+                            return (
+                                <div
+                                    key={i}
+                                    title="Définir comme photo principale"
+                                    className={`${compact ? 'w-10 h-10' : 'w-14 h-14'} overflow-hidden border-2 flex-shrink-0 cursor-pointer transition-all hover:border-purple-400 hover:scale-105 active:scale-95`}
+                                    style={{ borderRadius: imgStyle.borderRadius || '8px', borderColor: 'rgba(255,255,255,0.15)' }}
+                                    onClick={() => setActiveIdx(i)}
+                                >
+                                    <img src={img} alt="" className="w-full h-full object-cover" style={imgStyle} />
+                                </div>
+                            );
+                        })}
                     </div>
                 )}
             </div>
@@ -263,6 +291,41 @@ function CategoryCard({ cat, compact }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+        </div>
+    );
+}
+
+// ─── Branding / Logo overlay (renders logo image positioned on export pages) ──
+function BrandingOverlay({ branding }) {
+    if (!branding?.enabled || !branding?.logoUrl) return null;
+
+    const sizeMap = { small: 40, medium: 64, large: 96 };
+    const sizePx = sizeMap[branding.size] || 64;
+
+    const posStyle = {};
+    const pos = branding.position || 'bottom-right';
+    if (pos.includes('top')) posStyle.top = 12;
+    if (pos.includes('bottom')) posStyle.bottom = 12;
+    if (pos.includes('left')) posStyle.left = 12;
+    if (pos.includes('right')) posStyle.right = 12;
+    if (pos === 'center') {
+        posStyle.top = '50%';
+        posStyle.left = '50%';
+        posStyle.transform = 'translate(-50%, -50%)';
+    }
+
+    return (
+        <div className="absolute pointer-events-none" style={{ ...posStyle, zIndex: 5 }}>
+            <img
+                src={branding.logoUrl}
+                alt=""
+                style={{
+                    width: sizePx,
+                    height: sizePx,
+                    objectFit: 'contain',
+                    opacity: branding.opacity ?? 0.7,
+                }}
+            />
         </div>
     );
 }
@@ -619,7 +682,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
         // ── IMAGE ────────────────────────────────────────────────────────
         if (isVisible('image')) {
-            secs.push(<div key="image"><ImageGallery images={images} mainImage={mainImageUrl} compact={isCompact} /></div>);
+            secs.push(<div key="image"><ImageGallery images={images} mainImage={mainImageUrl} compact={isCompact} imageConfig={config?.image} /></div>);
         }
 
         // ── ANALYTICS (Cannabinoids) ─────────────────────────────────────
@@ -1029,12 +1092,8 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         {pageNum}/{totalPgs}
                     </div>
                 )}
-                {/* Watermark */}
-                {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                    <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                        {config.branding.watermarkText}
-                    </div>
-                )}
+                {/* Branding / Logo overlay */}
+                <BrandingOverlay branding={config?.branding} />
             </div>
         );
     };
@@ -1085,11 +1144,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             {dataSections}
                         </div>
                     </div>
-                    {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                        <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                            {config.branding.watermarkText}
-                        </div>
-                    )}
+                    <BrandingOverlay branding={config?.branding} />
                 </div>
             );
 
@@ -1128,11 +1183,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                                 {restSections}
                             </div>
                         </div>
-                        {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                            <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                                {config.branding.watermarkText}
-                            </div>
-                        )}
+                        <BrandingOverlay branding={config?.branding} />
                     </div>
                 );
             }
@@ -1189,11 +1240,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                                 {restSections}
                             </div>
                         </div>
-                        {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                            <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                                {config.branding.watermarkText}
-                            </div>
-                        )}
+                        <BrandingOverlay branding={config?.branding} />
                     </div>
                 );
             }
@@ -1242,11 +1289,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
                             {allSections}
                         </div>
-                        {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                            <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                                {config.branding.watermarkText}
-                            </div>
-                        )}
+                        <BrandingOverlay branding={config?.branding} />
                     </div>
                 );
             }
@@ -1294,11 +1337,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                     <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
                         {allSections}
                     </div>
-                    {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                        <div className="absolute bottom-2 left-3 text-[10px] text-white/15 font-medium">
-                            {config.branding.watermarkText}
-                        </div>
-                    )}
+                    <BrandingOverlay branding={config?.branding} />
                 </div>
             );
         }
@@ -1332,13 +1371,10 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         <div className="w-full h-full overflow-y-auto custom-scrollbar" style={rootStyle}>
             <div className={`${tStyle.maxWidth} mx-auto px-4 py-6 ${tStyle.spacing}`}>
                 {allSections}
-
-                {/* Watermark */}
-                {config?.branding?.showWatermark && config?.branding?.watermarkText && (
-                    <div className="text-center py-3 text-xs text-white/20">
-                        {config.branding.watermarkText}
-                    </div>
-                )}
+            </div>
+            {/* Branding overlay for preview mode */}
+            <div className="relative">
+                <BrandingOverlay branding={config?.branding} />
             </div>
         </div>
     );
