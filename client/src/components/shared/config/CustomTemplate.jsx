@@ -216,13 +216,15 @@ function renderCustomLayout(layout, reviewData, colors, typography) {
 
     const getFieldValue = (field) => {
         if (!reviewData || !field) return null;
-        if (field.id && field.id.includes('.')) {
-            const parts = field.id.split('.');
+        const fieldId = typeof field === 'string' ? field : field.id;
+        if (!fieldId) return null;
+        if (fieldId.includes('.')) {
+            const parts = fieldId.split('.');
             let value = reviewData;
             for (const p of parts) { value = value?.[p]; }
             return value;
         }
-        return reviewData[field.id];
+        return reviewData[fieldId];
     };
 
     return parsed.map((pl) => {
@@ -230,7 +232,7 @@ function renderCustomLayout(layout, reviewData, colors, typography) {
             return (
                 <div key={pl.id} className="absolute" style={{ left: `${pl.position.x}%`, top: `${pl.position.y}%`, width: `${pl.width}%`, height: `${pl.height}%`, transform: `rotate(${pl.rotation || 0}deg)` }}>
                     <div className="w-full h-full flex flex-col items-center justify-center rounded-lg overflow-hidden"
-                         style={{ background: colorWithOpacity(colors?.accent || '#A78BFA', 8), border: `1px solid ${colorWithOpacity(colors?.accent || '#A78BFA', 15)}` }}>
+                        style={{ background: colorWithOpacity(colors?.accent || '#A78BFA', 8), border: `1px solid ${colorWithOpacity(colors?.accent || '#A78BFA', 15)}` }}>
                         <div style={{ fontSize: `${(typography?.textSize || 14) - 2}px`, color: colors?.textSecondary || '#94A3B8', marginBottom: '4px', fontWeight: '600' }}>{pl.label || 'Zone'}</div>
                         {(pl.assignedFields || []).map(fid => {
                             const def = findFieldDef(fid);
@@ -253,7 +255,7 @@ function renderCustomLayout(layout, reviewData, colors, typography) {
 
         return (
             <div key={pl.id} className="absolute"
-                 style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${width}%`, height: `${height}%`, transform: `rotate(${rotation}deg)`, pointerEvents: 'none' }}>
+                style={{ left: `${pos.x}%`, top: `${pos.y}%`, width: `${width}%`, height: `${height}%`, transform: `rotate(${rotation}deg)`, pointerEvents: 'none' }}>
                 <FieldRenderer field={pl} value={getFieldValue(pl)} compact />
             </div>
         );

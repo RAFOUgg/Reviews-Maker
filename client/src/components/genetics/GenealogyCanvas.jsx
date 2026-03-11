@@ -7,11 +7,11 @@ import { Trash2, Plus, Download, RotateCcw } from 'lucide-react'
  * Drag & drop des cultivars, création de liens parent/enfant
  * Style GitHub (grille de points)
  */
-export default function GenealogyCanvas({ 
-    genealogy = {}, 
+export default function GenealogyCanvas({
+    genealogy = {},
     cultivarLibrary = [],
-    onChange = () => {},
-    disabled = false 
+    onChange = () => { },
+    disabled = false
 }) {
     const canvasRef = useRef(null)
     const [nodes, setNodes] = useState(genealogy.nodes || [])
@@ -37,9 +37,21 @@ export default function GenealogyCanvas({
         e.preventDefault()
         if (disabled) return
 
-        const cultivarId = e.dataTransfer.getData('cultivar-id')
-        const cultivarName = e.dataTransfer.getData('cultivar-name')
-        
+        let cultivarId = e.dataTransfer.getData('cultivar-id')
+        let cultivarName = e.dataTransfer.getData('cultivar-name')
+
+        // Fallback: try application/json format (set by PhenoHuntPage sidebar)
+        if (!cultivarId) {
+            try {
+                const jsonData = e.dataTransfer.getData('application/json')
+                if (jsonData) {
+                    const parsed = JSON.parse(jsonData)
+                    cultivarId = parsed.id
+                    cultivarName = parsed.name || parsed.cultivarName || ''
+                }
+            } catch { /* ignore parse errors */ }
+        }
+
         if (!cultivarId) return
 
         // Calculer la position relative au canvas
@@ -67,7 +79,7 @@ export default function GenealogyCanvas({
     // Ajouter connexion parent > enfant
     const addConnection = (parentId, childId) => {
         if (disabled) return
-        
+
         const exists = connections.some(
             c => c.parentId === parentId && c.childId === childId
         )
@@ -80,7 +92,7 @@ export default function GenealogyCanvas({
     // Supprimer noeud
     const deleteNode = (nodeId) => {
         if (disabled) return
-        
+
         setNodes(nodes.filter(n => n.id !== nodeId))
         setConnections(connections.filter(
             c => c.parentId !== nodeId && c.childId !== nodeId
@@ -122,7 +134,7 @@ export default function GenealogyCanvas({
                 width="100%"
                 height="100%"
                 style={{ position: 'absolute', top: 0, left: 0, pointerEvents: 'none' }}
-                viewBox={`${-canvasOffset.x * scale} ${-canvasOffset.y * scale} ${(canvasRef.current?.offsetWidth || 800) * scale} ${(canvasRef.current?.offsetHeight || 600) * scale}`}
+                viewBox={`0 0 ${canvasRef.current?.offsetWidth || 800} ${canvasRef.current?.offsetHeight || 600}`}
             >
                 {connections.map(conn => {
                     const parentNode = nodes.find(n => n.id === conn.parentId)
@@ -130,10 +142,10 @@ export default function GenealogyCanvas({
 
                     if (!parentNode || !childNode) return null
 
-                    const x1 = parentNode.x + 40
-                    const y1 = parentNode.y + 40
-                    const x2 = childNode.x + 40
-                    const y2 = childNode.y + 40
+                    const x1 = (parentNode.x + canvasOffset.x) * scale + 40
+                    const y1 = (parentNode.y + canvasOffset.y) * scale + 40
+                    const x2 = (childNode.x + canvasOffset.x) * scale + 40
+                    const y2 = (childNode.y + canvasOffset.y) * scale + 40
 
                     return (
                         <line
@@ -176,7 +188,7 @@ export default function GenealogyCanvas({
                     <RotateCcw className="w-4 h-4" />
                     Réinitialiser
                 </button>
-                
+
                 <button
                     onClick={() => {
                         const data = JSON.stringify({ nodes, connections }, null, 2)

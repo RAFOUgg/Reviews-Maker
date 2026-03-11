@@ -241,8 +241,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     style: { transform: 'none' }
                 });
 
+                const isLandscapeFormat = format === '16:9' || format === '4:3';
                 const pdf = new jsPDF({
-                    orientation: 'portrait',
+                    orientation: isLandscapeFormat ? 'landscape' : 'portrait',
                     unit: 'mm',
                     format: 'a4'
                 });

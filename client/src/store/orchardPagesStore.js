@@ -462,15 +462,18 @@ export const useOrchardPagesStore = create(
             /**
              * Ajoute une nouvelle page
              */
-            addPage: (page) => set((state) => ({
-                pages: [...state.pages, {
-                    id: page.id || `page-${Date.now()}`,
-                    label: page.label || `Page ${state.pages.length + 1}`,
-                    icon: page.icon || '📄',
-                    modules: page.modules || [],
-                    customLayout: page.customLayout || null
-                }]
-            })),
+            addPage: (page) => set((state) => {
+                if (state.pages.length >= 9) return state;
+                return {
+                    pages: [...state.pages, {
+                        id: page.id || `page-${Date.now()}`,
+                        label: page.label || `Page ${state.pages.length + 1}`,
+                        icon: page.icon || '📄',
+                        modules: page.modules || [],
+                        customLayout: page.customLayout || null
+                    }]
+                };
+            }),
 
             /**
              * Supprime une page

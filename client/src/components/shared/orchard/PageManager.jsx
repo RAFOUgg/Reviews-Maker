@@ -176,17 +176,19 @@ export default function PageManager() {
                     </DndContext>
 
                     {/* Add page button */}
-                    <button
-                        onClick={() => setShowAddModal(true)}
-                        className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover: hover: transition-all"
-                    >
-                        <div className="flex items-center justify-center gap-2">
-                            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
-                            <span className="font-medium">Ajouter une page</span>
-                        </div>
-                    </button>
+                    {pages.length < 9 && (
+                        <button
+                            onClick={() => setShowAddModal(true)}
+                            className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover: hover: transition-all"
+                        >
+                            <div className="flex items-center justify-center gap-2">
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <span className="font-medium">Ajouter une page</span>
+                            </div>
+                        </button>
+                    )}
                 </div>
             )}
 

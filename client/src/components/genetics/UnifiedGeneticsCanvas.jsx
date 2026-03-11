@@ -96,6 +96,50 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         setEdges(rfEdges);
     }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges]);
 
+    // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
+    const handleDragOver = useCallback((event) => {
+        event.preventDefault();
+        event.dataTransfer.dropEffect = 'copy';
+    }, []);
+
+    const handleDrop = useCallback(async (event) => {
+        event.preventDefault();
+        if (readOnly) return;
+
+        // Read cultivar data from the drag transfer
+        const jsonData = event.dataTransfer.getData('application/json');
+        if (!jsonData) return;
+
+        let cultivar;
+        try {
+            cultivar = JSON.parse(jsonData);
+        } catch { return; }
+
+        if (!cultivar || !cultivar.id) return;
+
+        // Calculate drop position relative to the React Flow canvas
+        const reactFlowBounds = event.currentTarget.getBoundingClientRect();
+        const position = {
+            x: event.clientX - reactFlowBounds.left,
+            y: event.clientY - reactFlowBounds.top,
+        };
+
+        // Check if this cultivar already exists as a node
+        const alreadyExists = store.nodes.some(n => n.cultivarId === cultivar.id);
+        if (alreadyExists) return;
+
+        // Add the node via the store (backend API)
+        await store.addNode({
+            cultivarId: cultivar.id,
+            cultivarName: cultivar.name || cultivar.cultivarName || 'Sans nom',
+            image: cultivar.image || null,
+            genetics: cultivar.genetics || null,
+            notes: '',
+            position,
+            color: '#10b981',
+        });
+    }, [readOnly, store]);
+
     // Gestion du drag & drop des nœuds
     const handleNodeDragStop = useCallback(async (event, node) => {
         if (readOnly) return;
@@ -211,7 +255,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     }
 
     return (
-        <div className="unified-genetics-canvas" onClick={handleCanvasClick}>
+        <div className="unified-genetics-canvas" onClick={handleCanvasClick} onDragOver={handleDragOver} onDrop={handleDrop}>
             <ReactFlow
                 nodes={nodes}
                 edges={edges}

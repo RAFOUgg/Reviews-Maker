@@ -185,12 +185,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         const humidity = step.humidity ?? step.humidite ?? step.hr;
         if (temp != null) metrics.push(`🌡️ ${temp}°C`);
         if (humidity != null) metrics.push(`💧 ${humidity}%`);
-        if (step.container || step.recipient) metrics.push(`🫙 ${step.container || step.recipient}`);
-        if (step.packaging || step.emballage) metrics.push(`📦 ${step.packaging || step.emballage}`);
-        if (step.method || step.methode) metrics.push(`⚙️ ${step.method || step.methode}`);
+        if (step.container ?? step.recipient) metrics.push(`🫙 ${step.container ?? step.recipient}`);
+        if (step.packaging ?? step.emballage) metrics.push(`📦 ${step.packaging ?? step.emballage}`);
+        if (step.method ?? step.methode) metrics.push(`⚙️ ${step.method ?? step.methode}`);
         if (step.co2) metrics.push(`☁️ ${step.co2}ppm`);
         if (step.ppfd) metrics.push(`☀️ ${step.ppfd}µmol`);
-        if (step.volume || step.volumeRecipient) metrics.push(`📐 ${step.volume || step.volumeRecipient}`);
+        if (step.volume ?? step.volumeRecipient) metrics.push(`📐 ${step.volume ?? step.volumeRecipient}`);
         return metrics;
     };
 
@@ -205,6 +205,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             color: highlight ? colors.accent : colors.textSecondary,
             fontWeight: highlight ? '600' : '400',
             whiteSpace: 'nowrap',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            maxWidth: '160px',
         }}>
             {icon} {value}
         </span>
@@ -217,14 +220,14 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         const humidity = step.humidity ?? step.humidite ?? step.hr;
         const co2 = step.co2;
         const ppfd = step.ppfd;
-        const container = step.container || step.recipient;
-        const packaging = step.packaging || step.emballage;
-        const volume = step.volume || step.volumeRecipient;
-        const curingType = step.curingType || step.typeCuring;
-        const opacity = step.opacite || step.recipientOpacity;
-        const action = step.action || step.event || step.evenement;
-        const method = step.method || step.methode;
-        const note = step.note || step.comment || step.commentaire;
+        const container = step.container ?? step.recipient;
+        const packaging = step.packaging ?? step.emballage;
+        const volume = step.volume ?? step.volumeRecipient;
+        const curingType = step.curingType ?? step.typeCuring;
+        const opacity = step.opacite ?? step.recipientOpacity;
+        const action = step.action ?? step.event ?? step.evenement;
+        const method = step.method ?? step.methode;
+        const note = step.note ?? step.comment ?? step.commentaire;
         const hasMetrics = temp != null || humidity != null || co2 || ppfd || container || packaging;
 
         return (
@@ -331,14 +334,14 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         || (step.timestamp ? `J${i + 1}` : `${i + 1}`);
                                     const temp = step.temperature ?? step.temp;
                                     const humidity = step.humidity ?? step.humidite ?? step.hr;
-                                    const note = step.note || step.comment || step.commentaire || '';
-                                    const action = step.action || step.event || '';
-                                    const hasData = temp != null || humidity != null || step.container || step.recipient || note || action;
+                                    const note = step.note ?? step.comment ?? step.commentaire ?? '';
+                                    const action = step.action ?? step.event ?? '';
+                                    const hasData = temp != null || humidity != null || (step.container ?? step.recipient) || note || action;
                                     // Tooltip
                                     const tooltipParts = [label];
                                     if (temp != null) tooltipParts.push(`🌡️ ${temp}°C`);
                                     if (humidity != null) tooltipParts.push(`💧 ${humidity}%`);
-                                    if (step.container || step.recipient) tooltipParts.push(`🫙 ${step.container || step.recipient}`);
+                                    if (step.container ?? step.recipient) tooltipParts.push(`🫙 ${step.container ?? step.recipient}`);
                                     if (action) tooltipParts.push(`⚡ ${action}`);
                                     if (note) tooltipParts.push(`💬 ${note.slice(0, 40)}`);
                                     const cellSize = isSquare ? 26 : 30;
