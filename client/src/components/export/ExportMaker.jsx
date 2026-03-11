@@ -126,7 +126,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const maxElements = getMaxElements(format, selectedTemplate);
     const totalPages = Math.ceil(finalAllowedIds.length / maxElements);
     const [currentPage, setCurrentPage] = useState(0);
-    const currentElements = finalAllowedIds.slice(currentPage * maxElements, (currentPage + 1) * maxElements);
+    // Clamp currentPage to valid range (handles template/format switches)
+    const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
+    const currentElements = finalAllowedIds.slice(safePage * maxElements, (safePage + 1) * maxElements);
 
     const hasElement = (ids) => {
         if (!ids) return false;
@@ -994,7 +996,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Hero */}
                     <div style={{ display: 'flex', flexDirection: isPortrait ? 'column' : 'row', gap: '14px' }}>
-                        {isSectionVisible('photo') && (
+                        {isSectionVisible('photo') && hasElement(['photo', 'photos']) && (
                             <div style={{
                                 flex: isPortrait ? undefined : '0 0 42%',
                                 height: isPortrait ? '180px' : undefined,
@@ -1035,13 +1037,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Sensorial */}
                     <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : 'repeat(3, 1fr)', gap: '8px' }}>
-                        {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
+                        {isSectionVisible('odor') && hasElement(['odorNotes', 'odor']) && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
                             <SectionCard title="Odeur" icon="👃">
                                 {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
                                 <div style={{ marginTop: '4px' }}>{renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}</div>
                             </SectionCard>
                         ) : null}
-                        {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
+                        {isSectionVisible('taste') && hasElement(['tasteNotes', 'taste']) && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
                             <SectionCard title="Goût" icon="😋">
                                 {renderScoreGroup([
                                     taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
@@ -1050,7 +1052,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div style={{ marginTop: '4px' }}>{renderList([...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])], 'rgba(245,158,11,0.12)', '#F59E0B')}</div>
                             </SectionCard>
                         ) : null}
-                        {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
+                        {isSectionVisible('effects') && hasElement('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
                             <SectionCard title="Effets" icon="💥">
                                 {renderScoreGroup([
                                     effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
@@ -1062,14 +1064,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     </div>
 
                     {/* Terpenes & Pipelines */}
-                    {((isSectionVisible('terpenes') && terps.length > 0) || (isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
-                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : ((isSectionVisible('terpenes') && terps.length > 0) ? '1fr 1fr' : '1fr'), gap: '8px' }}>
-                            {isSectionVisible('terpenes') && terps.length > 0 && (
+                    {((isSectionVisible('terpenes') && hasElement(['dominantTerpenes', 'terpeneProfile', 'terpenes']) && terps.length > 0) || (isSectionVisible('pipeline') && hasElement(['culture', 'curing']) && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : ((isSectionVisible('terpenes') && hasElement(['dominantTerpenes', 'terpeneProfile', 'terpenes']) && terps.length > 0) ? '1fr 1fr' : '1fr'), gap: '8px' }}>
+                            {isSectionVisible('terpenes') && hasElement(['dominantTerpenes', 'terpeneProfile', 'terpenes']) && terps.length > 0 && (
                                 <SectionCard title="Profil Terpénique" icon="🧬">
                                     <TerpeneBar profile={terps} compact />
                                 </SectionCard>
                             )}
-                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
+                            {isSectionVisible('pipeline') && hasElement(['culture', 'curing']) && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
                                 <SectionCard title="Pipeline" icon="⚗️">
                                     {cultureData.data?.length > 0 && (
                                         <div style={{ marginBottom: '6px' }}>
@@ -1171,22 +1173,22 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : '1fr 1fr', gap: '8px', minHeight: 0, overflow: 'hidden' }}>
                         {/* Left */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {isSectionVisible('photo') && imgUrl && (
+                            {isSectionVisible('photo') && hasElement(['photos', 'photo']) && imgUrl && (
                                 <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', maxHeight: isPortrait ? '140px' : '180px' }}>
                                     <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
                                 </div>
                             )}
-                            {isSectionVisible('visual') && visualBars.length > 0 && (
+                            {isSectionVisible('visual') && hasElement('visual') && visualBars.length > 0 && (
                                 <SectionCard title="Visuel" icon="👁">
                                     {renderScoreGroup(visualBars)}
                                 </SectionCard>
                             )}
-                            {isSectionVisible('texture') && textureBars.length > 0 && (
+                            {isSectionVisible('texture') && hasElement('texture') && textureBars.length > 0 && (
                                 <SectionCard title="Texture" icon="🤚">
                                     {renderScoreGroup(textureBars)}
                                 </SectionCard>
                             )}
-                            {isSectionVisible('terpenes') && terps.length > 0 && (
+                            {isSectionVisible('terpenes') && hasElement(['terpeneProfile', 'terpenes']) && terps.length > 0 && (
                                 <SectionCard title="Terpènes" icon="🧬">
                                     <TerpeneBar profile={terps} compact />
                                 </SectionCard>
@@ -1195,7 +1197,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                         {/* Right */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
+                            {isSectionVisible('odor') && hasElement('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
                                 <SectionCard title="Odeur" icon="👃">
                                     {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
                                     {(odor.dominant?.length > 0 || odor.secondary?.length > 0) && (
@@ -1205,7 +1207,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
+                            {isSectionVisible('taste') && hasElement('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
                                 <SectionCard title="Goût" icon="😋">
                                     {renderScoreGroup([
                                         taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
@@ -1227,7 +1229,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
+                            {isSectionVisible('effects') && hasElement('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
                                 <SectionCard title="Effets" icon="💥">
                                     {renderScoreGroup([
                                         effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
@@ -1240,7 +1242,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
+                            {isSectionVisible('pipeline') && hasElement(['culture', 'curing']) && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
                                 <SectionCard title="Pipeline" icon="⚗️">
                                     {cultureData.data?.length > 0 && (
                                         <div style={{ marginBottom: '6px' }}>
@@ -1266,7 +1268,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             )}
-                            {isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
+                            {isSectionVisible('recolte') && hasElement('recolte') && (recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
                                 <SectionCard title="Récolte" icon="🌾">
                                     <div style={{ display: 'flex', gap: '8px', fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>
                                         {recolte.poidsBrut && <span>Brut: <b>{recolte.poidsBrut}g</b></span>}
@@ -1284,7 +1286,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         </div>
                     </div>
 
-                    {notes && notes !== '-' && (
+                    {hasElement(['notes']) && notes && notes !== '-' && (
                         <div style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                             {String(notes).slice(0, 200)}
                         </div>
@@ -1477,8 +1479,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Pages</h3>
                                 <div className="flex items-center justify-center gap-2">
                                     <button
-                                        onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                                        disabled={currentPage === 0}
+                                        onClick={() => setCurrentPage(Math.max(0, safePage - 1))}
+                                        disabled={safePage === 0}
                                         className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
                                     >
                                         <ChevronsRight className="w-3.5 h-3.5 rotate-180" />
@@ -1488,15 +1490,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             <button
                                                 key={i}
                                                 onClick={() => setCurrentPage(i)}
-                                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${currentPage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
+                                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${safePage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
                                             >
                                                 {i + 1}
                                             </button>
                                         ))}
                                     </div>
                                     <button
-                                        onClick={() => setCurrentPage(Math.min(totalPages - 1, currentPage + 1))}
-                                        disabled={currentPage === totalPages - 1}
+                                        onClick={() => setCurrentPage(Math.min(totalPages - 1, safePage + 1))}
+                                        disabled={safePage === totalPages - 1}
                                         className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
                                     >
                                         <ChevronsRight className="w-3.5 h-3.5" />

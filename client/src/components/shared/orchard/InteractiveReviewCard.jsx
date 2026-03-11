@@ -47,9 +47,9 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
 
     const layoutClass = ss.layout === 'grid-2' ? 'grid grid-cols-2 gap-2'
         : ss.layout === 'grid-3' ? 'grid grid-cols-3 gap-2'
-        : ss.layout === 'compact' ? 'space-y-1.5'
-        : ss.layout === 'expanded' ? 'space-y-4'
-        : compact ? 'space-y-2' : 'space-y-3';
+            : ss.layout === 'compact' ? 'space-y-1.5'
+                : ss.layout === 'expanded' ? 'space-y-4'
+                    : compact ? 'space-y-2' : 'space-y-3';
 
     return (
         <div
@@ -463,35 +463,35 @@ const FALLBACK_LAYOUT = { layout: 'single', cols: 1, pad: 24, gap: 16, headerSiz
 const LAYOUT_STRATEGIES = {
     // ── MODERNE COMPACT ──────────────────────────────────────────────────
     modernCompact: {
-        '1:1':  { layout: 'hero',    cols: 1, pad: 24, gap: 14, headerSize: 'text-2xl', baseFontPx: 15, compact: true,  imagePos: 'hero' },
+        '1:1': { layout: 'hero', cols: 1, pad: 24, gap: 14, headerSize: 'text-2xl', baseFontPx: 15, compact: true, imagePos: 'hero' },
         '16:9': { layout: 'two-col', cols: 2, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '42%' },
-        '9:16': { layout: 'story',   cols: 1, pad: 24, gap: 12, headerSize: 'text-2xl', baseFontPx: 17, compact: true,  imagePos: 'hero' },
-        '4:3':  { layout: 'two-col', cols: 2, pad: 28, gap: 12, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '38%' },
-        'A4':   { layout: 'single',  cols: 1, pad: 40, gap: 18, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top'  },
+        '9:16': { layout: 'story', cols: 1, pad: 24, gap: 12, headerSize: 'text-2xl', baseFontPx: 17, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 28, gap: 12, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '38%' },
+        'A4': { layout: 'single', cols: 1, pad: 40, gap: 18, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
     },
     // ── FICHE TECHNIQUE DÉTAILLÉE ────────────────────────────────────────
     detailedCard: {
-        '1:1':  { layout: 'grid',    cols: 1, pad: 20, gap: 10, headerSize: 'text-xl',  baseFontPx: 14, compact: true,  imagePos: 'inline' },
+        '1:1': { layout: 'grid', cols: 1, pad: 20, gap: 10, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'inline' },
         '16:9': { layout: 'two-col', cols: 2, pad: 30, gap: 13, headerSize: 'text-3xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '36%' },
-        '9:16': { layout: 'single',  cols: 1, pad: 28, gap: 14, headerSize: 'text-2xl', baseFontPx: 17, compact: false, imagePos: 'top'  },
-        '4:3':  { layout: 'two-col', cols: 2, pad: 28, gap: 13, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '40%' },
-        'A4':   { layout: 'single',  cols: 1, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'top'  },
+        '9:16': { layout: 'single', cols: 1, pad: 28, gap: 14, headerSize: 'text-2xl', baseFontPx: 17, compact: false, imagePos: 'top' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 28, gap: 13, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '40%' },
+        'A4': { layout: 'single', cols: 1, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'top' },
     },
     // ── ARTICLE DE BLOG ──────────────────────────────────────────────────
     blogArticle: {
-        '1:1':  { layout: 'single',  cols: 1, pad: 24, gap: 16, headerSize: 'text-2xl', baseFontPx: 15, compact: false, imagePos: 'top'  },
+        '1:1': { layout: 'single', cols: 1, pad: 24, gap: 16, headerSize: 'text-2xl', baseFontPx: 15, compact: false, imagePos: 'top' },
         '16:9': { layout: 'two-col', cols: 2, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 19, compact: false, imagePos: 'left', leftWidth: '44%' },
-        '9:16': { layout: 'single',  cols: 1, pad: 32, gap: 18, headerSize: 'text-3xl', baseFontPx: 20, compact: false, imagePos: 'hero' },
-        '4:3':  { layout: 'two-col', cols: 2, pad: 32, gap: 15, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '40%' },
-        'A4':   { layout: 'single',  cols: 1, pad: 48, gap: 20, headerSize: 'text-5xl', baseFontPx: 22, compact: false, imagePos: 'top'  },
+        '9:16': { layout: 'single', cols: 1, pad: 32, gap: 18, headerSize: 'text-3xl', baseFontPx: 20, compact: false, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 32, gap: 15, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '40%' },
+        'A4': { layout: 'single', cols: 1, pad: 48, gap: 20, headerSize: 'text-5xl', baseFontPx: 22, compact: false, imagePos: 'top' },
     },
     // ── STORY SOCIAL MEDIA ───────────────────────────────────────────────
     socialStory: {
-        '1:1':  { layout: 'hero',    cols: 1, pad: 20, gap: 10, headerSize: 'text-xl',  baseFontPx: 14, compact: true,  imagePos: 'hero' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true,  imagePos: 'left', leftWidth: '48%' },
-        '9:16': { layout: 'story',   cols: 1, pad: 20, gap: 10, headerSize: 'text-2xl', baseFontPx: 19, compact: true,  imagePos: 'hero' },
-        '4:3':  { layout: 'hero',    cols: 1, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true,  imagePos: 'hero' },
-        'A4':   { layout: 'single',  cols: 1, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top'  },
+        '1:1': { layout: 'hero', cols: 1, pad: 20, gap: 10, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'left', leftWidth: '48%' },
+        '9:16': { layout: 'story', cols: 1, pad: 20, gap: 10, headerSize: 'text-2xl', baseFontPx: 19, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'hero', cols: 1, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'hero' },
+        'A4': { layout: 'single', cols: 1, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
     },
 };
 
