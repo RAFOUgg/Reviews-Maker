@@ -71,6 +71,10 @@ const handleMulterError = (err, req, res, next) => {
     if (err.name === 'MulterError') {
         return res.status(400).json({ error: 'upload_error', message: err.message || 'Erreur upload' })
     }
+    // fileFilter throws a plain Error (not MulterError) for unsupported file types — return 400
+    if (err.message && err.message.includes('files are allowed')) {
+        return res.status(400).json({ error: 'invalid_file_type', message: err.message })
+    }
     // Non-multer error: pass to the global error handler so it's properly logged
     // and returned with the correct status code
     next(err)
