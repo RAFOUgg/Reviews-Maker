@@ -73,7 +73,7 @@ export const TEMPLATE_TYPES = {
         description: 'Équilibré',
         color: 'blue',
         accountTypes: ['Consumer', 'Influencer', 'Producer'],
-        maxElements: 5
+        maxElements: 10
     },
     detailed: {
         id: 'detailed',
@@ -82,7 +82,7 @@ export const TEMPLATE_TYPES = {
         description: 'Complet',
         color: 'purple',
         accountTypes: ['Consumer', 'Influencer', 'Producer'],
-        maxElements: 8
+        maxElements: 20
     },
     custom: {
         id: 'custom',

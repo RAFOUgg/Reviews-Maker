@@ -22,6 +22,12 @@ import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
 import ScoreGauge from './ScoreGauge'
 import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/exportElementMappings';
+import OrchardContextMenu from '../shared/orchard/OrchardContextMenu';
+import ContentModuleControls from '../shared/config/ContentModuleControls';
+import TypographyControls from '../shared/config/TypographyControls';
+import ColorPaletteControls from '../shared/config/ColorPaletteControls';
+import ImageBrandingControls from '../shared/config/ImageBrandingControls';
+import PresetManager from '../shared/config/PresetManager';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
@@ -32,6 +38,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         console.debug('[ExportMaker] mounted', { productType, hasPreview: !!reviewData, reviewId: reviewData?.id })
         return () => console.debug('[ExportMaker] unmounted')
     }, [productType, reviewData?.id])
+
+    // Sync reviewData into orchardStore so ContentModuleControls can show data availability
+    const setReviewData = useOrchardStore((s) => s.setReviewData);
+    useEffect(() => {
+        if (reviewData) setReviewData(reviewData);
+        return () => setReviewData(null);
+    }, [reviewData, setReviewData]);
 
     const { isPremium, isProducer, isConsumer, isInfluencer, permissions, canAccess } = useAccountType();
     const canExportSVG = permissions.export?.formats?.svg === true;
@@ -55,6 +68,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const [exporting, setExporting] = useState(false);
     const [exportingGIF, setExportingGIF] = useState(false);
     const [gifProgress, setGifProgress] = useState(0);
+    const [sidebarTab, setSidebarTab] = useState('template'); // 'template' | 'contenu' | 'apparence' | 'prereglages'
 
     // Save to library modal state
     const [savingToLibrary, setSavingToLibrary] = useState(false);
@@ -126,8 +140,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const maxElements = getMaxElements(format, selectedTemplate);
     const totalPages = Math.ceil(finalAllowedIds.length / maxElements);
     const [currentPage, setCurrentPage] = useState(0);
-    // Clamp currentPage to valid range (handles template/format switches)
-    const safePage = Math.min(currentPage, Math.max(0, totalPages - 1));
+
+    // Reset page when template, format, or element list changes
+    useEffect(() => {
+        setCurrentPage(0);
+    }, [format, selectedTemplate, finalAllowedIds.length]);
+
+    // Clamp page in case it's out of bounds
+    const safePage = totalPages > 0 ? Math.min(currentPage, totalPages - 1) : 0;
     const currentElements = finalAllowedIds.slice(safePage * maxElements, (safePage + 1) * maxElements);
 
     const hasElement = (ids) => {
@@ -665,10 +685,36 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         pipeline: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'curing'],
     };
 
+    // Map section keys used by renderers to template element IDs used by pagination
+    const SECTION_TO_ELEMENTS = {
+        photo: ['photo', 'photos', 'gallery', 'image'],
+        infos: ['productName', 'genetics', 'breeder', 'hashType', 'separationMethod'],
+        analytics: ['analytics', 'thc', 'cbd'],
+        visual: ['visual'],
+        odor: ['odor', 'odorNotes'],
+        taste: ['taste', 'tasteNotes'],
+        effects: ['effects'],
+        texture: ['texture', 'textureScore'],
+        culture: ['culture'],
+        recolte: ['recolte'],
+        terpenes: ['terpeneProfile', 'dominantTerpenes', 'terpenes'],
+        pipeline: ['curing', 'separation', 'purification'],
+    };
+
     const isSectionVisible = (sectionKey) => {
         const keys = SECTION_VISIBILITY[sectionKey];
-        if (!keys) return true; // unknown sections are visible by default
-        return keys.some(k => contentModules[k] !== false);
+        if (!keys) return true;
+        const moduleVisible = keys.some(k => contentModules[k] !== false);
+        if (!moduleVisible) return false;
+
+        // If pagination is active, also check if the section's elements are on the current page
+        if (totalPages > 1) {
+            const elementIds = SECTION_TO_ELEMENTS[sectionKey];
+            if (elementIds) {
+                return elementIds.some(id => currentElements.includes(id));
+            }
+        }
+        return true;
     };
 
     // Check if a specific field is visible (false only if explicitly disabled)
@@ -825,27 +871,43 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         </div>
     )
 
-    const SectionCard = ({ children, title, icon, noPadding = false }) => (
-        <div style={{
-            background: 'rgba(255,255,255,0.03)',
+    const SectionCard = ({ children, title, icon, noPadding = false, sectionKey }) => {
+        const ss = sectionKey ? (orchardConfig?.sectionStyles?.[sectionKey] || {}) : {};
+        const cardStyle = {
+            background: ss.background || 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: '12px', overflow: 'hidden',
-        }}>
-            {title && (
-                <div style={{
-                    padding: '8px 12px',
-                    borderBottom: '1px solid rgba(255,255,255,0.04)',
-                    display: 'flex', alignItems: 'center', gap: '6px',
-                }}>
-                    {icon && <span style={{ fontSize: '12px' }}>{icon}</span>}
-                    <span style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', color: 'rgba(255,255,255,0.5)' }}>{title}</span>
+            borderRadius: ss.borderRadius != null ? `${ss.borderRadius}px` : '12px',
+            overflow: 'hidden',
+            opacity: ss.opacity != null ? ss.opacity / 100 : 1,
+            padding: ss.padding != null ? `${ss.padding}px` : undefined,
+        };
+        if (ss.visible === false) return null;
+        return (
+            <div
+                style={cardStyle}
+                {...(sectionKey ? { 'data-orchard-section': sectionKey, 'data-orchard-label': title || sectionKey } : {})}
+            >
+                {title && (
+                    <div style={{
+                        padding: '8px 12px',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        display: 'flex', alignItems: 'center', gap: '6px',
+                    }}>
+                        {icon && <span style={{ fontSize: ss.fontSize ? `${ss.fontSize}px` : '12px' }}>{icon}</span>}
+                        <span style={{
+                            fontSize: ss.fontSize ? `${Math.max(8, ss.fontSize - 2)}px` : '10px',
+                            fontWeight: ss.fontWeight || 700,
+                            textTransform: 'uppercase', letterSpacing: '0.08em',
+                            color: ss.accentColor || 'rgba(255,255,255,0.5)',
+                        }}>{title}</span>
+                    </div>
+                )}
+                <div style={{ padding: noPadding ? 0 : '10px 12px' }}>
+                    {children}
                 </div>
-            )}
-            <div style={{ padding: noPadding ? 0 : '10px 12px' }}>
-                {children}
             </div>
-        </div>
-    )
+        );
+    }
 
     const ExportPills = ({ items = [], color = 'rgba(139,92,246,0.15)', textColor = '#A78BFA', max: pillMax = 6 }) => {
         const normalized = items.map(item =>
@@ -996,7 +1058,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Hero */}
                     <div style={{ display: 'flex', flexDirection: isPortrait ? 'column' : 'row', gap: '14px' }}>
-                        {isSectionVisible('photo') && hasElement(['photo', 'photos']) && (
+                        {isSectionVisible('photo') && (
                             <div style={{
                                 flex: isPortrait ? undefined : '0 0 42%',
                                 height: isPortrait ? '180px' : undefined,
@@ -1037,14 +1099,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Sensorial */}
                     <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : 'repeat(3, 1fr)', gap: '8px' }}>
-                        {isSectionVisible('odor') && hasElement(['odorNotes', 'odor']) && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
-                            <SectionCard title="Odeur" icon="👃">
+                        {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
+                            <SectionCard title="Odeur" icon="👃" sectionKey="odor">
                                 {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
                                 <div style={{ marginTop: '4px' }}>{renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}</div>
                             </SectionCard>
                         ) : null}
-                        {isSectionVisible('taste') && hasElement(['tasteNotes', 'taste']) && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
-                            <SectionCard title="Goût" icon="😋">
+                        {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
+                            <SectionCard title="Goût" icon="😋" sectionKey="taste">
                                 {renderScoreGroup([
                                     taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
                                     taste.aggressiveness && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
@@ -1052,8 +1114,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div style={{ marginTop: '4px' }}>{renderList([...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])], 'rgba(245,158,11,0.12)', '#F59E0B')}</div>
                             </SectionCard>
                         ) : null}
-                        {isSectionVisible('effects') && hasElement('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
-                            <SectionCard title="Effets" icon="💥">
+                        {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
+                            <SectionCard title="Effets" icon="💥" sectionKey="effects">
                                 {renderScoreGroup([
                                     effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
                                     effects.onset && { label: 'Montée', value: effects.onset, color: '#34D399' },
@@ -1064,15 +1126,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     </div>
 
                     {/* Terpenes & Pipelines */}
-                    {((isSectionVisible('terpenes') && hasElement(['dominantTerpenes', 'terpeneProfile', 'terpenes']) && terps.length > 0) || (isSectionVisible('pipeline') && hasElement(['culture', 'curing']) && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
-                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : ((isSectionVisible('terpenes') && hasElement(['dominantTerpenes', 'terpeneProfile', 'terpenes']) && terps.length > 0) ? '1fr 1fr' : '1fr'), gap: '8px' }}>
-                            {isSectionVisible('terpenes') && hasElement(['dominantTerpenes', 'terpeneProfile', 'terpenes']) && terps.length > 0 && (
-                                <SectionCard title="Profil Terpénique" icon="🧬">
+                    {((isSectionVisible('terpenes') && terps.length > 0) || (isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : ((isSectionVisible('terpenes') && terps.length > 0) ? '1fr 1fr' : '1fr'), gap: '8px' }}>
+                            {isSectionVisible('terpenes') && terps.length > 0 && (
+                                <SectionCard title="Profil Terpénique" icon="🧬" sectionKey="terpenes">
                                     <TerpeneBar profile={terps} compact />
                                 </SectionCard>
                             )}
-                            {isSectionVisible('pipeline') && hasElement(['culture', 'curing']) && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
-                                <SectionCard title="Pipeline" icon="⚗️">
+                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
+                                <SectionCard title="Pipeline" icon="⚗️" sectionKey="pipeline">
                                     {cultureData.data?.length > 0 && (
                                         <div style={{ marginBottom: '6px' }}>
                                             <div style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>Culture ({cultureData.data.length} étapes)</div>
@@ -1173,23 +1235,23 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     <div style={{ flex: 1, display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : '1fr 1fr', gap: '8px', minHeight: 0, overflow: 'hidden' }}>
                         {/* Left */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {isSectionVisible('photo') && hasElement(['photos', 'photo']) && imgUrl && (
+                            {isSectionVisible('photo') && imgUrl && (
                                 <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', maxHeight: isPortrait ? '140px' : '180px' }}>
                                     <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
                                 </div>
                             )}
-                            {isSectionVisible('visual') && hasElement('visual') && visualBars.length > 0 && (
-                                <SectionCard title="Visuel" icon="👁">
+                            {isSectionVisible('visual') && visualBars.length > 0 && (
+                                <SectionCard title="Visuel" icon="👁" sectionKey="visual">
                                     {renderScoreGroup(visualBars)}
                                 </SectionCard>
                             )}
-                            {isSectionVisible('texture') && hasElement('texture') && textureBars.length > 0 && (
-                                <SectionCard title="Texture" icon="🤚">
+                            {isSectionVisible('texture') && textureBars.length > 0 && (
+                                <SectionCard title="Texture" icon="🤚" sectionKey="texture">
                                     {renderScoreGroup(textureBars)}
                                 </SectionCard>
                             )}
-                            {isSectionVisible('terpenes') && hasElement(['terpeneProfile', 'terpenes']) && terps.length > 0 && (
-                                <SectionCard title="Terpènes" icon="🧬">
+                            {isSectionVisible('terpenes') && terps.length > 0 && (
+                                <SectionCard title="Terpènes" icon="🧬" sectionKey="terpenes">
                                     <TerpeneBar profile={terps} compact />
                                 </SectionCard>
                             )}
@@ -1197,8 +1259,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                         {/* Right */}
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {isSectionVisible('odor') && hasElement('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
-                                <SectionCard title="Odeur" icon="👃">
+                            {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
+                                <SectionCard title="Odeur" icon="👃" sectionKey="odor">
                                     {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
                                     {(odor.dominant?.length > 0 || odor.secondary?.length > 0) && (
                                         <div style={{ marginTop: '4px' }}>
@@ -1207,8 +1269,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {isSectionVisible('taste') && hasElement('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
-                                <SectionCard title="Goût" icon="😋">
+                            {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
+                                <SectionCard title="Goût" icon="😋" sectionKey="taste">
                                     {renderScoreGroup([
                                         taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
                                         taste.aggressiveness && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
@@ -1229,8 +1291,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {isSectionVisible('effects') && hasElement('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
-                                <SectionCard title="Effets" icon="💥">
+                            {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
+                                <SectionCard title="Effets" icon="💥" sectionKey="effects">
                                     {renderScoreGroup([
                                         effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
                                         effects.onset && { label: 'Montée', value: effects.onset, color: '#34D399' },
@@ -1242,8 +1304,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             ) : null}
-                            {isSectionVisible('pipeline') && hasElement(['culture', 'curing']) && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
-                                <SectionCard title="Pipeline" icon="⚗️">
+                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
+                                <SectionCard title="Pipeline" icon="⚗️" sectionKey="pipeline">
                                     {cultureData.data?.length > 0 && (
                                         <div style={{ marginBottom: '6px' }}>
                                             <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: '3px' }}>Culture ({cultureData.data.length} étapes)</div>
@@ -1268,8 +1330,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     )}
                                 </SectionCard>
                             )}
-                            {isSectionVisible('recolte') && hasElement('recolte') && (recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
-                                <SectionCard title="Récolte" icon="🌾">
+                            {isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
+                                <SectionCard title="Récolte" icon="🌾" sectionKey="recolte">
                                     <div style={{ display: 'flex', gap: '8px', fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>
                                         {recolte.poidsBrut && <span>Brut: <b>{recolte.poidsBrut}g</b></span>}
                                         {recolte.poidsNet && <span>Net: <b>{recolte.poidsNet}g</b></span>}
@@ -1286,7 +1348,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         </div>
                     </div>
 
-                    {hasElement(['notes']) && notes && notes !== '-' && (
+                    {notes && notes !== '-' && (
                         <div style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                             {String(notes).slice(0, 200)}
                         </div>
@@ -1321,225 +1383,231 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         </button>
                     </div>
 
-                    {/* Unified sidebar content — no more 3-tab split */}
+                    {/* Sidebar tabs */}
+                    <div className="flex border-b border-white/10">
+                        {[
+                            { id: 'template', label: 'Template', icon: <Layout className="w-3.5 h-3.5" /> },
+                            { id: 'contenu', label: 'Contenu', icon: <Grid className="w-3.5 h-3.5" /> },
+                            { id: 'apparence', label: 'Apparence', icon: <Palette className="w-3.5 h-3.5" /> },
+                            { id: 'prereglages', label: 'Préréglages', icon: <Save className="w-3.5 h-3.5" /> },
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setSidebarTab(tab.id)}
+                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-all border-b-2 ${sidebarTab === tab.id ? 'border-purple-500 text-purple-300 bg-purple-500/5' : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'}`}
+                            >
+                                {tab.icon}
+                                <span className="hidden lg:inline">{tab.label}</span>
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Tab content */}
                     <div className="flex-1 overflow-y-auto p-4 space-y-5">
-                        {/* Template Selection */}
-                        <div>
-                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Template</h3>
-                            <div className="grid grid-cols-1 gap-2">
-                                {templates.map(t => {
-                                    const locked = !!t.premium;
-                                    const active = selectedTemplate === t.id;
-                                    const previewColors = {
-                                        minimal: ['#8B5CF6', '#22C55E', '#F59E0B'],
-                                        standard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
-                                        detailed: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
-                                        custom: ['#A78BFA'],
-                                    };
-                                    const colors = previewColors[t.id] || previewColors.standard;
-                                    return (
-                                        <button
-                                            key={t.id}
-                                            onClick={() => !locked && setSelectedTemplate(t.id)}
-                                            disabled={locked}
-                                            title={locked ? 'Réservé aux comptes Producteur / Influenceur' : ''}
-                                            className={`w-full text-left p-3 rounded-xl border transition-all ${active ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'} ${locked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                                        >
-                                            <div className="flex items-center gap-3">
-                                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${active ? 'bg-purple-500/20' : 'bg-white/5'}`}>
-                                                    <div className="flex gap-[2px]">
-                                                        {colors.slice(0, 3).map((c, ci) => (
-                                                            <div key={ci} style={{ width: '3px', height: `${10 + ci * 4}px`, borderRadius: '1px', background: active ? c : 'rgba(255,255,255,0.2)' }} />
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="font-semibold text-sm text-white flex items-center gap-2">
-                                                        {t.name}
-                                                        {t.premium && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
-                                                    </div>
-                                                    <div className="text-[11px] text-gray-500 mt-0.5">{t.description}</div>
-                                                </div>
-                                                {active && <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(139,92,246,0.5)]" />}
-                                            </div>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
 
-                        {/* Format Selection */}
-                        <div>
-                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Format</h3>
-                            <div className="grid grid-cols-4 gap-2">
-                                {[
-                                    { id: '1:1', label: 'Carré', w: 20, h: 20 },
-                                    { id: '16:9', label: 'Paysage', w: 24, h: 14 },
-                                    { id: '9:16', label: 'Portrait', w: 14, h: 24 },
-                                    { id: 'A4', label: 'A4', w: 16, h: 22 },
-                                ].map(f => (
-                                    <button
-                                        key={f.id}
-                                        onClick={() => setFormat(f.id)}
-                                        className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${format === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'}`}
-                                    >
-                                        <div
-                                            className={`rounded-sm border ${format === f.id ? 'border-purple-400/60' : 'border-white/10'}`}
-                                            style={{ width: `${f.w}px`, height: `${f.h}px`, background: format === f.id ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)' }}
-                                        />
-                                        <span className={`text-[10px] font-medium ${format === f.id ? 'text-purple-300' : 'text-gray-500'}`}>{f.label}</span>
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Content Visibility (section toggles) */}
-                        <div>
-                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Contenu visible</h3>
-                            <div className="space-y-1">
-                                {[
-                                    { key: 'photo', label: 'Photo', icon: '📷' },
-                                    { key: 'infos', label: 'Informations', icon: '📋' },
-                                    { key: 'analytics', label: 'Analytiques', icon: '🔬' },
-                                    { key: 'visual', label: 'Visuel', icon: '👁' },
-                                    { key: 'odor', label: 'Odeurs', icon: '👃' },
-                                    { key: 'texture', label: 'Texture', icon: '🤚' },
-                                    { key: 'taste', label: 'Goûts', icon: '😋' },
-                                    { key: 'effects', label: 'Effets', icon: '💥' },
-                                    { key: 'terpenes', label: 'Terpènes', icon: '🧬' },
-                                    { key: 'pipeline', label: 'Pipelines', icon: '⚗️' },
-                                    { key: 'recolte', label: 'Récolte', icon: '🌾' },
-                                ].map(section => {
-                                    const sectionKeys = SECTION_VISIBILITY[section.key] || [];
-                                    const allVisible = sectionKeys.every(k => contentModules[k] !== false);
-                                    const someVisible = sectionKeys.some(k => contentModules[k] !== false);
-                                    return (
-                                        <button
-                                            key={section.key}
-                                            onClick={() => {
-                                                const newModules = { ...contentModules };
-                                                const target = allVisible ? false : true;
-                                                sectionKeys.forEach(k => { newModules[k] = target; });
-                                                useOrchardStore.getState().setConfig({ ...orchardConfig, contentModules: newModules });
-                                            }}
-                                            className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-left transition-all ${allVisible ? 'bg-white/[0.04] border border-white/10' : 'bg-transparent border border-transparent opacity-50'}`}
-                                        >
-                                            <span className="text-sm">{section.icon}</span>
-                                            <span className="text-xs font-medium text-white flex-1">{section.label}</span>
-                                            <div className={`w-3 h-3 rounded-sm border transition-all ${allVisible ? 'bg-purple-500 border-purple-400' : someVisible ? 'bg-purple-500/40 border-purple-400/50' : 'border-white/20'}`} />
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Render Style */}
-                        <div>
-                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Style de rendu</h3>
-                            <div className="space-y-2">
+                        {/* ===== TEMPLATE TAB ===== */}
+                        {sidebarTab === 'template' && (
+                            <>
+                                {/* Template Selection */}
                                 <div>
-                                    <div className="text-[10px] text-gray-500 mb-1.5">Notes / Scores</div>
-                                    <div className="grid grid-cols-4 gap-1">
-                                        {[
-                                            { id: 'bar', label: 'Barres' },
-                                            { id: 'gauge', label: 'Jauges' },
-                                            { id: 'pill', label: 'Pilules' },
-                                            { id: 'number', label: 'Nombres' },
-                                        ].map(s => (
-                                            <button
-                                                key={s.id}
-                                                onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, scores: s.id } })}
-                                                className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.scores || 'bar') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
-                                            >{s.label}</button>
-                                        ))}
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Template</h3>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        {templates.map(t => {
+                                            const locked = !!t.premium;
+                                            const active = selectedTemplate === t.id;
+                                            const previewColors = {
+                                                minimal: ['#8B5CF6', '#22C55E', '#F59E0B'],
+                                                standard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
+                                                detailed: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
+                                                custom: ['#A78BFA'],
+                                            };
+                                            const colors = previewColors[t.id] || previewColors.standard;
+                                            return (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => !locked && setSelectedTemplate(t.id)}
+                                                    disabled={locked}
+                                                    title={locked ? 'Réservé aux comptes Producteur / Influenceur' : ''}
+                                                    className={`w-full text-left p-3 rounded-xl border transition-all ${active ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'} ${locked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                                >
+                                                    <div className="flex items-center gap-3">
+                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${active ? 'bg-purple-500/20' : 'bg-white/5'}`}>
+                                                            <div className="flex gap-[2px]">
+                                                                {colors.slice(0, 3).map((c, ci) => (
+                                                                    <div key={ci} style={{ width: '3px', height: `${10 + ci * 4}px`, borderRadius: '1px', background: active ? c : 'rgba(255,255,255,0.2)' }} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                        <div className="flex-1 min-w-0">
+                                                            <div className="font-semibold text-sm text-white flex items-center gap-2">
+                                                                {t.name}
+                                                                {t.premium && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
+                                                            </div>
+                                                            <div className="text-[11px] text-gray-500 mt-0.5">{t.description}</div>
+                                                        </div>
+                                                        {active && <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(139,92,246,0.5)]" />}
+                                                    </div>
+                                                </button>
+                                            );
+                                        })}
                                     </div>
                                 </div>
-                                <div>
-                                    <div className="text-[10px] text-gray-500 mb-1.5">Arômes / Effets</div>
-                                    <div className="grid grid-cols-3 gap-1">
-                                        {[
-                                            { id: 'pills', label: 'Pilules' },
-                                            { id: 'comma', label: 'Texte' },
-                                            { id: 'grid', label: 'Grille' },
-                                        ].map(s => (
-                                            <button
-                                                key={s.id}
-                                                onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, lists: s.id } })}
-                                                className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.lists || 'pills') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
-                                            >{s.label}</button>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Pagination Controls */}
-                        {totalPages > 1 && (
-                            <div>
-                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Pages</h3>
-                                <div className="flex items-center justify-center gap-2">
-                                    <button
-                                        onClick={() => setCurrentPage(Math.max(0, safePage - 1))}
-                                        disabled={safePage === 0}
-                                        className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
-                                    >
-                                        <ChevronsRight className="w-3.5 h-3.5 rotate-180" />
-                                    </button>
-                                    <div className="flex gap-1.5">
-                                        {Array.from({ length: totalPages }).map((_, i) => (
+                                {/* Format Selection */}
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Format</h3>
+                                    <div className="grid grid-cols-4 gap-2">
+                                        {[
+                                            { id: '1:1', label: 'Carré', w: 20, h: 20 },
+                                            { id: '16:9', label: 'Paysage', w: 24, h: 14 },
+                                            { id: '9:16', label: 'Portrait', w: 14, h: 24 },
+                                            { id: 'A4', label: 'A4', w: 16, h: 22 },
+                                        ].map(f => (
                                             <button
-                                                key={i}
-                                                onClick={() => setCurrentPage(i)}
-                                                className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${safePage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
+                                                key={f.id}
+                                                onClick={() => setFormat(f.id)}
+                                                className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${format === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'}`}
                                             >
-                                                {i + 1}
+                                                <div
+                                                    className={`rounded-sm border ${format === f.id ? 'border-purple-400/60' : 'border-white/10'}`}
+                                                    style={{ width: `${f.w}px`, height: `${f.h}px`, background: format === f.id ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)' }}
+                                                />
+                                                <span className={`text-[10px] font-medium ${format === f.id ? 'text-purple-300' : 'text-gray-500'}`}>{f.label}</span>
                                             </button>
                                         ))}
                                     </div>
-                                    <button
-                                        onClick={() => setCurrentPage(Math.min(totalPages - 1, safePage + 1))}
-                                        disabled={safePage === totalPages - 1}
-                                        className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
-                                    >
-                                        <ChevronsRight className="w-3.5 h-3.5" />
-                                    </button>
                                 </div>
-                            </div>
+
+                                {/* Pagination Controls */}
+                                {totalPages > 1 && (
+                                    <div>
+                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Pages ({safePage + 1}/{totalPages})</h3>
+                                        <div className="flex items-center justify-center gap-2">
+                                            <button
+                                                onClick={() => setCurrentPage(Math.max(0, safePage - 1))}
+                                                disabled={safePage === 0}
+                                                className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                                            >
+                                                <ChevronsRight className="w-3.5 h-3.5 rotate-180" />
+                                            </button>
+                                            <div className="flex gap-1.5">
+                                                {Array.from({ length: totalPages }).map((_, i) => (
+                                                    <button
+                                                        key={i}
+                                                        onClick={() => setCurrentPage(i)}
+                                                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${safePage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
+                                                    >
+                                                        {i + 1}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={() => setCurrentPage(Math.min(totalPages - 1, safePage + 1))}
+                                                disabled={safePage === totalPages - 1}
+                                                className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
+                                            >
+                                                <ChevronsRight className="w-3.5 h-3.5" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Render Style */}
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Style de rendu</h3>
+                                    <div className="space-y-2">
+                                        <div>
+                                            <div className="text-[10px] text-gray-500 mb-1.5">Notes / Scores</div>
+                                            <div className="grid grid-cols-4 gap-1">
+                                                {[
+                                                    { id: 'bar', label: 'Barres' },
+                                                    { id: 'gauge', label: 'Jauges' },
+                                                    { id: 'pill', label: 'Pilules' },
+                                                    { id: 'number', label: 'Nombres' },
+                                                ].map(s => (
+                                                    <button
+                                                        key={s.id}
+                                                        onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, scores: s.id } })}
+                                                        className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.scores || 'bar') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
+                                                    >{s.label}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <div className="text-[10px] text-gray-500 mb-1.5">Arômes / Effets</div>
+                                            <div className="grid grid-cols-3 gap-1">
+                                                {[
+                                                    { id: 'pills', label: 'Pilules' },
+                                                    { id: 'comma', label: 'Texte' },
+                                                    { id: 'grid', label: 'Grille' },
+                                                ].map(s => (
+                                                    <button
+                                                        key={s.id}
+                                                        onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, lists: s.id } })}
+                                                        className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.lists || 'pills') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
+                                                    >{s.label}</button>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </>
                         )}
 
-                        {/* Watermark section (collapsible, premium) */}
-                        <div>
-                            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                Filigrane
-                                {!permissions.export?.features?.watermark && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
-                            </h3>
-                            {permissions.export?.features?.watermark ? (
-                                <WatermarkEditor
-                                    watermark={watermark}
-                                    onWatermarkChange={setWatermark}
-                                />
-                            ) : (
-                                <div className="p-3 bg-white/5 rounded-lg">
-                                    <div className="text-xs text-gray-400">Le filigrane Terpologie est appliqué automatiquement.</div>
-                                    <div className="text-[10px] text-gray-600 mt-1">Personnalisez-le avec un compte Producteur ou Influenceur.</div>
-                                </div>
-                            )}
-                        </div>
+                        {/* ===== CONTENU TAB ===== */}
+                        {sidebarTab === 'contenu' && (
+                            <>
+                                <ContentModuleControls />
 
-                        {/* Custom Layout (premium, with DragDrop) */}
-                        {canUseCustomLayout && (
-                            <div>
-                                <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                    Agencement personnalisé
-                                    <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
-                                </h3>
-                                <DragDropExport
-                                    productType={productType}
-                                    selectedSections={customSections}
-                                    onSectionsChange={setCustomSections}
-                                    allowedModules={relevantModules}
-                                />
-                            </div>
+                                {/* Custom Layout (premium, with DragDrop) */}
+                                {canUseCustomLayout && (
+                                    <div>
+                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                            Agencement personnalisé
+                                            <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
+                                        </h3>
+                                        <DragDropExport
+                                            productType={productType}
+                                            selectedSections={customSections}
+                                            onSectionsChange={setCustomSections}
+                                            allowedModules={relevantModules}
+                                        />
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* ===== APPARENCE TAB ===== */}
+                        {sidebarTab === 'apparence' && (
+                            <>
+                                <TypographyControls />
+                                <ColorPaletteControls />
+                                <ImageBrandingControls />
+
+                                {/* Watermark section */}
+                                <div>
+                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+                                        Filigrane
+                                        {!permissions.export?.features?.watermark && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
+                                    </h3>
+                                    {permissions.export?.features?.watermark ? (
+                                        <WatermarkEditor
+                                            watermark={watermark}
+                                            onWatermarkChange={setWatermark}
+                                        />
+                                    ) : (
+                                        <div className="p-3 bg-white/5 rounded-lg">
+                                            <div className="text-xs text-gray-400">Le filigrane Terpologie est appliqué automatiquement.</div>
+                                            <div className="text-[10px] text-gray-600 mt-1">Personnalisez-le avec un compte Producteur ou Influenceur.</div>
+                                        </div>
+                                    )}
+                                </div>
+                            </>
+                        )}
+
+                        {/* ===== PREREGLAGES TAB ===== */}
+                        {sidebarTab === 'prereglages' && (
+                            <PresetManager />
                         )}
                     </div>
 
@@ -1675,6 +1743,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 {/* Preview Area */}
                 <div className="flex-1 bg-gray-950/80 p-8 flex items-center justify-center overflow-auto relative">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+
+                    {/* Contextual right-click menu for per-section styling */}
+                    <OrchardContextMenu />
 
                     <div
                         ref={exportRef}
