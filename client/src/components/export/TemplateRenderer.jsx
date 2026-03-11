@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { useOrchardStore } from '../../store/orchardStore';
+import { RATIO_DIMENSIONS } from '../../utils/orchardHelpers';
 import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
@@ -14,15 +15,6 @@ const TEMPLATES = {
     socialStory: SocialStoryTemplate
     ,
     custom: CustomTemplate
-};
-
-// Ratios et dimensions
-const RATIO_DIMENSIONS = {
-    '1:1': { width: 800, height: 800 },
-    '16:9': { width: 1920, height: 1080 },
-    '9:16': { width: 1080, height: 1920 },
-    '4:3': { width: 1600, height: 1200 },
-    'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
 export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false }) {

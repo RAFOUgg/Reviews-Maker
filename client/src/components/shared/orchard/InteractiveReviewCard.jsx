@@ -16,7 +16,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 import {
     asArray, extractLabel, formatRating, formatDate,
-    extractCategoryRatings, extractPipelines
+    extractCategoryRatings, extractPipelines, getResponsiveAdjustments,
+    RATIO_DIMENSIONS
 } from '../../../utils/orchardHelpers';
 import InteractivePipelineViewer from '../../gallery/InteractivePipelineViewer';
 import GenealogyTree2D from './GenealogyTree2D';
@@ -30,15 +31,10 @@ import { Star, ChevronDown, Eye, Image as ImageIcon, X, ChevronLeft, ChevronRigh
 const SECTION_FONT_SIZE_MAP = { xs: 10, sm: 12, md: 14, lg: 16, xl: 20 };
 
 // ─── Section wrapper with expand/collapse + per-section style overrides ──────
-function Section({ title, icon, children, defaultOpen = true, badge, compact, sectionKey, sectionStyles }) {
+function Section({ title, icon, children, defaultOpen = true, badge, compact, sectionKey, sectionStyles, forceOpen = false }) {
     const [open, setOpen] = useState(defaultOpen);
+    const isOpen = forceOpen || open;
     const ss = sectionStyles?.[sectionKey || title] || {};
-
-    const wrapperStyle = {};
-    if (ss.borderRadius !== undefined) wrapperStyle.borderRadius = `${ss.borderRadius}px`;
-    if (ss.background) wrapperStyle.background = ss.background;
-    if (ss.opacity !== undefined) wrapperStyle.opacity = ss.opacity;
-    if (ss.padding) wrapperStyle.padding = ss.padding;
 
     const contentStyle = {};
     if (ss.fontSize) contentStyle.fontSize = `${SECTION_FONT_SIZE_MAP[ss.fontSize] || 14}px`;
@@ -57,61 +53,76 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
             data-orchard-label={title}
             className="overflow-hidden"
             style={{
-                borderRadius: ss.borderRadius ? `${ss.borderRadius}px` : '14px',
+                borderRadius: ss.borderRadius ? `${ss.borderRadius}px` : compact ? '10px' : '14px',
                 border: '1px solid rgba(255,255,255,0.07)',
                 background: ss.background || 'rgba(255,255,255,0.025)',
                 ...(ss.opacity !== undefined ? { opacity: ss.opacity } : {}),
                 ...(ss.padding ? { padding: ss.padding } : {}),
             }}
         >
-            <button
-                onClick={() => setOpen(!open)}
-                className={`w-full flex items-center justify-between ${compact ? 'px-3 py-2' : 'px-4 py-3'} transition-colors`}
-                style={{
-                    background: open ? 'rgba(139,92,246,0.08)' : 'transparent',
-                    borderBottom: open ? '1px solid rgba(139,92,246,0.12)' : '1px solid transparent',
-                }}
-            >
-                <div className="flex items-center gap-2 min-w-0">
-                    <div
-                        className={`${compact ? 'w-6 h-6 text-xs' : 'w-7 h-7 text-sm'} rounded-lg flex items-center justify-center flex-shrink-0`}
-                        style={{ background: 'rgba(139,92,246,0.18)' }}
-                    >
-                        {icon}
-                    </div>
-                    <span
-                        className={`${compact ? 'text-[11px]' : 'text-[13px]'} font-semibold truncate`}
-                        style={{ color: 'rgba(255,255,255,0.88)' }}
-                    >
-                        {title}
-                    </span>
-                    {badge && (
-                        <span
-                            className={`${compact ? 'text-[9px] px-1 py-0.5' : 'text-[10px] px-1.5 py-0.5'} rounded-full font-semibold flex-shrink-0`}
-                            style={{ background: 'rgba(139,92,246,0.22)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }}
+            {!forceOpen && (
+                <button
+                    onClick={() => setOpen(!open)}
+                    className={`w-full flex items-center justify-between ${compact ? 'px-3 py-1.5' : 'px-4 py-3'} transition-colors`}
+                    style={{
+                        background: isOpen ? 'rgba(139,92,246,0.08)' : 'transparent',
+                        borderBottom: isOpen ? '1px solid rgba(139,92,246,0.12)' : '1px solid transparent',
+                    }}
+                >
+                    <div className="flex items-center gap-2 min-w-0">
+                        <div
+                            className={`${compact ? 'w-5 h-5 text-[10px]' : 'w-7 h-7 text-sm'} rounded-lg flex items-center justify-center flex-shrink-0`}
+                            style={{ background: 'rgba(139,92,246,0.18)' }}
                         >
-                            {badge}
+                            {icon}
+                        </div>
+                        <span
+                            className={`${compact ? 'text-[11px]' : 'text-[13px]'} font-semibold truncate`}
+                            style={{ color: 'rgba(255,255,255,0.88)' }}
+                        >
+                            {title}
                         </span>
+                        {badge && (
+                            <span
+                                className={`${compact ? 'text-[9px] px-1 py-0.5' : 'text-[10px] px-1.5 py-0.5'} rounded-full font-semibold flex-shrink-0`}
+                                style={{ background: 'rgba(139,92,246,0.22)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }}
+                            >
+                                {badge}
+                            </span>
+                        )}
+                    </div>
+                    <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.18 }}>
+                        <ChevronDown
+                            className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`}
+                            style={{ color: 'rgba(255,255,255,0.28)' }}
+                        />
+                    </motion.div>
+                </button>
+            )}
+            {forceOpen && (
+                <div className={`flex items-center gap-2 ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}
+                    style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
+                    <div className={`${compact ? 'w-5 h-5 text-[10px]' : 'w-6 h-6 text-xs'} rounded-lg flex items-center justify-center flex-shrink-0`}
+                        style={{ background: 'rgba(139,92,246,0.18)' }}>{icon}</div>
+                    <span className={`${compact ? 'text-[10px]' : 'text-[12px]'} font-semibold truncate`}
+                        style={{ color: 'rgba(255,255,255,0.88)' }}>{title}</span>
+                    {badge && (
+                        <span className={`${compact ? 'text-[8px] px-1 py-0' : 'text-[9px] px-1 py-0.5'} rounded-full font-semibold flex-shrink-0`}
+                            style={{ background: 'rgba(139,92,246,0.22)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }}>{badge}</span>
                     )}
                 </div>
-                <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.18 }}>
-                    <ChevronDown
-                        className={`${compact ? 'w-3 h-3' : 'w-4 h-4'} flex-shrink-0`}
-                        style={{ color: 'rgba(255,255,255,0.28)' }}
-                    />
-                </motion.div>
-            </button>
+            )}
             <AnimatePresence initial={false}>
-                {open && (
+                {isOpen && (
                     <motion.div
-                        initial={{ height: 0, opacity: 0 }}
+                        initial={forceOpen ? false : { height: 0, opacity: 0 }}
                         animate={{ height: 'auto', opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
+                        transition={{ duration: forceOpen ? 0 : 0.2 }}
                         className="overflow-hidden"
                     >
                         <div
-                            className={`${compact ? 'px-3 py-2.5' : 'px-4 py-3'} ${layoutClass}`}
+                            className={`${compact ? 'px-2.5 py-2' : 'px-4 py-3'} ${layoutClass}`}
                             style={contentStyle}
                         >
                             {children}
@@ -445,14 +456,6 @@ const TEMPLATE_STYLES = {
 };
 
 // Fixed pixel dimensions for export mode
-const RATIO_DIMENSIONS = {
-    '1:1': { width: 800, height: 800 },
-    '16:9': { width: 1920, height: 1080 },
-    '9:16': { width: 1080, height: 1920 },
-    '4:3': { width: 1600, height: 1200 },
-    'A4': { width: 1754, height: 2480 },
-};
-
 // ═══════════════════════════════════════════════════════════════════════════
 // LAYOUT STRATEGIES — per template × ratio combination
 // Each entry controls: layout type, font sizes, padding, columns, compactness
@@ -724,6 +727,11 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     const isCanvasCapture = mode === 'export';
     const isCompact = isExportLike ? ls.compact : tStyle.compact;
 
+    // ── Responsive limits for export (tag counts, card counts) ──────────
+    const responsive = useMemo(() => getResponsiveAdjustments(ratio, config?.typography), [ratio, config?.typography]);
+    const maxTags = isExportLike ? responsive.limits.maxTags : Infinity;
+    const maxCards = isExportLike ? responsive.limits.maxInfoCards : Infinity;
+
     // ── Pagination state ─────────────────────────────────────────────────────
     const measureRef = useRef(null);
     const [pages, setPages] = useState([]);
@@ -816,6 +824,9 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         return true;
     };
 
+    // In export-like modes, force all sections open (no collapsed accordions)
+    const sectionForceOpen = isExportLike;
+
     // ── Grid class helper ────────────────────────────────────────────────────
     const gridCols = isCompact ? 'grid-cols-2' : 'grid-cols-2 sm:grid-cols-3';
 
@@ -849,7 +860,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                 </div>
                 {isVisible('cultivarsList') && cultivars.length > 0 && (
                     <div className="flex flex-wrap gap-1">
-                        {cultivars.map((c, i) => <TagPill key={i} label={c} color="green" compact={isCompact} />)}
+                        {cultivars.slice(0, maxTags).map((c, i) => <TagPill key={i} label={c} color="green" compact={isCompact} />)}
                     </div>
                 )}
                 {isVisible('rating') && rating > 0 && (
@@ -875,7 +886,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         if (isVisible('analytics') && analytics) {
             const count = Object.keys(analytics).filter(k => k !== 'labUrl').length;
             secs.push(
-                <Section key="analytics" title="Analyses & Cannabinoïdes" icon="🧪" defaultOpen={!isCompact} badge={`${count}`} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="analytics" title="Analyses & Cannabinoïdes" icon="🧪" defaultOpen={!isCompact} badge={`${count}`} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {analytics.thc && <InfoCard label="THC" value={`${analytics.thc}%`} icon="🟢" compact={isCompact} />}
                         {analytics.cbd && <InfoCard label="CBD" value={`${analytics.cbd}%`} icon="🔵" compact={isCompact} />}
@@ -897,7 +908,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── GENETICS ─────────────────────────────────────────────────────
         if (isVisible('genetics') && (reviewData.breeder || reviewData.strainType || reviewData.indicaRatio !== undefined || reviewData.indicaPercent !== undefined || reviewData.variety || reviewData.phenotypeCode)) {
             secs.push(
-                <Section key="genetics" title="Génétique" icon="🧬" defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="genetics" title="Génétique" icon="🧬" defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🌱" compact={isCompact} />}
                         {reviewData.strainType && <InfoCard label="Type" value={reviewData.strainType} icon="🌿" compact={isCompact} />}
@@ -914,7 +925,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── GENEALOGY TREE (PhenoHunt) ───────────────────────────────────
         if (isVisible('genetics') && genealogyData) {
             secs.push(
-                <Section key="genealogy" title={genealogyData.name} icon="🌳" defaultOpen={!isCompact} badge={`${genealogyData.nodes.length}`} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="genealogy" title={genealogyData.name} icon="🌳" defaultOpen={!isCompact} badge={`${genealogyData.nodes.length}`} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <GenealogyTree2D
                         nodes={genealogyData.nodes}
                         edges={genealogyData.edges}
@@ -927,7 +938,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CATEGORY RATINGS ─────────────────────────────────────────────
         if (isVisible('categoryRatings') && categoryRatings.length > 0) {
             secs.push(
-                <Section key="catRatings" title="Notes par catégorie" icon="📊" badge={`${categoryRatings.length} cat.`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="catRatings" title="Notes par catégorie" icon="📊" badge={`${categoryRatings.length} cat.`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={isCompact ? 'space-y-1' : 'space-y-2'}>
                         {categoryRatings.map(cat => <CategoryCard key={cat.key} cat={cat} compact={isCompact} />)}
                     </div>
@@ -953,7 +964,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             ].filter(Boolean);
             if (vEntries.length > 0) {
                 secs.push(
-                    <Section key="visual" title="Visuel & Technique" icon="👁️" badge={`${vEntries.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                    <Section key="visual" title="Visuel & Technique" icon="👁️" badge={`${vEntries.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                         <div className={`grid ${gridCols} gap-2`}>
                             {vEntries.map((v, i) => <InfoCard key={i} label={v.label} value={v.value} icon={v.icon} compact={isCompact} />)}
                         </div>
@@ -985,7 +996,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             ].filter(Boolean);
             if (tEntries.length > 0) {
                 secs.push(
-                    <Section key="texture" title="Texture" icon="🤚" badge={`${tEntries.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                    <Section key="texture" title="Texture" icon="🤚" badge={`${tEntries.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                         <div className={`grid ${gridCols} gap-2`}>
                             {tEntries.map((t, i) => <InfoCard key={i} label={t.label} value={t.value} icon={t.icon} compact={isCompact} />)}
                         </div>
@@ -997,7 +1008,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── AROMAS ───────────────────────────────────────────────────────
         if (isVisible('aromas') && (aromas.length > 0 || secondaryAromas.length > 0 || reviewData.intensiteOdeur || reviewData.intensiteAromatique || reviewData.fideliteCultivarsOdeur || reviewData.fideliteCultivars)) {
             secs.push(
-                <Section key="aromas" title="Arômes" icon="👃" badge={`${aromas.length + secondaryAromas.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="aromas" title="Arômes" icon="👃" badge={`${aromas.length + secondaryAromas.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     {(reviewData.intensiteOdeur || reviewData.intensiteAromatique || reviewData.fideliteCultivarsOdeur || reviewData.fideliteCultivars) && (
                         <div className={`grid ${gridCols} gap-2 mb-2`}>
                             {(reviewData.intensiteOdeur || reviewData.intensiteAromatique) && (
@@ -1012,7 +1023,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Notes dominantes</span>
                             <div className="flex flex-wrap gap-1">
-                                {aromas.map((a, i) => <TagPill key={i} label={a} color="pink" compact={isCompact} />)}
+                                {aromas.slice(0, maxTags).map((a, i) => <TagPill key={i} label={a} color="pink" compact={isCompact} />)}
                             </div>
                         </div>
                     )}
@@ -1020,7 +1031,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Notes secondaires</span>
                             <div className="flex flex-wrap gap-1">
-                                {secondaryAromas.map((a, i) => <TagPill key={i} label={a} color="purple" compact={isCompact} />)}
+                                {secondaryAromas.slice(0, maxTags).map((a, i) => <TagPill key={i} label={a} color="purple" compact={isCompact} />)}
                             </div>
                         </div>
                     )}
@@ -1031,9 +1042,9 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── TERPENES ─────────────────────────────────────────────────────
         if (isVisible('terpenes') && terpenes.length > 0) {
             secs.push(
-                <Section key="terpenes" title="Terpènes" icon="🧬" badge={`${terpenes.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="terpenes" title="Terpènes" icon="🧬" badge={`${terpenes.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className="flex flex-wrap gap-1">
-                        {terpenes.map((t, i) => <TagPill key={i} label={t} color="cyan" compact={isCompact} />)}
+                        {terpenes.slice(0, maxTags).map((t, i) => <TagPill key={i} label={t} color="cyan" compact={isCompact} />)}
                     </div>
                 </Section>
             );
@@ -1042,7 +1053,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── TASTES / GOÛTS ───────────────────────────────────────────────
         if (isVisible('tastes') && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || reviewData.intensiteGout || reviewData.intensiteFumee || reviewData.agressivite)) {
             secs.push(
-                <Section key="tastes" title="Goûts" icon="👅" badge={`${tastes.length + dryPuffNotes.length + inhalationNotes.length + exhalationNotes.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="tastes" title="Goûts" icon="👅" badge={`${tastes.length + dryPuffNotes.length + inhalationNotes.length + exhalationNotes.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     {(reviewData.intensiteGout || reviewData.intensiteFumee || reviewData.agressivite) && (
                         <div className={`grid ${gridCols} gap-2 mb-2`}>
                             {(reviewData.intensiteGout || reviewData.intensiteFumee) && (
@@ -1056,25 +1067,25 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                     {dryPuffNotes.length > 0 && (
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Tirage à sec</span>
-                            <div className="flex flex-wrap gap-1">{dryPuffNotes.map((t, i) => <TagPill key={i} label={t} color="amber" compact={isCompact} />)}</div>
+                            <div className="flex flex-wrap gap-1">{dryPuffNotes.slice(0, maxTags).map((t, i) => <TagPill key={i} label={t} color="amber" compact={isCompact} />)}</div>
                         </div>
                     )}
                     {inhalationNotes.length > 0 && (
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Inhalation</span>
-                            <div className="flex flex-wrap gap-1">{inhalationNotes.map((t, i) => <TagPill key={i} label={t} color="blue" compact={isCompact} />)}</div>
+                            <div className="flex flex-wrap gap-1">{inhalationNotes.slice(0, maxTags).map((t, i) => <TagPill key={i} label={t} color="blue" compact={isCompact} />)}</div>
                         </div>
                     )}
                     {exhalationNotes.length > 0 && (
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Expiration / Arrière-goût</span>
-                            <div className="flex flex-wrap gap-1">{exhalationNotes.map((t, i) => <TagPill key={i} label={t} color="green" compact={isCompact} />)}</div>
+                            <div className="flex flex-wrap gap-1">{exhalationNotes.slice(0, maxTags).map((t, i) => <TagPill key={i} label={t} color="green" compact={isCompact} />)}</div>
                         </div>
                     )}
                     {tastes.length > 0 && (
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Saveurs</span>
-                            <div className="flex flex-wrap gap-1">{tastes.map((t, i) => <TagPill key={i} label={t} color="amber" compact={isCompact} />)}</div>
+                            <div className="flex flex-wrap gap-1">{tastes.slice(0, maxTags).map((t, i) => <TagPill key={i} label={t} color="amber" compact={isCompact} />)}</div>
                         </div>
                     )}
                 </Section>
@@ -1084,7 +1095,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── EFFECTS ──────────────────────────────────────────────────────
         if (isVisible('effects') && (effects.length > 0 || reviewData.montee || reviewData.intensiteEffet || reviewData.intensiteEffets)) {
             secs.push(
-                <Section key="effects" title="Effets ressentis" icon="⚡" badge={`${effects.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="effects" title="Effets ressentis" icon="⚡" badge={`${effects.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     {(reviewData.montee || reviewData.intensiteEffet || reviewData.intensiteEffets) && (
                         <div className={`grid ${gridCols} gap-2 mb-2`}>
                             {reviewData.montee && (
@@ -1096,7 +1107,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         </div>
                     )}
                     <div className="flex flex-wrap gap-1">
-                        {effects.map((e, i) => <TagPill key={i} label={e} color="purple" compact={isCompact} />)}
+                        {effects.slice(0, maxTags).map((e, i) => <TagPill key={i} label={e} color="purple" compact={isCompact} />)}
                     </div>
                 </Section>
             );
@@ -1105,7 +1116,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CONSUMPTION EXPERIENCE ───────────────────────────────────────
         if (isVisible('consumption') && consumption) {
             secs.push(
-                <Section key="consumption" title="Expérience de consommation" icon="🔥" defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="consumption" title="Expérience de consommation" icon="🔥" defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {consumption.method && <InfoCard label="Méthode" value={consumption.method} icon="💨" compact={isCompact} />}
                         {consumption.dosage && <InfoCard label="Dosage" value={consumption.dosage} icon="⚖️" compact={isCompact} />}
@@ -1118,7 +1129,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Profils d'effets</span>
                             <div className="flex flex-wrap gap-1">
-                                {consumption.profiles.map((p, i) => <TagPill key={i} label={p} color="blue" compact={isCompact} />)}
+                                {consumption.profiles.slice(0, maxTags).map((p, i) => <TagPill key={i} label={p} color="blue" compact={isCompact} />)}
                             </div>
                         </div>
                     )}
@@ -1126,7 +1137,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         <div>
                             <span className="text-[10px] text-white/40 mb-1 block">Effets secondaires</span>
                             <div className="flex flex-wrap gap-1">
-                                {consumption.sideEffects.map((s, i) => <TagPill key={i} label={s} color="red" compact={isCompact} />)}
+                                {consumption.sideEffects.slice(0, maxTags).map((s, i) => <TagPill key={i} label={s} color="red" compact={isCompact} />)}
                             </div>
                         </div>
                     )}
@@ -1137,7 +1148,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CULTURE METADATA (Flower) ────────────────────────────────────
         if (cultureInfo) {
             secs.push(
-                <Section key="culture" title="Données de culture" icon="🌱" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="culture" title="Données de culture" icon="🌱" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {cultureInfo.mode && <InfoCard label="Mode" value={cultureInfo.mode} icon="🏠" compact={isCompact} />}
                         {cultureInfo.spaceType && <InfoCard label="Espace" value={cultureInfo.spaceType} icon="📐" compact={isCompact} />}
@@ -1203,7 +1214,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CURING SPECIFICS ─────────────────────────────────────────────
         if (curingInfo) {
             secs.push(
-                <Section key="curingInfo" title="Curing & Maturation" icon="🫙" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="curingInfo" title="Curing & Maturation" icon="🫙" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {curingInfo.type && <InfoCard label="Type" value={curingInfo.type} icon="🌡️" compact={isCompact} />}
                         {curingInfo.temp && <InfoCard label="Température" value={`${curingInfo.temp}°C`} icon="🌡️" compact={isCompact} />}
@@ -1222,7 +1233,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── SEPARATION (Hash) ────────────────────────────────────────────
         if (separationInfo) {
             secs.push(
-                <Section key="separation" title="Séparation" icon="🔬" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="separation" title="Séparation" icon="🔬" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {separationInfo.method && <InfoCard label="Méthode" value={separationInfo.method} icon="⚙️" compact={isCompact} />}
                         {separationInfo.passes && <InfoCard label="Nb de passes" value={separationInfo.passes} icon="🔄" compact={isCompact} />}
@@ -1240,7 +1251,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── EXTRACTION (Concentrate) ─────────────────────────────────────
         if (extractionInfo) {
             secs.push(
-                <Section key="extraction" title="Extraction" icon="⚗️" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="extraction" title="Extraction" icon="⚗️" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={`grid ${gridCols} gap-2`}>
                         {extractionInfo.method && <InfoCard label="Méthode" value={extractionInfo.method} icon="⚙️" compact={isCompact} />}
                         {extractionInfo.solvant && <InfoCard label="Solvant" value={extractionInfo.solvant} icon="🧪" compact={isCompact} />}
@@ -1255,7 +1266,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── RECIPE (Edible) ──────────────────────────────────────────────
         if (recipeInfo) {
             secs.push(
-                <Section key="recipe" title="Recette" icon="🍳" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="recipe" title="Recette" icon="🍳" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     {(recipeInfo.typeComestible || recipeInfo.fabricant) && (
                         <div className={`grid ${gridCols} gap-2 mb-2`}>
                             {recipeInfo.typeComestible && <InfoCard label="Type" value={recipeInfo.typeComestible} icon="🍰" compact={isCompact} />}
@@ -1299,7 +1310,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── PIPELINES ────────────────────────────────────────────────────
         if (isVisible('pipelines') && pipelines.length > 0) {
             secs.push(
-                <Section key="pipelines" title="Pipelines" icon="⚗️" badge={`${pipelines.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="pipelines" title="Pipelines" icon="⚗️" badge={`${pipelines.length}`} defaultOpen={!isCompact} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <div className={isCompact ? 'space-y-2' : 'space-y-4'}>
                         {pipelines.map((pl, i) => (
                             <InteractivePipelineViewer
@@ -1318,7 +1329,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── DESCRIPTION ──────────────────────────────────────────────────
         if (isVisible('description') && reviewData.description) {
             secs.push(
-                <Section key="description" title="Description" icon="📝" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="description" title="Description" icon="📝" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-white/70 leading-relaxed whitespace-pre-wrap`}>{reviewData.description}</p>
                 </Section>
             );
@@ -1327,7 +1338,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── CONCLUSION ───────────────────────────────────────────────────
         if (isVisible('conclusion') && reviewData.conclusion) {
             secs.push(
-                <Section key="conclusion" title="Conclusion" icon="🏁" defaultOpen={false} compact={isCompact} sectionStyles={secStyles}>
+                <Section key="conclusion" title="Conclusion" icon="🏁" defaultOpen={false} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
                     <p className={`${isCompact ? 'text-xs' : 'text-sm'} text-white/70 leading-relaxed whitespace-pre-wrap`}>{reviewData.conclusion}</p>
                 </Section>
             );
@@ -1453,12 +1464,12 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         }}
                     >
                         <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
-                            <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: 'auto' }}>
+                            <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: isExportLike ? 'hidden' : 'auto' }}>
                                 {headerSection}
                                 {analyticsSection}
-                                {imageSection}
+                                {imageSection && <div style={{ maxHeight: '40%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
                             </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: 'auto' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: isExportLike ? 'hidden' : 'auto' }}>
                                 {dataSections}
                             </div>
                         </div>
@@ -1511,12 +1522,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
                                 {headerSection}
                                 {analyticsSection}
-                                {imageSection}
+                                {imageSection && <div style={{ maxHeight: '40%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
                             </div>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
                                 {rightColReady
                                     ? rightColPages[0]?.map(i => dataSections[i])
                                     : dataSections
+                                }
                                 }
                             </div>
                         </div>
@@ -1586,7 +1598,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             flexShrink: 0,
                         }}
                     >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
                             {headerSection}
                             {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '12px', flexShrink: 0 }}>{imageSection}</div>}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
@@ -1642,7 +1654,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             flexShrink: 0,
                         }}
                     >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
                             {headerSection}
                             {imageSection && <div style={{ maxHeight: '25%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
@@ -1694,7 +1706,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             flexShrink: 0,
                         }}
                     >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
                             {allSections}
                         </div>
                         <BrandingOverlay branding={config?.branding} />
@@ -1741,7 +1753,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                         flexShrink: 0,
                     }}
                 >
-                    <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: 'auto' }}>
+                    <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
                         {allSections}
                     </div>
                     <BrandingOverlay branding={config?.branding} />

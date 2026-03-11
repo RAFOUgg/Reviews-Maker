@@ -12,15 +12,9 @@ import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
 import OrchardContextMenu from './OrchardContextMenu';
 import { reviewsService } from '../../../services/apiService';
+import { RATIO_DIMENSIONS } from '../../../utils/orchardHelpers';
 
-// Must match InteractiveReviewCard RATIO_DIMENSIONS
-const RATIO_DIMS = {
-    '1:1': { width: 800, height: 800 },
-    '16:9': { width: 1920, height: 1080 },
-    '9:16': { width: 1080, height: 1920 },
-    '4:3': { width: 1600, height: 1200 },
-    'A4': { width: 1754, height: 2480 },
-};
+const RATIO_DIMS = RATIO_DIMENSIONS;
 
 /** Renders InteractiveReviewCard at export dimensions, scaled to fit inside the preview area */
 function RatioPreviewWrapper({ ratio, children }) {

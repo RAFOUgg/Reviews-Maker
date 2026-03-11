@@ -633,11 +633,11 @@ export function extractSubstrat(substratMix) {
  * Dimensions par ratio
  */
 export const RATIO_DIMENSIONS = {
-    '1:1': { width: 1080, height: 1080, label: 'Carré (1:1)' },
+    '1:1': { width: 800, height: 800, label: 'Carré (1:1)' },
     '16:9': { width: 1920, height: 1080, label: 'Paysage (16:9)' },
     '9:16': { width: 1080, height: 1920, label: 'Portrait (9:16)' },
-    '4:3': { width: 1440, height: 1080, label: 'Standard (4:3)' },
-    'A4': { width: 2480, height: 3508, label: 'A4 (Document)' },
+    '4:3': { width: 1600, height: 1200, label: 'Standard (4:3)' },
+    'A4': { width: 1754, height: 2480, label: 'A4 (Document)' },
 };
 
 /**
