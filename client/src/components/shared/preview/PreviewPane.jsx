@@ -79,6 +79,7 @@ export default function PreviewPane() {
                 <div
                     ref={previewRef}
                     id="orchard-preview-container"
+                    className="shadow-2xl rounded-xl overflow-hidden"
                     style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}
                 >
                     {/* Inner — native resolution, scaled via CSS transform */}

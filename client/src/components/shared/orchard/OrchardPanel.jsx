@@ -393,12 +393,12 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 className="fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 dark:"
                 style={
                     showPreview
-                        ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
-                        : { left: '50%', top: '50%', width: '600px', maxHeight: '80vh', marginLeft: '-300px', marginTop: '-40vh' }
+                        ? { left: '1%', right: '1%', top: '1%', bottom: '1%' }
+                        : { left: '50%', top: '50%', width: 'min(600px, 95vw)', maxHeight: '85vh', transform: 'translate(-50%, -50%)' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
-                <div className="flex items-center justify-between px-4 py-3 border-b-2 dark: bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
+                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b-2 dark: bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
                     <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-lg">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -579,15 +579,15 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
-                                className="flex h-full"
+                                className="flex flex-col md:flex-row h-full"
                             >
-                                {/* Configuration Pane - Left */}
-                                <div className="w-96 xl:w-[28rem] border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0">
+                            {/* Configuration Pane - Left */}
+                                <div className="w-full md:w-96 xl:w-[28rem] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none">
                                     <ConfigPane />
                                 </div>
 
                                 {/* Preview Pane - Right */}
-                                <div className="flex-1 overflow-hidden min-w-0">
+                                <div className="flex-1 overflow-hidden min-w-0 min-h-[300px]">
                                     {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                                 </div>
                             </motion.div>

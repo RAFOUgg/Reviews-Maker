@@ -57,7 +57,7 @@ export default function PagedPreviewPane() {
 
     // Helper: renders the TemplateRenderer inside a scale wrapper
     const renderScaledCanvas = (canvasProps) => (
-        <div style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
+        <div className="shadow-2xl rounded-xl overflow-hidden" style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}>
             <div style={{
                 position: 'absolute', top: 0, left: 0,
                 transform: `scale(${scale})`,

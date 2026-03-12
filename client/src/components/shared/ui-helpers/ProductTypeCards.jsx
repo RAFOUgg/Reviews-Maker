@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
     const productTypes = [
         {
-            name: 'flower',
+            name: 'Fleur',
             icon: '🌿',
             gradient: 'from-green-500/30 to-emerald-500/30',
             border: 'border-green-500/50',
