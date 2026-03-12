@@ -779,7 +779,8 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
     // Measure right-column dataSections and split into pages for two-col export
     const paginateRightCol = useCallback(() => {
-        if (!isCanvasCapture || !rightMeasureRef.current) return;
+        if (!rightMeasureRef.current) return;
+        if (!isCanvasCapture && !paginationConfig.enabled) return;
         const children = Array.from(rightMeasureRef.current.children);
         if (children.length === 0) return;
 
@@ -805,7 +806,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
         setRightColPages(result);
         setRightColReady(true);
-    }, [isCanvasCapture, rDims.height, ls.pad, ls.gap, paginationConfig.maxPages]);
+    }, [isCanvasCapture, rDims.height, ls.pad, ls.gap, paginationConfig.enabled, paginationConfig.maxPages]);
 
     // ── Resolved primitives (safe for null reviewData) ────────────────────
     const title = reviewData?.title || reviewData?.holderName || reviewData?.productName || reviewData?.nomCommercial || 'Sans titre';
@@ -1357,12 +1358,22 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     ]);
 
     // ── Pagination useEffect (must be after allSections definition) ─────────
+    // Runs for canvas capture (export) AND for preview-export when pagination is enabled
+    const shouldPaginate = isCanvasCapture || (mode === 'preview-export' && paginationConfig.enabled);
     useEffect(() => {
-        if (!isCanvasCapture) return;
+        if (!shouldPaginate) return;
         setPaginationReady(false);
         const timer = setTimeout(paginateSections, 400);
         return () => clearTimeout(timer);
-    }, [isCanvasCapture, allSections, paginateSections]);
+    }, [shouldPaginate, allSections, paginateSections]);
+
+    // ── Right-column pagination useEffect (two-col layouts) ──────────────
+    useEffect(() => {
+        if (!shouldPaginate) return;
+        setRightColReady(false);
+        const timer = setTimeout(paginateRightCol, 450);
+        return () => clearTimeout(timer);
+    }, [shouldPaginate, allSections, paginateRightCol]);
 
     // ── Early return if no data (after ALL hooks) ────────────────────────────
     if (!reviewData) return (
@@ -1431,6 +1442,43 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
     };
 
     /* ══════════════════════════════════════════════════════════════════════════
+       PAGE NAVIGATION OVERLAY (preview-export paginated mode)
+       ══════════════════════════════════════════════════════════════════════════ */
+    const PageNavOverlay = ({ totalPages }) => {
+        if (totalPages <= 1) return null;
+        const safePage = Math.min(previewPage, totalPages - 1);
+        return (
+            <div className="absolute bottom-0 left-0 right-0 flex items-center justify-center gap-2 py-1.5 px-4 bg-black/60 backdrop-blur-sm z-10">
+                <button
+                    onClick={() => setPreviewPage(Math.max(0, safePage - 1))}
+                    disabled={safePage === 0}
+                    className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <div className="flex gap-1">
+                    {Array.from({ length: totalPages }, (_, i) => (
+                        <button
+                            key={i}
+                            onClick={() => setPreviewPage(i)}
+                            className={`w-5 h-5 rounded text-[9px] font-medium transition-all ${i === safePage ? 'bg-purple-600 text-white' : 'bg-white/10 text-white/50 hover:bg-white/20'}`}
+                        >
+                            {i + 1}
+                        </button>
+                    ))}
+                </div>
+                <button
+                    onClick={() => setPreviewPage(Math.min(totalPages - 1, safePage + 1))}
+                    disabled={safePage >= totalPages - 1}
+                    className="p-1 rounded-md text-white/60 hover:text-white hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
+                >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+                </button>
+            </div>
+        );
+    };
+
+    /* ══════════════════════════════════════════════════════════════════════════
        EXPORT LAYOUT — strategy-based branching
        ══════════════════════════════════════════════════════════════════════════ */
     if (isExportLike) {
@@ -1445,36 +1493,72 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             const leftW = ls.leftWidth || '42%';
             const bgColor = colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)';
 
-            // preview-export: both columns are scrollable (WYSIWYG preview — no clipping)
+            // preview-export: paginated two-col — one page at a time with nav
             if (mode === 'preview-export') {
+                const totalRightPages = rightColReady && rightColPages.length > 0 ? rightColPages.length : 1;
+                const safePage = Math.min(previewPage, totalRightPages - 1);
+                const leftWidthFrac = parseFloat(leftW) / 100;
+                const rightColWidthPx = Math.floor(rDims.width * (1 - leftWidthFrac) - ls.pad * 2 - ls.gap);
+                const currentRightSections = rightColReady && rightColPages[safePage]
+                    ? rightColPages[safePage].map(i => dataSections[i])
+                    : dataSections;
+
                 return (
-                    <div
-                        data-width={rDims.width}
-                        data-height={rDims.height}
-                        data-ratio={ratio}
-                        className="orchard-export-page"
-                        style={{
-                            ...rootStyle,
-                            width: `${rDims.width}px`,
-                            height: `${rDims.height}px`,
-                            overflow: 'hidden',
-                            position: 'relative',
-                            background: bgColor,
-                            flexShrink: 0,
-                        }}
-                    >
-                        <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
-                            <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: isExportLike ? 'hidden' : 'auto' }}>
-                                {headerSection}
-                                {analyticsSection}
-                                {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '8px', flexShrink: 0 }}>{imageSection}</div>}
-                            </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: isExportLike ? 'hidden' : 'auto' }}>
-                                {dataSections}
-                            </div>
+                    <>
+                        {/* Hidden measure container for right-column pagination */}
+                        <div
+                            ref={rightMeasureRef}
+                            style={{
+                                position: 'absolute', left: '-99999px', top: 0,
+                                visibility: 'hidden', pointerEvents: 'none',
+                                width: `${rightColWidthPx}px`,
+                                display: 'flex', flexDirection: 'column', gap: lsGap,
+                            }}
+                        >
+                            {dataSections}
                         </div>
-                        <BrandingOverlay branding={config?.branding} />
-                    </div>
+                        <div
+                            data-width={rDims.width}
+                            data-height={rDims.height}
+                            data-ratio={ratio}
+                            className="orchard-export-page"
+                            style={{
+                                ...rootStyle,
+                                width: `${rDims.width}px`,
+                                height: `${rDims.height}px`,
+                                overflow: 'hidden',
+                                position: 'relative',
+                                background: bgColor,
+                                flexShrink: 0,
+                            }}
+                        >
+                            {safePage === 0 ? (
+                                /* Page 1: two-col with header/image left + data right */
+                                <div style={{ padding: lsPad, display: 'flex', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                                    <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                                        {headerSection}
+                                        {analyticsSection}
+                                        {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '8px', flexShrink: 0 }}>{imageSection}</div>}
+                                    </div>
+                                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
+                                        {currentRightSections}
+                                    </div>
+                                </div>
+                            ) : (
+                                /* Pages 2+: single-column overflow for remaining right-col sections */
+                                <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, height: '100%', overflow: 'hidden' }}>
+                                    {currentRightSections}
+                                </div>
+                            )}
+                            {totalRightPages > 1 && (
+                                <div className="absolute bottom-2 right-3 px-2 py-0.5 rounded-full bg-black/40 text-white/60 text-[10px] font-mono">
+                                    {safePage + 1}/{totalRightPages}
+                                </div>
+                            )}
+                            <BrandingOverlay branding={config?.branding} />
+                            <PageNavOverlay totalPages={totalRightPages} />
+                        </div>
+                    </>
                 );
             }
 
@@ -1581,32 +1665,47 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             const imageSection = allSections.find(s => s.key === 'image');
             const restSections = allSections.filter(s => !['header', 'image'].includes(s.key));
 
-            // Hero mode: image takes ~35% of height, data grid fills the rest
+            // Hero mode: paginated preview-export — one page at a time
             if (mode === 'preview-export') {
+                const totalPgs = paginationReady ? pages.length : 1;
+                const safePg = Math.min(previewPage, totalPgs - 1);
+                const currentPageSections = paginationReady && pages[safePg]
+                    ? pages[safePg].map(i => allSections[i]).filter(Boolean)
+                    : allSections;
+
                 return (
-                    <div
-                        data-width={rDims.width}
-                        data-height={rDims.height}
-                        data-ratio={ratio}
-                        style={{
-                            ...rootStyle,
-                            width: `${rDims.width}px`,
-                            height: `${rDims.height}px`,
-                            overflow: 'hidden',
-                            position: 'relative',
-                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                            flexShrink: 0,
-                        }}
-                    >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
-                            {headerSection}
-                            {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '12px', flexShrink: 0 }}>{imageSection}</div>}
+                    <>
+                        {/* Hidden measure container for page height calculation */}
+                        <div
+                            ref={measureRef}
+                            style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                        >
                             <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
-                                {restSections}
+                                {allSections}
                             </div>
                         </div>
-                        <BrandingOverlay branding={config?.branding} />
-                    </div>
+                        <div
+                            data-width={rDims.width}
+                            data-height={rDims.height}
+                            data-ratio={ratio}
+                            style={{
+                                ...rootStyle,
+                                width: `${rDims.width}px`,
+                                height: `${rDims.height}px`,
+                                overflow: 'hidden',
+                                position: 'relative',
+                                background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                                flexShrink: 0,
+                            }}
+                        >
+                            <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                                {safePg === 0 && imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '12px', flexShrink: 0 }}>{imageSection}</div>}
+                                {currentPageSections}
+                            </div>
+                            <BrandingOverlay branding={config?.branding} />
+                            <PageNavOverlay totalPages={totalPgs} />
+                        </div>
+                    </>
                 );
             }
 
@@ -1639,30 +1738,44 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
             const restSections = allSections.filter(s => !['header', 'image'].includes(s.key));
 
             if (mode === 'preview-export') {
+                const totalPgs = paginationReady ? pages.length : 1;
+                const safePg = Math.min(previewPage, totalPgs - 1);
+                const currentPageSections = paginationReady && pages[safePg]
+                    ? pages[safePg].map(i => allSections[i]).filter(Boolean)
+                    : allSections;
+
                 return (
-                    <div
-                        data-width={rDims.width}
-                        data-height={rDims.height}
-                        data-ratio={ratio}
-                        style={{
-                            ...rootStyle,
-                            width: `${rDims.width}px`,
-                            height: `${rDims.height}px`,
-                            overflow: 'hidden',
-                            position: 'relative',
-                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                            flexShrink: 0,
-                        }}
-                    >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
-                            {headerSection}
-                            {imageSection && <div style={{ maxHeight: '25%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
+                    <>
+                        <div
+                            ref={measureRef}
+                            style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                        >
                             <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
-                                {restSections}
+                                {allSections}
                             </div>
                         </div>
-                        <BrandingOverlay branding={config?.branding} />
-                    </div>
+                        <div
+                            data-width={rDims.width}
+                            data-height={rDims.height}
+                            data-ratio={ratio}
+                            style={{
+                                ...rootStyle,
+                                width: `${rDims.width}px`,
+                                height: `${rDims.height}px`,
+                                overflow: 'hidden',
+                                position: 'relative',
+                                background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                                flexShrink: 0,
+                            }}
+                        >
+                            <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                                {safePg === 0 && imageSection && <div style={{ maxHeight: '25%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
+                                {currentPageSections}
+                            </div>
+                            <BrandingOverlay branding={config?.branding} />
+                            <PageNavOverlay totalPages={totalPgs} />
+                        </div>
+                    </>
                 );
             }
 
@@ -1691,26 +1804,43 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         // ── GRID layout (compact dense grid — modernCompact on small/square formats) ──
         if (layout === 'grid') {
             if (mode === 'preview-export') {
+                const totalPgs = paginationReady ? pages.length : 1;
+                const safePg = Math.min(previewPage, totalPgs - 1);
+                const currentPageSections = paginationReady && pages[safePg]
+                    ? pages[safePg].map(i => allSections[i]).filter(Boolean)
+                    : allSections;
+
                 return (
-                    <div
-                        data-width={rDims.width}
-                        data-height={rDims.height}
-                        data-ratio={ratio}
-                        style={{
-                            ...rootStyle,
-                            width: `${rDims.width}px`,
-                            height: `${rDims.height}px`,
-                            overflow: 'hidden',
-                            position: 'relative',
-                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                            flexShrink: 0,
-                        }}
-                    >
-                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
-                            {allSections}
+                    <>
+                        <div
+                            ref={measureRef}
+                            style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                        >
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
+                                {allSections}
+                            </div>
                         </div>
-                        <BrandingOverlay branding={config?.branding} />
-                    </div>
+                        <div
+                            data-width={rDims.width}
+                            data-height={rDims.height}
+                            data-ratio={ratio}
+                            style={{
+                                ...rootStyle,
+                                width: `${rDims.width}px`,
+                                height: `${rDims.height}px`,
+                                overflow: 'hidden',
+                                position: 'relative',
+                                background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                                flexShrink: 0,
+                            }}
+                        >
+                            <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                                {currentPageSections}
+                            </div>
+                            <BrandingOverlay branding={config?.branding} />
+                            <PageNavOverlay totalPages={totalPgs} />
+                        </div>
+                    </>
                 );
             }
 
@@ -1738,26 +1868,43 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
         // ── SINGLE layout (default fallback — paginated single column) ──────
         if (mode === 'preview-export') {
+            const totalPgs = paginationReady ? pages.length : 1;
+            const safePg = Math.min(previewPage, totalPgs - 1);
+            const currentPageSections = paginationReady && pages[safePg]
+                ? pages[safePg].map(i => allSections[i]).filter(Boolean)
+                : allSections;
+
             return (
-                <div
-                    data-width={rDims.width}
-                    data-height={rDims.height}
-                    data-ratio={ratio}
-                    style={{
-                        ...rootStyle,
-                        width: `${rDims.width}px`,
-                        height: `${rDims.height}px`,
-                        overflow: 'hidden',
-                        position: 'relative',
-                        background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-                        flexShrink: 0,
-                    }}
-                >
-                    <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflowY: isExportLike ? 'hidden' : 'auto' }}>
-                        {allSections}
+                <>
+                    <div
+                        ref={measureRef}
+                        style={{ ...rootStyle, width: `${rDims.width}px`, position: 'absolute', left: '-99999px', top: 0, visibility: 'hidden', pointerEvents: 'none', padding: lsPad }}
+                    >
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: lsGap }}>
+                            {allSections}
+                        </div>
                     </div>
-                    <BrandingOverlay branding={config?.branding} />
-                </div>
+                    <div
+                        data-width={rDims.width}
+                        data-height={rDims.height}
+                        data-ratio={ratio}
+                        style={{
+                            ...rootStyle,
+                            width: `${rDims.width}px`,
+                            height: `${rDims.height}px`,
+                            overflow: 'hidden',
+                            position: 'relative',
+                            background: colors.background || 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
+                            flexShrink: 0,
+                        }}
+                    >
+                        <div style={{ padding: lsPad, display: 'flex', flexDirection: 'column', gap: lsGap, width: '100%', height: '100%', overflow: 'hidden' }}>
+                            {currentPageSections}
+                        </div>
+                        <BrandingOverlay branding={config?.branding} />
+                        <PageNavOverlay totalPages={totalPgs} />
+                    </div>
+                </>
             );
         }
 
