@@ -1,6 +1,6 @@
 import React from 'react'
-import { Camera, Info, Check } from 'lucide-react'
-import { LiquidCard, LiquidInput, LiquidSelect, LiquidDivider } from '@/components/ui/LiquidUI'
+import { Camera, X } from 'lucide-react'
+import LiquidCard from '../../../../components/ui/LiquidCard'
 
 const CONCENTRATE_TYPES = [
     'Rosin',
@@ -24,133 +24,125 @@ const CONCENTRATE_TYPES = [
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
     return (
         <div className="space-y-6">
-            <LiquidCard glow="cyan" padding="lg">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/30">
-                        <Info className="w-5 h-5 text-white" />
-                    </div>
-                    <div>
-                        <h3 className="text-xl font-bold text-white">📋 Informations générales</h3>
-                        <p className="text-sm text-white/50">Identité et origine du concentré</p>
-                    </div>
-                </div>
-
-                <LiquidDivider />
-
-                <div className="space-y-4 mt-6">
+            <LiquidCard title="📋 Informations générales" bordered>
+                <div className="space-y-4">
                     {/* Nom commercial */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                        <LiquidInput
-                            label="Nom commercial *"
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Nom commercial *
+                        </label>
+                        <input
+                            type="text"
                             value={formData.nomCommercial || ''}
                             onChange={(e) => handleChange('nomCommercial', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Nom du produit"
+                            required
                         />
                     </div>
 
                     {/* Type de concentré */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                        <LiquidSelect
-                            label="Type de concentré"
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Type de concentré
+                        </label>
+                        <select
                             value={formData.type || ''}
                             onChange={(e) => handleChange('type', e.target.value)}
-                            options={[
-                                { value: '', label: 'Sélectionnez un type' },
-                                ...CONCENTRATE_TYPES.map(type => ({ value: type, label: type }))
-                            ]}
-                        />
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
+                        >
+                            <option value="">Sélectionnez un type</option>
+                            {CONCENTRATE_TYPES.map(type => (
+                                <option key={type} value={type}>{type}</option>
+                            ))}
+                        </select>
                     </div>
 
                     {/* Hashmaker */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                        <LiquidInput
-                            label="Hashmaker / Extracteur"
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Hashmaker / Extracteur
+                        </label>
+                        <input
+                            type="text"
                             value={formData.hashmaker || ''}
                             onChange={(e) => handleChange('hashmaker', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Nom de l'extracteur"
                         />
                     </div>
 
                     {/* Laboratoire */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                        <LiquidInput
-                            label="Laboratoire de production"
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Laboratoire de production
+                        </label>
+                        <input
+                            type="text"
                             value={formData.laboratoire || ''}
                             onChange={(e) => handleChange('laboratoire', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Nom du laboratoire"
                         />
                     </div>
 
                     {/* Cultivars utilisés */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10">
-                        <LiquidInput
-                            label="Cultivar(s) utilisés"
+                    <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Cultivar(s) utilisés
+                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
+                                (Séparés par des virgules)
+                            </span>
+                        </label>
+                        <input
+                            type="text"
                             value={formData.cultivars || ''}
                             onChange={(e) => handleChange('cultivars', e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Cultivars utilisés (séparés par des virgules)"
                         />
                     </div>
 
-                    {/* C'est notre review - Toggle Button */}
+                    {/* Photos */}
                     <div>
-                        <button
-                            type="button"
-                            onClick={() => handleChange('isOurReview', !formData.isOurReview)}
-                            className={`w-full px-4 py-3 rounded-lg border-2 font-semibold transition-all flex items-center justify-center gap-2 ${formData.isOurReview
-                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500 border-green-400 text-white shadow-lg shadow-green-500/30'
-                                    : 'bg-white/5 border-white/20 text-white/70 hover:border-cyan-500/50 hover:bg-cyan-500/10'
-                                }`}
-                        >
-                            {formData.isOurReview && <Check className="w-5 h-5" />}
-                            <span>{formData.isOurReview ? '✓ C\'est notre review' : 'C\'est notre review'}</span>
-                        </button>
-                        <p className="text-xs text-white/40 mt-2">
-                            {formData.isOurReview ? 'Cette review est marquée comme personnelle' : 'Cliquez pour affirmer que c\'est votre review'}
-                        </p>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Photos du produit (1-4) *
+                        </label>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            {photos.map((photo, index) => (
+                                <div key={index} className="relative group">
+                                    <img
+                                        src={photo.preview || photo.url}
+                                        alt={`Photo ${index + 1}`}
+                                        className="w-full h-32 object-cover rounded-lg"
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={() => removePhoto(index)}
+                                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
+                        {photos.length < 4 && (
+                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-400 bg-white/50 dark:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all">
+                                <Camera className="w-6 h-6 text-gray-400" />
+                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                                    Ajouter une photo ({photos.length}/4)
+                                </span>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={handlePhotoUpload}
+                                    className="hidden"
+                                    multiple
+                                />
+                            </label>
+                        )}
                     </div>
                 </div>
-            </LiquidCard>
-
-            {/* Photos */}
-            <LiquidCard glow="cyan" padding="lg">
-                <label className="block text-sm font-medium text-white/80 mb-3">
-                    📷 Photos du produit (1-4) *
-                </label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                    {photos.map((photo, index) => (
-                        <div key={index} className="relative group">
-                            <img
-                                src={photo.preview || photo.url}
-                                alt={`Photo ${index + 1}`}
-                                className="w-full h-32 object-cover rounded-xl border border-white/10"
-                            />
-                            <button
-                                type="button"
-                                onClick={() => removePhoto(index)}
-                                className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                                ✕
-                            </button>
-                        </div>
-                    ))}
-                </div>
-                {photos.length < 4 && (
-                    <label className="cursor-pointer">
-                        <div className="border-2 border-dashed border-white/20 rounded-xl p-6 text-center hover:border-cyan-500/50 bg-white/5 transition-colors">
-                            <Camera className="mx-auto mb-2 text-white/40" size={32} />
-                            <span className="text-sm text-white/50">
-                                Ajouter des photos ({photos.length}/4)
-                            </span>
-                        </div>
-                        <input
-                            type="file"
-                            accept="image/*"
-                            multiple
-                            onChange={handlePhotoUpload}
-                            className="hidden"
-                        />
-                    </label>
-                )}
             </LiquidCard>
         </div>
     )

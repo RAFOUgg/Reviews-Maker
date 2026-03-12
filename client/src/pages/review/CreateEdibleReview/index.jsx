@@ -1,24 +1,23 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
-import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 import { edibleReviewsService } from '../../../services/apiService'
-import CreateReviewFormWrapper from '../../../components/account/CreateReviewFormWrapper'
-import { flattenEdibleFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
+import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
+import { motion, AnimatePresence } from 'framer-motion'
+import { useState } from 'react'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
-import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import TasteSection from '../../../components/sections/TasteSection'
-import EffectsSection from '../../../components/sections/EffectsSectionImpl'
+import EffectsSection from '../../../components/sections/EffectsSection'
 
 // Import hooks
 import { useEdibleForm } from './hooks/useEdibleForm'
 import { usePhotoUpload } from './hooks/usePhotoUpload'
 
 /**
- * CreateEdibleReview - Utilise le wrapper unifié
+ * CreateEdibleReview - Review complète pour Comestibles
  * Types: Brownie, Cookie, Gummies, Boissons, etc.
  */
 export default function CreateEdibleReview() {
@@ -26,46 +25,53 @@ export default function CreateEdibleReview() {
     const toast = useToast()
     const { id } = useParams()
     const { isAuthenticated } = useStore()
+    const [currentSection, setCurrentSection] = useState(0)
 
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
-    const { isProducteur } = useAccountFeatures()
 
-    // Définition des sections pour Edible selon PERMISSIONS.md:
-    // Amateur/Influenceur: Infos, Analytics, Goûts, Effets
-    // Producteur: + Recette (pipeline avancé)
-    const allSections = [
-        { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
-        { id: 'recipe', icon: '🥘', title: 'Recette & Préparation', access: 'producteur' },
-        { id: 'analytics', icon: '🔬', title: 'Données Analytiques', access: 'all' },
-        { id: 'gouts', icon: '😋', title: 'Goûts', access: 'all' },
-        { id: 'effets', icon: '💥', title: 'Effets + Expérience', access: 'all' }
+    const sections = [
+        { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
+        { id: 'recipe', icon: '🥘', title: 'Recette & Préparation' },
+        { id: 'gouts', icon: '😋', title: 'Goûts' },
+        { id: 'effets', icon: '💥', title: 'Effets + Expérience' }
     ]
 
-    // Filtrer les sections selon le type de compte
-    const sections = allSections.filter(section => {
-        if (section.access === 'all') return true
-        if (section.access === 'producteur' && isProducteur) return true
-        return false
-    })
+    const handlePrevious = () => {
+        if (currentSection > 0) {
+            setCurrentSection(currentSection - 1)
+        }
+    }
 
-    const sectionComponents = {
-        infos: InfosGenerales,
-        recipe: RecipePipelineSection,
-        analytics: AnalyticsSection,
-        gouts: TasteSection,
-        effets: EffectsSection
+    const handleNext = () => {
+        if (currentSection < sections.length - 1) {
+            setCurrentSection(currentSection + 1)
+        }
     }
 
     const handleSave = async () => {
         try {
             setSaving(true)
+            const reviewFormData = new FormData()
 
-            // Aplatir les données avec l'utilitaire
-            const flatData = flattenEdibleFormData(formData)
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft')
+            Object.keys(formData).forEach(key => {
+                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
+                    reviewFormData.append(key, typeof formData[key] === 'object'
+                        ? JSON.stringify(formData[key])
+                        : formData[key]
+                    )
+                }
+            })
 
-            console.log('📤 Sending flattened Edible data:', flatData)
+            if (photos && photos.length > 0) {
+                photos.forEach((photo) => {
+                    if (photo.file) {
+                        reviewFormData.append('photos', photo.file)
+                    }
+                })
+            }
+
+            reviewFormData.append('status', 'draft')
 
             let savedReview
             if (id) {
@@ -80,8 +86,8 @@ export default function CreateEdibleReview() {
                 navigate(`/edit/edible/${savedReview.id}`)
             }
         } catch (error) {
-            toast.error('Erreur lors de la sauvegarde: ' + (error.message || 'Erreur inconnue'))
-            console.error('Save error:', error)
+            toast.error('Erreur lors de la sauvegarde')
+            console.error(error)
         } finally {
             setSaving(false)
         }
@@ -95,10 +101,26 @@ export default function CreateEdibleReview() {
 
         try {
             setSaving(true)
+            const reviewFormData = new FormData()
 
-            // Aplatir les données avec l'utilitaire
-            const flatData = flattenEdibleFormData(formData)
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published')
+            Object.keys(formData).forEach(key => {
+                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
+                    reviewFormData.append(key, typeof formData[key] === 'object'
+                        ? JSON.stringify(formData[key])
+                        : formData[key]
+                    )
+                }
+            })
+
+            if (photos && photos.length > 0) {
+                photos.forEach((photo) => {
+                    if (photo.file) {
+                        reviewFormData.append('photos', photo.file)
+                    }
+                })
+            }
+
+            reviewFormData.append('status', 'published')
 
             if (id) {
                 await edibleReviewsService.update(id, reviewFormData)
@@ -110,8 +132,8 @@ export default function CreateEdibleReview() {
 
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de la publication: ' + (error.message || 'Erreur inconnue'))
-            console.error('Publish error:', error)
+            toast.error('Erreur lors de la publication')
+            console.error(error)
         } finally {
             setSaving(false)
         }
@@ -124,22 +146,59 @@ export default function CreateEdibleReview() {
     }
 
     return (
-        <CreateReviewFormWrapper
-            productType="edible"
+        <ResponsiveCreateReviewLayout
             sections={sections}
-            sectionComponents={sectionComponents}
+            currentSection={currentSection}
+            onPrevious={handlePrevious}
+            onNext={handleNext}
             formData={formData}
-            handleChange={handleChange}
             photos={photos}
             handlePhotoUpload={handlePhotoUpload}
             removePhoto={removePhoto}
             onSave={handleSave}
             onSubmit={handleSubmit}
             title="Créer une review Comestible"
-            subtitle="Documentez votre produit comestible"
+            subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
             loading={loading}
             saving={saving}
-            reviewId={id || null}
-        />
+        >
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={currentSection}
+                    initial={{ opacity: 0, x: 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -20 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    {currentSection === 0 && (
+                        <InfosGenerales
+                            formData={formData}
+                            handleChange={handleChange}
+                            photos={photos}
+                            handlePhotoUpload={handlePhotoUpload}
+                            removePhoto={removePhoto}
+                        />
+                    )}
+                    {currentSection === 1 && (
+                        <RecipePipelineSection
+                            data={formData.recipe || {}}
+                            onChange={(data) => handleChange('recipe', data)}
+                        />
+                    )}
+                    {currentSection === 2 && (
+                        <TasteSection
+                            data={formData.gouts || {}}
+                            onChange={(goutsData) => handleChange('gouts', goutsData)}
+                        />
+                    )}
+                    {currentSection === 3 && (
+                        <EffectsSection
+                            data={formData.effets || {}}
+                            onChange={(data) => handleChange('effets', data)}
+                        />
+                    )}
+                </motion.div>
+            </AnimatePresence>
+        </ResponsiveCreateReviewLayout>
     )
 }

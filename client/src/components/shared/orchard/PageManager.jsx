@@ -4,12 +4,13 @@ import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from 
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PropTypes from 'prop-types';
-import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
+import { useOrchardStore } from '../../../store/orchardStore';
+import { useOrchardPagesStore, PAGE_TEMPLATES } from '../../../store/orchardPagesStore';
 
 /**
  * Composant pour une page triable dans la liste
  */
-function SortablePage({ page, isActive, onClick, onRemove }) {
+function SortablePage({ page, pageNumber, isActive, onClick, onRemove }) {
     const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: page.id });
 
     const style = {
@@ -41,7 +42,10 @@ function SortablePage({ page, isActive, onClick, onRemove }) {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-gray-900 dark:text-white truncate">{page.label}</h4>
+                        <h4 className="font-medium text-sm text-gray-900 dark:text-white truncate">
+                            <span className="text-gray-400 dark:text-gray-500 mr-1">#{pageNumber}</span>
+                            {page.label}
+                        </h4>
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                             {page.modules.length} module{page.modules.length > 1 ? 's' : ''}
                         </p>
@@ -89,6 +93,7 @@ function SortablePage({ page, isActive, onClick, onRemove }) {
 
 SortablePage.propTypes = {
     page: PropTypes.object.isRequired,
+    pageNumber: PropTypes.number,
     isActive: PropTypes.bool,
     onClick: PropTypes.func,
     onRemove: PropTypes.func,
@@ -97,8 +102,11 @@ SortablePage.propTypes = {
 /**
  * Composant principal de gestion des pages
  */
-export default function PageManager() {
+export default function PageManager({ embedded = false }) {
     const [showAddModal, setShowAddModal] = useState(false);
+
+    const config = useOrchardStore((state) => state.config);
+    const reviewData = useOrchardStore((state) => state.reviewData);
 
     const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
     const pages = useOrchardPagesStore((state) => state.pages);
@@ -108,12 +116,18 @@ export default function PageManager() {
     const removePage = useOrchardPagesStore((state) => state.removePage);
     const setCurrentPage = useOrchardPagesStore((state) => state.setCurrentPage);
     const reorderPages = useOrchardPagesStore((state) => state.reorderPages);
+    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
+    // Page templates available for current review type + ratio
+    const reviewType = reviewData?.type || 'Fleur';
+    const currentRatio = config?.ratio || '1:1';
+    const availablePageTemplates = (PAGE_TEMPLATES[reviewType]?.[currentRatio] || PAGE_TEMPLATES[reviewType]?.['1:1'] || []);
+
     const handleDragEnd = (event) => {
         const { active, over } = event;
-        if (active.id !== over.id) {
+        if (over && active.id !== over.id) {
             const oldIndex = pages.findIndex((p) => p.id === active.id);
             const newIndex = pages.findIndex((p) => p.id === over.id);
             reorderPages(oldIndex, newIndex);
@@ -121,79 +135,106 @@ export default function PageManager() {
     };
 
     const handleAddPage = (template) => {
-        addPage(template);
+        addPage({
+            ...template,
+            id: `page-${Date.now()}`
+        });
         setShowAddModal(false);
     };
 
+    const handleResetPages = () => {
+        loadDefaultPages(reviewType, currentRatio);
+    };
+
     return (
-        <div className="h-full flex flex-col bg-gray-50 dark:bg-gray-900">
-            {/* Header */}
-            <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0">
-                        <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                        </svg>
-                    </div>
-                    <div>
-                        <h3 className="text-base font-bold text-gray-900 dark:text-white">Pages</h3>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {pages.length} page{pages.length > 1 ? 's' : ''}
-                        </p>
+        <div className={`flex flex-col ${embedded ? 'space-y-4' : 'h-full bg-gray-50 dark:bg-gray-900'}`}>
+
+            {/* Header - only when not embedded */}
+            {!embedded && (
+                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+                    <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0">
+                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 className="text-base font-bold text-gray-900 dark:text-white">Pages</h3>
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                    {pages.length} page{pages.length > 1 ? 's' : ''}
+                                </p>
+                            </div>
+                        </div>
+                        <button
+                            onClick={togglePagesMode}
+                            className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg shadow-purple-500/30 ring-2 dark:' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                        >
+                            <span>{pagesEnabled ? 'ON' : 'OFF'}</span>
+                        </button>
                     </div>
                 </div>
+            )}
 
-                {/* Info tooltip */}
-                {!pagesEnabled && (
-                    <div className="p-3 bg-gradient-to-r dark:/20 dark:/20 rounded-lg border-2 dark:">
-                        <div className="flex gap-2">
-                            <svg className="w-5 h-5 dark: flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                            <p className="text-xs dark: leading-relaxed">
-                                <strong>Mode Multi-Pages :</strong> Répartissez vos informations sur plusieurs pages pour une meilleure lisibilité
-                            </p>
-                        </div>
+            {/* Embedded header */}
+            {embedded && (
+                <div>
+                    <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                            Trame de pages
+                        </h3>
+                        <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                            {pages.length} page{pages.length > 1 ? 's' : ''}
+                        </span>
                     </div>
-                )}
-            </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                        Glissez pour réordonner · Cliquez pour sélectionner
+                    </p>
+                </div>
+            )}
 
             {/* Pages list */}
             {pagesEnabled && (
-                <div className="flex-1 overflow-y-auto p-4 space-y-2 scrollbar-thin scrollbar-thumb-rounded scrollbar-thumb-purple-300 dark:scrollbar-thumb-purple-700 scrollbar-track-transparent hover:scrollbar-thumb-purple-400 dark:hover:scrollbar-thumb-purple-600">
+                <div className={`${embedded ? '' : 'flex-1 overflow-y-auto p-4'} space-y-2`}>
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
                         <SortableContext items={pages.map((p) => p.id)} strategy={verticalListSortingStrategy}>
                             {pages.map((page, index) => (
                                 <SortablePage
                                     key={page.id}
                                     page={page}
+                                    pageNumber={index + 1}
                                     isActive={index === currentPageIndex}
                                     onClick={() => setCurrentPage(index)}
-                                    onRemove={() => removePage(page.id)}
+                                    onRemove={() => pages.length > 1 && removePage(page.id)}
                                 />
                             ))}
                         </SortableContext>
                     </DndContext>
 
-                    {/* Add page button */}
-                    {pages.length < 9 && (
+                    {/* Actions row */}
+                    <div className="flex gap-2 pt-1">
                         <button
                             onClick={() => setShowAddModal(true)}
-                            className="w-full p-3 border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg text-gray-500 dark:text-gray-400 hover: hover: transition-all"
+                            className="flex-1 p-2.5 border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-lg text-indigo-500 dark:text-indigo-400 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all text-xs font-medium flex items-center justify-center gap-1.5"
                         >
-                            <div className="flex items-center justify-center gap-2">
-                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                                </svg>
-                                <span className="font-medium">Ajouter une page</span>
-                            </div>
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                            </svg>
+                            Ajouter une page
                         </button>
-                    )}
+                        <button
+                            onClick={handleResetPages}
+                            title="Réinitialiser les pages par défaut"
+                            className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs"
+                        >
+                            ↺
+                        </button>
+                    </div>
                 </div>
             )}
 
             {/* Navigation buttons */}
-            {pagesEnabled && pages.length > 1 && (
+            {!embedded && pagesEnabled && pages.length > 1 && (
                 <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800">
                     <div className="flex items-center justify-between gap-2">
                         <button
@@ -237,23 +278,52 @@ export default function PageManager() {
                             <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Ajouter une page</h3>
 
                             <div className="space-y-2">
+                                {/* Blank page */}
                                 <button
                                     onClick={() => handleAddPage({ label: 'Nouvelle page', icon: '📄', modules: [] })}
-                                    className="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-lg hover: transition-colors"
+                                    className="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
                                 >
                                     <div className="flex items-center gap-3">
                                         <span className="text-2xl">📄</span>
                                         <div>
-                                            <div className="font-medium text-gray-900 dark:text-white">Page vierge</div>
-                                            <div className="text-sm text-gray-500">Personnalisez votre contenu</div>
+                                            <div className="font-semibold text-gray-900 dark:text-white">Page vierge</div>
+                                            <div className="text-xs text-gray-500">Contenu personnalisé vide</div>
                                         </div>
                                     </div>
                                 </button>
+
+                                {/* Available page templates */}
+                                {availablePageTemplates.length > 0 && (
+                                    <>
+                                        <div className="pt-2 pb-1">
+                                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                                                Modèles disponibles
+                                            </p>
+                                        </div>
+                                        {availablePageTemplates.map((tpl, i) => (
+                                            <button
+                                                key={i}
+                                                onClick={() => handleAddPage(tpl)}
+                                                className="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <span className="text-2xl">{tpl.icon || '📋'}</span>
+                                                    <div>
+                                                        <div className="font-semibold text-gray-900 dark:text-white">{tpl.label}</div>
+                                                        {tpl.description && (
+                                                            <div className="text-xs text-gray-500">{tpl.description}</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        ))}
+                                    </>
+                                )}
                             </div>
 
                             <button
                                 onClick={() => setShowAddModal(false)}
-                                className="mt-4 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                                className="mt-4 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
                             >
                                 Annuler
                             </button>
@@ -265,5 +335,7 @@ export default function PageManager() {
     );
 }
 
-
+PageManager.propTypes = {
+    embedded: PropTypes.bool,
+};
 

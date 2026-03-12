@@ -1,60 +1,15 @@
-import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
-import { createPortal } from 'react-dom';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useOrchardStore } from '../../../store/orchardStore';
-import { normalizeReviewDataByType } from '../../../utils/orchard/normalizeByType';
 import ConfigPane from '../config/ConfigPane';
-const InteractiveReviewCard = React.lazy(() => import('./InteractiveReviewCard'));
+import PreviewPane from '../preview/PreviewPane';
+import PagedPreviewPane from './PagedPreviewPane';
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
-import OrchardContextMenu from './OrchardContextMenu';
-import { reviewsService } from '../../../services/apiService';
-import { RATIO_DIMENSIONS } from '../../../utils/orchardHelpers';
-
-const RATIO_DIMS = RATIO_DIMENSIONS;
-
-/** Renders InteractiveReviewCard at export dimensions, scaled to fit inside the preview area */
-function RatioPreviewWrapper({ ratio, children }) {
-    const containerRef = useRef(null);
-    const [scale, setScale] = useState(0.5);
-    const dims = RATIO_DIMS[ratio] || RATIO_DIMS['1:1'];
-
-    useEffect(() => {
-        const el = containerRef.current;
-        if (!el) return;
-        const observer = new ResizeObserver(entries => {
-            const { width, height } = entries[0].contentRect;
-            if (width && height) {
-                const s = Math.min(width / dims.width, height / dims.height, 1);
-                setScale(s * 0.95); // 95% to leave some margin
-            }
-        });
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [dims.width, dims.height]);
-
-    return (
-        <div ref={containerRef} className="w-full h-full flex items-center justify-center overflow-hidden relative">
-            <div
-                style={{
-                    width: dims.width,
-                    height: dims.height,
-                    transform: `scale(${scale})`,
-                    transformOrigin: 'center center',
-                    flexShrink: 0,
-                    borderRadius: 12,
-                    overflow: 'hidden',
-                    boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
-                }}
-            >
-                {children}
-            </div>
-        </div>
-    );
-}
+import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -89,18 +44,6 @@ function normalizeReviewData(reviewData) {
     // CONSTRUIRE categoryRatings depuis les champs plats (extraData ou reviewData)
     // ============================================================================
     const dataSource = { ...parsedExtra, ...normalized };
-
-    // Merge nested 'visual' sub-object into dataSource for field lookups
-    // VisualSection stores scores under formData.visual.* in-session (before API save)
-    if (reviewData?.visual && typeof reviewData.visual === 'object') {
-        const vd = reviewData.visual;
-        if (vd.density !== undefined && dataSource.densite === undefined) dataSource.densite = vd.density;
-        if (vd.trichomes !== undefined && dataSource.trichome === undefined) dataSource.trichome = vd.trichomes;
-        if (vd.mold !== undefined && dataSource.moisissure === undefined) dataSource.moisissure = vd.mold;
-        if (vd.seeds !== undefined && dataSource.graines === undefined) dataSource.graines = vd.seeds;
-        if (vd.colorRating !== undefined && dataSource.couleur === undefined) dataSource.couleur = vd.colorRating;
-        if (vd.transparency !== undefined && dataSource.pureteVisuelle === undefined) dataSource.pureteVisuelle = vd.transparency;
-    }
 
     // Définition des champs par catégorie
     const categoryFieldsMap = {
@@ -171,29 +114,14 @@ function normalizeReviewData(reviewData) {
         normalized.holderName = normalized.title || normalized.productName || normalized.name || 'Sans nom';
     }
 
-    // Helper to resolve raw filenames to proper URLs
-    const resolveImgUrl = (img) => {
-        if (!img) return null;
-        if (typeof img === 'object') return img.preview || img.url || img.src || null;
-        const s = String(img);
-        if (s.startsWith('http') || s.startsWith('/') || s.startsWith('blob:') || s.startsWith('data:')) return s;
-        return `/images/${s}`;
-    };
-
-    // Resolve all images array entries
-    if (Array.isArray(normalized.images)) {
-        normalized.images = normalized.images.map(resolveImgUrl).filter(Boolean);
-    }
-
-    // Normaliser l'image principale — résoudre les noms de fichiers bruts
+    // Normaliser l'image principale
     if (!normalized.mainImageUrl) {
         if (normalized.imageUrl) {
-            normalized.mainImageUrl = resolveImgUrl(normalized.imageUrl) || normalized.imageUrl;
+            normalized.mainImageUrl = normalized.imageUrl;
         } else if (Array.isArray(normalized.images) && normalized.images.length > 0) {
-            normalized.mainImageUrl = resolveImgUrl(normalized.images[0]);
+            const firstImg = normalized.images[0];
+            normalized.mainImageUrl = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
         }
-    } else {
-        normalized.mainImageUrl = resolveImgUrl(normalized.mainImageUrl) || normalized.mainImageUrl;
     }
     // Aussi dans l'autre sens
     if (!normalized.imageUrl && normalized.mainImageUrl) {
@@ -265,21 +193,23 @@ function normalizeReviewData(reviewData) {
     return normalized;
 }
 
-export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onPublish, reviewId = null, productType = 'flower' }) {
+export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
     const [isCustomMode, setIsCustomMode] = useState(false); // Nouveau: mode template vs custom
     const [customLayout, setCustomLayout] = useState([]); // Layout custom pour drag & drop
     const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
-    const [isApplying, setIsApplying] = useState(false); // En cours de capture/upload thumbnail
     const canvasRef = useRef(null);
-    const thumbnailRef = useRef(null); // Ref sur la zone de préview template (pour capture thumbnail)
     const setReviewData = useOrchardStore((state) => state.setReviewData);
     const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
     const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
+
+    // Pages store
+    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
+    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -292,14 +222,14 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
 
     useEffect(() => {
         if (reviewData) {
-            // Use generic normalization function for any product type
-            const normalized = normalizeReviewDataByType(reviewData, productType);
+            // Utiliser la fonction de normalisation centralisée
+            const normalized = normalizeReviewData(reviewData);
 
             if (normalized) {
                 setReviewData(normalized);
             }
 
-            // Load custom layout if it exists
+            // Charger le layout personnalisé s'il existe depuis la review
             if (reviewData.orchardCustomLayout) {
                 try {
                     const parsed = typeof reviewData.orchardCustomLayout === 'string'
@@ -311,62 +241,34 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 }
             }
 
-            // Custom mode is disabled — old reviews in custom mode will use template mode
-        }
-    }, [reviewData, setReviewData, config.ratio]);
+            // Si la review a été sauvegardée en mode custom, activer le mode custom
+            if (reviewData.orchardLayoutMode === 'custom') {
+                setIsCustomMode(true);
+            }
 
-    // Pages are no longer used for preview (HTML scrolls naturally).
-    // The pages store is kept available for potential future export-specific pagination.
+            // Charger les pages par défaut
+            if (reviewData.type && config.ratio) {
+                loadDefaultPages(reviewData.type, config.ratio);
+            }
+        }
+    }, [reviewData, setReviewData, loadDefaultPages, config.ratio]);
+
+    // Note: la pagination ne s'active plus automatiquement - l'utilisateur choisit via le toggle
 
     const handleExport = () => {
         setShowExportModal(true);
     };
 
-    // Capture un thumbnail de la préview et l'uploade si reviewId dispo, puis applique le preset
-    const handleApplyPreset = async (publishAfter = false) => {
-        setIsApplying(true);
-        let previewUrl = null;
-
-        // Tenter de capturer le thumbnail de la zone de préview visible
-        if (reviewId) {
-            try {
-                const captureEl = isCustomMode ? canvasRef.current : thumbnailRef.current;
-                if (captureEl) {
-                    const { toPng } = await import('html-to-image');
-                    const dataUrl = await toPng(captureEl, {
-                        cacheBust: true,
-                        pixelRatio: 1,
-                        backgroundColor: '#0e0e1a',
-                        style: { transform: 'none' }
-                    });
-                    const result = await reviewsService.setPreview(reviewId, dataUrl);
-                    previewUrl = result?.previewUrl || null;
-                }
-            } catch (err) {
-                console.warn('[OrchardPanel] Thumbnail capture/upload failed (non-bloquant):', err);
-            }
-        }
-
+    const handleApplyPreset = () => {
         // Sauvegarder la configuration Orchard dans le formData
-        const orchardPayload = {
-            orchardConfig: config,
-            orchardPreset: activePreset,
-            customLayout: isCustomMode ? customLayout : null,
-            layoutMode: isCustomMode ? 'custom' : 'template',
-            previewUrl
-        };
         if (onPresetApplied) {
-            onPresetApplied(orchardPayload);
+            onPresetApplied({
+                orchardConfig: config,
+                orchardPreset: activePreset,
+                customLayout: isCustomMode ? customLayout : null, // Sauvegarder le layout custom
+                layoutMode: isCustomMode ? 'custom' : 'template'
+            });
         }
-
-        setIsApplying(false);
-
-        // Si mode "Appliquer & Publier", déclencher la publication en passant les données orchardPayload
-        // directement pour éviter la race-condition React setState
-        if (publishAfter && onPublish) {
-            onPublish(orchardPayload);
-        }
-
         onClose();
     };
 
@@ -467,8 +369,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     // Données normalisées pour les composants enfants
     const normalizedData = normalizeReviewData(reviewData);
 
-    // Utiliser createPortal pour rendre directement dans le body (évite les problèmes de stacking context)
-    return createPortal(
+    return (
         <DndContext
             sensors={sensors}
             collisionDetection={closestCenter}
@@ -480,7 +381,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-xl"
+                className="fixed inset-0 z-50 bg-black/50 backdrop-blur-md"
                 onClick={onClose}
             />
 
@@ -489,51 +390,64 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-                className={`fixed z-[9999] bg-[#0a0a12]/95 backdrop-blur-xl shadow-2xl overflow-hidden flex flex-col border border-white/10 ${isPreviewFullscreen ? 'rounded-none' : 'rounded-2xl'}`}
+                className="fixed z-50 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 dark:"
                 style={
-                    isPreviewFullscreen
-                        ? { left: 0, right: 0, top: 0, bottom: 0 }
-                        : showPreview
-                            ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
-                            : { left: '50%', top: '50%', width: '600px', maxHeight: '80vh', marginLeft: '-300px', marginTop: '-40vh' }
+                    showPreview
+                        ? { left: '3%', right: '3%', top: '3%', bottom: '3%' }
+                        : { left: '50%', top: '50%', width: '600px', maxHeight: '80vh', marginLeft: '-300px', marginTop: '-40vh' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#12121a] sticky top-0 z-10 flex-shrink-0 shadow-md gap-2 overflow-x-auto">
-                    <div className="flex items-center gap-3 flex-shrink-0">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-600 to-violet-600 flex items-center justify-center shadow-lg">
+                <div className="flex items-center justify-between px-4 py-3 border-b-2 dark: bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
+                    <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center shadow-lg">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
                         <div>
-                            <h2 className="text-lg font-bold text-white drop-shadow-sm">
-                                🌸 Export Maker
+                            <h2 className="text-lg font-bold text-gray-900 dark:text-white drop-shadow-sm">
+                                🌸 Orchard Studio
                             </h2>
-                            <p className="text-xs font-medium text-white/60">
+                            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                                 Système de rendu et d'exportation
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-1 flex-wrap justify-end flex-shrink-0">
+                    <div className="flex items-center gap-1.5">
+                        {/* Bouton Toggle Mode Template/Custom */}
+                        <motion.button
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            onClick={() => {
+                                setIsCustomMode(!isCustomMode);
+                            }}
+                            className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all border-2 ${isCustomMode ? 'bg-gradient-to-r text-white shadow-lg dark:' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600'}`}
+                            title={isCustomMode ? 'Mode Template' : 'Mode Personnalisé (Drag & Drop)'}
+                        >
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                {isCustomMode ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM14 5a1 1 0 011-1h4a1 1 0 011 1v7a1 1 0 01-1 1h-4a1 1 0 01-1-1V5z" />
+                                ) : (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343" />
+                                )}
+                            </svg>
+                            <span>{isCustomMode ? '🎨 Custom' : '📋 Template'}</span>
+                        </motion.button>
+
                         {/* Bouton Appliquer */}
                         {onPresetApplied && (
                             <motion.button
-                                whileHover={{ scale: isApplying ? 1 : 1.02 }}
+                                whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => handleApplyPreset(false)}
-                                disabled={isApplying}
-                                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all flex items-center gap-2 text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+                                onClick={handleApplyPreset}
+                                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all flex items-center gap-2 text-sm"
                             >
-                                {isApplying ? (
-                                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" /></svg>
-                                ) : (
-                                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                                    </svg>
-                                )}
-                                {isApplying ? 'Sauvegarde...' : 'Appliquer'}
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                                Appliquer
                             </motion.button>
                         )}
 
@@ -542,7 +456,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleExport}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-violet-600 text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm"
+                            className="px-4 py-2 bg-gradient-to-r text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -550,29 +464,48 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                             Exporter
                         </motion.button>
 
-                        {/* Bouton Plein écran */}
+                        {/* Bouton Toggle Preview */}
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={togglePreviewFullscreen}
-                            className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-white/15 transition-colors"
-                            title={isPreviewFullscreen ? 'Mode divisé' : 'Plein écran'}
+                            onClick={() => setShowPreview(!showPreview)}
+                            className={`p-2 rounded-lg transition-colors ${showPreview ? ' dark: dark:' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                            title={showPreview ? 'Masquer l\'aperçu' : 'Afficher l\'aperçu'}
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                {isPreviewFullscreen ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                                {showPreview ? (
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
                                 ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                 )}
                             </svg>
                         </motion.button>
+
+                        {/* Bouton Plein écran */}
+                        {showPreview && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={togglePreviewFullscreen}
+                                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
+                                title={isPreviewFullscreen ? 'Mode divisé' : 'Plein écran'}
+                            >
+                                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    {isPreviewFullscreen ? (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 9h4.5M15 9V4.5M15 9l5.25-5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                                    ) : (
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 3.75h-4.5m4.5 0v4.5m0-4.5L15 9m5.25 11.25h-4.5m4.5 0v-4.5m0 4.5L15 15" />
+                                    )}
+                                </svg>
+                            </motion.button>
+                        )}
 
                         {/* Bouton Fermer */}
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
                             onClick={onClose}
-                            className="p-2 rounded-lg bg-white/10 text-white/70 hover:bg-red-500/20 hover:text-red-400 transition-colors"
+                            className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-red-100 dark:hover:bg-red-900/30 hover:text-red-600 dark:hover:text-red-400 transition-colors"
                             title="Fermer"
                         >
                             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -606,7 +539,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 className="flex h-full"
                             >
                                 {/* Content Panel - Left */}
-                                <div className="w-80 flex-shrink-0 h-full overflow-hidden min-h-0">
+                                <div className="w-80 flex-shrink-0 overflow-hidden">
                                     <ContentPanel
                                         reviewData={normalizedData}
                                         placedFields={customLayout}
@@ -619,7 +552,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 </div>
 
                                 {/* Custom Layout Canvas - Right */}
-                                <div ref={canvasRef} className="flex-1 overflow-hidden min-w-0 h-full">
+                                <div ref={canvasRef} className="flex-1 overflow-hidden">
                                     <CustomLayoutPane
                                         reviewData={normalizedData}
                                         layout={customLayout}
@@ -629,23 +562,18 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 </div>
                             </motion.div>
                         ) : isPreviewFullscreen ? (
-                            // MODE PLEIN ÉCRAN — aperçu format réel
+                            // MODE TEMPLATE PLEIN ÉCRAN
                             <motion.div
-                                ref={thumbnailRef}
                                 key="fullscreen"
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                <RatioPreviewWrapper ratio={config.ratio || '1:1'}>
-                                    <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
-                                        <InteractiveReviewCard mode="preview-export" />
-                                    </Suspense>
-                                </RatioPreviewWrapper>
+                                {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                             </motion.div>
                         ) : (
-                            // MODE TEMPLATE SPLIT — Config à gauche, HTML interactif à droite
+                            // MODE TEMPLATE SPLIT
                             <motion.div
                                 key="split"
                                 initial={{ opacity: 0 }}
@@ -654,21 +582,13 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 className="flex h-full"
                             >
                                 {/* Configuration Pane - Left */}
-                                <div className="w-96 xl:w-[28rem] border-r border-white/10 overflow-y-auto flex-shrink-0 min-h-0">
+                                <div className="w-96 xl:w-[28rem] border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0">
                                     <ConfigPane />
                                 </div>
 
-                                {/* Preview Pane - Right — aperçu format réel */}
-                                <div ref={thumbnailRef} className="flex-1 overflow-hidden min-w-0 relative">
-                                    {/* Format indicator badge */}
-                                    <div className="absolute top-2 right-2 z-10 px-2 py-1 rounded-lg bg-black/50 backdrop-blur-sm border border-white/10 text-[10px] font-mono text-white/60">
-                                        {config.ratio || '1:1'}
-                                    </div>
-                                    <RatioPreviewWrapper ratio={config.ratio || '1:1'}>
-                                        <Suspense fallback={<div className="flex items-center justify-center h-full text-white/30">Chargement...</div>}>
-                                            <InteractiveReviewCard mode="preview-export" />
-                                        </Suspense>
-                                    </RatioPreviewWrapper>
+                                {/* Preview Pane - Right */}
+                                <div className="flex-1 overflow-hidden min-w-0">
+                                    {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
                                 </div>
                             </motion.div>
                         )}
@@ -676,24 +596,12 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                 </div>
             </motion.div>
 
-            {/* Hidden offscreen InteractiveReviewCard in export mode for image capture */}
-            {showExportModal && (
-                <div style={{ position: 'fixed', left: '-99999px', top: 0, zIndex: -1, opacity: 0, pointerEvents: 'none' }}>
-                    <Suspense fallback={null}>
-                        <InteractiveReviewCard mode="export" />
-                    </Suspense>
-                </div>
-            )}
-
             {/* Export Modal */}
             <AnimatePresence>
                 {showExportModal && (
                     <ExportModal onClose={() => setShowExportModal(false)} />
                 )}
             </AnimatePresence>
-
-            {/* Context Menu for right-click on preview elements */}
-            <OrchardContextMenu />
 
             {/* Drag Overlay - Affiche l'élément en cours de drag */}
             <DragOverlay>
@@ -703,8 +611,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                     </div>
                 ) : null}
             </DragOverlay>
-        </DndContext>,
-        document.body
+        </DndContext>
     );
 }
 

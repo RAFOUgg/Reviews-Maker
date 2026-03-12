@@ -21,9 +21,9 @@ const LiquidSelect = React.forwardRef(({
 }, ref) => {
     const selectClasses = `
     liquid-glass w-full px-4 py-3 pr-10 rounded-xl
-    text-[var(--text-primary)] 
-    border border-[var(--border-primary)]
-    focus:border-[var(--accent-primary)] focus:ring-2 focus:ring-[var(--accent-primary)]/20
+    bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100
+    border border-gray-300 dark:border-gray-600
+    focus:border-blue-500 dark:focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20
     transition-smooth outline-none appearance-none
     cursor-pointer
     ${error ? 'border-red-500 focus:border-red-500 focus:ring-red-500/20' : ''}
@@ -33,7 +33,7 @@ const LiquidSelect = React.forwardRef(({
     return (
         <div className={fullWidth ? 'w-full' : ''}>
             {label && (
-                <label className="block text-sm font-medium mb-2 text-[var(--text-primary)]">
+                <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
                     {label}
                 </label>
             )}
@@ -62,7 +62,7 @@ const LiquidSelect = React.forwardRef(({
 
                 {/* Custom Arrow */}
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                    <svg className="w-5 h-5 text-[var(--text-tertiary)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="w-5 h-5 text-gray-500 dark:text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                 </div>

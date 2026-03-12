@@ -1,6 +1,6 @@
+import { useRef, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useOrchardStore } from '../../store/orchardStore';
-import { RATIO_DIMENSIONS } from '../../utils/orchardHelpers';
 import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
@@ -17,9 +17,21 @@ const TEMPLATES = {
     custom: CustomTemplate
 };
 
+// Ratios et dimensions
+const RATIO_DIMENSIONS = {
+    '1:1': { width: 800, height: 800 },
+    '16:9': { width: 1920, height: 1080 },
+    '9:16': { width: 1080, height: 1920 },
+    '4:3': { width: 1600, height: 1200 },
+    'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
+};
+
 export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useOrchardStore((state) => state.templates);
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+
     // If the configured template is a registered custom template (layout=custom) use CustomTemplate
     if (!TemplateComponent && templatesMeta?.[config.template]?.layout === 'custom') {
         // fallback to generic custom template
@@ -31,8 +43,28 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         TemplateComponent = CustomTemplate;
     }
 
-    // Filtrer les modules si `activeModules` est fourni (utilisé pour passer les modules pertinents par produit)
-    const filteredConfig = activeModules ? {
+    const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+
+    // Scale the template to fit the available container while preserving aspect ratio
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const updateScale = () => {
+            const parent = containerRef.current?.parentElement;
+            if (!parent) return;
+            const availW = parent.clientWidth - 16;
+            const availH = parent.clientHeight - 16;
+            const scaleX = availW / dimensions.width;
+            const scaleY = availH / dimensions.height;
+            setScale(Math.min(scaleX, scaleY, 1));
+        };
+        updateScale();
+        const ro = new ResizeObserver(updateScale);
+        if (containerRef.current?.parentElement) ro.observe(containerRef.current.parentElement);
+        return () => ro.disconnect();
+    }, [dimensions.width, dimensions.height]);
+
+    // Filtrer les modules si on est en mode page
+    const filteredConfig = activeModules && pageMode ? {
         ...config,
         contentModules: Object.fromEntries(
             Object.entries(config.contentModules).map(([key, value]) => [
@@ -57,37 +89,32 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         );
     }
 
-    const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+    // Outer wrapper sized to scaled dimensions so it occupies correct space in layout
+    const scaledW = Math.round(dimensions.width * scale);
+    const scaledH = Math.round(dimensions.height * scale);
 
     return (
-        // Canvas always rendered at TARGET pixel dimensions (no maxWidth/maxHeight clamping).
-        // Preview wrappers (PagedPreviewPane, PreviewPane) apply CSS transform scale-to-fit.
-        // html-to-image captures this element at native resolution for full-quality exports.
         <div
-            className="orchard-template-container shadow-2xl rounded-xl"
-            id="orchard-template-canvas"
-            data-width={dimensions.width}
-            data-height={dimensions.height}
-            data-ratio={config.ratio}
-            style={{
-                width: `${dimensions.width}px`,
-                height: `${dimensions.height}px`,
-                contain: 'layout style paint',
-                overflow: 'hidden',
-                position: 'relative',
-                isolation: 'isolate',
-                flexShrink: 0,
-            }}
+            ref={containerRef}
+            className="orchard-template-container shadow-2xl rounded-xl overflow-hidden"
+            style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}
         >
+            {/* Full-resolution canvas scaled down via CSS transform */}
             <div
-                className="orchard-template-inner"
+                id="orchard-template-canvas"
+                data-width={dimensions.width}
+                data-height={dimensions.height}
+                data-ratio={config.ratio}
                 style={{
-                    width: '100%',
-                    height: '100%',
+                    width: dimensions.width,
+                    height: dimensions.height,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
                     overflow: 'hidden',
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    isolation: 'isolate',
                 }}
             >
                 <TemplateComponent
