@@ -1369,12 +1369,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4">
-            <LiquidGlass variant="modal" className="w-full max-w-6xl h-[90vh] flex flex-col md:flex-row overflow-hidden relative z-[9999]">
+        <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
+            <LiquidGlass variant="modal" className="w-full sm:max-w-6xl max-h-[95vh] sm:h-[90vh] flex flex-col sm:flex-row overflow-hidden relative z-[8889] rounded-t-3xl sm:rounded-3xl">
 
                 {/* Sidebar options */}
-                <div className="w-full md:w-80 border-r border-white/10 flex flex-col bg-white/5">
-                    <div className="p-4 border-b border-white/10 flex justify-between items-center">
+                <div className="w-full sm:w-80 border-r border-white/10 flex flex-col bg-white/5">
+                    <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 bg-white/5 z-10">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-purple-500/20">T</div>
                             Export Maker
@@ -1742,7 +1742,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 </div>
 
                 {/* Preview Area */}
-                <div className="flex-1 bg-gray-950/80 p-8 flex items-center justify-center overflow-auto relative">
+                <div className="hidden sm:flex flex-1 bg-gray-950/80 p-4 sm:p-8 flex items-center justify-center overflow-auto relative">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
                     {/* Contextual right-click menu for per-section styling */}
@@ -1752,8 +1752,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         ref={exportRef}
                         className="rounded-none shadow-2xl relative overflow-hidden"
                         style={{
-                            width: format === '9:16' ? '450px' : '800px',
-                            minHeight: format === '16:9' ? '450px' : '800px',
+                            width: Math.min(
+                                format === '9:16' ? 280 : format === '16:9' ? 400 : format === 'A4' ? 280 : 400,
+                                window.innerWidth * 0.6
+                            ),
+                            minHeight: Math.min(
+                                format === '16:9' ? 225 : format === 'A4' ? 400 : format === '9:16' ? 500 : 400,
+                                window.innerHeight * 0.7
+                            ),
                             aspectRatio: format.replace(':', '/'),
                             background: previewBackground,
                             fontFamily: `"${previewFont}", Inter, sans-serif`,
@@ -2222,6 +2228,28 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </div>
                             </div>
                         )}
+                    </div>
+                </div>
+
+                {/* Mobile Preview - Shows below sidebar on small screens */}
+                <div className="sm:hidden flex flex-col w-full max-h-[40vh] bg-gray-950/80 border-t border-white/10 overflow-auto">
+                    <div className="flex-1 flex items-center justify-center p-4 relative">
+                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
+                        
+                        <div
+                            className="rounded shadow-lg relative overflow-hidden"
+                            style={{
+                                width: Math.min(200, window.innerWidth * 0.85),
+                                height: Math.min(250, window.innerHeight * 0.35),
+                                aspectRatio: format.replace(':', '/'),
+                                background: previewBackground,
+                                fontFamily: `"${previewFont}", Inter, sans-serif`,
+                                color: previewTextColor,
+                                '--accent': previewAccent,
+                            }}
+                        >
+                            {renderCanvasContent()}
+                        </div>
                     </div>
                 </div>
             </LiquidGlass>

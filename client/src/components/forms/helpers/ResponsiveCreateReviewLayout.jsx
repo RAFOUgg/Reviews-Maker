@@ -318,8 +318,8 @@ export const ResponsiveCreateReviewLayout = ({
             )}
 
             <div className="relative z-10 flex flex-col flex-1">
-                {/* Header - Responsive Padding & Safe Area - z-30 to stay BELOW main navbar (z-[100]) */}
-                <div className={`sticky top-[4.5rem] z-30 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
+                {/* Header - Responsive Padding & Safe Area - z-20 to stay BELOW modals (z-[8888]) but above main content */}
+                <div className={`sticky top-[4.5rem] z-20 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
                     ? 'px-3 py-3 safe-area-inset-top'
                     : 'px-6 md:px-8 py-6'
                     }`}>
