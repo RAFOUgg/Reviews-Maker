@@ -316,191 +316,193 @@ export default function CreateFlowerReview() {
     }
 
     return (
-        <ResponsiveCreateReviewLayout
-            currentSection={currentSection}
-            totalSections={sections.length}
-            onSectionChange={setCurrentSection}
-            title="Créer une review Fleur"
-            subtitle="Documentez votre variété en détail"
-            sectionEmojis={sectionEmojis}
-            showProgress={true}
-            onOpenPreview={() => setShowOrchard(true)}
-            onSave={handleSave}
-            onSubmit={handleSubmit}
-            reviewVisibility={currentVisibility}
-            isSaving={saving}
-            reviewId={id || null}
-            reviewHasPreview={hasPreview}
-        >
-            {/* Orchard Preview Button - Mobile optimized */}
-            <div className="flex justify-end mb-4 gap-3">
-                <button
-                    onClick={() => setShowOrchard(!showOrchard)}
-                    className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all ${hasPreview
-                        ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/50 text-green-300'
-                        : 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/50 text-purple-300'
-                        }`}
-                    title="Ouvrir l'aperçu (Orchard)"
-                >
-                    <Eye className="w-4 h-4 inline mr-2" />
-                    {hasPreview ? '✅ Aperçu défini' : 'Créer aperçu'}
-                </button>
+        <>
+            <ResponsiveCreateReviewLayout
+                currentSection={currentSection}
+                totalSections={sections.length}
+                onSectionChange={setCurrentSection}
+                title="Créer une review Fleur"
+                subtitle="Documentez votre variété en détail"
+                sectionEmojis={sectionEmojis}
+                showProgress={true}
+                onOpenPreview={() => setShowOrchard(true)}
+                onSave={handleSave}
+                onSubmit={handleSubmit}
+                reviewVisibility={currentVisibility}
+                isSaving={saving}
+                reviewId={id || null}
+                reviewHasPreview={hasPreview}
+            >
+                {/* Orchard Preview Button - Mobile optimized */}
+                <div className="flex justify-end mb-4 gap-3">
+                    <button
+                        onClick={() => setShowOrchard(!showOrchard)}
+                        className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all ${hasPreview
+                            ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/50 text-green-300'
+                            : 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/50 text-purple-300'
+                            }`}
+                        title="Ouvrir l'aperçu (Orchard)"
+                    >
+                        <Eye className="w-4 h-4 inline mr-2" />
+                        {hasPreview ? '✅ Aperçu défini' : 'Créer aperçu'}
+                    </button>
 
-                {/* Nouveau: bouton visible desktop + mobile pour ouvrir ExportMaker directement */}
-                <button
-                    onClick={() => setShowExportMaker(true)}
-                    className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-95 transition-all"
-                    title="Ouvrir Export Maker (prévisualiser / exporter)"
-                >
-                    <Download className="w-4 h-4 inline mr-2" />
-                    Exporter
-                </button>
-            </div>
+                    {/* Nouveau: bouton visible desktop + mobile pour ouvrir ExportMaker directement */}
+                    <button
+                        onClick={() => setShowExportMaker(true)}
+                        className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-95 transition-all"
+                        title="Ouvrir Export Maker (prévisualiser / exporter)"
+                    >
+                        <Download className="w-4 h-4 inline mr-2" />
+                        Exporter
+                    </button>
+                </div>
 
-            {/* Section Content */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentSection}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.3 }}
-                    className="space-y-6"
-                >
-                    <div className="flex items-center gap-3 mb-6">
-                        <span className="text-3xl">{currentSectionData.icon}</span>
-                        <div>
-                            <h2 className="text-xl font-semibold text-white">
-                                {currentSectionData.title}
-                                {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
-                            </h2>
+                {/* Section Content */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSection}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.3 }}
+                        className="space-y-6"
+                    >
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="text-3xl">{currentSectionData.icon}</span>
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">
+                                    {currentSectionData.title}
+                                    {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
+                                </h2>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Render current section by ID */}
-                    {currentSectionData.id === 'infos' && (
-                        <InfosGenerales
-                            formData={formData}
-                            photos={photos}
-                            handleChange={handleChange}
-                            handlePhotoUpload={handlePhotoUpload}
-                            removePhoto={removePhoto}
-                        />
-                    )}
-                    {currentSectionData.id === 'genetics' && (
-                        <Genetiques formData={formData} handleChange={handleChange} />
-                    )}
-                    {currentSectionData.id === 'culture' && (
-                        <CulturePipelineSection
-                            data={formData.culture || {}}
-                            onChange={(cultureData) => handleChange('culture', cultureData)}
-                        />
-                    )}
-                    {currentSectionData.id === 'analytics' && (
-                        <AnalyticsSection
-                            productType="Fleur"
-                            data={formData.analytics || {}}
-                            onChange={(analyticsData) => handleChange('analytics', analyticsData)}
-                        />
-                    )}
-                    {currentSectionData.id === 'visual' && (
-                        <VisuelTechnique
-                            formData={formData}
-                            handleChange={handleChange}
-                        />
-                    )}
-                    {currentSectionData.id === 'odeurs' && (
-                        <OdorSection
-                            data={formData.odeurs || {}}
-                            onChange={(odeursData) => handleChange('odeurs', odeursData)}
-                        />
-                    )}
-                    {currentSectionData.id === 'texture' && (
-                        <TextureSection
-                            productType="Fleur"
-                            data={formData.texture || {}}
-                            onChange={(textureData) => handleChange('texture', textureData)}
-                        />
-                    )}
-                    {currentSectionData.id === 'gouts' && (
-                        <TasteSection
-                            data={formData.gouts || {}}
-                            onChange={(goutsData) => handleChange('gouts', goutsData)}
-                        />
-                    )}
-                    {currentSectionData.id === 'effects-experience' && (
-                        <EffectsSection
-                            data={formData.effets || {}}
-                            onChange={(data) => handleChange('effets', data)}
-                        />
-                    )}
-                    {currentSectionData.id === 'curing' && (
-                        <div className="space-y-4">
-                            {/* Section optionnelle — peut être ignorée */}
-                            {!curingEnabled ? (
-                                <div className="rounded-2xl border border-dashed border-white/20 bg-white/3 p-6 text-center space-y-3">
-                                    <div className="text-4xl">🔥</div>
-                                    <div>
-                                        <p className="text-white font-medium text-sm">Section optionnelle</p>
-                                        <p className="text-gray-400 text-xs mt-1 leading-relaxed">
-                                            Le curing & maturation est facultatif. Activez-le uniquement si vous
-                                            souhaitez documenter votre processus de conservation.
-                                        </p>
-                                    </div>
-                                    <button
-                                        onClick={() => setCuringEnabled(true)}
-                                        className="px-5 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 text-orange-300 rounded-xl text-sm font-medium transition-all"
-                                    >
-                                        + Activer le curing
-                                    </button>
-                                </div>
-                            ) : (
-                                <div className="space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2 text-orange-400 text-xs font-medium">
-                                            <span>🔥</span>
-                                            <span>Section optionnelle</span>
+                        {/* Render current section by ID */}
+                        {currentSectionData.id === 'infos' && (
+                            <InfosGenerales
+                                formData={formData}
+                                photos={photos}
+                                handleChange={handleChange}
+                                handlePhotoUpload={handlePhotoUpload}
+                                removePhoto={removePhoto}
+                            />
+                        )}
+                        {currentSectionData.id === 'genetics' && (
+                            <Genetiques formData={formData} handleChange={handleChange} />
+                        )}
+                        {currentSectionData.id === 'culture' && (
+                            <CulturePipelineSection
+                                data={formData.culture || {}}
+                                onChange={(cultureData) => handleChange('culture', cultureData)}
+                            />
+                        )}
+                        {currentSectionData.id === 'analytics' && (
+                            <AnalyticsSection
+                                productType="Fleur"
+                                data={formData.analytics || {}}
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
+                            />
+                        )}
+                        {currentSectionData.id === 'visual' && (
+                            <VisuelTechnique
+                                formData={formData}
+                                handleChange={handleChange}
+                            />
+                        )}
+                        {currentSectionData.id === 'odeurs' && (
+                            <OdorSection
+                                data={formData.odeurs || {}}
+                                onChange={(odeursData) => handleChange('odeurs', odeursData)}
+                            />
+                        )}
+                        {currentSectionData.id === 'texture' && (
+                            <TextureSection
+                                productType="Fleur"
+                                data={formData.texture || {}}
+                                onChange={(textureData) => handleChange('texture', textureData)}
+                            />
+                        )}
+                        {currentSectionData.id === 'gouts' && (
+                            <TasteSection
+                                data={formData.gouts || {}}
+                                onChange={(goutsData) => handleChange('gouts', goutsData)}
+                            />
+                        )}
+                        {currentSectionData.id === 'effects-experience' && (
+                            <EffectsSection
+                                data={formData.effets || {}}
+                                onChange={(data) => handleChange('effets', data)}
+                            />
+                        )}
+                        {currentSectionData.id === 'curing' && (
+                            <div className="space-y-4">
+                                {/* Section optionnelle — peut être ignorée */}
+                                {!curingEnabled ? (
+                                    <div className="rounded-2xl border border-dashed border-white/20 bg-white/3 p-6 text-center space-y-3">
+                                        <div className="text-4xl">🔥</div>
+                                        <div>
+                                            <p className="text-white font-medium text-sm">Section optionnelle</p>
+                                            <p className="text-gray-400 text-xs mt-1 leading-relaxed">
+                                                Le curing & maturation est facultatif. Activez-le uniquement si vous
+                                                souhaitez documenter votre processus de conservation.
+                                            </p>
                                         </div>
                                         <button
-                                            onClick={() => setCuringEnabled(false)}
-                                            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                                            onClick={() => setCuringEnabled(true)}
+                                            className="px-5 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 text-orange-300 rounded-xl text-sm font-medium transition-all"
                                         >
-                                            Passer cette section
+                                            + Activer le curing
                                         </button>
                                     </div>
-                                    <CuringMaturationSection
-                                        data={formData.curing || {}}
-                                        onChange={(curingData) => handleChange('curing', curingData)}
-                                        productType="flower"
-                                    />
-                                </div>
-                            )}
-                        </div>
-                    )}
-                </motion.div>
-            </AnimatePresence>
+                                ) : (
+                                    <div className="space-y-4">
+                                        <div className="flex items-center justify-between">
+                                            <div className="flex items-center gap-2 text-orange-400 text-xs font-medium">
+                                                <span>🔥</span>
+                                                <span>Section optionnelle</span>
+                                            </div>
+                                            <button
+                                                onClick={() => setCuringEnabled(false)}
+                                                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+                                            >
+                                                Passer cette section
+                                            </button>
+                                        </div>
+                                        <CuringMaturationSection
+                                            data={formData.curing || {}}
+                                            onChange={(curingData) => handleChange('curing', curingData)}
+                                            productType="flower"
+                                        />
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
 
-            {/* Orchard Preview Panel (lazy-loaded) */}
-            {showOrchard && (
-                <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
-                    <OrchardPanel
-                        reviewData={formData}
-                        productType="flower"
-                        reviewId={id || null}
-                        onClose={() => setShowOrchard(false)}
-                        onPresetApplied={(orchardData) => {
-                            handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
-                            handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
-                            if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
-                            if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
-                            setShowOrchard(false)
-                        }}
-                        onPublish={handleSubmitWithOrchardData}
-                    />
-                </Suspense>
-            )}
+                {/* Orchard Preview Panel (lazy-loaded) */}
+                {showOrchard && (
+                    <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
+                        <OrchardPanel
+                            reviewData={formData}
+                            productType="flower"
+                            reviewId={id || null}
+                            onClose={() => setShowOrchard(false)}
+                            onPresetApplied={(orchardData) => {
+                                handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
+                                handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
+                                if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
+                                if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
+                                setShowOrchard(false)
+                            }}
+                            onPublish={handleSubmitWithOrchardData}
+                        />
+                    </Suspense>
+                )}
+            </ResponsiveCreateReviewLayout>
 
-            {/* Export Maker – standalone full-screen overlay (manages its own backdrop) */}
+            {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
             {showExportMaker && (
                 <Suspense fallback={null}>
                     <ExportMaker
@@ -510,6 +512,6 @@ export default function CreateFlowerReview() {
                     />
                 </Suspense>
             )}
-        </ResponsiveCreateReviewLayout>
+        </>
     )
 }
