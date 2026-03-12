@@ -53,8 +53,8 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
             data-orchard-label={title}
             className="overflow-hidden"
             style={{
-                borderRadius: ss.borderRadius ? `${ss.borderRadius}px` : compact ? '10px' : '14px',
-                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: ss.borderRadius ? `${ss.borderRadius}px` : forceOpen ? '6px' : compact ? '10px' : '14px',
+                border: forceOpen ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255,255,255,0.07)',
                 background: ss.background || 'rgba(255,255,255,0.025)',
                 ...(ss.opacity !== undefined ? { opacity: ss.opacity } : {}),
                 ...(ss.padding ? { padding: ss.padding } : {}),
@@ -100,15 +100,15 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
                 </button>
             )}
             {forceOpen && (
-                <div className={`flex items-center gap-2 ${compact ? 'px-3 py-1.5' : 'px-4 py-2'}`}
-                    style={{ background: 'rgba(139,92,246,0.08)', borderBottom: '1px solid rgba(139,92,246,0.12)' }}>
-                    <div className={`${compact ? 'w-5 h-5 text-[10px]' : 'w-6 h-6 text-xs'} rounded-lg flex items-center justify-center flex-shrink-0`}
-                        style={{ background: 'rgba(139,92,246,0.18)' }}>{icon}</div>
-                    <span className={`${compact ? 'text-[10px]' : 'text-[12px]'} font-semibold truncate`}
-                        style={{ color: 'rgba(255,255,255,0.88)' }}>{title}</span>
+                <div className={`flex items-center gap-1.5 px-2.5 py-1`}
+                    style={{ background: 'rgba(139,92,246,0.06)', borderBottom: '1px solid rgba(139,92,246,0.10)' }}>
+                    <div className="w-4 h-4 text-[9px] rounded flex items-center justify-center flex-shrink-0"
+                        style={{ background: 'rgba(139,92,246,0.15)' }}>{icon}</div>
+                    <span className="text-[9px] font-semibold truncate"
+                        style={{ color: 'rgba(255,255,255,0.85)' }}>{title}</span>
                     {badge && (
-                        <span className={`${compact ? 'text-[8px] px-1 py-0' : 'text-[9px] px-1 py-0.5'} rounded-full font-semibold flex-shrink-0`}
-                            style={{ background: 'rgba(139,92,246,0.22)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.3)' }}>{badge}</span>
+                        <span className="text-[7px] px-1 py-0 rounded-full font-semibold flex-shrink-0"
+                            style={{ background: 'rgba(139,92,246,0.20)', color: '#c4b5fd', border: '1px solid rgba(139,92,246,0.25)' }}>{badge}</span>
                     )}
                 </div>
             )}
@@ -122,7 +122,7 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
                         className="overflow-hidden"
                     >
                         <div
-                            className={`${compact ? 'px-2.5 py-2' : 'px-4 py-3'} ${layoutClass}`}
+                            className={`${forceOpen ? 'px-2 py-1' : compact ? 'px-2.5 py-2' : 'px-4 py-3'} ${layoutClass}`}
                             style={contentStyle}
                         >
                             {children}
@@ -466,35 +466,35 @@ const FALLBACK_LAYOUT = { layout: 'single', cols: 1, pad: 24, gap: 16, headerSiz
 const LAYOUT_STRATEGIES = {
     // ── MODERNE COMPACT ──────────────────────────────────────────────────
     modernCompact: {
-        '1:1': { layout: 'hero', cols: 1, pad: 24, gap: 14, headerSize: 'text-2xl', baseFontPx: 15, compact: true, imagePos: 'hero' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '42%' },
-        '9:16': { layout: 'story', cols: 1, pad: 24, gap: 12, headerSize: 'text-2xl', baseFontPx: 17, compact: true, imagePos: 'hero' },
-        '4:3': { layout: 'two-col', cols: 2, pad: 28, gap: 12, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '38%' },
-        'A4': { layout: 'single', cols: 1, pad: 40, gap: 18, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+        '1:1': { layout: 'hero', cols: 1, pad: 18, gap: 8, headerSize: 'text-xl', baseFontPx: 13, compact: true, imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 14, compact: true, imagePos: 'left', leftWidth: '38%' },
+        '9:16': { layout: 'story', cols: 1, pad: 20, gap: 8, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 22, gap: 10, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'left', leftWidth: '36%' },
+        'A4': { layout: 'single', cols: 1, pad: 36, gap: 14, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'top' },
     },
     // ── FICHE TECHNIQUE DÉTAILLÉE ────────────────────────────────────────
     detailedCard: {
-        '1:1': { layout: 'grid', cols: 1, pad: 20, gap: 10, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'inline' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 30, gap: 13, headerSize: 'text-3xl', baseFontPx: 17, compact: false, imagePos: 'left', leftWidth: '36%' },
-        '9:16': { layout: 'single', cols: 1, pad: 28, gap: 14, headerSize: 'text-2xl', baseFontPx: 17, compact: false, imagePos: 'top' },
-        '4:3': { layout: 'two-col', cols: 2, pad: 28, gap: 13, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'left', leftWidth: '40%' },
-        'A4': { layout: 'single', cols: 1, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 20, compact: false, imagePos: 'top' },
+        '1:1': { layout: 'grid', cols: 1, pad: 16, gap: 6, headerSize: 'text-lg', baseFontPx: 12, compact: true, imagePos: 'inline' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 20, gap: 8, headerSize: 'text-xl', baseFontPx: 13, compact: true, imagePos: 'left', leftWidth: '34%' },
+        '9:16': { layout: 'story', cols: 1, pad: 20, gap: 8, headerSize: 'text-lg', baseFontPx: 13, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 22, gap: 8, headerSize: 'text-xl', baseFontPx: 13, compact: true, imagePos: 'left', leftWidth: '36%' },
+        'A4': { layout: 'single', cols: 1, pad: 36, gap: 14, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
     },
     // ── ARTICLE DE BLOG ──────────────────────────────────────────────────
     blogArticle: {
-        '1:1': { layout: 'single', cols: 1, pad: 24, gap: 16, headerSize: 'text-2xl', baseFontPx: 15, compact: false, imagePos: 'top' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 40, gap: 18, headerSize: 'text-4xl', baseFontPx: 19, compact: false, imagePos: 'left', leftWidth: '44%' },
-        '9:16': { layout: 'single', cols: 1, pad: 32, gap: 18, headerSize: 'text-3xl', baseFontPx: 20, compact: false, imagePos: 'hero' },
-        '4:3': { layout: 'two-col', cols: 2, pad: 32, gap: 15, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'left', leftWidth: '40%' },
-        'A4': { layout: 'single', cols: 1, pad: 48, gap: 20, headerSize: 'text-5xl', baseFontPx: 22, compact: false, imagePos: 'top' },
+        '1:1': { layout: 'single', cols: 1, pad: 20, gap: 10, headerSize: 'text-xl', baseFontPx: 13, compact: true, imagePos: 'top' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 28, gap: 12, headerSize: 'text-2xl', baseFontPx: 15, compact: true, imagePos: 'left', leftWidth: '40%' },
+        '9:16': { layout: 'single', cols: 1, pad: 24, gap: 12, headerSize: 'text-xl', baseFontPx: 15, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'two-col', cols: 2, pad: 26, gap: 12, headerSize: 'text-2xl', baseFontPx: 15, compact: true, imagePos: 'left', leftWidth: '38%' },
+        'A4': { layout: 'single', cols: 1, pad: 40, gap: 16, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
     },
     // ── STORY SOCIAL MEDIA ───────────────────────────────────────────────
     socialStory: {
-        '1:1': { layout: 'hero', cols: 1, pad: 20, gap: 10, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'hero' },
-        '16:9': { layout: 'two-col', cols: 2, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'left', leftWidth: '48%' },
-        '9:16': { layout: 'story', cols: 1, pad: 20, gap: 10, headerSize: 'text-2xl', baseFontPx: 19, compact: true, imagePos: 'hero' },
-        '4:3': { layout: 'hero', cols: 1, pad: 24, gap: 10, headerSize: 'text-2xl', baseFontPx: 16, compact: true, imagePos: 'hero' },
-        'A4': { layout: 'single', cols: 1, pad: 32, gap: 14, headerSize: 'text-3xl', baseFontPx: 18, compact: false, imagePos: 'top' },
+        '1:1': { layout: 'hero', cols: 1, pad: 16, gap: 6, headerSize: 'text-lg', baseFontPx: 12, compact: true, imagePos: 'hero' },
+        '16:9': { layout: 'two-col', cols: 2, pad: 20, gap: 8, headerSize: 'text-xl', baseFontPx: 13, compact: true, imagePos: 'left', leftWidth: '44%' },
+        '9:16': { layout: 'story', cols: 1, pad: 16, gap: 8, headerSize: 'text-xl', baseFontPx: 15, compact: true, imagePos: 'hero' },
+        '4:3': { layout: 'hero', cols: 1, pad: 20, gap: 8, headerSize: 'text-xl', baseFontPx: 14, compact: true, imagePos: 'hero' },
+        'A4': { layout: 'single', cols: 1, pad: 28, gap: 12, headerSize: 'text-2xl', baseFontPx: 16, compact: false, imagePos: 'top' },
     },
 };
 
@@ -1467,7 +1467,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: isExportLike ? 'hidden' : 'auto' }}>
                                 {headerSection}
                                 {analyticsSection}
-                                {imageSection && <div style={{ maxHeight: '40%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
+                                {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '8px', flexShrink: 0 }}>{imageSection}</div>}
                             </div>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflowY: isExportLike ? 'hidden' : 'auto' }}>
                                 {dataSections}
@@ -1522,7 +1522,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             <div style={{ flexShrink: 0, width: leftW, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
                                 {headerSection}
                                 {analyticsSection}
-                                {imageSection && <div style={{ maxHeight: '40%', overflow: 'hidden', borderRadius: '10px', flexShrink: 0 }}>{imageSection}</div>}
+                                {imageSection && <div style={{ maxHeight: '30%', overflow: 'hidden', borderRadius: '8px', flexShrink: 0 }}>{imageSection}</div>}
                             </div>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: lsGap, overflow: 'hidden' }}>
                                 {rightColReady
