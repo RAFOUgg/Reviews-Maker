@@ -1,3 +1,4 @@
+import { useRef, useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useOrchardStore } from '../../store/orchardStore';
 import ModernCompactTemplate from '../templates/ModernCompactTemplate';
@@ -28,6 +29,9 @@ const RATIO_DIMENSIONS = {
 export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useOrchardStore((state) => state.templates);
+    const containerRef = useRef(null);
+    const [scale, setScale] = useState(1);
+
     // If the configured template is a registered custom template (layout=custom) use CustomTemplate
     if (!TemplateComponent && templatesMeta?.[config.template]?.layout === 'custom') {
         // fallback to generic custom template
@@ -38,6 +42,26 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
     if (reviewData?.orchardLayoutMode === 'custom') {
         TemplateComponent = CustomTemplate;
     }
+
+    const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+
+    // Scale the template to fit the available container while preserving aspect ratio
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const updateScale = () => {
+            const parent = containerRef.current?.parentElement;
+            if (!parent) return;
+            const availW = parent.clientWidth - 16;
+            const availH = parent.clientHeight - 16;
+            const scaleX = availW / dimensions.width;
+            const scaleY = availH / dimensions.height;
+            setScale(Math.min(scaleX, scaleY, 1));
+        };
+        updateScale();
+        const ro = new ResizeObserver(updateScale);
+        if (containerRef.current?.parentElement) ro.observe(containerRef.current.parentElement);
+        return () => ro.disconnect();
+    }, [dimensions.width, dimensions.height]);
 
     // Filtrer les modules si on est en mode page
     const filteredConfig = activeModules && pageMode ? {
@@ -65,38 +89,32 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         );
     }
 
-    const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+    // Outer wrapper sized to scaled dimensions so it occupies correct space in layout
+    const scaledW = Math.round(dimensions.width * scale);
+    const scaledH = Math.round(dimensions.height * scale);
 
     return (
         <div
-            className="orchard-template-container shadow-2xl rounded-xl"
-            id="orchard-template-canvas"
-            data-width={dimensions.width}
-            data-height={dimensions.height}
-            data-ratio={config.ratio}
-            style={{
-                width: `${dimensions.width}px`,
-                height: `${dimensions.height}px`,
-                maxWidth: '100%',
-                maxHeight: '100%',
-                transform: 'scale(1)',
-                transformOrigin: 'center',
-                contain: 'layout style paint',
-                overflow: 'hidden',
-                position: 'relative',
-                isolation: 'isolate' // Crée un nouveau contexte de stacking
-            }}
+            ref={containerRef}
+            className="orchard-template-container shadow-2xl rounded-xl overflow-hidden"
+            style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}
         >
-            {/* Inner wrapper pour garantir le respect des dimensions */}
+            {/* Full-resolution canvas scaled down via CSS transform */}
             <div
-                className="orchard-template-inner"
+                id="orchard-template-canvas"
+                data-width={dimensions.width}
+                data-height={dimensions.height}
+                data-ratio={config.ratio}
                 style={{
-                    width: '100%',
-                    height: '100%',
+                    width: dimensions.width,
+                    height: dimensions.height,
+                    transform: `scale(${scale})`,
+                    transformOrigin: 'top left',
                     overflow: 'hidden',
-                    position: 'relative',
-                    display: 'flex',
-                    flexDirection: 'column'
+                    position: 'absolute',
+                    top: 0,
+                    left: 0,
+                    isolation: 'isolate',
                 }}
             >
                 <TemplateComponent
