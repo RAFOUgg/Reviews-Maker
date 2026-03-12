@@ -132,6 +132,18 @@ export default function ExportModal({ onClose }) {
                 case 'markdown':
                     await exportMarkdown();
                     break;
+                case 'svg':
+                    await exportSVG(allPages);
+                    break;
+                case 'csv':
+                    await exportCSV();
+                    break;
+                case 'json':
+                    await exportJSONData();
+                    break;
+                case 'html':
+                    await exportHTMLPage(allPages);
+                    break;
                 default:
                     throw new Error('Format non supporté');
             }
@@ -402,6 +414,126 @@ export default function ExportModal({ onClose }) {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
+    };
+
+    const exportSVG = async (pages) => {
+        setExportProgress(20);
+        setExportStatus('📐 Export SVG en cours...');
+        const { toSvg } = await import('html-to-image');
+        const { target, exportContainer, width, height } = prepareCapture(pages[0]);
+        await waitForRender(target);
+        try {
+            const svgString = await toSvg(target, {
+                cacheBust: true, width, height, style: { transform: 'none' },
+            });
+            const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `review-${reviewData.title || 'export'}-${Date.now()}.svg`;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 20000);
+        } finally {
+            exportContainer.remove();
+        }
+        setExportProgress(100);
+    };
+
+    const exportCSV = async () => {
+        setExportProgress(30);
+        setExportStatus('📊 Génération du CSV...');
+        const rows = [['Champ', 'Valeur']];
+        const add = (key, value) => {
+            if (value === null || value === undefined) return;
+            rows.push([key, typeof value === 'object' ? JSON.stringify(value) : String(value)]);
+        };
+        add('title', reviewData.title || reviewData.holderName || reviewData.nomCommercial);
+        add('author', authorName);
+        add('productType', reviewData.typeName || reviewData.productType);
+        add('rating', reviewData.rating || reviewData.overallRating || reviewData.computedOverall);
+        add('thc', reviewData.thcPercent || reviewData.thcLevel || reviewData.thc);
+        add('cbd', reviewData.cbdPercent || reviewData.cbdLevel || reviewData.cbd);
+        add('cultivar', reviewData.cultivar || reviewData.cultivars || reviewData.variety);
+        add('farm', reviewData.farm || reviewData.hashmaker);
+        add('breeder', reviewData.breeder);
+        add('varietyType', reviewData.varietyType);
+        add('effects', reviewData.effetsChoisis || reviewData.effects);
+        add('odors', reviewData.notesOdeursDominantes || reviewData.aromas);
+        add('tastes', reviewData.dryPuffNotes || reviewData.tastes);
+        add('description', reviewData.description || reviewData.notes);
+        add('createdAt', reviewData.createdAt);
+        const csvContent = rows.map(row =>
+            row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')
+        ).join('\n');
+        const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `review-${reviewData.title || 'export'}-${Date.now()}.csv`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 20000);
+        setExportProgress(100);
+    };
+
+    const exportJSONData = async () => {
+        setExportProgress(30);
+        setExportStatus('📦 Génération du JSON...');
+        const payload = {
+            meta: { exportedAt: new Date().toISOString(), app: 'terpologie.eu', version: '1.0' },
+            review: reviewData,
+            config,
+        };
+        const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `review-${reviewData.title || 'export'}-${Date.now()}.json`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 20000);
+        setExportProgress(100);
+    };
+
+    const exportHTMLPage = async (pages) => {
+        setExportProgress(20);
+        setExportStatus('🌐 Génération du HTML...');
+        const { toSvg } = await import('html-to-image');
+        const { target, exportContainer, width, height } = prepareCapture(pages[0]);
+        await waitForRender(target);
+        let svgString = '';
+        try {
+            svgString = await toSvg(target, { cacheBust: true, width, height, style: { transform: 'none' } });
+        } finally {
+            exportContainer.remove();
+        }
+        const title = reviewData.title || reviewData.holderName || 'Review';
+        const htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>${title} – Terpologie</title>
+<style>
+  body { margin: 0; background: #0f0f1a; display: flex; justify-content: center; align-items: flex-start; min-height: 100vh; font-family: Inter, system-ui, sans-serif; padding: 32px 16px; }
+  .container { max-width: 900px; width: 100%; }
+  .footer { text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 16px; }
+  img { width: 100%; height: auto; display: block; border-radius: 12px; box-shadow: 0 8px 40px rgba(0,0,0,0.6); }
+</style>
+</head>
+<body>
+  <div class="container">
+    <img src="data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}" alt="${title}" />
+    <div class="footer">Exporté depuis <strong>terpologie.eu</strong> – ${new Date().toLocaleDateString('fr-FR')}</div>
+  </div>
+</body>
+</html>`;
+        const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `review-${(reviewData.title || 'export').replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.html`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 20000);
+        setExportProgress(100);
     };
 
     return (
