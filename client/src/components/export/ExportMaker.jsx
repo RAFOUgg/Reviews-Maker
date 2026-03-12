@@ -1370,7 +1370,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-4">
-            <LiquidGlass variant="modal" className="w-full sm:max-w-6xl max-h-[95vh] sm:h-[90vh] flex flex-col sm:flex-row overflow-hidden relative z-[8889] rounded-t-3xl sm:rounded-3xl">
+            <LiquidGlass variant="modal" className="w-full sm:max-w-5xl h-[88vh] sm:h-[85vh] flex flex-col sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl">
 
                 {/* Sidebar options */}
                 <div className="w-full sm:w-80 border-r border-white/10 flex flex-col bg-white/5">
@@ -1742,7 +1742,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 </div>
 
                 {/* Preview Area */}
-                <div className="hidden sm:flex flex-1 bg-gray-950/80 p-4 sm:p-8 flex items-center justify-center overflow-auto relative">
+                <div className="hidden sm:flex flex-1 bg-gray-950/80 p-4 sm:p-6 items-center justify-center overflow-auto relative">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
                     {/* Contextual right-click menu for per-section styling */}
@@ -1750,17 +1750,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     <div
                         ref={exportRef}
-                        className="rounded-none shadow-2xl relative overflow-hidden"
+                        className="shadow-2xl relative overflow-hidden flex-shrink-0"
                         style={{
-                            width: Math.min(
-                                format === '9:16' ? 280 : format === '16:9' ? 400 : format === 'A4' ? 280 : 400,
-                                window.innerWidth * 0.6
-                            ),
-                            minHeight: Math.min(
-                                format === '16:9' ? 225 : format === 'A4' ? 400 : format === '9:16' ? 500 : 400,
-                                window.innerHeight * 0.7
-                            ),
-                            aspectRatio: format.replace(':', '/'),
+                            aspectRatio: format === 'A4' ? '210/297' : format.replace(':', '/'),
+                            maxWidth: format === '9:16' ? '260px' : '100%',
+                            maxHeight: 'calc(85vh - 4rem)',
+                            width: format === '9:16' ? '260px' : format === '16:9' ? 'min(640px, 100%)' : format === 'A4' ? '380px' : 'min(560px, 100%)',
                             background: previewBackground,
                             fontFamily: `"${previewFont}", Inter, sans-serif`,
                             color: previewTextColor,
@@ -2231,17 +2226,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     </div>
                 </div>
 
-                {/* Mobile Preview - Shows below sidebar on small screens */}
-                <div className="sm:hidden flex flex-col w-full max-h-[40vh] bg-gray-950/80 border-t border-white/10 overflow-auto">
+                {/* Mobile Preview */}
+                <div className="sm:hidden flex flex-col w-full min-h-[35vh] bg-gray-950/80 border-t border-white/10 overflow-auto">
                     <div className="flex-1 flex items-center justify-center p-4 relative">
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
-                        
                         <div
-                            className="rounded shadow-lg relative overflow-hidden"
+                            className="shadow-lg relative overflow-hidden flex-shrink-0"
                             style={{
-                                width: Math.min(200, window.innerWidth * 0.85),
-                                height: Math.min(250, window.innerHeight * 0.35),
-                                aspectRatio: format.replace(':', '/'),
+                                aspectRatio: format === 'A4' ? '210/297' : format.replace(':', '/'),
+                                maxWidth: '100%',
+                                maxHeight: '32vh',
+                                width: format === '9:16' ? '120px' : '180px',
                                 background: previewBackground,
                                 fontFamily: `"${previewFont}", Inter, sans-serif`,
                                 color: previewTextColor,

@@ -333,31 +333,6 @@ export default function CreateFlowerReview() {
                 reviewId={id || null}
                 reviewHasPreview={hasPreview}
             >
-                {/* Orchard Preview Button - Mobile optimized */}
-                <div className="flex justify-end mb-4 gap-3">
-                    <button
-                        onClick={() => setShowOrchard(!showOrchard)}
-                        className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all ${hasPreview
-                            ? 'bg-green-600/20 hover:bg-green-600/30 border-green-500/50 text-green-300'
-                            : 'bg-purple-600/20 hover:bg-purple-600/30 border-purple-500/50 text-purple-300'
-                            }`}
-                        title="Ouvrir l'aperçu (Orchard)"
-                    >
-                        <Eye className="w-4 h-4 inline mr-2" />
-                        {hasPreview ? '✅ Aperçu défini' : 'Créer aperçu'}
-                    </button>
-
-                    {/* Nouveau: bouton visible desktop + mobile pour ouvrir ExportMaker directement */}
-                    <button
-                        onClick={() => setShowExportMaker(true)}
-                        className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-cyan-500 text-white rounded-lg text-sm font-semibold shadow-md hover:opacity-95 transition-all"
-                        title="Ouvrir Export Maker (prévisualiser / exporter)"
-                    >
-                        <Download className="w-4 h-4 inline mr-2" />
-                        Exporter
-                    </button>
-                </div>
-
                 {/* Section Content */}
                 <AnimatePresence mode="wait">
                     <motion.div
