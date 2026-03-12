@@ -1959,7 +1959,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     {/* Custom Sections (Drag & Drop) */}
                                     {mode === 'custom' && customSections.filter(s => (
                                         // show the section if the section id or any of its modules are available for this product
-                                        isElementAvailable(s.id) || (s.modules || s.fields || []).some(m => relevantModulesSet.has(m))
+                                        isElementAvailableForProduct(productType || productKey, s.id) || (s.modules || s.fields || []).some(m => relevantModulesSet.has(m))
                                     )).map(section => (
                                         <div key={section.id} className="bg-white/5 p-3 rounded-xl border border-white/5">
                                             <div className="text-xs font-bold uppercase mb-1">{section.name}</div>
