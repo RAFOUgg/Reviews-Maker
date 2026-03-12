@@ -11,7 +11,7 @@ import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
-import CulturePipelineSection from './sections/CulturePipelineSection'
+import CulturePipelineSection from '../../../components/pipelines/sections/CulturePipelineSection'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisuelTechnique from './sections/VisuelTechnique'
 import OdorSection from '../../../components/sections/OdorSection'

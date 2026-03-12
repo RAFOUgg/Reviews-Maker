@@ -8,7 +8,6 @@ import PreviewPane from '../preview/PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
-import PageManager from './PageManager';
 import ExportModal from '../../export/ExportModal';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 
@@ -210,9 +209,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
 
     // Pages store
     const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const pages = useOrchardPagesStore((state) => state.pages);
     const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
-    const togglePagesMode = useOrchardPagesStore((state) => state.togglePagesMode);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -256,33 +253,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
         }
     }, [reviewData, setReviewData, loadDefaultPages, config.ratio]);
 
-    // Effet séparé pour auto-activer le mode pages après chargement
-    useEffect(() => {
-        if (reviewData && config.ratio && pages.length > 0) {
-            // Analyser si le contenu nécessite la pagination
-            const needsPagination = (
-                // Formats compacts avec beaucoup de contenu
-                (config.ratio === '1:1' || config.ratio === '9:16' || config.ratio === '4:3') &&
-                (
-                    // Vérifier la quantité de données
-                    (reviewData.categoryRatings && Object.keys(reviewData.categoryRatings).length > 0) ||
-                    (reviewData.aromas?.length > 3) ||
-                    (reviewData.effects?.length > 3) ||
-                    (reviewData.tastes?.length > 3) ||
-                    (reviewData.description?.length > 200) ||
-                    (reviewData.cultivarsList?.length > 1)
-                )
-            );
-
-            // Auto-activer si nécessaire et pas encore activé
-            if (needsPagination && !pagesEnabled) {
-                const timer = setTimeout(() => {
-                    togglePagesMode();
-                }, 150);
-                return () => clearTimeout(timer);
-            }
-        }
-    }, [config.ratio, togglePagesMode, pagesEnabled, pages.length, reviewData?.type, reviewData?.categoryRatings, reviewData?.aromas, reviewData?.effects]);
+    // Note: la pagination ne s'active plus automatiquement - l'utilisateur choisit via le toggle
 
     const handleExport = () => {
         setShowExportModal(true);
@@ -445,27 +416,6 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                     </div>
 
                     <div className="flex items-center gap-1.5">
-                        {/* Bouton Toggle Mode Pages - TOUJOURS VISIBLE */}
-                        <motion.button
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            onClick={() => {
-                                console.log('📄 Toggle pages mode:', !pagesEnabled, 'Current ratio:', config.ratio);
-                                togglePagesMode();
-                            }}
-                            className={`px-3 py-2 rounded-lg font-semibold text-xs flex items-center gap-1.5 transition-all border-2 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg border-indigo-400 dark:border-indigo-500' : 'bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-100 hover:bg-gray-100 dark:hover:bg-gray-600 border-gray-300 dark:border-gray-600'}`}
-                            title={pagesEnabled ? 'Désactiver le mode pages' : 'Activer le mode pages'}
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                {pagesEnabled ? (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                ) : (
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                )}
-                            </svg>
-                            <span>{pagesEnabled ? '📄 ON' : '📄 OFF'}</span>
-                        </motion.button>
-
                         {/* Bouton Toggle Mode Template/Custom */}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -631,17 +581,10 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                                 exit={{ opacity: 0 }}
                                 className="flex h-full"
                             >
-                                {/* Configuration Pane - Left - Responsive width */}
-                                <div className={`border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 ${pagesEnabled ? 'w-72 xl:w-80' : 'w-96 xl:w-[28rem]'}`}>
+                                {/* Configuration Pane - Left */}
+                                <div className="w-96 xl:w-[28rem] border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0">
                                     <ConfigPane />
                                 </div>
-
-                                {/* Page Manager - Middle (shown when pages enabled) */}
-                                {pagesEnabled && (
-                                    <div className="w-72 xl:w-80 border-r border-gray-200 dark:border-gray-800 overflow-y-auto bg-gradient-to-b from-gray-50 to-white dark:from-gray-900 dark:to-gray-800 flex-shrink-0">
-                                        <PageManager />
-                                    </div>
-                                )}
 
                                 {/* Preview Pane - Right */}
                                 <div className="flex-1 overflow-hidden min-w-0">

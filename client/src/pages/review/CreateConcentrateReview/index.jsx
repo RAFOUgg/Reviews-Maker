@@ -2,7 +2,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { concentrateReviewsService } from '../../../services/apiService'
-import ResponsiveCreateReviewLayout from '../../../components/layout/ResponsiveCreateReviewLayout'
+import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState } from 'react'
 

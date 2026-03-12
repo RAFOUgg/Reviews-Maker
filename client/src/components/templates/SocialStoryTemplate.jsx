@@ -318,4 +318,4 @@ SocialStoryTemplate.propTypes = {
     config: PropTypes.object.isRequired,
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object,
-};
+};
