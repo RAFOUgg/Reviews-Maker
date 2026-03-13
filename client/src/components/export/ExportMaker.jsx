@@ -335,6 +335,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
     };
 
+
     // Helper to resolve common field ids into actual review fields
     // Searches: top-level reviewData → type-specific sub-object (flowerData/hashData/etc.) → extraData
     const resolveReviewField = (id) => {
@@ -526,6 +527,166 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
             default:
                 return lookup(id) ?? sub[id] ?? undefined;
+        }
+    };
+
+    // ---- Data exports (CSV / JSON / HTML) — Producteur tier ----
+    // Defined after resolveReviewField so they can safely call it.
+
+    const handleExportJSON = () => {
+        try {
+            const exportData = {
+                meta: {
+                    exportedAt: new Date().toISOString(),
+                    template: selectedTemplate,
+                    format,
+                    productType,
+                    app: 'terpologie.eu',
+                },
+                review: reviewData,
+            };
+            const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.json`;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 20000);
+        } catch (err) {
+            console.error('[ExportMaker] JSON export failed:', err);
+            alert('Erreur lors de l\'export JSON.');
+        }
+    };
+
+    const handleExportCSV = () => {
+        try {
+            const rows = [];
+            rows.push(['Champ', 'Valeur']);
+            const addRow = (key, value) => {
+                if (value === null || value === undefined) return;
+                rows.push([key, typeof value === 'object' ? JSON.stringify(value) : String(value)]);
+            };
+
+            const fields = [
+                'productName', 'genetics', 'breeder', 'farm', 'cultivar', 'varietyType',
+                'thc', 'cbd', 'cbg', 'overallRating',
+                'visual', 'odor', 'taste', 'effects', 'texture',
+                'terpenes', 'curing', 'culture', 'recolte', 'experience', 'notes',
+            ];
+            fields.forEach(f => addRow(f, resolveReviewField(f)));
+
+            const csvContent = rows.map(row =>
+                row.map(cell => `"${String(cell ?? '').replace(/"/g, '""')}"`).join(',')
+            ).join('\n');
+
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.csv`;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 20000);
+        } catch (err) {
+            console.error('[ExportMaker] CSV export failed:', err);
+            alert('Erreur lors de l\'export CSV.');
+        }
+    };
+
+    const handleExportHTML = async () => {
+        try {
+            if (!exportRef.current) {
+                alert('Aucune preview disponible pour l\'export HTML.');
+                return;
+            }
+            const { toSvg } = await import('html-to-image');
+            const svgString = await toSvg(exportRef.current, {
+                cacheBust: true,
+                width: exportRef.current.offsetWidth,
+                height: exportRef.current.offsetHeight,
+                style: { transform: 'none' },
+            });
+
+            // Embed SVG as URL-encoded data URI to avoid btoa/unescape issues
+            const svgDataUri = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+
+            const htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Review – ${reviewName.replace(/</g, '&lt;')}</title>
+<style>
+  body { margin: 0; background: #0f0f1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; font-family: Inter, system-ui, sans-serif; }
+  .container { max-width: 900px; width: 100%; padding: 24px 16px; }
+  .footer { text-align: center; color: rgba(255,255,255,0.3); font-size: 12px; margin-top: 16px; }
+  img { width: 100%; height: auto; display: block; border-radius: 12px; }
+</style>
+</head>
+<body>
+  <div class="container">
+    <img src="${svgDataUri}" alt="${reviewName.replace(/"/g, '&quot;')}" />
+    <div class="footer">Exporté depuis terpologie.eu – ${new Date().toLocaleDateString('fr-FR')}</div>
+  </div>
+</body>
+</html>`;
+
+            const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.html`;
+            link.href = url;
+            link.click();
+            setTimeout(() => URL.revokeObjectURL(url), 20000);
+        } catch (err) {
+            console.error('[ExportMaker] HTML export failed:', err);
+            alert('Erreur lors de l\'export HTML.');
+        }
+    };
+
+    // Multi-page PDF: exports every paginated page as a separate PDF page
+    const handleExportMultiPagePDF = async () => {
+        if (!exportRef.current || totalPages <= 1) {
+            // Single page fallback
+            handleExport('pdf');
+            return;
+        }
+        setExporting(true);
+        try {
+            const { toPng } = await import('html-to-image');
+            const { jsPDF } = await import('jspdf');
+            const scale = highQuality ? 3 : 2;
+            const isLandscapeFormat = format === '16:9' || format === '4:3';
+            const pdf = new jsPDF({ orientation: isLandscapeFormat ? 'landscape' : 'portrait', unit: 'mm', format: 'a4' });
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+
+            for (let p = 0; p < totalPages; p++) {
+                setCurrentPage(p);
+                // Wait for React to re-render the updated page
+                await new Promise(r => requestAnimationFrame(() => setTimeout(r, 120)));
+                const dataUrl = await toPng(exportRef.current, {
+                    cacheBust: true, pixelRatio: scale, backgroundColor: '#ffffff', style: { transform: 'none' }
+                });
+                const img = new Image();
+                img.src = dataUrl;
+                await img.decode();
+                const imgRatio = img.width / img.height;
+                const pageRatio = pageWidth / pageHeight;
+                let iW, iH;
+                if (imgRatio > pageRatio) { iW = pageWidth - 20; iH = iW / imgRatio; }
+                else { iH = pageHeight - 20; iW = iH * imgRatio; }
+                const x = (pageWidth - iW) / 2;
+                const y = (pageHeight - iH) / 2;
+                if (p > 0) pdf.addPage();
+                pdf.addImage(dataUrl, 'PNG', x, y, iW, iH);
+            }
+            pdf.setProperties({ title: reviewName || 'Review', author: reviewData?.author?.username || 'Reviews-Maker' });
+            pdf.save(`review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.pdf`);
+        } catch (err) {
+            console.error('[ExportMaker] Multi-page PDF export failed:', err);
+            alert('Erreur lors de l\'export PDF multi-pages.');
+        } finally {
+            setExporting(false);
         }
     };
 
@@ -1365,6 +1526,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const renderCanvasContent = () => {
         if (selectedTemplate === 'minimal') return renderCompactCanvas()
         if (selectedTemplate === 'detailed') return renderDetailedCanvas()
+        if (selectedTemplate === 'custom') return renderDetailedCanvas() // custom uses detailed layout as base
         return renderStandardCanvas()
     }
 
@@ -1639,11 +1801,20 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             )}
 
                         <div className="flex gap-2 items-center">
+                            <button onClick={() => handleExport('jpg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">JPEG</button>
+
                             <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
                                 <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
                             </FeatureGate>
 
-                            <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
+                            <button
+                                onClick={totalPages > 1 ? handleExportMultiPagePDF : () => handleExport('pdf')}
+                                disabled={exporting}
+                                className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white"
+                                title={totalPages > 1 ? `Export PDF multi-pages (${totalPages} pages)` : 'Export PDF'}
+                            >
+                                PDF{totalPages > 1 ? ` (${totalPages}p)` : ''}
+                            </button>
 
                             {/* Haute qualité (visible si la permission existe) */}
                             {permissions.export?.quality && (
@@ -1653,24 +1824,50 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     title={!canExportAdvanced ? 'Haute qualité réservé aux comptes payants' : 'Activer la haute qualité (300dpi)'}
                                     className={`ml-2 px-3 py-2 text-xs rounded-lg ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10') : 'opacity-50 cursor-not-allowed bg-white/5 text-gray-500'}`}
                                 >
-                                    Haute qualité
+                                    {highQuality ? '300dpi' : 'HQ'}
                                 </button>
                             )}
                         </div>
 
+                        {/* Data exports: CSV / JSON / HTML — Producteur only */}
+                        {isProducer ? (
+                            <div className="flex gap-2">
+                                <button onClick={handleExportCSV} className="flex-1 py-2 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-emerald-300 border border-emerald-500/10" title="Exporter les données en CSV">CSV</button>
+                                <button onClick={handleExportJSON} className="flex-1 py-2 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-blue-300 border border-blue-500/10" title="Exporter les données en JSON">JSON</button>
+                                <button onClick={handleExportHTML} className="flex-1 py-2 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-orange-300 border border-orange-500/10" title="Exporter en HTML autonome">HTML</button>
+                            </div>
+                        ) : (
+                            <div className="flex gap-2 opacity-40 cursor-not-allowed" title="Réservé aux comptes Producteur">
+                                <div className="flex-1 py-2 text-xs bg-white/5 rounded-lg text-gray-500 border border-white/5 text-center">CSV</div>
+                                <div className="flex-1 py-2 text-xs bg-white/5 rounded-lg text-gray-500 border border-white/5 text-center">JSON</div>
+                                <div className="flex-1 py-2 text-xs bg-white/5 rounded-lg text-gray-500 border border-white/5 text-center">HTML</div>
+                                <div className="self-center text-[10px] text-amber-400 bg-amber-500/10 px-1.5 py-0.5 rounded-full font-bold whitespace-nowrap" role="img" aria-label="Fonctionnalité réservée aux comptes Producteur">PRO</div>
+                            </div>
+                        )}
+
                         <div className="space-y-2">
-                            <button
-                                onClick={() => handleExport('png')}
-                                disabled={exporting}
-                                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
-                            >
-                                {exporting ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <Download className="w-5 h-5" />
-                                )}
-                                Exporter l'image
-                            </button>
+                            <div className="flex gap-2">
+                                <button
+                                    onClick={() => handleExport('png')}
+                                    disabled={exporting}
+                                    className="flex-1 py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    {exporting ? (
+                                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    ) : (
+                                        <Download className="w-5 h-5" />
+                                    )}
+                                    PNG
+                                </button>
+                                <button
+                                    onClick={() => handleExport('jpg')}
+                                    disabled={exporting}
+                                    className="py-3 px-4 bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl text-white font-bold shadow-lg hover:shadow-indigo-500/30 transition-all flex items-center justify-center gap-2"
+                                >
+                                    <Download className="w-4 h-4" />
+                                    JPEG
+                                </button>
+                            </div>
 
                             <button
                                 onClick={() => setSavingToLibrary(true)}

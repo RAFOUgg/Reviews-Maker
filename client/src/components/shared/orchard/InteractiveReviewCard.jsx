@@ -1613,7 +1613,6 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                                     ? rightColPages[0]?.map(i => dataSections[i])
                                     : dataSections
                                 }
-                                }
                             </div>
                         </div>
                         {totalPages > 1 && (
