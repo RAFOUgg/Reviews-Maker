@@ -84,13 +84,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 setCultivars(data.cultivars || [])
             }
 
-            // Charger projets PhenoHunt
-            const phenoRes = await fetch('/api/library/phenohunt', {
+            // Charger projets PhenoHunt depuis l'API genetics (pas le stub library)
+            const phenoRes = await fetch('/api/genetics/trees', {
                 credentials: 'include'
             })
             if (phenoRes.ok) {
                 const data = await phenoRes.json()
-                setPhenoHuntProjects(data.projects || [])
+                setPhenoHuntProjects(data.trees || data || [])
             }
         } catch (error) {
             toast.error('Erreur lors du chargement')
@@ -446,12 +446,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         </div>
                         <div className="flex-1">
                             <h3 className="font-bold text-white">{project.name}</h3>
-                            <p className="text-sm text-white/50">{project.cultivarsCount || 0} cultivars</p>
+                            <p className="text-sm text-white/50">{project._count?.nodes || 0} nœuds · {project._count?.edges || 0} liens</p>
                         </div>
-                        <span className={`px-2 py-1 rounded-lg text-xs font-bold ${project.status === 'active' ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/50'
-                            }`}>
-                            {project.status === 'active' ? 'En cours' : 'Terminé'}
-                        </span>
+                        {project.projectType && (
+                            <span className="px-2 py-1 rounded-lg text-xs font-bold bg-amber-500/20 text-amber-400">
+                                {project.projectType}
+                            </span>
+                        )}
                     </div>
 
                     <p className="text-sm text-white/60 mb-4 line-clamp-2">
@@ -463,7 +464,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                             <Calendar className="w-3 h-3" />
                             {new Date(project.createdAt).toLocaleDateString('fr-FR')}
                         </span>
-                        <button className="flex items-center gap-1 text-purple-400 hover:text-purple-300">
+                        <button
+                            onClick={() => navigate(`/phenohunt?tree=${project.id}`)}
+                            className="flex items-center gap-1 text-purple-400 hover:text-purple-300"
+                        >
                             Ouvrir
                             <ChevronRight className="w-3 h-3" />
                         </button>
@@ -488,8 +492,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 <button
                     onClick={() => setActiveTab('library')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'library'
-                            ? 'bg-green-500/20 text-green-400'
-                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-green-500/20 text-green-400'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
                         }`}
                 >
                     <FolderTree className="w-4 h-4" />
@@ -499,8 +503,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 <button
                     onClick={() => setActiveTab('phenohunt')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'phenohunt'
-                            ? 'bg-amber-500/20 text-amber-400'
-                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-amber-500/20 text-amber-400'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
                         }`}
                 >
                     <Beaker className="w-4 h-4" />
@@ -510,8 +514,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 <button
                     onClick={() => setActiveTab('arbres')}
                     className={`flex items-center gap-2 px-4 py-2 rounded-xl transition-colors ${activeTab === 'arbres'
-                            ? 'bg-violet-500/20 text-violet-400'
-                            : 'text-white/60 hover:text-white hover:bg-white/5'
+                        ? 'bg-violet-500/20 text-violet-400'
+                        : 'text-white/60 hover:text-white hover:bg-white/5'
                         }`}
                 >
                     <Dna className="w-4 h-4" />

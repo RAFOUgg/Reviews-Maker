@@ -268,6 +268,17 @@ function validateFlowerReviewData(data, options = {}) {
             cleaned.cultureEndDate = date
         }
     }
+    if (data.cultureDuration !== undefined && data.cultureDuration !== null && data.cultureDuration !== '') {
+        const val = parseInt(data.cultureDuration)
+        if (!isNaN(val) && val >= 0) cleaned.cultureDuration = val
+    }
+    if (data.cultureSeason) {
+        if (typeof data.cultureSeason === 'string') {
+            try { cleaned.cultureSeason = JSON.parse(data.cultureSeason) } catch { cleaned.cultureSeason = data.cultureSeason }
+        } else {
+            cleaned.cultureSeason = JSON.stringify(data.cultureSeason)
+        }
+    }
 
     // ===== SECTION 4: Analytics =====
     const cannabinoids = ['thcPercent', 'cbdPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
@@ -288,6 +299,16 @@ function validateFlowerReviewData(data, options = {}) {
             }
         } else {
             cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
+        }
+    }
+    if (data.labReportUrl && typeof data.labReportUrl === 'string') {
+        cleaned.labReportUrl = data.labReportUrl.trim()
+    }
+    if (data.otherCannabinoids) {
+        if (typeof data.otherCannabinoids === 'string') {
+            try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
+        } else {
+            cleaned.otherCannabinoids = JSON.stringify(data.otherCannabinoids)
         }
     }
 

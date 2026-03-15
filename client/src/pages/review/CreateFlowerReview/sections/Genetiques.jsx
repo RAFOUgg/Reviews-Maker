@@ -18,6 +18,7 @@ export default function Genetiques({ formData, handleChange }) {
     const [showInitialModal, setShowInitialModal] = useState(false)
     const [activeTab, setActiveTab] = useState('cultivars')
     const [userReviews, setUserReviews] = useState([])
+    const [libraryCultivars, setLibraryCultivars] = useState([])
     const [loadingReviews, setLoadingReviews] = useState(false)
     const [creatingTree, setCreatingTree] = useState(false)
 
@@ -95,11 +96,12 @@ export default function Genetiques({ formData, handleChange }) {
         })
     }, [selectedNode, updateNode])
 
-    // Charger les arbres et reviews au montage
+    // Charger les arbres, reviews et cultivars au montage
     useEffect(() => {
         if (user?.id) {
             fetchTrees()
             fetchUserFlowerReviews()
+            fetchLibraryCultivars()
         }
     }, [user?.id])
 
@@ -139,6 +141,19 @@ export default function Genetiques({ formData, handleChange }) {
             console.error('Error fetching reviews:', error)
         } finally {
             setLoadingReviews(false)
+        }
+    }
+
+    // Charger les cultivars de la bibliothèque
+    const fetchLibraryCultivars = async () => {
+        try {
+            const response = await fetch('/api/cultivars', { credentials: 'include' })
+            if (response.ok) {
+                const data = await response.json()
+                setLibraryCultivars(Array.isArray(data) ? data : data.cultivars || [])
+            }
+        } catch (error) {
+            console.error('Error fetching cultivars:', error)
         }
     }
 
@@ -458,6 +473,46 @@ export default function Genetiques({ formData, handleChange }) {
                                                 </div>
                                             </div>
                                         ))
+                                    )}
+
+                                    {/* Cultivars de la bibliothèque */}
+                                    {libraryCultivars.length > 0 && (
+                                        <>
+                                            <div className="text-xs font-semibold text-white/40 uppercase tracking-wider pt-3 pb-1">
+                                                Bibliothèque cultivars
+                                            </div>
+                                            {libraryCultivars.map((cultivar) => (
+                                                <div
+                                                    key={`lib-${cultivar.id}`}
+                                                    draggable
+                                                    onDragStart={(e) => handleDragStart(e, {
+                                                        id: cultivar.id,
+                                                        generalInfo: { commercialName: cultivar.name },
+                                                        genetics: { breeder: cultivar.breeder, variety: cultivar.name },
+                                                        cultivars: cultivar.name,
+                                                        _source: 'library'
+                                                    })}
+                                                    className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-green-500/50 transition-all"
+                                                >
+                                                    <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg flex items-center justify-center overflow-hidden">
+                                                        <Leaf className="w-8 h-8 text-green-400" />
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-semibold text-white truncate">
+                                                            {cultivar.name}
+                                                        </p>
+                                                        <p className="text-xs text-white/50 truncate">
+                                                            {cultivar.type || 'Hybride'}
+                                                        </p>
+                                                        {cultivar.breeder && (
+                                                            <p className="text-xs text-white/30 truncate">
+                                                                {cultivar.breeder}
+                                                            </p>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </>
                                     )}
                                 </motion.div>
                             )}

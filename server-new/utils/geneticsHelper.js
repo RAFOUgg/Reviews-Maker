@@ -1,19 +1,21 @@
 /**
  * Utilités pour intégrer le système Genetics aux Reviews
- * 
+ *
  * Ce module fournit des fonctions pour:
  * - Récupérer un arbre généalogique avec tous ses nœuds/arêtes
  * - Valider les références cultivars dans une review
  * - Exporter les données genetics au format JSON/SVG
  */
 
-const prisma = require("../prisma");
+import { PrismaClient } from '@prisma/client'
+
+const prisma = new PrismaClient()
 
 /**
  * Récupère un arbre généalogique complet (tree + nodes + edges)
  * Vérifie les permissions de l'utilisateur
  */
-async function getGeneticTreeWithAccess(treeId, userId) {
+export async function getGeneticTreeWithAccess(treeId, userId) {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: treeId },
@@ -41,7 +43,7 @@ async function getGeneticTreeWithAccess(treeId, userId) {
 /**
  * Récupère les nœuds d'un arbre avec leurs cultivars associés
  */
-async function getTreeNodesWithCultivars(treeId, userId) {
+export async function getTreeNodesWithCultivars(treeId, userId) {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: treeId },
@@ -83,7 +85,7 @@ async function getTreeNodesWithCultivars(treeId, userId) {
 /**
  * Valide qu'une référence cultivar existe
  */
-async function validateCultivarReference(cultivarId, userId) {
+export async function validateCultivarReference(cultivarId, userId) {
     try {
         if (!cultivarId) return { valid: true }; // C'est optionnel
 
@@ -109,7 +111,7 @@ async function validateCultivarReference(cultivarId, userId) {
  * Récupère les données genetics formatées pour export
  * Retourne un objet compatible JSON/CSV
  */
-async function formatGeneticsForExport(treeId, userId) {
+export async function formatGeneticsForExport(treeId, userId) {
     try {
         const result = await getGeneticTreeWithAccess(treeId, userId);
 
@@ -169,7 +171,7 @@ async function formatGeneticsForExport(treeId, userId) {
 /**
  * Crée un CSV à partir des données genetics
  */
-function generateGeneticsCSV(treeData) {
+export function generateGeneticsCSV(treeData) {
     let csv = "Genetic Tree Export\n";
     csv += `Name: ${treeData.tree.name}\n`;
     csv += `Project Type: ${treeData.tree.projectType}\n`;
@@ -198,7 +200,7 @@ function generateGeneticsCSV(treeData) {
 /**
  * Récupère les statistiques genetics pour le dashboard utilisateur
  */
-async function getUserGeneticsStats(userId) {
+export async function getUserGeneticsStats(userId) {
     try {
         const stats = await prisma.geneticTree.findMany({
             where: { userId },
@@ -237,12 +239,3 @@ async function getUserGeneticsStats(userId) {
         return { error: "Failed to fetch statistics", status: 500 };
     }
 }
-
-module.exports = {
-    getGeneticTreeWithAccess,
-    getTreeNodesWithCultivars,
-    validateCultivarReference,
-    formatGeneticsForExport,
-    generateGeneticsCSV,
-    getUserGeneticsStats
-};

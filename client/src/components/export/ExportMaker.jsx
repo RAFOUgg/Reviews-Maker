@@ -13,15 +13,15 @@ import { FeatureGate } from '../account/FeatureGate';
 import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
-import { PREDEFINED_TEMPLATES, getPredefinedTemplate, isTemplateAvailable } from '../../data/exportTemplates';
+import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
-import { getMaxElements } from '../../data/exportTemplates';
+// getMaxElements removed — pagination simplifié avec DEFAULT_TEMPLATES
 import { CANNABIS_COLORS } from '../../data/cannabisColors';
 import { useOrchardStore } from '../../store/orchardStore';
 import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
 import ScoreGauge from './ScoreGauge'
-import { ELEMENT_MODULES_MAP, isElementAvailableForProduct } from '../../utils/exportElementMappings';
+import { isElementAvailableForProduct } from '../../utils/exportElementMappings';
 import OrchardContextMenu from '../shared/orchard/OrchardContextMenu';
 import ContentModuleControls from '../shared/config/ContentModuleControls';
 import TypographyControls from '../shared/config/TypographyControls';
@@ -52,8 +52,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const canUseCustomLayout = permissions.export?.templates?.custom === true;
     const canExportGIF = permissions.export?.features?.dragDrop === true;
     const exportRef = useRef(null);
+    const previewAreaRef = useRef(null);
+    const [canvasScale, setCanvasScale] = useState(1);
     const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
-    const [selectedTemplate, setSelectedTemplate] = useState('minimal');
+    const [selectedTemplate, setSelectedTemplate] = useState('modernCompact');
     const [format, setFormat] = useState('1:1');
     const [highQuality, setHighQuality] = useState(false);
     const [watermark, setWatermark] = useState({
@@ -94,67 +96,61 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const previewAccent = orchardConfig?.colors?.accent || '#ffd700';
     const previewTextColor = orchardConfig?.colors?.textPrimary || '#ffffff';
 
+    // Design sizes — tailles de référence pour chaque format (le canvas est rendu à cette taille
+    // puis mis à l'échelle via CSS transform pour le preview, et exporté en haute résolution via pixelRatio)
+    const DESIGN_SIZES = {
+        '1:1': { w: 540, h: 540 },
+        '16:9': { w: 720, h: 405 },
+        '9:16': { w: 405, h: 720 },
+        'A4': { w: 530, h: 750 },
+    };
+    const designSize = DESIGN_SIZES[format] || DESIGN_SIZES['1:1'];
+
+    // Calcul du scale pour faire tenir le canvas dans la zone preview
+    useEffect(() => {
+        const el = previewAreaRef.current;
+        if (!el) return;
+        const compute = () => {
+            const rect = el.getBoundingClientRect();
+            // Laisser un petit padding (16px de chaque côté)
+            const availW = rect.width - 32;
+            const availH = rect.height - 32;
+            if (availW <= 0 || availH <= 0) return;
+            const scaleW = availW / designSize.w;
+            const scaleH = availH / designSize.h;
+            setCanvasScale(Math.min(scaleW, scaleH, 1));
+        };
+        compute();
+        const observer = new ResizeObserver(compute);
+        observer.observe(el);
+        return () => observer.disconnect();
+    }, [format, designSize.w, designSize.h]);
+
     // Résolution du nom de la review (plusieurs champs possibles selon le type de produit)
     const reviewName = (reviewData?.holderName || reviewData?.nomCommercial || reviewData?.name || '').trim() || 'export';
 
-    // Templates prédéfinis — utiliser les templates par type de produit si présents
-    const productKey = productType || 'Fleurs';
-    const predefined = PREDEFINED_TEMPLATES[productKey] || PREDEFINED_TEMPLATES['Fleurs'];
+    // Templates — basés sur DEFAULT_TEMPLATES d'orchardConstants
+    const productKey = productType || 'flower';
 
     // Modules relevant to this product type
     const relevantModules = getModulesByProductType(productType || productKey);
     const relevantModulesSet = new Set(relevantModules);
 
-    const templates = Object.keys(predefined).map((key) => {
-        const meta = predefined[key];
-        // Map key -> display name and basic icon choice
-        const name = key === 'minimal' ? 'Compact' : key === 'standard' ? 'Standard' : key === 'detailed' ? 'Détaillé' : key === 'custom' ? 'Personnalisé' : key;
-        const icon = key === 'detailed' ? Layout : key === 'minimal' ? Grid : Maximize2;
-
-        // Check template availability based on account type permissions
-        // Spec: Consumer has Compact + Standard + Détaillé; only Personnalisé requires Producer
-        const isAvailable = key === 'minimal' || // Compact — toujours disponible
-            key === 'standard' || // Standard — disponible pour tous
-            key === 'detailed' || // Détaillé — disponible pour tous
-            (key === 'custom' && isProducer); // Personnalisé — Producteur uniquement
-
+    const templates = Object.entries(DEFAULT_TEMPLATES).map(([key, tpl]) => {
+        const icon = key === 'detailedCard' ? Layout : key === 'modernCompact' ? Grid : key === 'socialStory' ? Film : Maximize2;
         return {
             id: key,
-            name,
+            name: tpl.name,
             icon,
-            description: meta?.description || `${name} template`,
-            premium: !isAvailable
+            description: tpl.description,
+            premium: false // tous les templates sont disponibles
         };
     });
 
-    // Elements allowed for the currently selected template
-    const selectedTemplateDef = getPredefinedTemplate(productKey, selectedTemplate) || predefined[selectedTemplate] || predefined['minimal'];
-    const allowedElementIds = (selectedTemplateDef?.elements || []).map(e => e.id);
-
-    // Final allowed ids = template elements that are available for this product type
-    const finalAllowedIds = allowedElementIds.filter(id => {
-        try { return isElementAvailableForProduct(productType || productKey, id) } catch (e) { return false }
-    });
-
-    // Pagination logic
-    const maxElements = getMaxElements(format, selectedTemplate);
-    const totalPages = Math.ceil(finalAllowedIds.length / maxElements);
+    // Pagination simplifiée — pas de système d'éléments, le contenu est contrôlé par les renderers
+    const totalPages = 1;
     const [currentPage, setCurrentPage] = useState(0);
-
-    // Reset page when template, format, or element list changes
-    useEffect(() => {
-        setCurrentPage(0);
-    }, [format, selectedTemplate, finalAllowedIds.length]);
-
-    // Clamp page in case it's out of bounds
-    const safePage = totalPages > 0 ? Math.min(currentPage, totalPages - 1) : 0;
-    const currentElements = finalAllowedIds.slice(safePage * maxElements, (safePage + 1) * maxElements);
-
-    const hasElement = (ids) => {
-        if (!ids) return false;
-        const arr = Array.isArray(ids) ? ids : [ids];
-        return arr.some(id => currentElements.includes(id));
-    };
+    const safePage = 0;
 
     const Star = ({ className }) => (
         <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
@@ -377,7 +373,20 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 return parseJSON(lookup('images', 'gallery', 'photos'), []);
 
             case 'genetics':
-                return lookup('breeder', 'variety', 'cultivar', 'geneticType') || '-';
+                // Retourne un objet complet pour un rendu riche
+                return {
+                    breeder: lookup('breeder') || null,
+                    variety: lookup('variety', 'cultivar', 'cultivars') || null,
+                    geneticType: lookup('geneticType', 'varietyType', 'strainType') || null,
+                    indicaPercent: lookup('indicaPercent') ?? null,
+                    sativaPercent: lookup('sativaPercent') ?? null,
+                    phenotype: lookup('phenotypeCode', 'phenotype') || null,
+                    parentage: parseJSON(lookup('parentage'), null),
+                };
+
+            case 'genetics_str':
+                // Version string pour compatibilité descendante
+                return lookup('breeder', 'variety', 'cultivar', 'geneticType') || null;
 
             case 'breeder':
                 return lookup('breeder') || '-';
@@ -402,7 +411,22 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             case 'cbg':
                 return lookup('cbgPercent', 'cbg') ?? null;
 
-            case 'analytics':
+            case 'cbc':
+                return lookup('cbcPercent', 'cbc') ?? null;
+
+            case 'cbn':
+                return lookup('cbnPercent', 'cbn') ?? null;
+
+            case 'thcv':
+                return lookup('thcvPercent', 'thcv') ?? null;
+
+            case 'labReport':
+            case 'labReportUrl':
+                return lookup('labReportUrl', 'labReport') || null;
+
+            case 'laboratoire':
+                return lookup('laboratoire') || null;
+
             case 'terpeneProfile':
             case 'terpenes':
                 return parseJSON(lookup('terpeneProfile', 'terpenes'), []);
@@ -426,9 +450,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             case 'odor':
             case 'odors':
                 return {
-                    dominant: parseJSON(lookup('notesOdeursDominantes', 'notesDominantesOdeur', 'aromas'), []),
-                    secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur'), []),
-                    intensity: lookup('intensiteAromeScore', 'aromasIntensity', 'intensiteAromatique') ?? null,
+                    dominant: parseJSON(lookup('notesOdeursDominantes', 'notesDominantesOdeur', 'notesDominantes', 'aromas'), []),
+                    secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur', 'notesSecondaires'), []),
+                    intensity: lookup('intensiteAromeScore', 'intensiteAromatique', 'aromasIntensity') ?? null,
                     complexity: lookup('complexiteAromeScore') ?? null,
                     fidelity: lookup('fideliteAromeScore', 'fideliteCultivars') ?? null,
                 };
@@ -436,8 +460,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             case 'taste':
             case 'tastes':
                 return {
-                    intensity: lookup('intensiteGoutScore', 'intensiteFumee', 'tastesIntensity', 'goutIntensity', 'intensiteGout') ?? null,
-                    aggressiveness: lookup('agressiviteScore', 'agressivite') ?? null,
+                    intensity: lookup('intensiteGoutScore', 'intensite', 'intensiteFumee', 'tastesIntensity', 'goutIntensity', 'intensiteGout') ?? null,
+                    aggressiveness: lookup('agressiviteScore', 'agressivitePiquant', 'agressivite') ?? null,
                     dryPuff: parseJSON(lookup('dryPuffNotes', 'dryPuff'), []),
                     inhalation: parseJSON(lookup('inhalationNotes', 'inhalation'), []),
                     expiration: parseJSON(lookup('expirationNotes', 'expiration'), []),
@@ -447,9 +471,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 const arr = parseJSON(lookup('effetsChoisis', 'effects', 'selectedEffects'), []);
                 return {
                     selected: arr,
-                    intensity: lookup('intensiteEffetScore', 'intensiteEffet', 'effectsIntensity') ?? null,
-                    onset: lookup('monteeScore', 'montee') ?? null,
-                    duration: lookup('dureeEffet') || null,
+                    intensity: lookup('intensiteEffetScore', 'intensiteEffets', 'intensiteEffet', 'effectsIntensity') ?? null,
+                    onset: lookup('monteeScore', 'monteeRapidite', 'montee') ?? null,
+                    duration: lookup('effectDuration', 'dureeEffet', 'dureeEffets') || null,
+                    method: lookup('consumptionMethod', 'methodeConsommation') || null,
+                    dosage: lookup('dosage', 'dosageUtilise') || null,
+                    dosageUnit: lookup('dosageUnit') || null,
+                    onset_text: lookup('effectOnset', 'debutEffets') || null,
+                    length: lookup('effectLength', 'dureeEffetsCategorie') || null,
+                    profiles: parseJSON(lookup('effectProfiles', 'profilsEffets'), []),
+                    sideEffects: parseJSON(lookup('sideEffects', 'effetsSecondaires'), []),
+                    preferredUse: parseJSON(lookup('preferredUse', 'usagesPreferes'), []),
                 };
             }
 
@@ -520,9 +552,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
             case 'hashmaker':
                 return lookup('hashmaker') || '-';
-
-            case 'laboratoire':
-                return lookup('laboratoire') || null;
 
             default:
                 return lookup(id) ?? sub[id] ?? undefined;
@@ -686,36 +715,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         pipeline: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'curing'],
     };
 
-    // Map section keys used by renderers to template element IDs used by pagination
-    const SECTION_TO_ELEMENTS = {
-        photo: ['photo', 'photos', 'gallery', 'image'],
-        infos: ['productName', 'genetics', 'breeder', 'hashType', 'separationMethod'],
-        analytics: ['analytics', 'thc', 'cbd'],
-        visual: ['visual'],
-        odor: ['odor', 'odorNotes'],
-        taste: ['taste', 'tasteNotes'],
-        effects: ['effects'],
-        texture: ['texture', 'textureScore'],
-        culture: ['culture'],
-        recolte: ['recolte'],
-        terpenes: ['terpeneProfile', 'dominantTerpenes', 'terpenes'],
-        pipeline: ['curing', 'separation', 'purification'],
-    };
-
     const isSectionVisible = (sectionKey) => {
         const keys = SECTION_VISIBILITY[sectionKey];
         if (!keys) return true;
         const moduleVisible = keys.some(k => contentModules[k] !== false);
-        if (!moduleVisible) return false;
-
-        // If pagination is active, also check if the section's elements are on the current page
-        if (totalPages > 1) {
-            const elementIds = SECTION_TO_ELEMENTS[sectionKey];
-            if (elementIds) {
-                return elementIds.some(id => currentElements.includes(id));
-            }
-        }
-        return true;
+        return moduleVisible;
     };
 
     // Check if a specific field is visible (false only if explicitly disabled)
@@ -1041,6 +1045,25 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const genetics = resolveReviewField('genetics')
         const curingData = resolveReviewField('curing') || {}
         const cultureData = resolveReviewField('culture') || {}
+        const visual = resolveReviewField('visual') || {}
+        const texture = resolveReviewField('texture') || {}
+        const recolte = resolveReviewField('recolte') || {}
+
+        const visualBars = [
+            visual.couleur != null && { label: 'Couleur', value: visual.couleur, color: '#F472B6' },
+            visual.densite != null && { label: 'Densité', value: visual.densite, color: '#8B5CF6' },
+            visual.trichomes != null && { label: 'Trichomes', value: visual.trichomes, color: '#A78BFA' },
+            visual.pistils != null && { label: 'Pistils', value: visual.pistils, color: '#C084FC' },
+            visual.manucure != null && { label: 'Manucure', value: visual.manucure, color: '#E879F9' },
+        ].filter(Boolean)
+
+        const textureBars = [
+            texture.hardness != null && { label: 'Dureté', value: texture.hardness, color: '#FB7185' },
+            texture.elasticity != null && { label: 'Élasticité', value: texture.elasticity, color: '#FDA4AF' },
+            texture.stickiness != null && { label: 'Collant', value: texture.stickiness, color: '#FB923C' },
+            texture.friability != null && { label: 'Friabilité', value: texture.friability, color: '#FBBF24' },
+        ].filter(Boolean)
+
         const pad = isPortrait ? '20px 16px' : isA4 ? '32px 36px' : '24px 28px'
         const fs = isA4 ? 1.15 : 1
 
@@ -1081,9 +1104,16 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {reviewData.varietyType && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>}
                                         {isSectionVisible('analytics') && resolveReviewField('thc') && resolveReviewField('thc') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>}
                                         {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbg') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>}
+                                        {isSectionVisible('analytics') && resolveReviewField('thcv') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>}
                                     </div>
-                                    {genetics && genetics !== '-' && (
-                                        <div style={{ fontSize: `${10 * fs}px`, color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>{typeof genetics === 'string' ? genetics : JSON.stringify(genetics)}</div>
+                                    {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null) && (
+                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
+                                            {genetics.breeder && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{genetics.breeder}</span>}
+                                            {genetics.variety && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)' }}>· {genetics.variety}</span>}
+                                            {genetics.indicaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(139,92,246,0.8)', background: 'rgba(139,92,246,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.indicaPercent}% I</span>}
+                                            {genetics.phenotype && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.3)' }}>#{genetics.phenotype}</span>}
+                                        </div>
                                     )}
                                 </div>
                             )}
@@ -1125,6 +1155,37 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             </SectionCard>
                         ) : null}
                     </div>
+
+                    {/* Visual & Texture */}
+                    {(isSectionVisible('visual') && visualBars.length > 0) || (isSectionVisible('texture') && textureBars.length > 0) || (isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet)) ? (
+                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : `repeat(${[isSectionVisible('visual') && visualBars.length > 0, isSectionVisible('texture') && textureBars.length > 0, isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet)].filter(Boolean).length}, 1fr)`, gap: '8px' }}>
+                            {isSectionVisible('visual') && visualBars.length > 0 && (
+                                <SectionCard title="Visuel" icon="👁" sectionKey="visual">
+                                    {renderScoreGroup(visualBars)}
+                                </SectionCard>
+                            )}
+                            {isSectionVisible('texture') && textureBars.length > 0 && (
+                                <SectionCard title="Texture" icon="🤚" sectionKey="texture">
+                                    {renderScoreGroup(textureBars)}
+                                </SectionCard>
+                            )}
+                            {isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet) && (
+                                <SectionCard title="Récolte" icon="🌾" sectionKey="recolte">
+                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.7)' }}>
+                                        {recolte.poidsBrut && <span>Brut: <b>{recolte.poidsBrut}g</b></span>}
+                                        {recolte.poidsNet && <span>Net: <b>{recolte.poidsNet}g</b></span>}
+                                    </div>
+                                    {(recolte.trichomesLaiteux > 0 || recolte.trichomesAmbres > 0) && (
+                                        <div style={{ display: 'flex', gap: '3px', marginTop: '6px' }}>
+                                            <div style={{ flex: Number(recolte.trichomesTranslucides || 0), height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
+                                            <div style={{ flex: Number(recolte.trichomesLaiteux || 0), height: '4px', borderRadius: '2px', background: '#E0E7FF' }} />
+                                            <div style={{ flex: Number(recolte.trichomesAmbres || 0), height: '4px', borderRadius: '2px', background: '#FBBF24' }} />
+                                        </div>
+                                    )}
+                                </SectionCard>
+                            )}
+                        </div>
+                    ) : null}
 
                     {/* Terpenes & Pipelines */}
                     {((isSectionVisible('terpenes') && terps.length > 0) || (isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
@@ -1222,8 +1283,18 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 {reviewData.varietyType && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>}
                                 {resolveReviewField('thc') && resolveReviewField('thc') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>}
                                 {resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
+                                {resolveReviewField('cbg') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>}
+                                {resolveReviewField('cbc') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>}
+                                {resolveReviewField('thcv') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>}
                             </div>
-                            {genetics && genetics !== '-' && <div style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.35)', marginTop: '4px' }}>{typeof genetics === 'string' ? genetics : JSON.stringify(genetics)}</div>}
+                            {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null) && (
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
+                                    {genetics.breeder && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{genetics.breeder}</span>}
+                                    {genetics.variety && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)' }}>· {genetics.variety}</span>}
+                                    {genetics.indicaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(139,92,246,0.8)', background: 'rgba(139,92,246,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.indicaPercent}% I</span>}
+                                    {genetics.phenotype && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.3)' }}>#{genetics.phenotype}</span>}
+                                </div>
+                            )}
                         </div>
                         {rating && (
                             <div style={{ marginLeft: '12px' }}>
@@ -1262,7 +1333,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
                             {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
                                 <SectionCard title="Odeur" icon="👃" sectionKey="odor">
-                                    {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
+                                    {renderScoreGroup([
+                                        odor.intensity != null && { label: 'Intensité', value: odor.intensity, color: '#22C55E' },
+                                        odor.complexity != null && { label: 'Complexité', value: odor.complexity, color: '#4ADE80' },
+                                        odor.fidelity != null && { label: 'Fidélité', value: odor.fidelity, color: '#86EFAC' },
+                                    ].filter(Boolean))}
                                     {(odor.dominant?.length > 0 || odor.secondary?.length > 0) && (
                                         <div style={{ marginTop: '4px' }}>
                                             {renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}
@@ -1301,6 +1376,24 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     {effects.selected?.length > 0 && (
                                         <div style={{ marginTop: '4px' }}>
                                             {renderList(effects.selected, 'rgba(6,182,212,0.12)', '#06B6D4')}
+                                        </div>
+                                    )}
+                                    {effects.profiles?.length > 0 && (
+                                        <div style={{ marginTop: '4px' }}>
+                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: '3px' }}>Profils</div>
+                                            {renderList(effects.profiles, 'rgba(52,211,153,0.10)', '#34D399', undefined, 4)}
+                                        </div>
+                                    )}
+                                    {(effects.duration || effects.method) && (
+                                        <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
+                                            {effects.duration && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>⏱ {effects.duration}</span>}
+                                            {effects.method && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>💨 {effects.method}</span>}
+                                        </div>
+                                    )}
+                                    {effects.sideEffects?.length > 0 && (
+                                        <div style={{ marginTop: '4px' }}>
+                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,165,0,0.6)', marginBottom: '3px' }}>Effets secondaires</div>
+                                            {renderList(effects.sideEffects, 'rgba(251,146,60,0.08)', '#FB923C', undefined, 3)}
                                         </div>
                                     )}
                                 </SectionCard>
@@ -1361,19 +1454,23 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         )
     }
 
-    // Canvas dispatch
+    // Canvas dispatch — mapping orchardStore template IDs → canvas renderers
     const renderCanvasContent = () => {
-        if (selectedTemplate === 'minimal') return renderCompactCanvas()
-        if (selectedTemplate === 'detailed') return renderDetailedCanvas()
-        return renderStandardCanvas()
+        const tpl = orchardConfig?.template || selectedTemplate;
+        if (tpl === 'modernCompact' || tpl === 'minimal' || tpl === 'socialStory')
+            return renderCompactCanvas();
+        if (tpl === 'detailedCard' || tpl === 'detailed')
+            return renderDetailedCanvas();
+        // blogArticle, standard, ou défaut
+        return renderStandardCanvas();
     }
 
     return (
         <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md" style={{ paddingTop: '4.5rem' }}>
-            <LiquidGlass variant="modal" className="w-full sm:max-w-5xl sm:mx-4 flex flex-col sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl" style={{ height: 'min(85vh, calc(100% - 1rem))' }}>
+            <LiquidGlass variant="modal" className="w-full sm:max-w-4xl sm:mx-4 flex flex-col-reverse sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl" style={{ height: 'min(75vh, 640px)' }}>
 
                 {/* Sidebar options */}
-                <div className="w-full sm:w-80 border-r border-white/10 flex flex-col bg-white/5">
+                <div className="w-full sm:w-72 border-r border-white/10 flex flex-col bg-white/5">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 bg-white/5 z-10">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-purple-500/20">T</div>
@@ -1398,7 +1495,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-all border-b-2 ${sidebarTab === tab.id ? 'border-purple-500 text-purple-300 bg-purple-500/5' : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'}`}
                             >
                                 {tab.icon}
-                                <span className="hidden lg:inline">{tab.label}</span>
+                                <span className="hidden sm:inline">{tab.label}</span>
                             </button>
                         ))}
                     </div>
@@ -1417,12 +1514,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             const locked = !!t.premium;
                                             const active = selectedTemplate === t.id;
                                             const previewColors = {
-                                                minimal: ['#8B5CF6', '#22C55E', '#F59E0B'],
-                                                standard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
-                                                detailed: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
-                                                custom: ['#A78BFA'],
+                                                modernCompact: ['#8B5CF6', '#22C55E', '#F59E0B'],
+                                                blogArticle: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
+                                                detailedCard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
+                                                socialStory: ['#F472B6', '#8B5CF6', '#22C55E'],
                                             };
-                                            const colors = previewColors[t.id] || previewColors.standard;
+                                            const colors = previewColors[t.id] || previewColors.blogArticle;
                                             return (
                                                 <button
                                                     key={t.id}
@@ -1614,50 +1711,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                     {/* Actions footer */}
                     <div className="p-4 border-t border-white/10 space-y-3 bg-black/20">
-                        {/* Bouton Export GIF - Disponible pour tous si pipeline présent */}
-                        {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
-                            reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
-                                <FeatureGate hasAccess={canExportGIF} upgradeType="producer">
-                                    <button
-                                        onClick={handleExportGIF}
-                                        disabled={exportingGIF}
-                                        className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
-                                    >
-                                        {exportingGIF ? (
-                                            <>
-                                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
-                                                <span>{gifProgress}%</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Film className="w-5 h-5" />
-                                                <span>Exporter Pipeline en GIF</span>
-                                            </>
-                                        )}
-                                    </button>
-                                </FeatureGate>
-                            )}
 
-                        <div className="flex gap-2 items-center">
-                            <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
-                                <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
-                            </FeatureGate>
-
-                            <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
-
-                            {/* Haute qualité (visible si la permission existe) */}
-                            {permissions.export?.quality && (
-                                <button
-                                    onClick={() => setHighQuality(h => !h)}
-                                    disabled={!canExportAdvanced}
-                                    title={!canExportAdvanced ? 'Haute qualité réservé aux comptes payants' : 'Activer la haute qualité (300dpi)'}
-                                    className={`ml-2 px-3 py-2 text-xs rounded-lg ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10') : 'opacity-50 cursor-not-allowed bg-white/5 text-gray-500'}`}
-                                >
-                                    Haute qualité
-                                </button>
-                            )}
-                        </div>
-
+                        {/* Bouton principal — Exporter l'image en PNG */}
                         <div className="space-y-2">
                             <button
                                 onClick={() => handleExport('png')}
@@ -1738,32 +1793,76 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 Partager
                             </button>
                         </div>
+
+                        {/* Formats secondaires + qualité */}
+                        <div className="flex gap-2 items-center">
+                            <button onClick={() => handleExport('jpg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">JPEG</button>
+                            <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
+                                <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
+                            </FeatureGate>
+                            <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
+                            {permissions.export?.quality && (
+                                <button
+                                    onClick={() => setHighQuality(h => !h)}
+                                    disabled={!canExportAdvanced}
+                                    title={!canExportAdvanced ? 'Haute qualité réservé aux comptes payants' : 'Activer la haute qualité (300dpi)'}
+                                    className={`px-3 py-2 text-xs rounded-lg ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10') : 'opacity-50 cursor-not-allowed bg-white/5 text-gray-500'}`}
+                                >
+                                    HQ
+                                </button>
+                            )}
+                        </div>
+
+                        {/* Bouton Export GIF - si pipeline présent */}
+                        {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
+                            reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
+                                <FeatureGate hasAccess={canExportGIF} upgradeType="producer">
+                                    <button
+                                        onClick={handleExportGIF}
+                                        disabled={exportingGIF}
+                                        className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                                    >
+                                        {exportingGIF ? (
+                                            <>
+                                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                                <span>{gifProgress}%</span>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Film className="w-5 h-5" />
+                                                <span>Exporter Pipeline en GIF</span>
+                                            </>
+                                        )}
+                                    </button>
+                                </FeatureGate>
+                            )}
                     </div>
                 </div>
 
                 {/* Preview Area */}
-                <div className="hidden sm:flex flex-1 bg-gray-950/80 p-4 sm:p-6 items-center justify-center overflow-auto relative">
+                <div ref={previewAreaRef} className="flex h-44 sm:h-auto sm:flex-1 min-h-0 bg-gray-950/80 p-2 sm:p-4 items-center justify-center overflow-hidden relative">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
                     {/* Contextual right-click menu for per-section styling */}
                     <OrchardContextMenu />
 
-                    <div
-                        ref={exportRef}
-                        className="shadow-2xl relative overflow-hidden flex-shrink-0"
-                        style={{
-                            aspectRatio: format === 'A4' ? '210/297' : format.replace(':', '/'),
-                            maxWidth: format === '9:16' ? '260px' : '100%',
-                            maxHeight: 'calc(85vh - 4rem)',
-                            width: format === '9:16' ? '260px' : format === '16:9' ? 'min(640px, 100%)' : format === 'A4' ? '380px' : 'min(560px, 100%)',
-                            background: previewBackground,
-                            fontFamily: `"${previewFont}", Inter, sans-serif`,
-                            color: previewTextColor,
-                            '--accent': previewAccent,
-                        }}
-                    >
-                        {/* Template Canvas Content */}
-                        {renderCanvasContent()}
+                    {/* Scale wrapper — shrinks the canvas for preview, exportRef keeps design size for html-to-image */}
+                    <div style={{ transform: `scale(${canvasScale})`, transformOrigin: 'center center', flexShrink: 0, lineHeight: 0 }}>
+                        <div
+                            ref={exportRef}
+                            className="shadow-2xl relative overflow-hidden"
+                            style={{
+                                width: designSize.w,
+                                height: designSize.h,
+                                background: previewBackground,
+                                fontFamily: `"${previewFont}", Inter, sans-serif`,
+                                color: previewTextColor,
+                                '--accent': previewAccent,
+                                borderRadius: '12px',
+                            }}
+                        >
+                            {/* Template Canvas Content */}
+                            {renderCanvasContent()}
 
                         {/* Legacy content (hidden) */}
                         {false && <div className="relative z-10 p-8 h-full flex flex-col">
@@ -2172,7 +2271,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                         form.append('name', saveName || '')
                                                         form.append('description', saveDescription || '')
                                                         form.append('format', 'png')
-                                                        form.append('templateName', selectedTemplate || 'detailed')
+                                                        form.append('templateName', selectedTemplate || 'modernCompact')
                                                         form.append('isPublic', savePublic ? 'true' : 'false')
 
                                                         const resp = await fetch('/api/library/exports', {
@@ -2224,26 +2323,29 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             </div>
                         )}
                     </div>
+                    {/* Close scale wrapper */}
+                    </div>
                 </div>
 
                 {/* Mobile Preview */}
-                <div className="sm:hidden flex flex-col w-full min-h-[35vh] bg-gray-950/80 border-t border-white/10 overflow-auto">
-                    <div className="flex-1 flex items-center justify-center p-4 relative">
+                <div className="sm:hidden flex flex-col w-full min-h-[35vh] bg-gray-950/80 border-t border-white/10 overflow-hidden">
+                    <div className="flex-1 flex items-center justify-center p-3 relative">
                         <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
-                        <div
-                            className="shadow-lg relative overflow-hidden flex-shrink-0"
-                            style={{
-                                aspectRatio: format === 'A4' ? '210/297' : format.replace(':', '/'),
-                                maxWidth: '100%',
-                                maxHeight: '32vh',
-                                width: format === '9:16' ? '120px' : '180px',
-                                background: previewBackground,
-                                fontFamily: `"${previewFont}", Inter, sans-serif`,
-                                color: previewTextColor,
-                                '--accent': previewAccent,
-                            }}
-                        >
-                            {renderCanvasContent()}
+                        <div style={{ transform: `scale(${Math.min(0.35, (window.innerWidth - 32) / designSize.w)})`, transformOrigin: 'center center', flexShrink: 0, lineHeight: 0 }}>
+                            <div
+                                className="shadow-lg relative overflow-hidden"
+                                style={{
+                                    width: designSize.w,
+                                    height: designSize.h,
+                                    background: previewBackground,
+                                    fontFamily: `"${previewFont}", Inter, sans-serif`,
+                                    color: previewTextColor,
+                                    '--accent': previewAccent,
+                                    borderRadius: '8px',
+                                }}
+                            >
+                                {renderCanvasContent()}
+                            </div>
                         </div>
                     </div>
                 </div>

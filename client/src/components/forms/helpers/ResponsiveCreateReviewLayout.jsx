@@ -39,60 +39,14 @@ export const ResponsiveCreateReviewLayout = ({
     reviewVisibility = null,  // 'private'|'public'|null — current visibility of existing review
 }) => {
     const layout = useResponsiveLayout();
-    const [scrollPosition, setScrollPosition] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState(0);
-    const [dragOffset, setDragOffset] = useState(0);
     const [shouldUseCarousel, setShouldUseCarousel] = useState(false);
     const carouselRef = useRef(null);
     const containerRef = useRef(null);
     const [showSaveModal, setShowSaveModal] = useState(false);
 
-    // Nombre de sections visibles dans le carrousel
     const VISIBLE_ITEMS = 5;
-    const FALLBACK_ITEM_WIDTH = 70; // px (emoji button width + gap)
-    const CONTAINER_CENTER = VISIBLE_ITEMS / 2; // Position du centre (2.5 = centre between two)
-
-    // Measured sizes (dynamic): use DOM measurements for correct centering
-    const [itemWidth, setItemWidth] = useState(FALLBACK_ITEM_WIDTH);
-    const [containerWidthState, setContainerWidthState] = useState(0);
-    const [maxScrollState, setMaxScrollState] = useState(0);
-
-    // Backwards compatibility fallback: some bundles or older code paths may reference ITEM_WIDTH
-    // Defining it here prevents ReferenceError in case an uppercase variant is emitted by minifier.
-    const ITEM_WIDTH = itemWidth || FALLBACK_ITEM_WIDTH;
-
-    // Compute/measure widths to calculate exact centering and maxScroll
-    useEffect(() => {
-        const measure = () => {
-            try {
-                if (!containerRef.current) return;
-                const containerWidth = containerRef.current.offsetWidth - 24; // account for small padding
-                setContainerWidthState(containerWidth);
-
-                // Try to detect a real item width from the first emoji button
-                const firstBtn = carouselRef.current?.querySelector('button');
-                let measuredItemWidth = FALLBACK_ITEM_WIDTH;
-                if (firstBtn) {
-                    const btnStyle = window.getComputedStyle(firstBtn);
-                    const marginRight = parseFloat(btnStyle.marginRight || '8') || 8;
-                    measuredItemWidth = Math.round(firstBtn.offsetWidth + marginRight);
-                }
-                setItemWidth(measuredItemWidth);
-
-                const totalWidth = sectionEmojis.length * measuredItemWidth;
-                const maxScroll = Math.max(0, totalWidth - containerWidth);
-                setMaxScrollState(maxScroll);
-            } catch (err) {
-                // ignore measurement failures
-            }
-        };
-
-        measure();
-        const t = setTimeout(measure, 150);
-        window.addEventListener('resize', measure);
-        return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
-    }, [sectionEmojis.length]);
+    const FALLBACK_ITEM_WIDTH = 70;
 
     const handlePrevious = () => {
         if (currentSection > 0) onSectionChange(currentSection - 1);
@@ -103,64 +57,22 @@ export const ResponsiveCreateReviewLayout = ({
     };
 
     // Scroll-snap helpers (Apple-like UX)
-    const scrollTimeoutRef = React.useRef(null);
-    const scrollLockRef = React.useRef(false);
 
     const scrollToIndex = (index) => {
-        if (!carouselRef.current) return;
-        const buttons = Array.from(carouselRef.current.querySelectorAll('button'));
+        const container = carouselRef.current;
+        if (!container) return;
+        const buttons = Array.from(container.querySelectorAll('button'));
         const btn = buttons[index];
         if (!btn) return;
-        // center using native API
-        btn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
-    };
-
-    const handleScroll = () => {
-        if (!carouselRef.current || scrollLockRef.current) return;
-        const container = carouselRef.current;
-        const center = container.scrollLeft + container.offsetWidth / 2;
-        const buttons = Array.from(container.querySelectorAll('button'));
-        if (!buttons.length) return;
-        let closest = 0;
-        let minDist = Infinity;
-        buttons.forEach((b, idx) => {
-            const bCenter = b.offsetLeft + b.offsetWidth / 2;
-            const dist = Math.abs(bCenter - center);
-            if (dist < minDist) { minDist = dist; closest = idx; }
-        });
-        const logicalIndex = closest % totalSections;
-        if (logicalIndex !== currentSection) {
-            onSectionChange(logicalIndex);
-        }
-    };
-
-    const handleScrollDebounced = () => {
-        if (scrollTimeoutRef.current) clearTimeout(scrollTimeoutRef.current);
-        scrollTimeoutRef.current = setTimeout(() => handleScroll(), 80);
+        // Scroll le container directement — scrollIntoView scrolle la page entière
+        const targetLeft = btn.offsetLeft - container.offsetWidth / 2 + btn.offsetWidth / 2;
+        container.scrollTo({ left: Math.max(0, targetLeft), behavior: 'smooth' });
     };
 
     React.useEffect(() => {
-        if (!carouselRef.current) return;
-        // Lock scroll detection while we programmatically center the active item
-        // This prevents handleScroll from overriding the arrow navigation
-        scrollLockRef.current = true;
         scrollToIndex(currentSection);
-        // Release lock after scroll animation completes (~350ms for smooth scroll)
-        const unlockTimer = setTimeout(() => { scrollLockRef.current = false; }, 350);
-        return () => clearTimeout(unlockTimer);
     }, [currentSection]);
 
-    // Apply calculated scrollPosition to the container (smooth)
-    // Only when NOT locked by a programmatic scrollToIndex call
-    React.useEffect(() => {
-        if (!carouselRef.current || scrollLockRef.current) return;
-        try {
-            carouselRef.current.scrollTo({ left: scrollPosition, behavior: 'smooth' });
-        } catch (e) {
-            // Fallback si scrollTo avec options n'est pas supporté
-            carouselRef.current.scrollLeft = scrollPosition;
-        }
-    }, [scrollPosition]);
     // Détecte si l'espace n'est pas suffisant pour afficher tous les émojis
     useEffect(() => {
         const detectCarouselNeeded = () => {
@@ -190,38 +102,18 @@ export const ResponsiveCreateReviewLayout = ({
         };
     }, [layout.isMobile, sectionEmojis.length]);
 
-    // Auto-position carousel to center selected section (using middle repetition)
-    useEffect(() => {
-        if (!sectionEmojis.length) return;
-        const w = itemWidth || FALLBACK_ITEM_WIDTH;
-        const containerW = containerWidthState || (VISIBLE_ITEMS * w);
-        const totalWidth = sectionEmojis.length * w;
-        const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
-
-        // center the currentSection
-        const itemCenter = (currentSection * w) + (w / 2);
-        const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
-
-        if (!isDragging) {
-            setScrollPosition(targetScroll);
-        }
-    }, [currentSection, isDragging, maxScrollState, itemWidth, containerWidthState, sectionEmojis.length]);
 
     // Pointer-enabled handlers - Improved touch responsiveness and softer snap
     // Use a ref-based drag state and rAF for smooth updates, avoid passive scroll interference
-    const dragStateRef = React.useRef({ active: false, startX: 0, lastX: 0, offset: 0, raf: null });
+    const dragStateRef = React.useRef({ active: false, startX: 0, lastX: 0, offset: 0, raf: null, moved: false });
 
     const handlePointerDown = (e) => {
-        if (sectionEmojis.length <= VISIBLE_ITEMS) return;
         // Normaliser clientX pour mouse/touch/pointer events
         const clientX = e.clientX ?? e.touches?.[0]?.clientX;
-        // Prevent accidental text selection / page pan for horizontal drags
-        e.preventDefault?.();
-        // Record initial scroll so we can apply offset live while dragging
+        // NE PAS appeler e.preventDefault() ici — ça bloque les click events sur les boutons enfants
         const startScroll = carouselRef.current ? carouselRef.current.scrollLeft : 0;
-        dragStateRef.current = { active: true, startX: clientX, lastX: clientX, startScroll, offset: 0, raf: null };
-        setIsDragging(true);
-        setDragOffset(0);
+        dragStateRef.current = { active: true, startX: clientX, lastX: clientX, startScroll, offset: 0, raf: null, moved: false };
+        // Ne pas setIsDragging ici — attendre un vrai mouvement
 
         // Attach global listeners to ensure we capture move/up outside the element
         window.addEventListener('pointermove', handlePointerMove, { passive: false });
@@ -237,15 +129,22 @@ export const ResponsiveCreateReviewLayout = ({
         dragStateRef.current.lastX = clientX;
         dragStateRef.current.offset = offset;
 
+        // Activer le mode drag seulement après un mouvement significatif
+        if (Math.abs(offset) > 5 && !dragStateRef.current.moved) {
+            dragStateRef.current.moved = true;
+            setIsDragging(true);
+        }
+
         // rAF throttle updates for smoother visual feedback and apply live scroll
-        if (!dragStateRef.current.raf) {
-            dragStateRef.current.raf = requestAnimationFrame(() => {
-                setDragOffset(dragStateRef.current.offset);
-                if (carouselRef.current) {
-                    carouselRef.current.scrollLeft = dragStateRef.current.startScroll + dragStateRef.current.offset;
-                }
-                dragStateRef.current.raf = null;
-            });
+        if (dragStateRef.current.moved) {
+            if (!dragStateRef.current.raf) {
+                dragStateRef.current.raf = requestAnimationFrame(() => {
+                    if (carouselRef.current) {
+                        carouselRef.current.scrollLeft = dragStateRef.current.startScroll + dragStateRef.current.offset;
+                    }
+                    dragStateRef.current.raf = null;
+                });
+            }
         }
 
         // Prevent vertical page scrolling when significant horizontal move is detected
@@ -257,41 +156,6 @@ export const ResponsiveCreateReviewLayout = ({
         dragStateRef.current.active = false;
         setIsDragging(false);
 
-        const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX ?? dragStateRef.current.lastX;
-        const diff = dragStateRef.current.startX - clientX;
-
-        // Use real scroll position from the container (more reliable) or fallback
-        let newScroll = carouselRef.current ? carouselRef.current.scrollLeft : (scrollPosition + diff);
-        const maxScroll = maxScrollState || Math.max(0, (sectionEmojis.length * itemWidth) - (containerWidthState || (VISIBLE_ITEMS * itemWidth)));
-        newScroll = Math.max(0, Math.min(maxScroll, newScroll));
-
-        // Déterminer l'index scrolled selon la position du centre du conteneur
-        const containerCenter = (containerWidthState || (VISIBLE_ITEMS * itemWidth)) / 2;
-        const scrolledIndex = (newScroll + containerCenter - (itemWidth / 2)) / itemWidth;
-        const movedSections = scrolledIndex - currentSection;
-        const absMoved = Math.abs(movedSections);
-
-        let snapIndex;
-        if (absMoved < 0.35) {
-            snapIndex = currentSection;
-        } else {
-            snapIndex = Math.max(0, Math.min(totalSections - 1, Math.round(scrolledIndex)));
-        }
-
-        // If we've hit the max scroll clamp, ensure we snap to the last section (avoid getting stuck before the end)
-        if (carouselRef.current) {
-            const currentScroll = carouselRef.current.scrollLeft;
-            if (Math.abs(currentScroll - maxScroll) <= 1) {
-                snapIndex = totalSections - 1;
-            }
-        }
-
-        const snappedScroll = Math.max(0, Math.min(maxScroll, (snapIndex * itemWidth + (itemWidth / 2)) - containerCenter));
-
-        // Appliquer snapping et réinitialiser offset
-        setScrollPosition(snappedScroll);
-        setDragOffset(0);
-
         // Nettoyer raf et listeners
         if (dragStateRef.current.raf) {
             cancelAnimationFrame(dragStateRef.current.raf);
@@ -302,12 +166,33 @@ export const ResponsiveCreateReviewLayout = ({
         window.removeEventListener('touchmove', handlePointerMove);
         window.removeEventListener('touchend', handlePointerUp);
 
-        // Déclencher le changement de section si nécessaire (use snapIndex)
+        // Si pas de mouvement significatif, c'est un clic — laisser le onClick du button gérer
+        if (!dragStateRef.current.moved) return;
+
+        const clientX = e.clientX ?? e.changedTouches?.[0]?.clientX ?? dragStateRef.current.lastX;
+        const diff = dragStateRef.current.startX - clientX;
+
+        const container = carouselRef.current;
+        const currentScroll = container ? container.scrollLeft : (dragStateRef.current.startScroll + diff);
+        const containerWidth = container ? container.offsetWidth : (VISIBLE_ITEMS * FALLBACK_ITEM_WIDTH);
+
+        // Snap to the closest button based on container center
+        let snapIndex = currentSection;
+        if (container) {
+            const center = currentScroll + containerWidth / 2;
+            const buttons = Array.from(container.querySelectorAll('button'));
+            let minDist = Infinity;
+            buttons.forEach((b, idx) => {
+                const dist = Math.abs((b.offsetLeft + b.offsetWidth / 2) - center);
+                if (dist < minDist) { minDist = dist; snapIndex = idx; }
+            });
+        }
+        snapIndex = Math.max(0, Math.min(totalSections - 1, snapIndex));
+
         if (snapIndex !== currentSection) {
             onSectionChange(snapIndex);
-            // assurer le recentrage visuel
-            scrollToIndex(snapIndex);
         }
+        scrollToIndex(snapIndex);
     };
 
     return (
@@ -318,8 +203,8 @@ export const ResponsiveCreateReviewLayout = ({
             )}
 
             <div className="relative z-10 flex flex-col flex-1">
-                {/* Header - Responsive Padding & Safe Area - z-20 to stay BELOW modals (z-[8888]) but above main content */}
-                <div className={`sticky top-[4.5rem] z-20 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
+                {/* Header - Responsive Padding & Safe Area - z-30 to stay ABOVE main content (z-10) but BELOW modals (z-[8888]) */}
+                <div className={`sticky top-[4.5rem] z-30 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
                     ? 'px-3 py-3 safe-area-inset-top'
                     : 'px-6 md:px-8 py-6'
                     }`}>
@@ -367,7 +252,6 @@ export const ResponsiveCreateReviewLayout = ({
                                                 {/* New Apple-like scroll-snap carousel (single pass, accessible) */}
                                                 <div
                                                     ref={carouselRef}
-                                                    onScroll={() => handleScrollDebounced()}
                                                     className="flex items-center gap-3 overflow-x-auto no-scrollbar py-4 px-4"
                                                     style={{
                                                         scrollSnapType: 'x mandatory',
@@ -425,31 +309,17 @@ export const ResponsiveCreateReviewLayout = ({
                     </div>
                 </div>
 
-                {/* Main Content - Flex-grow to push footer down, with padding-bottom for fixed footer */}
+                {/* Main Content - NO relative/z-index to avoid creating a stacking context that overlaps the sticky header */}
                 <main
-                    className={`relative z-20 flex-1 overflow-y-auto ${layout.isMobile
+                    className={`flex-1 ${layout.isMobile
                         ? 'px-3 py-4 pb-20'
                         : 'px-6 md:px-8 py-8 pb-24'
                         }`}
                     onClick={(e) => {
-                        // Recenter carousel when clicking elsewhere in the section
-                        // Ignore clicks on form controls to avoid interfering with interactions
                         const tag = (e.target && e.target.tagName && e.target.tagName.toLowerCase()) || '';
                         if (['input', 'textarea', 'select', 'button', 'a', 'svg', 'path'].includes(tag)) return;
-                        // Also ignore clicks inside modal-like elements (closest check)
                         if (e.target.closest && e.target.closest('.modal, .react-modal, .fixed')) return;
-
-                        // center the carousel to the active section
-                        if (!sectionEmojis.length) return;
-                        const w = itemWidth || FALLBACK_ITEM_WIDTH;
-                        const containerW = containerWidthState || (VISIBLE_ITEMS * w);
-                        const totalWidth = sectionEmojis.length * w;
-                        const maxScroll = maxScrollState || Math.max(0, totalWidth - containerW);
-                        // Center on the real current index
-                        const targetIndex = currentSection;
-                        const itemCenter = (targetIndex * w) + (w / 2);
-                        const targetScroll = Math.max(0, Math.min(maxScroll, itemCenter - (containerW / 2)));
-                        setScrollPosition(targetScroll);
+                        if (sectionEmojis.length) scrollToIndex(currentSection);
                     }}
                 >
                     <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
