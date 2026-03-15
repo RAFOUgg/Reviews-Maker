@@ -494,7 +494,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
             case 'overallRating':
             case 'rating':
-                return lookup('computedOverall', 'overallRating', 'note', 'rating') ?? null;
+                return lookup('computedOverall', 'overallRating', 'note', 'rating') || null;
 
             case 'culture':
                 return {
@@ -884,7 +884,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 ) : (
                                     <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
                                 )}
-                                {rating && (
+                                {rating > 0 && (
                                     <div style={{
                                         position: 'absolute', bottom: '10px', right: '10px',
                                         background: 'rgba(0,0,0,0.65)',
@@ -1030,7 +1030,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </div>
                             )}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                {rating && <ScoreGauge score={rating} size={56} label="Note" />}
+                                {rating > 0 && <ScoreGauge score={rating} size={56} label="Note" />}
                                 {categories.length > 0 && (
                                     <div style={{ flex: 1 }}>
                                         {renderScoreGroup(categories.slice(0, 4).map(c => ({ label: c.label, value: c.score, color: c.color })))}
@@ -1208,7 +1208,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </div>
                             )}
                         </div>
-                        {rating && (
+                        {rating > 0 && (
                             <div style={{ marginLeft: '12px' }}>
                                 <ScoreGauge score={rating} size={60} label="Note" />
                             </div>
@@ -1383,7 +1383,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                 {/* Sidebar options */}
                 <div className="w-full sm:w-72 border-r border-white/10 flex flex-col bg-white/5">
-                    <div className="p-4 border-b border-white/10 flex justify-between items-center sticky top-0 bg-white/5 z-10">
+                    <div className="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0 bg-white/5 z-10">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-purple-500/20">T</div>
                             Export Maker
@@ -1758,8 +1758,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     {/* Contextual right-click menu for per-section styling */}
                     <OrchardContextMenu />
 
-                    {/* Scale wrapper — shrinks the canvas for preview, exportRef keeps design size for html-to-image */}
-                    <div style={{ transform: `scale(${canvasScale})`, transformOrigin: 'center center', flexShrink: 0, lineHeight: 0 }}>
+                    {/* Size placeholder: flex centering uses SCALED dimensions, not raw design dimensions */}
+                    <div style={{ width: designSize.w * canvasScale, height: designSize.h * canvasScale, position: 'relative', flexShrink: 0, lineHeight: 0 }}>
+                    <div style={{ transform: `scale(${canvasScale})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0, lineHeight: 0 }}>
                         <div
                             ref={exportRef}
                             className="shadow-2xl relative overflow-hidden"
@@ -1852,6 +1853,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             )}
                         </div>
                         {/* Close scale wrapper */}
+                    </div>
+                    {/* Close size placeholder */}
                     </div>
 
                     {/* Save to Library Modal — outside exportRef to avoid being captured in exports */}
