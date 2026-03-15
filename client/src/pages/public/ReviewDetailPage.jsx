@@ -6,10 +6,9 @@ import GalleryReviewCard from '../../components/gallery/GalleryReviewCard'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
-import { templatesService } from '../../services/apiService'
 import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2 } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
-import LiquidModal from '../../components/ui/LiquidModal'
+
 
 export default function ReviewDetailPage() {
     const { id } = useParams()
@@ -67,25 +66,6 @@ export default function ReviewDetailPage() {
             navigate('/')
         } finally {
             setLoading(false)
-        }
-    }
-
-    const handleSaveTemplate = async (templateConfig) => {
-        const templateName = prompt('Entrez un nom pour votre template :', 'Mon Template Personnalisé');
-        if (!templateName) return;
-
-        try {
-            const dataToSave = {
-                name: templateName,
-                description: `Template personnalisé basé sur la review ${review?.holderName}`,
-                isPublic: false,
-                config: templateConfig,
-            }
-            await templatesService.create(dataToSave)
-            toast.success('Template sauvegardé avec succès !')
-        } catch (error) {
-            console.error('Erreur lors de la sauvegarde du template:', error)
-            toast.error(error.message || 'Erreur lors de la sauvegarde du template.')
         }
     }
 
@@ -209,22 +189,15 @@ export default function ReviewDetailPage() {
             </div>
 
             {/* Export Modal using ExportMaker */}
-            <LiquidModal
-                isOpen={showExportModal}
-                onClose={() => setShowExportModal(false)}
-                title="Exporter la review"
-                size="xl"
-            >
+            {showExportModal && (
                 <Suspense fallback={<div className="p-6 text-center">Chargement de l'export…</div>}>
                     <ExportMaker
                         reviewData={review}
                         productType={review.type}
-                        accountType={user?.accountType || 'Amateur'}
                         onClose={() => setShowExportModal(false)}
-                        onSave={handleSaveTemplate}
                     />
                 </Suspense>
-            </LiquidModal>
+            )}
         </div>
     )
 }

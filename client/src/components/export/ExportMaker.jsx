@@ -1378,8 +1378,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md" style={{ paddingTop: '4.5rem' }}>
-            <LiquidGlass variant="modal" className="w-full sm:max-w-4xl sm:mx-4 flex flex-col-reverse sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl" style={{ height: 'min(75vh, 640px)' }}>
+        <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md" style={{ padding: '5rem 1rem 1rem' }}>
+            <LiquidGlass variant="modal" className="w-full sm:max-w-5xl flex flex-col-reverse sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl" style={{ height: 'calc(100dvh - 6rem)', maxHeight: '740px' }}>
 
                 {/* Sidebar options */}
                 <div className="w-full sm:w-72 border-r border-white/10 flex flex-col bg-white/5">
@@ -1752,7 +1752,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 </div>
 
                 {/* Preview Area */}
-                <div ref={previewAreaRef} className="flex h-44 sm:h-auto sm:flex-1 min-h-0 bg-gray-950/80 p-2 sm:p-4 items-center justify-center overflow-hidden relative">
+                <div ref={previewAreaRef} className="flex h-52 sm:h-auto sm:flex-1 min-h-0 bg-gray-950/80 p-2 sm:p-4 items-center justify-center overflow-hidden relative">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
                     {/* Contextual right-click menu for per-section styling */}
@@ -1775,83 +1775,83 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         >
                             {/* Template Canvas Content */}
                             {renderCanvasContent()}
-                        {/* Filigrane Overlay */}
-                        {watermark.visible && (
-                            <div
-                                className="absolute pointer-events-none z-50"
-                                style={{
-                                    left: `${watermark.position.x}%`,
-                                    top: `${watermark.position.y}%`,
-                                    transform: `translate(-50%, -50%) rotate(${watermark.rotation}deg)`,
-                                    opacity: watermark.opacity / 100,
-                                }}
-                            >
-                                {watermark.type === 'image' && watermark.imageUrl ? (
-                                    <img
-                                        src={watermark.imageUrl}
-                                        alt="Watermark"
-                                        style={{ width: `${watermark.size * 5}px` }}
-                                    />
-                                ) : (
-                                    <div
-                                        style={{
-                                            fontSize: `${watermark.size}px`,
-                                            color: watermark.color || '#ffffff',
-                                            fontWeight: 'bold',
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                        }}
-                                    >
-                                        {watermark.content}
-                                    </div>
-                                )}
-                            </div>
-                        )}
-
-                        {/* Filigrane Terpologie forcé pour comptes Amateur */}
-                        {(!permissions.export?.features?.watermark) && (
-                            <div
-                                className="absolute pointer-events-none z-[60]"
-                                style={{
-                                    bottom: '16px',
-                                    right: '16px',
-                                    opacity: 0.35,
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                }}
-                            >
+                            {/* Filigrane Overlay */}
+                            {watermark.visible && (
                                 <div
+                                    className="absolute pointer-events-none z-50"
                                     style={{
-                                        width: '18px',
-                                        height: '18px',
-                                        borderRadius: '5px',
-                                        background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        fontSize: '10px',
-                                        fontWeight: 900,
-                                        color: '#fff',
-                                        boxShadow: '0 2px 6px rgba(139, 92, 246, 0.4)',
-                                    }}
-                                >T</div>
-                                <div
-                                    style={{
-                                        fontSize: '12px',
-                                        fontWeight: 700,
-                                        color: '#A78BFA',
-                                        textShadow: '0 0 8px rgba(139, 92, 246, 0.4), 0 1px 3px rgba(0,0,0,0.3)',
-                                        letterSpacing: '0.12em',
-                                        textTransform: 'uppercase',
-                                        userSelect: 'none',
+                                        left: `${watermark.position.x}%`,
+                                        top: `${watermark.position.y}%`,
+                                        transform: `translate(-50%, -50%) rotate(${watermark.rotation}deg)`,
+                                        opacity: watermark.opacity / 100,
                                     }}
                                 >
-                                    terpologie
+                                    {watermark.type === 'image' && watermark.imageUrl ? (
+                                        <img
+                                            src={watermark.imageUrl}
+                                            alt="Watermark"
+                                            style={{ width: `${watermark.size * 5}px` }}
+                                        />
+                                    ) : (
+                                        <div
+                                            style={{
+                                                fontSize: `${watermark.size}px`,
+                                                color: watermark.color || '#ffffff',
+                                                fontWeight: 'bold',
+                                                textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+                                            }}
+                                        >
+                                            {watermark.content}
+                                        </div>
+                                    )}
                                 </div>
-                            </div>
-                        )}
-                    </div>
-                    {/* Close scale wrapper */}
+                            )}
+
+                            {/* Filigrane Terpologie forcé pour comptes Amateur */}
+                            {(!permissions.export?.features?.watermark) && (
+                                <div
+                                    className="absolute pointer-events-none z-[60]"
+                                    style={{
+                                        bottom: '16px',
+                                        right: '16px',
+                                        opacity: 0.35,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '5px',
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            width: '18px',
+                                            height: '18px',
+                                            borderRadius: '5px',
+                                            background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '10px',
+                                            fontWeight: 900,
+                                            color: '#fff',
+                                            boxShadow: '0 2px 6px rgba(139, 92, 246, 0.4)',
+                                        }}
+                                    >T</div>
+                                    <div
+                                        style={{
+                                            fontSize: '12px',
+                                            fontWeight: 700,
+                                            color: '#A78BFA',
+                                            textShadow: '0 0 8px rgba(139, 92, 246, 0.4), 0 1px 3px rgba(0,0,0,0.3)',
+                                            letterSpacing: '0.12em',
+                                            textTransform: 'uppercase',
+                                            userSelect: 'none',
+                                        }}
+                                    >
+                                        terpologie
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        {/* Close scale wrapper */}
                     </div>
 
                     {/* Save to Library Modal — outside exportRef to avoid being captured in exports */}
