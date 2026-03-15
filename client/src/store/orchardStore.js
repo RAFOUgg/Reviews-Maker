@@ -11,7 +11,7 @@ export { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS };
 // ═══════════════════════════════════════════════════════════════════════════════
 // FORCE RESET: Supprimer localStorage obsolète AVANT que zustand ne charge
 // ═══════════════════════════════════════════════════════════════════════════════
-const CURRENT_STORAGE_VERSION = 7; // Incrémenté pour forcer reset - BUILD DEC 2 2025
+const CURRENT_STORAGE_VERSION = 8; // v8: dark default background - BUILD MAR 2026
 const STORAGE_KEY = 'orchard-storage';
 
 // FORCE IMMEDIATE RESET - Dec 2 2025
@@ -34,7 +34,7 @@ try {
             needsReset: storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 50
         });
 
-        // TOUJOURS reset si version < 7 OU moins de 70 modules
+        // TOUJOURS reset si version < 8 OU moins de 70 modules
         if (storedVersion < CURRENT_STORAGE_VERSION || modulesCount < 70) {
             console.warn('🗑️ FORCING localStorage reset - old version or incomplete modules');
             console.warn('   Stored version:', storedVersion, '| Current:', CURRENT_STORAGE_VERSION);
@@ -68,7 +68,7 @@ const DEFAULT_CONFIG = {
     // Couleurs
     colors: {
         palette: 'modern',
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%)',
         textPrimary: '#ffffff',
         textSecondary: '#e0e0e0',
         accent: '#ffd700',
@@ -518,7 +518,7 @@ export const useOrchardStore = create(
                 config: state.config
             }),
             // Version du storage - doit correspondre à CURRENT_STORAGE_VERSION
-            // v7: Force reset automatique au chargement si version < 7 ou < 70 modules - Dec 2 2025
+            // v8: Dark default background + reset colors - MAR 2026
             version: CURRENT_STORAGE_VERSION,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
@@ -526,17 +526,15 @@ export const useOrchardStore = create(
 
                 // Si version < 7, reset COMPLET des contentModules et moduleOrder
                 if (version < CURRENT_STORAGE_VERSION) {
-                    console.warn('📦 v7 Migration: Forcing COMPLETE contentModules reset to 80+ modules');
-                    const modulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
-                    console.warn('   Will create', modulesCount, 'modules');
+                    console.warn('📦 v8 Migration: Reset colors + contentModules to new defaults');
                     return {
                         ...persistedState,
                         config: {
                             ...DEFAULT_CONFIG,
                             ...(persistedState?.config || {}),
-                            // FORCER ABSOLUMENT les modules par défaut
                             contentModules: { ...DEFAULT_CONFIG.contentModules },
-                            moduleOrder: [...DEFAULT_CONFIG.moduleOrder]
+                            moduleOrder: [...DEFAULT_CONFIG.moduleOrder],
+                            colors: { ...DEFAULT_CONFIG.colors }
                         }
                     };
                 }
