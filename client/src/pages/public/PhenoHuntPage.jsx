@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import UnifiedGeneticsCanvas from '../../components/genetics/UnifiedGeneticsCanvas';
@@ -13,6 +13,7 @@ import { Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight, GitB
  */
 export default function PhenoHuntPage() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const store = useGeneticsStore();
 
     const [cultivarLibrary, setCultivarLibrary] = useState([]);
@@ -38,6 +39,14 @@ export default function PhenoHuntPage() {
         };
         loadCultivars();
     }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+    // Auto-load tree from ?tree= query param (e.g. navigating from library)
+    useEffect(() => {
+        const treeId = searchParams.get('tree');
+        if (treeId && treeId !== store.selectedTreeId) {
+            store.loadTree(treeId);
+        }
+    }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
     const handleSelectTree = async (treeId) => {
         if (treeId) {
@@ -177,8 +186,8 @@ export default function PhenoHuntPage() {
                                                 key={tree.id}
                                                 onClick={() => handleSelectTree(tree.id)}
                                                 className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${store.selectedTreeId === tree.id
-                                                        ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
-                                                        : 'text-slate-300 hover:bg-slate-700/50'
+                                                    ? 'bg-emerald-600/30 text-emerald-300 border border-emerald-500/30'
+                                                    : 'text-slate-300 hover:bg-slate-700/50'
                                                     }`}
                                             >
                                                 {tree.name}

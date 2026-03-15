@@ -1,76 +1,70 @@
 import React from 'react'
-import { Camera, X } from 'lucide-react'
-import LiquidCard from '../../../../components/ui/LiquidCard'
+import { Camera, X, Info } from 'lucide-react'
+import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
     return (
         <div className="space-y-6">
-            <LiquidCard title="📋 Informations générales" bordered>
-                <div className="space-y-4">
+            <LiquidCard glow="purple" padding="lg">
+                <div className="flex items-center gap-3 mb-6">
+                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                        <Info className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                        <h3 className="text-xl font-bold text-white">📋 Informations générales</h3>
+                        <p className="text-sm text-white/50">Identité et photos du produit</p>
+                    </div>
+                </div>
+
+                <LiquidDivider />
+
+                <div className="space-y-4 mt-6">
                     {/* Nom commercial */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Nom du produit *
-                        </label>
-                        <input
-                            type="text"
+                        <LiquidInput
+                            label="Nom du produit *"
                             value={formData.nomCommercial || ''}
                             onChange={(e) => handleChange('nomCommercial', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
-                            placeholder="Nom du produit"
-                            required
+                            placeholder="Nom du hash"
+                            maxLength={100}
                         />
                     </div>
 
                     {/* Hashmaker */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Hashmaker
-                        </label>
-                        <input
-                            type="text"
+                        <LiquidInput
+                            label="Hashmaker"
                             value={formData.hashmaker || ''}
                             onChange={(e) => handleChange('hashmaker', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Nom du hashmaker"
                         />
                     </div>
 
                     {/* Laboratoire */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Laboratoire de production
-                        </label>
-                        <input
-                            type="text"
+                        <LiquidInput
+                            label="Laboratoire de production"
                             value={formData.laboratoire || ''}
                             onChange={(e) => handleChange('laboratoire', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Nom du laboratoire"
                         />
                     </div>
 
                     {/* Cultivars utilisés */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Cultivar(s) utilisés
-                            <span className="ml-2 text-xs text-gray-500 dark:text-gray-400">
-                                (Séparés par des virgules)
-                            </span>
-                        </label>
-                        <input
-                            type="text"
+                        <LiquidInput
+                            label="Cultivar(s) utilisés"
                             value={formData.cultivars || ''}
                             onChange={(e) => handleChange('cultivars', e.target.value)}
-                            className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                             placeholder="Cultivars utilisés"
                         />
+                        <p className="text-xs text-white/40 mt-1">(Séparés par des virgules si plusieurs)</p>
                     </div>
 
                     {/* Photos */}
                     <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                            Photos du produit (1-4) *
+                        <label className="block text-sm font-medium text-white mb-2">
+                            📷 Photos du produit (1-4) *
                         </label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                             {photos.map((photo, index) => (
@@ -78,12 +72,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                     <img
                                         src={photo.preview || photo.url}
                                         alt={`Photo ${index + 1}`}
-                                        className="w-full h-32 object-cover rounded-lg"
+                                        className="w-full h-32 object-cover rounded-lg border border-white/10 shadow-md"
                                     />
                                     <button
                                         type="button"
                                         onClick={() => removePhoto(index)}
-                                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all"
+                                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg"
                                     >
                                         <X className="w-4 h-4" />
                                     </button>
@@ -91,9 +85,9 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             ))}
                         </div>
                         {photos.length < 4 && (
-                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer hover:border-blue-400 dark:hover:border-blue-400 bg-white/50 dark:bg-gray-800/30 hover:bg-blue-50 dark:hover:bg-blue-900/10 transition-all">
-                                <Camera className="w-6 h-6 text-gray-400" />
-                                <span className="text-sm font-medium text-gray-600 dark:text-gray-400">
+                            <label className="flex items-center justify-center gap-2 px-4 py-8 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-amber-500/50 bg-white/5 hover:bg-amber-500/10 transition-all backdrop-blur-sm">
+                                <Camera className="w-6 h-6 text-white/40" />
+                                <span className="text-sm font-medium text-white/60">
                                     Ajouter une photo ({photos.length}/4)
                                 </span>
                                 <input

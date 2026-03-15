@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from 'react';
 // Note: heavy export libs (html-to-image, jspdf) are dynamically imported only when the user triggers an export
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-    Download, Settings, Image as ImageIcon, Type, Palette,
-    Grid, Layout, Maximize2, FileImage, File, Save, X, ChevronsRight,
-    Share2, Info, CheckCircle, Film
+    Download, Palette,
+    Grid, Layout, Maximize2, Save, X, ChevronsRight,
+    Share2, Film
 } from 'lucide-react';
 import LiquidGlass from '../ui/LiquidGlass';
 import { useAccountType } from '../../hooks/useAccountType';
@@ -15,13 +15,10 @@ import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
 import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
-// getMaxElements removed — pagination simplifié avec DEFAULT_TEMPLATES
-import { CANNABIS_COLORS } from '../../data/cannabisColors';
 import { useOrchardStore } from '../../store/orchardStore';
 import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
 import ScoreGauge from './ScoreGauge'
-import { isElementAvailableForProduct } from '../../utils/exportElementMappings';
 import OrchardContextMenu from '../shared/orchard/OrchardContextMenu';
 import ContentModuleControls from '../shared/config/ContentModuleControls';
 import TypographyControls from '../shared/config/TypographyControls';
@@ -54,7 +51,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const exportRef = useRef(null);
     const previewAreaRef = useRef(null);
     const [canvasScale, setCanvasScale] = useState(1);
-    const [mode, setMode] = useState('templates'); // 'templates', 'custom', 'watermark'
     const [selectedTemplate, setSelectedTemplate] = useState('modernCompact');
     const [format, setFormat] = useState('1:1');
     const [highQuality, setHighQuality] = useState(false);
@@ -64,7 +60,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         content: reviewData?.author?.username ? `@${reviewData.author.username}` : '',
         position: { x: 50, y: 90 },
         size: 20,
-        opacity: 50
+        opacity: 50,
+        rotation: 0,
+        color: '#ffffff'
     });
     const [customSections, setCustomSections] = useState([]);
     const [exporting, setExporting] = useState(false);
@@ -134,7 +132,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // Modules relevant to this product type
     const relevantModules = getModulesByProductType(productType || productKey);
-    const relevantModulesSet = new Set(relevantModules);
 
     const templates = Object.entries(DEFAULT_TEMPLATES).map(([key, tpl]) => {
         const icon = key === 'detailedCard' ? Layout : key === 'modernCompact' ? Grid : key === 'socialStory' ? Film : Maximize2;
@@ -558,91 +555,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
     };
 
-    // Helper to render a review field value for export
-    const renderFieldValue = (fieldId) => {
-        const val = resolveReviewField(fieldId)
-        if (val === null || typeof val === 'undefined') return '-';
-
-        // If it's a primitive
-        if (typeof val === 'string' || typeof val === 'number' || typeof val === 'boolean') return String(val)
-
-        // If it's an array of images (filenames or urls) -> render first
-        if (Array.isArray(val)) {
-            // array of filenames/strings
-            if (val.length === 0) return '-'
-            // if array of objects with filename or url
-            if (typeof val[0] === 'object') {
-                const first = val[0]
-                const url = first.url || first.filename || first.path || first
-                return typeof url === 'string' ? <img src={url.startsWith('http') ? url : `/images/${String(url).replace(/^\//, '')}`} alt={fieldId} className="w-full h-auto rounded" /> : '-'
-            }
-            // array of strings
-            return val.join(', ')
-        }
-
-        // If val is an object (e.g., visual/taste/effects) render a compact representation
-        if (typeof val === 'object') {
-            // Visual object
-            if (val.densite !== undefined || val.trichomes !== undefined) {
-                return (
-                    <div className="flex flex-col text-sm text-white">
-                        {Object.keys(val).map(k => (
-                            <div key={k} className="flex justify-between">
-                                <div className="text-xs text-gray-400">{k}</div>
-                                <div className="font-medium">{String(val[k] ?? '-')}</div>
-                            </div>
-                        ))}
-                    </div>
-                )
-            }
-
-            // Odors, tastes, effects
-            if (val.dominant || val.dryPuff || val.selected) {
-                const lists = []
-                if (val.dominant) lists.push((val.dominant || []).join(', '))
-                if (val.secondary) lists.push((val.secondary || []).join(', '))
-                if (val.dryPuff) lists.push('Dry: ' + (val.dryPuff || []).join(', '))
-                if (val.inhalation) lists.push('In: ' + (val.inhalation || []).join(', '))
-                if (val.expiration) lists.push('Out: ' + (val.expiration || []).join(', '))
-                if (val.selected) lists.push((val.selected || []).join(', '))
-                return lists.filter(Boolean).join(' • ') || '-'
-            }
-
-            // Récolte (trichomes + weights)
-            if (val.trichomesTranslucides !== undefined || val.trichomesLaiteux !== undefined || val.trichomesAmbres !== undefined) {
-                const total = (Number(val.trichomesTranslucides || 0) + Number(val.trichomesLaiteux || 0) + Number(val.trichomesAmbres || 0))
-                return (
-                    <div className="text-sm text-white">
-                        <div className="flex items-center gap-4 mb-2">
-                            <div className="text-xs text-gray-400">Trichomes</div>
-                            <div className="flex gap-2">
-                                <div className="text-xs">Translucides: <span className="font-medium">{val.trichomesTranslucides ?? 0}%</span></div>
-                                <div className="text-xs">Laiteux: <span className="font-medium">{val.trichomesLaiteux ?? 0}%</span></div>
-                                <div className="text-xs">Ambrés: <span className="font-medium">{val.trichomesAmbres ?? 0}%</span></div>
-                            </div>
-                        </div>
-                        <div className="flex items-center gap-4">
-                            <div className="text-xs text-gray-400">Poids</div>
-                            <div className="text-xs">Brut: <span className="font-medium">{val.poidsBrut ?? '-'} g</span></div>
-                            <div className="text-xs">Net: <span className="font-medium">{val.poidsNet ?? '-'} g</span></div>
-                            <div className="text-xs">Mode: <span className="font-medium">{val.modeRecolte ?? '-'}</span></div>
-                        </div>
-                        <div className={`mt-2 text-xs ${total === 100 ? 'text-green-400' : 'text-amber-400'}`}>Total trichomes: {total}%</div>
-                    </div>
-                )
-            }
-
-            // Timeline objects
-            if (val.data || val.config) {
-                return <div className="text-sm text-gray-300">Timeline ({val.data ? (val.data.length || 0) : 0} steps)</div>
-            }
-
-            return JSON.stringify(val)
-        }
-
-        return String(val)
-    };
-
     // ========== BRAND & TEMPLATE RENDERING SYSTEM ==========
     const TYPE_ICONS = { Fleurs: '🌿', Hash: '🟤', Concentrés: '💎', Comestibles: '🍪' }
     const isLandscape = format === '16:9'
@@ -938,7 +850,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== COMPACT TEMPLATE (minimal) ======
     const renderCompactCanvas = () => {
-        const rating = resolveReviewField('overallRating') || reviewData.rating || reviewData.overallRating || null
+        const rating = resolveReviewField('overallRating') ?? reviewData.rating ?? reviewData.overallRating ?? null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
         const categories = getCategoryScores().filter(c => isSectionVisible(c.key)).slice(0, 4)
@@ -1031,7 +943,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== STANDARD TEMPLATE ======
     const renderStandardCanvas = () => {
-        const rating = resolveReviewField('overallRating') || reviewData.rating || reviewData.overallRating || null
+        const rating = resolveReviewField('overallRating') ?? reviewData.rating ?? reviewData.overallRating ?? null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
         const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
@@ -1039,7 +951,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const taste = resolveReviewField('taste') || {}
         const effects = resolveReviewField('effects') || {}
         const terps = (() => {
-            const raw = resolveReviewField('terpeneProfile') || resolveReviewField('terpenes') || []
+            const raw = resolveReviewField('terpeneProfile') || []
             return Array.isArray(raw) ? raw.map(t => ({ name: t.name || t.terpene || t.key || t.label || 'Autre', percent: t.percent || t.value || t.amount || 0 })) : []
         })()
         const genetics = resolveReviewField('genetics')
@@ -1132,15 +1044,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : 'repeat(3, 1fr)', gap: '8px' }}>
                         {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
                             <SectionCard title="Odeur" icon="👃" sectionKey="odor">
-                                {odor.intensity && renderScore(odor.intensity, 'Intensité', '#22C55E')}
+                                {odor.intensity != null && renderScore(odor.intensity, 'Intensité', '#22C55E')}
                                 <div style={{ marginTop: '4px' }}>{renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}</div>
                             </SectionCard>
                         ) : null}
                         {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
                             <SectionCard title="Goût" icon="😋" sectionKey="taste">
                                 {renderScoreGroup([
-                                    taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
-                                    taste.aggressiveness && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
+                                    taste.intensity != null && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
+                                    taste.aggressiveness != null && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
                                 ].filter(Boolean))}
                                 <div style={{ marginTop: '4px' }}>{renderList([...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])], 'rgba(245,158,11,0.12)', '#F59E0B')}</div>
                             </SectionCard>
@@ -1148,8 +1060,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
                             <SectionCard title="Effets" icon="💥" sectionKey="effects">
                                 {renderScoreGroup([
-                                    effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
-                                    effects.onset && { label: 'Montée', value: effects.onset, color: '#34D399' },
+                                    effects.intensity != null && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
+                                    effects.onset != null && { label: 'Montée', value: effects.onset, color: '#34D399' },
                                 ].filter(Boolean))}
                                 <div style={{ marginTop: '4px' }}>{renderList(effects.selected || [], 'rgba(6,182,212,0.12)', '#06B6D4')}</div>
                             </SectionCard>
@@ -1232,7 +1144,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== DETAILED TEMPLATE ======
     const renderDetailedCanvas = () => {
-        const rating = resolveReviewField('overallRating') || reviewData.rating || reviewData.overallRating || null
+        const rating = resolveReviewField('overallRating') ?? reviewData.rating ?? reviewData.overallRating ?? null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
         const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
@@ -1242,7 +1154,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const visual = resolveReviewField('visual') || {}
         const texture = resolveReviewField('texture') || {}
         const terps = (() => {
-            const raw = resolveReviewField('terpeneProfile') || resolveReviewField('terpenes') || []
+            const raw = resolveReviewField('terpeneProfile') || []
             return Array.isArray(raw) ? raw.map(t => ({ name: t.name || t.terpene || t.key || t.label || 'Autre', percent: t.percent || t.value || t.amount || 0 })) : []
         })()
         const genetics = resolveReviewField('genetics')
@@ -1863,294 +1775,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         >
                             {/* Template Canvas Content */}
                             {renderCanvasContent()}
-
-                        {/* Legacy content (hidden) */}
-                        {false && <div className="relative z-10 p-8 h-full flex flex-col">
-                            {/* Header */}
-                            <div className="flex justify-between items-start mb-8">
-                                <div>
-                                    <div className="text-sm font-bold tracking-widest uppercase mb-1">{reviewData.typeName || productType}</div>
-                                    <h1 className="text-4xl font-black text-white mb-2">{reviewName || 'Produit sans nom'}</h1>
-                                    <div className="flex flex-col gap-2">
-                                        <div className="flex gap-2">
-                                            <span className="px-2 py-1 bg-white/10 rounded text-xs text-gray-300">
-                                                {reviewData.varietyType || 'Hybride'}
-                                            </span>
-                                            {(resolveReviewField('thc') || resolveReviewField('thcPercent')) && (
-                                                <span className="px-2 py-1 bg-red-500/20 text-red-300 rounded text-xs">THC: {resolveReviewField('thc') ?? resolveReviewField('thcPercent')}%</span>
-                                            )}
-                                            {(resolveReviewField('cbd') || resolveReviewField('cbdPercent')) && (
-                                                <span className="px-2 py-1 bg-emerald-600/10 text-emerald-300 rounded text-xs">CBD: {resolveReviewField('cbd') ?? resolveReviewField('cbdPercent')}%</span>
-                                            )}
-                                        </div>
-
-                                        {/* Genetics quick line */}
-                                        <div className="text-sm text-gray-300 mt-1">{resolveReviewField('genetics')}</div>
-                                    </div>
-                                </div>
-                                <div className="text-right">
-                                    <div className="text-5xl font-black text-transparent bg-clip-text bg-gradient-to-r">
-                                        {reviewData.rating || '0.0'}
-                                    </div>
-                                    <div className="text-gray-400 text-sm">Note globale</div>
-                                </div>
-                            </div>
-
-                            {/* Main Image & Stats */}
-                            <div className="grid grid-cols-2 gap-6 mb-8 flex-1">
-                                <div className="rounded-2xl overflow-hidden border border-white/10 relative group">
-                                    {hasElement(['photo', 'photos', 'gallery', 'image']) ? (
-                                        (() => {
-                                            const mainCandidate = resolveReviewField('photo') || resolveReviewField('mainImage') || resolveReviewField('images')
-                                            let url = null
-                                            if (Array.isArray(mainCandidate)) url = mainCandidate[0]
-                                            else url = mainCandidate
-
-                                            if (!url) {
-                                                return (
-                                                    <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
-                                                        <ImageIcon className="w-12 h-12 opacity-50" />
-                                                    </div>
-                                                )
-                                            }
-
-                                            const src = (typeof url === 'string' && (url.startsWith('http://') || url.startsWith('https://'))) ? url : `/images/${String(url).replace(/^\//, '')}`
-
-                                            return <img src={src} className="w-full h-full object-cover" alt="Product" />
-                                        })()
-                                    ) : (
-                                        <div className="w-full h-full bg-white/5 flex items-center justify-center text-gray-500">
-                                            <div className="text-sm text-gray-400">Image non disponible pour ce template</div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="space-y-4">
-                                    {/* Stats grid */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {hasElement(['odor', 'odorNotes', 'odors']) && (() => {
-                                            const od = resolveReviewField('odor') || {}
-                                            const items = []
-                                            if (Array.isArray(od.dominant) && od.dominant.length) items.push({ label: 'Dominant', value: (od.dominant.length || 0), color: '#84CC16' })
-                                            if (Array.isArray(od.secondary) && od.secondary.length) items.push({ label: 'Secondaires', value: (od.secondary.length || 0), color: '#10B981' })
-                                            if (od.intensity !== undefined && od.intensity !== null) items.unshift({ label: 'Intensité', value: od.intensity, color: '#059669' })
-                                            const allNotes = [...(od.dominant || []), ...(od.secondary || [])]
-                                            return (
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-2">Odeur</div>
-                                                    <MiniBars items={items} max={10} />
-                                                    {allNotes.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1 mt-2">
-                                                            {allNotes.slice(0, 6).map((n, i) => (
-                                                                <span key={i} className="text-xs px-1.5 py-0.5 bg-green-500/20 text-green-300 rounded-full">{typeof n === 'object' ? (n.label || n.id || n.name) : n}</span>
-                                                            ))}
-                                                            {allNotes.length > 6 && <span className="text-xs text-gray-500">+{allNotes.length - 6}</span>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        })()}
-
-                                        {hasElement(['taste', 'tasteNotes', 'tastes']) && (() => {
-                                            const t = resolveReviewField('taste') || {}
-                                            const items = []
-                                            if (t.intensity !== undefined && t.intensity !== null) items.push({ label: 'Intensité', value: t.intensity, color: '#F59E0B' })
-                                            if (t.aggressiveness !== undefined && t.aggressiveness !== null) items.push({ label: 'Agressivité', value: t.aggressiveness, color: '#FB923C' })
-                                            const allTasteNotes = [...(t.dryPuff || []), ...(t.inhalation || []), ...(t.expiration || [])]
-                                            if (allTasteNotes.length) items.push({ label: 'Notes', value: allTasteNotes.length, color: '#F97316' })
-                                            return (
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-2">Goût</div>
-                                                    <MiniBars items={items} max={10} />
-                                                    {allTasteNotes.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1 mt-2">
-                                                            {allTasteNotes.slice(0, 6).map((n, i) => (
-                                                                <span key={i} className="text-xs px-1.5 py-0.5 bg-amber-500/20 text-amber-300 rounded-full">{typeof n === 'object' ? (n.label || n.id || n.name) : n}</span>
-                                                            ))}
-                                                            {allTasteNotes.length > 6 && <span className="text-xs text-gray-500">+{allTasteNotes.length - 6}</span>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        })()}
-
-                                        {hasElement('effects') && (() => {
-                                            const e = resolveReviewField('effects') || {}
-                                            const items = []
-                                            if (e.intensity !== undefined && e.intensity !== null) items.push({ label: 'Intensité', value: e.intensity, color: '#06B6D4' })
-                                            if (e.onset !== undefined && e.onset !== null) items.push({ label: 'Montée', value: e.onset, color: '#34D399' })
-                                            if (Array.isArray(e.selected) && e.selected.length) items.push({ label: 'Choix', value: e.selected.length, color: '#60A5FA' })
-                                            return (
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-2">Effets</div>
-                                                    <MiniBars items={items} max={10} />
-                                                    {Array.isArray(e.selected) && e.selected.length > 0 && (
-                                                        <div className="flex flex-wrap gap-1 mt-2">
-                                                            {e.selected.slice(0, 6).map((eff, i) => (
-                                                                <span key={i} className="text-xs px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded-full">{typeof eff === 'object' ? (eff.label || eff.id || eff.name) : eff}</span>
-                                                            ))}
-                                                            {e.selected.length > 6 && <span className="text-xs text-gray-500">+{e.selected.length - 6}</span>}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            )
-                                        })()}
-
-                                        {hasElement('visual') && (() => {
-                                            const v = resolveReviewField('visual') || {}
-                                            const items = []
-                                            if (v.couleur !== undefined && v.couleur !== null) items.push({ label: 'Couleur', value: v.couleur, color: '#F472B6' })
-                                            if (v.densite !== undefined && v.densite !== null) items.push({ label: 'Densité', value: v.densite, color: '#8B5CF6' })
-                                            if (v.trichomes !== undefined && v.trichomes !== null) items.push({ label: 'Trichomes', value: v.trichomes, color: '#A78BFA' })
-                                            if (v.pistils !== undefined && v.pistils !== null) items.push({ label: 'Pistils', value: v.pistils, color: '#C084FC' })
-                                            if (v.manucure !== undefined && v.manucure !== null) items.push({ label: 'Manucure', value: v.manucure, color: '#E879F9' })
-                                            return (
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-2">Visuel</div>
-                                                    <MiniBars items={items} max={10} />
-                                                </div>
-                                            )
-                                        })()}
-
-                                        {hasElement('texture') && (() => {
-                                            const tx = resolveReviewField('texture') || {}
-                                            const items = []
-                                            if (tx.hardness !== undefined && tx.hardness !== null) items.push({ label: 'Dureté', value: tx.hardness, color: '#FB7185' })
-                                            if (tx.density !== undefined && tx.density !== null) items.push({ label: 'Densité', value: tx.density, color: '#F43F5E' })
-                                            if (tx.elasticity !== undefined && tx.elasticity !== null) items.push({ label: 'Élasticité', value: tx.elasticity, color: '#FDA4AF' })
-                                            if (tx.stickiness !== undefined && tx.stickiness !== null) items.push({ label: 'Collant', value: tx.stickiness, color: '#FB923C' })
-                                            if (items.length === 0) return null
-                                            return (
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-2">Texture</div>
-                                                    <MiniBars items={items} max={10} />
-                                                </div>
-                                            )
-                                        })()}
-
-                                        {/* Profil terpénique */}
-                                        {hasElement(['terpeneProfile', 'terpenes']) && (() => {
-                                            const terps = resolveReviewField('terpeneProfile') || resolveReviewField('terpenes') || []
-                                            const normalized = Array.isArray(terps) ? terps.map(t => ({ name: t.name || t.terpene || t.key || t.label || 'Autre', percent: t.percent || t.value || t.amount || 0 })) : []
-                                            return (
-                                                <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                    <div className="text-gray-400 text-xs mb-2">Profil terpénique</div>
-                                                    <TerpeneBar profile={normalized} />
-                                                </div>
-                                            )
-                                        })()}
-
-                                        {/* Analytique rapide */}
-                                        {(resolveReviewField('thc') || resolveReviewField('cbd') || resolveReviewField("cbg")) && (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-2">Analytiques</div>
-                                                <div className="flex gap-2 items-center">
-                                                    {resolveReviewField('thc') && <div className="px-2 py-1 bg-red-500/20 rounded text-xs text-red-300">THC: {resolveReviewField('thc')}</div>}
-                                                    {resolveReviewField('cbd') && <div className="px-2 py-1 bg-emerald-600/20 rounded text-xs text-emerald-300">CBD: {resolveReviewField('cbd')}</div>}
-                                                    {resolveReviewField('cbg') && <div className="px-2 py-1 bg-violet-600/20 rounded text-xs text-violet-300">CBG: {resolveReviewField('cbg')}</div>}
-                                                    {reviewData?.flowerData?.analyticsPdfUrl && (
-                                                        <a href={`/images/${reviewData.flowerData.analyticsPdfUrl}`} target="_blank" rel="noreferrer" className="ml-auto text-xs text-gray-300 underline">Certificat</a>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Custom Sections (Drag & Drop) */}
-                                    {mode === 'custom' && customSections.filter(s => (
-                                        // show the section if the section id or any of its modules are available for this product
-                                        isElementAvailableForProduct(productType || productKey, s.id) || (s.modules || s.fields || []).some(m => relevantModulesSet.has(m))
-                                    )).map(section => (
-                                        <div key={section.id} className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                            <div className="text-xs font-bold uppercase mb-1">{section.name}</div>
-                                            <div className="space-y-2">
-                                                {(section.modules || section.fields || []).map((modId) => (
-                                                    <div key={modId} className="text-white text-sm">
-                                                        <div className="text-xs text-gray-400 uppercase">{modId}</div>
-                                                        <div className="mt-1">{renderFieldValue(modId)}</div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Culture / Curing Pipelines */}
-                            {(hasElement('culture') || hasElement('curing') || hasElement('recolte')) && (
-                                <div className="mt-4 space-y-3">
-                                    {hasElement('culture') && (() => {
-                                        const c = resolveReviewField('culture') || {}
-                                        if (!Array.isArray(c.data) || c.data.length === 0) return null
-                                        return (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-2">Pipeline Culture ({c.data.length} étapes)</div>
-                                                <div className="flex gap-1 flex-wrap">
-                                                    {c.data.slice(0, 12).map((step, i) => (
-                                                        <div key={i} className="w-6 h-6 rounded bg-green-500/30 border border-green-500/50 flex items-center justify-center" title={step.label || step.phase || `Étape ${i + 1}`}>
-                                                            <span className="text-green-300" style={{ fontSize: '8px' }}>{i + 1}</span>
-                                                        </div>
-                                                    ))}
-                                                    {c.data.length > 12 && <span className="text-xs text-gray-500 self-center">+{c.data.length - 12}</span>}
-                                                </div>
-                                            </div>
-                                        )
-                                    })()}
-                                    {hasElement('curing') && (() => {
-                                        const c = resolveReviewField('curing') || {}
-                                        if (!Array.isArray(c.data) || c.data.length === 0) return null
-                                        return (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-2">Pipeline Curing ({c.data.length} étapes)</div>
-                                                <div className="flex gap-1 flex-wrap">
-                                                    {c.data.slice(0, 12).map((step, i) => (
-                                                        <div key={i} className="w-6 h-6 rounded bg-amber-500/30 border border-amber-500/50 flex items-center justify-center" title={step.label || `J+${i + 1}`}>
-                                                            <span className="text-amber-300" style={{ fontSize: '8px' }}>{i + 1}</span>
-                                                        </div>
-                                                    ))}
-                                                    {c.data.length > 12 && <span className="text-xs text-gray-500 self-center">+{c.data.length - 12}</span>}
-                                                </div>
-                                            </div>
-                                        )
-                                    })()}
-                                    {hasElement('recolte') && (() => {
-                                        const r = resolveReviewField('recolte') || {}
-                                        if (!r.poidsBrut && !r.poidsNet && !r.trichomesLaiteux) return null
-                                        return (
-                                            <div className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                                <div className="text-gray-400 text-xs mb-2">Récolte</div>
-                                                <div className="flex gap-4 text-xs text-white">
-                                                    {r.poidsBrut && <span>Brut: <b>{r.poidsBrut}g</b></span>}
-                                                    {r.poidsNet && <span>Net: <b>{r.poidsNet}g</b></span>}
-                                                    {(r.trichomesLaiteux > 0 || r.trichomesAmbres > 0) && (
-                                                        <span>Trichomes: <b>{r.trichomesLaiteux ?? 0}% laiteux / {r.trichomesAmbres ?? 0}% ambrés</b></span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )
-                                    })()}
-                                </div>
-                            )}
-
-                            {/* Footer */}
-                            <div className="mt-auto pt-6 border-t border-white/10 flex justify-between items-end">
-                                <div className="text-xs text-gray-500">
-                                    Review réalisée sur<br />
-                                    <span className="text-white font-bold text-lg">Reviews-Maker</span>
-                                </div>
-                                <div className="flex gap-4">
-                                    <div className="text-center">
-                                        <div className="text-xs text-gray-500">Date</div>
-                                        <div className="text-white font-medium">{new Date().toLocaleDateString()}</div>
-                                    </div>
-                                    <div className="text-center">
-                                        <div className="text-xs text-gray-500">Reviewer</div>
-                                        <div className="text-white font-medium">@{reviewData.author?.username || 'Anonyme'}</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>}
-
                         {/* Filigrane Overlay */}
                         {watermark.visible && (
                             <div
@@ -2226,105 +1850,101 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </div>
                             </div>
                         )}
-
-                        {/* Save to Library Modal */}
-                        {savingToLibrary && (
-                            <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/60">
-                                <div className="bg-white/5 p-6 rounded-lg w-[420px]">
-                                    <h3 className="text-lg font-semibold text-white mb-3">Sauvegarder l'export</h3>
-                                    <div className="space-y-2">
-                                        <label className="text-xs text-gray-400">Nom</label>
-                                        <input value={saveName} onChange={(e) => setSaveName(e.target.value)} className="w-full p-2 rounded bg-black/30 text-white text-sm" placeholder={`Export ${new Date().toLocaleDateString()}`} />
-
-                                        <label className="text-xs text-gray-400">Description (optionnel)</label>
-                                        <textarea value={saveDescription} onChange={(e) => setSaveDescription(e.target.value)} className="w-full p-2 rounded bg-black/30 text-white text-sm" rows={3} />
-
-                                        <div className="flex items-start gap-2">
-                                            <input id="publish" type="checkbox" checked={savePublic} onChange={(e) => setSavePublic(e.target.checked)} disabled={!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)} />
-                                            <div className="flex flex-col">
-                                                <label htmlFor="publish" className="text-sm text-gray-300">Publier dans la galerie publique</label>
-                                                {(!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)) && (
-                                                    <div className="text-xs text-gray-500">Seul le propriétaire de la review peut la publier</div>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {saveError && (<div className="text-sm text-rose-400">{saveError}</div>)}
-
-                                        <div className="flex items-center justify-end gap-2 mt-4">
-                                            <button onClick={() => setSavingToLibrary(false)} className="px-3 py-2 rounded bg-white/5 text-sm">Annuler</button>
-                                            <button
-                                                onClick={async () => {
-                                                    setSaveError(null)
-                                                    setSaveLoading(true)
-                                                    try {
-                                                        // Render canvas and upload
-                                                        if (!exportRef.current) throw new Error('Aucune preview disponible')
-                                                        const { toPng: _toPng } = await import('html-to-image')
-                                                        const dataUrl = await _toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
-                                                        const imgResp = await fetch(dataUrl)
-                                                        const blob = await imgResp.blob()
-                                                        const filename = `export-${reviewName.replace(/\s+/g, '-')}-${Date.now()}.png`
-                                                        const form = new FormData()
-                                                        form.append('file', blob, filename)
-                                                        if (reviewData?.id) form.append('reviewId', reviewData.id)
-                                                        form.append('name', saveName || '')
-                                                        form.append('description', saveDescription || '')
-                                                        form.append('format', 'png')
-                                                        form.append('templateName', selectedTemplate || 'modernCompact')
-                                                        form.append('isPublic', savePublic ? 'true' : 'false')
-
-                                                        const resp = await fetch('/api/library/exports', {
-                                                            method: 'POST',
-                                                            body: form,
-                                                            credentials: 'include'
-                                                        })
-                                                        if (!resp.ok) {
-                                                            const json = await resp.json().catch(() => ({ message: 'Erreur' }))
-                                                            throw new Error(json.message || 'Erreur lors de l\'upload')
-                                                        }
-
-                                                        const json = await resp.json()
-
-                                                        // Si publication publique → marquer la review comme publique aussi
-                                                        if (savePublic && reviewData?.id) {
-                                                            try {
-                                                                await fetch(`/api/reviews/${reviewData.id}/visibility`, {
-                                                                    method: 'PATCH',
-                                                                    headers: { 'Content-Type': 'application/json' },
-                                                                    body: JSON.stringify({ isPublic: true }),
-                                                                    credentials: 'include'
-                                                                })
-                                                            } catch (visErr) {
-                                                                console.warn('[ExportMaker] Failed to update review visibility:', visErr)
-                                                            }
-                                                        }
-
-                                                        setSavingToLibrary(false)
-                                                        alert(savePublic
-                                                            ? 'Export enregistré et review publiée dans la galerie !'
-                                                            : 'Export enregistré dans votre bibliothèque'
-                                                        )
-                                                    } catch (err) {
-                                                        console.error(err)
-                                                        setSaveError(err.message)
-                                                    } finally {
-                                                        setSaveLoading(false)
-                                                    }
-                                                }}
-                                                disabled={saveLoading}
-                                                className="px-4 py-2 rounded bg-emerald-600 text-white font-medium"
-                                            >
-                                                {saveLoading ? 'Enregistrement...' : 'Enregistrer'}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        )}
                     </div>
                     {/* Close scale wrapper */}
                     </div>
+
+                    {/* Save to Library Modal — outside exportRef to avoid being captured in exports */}
+                    {savingToLibrary && (
+                        <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
+                            <div className="bg-[#0f0f1a]/95 border border-white/10 p-6 rounded-xl w-[380px] max-w-[90%] shadow-2xl">
+                                <h3 className="text-lg font-semibold text-white mb-3">Sauvegarder l'export</h3>
+                                <div className="space-y-2">
+                                    <label className="text-xs text-gray-400">Nom</label>
+                                    <input value={saveName} onChange={(e) => setSaveName(e.target.value)} className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-purple-500/50 outline-none" placeholder={`Export ${new Date().toLocaleDateString()}`} />
+
+                                    <label className="text-xs text-gray-400">Description (optionnel)</label>
+                                    <textarea value={saveDescription} onChange={(e) => setSaveDescription(e.target.value)} className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-purple-500/50 outline-none" rows={3} />
+
+                                    <div className="flex items-start gap-2">
+                                        <input id="publish" type="checkbox" checked={savePublic} onChange={(e) => setSavePublic(e.target.checked)} disabled={!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)} />
+                                        <div className="flex flex-col">
+                                            <label htmlFor="publish" className="text-sm text-gray-300">Publier dans la galerie publique</label>
+                                            {(!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)) && (
+                                                <div className="text-xs text-gray-500">Seul le propriétaire de la review peut la publier</div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {saveError && (<div className="text-sm text-rose-400">{saveError}</div>)}
+
+                                    <div className="flex items-center justify-end gap-2 mt-4">
+                                        <button onClick={() => setSavingToLibrary(false)} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 transition-colors">Annuler</button>
+                                        <button
+                                            onClick={async () => {
+                                                setSaveError(null)
+                                                setSaveLoading(true)
+                                                try {
+                                                    if (!exportRef.current) throw new Error('Aucune preview disponible')
+                                                    const { toPng: _toPng } = await import('html-to-image')
+                                                    const dataUrl = await _toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
+                                                    const imgResp = await fetch(dataUrl)
+                                                    const blob = await imgResp.blob()
+                                                    const filename = `export-${reviewName.replace(/\s+/g, '-')}-${Date.now()}.png`
+                                                    const form = new FormData()
+                                                    form.append('file', blob, filename)
+                                                    if (reviewData?.id) form.append('reviewId', reviewData.id)
+                                                    form.append('name', saveName || '')
+                                                    form.append('description', saveDescription || '')
+                                                    form.append('format', 'png')
+                                                    form.append('templateName', selectedTemplate || 'modernCompact')
+                                                    form.append('isPublic', savePublic ? 'true' : 'false')
+
+                                                    const resp = await fetch('/api/library/exports', {
+                                                        method: 'POST',
+                                                        body: form,
+                                                        credentials: 'include'
+                                                    })
+                                                    if (!resp.ok) {
+                                                        const json = await resp.json().catch(() => ({ message: 'Erreur' }))
+                                                        throw new Error(json.message || 'Erreur lors de l\'upload')
+                                                    }
+
+                                                    if (savePublic && reviewData?.id) {
+                                                        try {
+                                                            await fetch(`/api/reviews/${reviewData.id}/visibility`, {
+                                                                method: 'PATCH',
+                                                                headers: { 'Content-Type': 'application/json' },
+                                                                body: JSON.stringify({ isPublic: true }),
+                                                                credentials: 'include'
+                                                            })
+                                                        } catch (visErr) {
+                                                            console.warn('[ExportMaker] Failed to update review visibility:', visErr)
+                                                        }
+                                                    }
+
+                                                    setSavingToLibrary(false)
+                                                    alert(savePublic
+                                                        ? 'Export enregistré et review publiée dans la galerie !'
+                                                        : 'Export enregistré dans votre bibliothèque'
+                                                    )
+                                                } catch (err) {
+                                                    console.error(err)
+                                                    setSaveError(err.message)
+                                                } finally {
+                                                    setSaveLoading(false)
+                                                }
+                                            }}
+                                            disabled={saveLoading}
+                                            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
+                                        >
+                                            {saveLoading ? 'Enregistrement...' : 'Enregistrer'}
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Mobile Preview */}
