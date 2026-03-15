@@ -589,9 +589,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const imgs = resolveReviewField('images')
         const raw = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : null
         if (!raw) return null
-        let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path) : raw
+        let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path || raw.preview) : raw
         if (!url || typeof url !== 'string') return null
-        if (url.startsWith('http') || url.startsWith('/images/')) return url
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/images/')) return url
         return `/images/${url.replace(/^\//, '')}`
     }
 
@@ -600,9 +600,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const imgs = resolveReviewField('images')
         if (!Array.isArray(imgs) || imgs.length === 0) return []
         return imgs.map(raw => {
-            let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path) : raw
+            let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path || raw.preview) : raw
             if (!url || typeof url !== 'string') return null
-            if (url.startsWith('http') || url.startsWith('/images/')) return url
+            if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/images/')) return url
             return `/images/${url.replace(/^\//, '')}`
         }).filter(Boolean)
     }
@@ -850,7 +850,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== COMPACT TEMPLATE (minimal) ======
     const renderCompactCanvas = () => {
-        const rating = resolveReviewField('overallRating') ?? reviewData.rating ?? reviewData.overallRating ?? null
+        const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
         const categories = getCategoryScores().filter(c => isSectionVisible(c.key)).slice(0, 4)
@@ -943,7 +943,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== STANDARD TEMPLATE ======
     const renderStandardCanvas = () => {
-        const rating = resolveReviewField('overallRating') ?? reviewData.rating ?? reviewData.overallRating ?? null
+        const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
         const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
@@ -1144,7 +1144,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // ====== DETAILED TEMPLATE ======
     const renderDetailedCanvas = () => {
-        const rating = resolveReviewField('overallRating') ?? reviewData.rating ?? reviewData.overallRating ?? null
+        const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
         const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
