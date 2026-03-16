@@ -1380,7 +1380,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md pt-10 sm:pt-28 sm:px-4 sm:pb-4">
+        <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md pt-10 sm:p-4">
             <LiquidGlass variant="modal" hover={false} className="w-full sm:max-w-5xl flex flex-col-reverse sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl h-[calc(100dvh_-_2.5rem)] sm:h-[calc(100dvh_-_8rem)] sm:max-h-[740px]">
 
                 {/* Sidebar options */}
