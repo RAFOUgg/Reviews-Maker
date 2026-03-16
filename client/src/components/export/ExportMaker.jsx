@@ -1368,7 +1368,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // Canvas dispatch — mapping orchardStore template IDs → canvas renderers
     const renderCanvasContent = () => {
-        const tpl = orchardConfig?.template || selectedTemplate;
+        // Use local selectedTemplate only — orchardConfig.template belongs to OrchardPanel
+        // and must not override the user's template choice in ExportMaker
+        const tpl = selectedTemplate;
         if (tpl === 'modernCompact' || tpl === 'minimal' || tpl === 'socialStory')
             return renderCompactCanvas();
         if (tpl === 'detailedCard' || tpl === 'detailed')
@@ -1379,7 +1381,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     return (
         <div className="fixed inset-0 z-[8888] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md pt-10 sm:pt-28 sm:px-4 sm:pb-4">
-            <LiquidGlass variant="modal" className="w-full sm:max-w-5xl flex flex-col-reverse sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl h-[calc(100dvh_-_2.5rem)] sm:h-[calc(100dvh_-_8rem)] sm:max-h-[740px]">
+            <LiquidGlass variant="modal" hover={false} className="w-full sm:max-w-5xl flex flex-col-reverse sm:flex-row overflow-hidden relative z-[8889] rounded-t-2xl sm:rounded-2xl h-[calc(100dvh_-_2.5rem)] sm:h-[calc(100dvh_-_8rem)] sm:max-h-[740px]">
 
                 {/* Sidebar options */}
                 <div className="flex-1 sm:flex-none w-full sm:w-72 border-r border-white/10 flex flex-col bg-white/5 min-h-0">
@@ -1394,7 +1396,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     </div>
 
                     {/* Sidebar tabs */}
-                    <div className="flex border-b border-white/10">
+                    <div className="flex border-b border-white/10 flex-shrink-0">
                         {[
                             { id: 'template', label: 'Template', icon: <Layout className="w-3.5 h-3.5" /> },
                             { id: 'contenu', label: 'Contenu', icon: <Grid className="w-3.5 h-3.5" /> },
@@ -1622,7 +1624,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     </div>
 
                     {/* Actions footer */}
-                    <div className="p-4 border-t border-white/10 space-y-3 bg-black/20">
+                    <div className="p-4 border-t border-white/10 space-y-3 bg-black/20 flex-shrink-0">
 
                         {/* Bouton principal — Exporter l'image en PNG */}
                         <div className="space-y-2">
