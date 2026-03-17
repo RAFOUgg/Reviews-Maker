@@ -455,27 +455,27 @@ export default function CreateFlowerReview() {
                         )}
                     </motion.div>
                 </AnimatePresence>
-
-                {/* Orchard Preview Panel (lazy-loaded) */}
-                {showOrchard && (
-                    <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
-                        <OrchardPanel
-                            reviewData={formData}
-                            productType="flower"
-                            reviewId={id || null}
-                            onClose={() => setShowOrchard(false)}
-                            onPresetApplied={(orchardData) => {
-                                handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
-                                handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
-                                if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
-                                if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
-                                setShowOrchard(false)
-                            }}
-                            onPublish={handleSubmitWithOrchardData}
-                        />
-                    </Suspense>
-                )}
             </ResponsiveCreateReviewLayout>
+
+            {/* Orchard Preview Panel – OUTSIDE layout to avoid z-index stacking context issues */}
+            {showOrchard && (
+                <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
+                    <OrchardPanel
+                        reviewData={formData}
+                        productType="flower"
+                        reviewId={id || null}
+                        onClose={() => setShowOrchard(false)}
+                        onPresetApplied={(orchardData) => {
+                            handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
+                            handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
+                            if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
+                            if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
+                            setShowOrchard(false)
+                        }}
+                        onPublish={handleSubmitWithOrchardData}
+                    />
+                </Suspense>
+            )}
 
             {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
             {showExportMaker && (
