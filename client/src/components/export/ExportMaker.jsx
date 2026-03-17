@@ -1380,11 +1380,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     }
 
     return (
-        <div className="fixed inset-0 z-[10001] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md pt-10 sm:p-4">
-            <LiquidGlass variant="modal" hover={false} className="w-full sm:max-w-5xl flex flex-col-reverse sm:flex-row overflow-hidden relative z-[10002] rounded-t-2xl sm:rounded-2xl h-[calc(100dvh_-_2.5rem)] sm:h-[calc(100dvh_-_8rem)] sm:max-h-[740px]">
+        <div className="fixed inset-0 z-[10001] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md sm:p-4">
+            <LiquidGlass variant="modal" hover={false} className="w-full sm:max-w-6xl flex flex-col sm:flex-row overflow-hidden relative z-[10002] rounded-t-2xl sm:rounded-2xl h-[calc(100dvh_-_1.5rem)] sm:h-[calc(100dvh_-_4rem)] sm:max-h-[880px]">
 
                 {/* Sidebar options */}
-                <div className="flex-1 sm:flex-none w-full sm:w-72 border-r border-white/10 flex flex-col bg-white/5 min-h-0">
+                <div className="order-2 sm:order-1 flex-1 sm:flex-none w-full sm:w-80 border-t sm:border-t-0 sm:border-r border-white/10 flex flex-col bg-white/5 min-h-0">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0 bg-white/5 z-10">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
                             <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-purple-500/20">T</div>
@@ -1624,127 +1624,112 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     </div>
 
                     {/* Actions footer */}
-                    <div className="p-4 border-t border-white/10 space-y-3 bg-black/20 flex-shrink-0">
+                    <div className="px-4 py-3 border-t border-white/10 space-y-2 bg-black/20 flex-shrink-0">
 
-                        {/* Bouton principal — Exporter l'image en PNG */}
-                        <div className="space-y-2">
-                            <button
-                                onClick={() => handleExport('png')}
-                                disabled={exporting}
-                                className="w-full py-3 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2"
-                            >
-                                {exporting ? (
-                                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                                ) : (
-                                    <Download className="w-5 h-5" />
-                                )}
-                                Exporter l'image
-                            </button>
+                        {/* Bouton principal PNG */}
+                        <button
+                            onClick={() => handleExport('png')}
+                            disabled={exporting}
+                            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                        >
+                            {exporting ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                                <Download className="w-4 h-4" />
+                            )}
+                            Exporter PNG
+                        </button>
 
+                        {/* Sauvegarder + Partager */}
+                        <div className="grid grid-cols-2 gap-2">
                             <button
                                 onClick={() => setSavingToLibrary(true)}
                                 disabled={saveLoading}
-                                className="w-full py-3 bg-white/5 rounded-xl text-white font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
+                                className="py-2 bg-white/5 rounded-xl text-white text-xs font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-1.5"
                             >
-                                <Save className="w-4 h-4" />
-                                Sauvegarder dans la bibliothèque
+                                <Save className="w-3.5 h-3.5" />
+                                Sauvegarder
                             </button>
-
                             {/* Partage — Web Share API (mobile) ou copie du lien */}
                             <button
                                 onClick={async () => {
                                     try {
-                                        // Générer le PNG depuis la preview
                                         const { toPng } = await import('html-to-image');
                                         const dataUrl = await toPng(exportRef.current, {
                                             cacheBust: true,
                                             pixelRatio: highQuality ? 3 : 2,
                                             backgroundColor: null,
                                         });
-
-                                        // Web Share API (mobile / Chrome Android / Safari iOS 15+)
                                         if (navigator.share) {
                                             const imgResp = await fetch(dataUrl);
                                             const blob = await imgResp.blob();
                                             const file = new File([blob], `review-${reviewName}.png`, { type: 'image/png' });
                                             const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
                                             if (canShareFiles) {
-                                                await navigator.share({
-                                                    title: `Review ${reviewName}`,
-                                                    text: `Découvrez cette review sur Terpologie`,
-                                                    files: [file],
-                                                });
+                                                await navigator.share({ title: `Review ${reviewName}`, text: `Découvrez cette review sur Terpologie`, files: [file] });
                                             } else {
-                                                await navigator.share({
-                                                    title: `Review ${reviewName}`,
-                                                    text: `Découvrez cette review sur Terpologie`,
-                                                    url: window.location.href,
-                                                });
+                                                await navigator.share({ title: `Review ${reviewName}`, text: `Découvrez cette review sur Terpologie`, url: window.location.href });
                                             }
+                                        } else if (navigator.clipboard && window.ClipboardItem) {
+                                            const imgResp = await fetch(dataUrl);
+                                            const blob = await imgResp.blob();
+                                            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+                                            alert('Image copiée dans le presse-papier !');
                                         } else {
-                                            // Fallback: copier l'image en base64 dans le presse-papier ou télécharger
-                                            if (navigator.clipboard && window.ClipboardItem) {
-                                                const imgResp = await fetch(dataUrl);
-                                                const blob = await imgResp.blob();
-                                                await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                                                alert('Image copiée dans le presse-papier !');
-                                            } else {
-                                                // Dernier recours : copier l'URL
-                                                await navigator.clipboard.writeText(window.location.href);
-                                                alert('Lien de la review copié dans le presse-papier !');
-                                            }
+                                            await navigator.clipboard.writeText(window.location.href);
+                                            alert('Lien copié dans le presse-papier !');
                                         }
                                     } catch (err) {
                                         if (err.name !== 'AbortError') {
                                             console.error('[ExportMaker] Share failed:', err);
-                                            alert('Partage non disponible. Utilisez le bouton "Exporter" pour télécharger l\'image.');
+                                            alert('Partage non disponible. Utilisez "Exporter PNG".');
                                         }
                                     }
                                 }}
-                                className="w-full py-3 bg-white/5 rounded-xl text-white font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-2"
+                                className="py-2 bg-white/5 rounded-xl text-white text-xs font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-1.5"
                             >
-                                <Share2 className="w-4 h-4" />
+                                <Share2 className="w-3.5 h-3.5" />
                                 Partager
                             </button>
                         </div>
 
                         {/* Formats secondaires + qualité */}
-                        <div className="flex gap-2 items-center">
-                            <button onClick={() => handleExport('jpg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">JPEG</button>
+                        <div className="flex gap-1.5 items-center">
+                            <button onClick={() => handleExport('jpg')} className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 font-medium">JPEG</button>
                             <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
-                                <button onClick={() => handleExport('svg')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">SVG</button>
+                                <button onClick={() => handleExport('svg')} className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 font-medium">SVG</button>
                             </FeatureGate>
-                            <button onClick={() => handleExport('pdf')} className="flex-1 py-2 text-sm bg-white/5 hover:bg-white/10 rounded-lg text-white">PDF</button>
+                            <button onClick={() => handleExport('pdf')} className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 font-medium">PDF</button>
                             {permissions.export?.quality && (
                                 <button
                                     onClick={() => setHighQuality(h => !h)}
                                     disabled={!canExportAdvanced}
                                     title={!canExportAdvanced ? 'Haute qualité réservé aux comptes payants' : 'Activer la haute qualité (300dpi)'}
-                                    className={`px-3 py-2 text-xs rounded-lg ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-200 hover:bg-white/10') : 'opacity-50 cursor-not-allowed bg-white/5 text-gray-500'}`}
+                                    className={`px-2.5 py-1.5 text-xs rounded-lg font-semibold ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10') : 'opacity-40 cursor-not-allowed bg-white/5 text-gray-500'}`}
                                 >
                                     HQ
                                 </button>
                             )}
                         </div>
 
-                        {/* Bouton Export GIF - si pipeline présent */}
+                        {/* Export GIF — si pipeline présent */}
                         {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
                             reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
                                 <FeatureGate hasAccess={canExportGIF} upgradeType="producer">
                                     <button
                                         onClick={handleExportGIF}
                                         disabled={exportingGIF}
-                                        className="w-full py-3 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold shadow-lg hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-2"
+                                        className="w-full py-2 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold text-xs hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-1.5"
                                     >
                                         {exportingGIF ? (
                                             <>
-                                                <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full" />
+                                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
                                                 <span>{gifProgress}%</span>
                                             </>
                                         ) : (
                                             <>
-                                                <Film className="w-5 h-5" />
-                                                <span>Exporter Pipeline en GIF</span>
+                                                <Film className="w-4 h-4" />
+                                                <span>Pipeline en GIF</span>
                                             </>
                                         )}
                                     </button>
@@ -1754,7 +1739,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 </div>
 
                 {/* Preview Area */}
-                <div ref={previewAreaRef} className="hidden sm:flex sm:flex-1 min-h-0 bg-gray-950/80 sm:p-4 items-center justify-center overflow-hidden relative">
+                <div ref={previewAreaRef} className="order-1 sm:order-2 flex shrink-0 sm:shrink sm:flex-1 h-[40vh] sm:h-auto min-h-0 bg-gray-950/80 p-3 sm:p-6 items-center justify-center overflow-hidden relative">
                     <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
 
                     {/* Contextual right-click menu for per-section styling */}
@@ -1950,29 +1935,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             </div>
                         </div>
                     )}
-                </div>
-
-                {/* Mobile Preview */}
-                <div className="sm:hidden flex flex-col w-full h-[38vh] bg-gray-950/80 border-t border-white/10 overflow-hidden">
-                    <div className="flex-1 flex items-center justify-center p-3 relative">
-                        <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
-                        <div style={{ transform: `scale(${Math.min(0.35, (window.innerWidth - 32) / designSize.w)})`, transformOrigin: 'center center', flexShrink: 0, lineHeight: 0 }}>
-                            <div
-                                className="shadow-lg relative overflow-hidden"
-                                style={{
-                                    width: designSize.w,
-                                    height: designSize.h,
-                                    background: previewBackground,
-                                    fontFamily: `"${previewFont}", Inter, sans-serif`,
-                                    color: previewTextColor,
-                                    '--accent': previewAccent,
-                                    borderRadius: '8px',
-                                }}
-                            >
-                                {renderCanvasContent()}
-                            </div>
-                        </div>
-                    </div>
                 </div>
             </LiquidGlass>
         </div>
