@@ -393,8 +393,8 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                 className="fixed z-[10002] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 dark:"
                 style={
                     showPreview
-                        ? { left: '50%', top: '50%', transform: 'translate(-50%, -50%)', width: 'min(1180px, 96vw)', height: 'min(860px, calc(100svh - 3rem))' }
-                        : { left: '50%', top: '50%', width: 'min(600px, 95vw)', maxHeight: '85vh', transform: 'translate(-50%, -50%)' }
+                        ? { inset: 0, margin: 'auto', width: 'min(1180px, 96vw)', height: 'min(860px, calc(100svh - 3rem))' }
+                        : { inset: 0, margin: 'auto', width: 'min(600px, 95vw)', height: 'fit-content', maxHeight: 'calc(100svh - 3rem)' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
