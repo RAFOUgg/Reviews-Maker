@@ -355,7 +355,7 @@ router.put('/api/reviews/:reviewId/pipeline', async (req, res) => {
     try {
         const userId = req.user.id;
         const { reviewId } = req.params;
-        const { mode, startDate, endDate, activeSetups, notesGenerales } = req.body;
+        const { mode, startDate, endDate, activeSetups, notesGenerales, phases } = req.body;
 
         // Vérifier que la review existe et appartient à l'utilisateur
         const review = await prisma.review.findFirst({

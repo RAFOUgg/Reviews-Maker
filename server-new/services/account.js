@@ -16,6 +16,8 @@ export const ACCOUNT_TYPES = {
     PRODUCER: 'producer',     // 29.99€/mois (ancien producteur)
     INFLUENCER: 'influencer',   // 15.99€/mois (anciens influenceur)
     ADMIN: 'admin',               // Administrateur
+    BETA_TESTER: 'beta_tester',    // Beta testeur
+    MERCHANT: 'merchant',          // Marchand
 };
 
 /**

@@ -194,7 +194,7 @@ if (process.env.APPLE_CLIENT_ID && process.env.APPLE_TEAM_ID && process.env.APPL
             const displayName = profile.name ? `${profile.name.firstName || ''} ${profile.name.lastName || ''}`.trim() : null
 
             if (!user) {
-                const existingUser = primaryEmail ? await prisma.user.findUnique({
+                const existingUser = primaryEmail ? await prisma.user.findFirst({
                     where: { email: primaryEmail }
                 }) : null
 

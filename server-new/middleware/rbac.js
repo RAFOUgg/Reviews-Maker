@@ -2,6 +2,8 @@
  * Middleware RBAC (Role-Based Access Control)
  */
 
+import { prisma } from '../server.js';
+
 /**
  * Parse les rôles depuis le champ JSON string
  * @param {string} rolesJson - Champ User.roles (JSON string)
@@ -44,8 +46,6 @@ function requireRole(...requiredRoles) {
             return res.status(403).json({
                 error: 'forbidden',
                 message: 'Vous n\'avez pas les permissions nécessaires',
-                requiredRoles,
-                userRoles,
             });
         }
 
@@ -112,10 +112,6 @@ function requireSubscription(allowedPlans = []) {
             });
         }
 
-        // Charger la subscription depuis Prisma
-        const { PrismaClient } = require('@prisma/client');
-        const prisma = new PrismaClient();
-
         try {
             const subscription = await prisma.subscription.findUnique({
                 where: { userId: req.user.id },
@@ -133,7 +129,6 @@ function requireSubscription(allowedPlans = []) {
                 return res.status(403).json({
                     error: 'subscription_inactive',
                     message: 'Votre abonnement n\'est pas actif',
-                    status: subscription.status,
                     requiredAction: 'reactivate_subscription',
                 });
             }
@@ -142,8 +137,6 @@ function requireSubscription(allowedPlans = []) {
                 return res.status(403).json({
                     error: 'insufficient_plan',
                     message: 'Votre plan d\'abonnement ne permet pas d\'accéder à cette fonctionnalité',
-                    currentPlan: subscription.plan,
-                    requiredPlans: allowedPlans,
                     requiredAction: 'upgrade_plan',
                 });
             }
@@ -157,8 +150,6 @@ function requireSubscription(allowedPlans = []) {
                 error: 'internal_error',
                 message: 'Erreur lors de la vérification de l\'abonnement',
             });
-        } finally {
-            await prisma.$disconnect();
         }
     };
 }
@@ -170,9 +161,6 @@ async function attachUserMetadata(req, res, next) {
     if (!req.user) {
         return next();
     }
-
-    const { PrismaClient } = require('@prisma/client');
-    const prisma = new PrismaClient();
 
     try {
         // Parser les rôles
@@ -188,12 +176,10 @@ async function attachUserMetadata(req, res, next) {
         next();
     } catch (error) {
         next(); // Continue même en cas d'erreur
-    } finally {
-        await prisma.$disconnect();
     }
 }
 
-module.exports = {
+export {
     parseRoles,
     requireRole,
     requireStaff,

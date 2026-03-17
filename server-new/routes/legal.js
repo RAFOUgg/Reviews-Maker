@@ -510,7 +510,7 @@ router.get('/user-preferences', async (req, res) => {
 
         res.json({
             country: req.user.country || null,
-            language: req.user.preferredLanguage || 'fr',
+            language: req.user.locale || 'fr',
             legalAge: req.user.legalAge || false,
             consentRDR: req.user.consentRDR || false
         });
@@ -556,14 +556,14 @@ router.post('/update-preferences', async (req, res) => {
             where: { id: req.user.id },
             data: {
                 country,
-                preferredLanguage: language
+                locale: language
             },
         });
 
         res.json({
             success: true,
             country: updatedUser.country,
-            language: updatedUser.preferredLanguage
+            language: updatedUser.locale
         });
     } catch (error) {
         res.status(500).json({

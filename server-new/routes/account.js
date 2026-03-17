@@ -90,7 +90,7 @@ router.get('/types', (req, res) => {
             disabled: true,
         },
         {
-            type: ACCOUNT_TYPES.INFLUENCEUR,
+            type: ACCOUNT_TYPES.INFLUENCER,
             name: 'Influenceur',
             description: 'Exports haute qualité et branding personnel',
             price: 15.99,
@@ -422,25 +422,6 @@ router.put('/update', asyncHandler(async (req, res) => {
         updates.emailVerified = false; // Nécessite re-vérification
     }
 
-    if (email && email.trim().length > 0) {
-        // Vérifier que l'email n'existe pas déjà
-        const existing = await prisma.user.findFirst({
-            where: {
-                email: email.trim(),
-                id: { not: req.user.id }
-            }
-        });
-
-        if (existing) {
-            return res.status(400).json({
-                error: 'email_taken',
-                message: 'Cet email est déjà utilisé',
-            });
-        }
-        updates.email = email.trim();
-        updates.emailVerified = false; // Nécessite re-vérification
-    }
-
     // === FIX: Handle Account Type Update ===
     const { accountType } = req.body;
     if (accountType) {
@@ -490,7 +471,7 @@ router.put('/update', asyncHandler(async (req, res) => {
     const userAccountType = getUserAccountType(updatedUser);
 
     if ((companyName || siret || billingAddress || vatNumber) &&
-        (userAccountType === 'producteur' || userAccountType === 'influenceur')) {
+        (userAccountType === 'producer' || userAccountType === 'influencer')) {
         // Rechercher ou créer le ProducerProfile
         producerProfile = await prisma.producerProfile.upsert({
             where: { userId: req.user.id },

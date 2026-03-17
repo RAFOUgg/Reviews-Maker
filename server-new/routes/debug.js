@@ -1,6 +1,6 @@
 import express from 'express'
 import { requireAuth } from '../middleware/auth.js'
-import { getUserLimits, canAccessSection, canAccessFeature, getUserLimits as _getUserLimits } from '../middleware/permissions.js'
+import { getUserLimits, canAccessSection, canAccessFeature } from '../middleware/permissions.js'
 import { getUserAccountType } from '../services/account.js'
 
 const router = express.Router()

@@ -38,11 +38,11 @@ const requireAdmin = (req, res, next) => {
 // Check admin auth
 router.get('/check-auth', async (req, res) => {
     try {
-        const isAdmin = process.env.ADMIN_MODE === 'true' || 
-                       (req.user && req.user.roles && 
-                        (typeof req.user.roles === 'string' ? JSON.parse(req.user.roles) : req.user.roles)
-                        .includes('admin'))
-        
+        const isAdmin = process.env.ADMIN_MODE === 'true' ||
+            (req.user && req.user.roles &&
+                (typeof req.user.roles === 'string' ? JSON.parse(req.user.roles) : req.user.roles)
+                    .includes('admin'))
+
         if (!isAdmin) {
             return res.status(401).json({
                 authenticated: false,
@@ -50,7 +50,7 @@ router.get('/check-auth', async (req, res) => {
                 message: 'Not authenticated as admin'
             })
         }
-        
+
         res.json({
             isAdmin: true,
             authenticated: !!req.user,
@@ -172,8 +172,8 @@ router.patch('/users/:id/subscription', requireAdmin, async (req, res) => {
             where: { id: req.params.id },
             data: {
                 subscriptionStatus: subscriptionStatus,
-                subscriptionStartDate: subscriptionStatus === 'active' ? new Date() : undefined,
-                subscriptionEndDate: subscriptionStatus === 'expired' ? new Date() : undefined
+                subscriptionStart: subscriptionStatus === 'active' ? new Date() : undefined,
+                subscriptionEnd: subscriptionStatus === 'expired' ? new Date() : undefined
             },
             select: {
                 id: true,

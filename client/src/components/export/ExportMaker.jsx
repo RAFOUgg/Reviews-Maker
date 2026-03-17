@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 // Note: heavy export libs (html-to-image, jspdf) are dynamically imported only when the user triggers an export
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
     Download, Palette,
     Grid, Layout, Maximize2, Save, X, ChevronsRight,
@@ -43,7 +43,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         return () => setReviewData(null);
     }, [reviewData, setReviewData]);
 
-    const { isPremium, isProducer, isConsumer, isInfluencer, permissions, canAccess } = useAccountType();
+    const { permissions } = useAccountType();
     const canExportSVG = permissions.export?.formats?.svg === true;
     const canExportAdvanced = permissions.export?.quality?.high === true;
     const canUseCustomLayout = permissions.export?.templates?.custom === true;
@@ -146,14 +146,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // Pagination simplifiée — pas de système d'éléments, le contenu est contrôlé par les renderers
     const totalPages = 1;
-    const [currentPage, setCurrentPage] = useState(0);
     const safePage = 0;
-
-    const Star = ({ className }) => (
-        <svg viewBox="0 0 24 24" fill="currentColor" className={className}>
-            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
-        </svg>
-    );
 
     const handleExport = async (exportFormat = 'png') => {
         console.debug('[ExportMaker] handleExport called', { exportFormat, exportRefCurrent: !!exportRef.current })
@@ -595,18 +588,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         return `/images/${url.replace(/^\//, '')}`
     }
 
-    // Get all images as resolved URLs
-    const getAllImages = () => {
-        const imgs = resolveReviewField('images')
-        if (!Array.isArray(imgs) || imgs.length === 0) return []
-        return imgs.map(raw => {
-            let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path || raw.preview) : raw
-            if (!url || typeof url !== 'string') return null
-            if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/images/')) return url
-            return `/images/${url.replace(/^\//, '')}`
-        }).filter(Boolean)
-    }
-
     // Content module visibility — read from orchardStore
     const contentModules = orchardConfig?.contentModules || {};
 
@@ -632,11 +613,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         if (!keys) return true;
         const moduleVisible = keys.some(k => contentModules[k] !== false);
         return moduleVisible;
-    };
-
-    // Check if a specific field is visible (false only if explicitly disabled)
-    const isFieldVisible = (fieldKey) => {
-        return contentModules[fieldKey] !== false;
     };
 
     // ========== FLEXIBLE DATA RENDERERS ==========
@@ -1147,7 +1123,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
         const typeName = reviewData.typeName || productType || 'Fleurs'
         const imgUrl = getMainImage()
-        const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
         const odor = resolveReviewField('odor') || {}
         const taste = resolveReviewField('taste') || {}
         const effects = resolveReviewField('effects') || {}
