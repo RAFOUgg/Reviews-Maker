@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 // Note: heavy export libs (html-to-image, jspdf) are dynamically imported only when the user triggers an export
-import { motion } from 'framer-motion';
 import {
     Download, Palette,
     Grid, Layout, Maximize2, Save, X, ChevronsRight,

@@ -7,10 +7,10 @@
 import React, { useState, useEffect } from 'react';
 import { LiquidModal, LiquidButton, LiquidCard, LiquidChip } from '@/components/ui/LiquidUI';
 import { Globe, AlertTriangle, Check, Shield, Loader2 } from 'lucide-react';
-import legalTranslations from '../i18n/legalWelcome.json';
-import { useAuth } from '../hooks/useAuth';
+import legalTranslations from '../../i18n/legalWelcome.json';
+import { useAuth } from '../../hooks/useAuth';
 import { useTranslation } from 'react-i18next';
-import { SUPPORTED_LANGUAGES, changeLanguage } from '../i18n/i18n';
+import { SUPPORTED_LANGUAGES, changeLanguage } from '../../i18n/i18n';
 
 const LegalWelcomeModal = ({ onAccept, onDeny }) => {
     const { user, isAuthenticated } = useAuth();
