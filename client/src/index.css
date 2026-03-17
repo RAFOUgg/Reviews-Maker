@@ -182,13 +182,12 @@
 
 @layer utilities {
 
+    /* Cards / panels who contain content directly need padding + radius */
     .glass,
-    .liquid-glass,
     .liquid-glass--card {
         position: relative;
         -webkit-backdrop-filter: blur(var(--glass-blur));
         backdrop-filter: blur(var(--glass-blur));
-        /* Use semantic token as the base background for glass containers */
         background: var(--glass-bg-dark, rgba(15, 23, 42, 0.85));
         border: 1px solid rgba(255, 255, 255, 0.04);
         box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -196,6 +195,18 @@
         overflow: hidden;
         border-radius: 1.25rem;
         padding: 1rem;
+    }
+
+    /* Base liquid-glass wrapper: no forced padding or radius —
+       let each usage (modal, sidebar, nav) define its own via Tailwind */
+    .liquid-glass {
+        position: relative;
+        -webkit-backdrop-filter: blur(var(--glass-blur));
+        backdrop-filter: blur(var(--glass-blur));
+        background: var(--glass-bg-dark, rgba(15, 23, 42, 0.85));
+        border: 1px solid rgba(255, 255, 255, 0.04);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+        transition: var(--transition-smooth, all 0.3s ease);
     }
 
     /* Scoped select / react-select styles only when inside a glass container */
