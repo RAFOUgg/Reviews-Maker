@@ -71,91 +71,93 @@ const CreateReviewFormWrapper = ({
     const SectionComponent = sectionComponents[currentSectionData?.id]
 
     return (
-        <ResponsiveCreateReviewLayout
-            currentSection={currentSection}
-            totalSections={sections.length}
-            onSectionChange={setCurrentSection}
-            title={title}
-            subtitle={subtitle}
-            sectionEmojis={sectionEmojis}
-            showProgress={true}
-            onSave={onSave}
-            onSubmit={onSubmit}
-            isSaving={saving}
-            reviewId={reviewId}
-            reviewHasPreview={reviewHasPreview}
-            onOpenPreview={() => setShowOrchard(true)}
-        >
-            {/* Bouton Aperçu - Ouvre OrchardPanel (système complet: templates, export, partage) */}
-            <div className="flex justify-end mb-4">
-                <button
-                    onClick={() => setShowOrchard(!showOrchard)}
-                    className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${layout.isMobile
-                        ? 'px-3 py-2 text-xs'
-                        : 'px-4 py-2 text-sm'
-                        }`}
-                >
-                    <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
-                    <span>Aperçu</span>
-                </button>
-            </div>
+        <>
+            <ResponsiveCreateReviewLayout
+                currentSection={currentSection}
+                totalSections={sections.length}
+                onSectionChange={setCurrentSection}
+                title={title}
+                subtitle={subtitle}
+                sectionEmojis={sectionEmojis}
+                showProgress={true}
+                onSave={onSave}
+                onSubmit={onSubmit}
+                isSaving={saving}
+                reviewId={reviewId}
+                reviewHasPreview={reviewHasPreview}
+                onOpenPreview={() => setShowOrchard(true)}
+            >
+                {/* Bouton Aperçu - Ouvre OrchardPanel (système complet: templates, export, partage) */}
+                <div className="flex justify-end mb-4">
+                    <button
+                        onClick={() => setShowOrchard(!showOrchard)}
+                        className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${layout.isMobile
+                            ? 'px-3 py-2 text-xs'
+                            : 'px-4 py-2 text-sm'
+                            }`}
+                    >
+                        <Eye className={layout.isMobile ? 'w-3.5 h-3.5' : 'w-4 h-4'} />
+                        <span>Aperçu</span>
+                    </button>
+                </div>
 
-            {/* Section Header - Mobile Optimized */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={`header-${currentSection}`}
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 10 }}
-                    transition={{ duration: 0.2 }}
-                    className={`flex items-start gap-3 mb-4 ${layout.isMobile ? '-mx-4 px-4 py-3 bg-gray-800/30 border-b border-gray-700/50' : 'p-0'}`}
-                >
-                    <span className={layout.isMobile ? 'text-2xl flex-shrink-0' : 'text-3xl flex-shrink-0'}>
-                        {currentSectionData?.icon}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                        <h2 className={`font-semibold text-gray-100 ${layout.isMobile ? 'text-base' : 'text-xl'
-                            }`}>
-                            {currentSectionData?.title}
-                            {currentSectionData?.required && <span className="text-red-500 ml-2">*</span>}
-                        </h2>
-                        {layout.isMobile && (
-                            <p className="text-xs text-gray-400 mt-0.5">Étape {currentSection + 1}/{sections.length}</p>
-                        )}
-                    </div>
-                </motion.div>
-            </AnimatePresence>
-
-            {/* Section Content - Mobile Optimized */}
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={`content-${currentSection}`}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                    transition={{ duration: 0.25 }}
-                    className={`space-y-4 ${layout.isMobile ? '' : 'space-y-6'}`}
-                >
-                    {/* Render current section component */}
-                    {SectionComponent ? (
-                        <SectionComponent
-                            formData={formData}
-                            handleChange={handleChange}
-                            photos={photos}
-                            handlePhotoUpload={handlePhotoUpload}
-                            removePhoto={removePhoto}
-                            productType={productType}
-                        />
-                    ) : (
-                        <div className={`text-center text-gray-400 py-8 ${layout.isMobile ? 'text-xs' : 'text-sm'
-                            }`}>
-                            Composant non trouvé pour {currentSectionData?.id}
+                {/* Section Header - Mobile Optimized */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`header-${currentSection}`}
+                        initial={{ opacity: 0, y: -10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 10 }}
+                        transition={{ duration: 0.2 }}
+                        className={`flex items-start gap-3 mb-4 ${layout.isMobile ? '-mx-4 px-4 py-3 bg-gray-800/30 border-b border-gray-700/50' : 'p-0'}`}
+                    >
+                        <span className={layout.isMobile ? 'text-2xl flex-shrink-0' : 'text-3xl flex-shrink-0'}>
+                            {currentSectionData?.icon}
+                        </span>
+                        <div className="flex-1 min-w-0">
+                            <h2 className={`font-semibold text-gray-100 ${layout.isMobile ? 'text-base' : 'text-xl'
+                                }`}>
+                                {currentSectionData?.title}
+                                {currentSectionData?.required && <span className="text-red-500 ml-2">*</span>}
+                            </h2>
+                            {layout.isMobile && (
+                                <p className="text-xs text-gray-400 mt-0.5">Étape {currentSection + 1}/{sections.length}</p>
+                            )}
                         </div>
-                    )}
-                </motion.div>
-            </AnimatePresence>
+                    </motion.div>
+                </AnimatePresence>
 
-            {/* OrchardPanel - Système complet: templates, aperçu, export, partage */}
+                {/* Section Content - Mobile Optimized */}
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={`content-${currentSection}`}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        transition={{ duration: 0.25 }}
+                        className={`space-y-4 ${layout.isMobile ? '' : 'space-y-6'}`}
+                    >
+                        {/* Render current section component */}
+                        {SectionComponent ? (
+                            <SectionComponent
+                                formData={formData}
+                                handleChange={handleChange}
+                                photos={photos}
+                                handlePhotoUpload={handlePhotoUpload}
+                                removePhoto={removePhoto}
+                                productType={productType}
+                            />
+                        ) : (
+                            <div className={`text-center text-gray-400 py-8 ${layout.isMobile ? 'text-xs' : 'text-sm'
+                                }`}>
+                                Composant non trouvé pour {currentSectionData?.id}
+                            </div>
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            </ResponsiveCreateReviewLayout>
+
+            {/* OrchardPanel – OUTSIDE layout to avoid z-index stacking context issues */}
             {showOrchard && (
                 <OrchardPanel
                     reviewData={{
@@ -169,7 +171,7 @@ const CreateReviewFormWrapper = ({
                     onClose={() => setShowOrchard(false)}
                 />
             )}
-        </ResponsiveCreateReviewLayout>
+        </>
     )
 }
 
