@@ -853,28 +853,43 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         </>
     )
 
-    const CanvasFooter = ({ compact: isCompact = false }) => (
-        <div style={{
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            paddingTop: isCompact ? '8px' : '12px',
-            borderTop: '1px solid rgba(255,255,255,0.06)',
-            marginTop: 'auto',
-        }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <div style={{
-                    width: '16px', height: '16px', borderRadius: '4px',
-                    background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '9px', fontWeight: 900, color: '#fff',
-                }}>T</div>
-                <span style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(139,92,246,0.5)', letterSpacing: '0.08em' }}>terpologie.eu</span>
+    const CanvasFooter = ({ compact: isCompact = false }) => {
+        const labReportUrl = resolveReviewField('labReportUrl');
+        return (
+            <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                paddingTop: isCompact ? '8px' : '12px',
+                borderTop: '1px solid rgba(255,255,255,0.06)',
+                marginTop: 'auto',
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <div style={{
+                        width: '16px', height: '16px', borderRadius: '4px',
+                        background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: '9px', fontWeight: 900, color: '#fff',
+                    }}>T</div>
+                    <span style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(139,92,246,0.5)', letterSpacing: '0.08em' }}>terpologie.eu</span>
+                </div>
+                <div style={{ display: 'flex', gap: '12px', fontSize: '9px', color: 'rgba(255,255,255,0.30)', alignItems: 'center' }}>
+                    {labReportUrl && (
+                        <span style={{
+                            padding: '2px 6px',
+                            borderRadius: '8px',
+                            background: 'rgba(34,197,94,0.12)',
+                            border: '1px solid rgba(34,197,94,0.25)',
+                            color: '#4ADE80',
+                            fontSize: '8px',
+                            fontWeight: 600,
+                            letterSpacing: '0.05em'
+                        }}>🧪 LAB</span>
+                    )}
+                    <span>{new Date().toLocaleDateString('fr-FR')}</span>
+                    <span>@{reviewData.author?.username || 'Anonyme'}</span>
+                </div>
             </div>
-            <div style={{ display: 'flex', gap: '12px', fontSize: '9px', color: 'rgba(255,255,255,0.30)' }}>
-                <span>{new Date().toLocaleDateString('fr-FR')}</span>
-                <span>@{reviewData.author?.username || 'Anonyme'}</span>
-            </div>
-        </div>
-    )
+        );
+    }
 
     const SectionCard = ({ children, title, icon, noPadding = false, sectionKey }) => {
         const ss = sectionKey ? (orchardConfig?.sectionStyles?.[sectionKey] || {}) : {};
@@ -1002,6 +1017,18 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && (
                                             <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: '9px', fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>
                                         )}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbg') != null && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: '9px', fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>
+                                        )}
+                                        {isSectionVisible('analytics') && resolveReviewField('thcv') != null && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: '9px', fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>
+                                        )}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbc') != null && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: '9px', fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>
+                                        )}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbn') != null && (
+                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(244,114,182,0.10)', border: '1px solid rgba(244,114,182,0.20)', fontSize: '9px', fontWeight: 600, color: '#F9A8D4' }}>CBN {resolveReviewField('cbn')}%</span>
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -1106,12 +1133,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
                                         {isSectionVisible('analytics') && resolveReviewField('cbg') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>}
                                         {isSectionVisible('analytics') && resolveReviewField('thcv') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbc') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>}
+                                        {isSectionVisible('analytics') && resolveReviewField('cbn') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(244,114,182,0.10)', border: '1px solid rgba(244,114,182,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F9A8D4' }}>CBN {resolveReviewField('cbn')}%</span>}
                                     </div>
-                                    {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null) && (
+                                    {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null || genetics.sativaPercent != null) && (
                                         <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
                                             {genetics.breeder && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{genetics.breeder}</span>}
                                             {genetics.variety && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)' }}>· {genetics.variety}</span>}
                                             {genetics.indicaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(139,92,246,0.8)', background: 'rgba(139,92,246,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.indicaPercent}% I</span>}
+                                            {genetics.sativaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(34,197,94,0.8)', background: 'rgba(34,197,94,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.sativaPercent}% S</span>}
                                             {genetics.phenotype && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.3)' }}>#{genetics.phenotype}</span>}
                                         </div>
                                     )}
@@ -1152,6 +1182,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     effects.onset != null && { label: 'Montée', value: effects.onset, color: '#34D399' },
                                 ].filter(Boolean))}
                                 <div style={{ marginTop: '4px' }}>{renderList(effects.selected || [], 'rgba(6,182,212,0.12)', '#06B6D4')}</div>
+                                {(effects.duration || effects.method || effects.dosage) && (
+                                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap', fontSize: `${8 * fs}px`, color: 'rgba(255,255,255,0.45)' }}>
+                                        {effects.duration && <span>⏱ {effects.duration}</span>}
+                                        {effects.method && <span>💨 {effects.method}</span>}
+                                        {effects.dosage && <span>📊 {effects.dosage}{effects.dosageUnit ? ` ${effects.dosageUnit}` : ''}</span>}
+                                    </div>
+                                )}
                             </SectionCard>
                         ) : null}
                     </div>
@@ -1258,6 +1295,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             visual.trichomes != null && { label: 'Trichomes', value: visual.trichomes, color: '#A78BFA' },
             visual.pistils != null && { label: 'Pistils', value: visual.pistils, color: '#C084FC' },
             visual.manucure != null && { label: 'Manucure', value: visual.manucure, color: '#E879F9' },
+            // Hash/Concentrate specific
+            visual.transparence != null && { label: 'Transparence', value: visual.transparence, color: '#06B6D4' },
+            visual.viscosite != null && { label: 'Viscosité', value: visual.viscosite, color: '#0EA5E9' },
+            visual.melting != null && { label: 'Melting', value: visual.melting, color: '#14B8A6' },
+            visual.residus != null && { label: 'Résidus', value: visual.residus, color: '#22C55E' },
+            // Quality indicators
+            visual.moisissure != null && { label: 'Moisissure', value: visual.moisissure, color: '#EF4444' },
+            visual.graines != null && { label: 'Graines', value: visual.graines, color: '#F97316' },
         ].filter(Boolean)
 
         const textureBars = [
@@ -1266,6 +1311,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             texture.elasticity != null && { label: 'Élasticité', value: texture.elasticity, color: '#FDA4AF' },
             texture.stickiness != null && { label: 'Collant', value: texture.stickiness, color: '#FB923C' },
             texture.melting != null && { label: 'Melting', value: texture.melting, color: '#FBBF24' },
+            // Hash/Concentrate specific
+            texture.friability != null && { label: 'Friabilité', value: texture.friability, color: '#FDE047' },
+            texture.viscosity != null && { label: 'Viscosité', value: texture.viscosity, color: '#BEF264' },
+            texture.residue != null && { label: 'Résidu', value: texture.residue, color: '#86EFAC' },
         ].filter(Boolean)
 
         return (
@@ -1284,13 +1333,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 {resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
                                 {resolveReviewField('cbg') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>}
                                 {resolveReviewField('cbc') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>}
+                                {resolveReviewField('cbn') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,113,133,0.10)', border: '1px solid rgba(251,113,133,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FB7185' }}>CBN {resolveReviewField('cbn')}%</span>}
                                 {resolveReviewField('thcv') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>}
                             </div>
-                            {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null) && (
+                            {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null || genetics.sativaPercent != null) && (
                                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
                                     {genetics.breeder && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{genetics.breeder}</span>}
                                     {genetics.variety && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)' }}>· {genetics.variety}</span>}
                                     {genetics.indicaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(139,92,246,0.8)', background: 'rgba(139,92,246,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.indicaPercent}% I</span>}
+                                    {genetics.sativaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(34,197,94,0.8)', background: 'rgba(34,197,94,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.sativaPercent}% S</span>}
                                     {genetics.phenotype && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.3)' }}>#{genetics.phenotype}</span>}
                                 </div>
                             )}
@@ -1383,10 +1434,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             {renderList(effects.profiles, 'rgba(52,211,153,0.10)', '#34D399', undefined, 4)}
                                         </div>
                                     )}
-                                    {(effects.duration || effects.method) && (
+                                    {(effects.duration || effects.method || effects.dosage) && (
                                         <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
                                             {effects.duration && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>⏱ {effects.duration}</span>}
                                             {effects.method && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>💨 {effects.method}</span>}
+                                            {effects.dosage && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>📊 {effects.dosage}{effects.dosageUnit ? ` ${effects.dosageUnit}` : ''}</span>}
                                         </div>
                                     )}
                                     {effects.sideEffects?.length > 0 && (
