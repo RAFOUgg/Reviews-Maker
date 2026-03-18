@@ -25,7 +25,7 @@ import PresetManager from '../shared/config/PresetManager';
 
 /**
  * ExportMaker - Gestionnaire final d'exports
- * Intègre Drag & Drop (Phase 5) et Filigranes
+ * Système de templates adaptatif avec sections modulaires
  */
 const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     useEffect(() => {
@@ -160,9 +160,419 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         };
     });
 
-    // Pagination simplifiée — pas de système d'éléments, le contenu est contrôlé par les renderers
-    const totalPages = 1;
-    const safePage = 0;
+    // ====== SMART TEMPLATE SYSTEM ======
+    // Dynamic layout adaptation based on format ratio and content density
+
+    const getFormatSpecs = (format) => {
+        const formatSpecs = {
+            '1:1': { ratio: 1, orientation: 'square', maxSections: 8, fontSize: 1.0, layout: 'compact' },
+            '16:9': { ratio: 1.78, orientation: 'landscape', maxSections: 12, fontSize: 0.9, layout: 'row-heavy' },
+            'A4': { ratio: 0.71, orientation: 'portrait', maxSections: 16, fontSize: 0.85, layout: 'vertical' },
+            '9:16': { ratio: 0.56, orientation: 'story', maxSections: 6, fontSize: 1.1, layout: 'story-mode' }
+        };
+        return formatSpecs[format] || formatSpecs['1:1'];
+    };
+
+    const getTemplateConfig = (templateId, formatSpecs) => {
+        const configs = {
+            modernCompact: {
+                density: 'low',
+                sections: ['header', 'analytics', 'ratings', 'footer'],
+                maxSectionsPerPage: formatSpecs.maxSections * 0.5,
+                adaptiveLayout: true
+            },
+            detailedCard: {
+                density: 'high',
+                sections: ['header', 'analytics', 'visual', 'ratings', 'aromas', 'effects', 'footer'],
+                maxSectionsPerPage: formatSpecs.maxSections,
+                adaptiveLayout: true
+            },
+            blogArticle: {
+                density: 'medium',
+                sections: ['header', 'analytics', 'ratings', 'aromas', 'effects', 'conclusion', 'footer'],
+                maxSectionsPerPage: formatSpecs.maxSections * 0.8,
+                adaptiveLayout: true
+            },
+            socialStory: {
+                density: 'minimal',
+                sections: ['header', 'analytics', 'rating', 'footer'],
+                maxSectionsPerPage: formatSpecs.maxSections * 0.3,
+                adaptiveLayout: true
+            }
+        };
+        return configs[templateId] || configs.modernCompact;
+    };
+
+    const calculateOptimalLayout = () => {
+        const formatSpecs = getFormatSpecs(format);
+        const templateConfig = getTemplateConfig(selectedTemplate, formatSpecs);
+
+        // Calculate if pagination is needed
+        const totalSections = templateConfig.sections.length;
+        const needsPagination = totalSections > templateConfig.maxSectionsPerPage;
+        const calculatedPages = needsPagination ? Math.ceil(totalSections / templateConfig.maxSectionsPerPage) : 1;
+
+        // Adaptive font scaling
+        const baseFontScale = formatSpecs.fontSize;
+        const densityScale = templateConfig.density === 'high' ? 0.85 : templateConfig.density === 'low' ? 1.15 : 1.0;
+        const finalFontScale = baseFontScale * densityScale;
+
+        return {
+            formatSpecs,
+            templateConfig,
+            pages: calculatedPages,
+            fontScale: finalFontScale,
+            needsPagination,
+            layout: formatSpecs.layout
+        };
+    };
+
+    // ====== MODULAR SECTION RENDERERS ======
+    // Adaptive section rendering based on format and content availability
+
+    const renderHeaderSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+        const isCompact = formatSpecs.orientation === 'story' || layout.templateConfig.density === 'minimal';
+
+        return (
+            <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginBottom: `${12 * fontSize}px`
+            }}>
+                <BrandMark size={isCompact ? "xs" : "sm"} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: `${8 * fontSize}px` }}>
+                    <span style={{
+                        fontSize: `${10 * fontSize}px`,
+                        fontWeight: 600,
+                        color: 'rgba(255,255,255,0.35)',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.1em'
+                    }}>
+                        {typeName}
+                    </span>
+                    <span style={{ fontSize: `${13 * fontSize}px` }}>
+                        {TYPE_ICONS[typeName] || '🌿'}
+                    </span>
+                </div>
+            </div>
+        );
+    };
+
+    const renderAnalyticsSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+        const isCompact = layout.templateConfig.density === 'minimal';
+
+        if (!isSectionVisible('analytics')) return null;
+
+        const cannabinoids = [
+            { key: 'thc', value: resolveReviewField('thc'), color: '#F87171', label: 'THC' },
+            { key: 'cbd', value: resolveReviewField('cbd'), color: '#34D399', label: 'CBD' },
+            { key: 'cbg', value: resolveReviewField('cbg'), color: '#FCD34D', label: 'CBG' },
+            { key: 'cbc', value: resolveReviewField('cbc'), color: '#6EE7B7', label: 'CBC' },
+            { key: 'cbn', value: resolveReviewField('cbn'), color: '#F9A8D4', label: 'CBN' },
+            { key: 'thcv', value: resolveReviewField('thcv'), color: '#C4B5FD', label: 'THCV' }
+        ].filter(c => c.value != null && c.value !== '-');
+
+        if (!cannabinoids.length) return null;
+
+        return (
+            <div style={{ marginBottom: `${16 * fontSize}px` }}>
+                <h3 style={{
+                    fontSize: `${14 * fontSize}px`,
+                    fontWeight: 700,
+                    color: 'rgba(255,255,255,0.8)',
+                    margin: `0 0 ${8 * fontSize}px 0`,
+                    display: formatSpecs.orientation === 'story' ? 'none' : 'block'
+                }}>
+                    Analyse
+                </h3>
+                <div style={{
+                    display: 'flex',
+                    gap: `${6 * fontSize}px`,
+                    flexWrap: 'wrap',
+                    maxHeight: isCompact ? `${40 * fontSize}px` : 'none',
+                    overflow: 'hidden'
+                }}>
+                    {cannabinoids.slice(0, isCompact ? 2 : 6).map(c => (
+                        <span key={c.key} style={{
+                            padding: `${2 * fontSize}px ${8 * fontSize}px`,
+                            borderRadius: '20px',
+                            background: `${c.color}15`,
+                            border: `1px solid ${c.color}30`,
+                            fontSize: `${9 * fontSize}px`,
+                            fontWeight: 600,
+                            color: c.color
+                        }}>
+                            {c.label} {Number(c.value).toFixed(1)}%
+                        </span>
+                    ))}
+                    {isCompact && cannabinoids.length > 2 && (
+                        <span style={{
+                            fontSize: `${8 * fontSize}px`,
+                            color: 'rgba(255,255,255,0.3)',
+                            alignSelf: 'center'
+                        }}>
+                            +{cannabinoids.length - 2}
+                        </span>
+                    )}
+                </div>
+            </div>
+        );
+    };
+
+    const renderRatingsSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+        const isVertical = formatSpecs.orientation === 'portrait' || formatSpecs.orientation === 'story';
+
+        if (!isSectionVisible('rating') && !categories.length) return null;
+
+        return (
+            <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: `${12 * fontSize}px`,
+                marginBottom: `${16 * fontSize}px`,
+                flexDirection: isVertical && layout.templateConfig.density === 'high' ? 'column' : 'row'
+            }}>
+                {rating > 0 && (
+                    <ScoreGauge
+                        score={rating}
+                        size={Math.max(48, 56 * fontSize)}
+                        label="Note"
+                    />
+                )}
+                {categories.length > 0 && (
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        {renderScoreGroup(
+                            categories
+                                .slice(0, formatSpecs.maxSections >= 12 ? 6 : 4)
+                                .map(c => ({
+                                    label: c.label,
+                                    value: c.score,
+                                    color: c.color
+                                })),
+                            fontSize
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderVisualSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+
+        if (!isSectionVisible('photo') && !isSectionVisible('visual')) return null;
+
+        const visual = templateData.visual || {};
+        const texture = templateData.texture || {};
+        const isVertical = formatSpecs.orientation === 'portrait' || formatSpecs.orientation === 'story';
+
+        return (
+            <div style={{
+                marginBottom: `${16 * fontSize}px`,
+                display: 'flex',
+                flexDirection: isVertical ? 'column' : 'row',
+                gap: `${14 * fontSize}px`
+            }}>
+                {/* Photo */}
+                {isSectionVisible('photo') && (
+                    <div style={{
+                        flex: isVertical ? undefined : '0 0 42%',
+                        height: isVertical ? `${180 * fontSize}px` : 'auto',
+                        borderRadius: `${14 * fontSize}px`,
+                        overflow: 'hidden',
+                        position: 'relative',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        background: 'rgba(0,0,0,0.2)',
+                        minHeight: `${150 * fontSize}px`
+                    }}>
+                        {imgUrl ? (
+                            <img
+                                src={imgUrl}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    display: 'block'
+                                }}
+                                alt=""
+                            />
+                        ) : (
+                            <div style={{
+                                width: '100%',
+                                height: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: 'rgba(255,255,255,0.15)',
+                                fontSize: `${40 * fontSize}px`
+                            }}>
+                                📷
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {/* Visual & Texture Details */}
+                {isSectionVisible('visual') && (Object.keys(visual).length > 0 || Object.keys(texture).length > 0) && (
+                    <div style={{ flex: 1 }}>
+                        <h3 style={{
+                            fontSize: `${14 * fontSize}px`,
+                            fontWeight: 700,
+                            color: 'rgba(255,255,255,0.8)',
+                            margin: `0 0 ${8 * fontSize}px 0`
+                        }}>
+                            Visuel
+                        </h3>
+                        <div style={{
+                            display: 'grid',
+                            gridTemplateColumns: formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
+                            gap: `${8 * fontSize}px`
+                        }}>
+                            {Object.entries(visual).filter(([_, value]) => value != null).slice(0, 4).map(([key, value]) =>
+                                renderScore(value, key, '#A78BFA', fontSize)
+                            )}
+                            {Object.entries(texture).filter(([_, value]) => value != null).slice(0, 4).map(([key, value]) =>
+                                renderScore(value, key, '#FB7185', fontSize)
+                            )}
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    const renderAromasSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+
+        if (!isSectionVisible('odor') && !isSectionVisible('taste')) return null;
+
+        const odor = templateData.odor || {};
+        const taste = templateData.taste || {};
+        const isCompact = layout.templateConfig.density === 'minimal';
+
+        return (
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: formatSpecs.orientation === 'portrait' ? '1fr' :
+                                   formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
+                gap: `${8 * fontSize}px`,
+                marginBottom: `${16 * fontSize}px`
+            }}>
+                {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity != null) && (
+                    <SectionCard title="Odeur" icon="👃" sectionKey="odor" fontSize={fontSize}>
+                        {odor.intensity != null && renderScore(odor.intensity, 'Intensité', '#22C55E', fontSize)}
+                        <div style={{ marginTop: `${4 * fontSize}px` }}>
+                            {renderList(
+                                [...(odor.dominant || []), ...(odor.secondary || [])]
+                                    .slice(0, isCompact ? 2 : 6),
+                                'rgba(34,197,94,0.12)',
+                                '#22C55E',
+                                fontSize
+                            )}
+                        </div>
+                    </SectionCard>
+                )}
+
+                {isSectionVisible('taste') && (taste.intensity != null || taste.aggressiveness != null ||
+                 (taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length)) && (
+                    <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={fontSize}>
+                        {renderScoreGroup([
+                            taste.intensity != null && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
+                            taste.aggressiveness != null && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
+                        ].filter(Boolean), fontSize)}
+                        <div style={{ marginTop: `${4 * fontSize}px` }}>
+                            {renderList(
+                                [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])]
+                                    .slice(0, isCompact ? 2 : 6),
+                                'rgba(245,158,11,0.12)',
+                                '#F59E0B',
+                                fontSize
+                            )}
+                        </div>
+                    </SectionCard>
+                )}
+            </div>
+        );
+    };
+
+    const renderEffectsSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+
+        if (!isSectionVisible('effects')) return null;
+
+        const effects = templateData.effects || {};
+        const isCompact = layout.templateConfig.density === 'minimal';
+
+        if (!effects.intensity && !effects.onset && !effects.selected?.length) return null;
+
+        return (
+            <div style={{ marginBottom: `${16 * fontSize}px` }}>
+                <SectionCard title="Effets" icon="💥" sectionKey="effects" fontSize={fontSize}>
+                    {renderScoreGroup([
+                        effects.intensity != null && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
+                        effects.onset != null && { label: 'Montée', value: effects.onset, color: '#34D399' },
+                    ].filter(Boolean), fontSize)}
+                    {effects.selected?.length > 0 && (
+                        <div style={{ marginTop: `${4 * fontSize}px` }}>
+                            {renderList(
+                                effects.selected.slice(0, isCompact ? 3 : 8),
+                                'rgba(6,182,212,0.12)',
+                                '#06B6D4',
+                                fontSize
+                            )}
+                        </div>
+                    )}
+                </SectionCard>
+            </div>
+        );
+    };
+
+    const renderFooterSection = (layout) => {
+        const { fontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * fontScale;
+
+        return (
+            <div style={{
+                marginTop: 'auto',
+                paddingTop: `${12 * fontSize}px`,
+                borderTop: '1px solid rgba(255,255,255,0.05)',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+            }}>
+                <div style={{
+                    fontSize: `${9 * fontSize}px`,
+                    color: 'rgba(255,255,255,0.3)',
+                    fontWeight: 500
+                }}>
+                    terpologie.fr
+                </div>
+                {reviewData?.createdAt && (
+                    <div style={{
+                        fontSize: `${9 * fontSize}px`,
+                        color: 'rgba(255,255,255,0.3)'
+                    }}>
+                        {new Date(reviewData.createdAt).toLocaleDateString('fr-FR')}
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // Pagination simplifiée — NOW DYNAMIC based on content and format
+    const layoutData = calculateOptimalLayout();
+    const totalPages = layoutData.pages;
+    const safePage = Math.max(0, Math.min(totalPages - 1, 0)); // Start at page 0
 
     // Template creation functions
     const handleCreateTemplate = async () => {
@@ -229,161 +639,125 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             const scale = highQuality ? 3 : 2;
 
             // 🔥 ERROR HANDLING FIX: Protect dynamic imports
-            let toPng, toJpeg, toSvg, jsPDF;
-
-            try {
-                // lazy-load heavy export libraries only when needed
-                const htmlToImage = await import('html-to-image');
-                toPng = htmlToImage.toPng;
-                toJpeg = htmlToImage.toJpeg;
-                toSvg = htmlToImage.toSvg;
-            } catch (importErr) {
-                console.error('[ExportMaker] Failed to load html-to-image library:', importErr);
-                alert('Impossible de charger la bibliothèque d\'export. Veuillez rafraîchir la page et réessayer.');
-                return;
-            }
-
-            if (exportFormat === 'pdf') {
-                try {
-                    const jsPDFModule = await import('jspdf');
-                    jsPDF = jsPDFModule.jsPDF;
-                } catch (importErr) {
-                    console.error('[ExportMaker] Failed to load jsPDF library:', importErr);
-                    alert('Impossible de charger la bibliothèque PDF. Veuillez rafraîchir la page et réessayer.');
-                    return;
-                }
-            }
-
-            // PNG
-            if (exportFormat === 'png') {
-                const dataUrl = await toPng(node, {
-                    cacheBust: true,
-                    pixelRatio: scale,
-                    backgroundColor: null,
-                    style: { transform: 'none' }
-                });
-                const link = document.createElement('a');
-                link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
-                link.href = dataUrl;
-                link.click();
-                return;
-            }
-
-            // JPEG
-            if (exportFormat === 'jpg' || exportFormat === 'jpeg') {
-                const dataUrl = await toJpeg(node, {
-                    cacheBust: true,
-                    quality: highQuality ? 0.95 : 0.92,
-                    pixelRatio: scale,
-                    backgroundColor: '#ffffff',
-                    style: { transform: 'none' }
-                });
-                const link = document.createElement('a');
-                link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.jpg`;
-                link.href = dataUrl;
-                link.click();
-                return;
-            }
-
-            // SVG
             if (exportFormat === 'svg') {
-                const svgString = await toSvg(node, {
-                    cacheBust: true,
-                    width: node.offsetWidth,
-                    height: node.offsetHeight,
-                    style: { transform: 'none' }
-                });
-                const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
-                const url = URL.createObjectURL(blob);
+                // SVG export requires specialized handling
+                try {
+                    const { toPng } = await import('html-to-image');
+                    const dataUrl = await toPng(node, {
+                        quality: 1,
+                        pixelRatio: scale,
+                        backgroundColor: 'transparent',
+                        filter: (node) => {
+                            // Filter out any problematic nodes
+                            return !node?.classList?.contains?.('no-export');
+                        }
+                    });
 
-                // 🔥 MEMORY LEAK FIX: Track blob URL pour cleanup
-                blobUrlsRef.current.push(url);
+                    // Convert to SVG wrapper for better quality
+                    const canvas = document.createElement('canvas');
+                    const ctx = canvas.getContext('2d');
+                    const img = new Image();
 
-                const link = document.createElement('a');
-                link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.svg`;
-                link.href = url;
-                link.click();
+                    img.onload = () => {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        ctx.drawImage(img, 0, 0);
 
-                // Cleanup immédiat après un court délai (le temps que le download se déclenche)
-                setTimeout(() => {
-                    URL.revokeObjectURL(url);
-                    // Retirer de la liste de tracking
-                    blobUrlsRef.current = blobUrlsRef.current.filter(u => u !== url);
-                }, 1000);
-                return;
-            }
+                        // Create SVG wrapper
+                        const svgContent = `
+                            <svg xmlns="http://www.w3.org/2000/svg" width="${img.width}" height="${img.height}">
+                                <image href="${dataUrl}" width="${img.width}" height="${img.height}"/>
+                            </svg>
+                        `;
 
-            // PDF
-            if (exportFormat === 'pdf') {
-                const dataUrl = await toPng(node, {
-                    cacheBust: true,
-                    pixelRatio: scale,
-                    backgroundColor: '#ffffff',
-                    style: { transform: 'none' }
-                });
+                        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                        const url = URL.createObjectURL(blob);
+                        blobUrlsRef.current.push(url);
 
-                const isLandscapeFormat = format === '16:9' || format === '4:3';
-                const pdf = new jsPDF({
-                    orientation: isLandscapeFormat ? 'landscape' : 'portrait',
-                    unit: 'mm',
-                    format: 'a4'
-                });
+                        const link = document.createElement('a');
+                        link.href = url;
+                        link.download = `${reviewName}.svg`;
+                        link.click();
+                    };
 
-                const pageWidth = pdf.internal.pageSize.getWidth();
-                const pageHeight = pdf.internal.pageSize.getHeight();
+                    img.src = dataUrl;
 
-                const img = new Image();
-                img.src = dataUrl;
-                await img.decode();
-
-                const imgRatio = img.width / img.height;
-                const pageRatio = pageWidth / pageHeight;
-
-                let imgWidth, imgHeight;
-                if (imgRatio > pageRatio) {
-                    imgWidth = pageWidth - 20;
-                    imgHeight = imgWidth / imgRatio;
-                } else {
-                    imgHeight = pageHeight - 20;
-                    imgWidth = imgHeight * imgRatio;
+                } catch (error) {
+                    console.error('SVG export error:', error);
+                    throw new Error('SVG export failed. Fallback to PNG.');
                 }
+            } else if (exportFormat === 'pdf') {
+                try {
+                    const { toPng } = await import('html-to-image');
+                    const jsPDF = (await import('jspdf')).default;
 
-                const x = (pageWidth - imgWidth) / 2;
-                const y = (pageHeight - imgHeight) / 2;
+                    const dataUrl = await toPng(node, {
+                        quality: 1,
+                        pixelRatio: scale,
+                        backgroundColor: '#ffffff'
+                    });
 
-                pdf.addImage(dataUrl, 'PNG', x, y, imgWidth, imgHeight);
-                pdf.setProperties({
-                    title: reviewName || 'Review',
-                    author: reviewData.author?.username || reviewData.author || 'Reviews-Maker'
-                });
-                pdf.save(`review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.pdf`);
-                return;
+                    const orientations = {
+                        '1:1': 'portrait',
+                        '16:9': 'landscape',
+                        '9:16': 'portrait',
+                        'A4': 'portrait'
+                    };
+
+                    const pdf = new jsPDF({
+                        orientation: orientations[format] || 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+
+                    const imgWidth = pdf.internal.pageSize.getWidth();
+                    const imgHeight = (designSize.h / designSize.w) * imgWidth;
+
+                    pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
+                    pdf.save(`${reviewName}.pdf`);
+
+                } catch (error) {
+                    console.error('PDF export error:', error);
+                    throw new Error('PDF export failed.');
+                }
+            } else {
+                // PNG/JPEG export
+                try {
+                    const { toPng, toJpeg } = await import('html-to-image');
+                    const exportFn = exportFormat === 'jpeg' ? toJpeg : toPng;
+
+                    const dataUrl = await exportFn(node, {
+                        quality: exportFormat === 'jpeg' ? 0.95 : 1,
+                        pixelRatio: scale,
+                        backgroundColor: exportFormat === 'jpeg' ? '#ffffff' : 'transparent'
+                    });
+
+                    const link = document.createElement('a');
+                    link.href = dataUrl;
+                    link.download = `${reviewName}.${exportFormat}`;
+                    blobUrlsRef.current.push(dataUrl);
+                    link.click();
+
+                } catch (error) {
+                    console.error(`${exportFormat.toUpperCase()} export error:`, error);
+                    throw new Error(`${exportFormat.toUpperCase()} export failed.`);
+                }
             }
 
-            // default fallback to png
-            const fallbackDataUrl = await toPng(node, { cacheBust: true, pixelRatio: scale, backgroundColor: null, style: { transform: 'none' } });
-            const link = document.createElement('a');
-            link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.png`;
-            link.href = fallbackDataUrl;
-            link.click();
+            console.log(`[ExportMaker] ${exportFormat.toUpperCase()} export successful`);
 
-        } catch (err) {
-            console.error('[ExportMaker] Export failed:', err);
-            alert('Erreur lors de l\'export. Voir la console pour plus de détails.')
+        } catch (error) {
+            console.error('[ExportMaker] Export failed:', error);
+            alert(`Erreur lors de l'export ${exportFormat.toUpperCase()}: ${error.message}`);
         } finally {
             setExporting(false);
         }
     };
 
     const handleExportGIF = async () => {
-        if (!exportRef.current) return;
-
-        // Vérifier qu'il y a au moins un pipeline dans la review
-        const hasPipeline = reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
-            reviewData?.pipelineExtraction || reviewData?.pipelinePurification || reviewData?.fertilizationPipeline || reviewData?.pipelineCuring;
-
-        if (!hasPipeline) {
-            alert('Cette review ne contient aucun pipeline à exporter en GIF.');
+        console.debug('[ExportMaker] handleExportGIF called');
+        if (!exportRef.current) {
+            alert('Aucune preview disponible pour l\'export GIF');
             return;
         }
 
@@ -391,25 +765,18 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         setGifProgress(0);
 
         try {
-            // Récupérer le premier pipeline disponible (supporter plus de types)
-            const pipelineData = reviewData.pipelineGlobal ||
-                reviewData.pipelineSeparation ||
-                reviewData.pipelineExtraction ||
-                reviewData.pipelinePurification ||
-                reviewData.fertilizationPipeline ||
-                reviewData.pipelineCuring;
+            const frames = await exportPipelineToGIF(
+                exportRef.current,
+                { steps: 8, duration: 3000 },
+                (progress) => setGifProgress(Math.floor(progress * 100))
+            );
 
-            const blob = await exportPipelineToGIF(pipelineData, exportRef.current, {
-                delay: 200,
-                quality: 10,
-                onProgress: (percent) => setGifProgress(percent)
-            });
+            await downloadGIF(frames, `${reviewName}.gif`);
+            console.log('[ExportMaker] GIF export successful');
 
-            const filename = `review-${reviewName}-pipeline-${Date.now()}.gif`;
-            downloadGIF(blob, filename);
         } catch (error) {
-            console.error('❌ Export GIF failed:', error);
-            alert('Erreur lors de l\'export GIF. Voir console pour détails.');
+            console.error('[ExportMaker] GIF export failed:', error);
+            alert('Erreur lors de l\'export GIF: ' + error.message);
         } finally {
             setExportingGIF(false);
             setGifProgress(0);
@@ -417,371 +784,122 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     // Helper to resolve common field ids into actual review fields
-    // Searches: top-level reviewData → type-specific sub-object (flowerData/hashData/etc.) → extraData
-    // 🔥 PERFORMANCE FIX: Mémoriser resolveReviewField avec cache Map
-    const resolveReviewField = useMemo(() => {
-        // Cache pour éviter recalculs inutiles
-        const cache = new Map();
-
-        // Fonction interne qui fait le vrai calcul
-        const computeField = (id) => {
-            const f = reviewData || {};
-            // Type-specific sub-object
-            const sub = f.flowerData || f.hashData || f.concentrateData || f.edibleData || {};
-
-            // Lookup helper: checks top-level, sub-object, then extraData
-            const lookup = (...keys) => {
-                for (const k of keys) {
-                    if (!k) continue;
-                    if (f[k] !== undefined && f[k] !== null && f[k] !== '') return f[k];
-                    if (sub[k] !== undefined && sub[k] !== null && sub[k] !== '') return sub[k];
-                    if (f.extraData && typeof f.extraData === 'object' && f.extraData[k] !== undefined && f.extraData[k] !== null && f.extraData[k] !== '') return f.extraData[k];
-                }
-                return undefined;
-            };
-            // Parse JSON strings from DB into arrays/objects
-            const parseJSON = (v, def = []) => {
-                if (!v) return def
-                if (Array.isArray(v)) return v
-                if (typeof v === 'object' && v !== null) return v
-                try { return JSON.parse(v) } catch { return def }
-            }
-
-            switch (id) {
-                case 'productName':
-                case 'product_name':
-                    return lookup('holderName', 'nomCommercial', 'productName', 'name', 'title') || '-';
-
-                case 'photo':
-                case 'mainImage':
-                case 'mainImageUrl':
-                    // Prefer pre-resolved mainImageUrl from API, then build from images array
-                    return lookup('mainImageUrl') || null;
-
-                case 'photos':
-                case 'gallery':
-                case 'images':
-                    return parseJSON(lookup('images', 'gallery', 'photos'), []);
-
-                case 'genetics':
-                    // Retourne un objet complet pour un rendu riche
-                    return {
-                        breeder: lookup('breeder') || null,
-                        variety: lookup('variety', 'cultivar', 'cultivars') || null,
-                        geneticType: lookup('geneticType', 'varietyType', 'strainType') || null,
-                        indicaPercent: lookup('indicaPercent') ?? null,
-                        sativaPercent: lookup('sativaPercent') ?? null,
-                        phenotype: lookup('phenotypeCode', 'phenotype') || null,
-                        parentage: parseJSON(lookup('parentage'), null),
-                    };
-
-                case 'genetics_str':
-                    // Version string pour compatibilité descendante
-                    return lookup('breeder', 'variety', 'cultivar', 'geneticType') || null;
-
-                case 'breeder':
-                    return lookup('breeder') || '-';
-
-                case 'farm':
-                    return lookup('farm') || '-';
-
-                case 'cultivar':
-                    return lookup('cultivar', 'cultivars', 'variety') || '-';
-
-                case 'varietyType':
-                    return lookup('varietyType', 'strainType') || null;
-
-                case 'thc':
-                case 'thcPercent':
-                    return lookup('thcPercent', 'thcLevel', 'thc') ?? '-';
-
-                case 'cbd':
-                case 'cbdPercent':
-                    return lookup('cbdPercent', 'cbdLevel', 'cbd') ?? '-';
-
-                case 'cbg':
-                    return lookup('cbgPercent', 'cbg') ?? null;
-
-                case 'cbc':
-                    return lookup('cbcPercent', 'cbc') ?? null;
-
-                case 'cbn':
-                    return lookup('cbnPercent', 'cbn') ?? null;
-
-                case 'thcv':
-                    return lookup('thcvPercent', 'thcv') ?? null;
-
-                case 'labReport':
-                case 'labReportUrl':
-                    return lookup('labReportUrl', 'labReport') || null;
-
-                case 'laboratoire':
-                    return lookup('laboratoire') || null;
-
-                case 'terpeneProfile':
-                case 'terpenes':
-                    return parseJSON(lookup('terpeneProfile', 'terpenes'), []);
-
-                case 'visual':
-                    return {
-                        couleur: lookup('couleurScore', 'couleur', 'couleurTransparence') ?? null,
-                        densite: lookup('densiteVisuelle', 'densite', 'pureteVisuelle') ?? null,
-                        trichomes: lookup('trichomesScore', 'trichome') ?? null,
-                        pistils: lookup('pistilsScore', 'pistil') ?? null,
-                        manucure: lookup('manucureScore', 'manucure') ?? null,
-                        moisissure: lookup('moisissureScore', 'moisissure') ?? null,
-                        graines: lookup('grainesScore', 'graines') ?? null,
-                        // Hash/Concentrate specific
-                        transparence: lookup('couleurTransparence') ?? null,
-                        viscosite: lookup('viscosite') ?? null,
-                        melting: lookup('melting') ?? null,
-                        residus: lookup('residus') ?? null,
-                    };
-
-                case 'odor':
-                case 'odors':
-                    return {
-                        dominant: parseJSON(lookup('notesOdeursDominantes', 'notesDominantesOdeur', 'notesDominantes', 'aromas'), []),
-                        secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur', 'notesSecondaires'), []),
-                        intensity: lookup('intensiteAromeScore', 'intensiteAromatique', 'aromasIntensity') ?? null,
-                        complexity: lookup('complexiteAromeScore') ?? null,
-                        fidelity: lookup('fideliteAromeScore', 'fideliteCultivars') ?? null,
-                    };
-
-                case 'taste':
-                case 'tastes':
-                    return {
-                        intensity: lookup('intensiteGoutScore', 'intensite', 'intensiteFumee', 'tastesIntensity', 'goutIntensity', 'intensiteGout') ?? null,
-                        aggressiveness: lookup('agressiviteScore', 'agressivitePiquant', 'agressivite') ?? null,
-                        dryPuff: parseJSON(lookup('dryPuffNotes', 'dryPuff'), []),
-                        inhalation: parseJSON(lookup('inhalationNotes', 'inhalation'), []),
-                        expiration: parseJSON(lookup('expirationNotes', 'expiration'), []),
-                    };
-
-                case 'effects': {
-                    const arr = parseJSON(lookup('effetsChoisis', 'effects', 'selectedEffects'), []);
-                    return {
-                        selected: arr,
-                        intensity: lookup('intensiteEffetScore', 'intensiteEffets', 'intensiteEffet', 'effectsIntensity') ?? null,
-                        onset: lookup('monteeScore', 'monteeRapidite', 'montee') ?? null,
-                        duration: lookup('effectDuration', 'dureeEffet', 'dureeEffets') || null,
-                        method: lookup('consumptionMethod', 'methodeConsommation') || null,
-                        dosage: lookup('dosage', 'dosageUtilise') || null,
-                        dosageUnit: lookup('dosageUnit') || null,
-                        onset_text: lookup('effectOnset', 'debutEffets') || null,
-                        length: lookup('effectLength', 'dureeEffetsCategorie') || null,
-                        profiles: parseJSON(lookup('effectProfiles', 'profilsEffets'), []),
-                        sideEffects: parseJSON(lookup('sideEffects', 'effetsSecondaires'), []),
-                        preferredUse: parseJSON(lookup('preferredUse', 'usagesPreferes'), []),
-                    };
-                }
-
-                case 'cultivarsList':
-                case 'cultivars':
-                    return parseJSON(lookup('cultivarsList', 'cultivars'), []);
-
-                case 'substratMix':
-                    return parseJSON(lookup('substratMix', 'substrat', 'cultureSubstrat'), []);
-
-                case 'categoryRatings':
-                    return lookup('categoryRatings', 'sectionScores', 'ratings') || undefined;
-
-                case 'overallRating':
-                case 'rating':
-                    return lookup('computedOverall', 'overallRating', 'note', 'rating') || null;
-
-                case 'culture':
-                    return {
-                        config: parseJSON(lookup('cultureTimelineConfig'), {}),
-                        data: parseJSON(lookup('cultureTimelineData'), []),
-                        mode: lookup('cultureMode') || null,
-                    };
-
-                case 'curing':
-                    return {
-                        config: parseJSON(lookup('curingTimelineConfig'), {}),
-                        data: parseJSON(lookup('curingTimelineData', 'cureTimelineData'), []),
-                    };
-
-                case 'texture':
-                    return {
-                        hardness: lookup('dureteScore', 'durete') ?? null,
-                        density: lookup('densiteTactileScore', 'densiteTexture') ?? null,
-                        elasticity: lookup('elasticiteScore', 'elasticite') ?? null,
-                        stickiness: lookup('collantScore', 'collant') ?? null,
-                        melting: lookup('meltingScore', 'meltingResidus') ?? null,
-                        friability: lookup('friabiliteScore', 'friabiliteViscosite') ?? null,
-                        viscosity: lookup('viscositeScore', 'viscositeTexture') ?? null,
-                        residue: lookup('residuScore', 'residus') ?? null,
-                    };
-
-                case 'recolte':
-                    return {
-                        trichomesTranslucides: lookup('trichomesTranslucides') || 0,
-                        trichomesLaiteux: lookup('trichomesLaiteux') || 0,
-                        trichomesAmbres: lookup('trichomesAmbres') || 0,
-                        modeRecolte: lookup('modeRecolte') || null,
-                        poidsBrut: lookup('poidsBrut') || null,
-                        poidsNet: lookup('poidsNet') || null,
-                    };
-
-                case 'experience':
-                    return {
-                        method: lookup('consumptionMethod') || null,
-                        dosage: lookup('dosage') || null,
-                        dosageUnit: lookup('dosageUnit') || null,
-                        effectDuration: lookup('effectDuration') || null,
-                        effectProfiles: parseJSON(lookup('effectProfiles'), []),
-                        sideEffects: parseJSON(lookup('sideEffects'), []),
-                        effectOnset: lookup('effectOnset') || null,
-                        preferredUse: parseJSON(lookup('preferredUse'), []),
-                    };
-
-                case 'notes':
-                case 'description':
-                    return lookup('description', 'notes') || '-';
-
-                case 'hashmaker':
-                    return lookup('hashmaker') || '-';
-
-                default:
-                    return lookup(id) ?? sub[id] ?? undefined;
-            }
-        };
-
-        // Wrapper avec cache
-        return (id) => {
-            // Vérifier cache d'abord
-            if (cache.has(id)) {
-                return cache.get(id);
-            }
-
-            // Calculer le résultat
-            const result = computeField(id);
-
-            // Mettre en cache
-            cache.set(id, result);
-
-            return result;
-        };
-    }, [reviewData]);
-
-    // 🔥 PERFORMANCE FIX: Pré-calculer les données template pour éviter appels répétés
-    const templateData = useMemo(() => {
-        if (!reviewData) return null;
+    // 🔧 templateData cache — éviter les re-calculs sur chaque render
+    const templateData = React.useMemo(() => {
+        if (!reviewData) return {};
 
         return {
-            // Données de base
-            productName: resolveReviewField('productName'),
-            mainImage: resolveReviewField('mainImage'),
-            rating: resolveReviewField('overallRating'),
-
-            // Genetics
             genetics: resolveReviewField('genetics'),
-            breeder: resolveReviewField('breeder'),
-            cultivar: resolveReviewField('cultivar'),
-
-            // Cannabinoids
-            thc: resolveReviewField('thc'),
-            cbd: resolveReviewField('cbd'),
-            cbg: resolveReviewField('cbg'),
-            cbc: resolveReviewField('cbc'),
-            cbn: resolveReviewField('cbn'),
-            thcv: resolveReviewField('thcv'),
-
-            // Terpenes
-            terpeneProfile: resolveReviewField('terpeneProfile'),
-
-            // Profils sensoriels
+            analytics: {
+                thc: resolveReviewField('thc'),
+                cbd: resolveReviewField('cbd'),
+                cbg: resolveReviewField('cbg'),
+                cbc: resolveReviewField('cbc'),
+                cbn: resolveReviewField('cbn'),
+                thcv: resolveReviewField('thcv'),
+            },
             visual: resolveReviewField('visual'),
+            texture: resolveReviewField('texture'),
             odor: resolveReviewField('odor'),
             taste: resolveReviewField('taste'),
             effects: resolveReviewField('effects'),
-
-            // Hash/Concentrate specific
-            hashmaker: resolveReviewField('hashmaker'),
-            texture: resolveReviewField('texture'),
-
-            // Metadata
-            description: resolveReviewField('description'),
-            categoryRatings: resolveReviewField('categoryRatings'),
+            terpenes: resolveReviewField('terpenes') || resolveReviewField('terpeneProfile'),
+            rating: resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating,
         };
-    }, [reviewData, resolveReviewField]);
+    }, [reviewData]);
 
-    // ========== BRAND & TEMPLATE RENDERING SYSTEM ==========
-    const TYPE_ICONS = { Fleurs: '🌿', Hash: '🟤', Concentrés: '💎', Comestibles: '🍪' }
-    const isLandscape = format === '16:9'
-    const isPortrait = format === '9:16'
-    const isA4 = format === 'A4' || format === '210:297'
+    const resolveReviewField = (fieldKey) => {
+        if (!reviewData || !fieldKey) return null;
 
-    const BrandMark = ({ size = 'sm' }) => (
-        <div style={{ display: 'flex', alignItems: 'center', gap: size === 'sm' ? '6px' : '8px' }}>
-            <div style={{
-                width: size === 'sm' ? '22px' : '28px',
-                height: size === 'sm' ? '22px' : '28px',
-                borderRadius: '6px',
-                background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: size === 'sm' ? '12px' : '15px',
-                fontWeight: 900, color: '#fff',
-                boxShadow: '0 2px 8px rgba(139, 92, 246, 0.35)',
-            }}>T</div>
-            <span style={{
-                fontSize: size === 'sm' ? '10px' : '13px',
-                fontWeight: 700, letterSpacing: '0.15em',
-                textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.45)',
-            }}>terpologie</span>
-        </div>
-    )
+        // 🔧 Cache to avoid repeated JSON parsing
+        if (resolveReviewField._cache && resolveReviewField._cache.reviewId === reviewData.id) {
+            const cached = resolveReviewField._cache.data[fieldKey];
+            if (cached !== undefined) return cached;
+        } else {
+            resolveReviewField._cache = { reviewId: reviewData.id, data: {} };
+        }
 
-    const getMainImage = () => {
-        // 1. Pre-resolved URL from API (most reliable)
-        if (reviewData?.mainImageUrl) return reviewData.mainImageUrl
-        // 2. Try images array
-        const imgs = resolveReviewField('images')
-        const raw = Array.isArray(imgs) && imgs.length > 0 ? imgs[0] : null
-        if (!raw) return null
-        let url = typeof raw === 'object' ? (raw.url || raw.filename || raw.path || raw.preview) : raw
-        if (!url || typeof url !== 'string') return null
-        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/images/')) return url
-        return `/images/${url.replace(/^\//, '')}`
-    }
+        let result = null;
 
-    // Content module visibility — read from orchardStore
-    const contentModules = orchardConfig?.contentModules || {};
+        try {
+            // Direct field access first
+            if (reviewData[fieldKey] !== undefined) {
+                result = reviewData[fieldKey];
+            }
+            // Backup with product-type-specific naming
+            else if (fieldKey === 'genetics') {
+                result = reviewData.genetics ||
+                         reviewData.strain ||
+                         (reviewData.infosProduit ?
+                          (typeof reviewData.infosProduit === 'string' ?
+                           JSON.parse(reviewData.infosProduit) : reviewData.infosProduit) : null);
+            }
+            // Sensory data (nested in JSON fields)
+            else if (['visual', 'texture', 'odor', 'taste', 'effects', 'terpenes', 'terpeneProfile'].includes(fieldKey)) {
+                const checkFields = [
+                    'sensoryData', 'sensorielle', 'evaluation',
+                    'infosProduit', 'productInfo', 'data'
+                ];
 
-    // Check if a section/category has any visible field in the export
-    // Maps section IDs to the data resolver IDs and orchardStore keys
-    const SECTION_VISIBILITY = {
-        photo: ['image', 'images', 'mainImage', 'imageUrl'],
-        infos: ['holderName', 'title', 'type', 'cultivar', 'breeder', 'farm', 'hashmaker'],
-        analytics: ['thcLevel', 'cbdLevel', 'terpenes'],
-        visual: ['densite', 'trichome', 'pistil', 'manucure', 'moisissure', 'graines', 'couleur', 'couleurTransparence', 'pureteVisuelle', 'viscosite', 'melting', 'residus'],
-        odor: ['aromasIntensity', 'intensiteAromatique', 'fideliteCultivars', 'aromas'],
-        taste: ['intensiteFumee', 'agressivite', 'intensiteGout', 'goutIntensity', 'tastes'],
-        effects: ['montee', 'intensiteEffet', 'dureeEffet', 'effects'],
-        texture: ['durete', 'elasticite', 'collant', 'densiteTexture', 'friabiliteViscosite', 'meltingResidus'],
-        culture: ['fertilizationPipeline', 'substratMix', 'curing'],
-        recolte: ['poidsBrut', 'poidsNet', 'trichomesTranslucides'],
-        terpenes: ['terpenes'],
-        pipeline: ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'curing'],
+                for (const field of checkFields) {
+                    if (reviewData[field]) {
+                        let parsed = typeof reviewData[field] === 'string' ?
+                                    JSON.parse(reviewData[field]) : reviewData[field];
+
+                        if (parsed && parsed[fieldKey]) {
+                            result = parsed[fieldKey];
+                            break;
+                        }
+                    }
+                }
+            }
+            // Analytics fields (THC, CBD, etc.)
+            else if (['thc', 'cbd', 'cbg', 'cbc', 'cbn', 'thcv', 'labReport', 'labReportUrl'].includes(fieldKey)) {
+                const analyticsFields = ['analytics', 'analytiques', 'dosages', 'infosProduit'];
+
+                for (const field of analyticsFields) {
+                    if (reviewData[field]) {
+                        let parsed = typeof reviewData[field] === 'string' ?
+                                    JSON.parse(reviewData[field]) : reviewData[field];
+
+                        if (parsed && parsed[fieldKey] !== undefined) {
+                            result = parsed[fieldKey];
+                            break;
+                        }
+                    }
+                }
+            }
+            // Rating fields
+            else if (fieldKey === 'overallRating') {
+                result = reviewData.overallRating ?? reviewData.rating ?? reviewData.score;
+            }
+
+        } catch (error) {
+            console.warn(`[resolveReviewField] Error parsing ${fieldKey}:`, error);
+            result = null;
+        }
+
+        // Cache result
+        resolveReviewField._cache.data[fieldKey] = result;
+        return result;
     };
 
     const isSectionVisible = (sectionKey) => {
-        const keys = SECTION_VISIBILITY[sectionKey];
-        if (!keys) return true;
-        const moduleVisible = keys.some(k => contentModules[k] !== false);
-        return moduleVisible;
+        const visibility = orchardConfig?.contentModules?.[sectionKey]?.visible;
+        return visibility !== false; // true par défaut si pas défini
     };
 
-    // ========== FLEXIBLE DATA RENDERERS ==========
-    // Each renderer can display scores, lists, and text in multiple visual styles.
-    // The orchardConfig.renderMode controls which style is used per section.
+    // Icons map for product types
+    const TYPE_ICONS = {
+        flower: '🌸', hash: '🟫', concentrate: '🍯', edible: '🍪',
+        fleurs: '🌸', concentré: '🍯', comestible: '🍪'
+    };
+
+    // Render modes from orchard config
     const renderModes = orchardConfig?.renderModes || {};
 
-    // Score renderer — supports: 'gauge', 'bar', 'pill', 'number'
-    const renderScore = (value, label, color = '#A78BFA', mode) => {
+    // Score renderer — supports: 'gauge', 'bar', 'pill', 'number' with adaptive fontSize
+    const renderScore = (value, label, color = '#A78BFA', fontSize = 1, mode) => {
         const resolvedMode = mode || renderModes.scores || 'bar';
         if (value == null || value === undefined) return null;
         const num = Number(value);
@@ -789,54 +907,74 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
         switch (resolvedMode) {
             case 'gauge':
-                return <ScoreGauge score={num} size={40} label={label} showMax={false} />;
+                return <ScoreGauge score={num} size={Math.max(32, 40 * fontSize)} label={label} showMax={false} />;
             case 'pill':
                 return (
                     <span style={{
-                        padding: '2px 8px', borderRadius: '12px',
-                        background: `${color}20`, fontSize: '10px', fontWeight: 700,
-                        color: color, border: `1px solid ${color}30`,
-                        display: 'inline-flex', alignItems: 'center', gap: '4px',
+                        padding: `${2 * fontSize}px ${8 * fontSize}px`,
+                        borderRadius: `${12 * fontSize}px`,
+                        background: `${color}20`,
+                        fontSize: `${10 * fontSize}px`,
+                        fontWeight: 700,
+                        color: color,
+                        border: `1px solid ${color}30`,
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: `${4 * fontSize}px`,
                     }}>
-                        {label && <span style={{ fontSize: '8px', opacity: 0.7 }}>{label}</span>}
+                        {label && <span style={{ fontSize: `${8 * fontSize}px`, opacity: 0.7 }}>{label}</span>}
                         {num}/10
                     </span>
                 );
             case 'number':
                 return (
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-                        <span style={{ fontSize: '18px', fontWeight: 900, color }}>{num}</span>
-                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)' }}>/10</span>
-                        {label && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginLeft: '4px' }}>{label}</span>}
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: `${4 * fontSize}px` }}>
+                        <span style={{ fontSize: `${18 * fontSize}px`, fontWeight: 900, color }}>{num}</span>
+                        <span style={{ fontSize: `${9 * fontSize}px`, color: 'rgba(255,255,255,0.3)' }}>/10</span>
+                        {label && <span style={{ fontSize: `${8 * fontSize}px`, color: 'rgba(255,255,255,0.4)', marginLeft: `${4 * fontSize}px` }}>{label}</span>}
                     </div>
                 );
             case 'bar':
             default:
-                return <MiniBars items={[{ label: label || '', value: num, color }]} max={10} compact />;
+                return <MiniBars
+                    items={[{ label: label || '', value: num, color }]}
+                    max={10}
+                    compact
+                    fontSize={fontSize}
+                />;
         }
     };
 
-    // Multi-score renderer — for section with multiple score bars
-    const renderScoreGroup = (items, mode) => {
+    // Multi-score renderer — for section with multiple score bars with adaptive fontSize
+    const renderScoreGroup = (items, fontSize = 1, mode) => {
         const resolvedMode = mode || renderModes.scores || 'bar';
         const validItems = items.filter(Boolean);
         if (!validItems.length) return null;
 
         if (resolvedMode === 'bar') {
-            return <MiniBars items={validItems.map(i => ({ label: i.label, value: i.value, color: i.color }))} max={10} compact />;
+            return <MiniBars
+                items={validItems.map(i => ({ label: i.label, value: i.value, color: i.color }))}
+                max={10}
+                compact
+                fontSize={fontSize}
+            />;
         }
 
         return (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: resolvedMode === 'gauge' ? '8px' : '4px' }}>
+            <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: resolvedMode === 'gauge' ? `${8 * fontSize}px` : `${4 * fontSize}px`
+            }}>
                 {validItems.map((item, i) => (
-                    <div key={i}>{renderScore(item.value, item.label, item.color, resolvedMode)}</div>
+                    <div key={i}>{renderScore(item.value, item.label, item.color, fontSize, resolvedMode)}</div>
                 ))}
             </div>
         );
     };
 
-    // List renderer — supports: 'pills', 'comma', 'grid'
-    const renderList = (items, color = 'rgba(139,92,246,0.15)', textColor = '#A78BFA', mode, max = 6) => {
+    // List renderer — supports: 'pills', 'comma', 'grid' with adaptive fontSize
+    const renderList = (items, color = 'rgba(139,92,246,0.15)', textColor = '#A78BFA', fontSize = 1, mode, max = 6) => {
         const resolvedMode = mode || renderModes.lists || 'pills';
         const normalized = (items || []).map(item =>
             typeof item === 'object' ? (item.label || item.name || item.id || String(item)) : String(item)
@@ -846,27 +984,54 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         switch (resolvedMode) {
             case 'comma':
                 return (
-                    <span style={{ fontSize: '10px', color: textColor, lineHeight: 1.5 }}>
+                    <span style={{
+                        fontSize: `${10 * fontSize}px`,
+                        color: textColor,
+                        lineHeight: 1.5
+                    }}>
                         {normalized.slice(0, max).join(', ')}
-                        {normalized.length > max && <span style={{ color: 'rgba(255,255,255,0.3)' }}> +{normalized.length - max}</span>}
+                        {normalized.length > max && (
+                            <span style={{
+                                color: 'rgba(255,255,255,0.3)',
+                                fontSize: `${8 * fontSize}px`
+                            }}>
+                                {' '}+{normalized.length - max}
+                            </span>
+                        )}
                     </span>
                 );
             case 'grid':
                 return (
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))', gap: '3px' }}>
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fill, minmax(60px, 1fr))',
+                        gap: `${3 * fontSize}px`
+                    }}>
                         {normalized.slice(0, max).map((item, i) => (
                             <div key={i} style={{
-                                padding: '3px 6px', borderRadius: '6px',
-                                background: color, fontSize: '8px', fontWeight: 600,
-                                color: textColor, textAlign: 'center',
+                                padding: `${3 * fontSize}px ${6 * fontSize}px`,
+                                borderRadius: `${6 * fontSize}px`,
+                                background: color,
+                                fontSize: `${8 * fontSize}px`,
+                                fontWeight: 600,
+                                color: textColor,
+                                textAlign: 'center',
                                 border: `1px solid ${textColor}15`,
-                            }}>{item}</div>
+                            }}>
+                                {item}
+                            </div>
                         ))}
                     </div>
                 );
             case 'pills':
             default:
-                return <ExportPills items={normalized} color={color} textColor={textColor} max={max} />;
+                return <ExportPills
+                    items={normalized}
+                    color={color}
+                    textColor={textColor}
+                    max={max}
+                    fontSize={fontSize}
+                />;
         }
     };
 
@@ -885,14 +1050,25 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         const effects = resolveReviewField('effects') || {}
         const texture = resolveReviewField('texture') || {}
         return [
-            { key: 'visual', label: 'Visuel', icon: '👁', score: avgScore(visual), color: '#A78BFA' },
-            { key: 'odor', label: 'Odeur', icon: '👃', score: odor.intensity ?? avgScore(odor), color: '#22C55E' },
-            { key: 'taste', label: 'Goût', icon: '😋', score: taste.intensity ?? avgScore(taste), color: '#F59E0B' },
-            { key: 'effects', label: 'Effets', icon: '💥', score: effects.intensity ?? avgScore(effects), color: '#06B6D4' },
-            { key: 'texture', label: 'Texture', icon: '🤚', score: avgScore(texture), color: '#F472B6' },
+            { key: 'visual', label: 'Visuel', score: avgScore(visual), color: '#A78BFA' },
+            { key: 'odor', label: 'Odeur', score: avgScore(odor), color: '#22C55E' },
+            { key: 'taste', label: 'Goût', score: avgScore(taste), color: '#F59E0B' },
+            { key: 'effects', label: 'Effets', score: avgScore(effects), color: '#06B6D4' },
+            { key: 'texture', label: 'Texture', score: avgScore(texture), color: '#FB7185' },
         ].filter(c => c.score != null)
     }
 
+    const getMainImage = () => {
+        if (!reviewData) return null
+        // Multiple image sources possible
+        return reviewData.mainImage ||
+               reviewData.image ||
+               reviewData.photo ||
+               (reviewData.gallery && reviewData.gallery[0]) ||
+               null
+    }
+
+    // Canvas background component
     const CanvasBackground = () => (
         <>
             <div style={{ position: 'absolute', inset: 0, background: previewBackground, zIndex: 0 }} />
@@ -902,53 +1078,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         </>
     )
 
-    const CanvasFooter = ({ compact: isCompact = false }) => {
-        const labReportUrl = resolveReviewField('labReportUrl');
-        return (
-            <div style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                paddingTop: isCompact ? '8px' : '12px',
-                borderTop: '1px solid rgba(255,255,255,0.06)',
-                marginTop: 'auto',
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <div style={{
-                        width: '16px', height: '16px', borderRadius: '4px',
-                        background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: '9px', fontWeight: 900, color: '#fff',
-                    }}>T</div>
-                    <span style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(139,92,246,0.5)', letterSpacing: '0.08em' }}>terpologie.eu</span>
-                </div>
-                <div style={{ display: 'flex', gap: '12px', fontSize: '9px', color: 'rgba(255,255,255,0.30)', alignItems: 'center' }}>
-                    {labReportUrl && (
-                        <span style={{
-                            padding: '2px 6px',
-                            borderRadius: '8px',
-                            background: 'rgba(34,197,94,0.12)',
-                            border: '1px solid rgba(34,197,94,0.25)',
-                            color: '#4ADE80',
-                            fontSize: '8px',
-                            fontWeight: 600,
-                            letterSpacing: '0.05em'
-                        }}>🧪 LAB</span>
-                    )}
-                    <span>{new Date().toLocaleDateString('fr-FR')}</span>
-                    <span>@{reviewData.author?.username || 'Anonyme'}</span>
-                </div>
-            </div>
-        );
-    }
-
-    const SectionCard = ({ children, title, icon, noPadding = false, sectionKey }) => {
+    const SectionCard = ({ children, title, icon, noPadding = false, sectionKey, fontSize = 1 }) => {
         const ss = sectionKey ? (orchardConfig?.sectionStyles?.[sectionKey] || {}) : {};
         const cardStyle = {
             background: ss.background || 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.06)',
-            borderRadius: ss.borderRadius != null ? `${ss.borderRadius}px` : '12px',
+            borderRadius: ss.borderRadius != null ? `${ss.borderRadius * fontSize}px` : `${12 * fontSize}px`,
             overflow: 'hidden',
             opacity: ss.opacity != null ? ss.opacity / 100 : 1,
-            padding: ss.padding != null ? `${ss.padding}px` : undefined,
+            padding: ss.padding != null ? `${ss.padding * fontSize}px` : undefined,
         };
         if (ss.visible === false) return null;
         return (
@@ -958,614 +1096,242 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             >
                 {title && (
                     <div style={{
-                        padding: '8px 12px',
+                        padding: `${8 * fontSize}px ${12 * fontSize}px`,
                         borderBottom: '1px solid rgba(255,255,255,0.04)',
-                        display: 'flex', alignItems: 'center', gap: '6px',
+                        display: 'flex', alignItems: 'center', gap: `${6 * fontSize}px`,
                     }}>
-                        {icon && <span style={{ fontSize: ss.fontSize ? `${ss.fontSize}px` : '12px' }}>{icon}</span>}
+                        {icon && <span style={{ fontSize: ss.fontSize ? `${ss.fontSize * fontSize}px` : `${12 * fontSize}px` }}>{icon}</span>}
                         <span style={{
-                            fontSize: ss.fontSize ? `${Math.max(8, ss.fontSize - 2)}px` : '10px',
+                            fontSize: ss.fontSize ? `${Math.max(8, (ss.fontSize - 2)) * fontSize}px` : `${10 * fontSize}px`,
                             fontWeight: ss.fontWeight || 700,
                             textTransform: 'uppercase', letterSpacing: '0.08em',
                             color: ss.accentColor || 'rgba(255,255,255,0.5)',
                         }}>{title}</span>
                     </div>
                 )}
-                <div style={{ padding: noPadding ? 0 : '10px 12px' }}>
+                <div style={{ padding: noPadding ? 0 : `${10 * fontSize}px ${12 * fontSize}px` }}>
                     {children}
                 </div>
             </div>
         );
     }
 
-    const ExportPills = ({ items = [], color = 'rgba(139,92,246,0.15)', textColor = '#A78BFA', max: pillMax = 6 }) => {
+    const ExportPills = ({ items = [], color = 'rgba(139,92,246,0.15)', textColor = '#A78BFA', max: pillMax = 6, fontSize = 1 }) => {
         const normalized = items.map(item =>
             typeof item === 'object' ? (item.label || item.name || item.id || String(item)) : String(item)
         ).filter(Boolean)
         if (!normalized.length) return null
         return (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${4 * fontSize}px` }}>
                 {normalized.slice(0, pillMax).map((item, i) => (
                     <span key={i} style={{
-                        padding: '2px 8px', borderRadius: '12px',
-                        background: color, fontSize: '9px', fontWeight: 600,
-                        color: textColor, letterSpacing: '0.02em',
+                        padding: `${2 * fontSize}px ${8 * fontSize}px`,
+                        borderRadius: `${12 * fontSize}px`,
+                        background: color,
+                        fontSize: `${9 * fontSize}px`,
+                        fontWeight: 600,
+                        color: textColor,
+                        letterSpacing: '0.02em',
                         border: `1px solid ${textColor}20`,
-                    }}>{item}</span>
+                    }}>
+                        {item}
+                    </span>
                 ))}
                 {normalized.length > pillMax && (
-                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', alignSelf: 'center' }}>+{normalized.length - pillMax}</span>
+                    <span style={{
+                        fontSize: `${9 * fontSize}px`,
+                        color: 'rgba(255,255,255,0.3)',
+                        alignSelf: 'center'
+                    }}>
+                        +{normalized.length - pillMax}
+                    </span>
                 )}
             </div>
         )
     }
 
-    // ====== COMPACT TEMPLATE (minimal) ======
-    const renderCompactCanvas = () => {
-        const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
-        const typeName = reviewData.typeName || productType || 'Fleurs'
-        const imgUrl = getMainImage()
-        const categories = getCategoryScores().filter(c => isSectionVisible(c.key)).slice(0, 4)
-        const pad = isPortrait ? '20px 18px' : '24px 28px'
-
+    // Brand mark component
+    const BrandMark = ({ size = "sm" }) => {
+        const sizes = { xs: 12, sm: 16, md: 20 };
+        const s = sizes[size] || sizes.sm;
         return (
-            <>
-                <CanvasBackground />
-                <div style={{ position: 'relative', zIndex: 10, padding: pad, height: '100%', display: 'flex', flexDirection: 'column', fontFamily: `"${previewFont}", Inter, system-ui, sans-serif` }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                        <BrandMark size="sm" />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{typeName}</span>
-                            <span style={{ fontSize: '13px' }}>{TYPE_ICONS[typeName] || '🌿'}</span>
-                        </div>
-                    </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{
+                    width: s, height: s, borderRadius: '4px',
+                    background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: `${s * 0.6}px`, fontWeight: 900, color: '#fff',
+                }}>T</div>
+                <span style={{
+                    fontSize: `${s * 0.75}px`, fontWeight: 600,
+                    background: 'linear-gradient(135deg, #8B5CF6, #A78BFA)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    letterSpacing: '0.08em'
+                }}>TERPOLOGIE</span>
+            </div>
+        );
+    };
 
-                    {/* Hero */}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: isLandscape ? 'row' : 'column', gap: '16px', minHeight: 0 }}>
-                        {/* Image */}
-                        {isSectionVisible('photo') && (
-                            <div style={{
-                                flex: isLandscape ? '0 0 50%' : '1 1 55%',
-                                borderRadius: '14px', overflow: 'hidden', position: 'relative',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                background: 'rgba(0,0,0,0.2)', minHeight: 0,
-                            }}>
-                                {imgUrl ? (
-                                    <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
-                                )}
-                                {rating > 0 && (
-                                    <div style={{
-                                        position: 'absolute', bottom: '10px', right: '10px',
-                                        background: 'rgba(0,0,0,0.65)',
-                                        borderRadius: '12px', padding: '6px 10px',
-                                        border: '1px solid rgba(139,92,246,0.25)',
-                                        display: 'flex', flexDirection: 'column', alignItems: 'center',
-                                    }}>
-                                        <span style={{ fontSize: '24px', fontWeight: 900, color: '#fff', lineHeight: 1 }}>{rating}</span>
-                                        <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', marginTop: '1px' }}>/10</span>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+    // Get needed data for rendering
+    const typeName = reviewData?.typeName || productType || 'Fleurs';
+    const imgUrl = getMainImage();
+    const rating = templateData.rating;
+    const categories = getCategoryScores();
+    const genetics = templateData.genetics || {};
 
-                        {/* Info */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: isLandscape ? '0 0 48%' : undefined, justifyContent: 'center' }}>
-                            {isSectionVisible('infos') && (
-                                <div>
-                                    <h1 style={{ fontSize: isPortrait ? '22px' : '26px', fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
-                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '8px' }}>
-                                        {reviewData.varietyType && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: '9px', fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>
-                                        )}
-                                        {isSectionVisible('analytics') && resolveReviewField('thc') && resolveReviewField('thc') !== '-' && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: '9px', fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>
-                                        )}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: '9px', fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>
-                                        )}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbg') != null && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: '9px', fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>
-                                        )}
-                                        {isSectionVisible('analytics') && resolveReviewField('thcv') != null && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: '9px', fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>
-                                        )}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbc') != null && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: '9px', fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>
-                                        )}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbn') != null && (
-                                            <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(244,114,182,0.10)', border: '1px solid rgba(244,114,182,0.20)', fontSize: '9px', fontWeight: 600, color: '#F9A8D4' }}>CBN {resolveReviewField('cbn')}%</span>
-                                        )}
-                                    </div>
-                                </div>
-                            )}
-                            {categories.length > 0 && (
-                                <div style={{ display: 'grid', gridTemplateColumns: `repeat(${Math.min(categories.length, isLandscape ? 2 : 4)}, 1fr)`, gap: '6px' }}>
-                                    {categories.map((cat, i) => (
-                                        <div key={i} style={{
-                                            background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                            borderRadius: '10px', padding: '8px 4px',
-                                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px',
-                                        }}>
-                                            <span style={{ fontSize: '14px' }}>{cat.icon}</span>
-                                            <ScoreGauge score={cat.score} size={40} showMax={false} />
-                                            <span style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{cat.label}</span>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <CanvasFooter compact />
-                </div>
-            </>
-        )
-    }
-
-    // ====== STANDARD TEMPLATE ======
-    const renderStandardCanvas = () => {
-        const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
-        const typeName = reviewData.typeName || productType || 'Fleurs'
-        const imgUrl = getMainImage()
-        const categories = getCategoryScores().filter(c => isSectionVisible(c.key))
-        const odor = resolveReviewField('odor') || {}
-        const taste = resolveReviewField('taste') || {}
-        const effects = resolveReviewField('effects') || {}
-        const terps = (() => {
-            const raw = resolveReviewField('terpeneProfile') || []
-            return Array.isArray(raw) ? raw.map(t => ({ name: t.name || t.terpene || t.key || t.label || 'Autre', percent: t.percent || t.value || t.amount || 0 })) : []
-        })()
-        const genetics = resolveReviewField('genetics')
-        const curingData = resolveReviewField('curing') || {}
-        const cultureData = resolveReviewField('culture') || {}
-        const visual = resolveReviewField('visual') || {}
-        const texture = resolveReviewField('texture') || {}
-        const recolte = resolveReviewField('recolte') || {}
-
-        const visualBars = [
-            visual.couleur != null && { label: 'Couleur', value: visual.couleur, color: '#F472B6' },
-            visual.densite != null && { label: 'Densité', value: visual.densite, color: '#8B5CF6' },
-            visual.trichomes != null && { label: 'Trichomes', value: visual.trichomes, color: '#A78BFA' },
-            visual.pistils != null && { label: 'Pistils', value: visual.pistils, color: '#C084FC' },
-            visual.manucure != null && { label: 'Manucure', value: visual.manucure, color: '#E879F9' },
-        ].filter(Boolean)
-
-        const textureBars = [
-            texture.hardness != null && { label: 'Dureté', value: texture.hardness, color: '#FB7185' },
-            texture.elasticity != null && { label: 'Élasticité', value: texture.elasticity, color: '#FDA4AF' },
-            texture.stickiness != null && { label: 'Collant', value: texture.stickiness, color: '#FB923C' },
-            texture.friability != null && { label: 'Friabilité', value: texture.friability, color: '#FBBF24' },
-        ].filter(Boolean)
-
-        const pad = isPortrait ? '20px 16px' : isA4 ? '32px 36px' : '24px 28px'
-        const fs = isA4 ? 1.15 : 1
-
-        return (
-            <>
-                <CanvasBackground />
-                <div style={{ position: 'relative', zIndex: 10, padding: pad, height: '100%', display: 'flex', flexDirection: 'column', gap: '14px', fontFamily: `"${previewFont}", Inter, system-ui, sans-serif`, overflow: 'hidden' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <BrandMark size="sm" />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: `${10 * fs}px`, fontWeight: 600, color: 'rgba(255,255,255,0.35)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>{typeName}</span>
-                            <span style={{ fontSize: `${13 * fs}px` }}>{TYPE_ICONS[typeName] || '🌿'}</span>
-                        </div>
-                    </div>
-
-                    {/* Hero */}
-                    <div style={{ display: 'flex', flexDirection: isPortrait ? 'column' : 'row', gap: '14px' }}>
-                        {isSectionVisible('photo') && (
-                            <div style={{
-                                flex: isPortrait ? undefined : '0 0 42%',
-                                height: isPortrait ? '180px' : undefined,
-                                borderRadius: '14px', overflow: 'hidden', position: 'relative',
-                                border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)',
-                            }}>
-                                {imgUrl ? (
-                                    <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
-                                ) : (
-                                    <div style={{ width: '100%', height: '100%', minHeight: '150px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '40px' }}>📷</div>
-                                )}
-                            </div>
-                        )}
-                        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                            {isSectionVisible('infos') && (
-                                <div>
-                                    <h1 style={{ fontSize: `${24 * fs}px`, fontWeight: 900, color: '#fff', margin: 0, lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
-                                    <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
-                                        {reviewData.varietyType && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>}
-                                        {isSectionVisible('analytics') && resolveReviewField('thc') && resolveReviewField('thc') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbg') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>}
-                                        {isSectionVisible('analytics') && resolveReviewField('thcv') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbc') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>}
-                                        {isSectionVisible('analytics') && resolveReviewField('cbn') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(244,114,182,0.10)', border: '1px solid rgba(244,114,182,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F9A8D4' }}>CBN {resolveReviewField('cbn')}%</span>}
-                                    </div>
-                                    {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null || genetics.sativaPercent != null) && (
-                                        <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
-                                            {genetics.breeder && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{genetics.breeder}</span>}
-                                            {genetics.variety && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)' }}>· {genetics.variety}</span>}
-                                            {genetics.indicaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(139,92,246,0.8)', background: 'rgba(139,92,246,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.indicaPercent}% I</span>}
-                                            {genetics.sativaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(34,197,94,0.8)', background: 'rgba(34,197,94,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.sativaPercent}% S</span>}
-                                            {genetics.phenotype && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.3)' }}>#{genetics.phenotype}</span>}
-                                        </div>
-                                    )}
-                                </div>
-                            )}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                {rating > 0 && <ScoreGauge score={rating} size={56} label="Note" />}
-                                {categories.length > 0 && (
-                                    <div style={{ flex: 1 }}>
-                                        {renderScoreGroup(categories.slice(0, 4).map(c => ({ label: c.label, value: c.score, color: c.color })))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Sensorial */}
-                    <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : 'repeat(3, 1fr)', gap: '8px' }}>
-                        {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
-                            <SectionCard title="Odeur" icon="👃" sectionKey="odor">
-                                {odor.intensity != null && renderScore(odor.intensity, 'Intensité', '#22C55E')}
-                                <div style={{ marginTop: '4px' }}>{renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}</div>
-                            </SectionCard>
-                        ) : null}
-                        {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
-                            <SectionCard title="Goût" icon="😋" sectionKey="taste">
-                                {renderScoreGroup([
-                                    taste.intensity != null && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
-                                    taste.aggressiveness != null && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
-                                ].filter(Boolean))}
-                                <div style={{ marginTop: '4px' }}>{renderList([...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])], 'rgba(245,158,11,0.12)', '#F59E0B')}</div>
-                            </SectionCard>
-                        ) : null}
-                        {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
-                            <SectionCard title="Effets" icon="💥" sectionKey="effects">
-                                {renderScoreGroup([
-                                    effects.intensity != null && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
-                                    effects.onset != null && { label: 'Montée', value: effects.onset, color: '#34D399' },
-                                ].filter(Boolean))}
-                                <div style={{ marginTop: '4px' }}>{renderList(effects.selected || [], 'rgba(6,182,212,0.12)', '#06B6D4')}</div>
-                                {(effects.duration || effects.method || effects.dosage) && (
-                                    <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap', fontSize: `${8 * fs}px`, color: 'rgba(255,255,255,0.45)' }}>
-                                        {effects.duration && <span>⏱ {effects.duration}</span>}
-                                        {effects.method && <span>💨 {effects.method}</span>}
-                                        {effects.dosage && <span>📊 {effects.dosage}{effects.dosageUnit ? ` ${effects.dosageUnit}` : ''}</span>}
-                                    </div>
-                                )}
-                            </SectionCard>
-                        ) : null}
-                    </div>
-
-                    {/* Visual & Texture */}
-                    {(isSectionVisible('visual') && visualBars.length > 0) || (isSectionVisible('texture') && textureBars.length > 0) || (isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet)) ? (
-                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : `repeat(${[isSectionVisible('visual') && visualBars.length > 0, isSectionVisible('texture') && textureBars.length > 0, isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet)].filter(Boolean).length}, 1fr)`, gap: '8px' }}>
-                            {isSectionVisible('visual') && visualBars.length > 0 && (
-                                <SectionCard title="Visuel" icon="👁" sectionKey="visual">
-                                    {renderScoreGroup(visualBars)}
-                                </SectionCard>
-                            )}
-                            {isSectionVisible('texture') && textureBars.length > 0 && (
-                                <SectionCard title="Texture" icon="🤚" sectionKey="texture">
-                                    {renderScoreGroup(textureBars)}
-                                </SectionCard>
-                            )}
-                            {isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet) && (
-                                <SectionCard title="Récolte" icon="🌾" sectionKey="recolte">
-                                    <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.7)' }}>
-                                        {recolte.poidsBrut && <span>Brut: <b>{recolte.poidsBrut}g</b></span>}
-                                        {recolte.poidsNet && <span>Net: <b>{recolte.poidsNet}g</b></span>}
-                                    </div>
-                                    {(recolte.trichomesLaiteux > 0 || recolte.trichomesAmbres > 0) && (
-                                        <div style={{ display: 'flex', gap: '3px', marginTop: '6px' }}>
-                                            <div style={{ flex: Number(recolte.trichomesTranslucides || 0), height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} />
-                                            <div style={{ flex: Number(recolte.trichomesLaiteux || 0), height: '4px', borderRadius: '2px', background: '#E0E7FF' }} />
-                                            <div style={{ flex: Number(recolte.trichomesAmbres || 0), height: '4px', borderRadius: '2px', background: '#FBBF24' }} />
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            )}
-                        </div>
-                    ) : null}
-
-                    {/* Terpenes & Pipelines */}
-                    {((isSectionVisible('terpenes') && terps.length > 0) || (isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0))) && (
-                        <div style={{ display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : ((isSectionVisible('terpenes') && terps.length > 0) ? '1fr 1fr' : '1fr'), gap: '8px' }}>
-                            {isSectionVisible('terpenes') && terps.length > 0 && (
-                                <SectionCard title="Profil Terpénique" icon="🧬" sectionKey="terpenes">
-                                    <TerpeneBar profile={terps} compact />
-                                </SectionCard>
-                            )}
-                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
-                                <SectionCard title="Pipeline" icon="⚗️" sectionKey="pipeline">
-                                    {cultureData.data?.length > 0 && (
-                                        <div style={{ marginBottom: '6px' }}>
-                                            <div style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>Culture ({cultureData.data.length} étapes)</div>
-                                            <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
-                                                {cultureData.data.slice(0, 16).map((step, i) => (
-                                                    <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: `rgba(34,197,94,${0.15 + (i / cultureData.data.length) * 0.35})`, border: '1px solid rgba(34,197,94,0.3)' }} title={step.label || `Étape ${i + 1}`} />
-                                                ))}
-                                                {cultureData.data.length > 16 && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', alignSelf: 'center' }}>+{cultureData.data.length - 16}</span>}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {curingData.data?.length > 0 && (
-                                        <div>
-                                            <div style={{ fontSize: '9px', fontWeight: 600, color: 'rgba(255,255,255,0.4)', marginBottom: '4px' }}>Curing ({curingData.data.length} étapes)</div>
-                                            <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
-                                                {curingData.data.slice(0, 16).map((step, i) => (
-                                                    <div key={i} style={{ width: '14px', height: '14px', borderRadius: '3px', background: `rgba(245,158,11,${0.15 + (i / curingData.data.length) * 0.35})`, border: '1px solid rgba(245,158,11,0.3)' }} title={step.label || `J+${i + 1}`} />
-                                                ))}
-                                                {curingData.data.length > 16 && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', alignSelf: 'center' }}>+{curingData.data.length - 16}</span>}
-                                            </div>
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            )}
-                        </div>
-                    )}
-
-                    <CanvasFooter />
-                </div>
-            </>
-        )
-    }
-
-    // ====== DETAILED TEMPLATE ======
-    const renderDetailedCanvas = () => {
-        const rating = resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating || null
-        const typeName = reviewData.typeName || productType || 'Fleurs'
-        const imgUrl = getMainImage()
-        const odor = resolveReviewField('odor') || {}
-        const taste = resolveReviewField('taste') || {}
-        const effects = resolveReviewField('effects') || {}
-        const visual = resolveReviewField('visual') || {}
-        const texture = resolveReviewField('texture') || {}
-        const terps = (() => {
-            const raw = resolveReviewField('terpeneProfile') || []
-            return Array.isArray(raw) ? raw.map(t => ({ name: t.name || t.terpene || t.key || t.label || 'Autre', percent: t.percent || t.value || t.amount || 0 })) : []
-        })()
-        const genetics = resolveReviewField('genetics')
-        const curingData = resolveReviewField('curing') || {}
-        const cultureData = resolveReviewField('culture') || {}
-        const recolte = resolveReviewField('recolte') || {}
-        const notes = resolveReviewField('notes')
-        const pad = isPortrait ? '18px 14px' : isA4 ? '32px 36px' : '24px 28px'
-        const fs = isA4 ? 1.15 : 1
-
-        const visualBars = [
-            visual.couleur != null && { label: 'Couleur', value: visual.couleur, color: '#F472B6' },
-            visual.densite != null && { label: 'Densité', value: visual.densite, color: '#8B5CF6' },
-            visual.trichomes != null && { label: 'Trichomes', value: visual.trichomes, color: '#A78BFA' },
-            visual.pistils != null && { label: 'Pistils', value: visual.pistils, color: '#C084FC' },
-            visual.manucure != null && { label: 'Manucure', value: visual.manucure, color: '#E879F9' },
-            // Hash/Concentrate specific
-            visual.transparence != null && { label: 'Transparence', value: visual.transparence, color: '#06B6D4' },
-            visual.viscosite != null && { label: 'Viscosité', value: visual.viscosite, color: '#0EA5E9' },
-            visual.melting != null && { label: 'Melting', value: visual.melting, color: '#14B8A6' },
-            visual.residus != null && { label: 'Résidus', value: visual.residus, color: '#22C55E' },
-            // Quality indicators
-            visual.moisissure != null && { label: 'Moisissure', value: visual.moisissure, color: '#EF4444' },
-            visual.graines != null && { label: 'Graines', value: visual.graines, color: '#F97316' },
-        ].filter(Boolean)
-
-        const textureBars = [
-            texture.hardness != null && { label: 'Dureté', value: texture.hardness, color: '#FB7185' },
-            texture.density != null && { label: 'Densité', value: texture.density, color: '#F43F5E' },
-            texture.elasticity != null && { label: 'Élasticité', value: texture.elasticity, color: '#FDA4AF' },
-            texture.stickiness != null && { label: 'Collant', value: texture.stickiness, color: '#FB923C' },
-            texture.melting != null && { label: 'Melting', value: texture.melting, color: '#FBBF24' },
-            // Hash/Concentrate specific
-            texture.friability != null && { label: 'Friabilité', value: texture.friability, color: '#FDE047' },
-            texture.viscosity != null && { label: 'Viscosité', value: texture.viscosity, color: '#BEF264' },
-            texture.residue != null && { label: 'Résidu', value: texture.residue, color: '#86EFAC' },
-        ].filter(Boolean)
-
-        return (
-            <>
-                <CanvasBackground />
-                <div style={{ position: 'relative', zIndex: 10, padding: pad, height: '100%', display: 'flex', flexDirection: 'column', gap: '10px', fontFamily: `"${previewFont}", Inter, system-ui, sans-serif`, overflow: 'hidden' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div style={{ flex: 1 }}>
-                            <BrandMark size="sm" />
-                            <h1 style={{ fontSize: `${22 * fs}px`, fontWeight: 900, color: '#fff', margin: '8px 0 0', lineHeight: 1.1 }}>{reviewName || 'Sans nom'}</h1>
-                            <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap', marginTop: '6px' }}>
-                                <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(255,255,255,0.06)', fontSize: `${9 * fs}px`, fontWeight: 600, color: 'rgba(255,255,255,0.5)' }}>{typeName} {TYPE_ICONS[typeName] || ''}</span>
-                                {reviewData.varietyType && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(139,92,246,0.12)', border: '1px solid rgba(139,92,246,0.25)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#A78BFA' }}>{reviewData.varietyType}</span>}
-                                {resolveReviewField('thc') && resolveReviewField('thc') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#F87171' }}>THC {resolveReviewField('thc')}%</span>}
-                                {resolveReviewField('cbd') && resolveReviewField('cbd') !== '-' && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(16,185,129,0.10)', border: '1px solid rgba(16,185,129,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#34D399' }}>CBD {resolveReviewField('cbd')}%</span>}
-                                {resolveReviewField('cbg') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,191,36,0.10)', border: '1px solid rgba(251,191,36,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FCD34D' }}>CBG {resolveReviewField('cbg')}%</span>}
-                                {resolveReviewField('cbc') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(52,211,153,0.10)', border: '1px solid rgba(52,211,153,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#6EE7B7' }}>CBC {resolveReviewField('cbc')}%</span>}
-                                {resolveReviewField('cbn') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(251,113,133,0.10)', border: '1px solid rgba(251,113,133,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#FB7185' }}>CBN {resolveReviewField('cbn')}%</span>}
-                                {resolveReviewField('thcv') != null && <span style={{ padding: '2px 8px', borderRadius: '20px', background: 'rgba(167,139,250,0.10)', border: '1px solid rgba(167,139,250,0.20)', fontSize: `${9 * fs}px`, fontWeight: 600, color: '#C4B5FD' }}>THCV {resolveReviewField('thcv')}%</span>}
-                            </div>
-                            {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null || genetics.sativaPercent != null) && (
-                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px', alignItems: 'center' }}>
-                                    {genetics.breeder && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.5)', fontWeight: 600 }}>{genetics.breeder}</span>}
-                                    {genetics.variety && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)' }}>· {genetics.variety}</span>}
-                                    {genetics.indicaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(139,92,246,0.8)', background: 'rgba(139,92,246,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.indicaPercent}% I</span>}
-                                    {genetics.sativaPercent != null && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(34,197,94,0.8)', background: 'rgba(34,197,94,0.1)', padding: '1px 5px', borderRadius: '10px' }}>{genetics.sativaPercent}% S</span>}
-                                    {genetics.phenotype && <span style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.3)' }}>#{genetics.phenotype}</span>}
-                                </div>
-                            )}
-                        </div>
-                        {rating > 0 && (
-                            <div style={{ marginLeft: '12px' }}>
-                                <ScoreGauge score={rating} size={60} label="Note" />
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Main Grid */}
-                    <div style={{ flex: 1, display: 'grid', gridTemplateColumns: isPortrait ? '1fr' : '1fr 1fr', gap: '8px', minHeight: 0, overflow: 'hidden' }}>
-                        {/* Left */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {isSectionVisible('photo') && imgUrl && (
-                                <div style={{ borderRadius: '12px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', maxHeight: isPortrait ? '140px' : '180px' }}>
-                                    <img src={imgUrl} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} alt="" />
-                                </div>
-                            )}
-                            {isSectionVisible('visual') && visualBars.length > 0 && (
-                                <SectionCard title="Visuel" icon="👁" sectionKey="visual">
-                                    {renderScoreGroup(visualBars)}
-                                </SectionCard>
-                            )}
-                            {isSectionVisible('texture') && textureBars.length > 0 && (
-                                <SectionCard title="Texture" icon="🤚" sectionKey="texture">
-                                    {renderScoreGroup(textureBars)}
-                                </SectionCard>
-                            )}
-                            {isSectionVisible('terpenes') && terps.length > 0 && (
-                                <SectionCard title="Terpènes" icon="🧬" sectionKey="terpenes">
-                                    <TerpeneBar profile={terps} compact />
-                                </SectionCard>
-                            )}
-                        </div>
-
-                        {/* Right */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', overflow: 'hidden' }}>
-                            {isSectionVisible('odor') && (odor.dominant?.length || odor.secondary?.length || odor.intensity) ? (
-                                <SectionCard title="Odeur" icon="👃" sectionKey="odor">
-                                    {renderScoreGroup([
-                                        odor.intensity != null && { label: 'Intensité', value: odor.intensity, color: '#22C55E' },
-                                        odor.complexity != null && { label: 'Complexité', value: odor.complexity, color: '#4ADE80' },
-                                        odor.fidelity != null && { label: 'Fidélité', value: odor.fidelity, color: '#86EFAC' },
-                                    ].filter(Boolean))}
-                                    {(odor.dominant?.length > 0 || odor.secondary?.length > 0) && (
-                                        <div style={{ marginTop: '4px' }}>
-                                            {renderList([...(odor.dominant || []), ...(odor.secondary || [])], 'rgba(34,197,94,0.12)', '#22C55E')}
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            ) : null}
-                            {isSectionVisible('taste') && (taste.intensity || taste.aggressiveness || taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) ? (
-                                <SectionCard title="Goût" icon="😋" sectionKey="taste">
-                                    {renderScoreGroup([
-                                        taste.intensity && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
-                                        taste.aggressiveness && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
-                                    ].filter(Boolean))}
-                                    {(taste.dryPuff?.length > 0 || taste.inhalation?.length > 0 || taste.expiration?.length > 0) && (
-                                        <div style={{ marginTop: '4px' }}>
-                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: '3px' }}>Dry Puff</div>
-                                            {renderList(taste.dryPuff || [], 'rgba(245,158,11,0.10)', '#F59E0B', undefined, 4)}
-                                            {taste.inhalation?.length > 0 && <>
-                                                <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', margin: '3px 0' }}>Inhalation</div>
-                                                {renderList(taste.inhalation, 'rgba(251,146,60,0.10)', '#FB923C', undefined, 4)}
-                                            </>}
-                                            {taste.expiration?.length > 0 && <>
-                                                <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', margin: '3px 0' }}>Expiration</div>
-                                                {renderList(taste.expiration, 'rgba(249,115,22,0.10)', '#F97316', undefined, 4)}
-                                            </>}
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            ) : null}
-                            {isSectionVisible('effects') && (effects.intensity || effects.onset || effects.selected?.length) ? (
-                                <SectionCard title="Effets" icon="💥" sectionKey="effects">
-                                    {renderScoreGroup([
-                                        effects.intensity && { label: 'Intensité', value: effects.intensity, color: '#06B6D4' },
-                                        effects.onset && { label: 'Montée', value: effects.onset, color: '#34D399' },
-                                    ].filter(Boolean))}
-                                    {effects.selected?.length > 0 && (
-                                        <div style={{ marginTop: '4px' }}>
-                                            {renderList(effects.selected, 'rgba(6,182,212,0.12)', '#06B6D4')}
-                                        </div>
-                                    )}
-                                    {effects.profiles?.length > 0 && (
-                                        <div style={{ marginTop: '4px' }}>
-                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.3)', marginBottom: '3px' }}>Profils</div>
-                                            {renderList(effects.profiles, 'rgba(52,211,153,0.10)', '#34D399', undefined, 4)}
-                                        </div>
-                                    )}
-                                    {(effects.duration || effects.method || effects.dosage) && (
-                                        <div style={{ display: 'flex', gap: '6px', marginTop: '4px', flexWrap: 'wrap' }}>
-                                            {effects.duration && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>⏱ {effects.duration}</span>}
-                                            {effects.method && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>💨 {effects.method}</span>}
-                                            {effects.dosage && <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.45)' }}>📊 {effects.dosage}{effects.dosageUnit ? ` ${effects.dosageUnit}` : ''}</span>}
-                                        </div>
-                                    )}
-                                    {effects.sideEffects?.length > 0 && (
-                                        <div style={{ marginTop: '4px' }}>
-                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,165,0,0.6)', marginBottom: '3px' }}>Effets secondaires</div>
-                                            {renderList(effects.sideEffects, 'rgba(251,146,60,0.08)', '#FB923C', undefined, 3)}
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            ) : null}
-                            {isSectionVisible('pipeline') && (curingData.data?.length > 0 || cultureData.data?.length > 0) && (
-                                <SectionCard title="Pipeline" icon="⚗️" sectionKey="pipeline">
-                                    {cultureData.data?.length > 0 && (
-                                        <div style={{ marginBottom: '6px' }}>
-                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: '3px' }}>Culture ({cultureData.data.length} étapes)</div>
-                                            <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
-                                                {cultureData.data.slice(0, 14).map((step, i) => (
-                                                    <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', background: `rgba(34,197,94,${0.2 + (i / cultureData.data.length) * 0.4})`, border: '1px solid rgba(34,197,94,0.3)' }} />
-                                                ))}
-                                                {cultureData.data.length > 14 && <span style={{ fontSize: '7px', color: 'rgba(255,255,255,0.25)', alignSelf: 'center' }}>+{cultureData.data.length - 14}</span>}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {curingData.data?.length > 0 && (
-                                        <div>
-                                            <div style={{ fontSize: '8px', fontWeight: 600, color: 'rgba(255,255,255,0.35)', marginBottom: '3px' }}>Curing ({curingData.data.length} étapes)</div>
-                                            <div style={{ display: 'flex', gap: '2px', flexWrap: 'wrap' }}>
-                                                {curingData.data.slice(0, 14).map((step, i) => (
-                                                    <div key={i} style={{ width: '12px', height: '12px', borderRadius: '2px', background: `rgba(245,158,11,${0.2 + (i / curingData.data.length) * 0.4})`, border: '1px solid rgba(245,158,11,0.3)' }} />
-                                                ))}
-                                                {curingData.data.length > 14 && <span style={{ fontSize: '7px', color: 'rgba(255,255,255,0.25)', alignSelf: 'center' }}>+{curingData.data.length - 14}</span>}
-                                            </div>
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            )}
-                            {isSectionVisible('recolte') && (recolte.poidsBrut || recolte.poidsNet || recolte.trichomesLaiteux > 0) && (
-                                <SectionCard title="Récolte" icon="🌾" sectionKey="recolte">
-                                    <div style={{ display: 'flex', gap: '8px', fontSize: '9px', color: 'rgba(255,255,255,0.7)' }}>
-                                        {recolte.poidsBrut && <span>Brut: <b>{recolte.poidsBrut}g</b></span>}
-                                        {recolte.poidsNet && <span>Net: <b>{recolte.poidsNet}g</b></span>}
-                                    </div>
-                                    {(recolte.trichomesLaiteux > 0 || recolte.trichomesAmbres > 0) && (
-                                        <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                                            <div style={{ flex: Number(recolte.trichomesTranslucides || 0), height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.2)' }} title={`Translucides: ${recolte.trichomesTranslucides || 0}%`} />
-                                            <div style={{ flex: Number(recolte.trichomesLaiteux || 0), height: '4px', borderRadius: '2px', background: '#E0E7FF' }} title={`Laiteux: ${recolte.trichomesLaiteux || 0}%`} />
-                                            <div style={{ flex: Number(recolte.trichomesAmbres || 0), height: '4px', borderRadius: '2px', background: '#FBBF24' }} title={`Ambrés: ${recolte.trichomesAmbres || 0}%`} />
-                                        </div>
-                                    )}
-                                </SectionCard>
-                            )}
-                        </div>
-                    </div>
-
-                    {notes && notes !== '-' && (
-                        <div style={{ fontSize: `${9 * fs}px`, color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', padding: '6px 0', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                            {String(notes).slice(0, 200)}
-                        </div>
-                    )}
-
-                    <CanvasFooter />
-                </div>
-            </>
-        )
-    }
-
-    // Canvas dispatch — mapping orchardStore template IDs → canvas renderers
     const renderCanvasContent = () => {
-        // Use local selectedTemplate only — orchardConfig.template belongs to OrchardPanel
-        // and must not override the user's template choice in ExportMaker
-        const tpl = selectedTemplate;
-        if (tpl === 'modernCompact' || tpl === 'minimal' || tpl === 'socialStory')
-            return renderCompactCanvas();
-        if (tpl === 'detailedCard' || tpl === 'detailed')
-            return renderDetailedCanvas();
-        // blogArticle, standard, ou défaut
-        return renderStandardCanvas();
-    }
+        // Use new adaptive template system with modular sections
+        const layout = calculateOptimalLayout();
+        const { templateConfig, formatSpecs, fontScale } = layout;
+
+        // Calculate responsive padding based on format
+        const basePadding = formatSpecs.orientation === 'portrait' ? 20 :
+                           formatSpecs.orientation === 'landscape' ? 28 :
+                           formatSpecs.orientation === 'story' ? 16 : 24;
+        const padding = `${basePadding * fontScale}px ${(basePadding * 1.2 * fontScale)}px`;
+
+        // Get sections to render based on template configuration
+        const sectionsToRender = templateConfig.sections.slice(0, templateConfig.maxSectionsPerPage);
+
+        return (
+            <>
+                <CanvasBackground />
+                <div style={{
+                    position: 'relative',
+                    zIndex: 10,
+                    padding: padding,
+                    height: '100%',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: `${14 * fontScale}px`,
+                    fontFamily: `"${previewFont}", Inter, system-ui, sans-serif`,
+                    overflow: 'hidden'
+                }}>
+                    {/* Render sections based on template configuration */}
+                    {sectionsToRender.includes('header') && renderHeaderSection(layout)}
+
+                    {/* Main content area */}
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: formatSpecs.orientation === 'portrait' || formatSpecs.orientation === 'story' ? 'column' : 'row',
+                        gap: `${14 * fontScale}px`,
+                        flex: 1,
+                        minHeight: 0
+                    }}>
+                        {/* Visual section (photo + infos) */}
+                        {sectionsToRender.includes('visual') && (
+                            <div style={{
+                                flex: formatSpecs.orientation === 'landscape' ? '0 0 42%' : undefined,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: `${10 * fontScale}px`
+                            }}>
+                                {renderVisualSection(layout)}
+
+                                {/* Title and basic info */}
+                                {isSectionVisible('infos') && (
+                                    <div>
+                                        <h1 style={{
+                                            fontSize: `${24 * fontScale}px`,
+                                            fontWeight: 900,
+                                            color: '#fff',
+                                            margin: 0,
+                                            lineHeight: 1.1
+                                        }}>
+                                            {reviewName || 'Sans nom'}
+                                        </h1>
+                                        {genetics && (genetics.breeder || genetics.variety) && (
+                                            <div style={{
+                                                display: 'flex',
+                                                gap: `${4 * fontScale}px`,
+                                                flexWrap: 'wrap',
+                                                marginTop: `${6 * fontScale}px`,
+                                                alignItems: 'center'
+                                            }}>
+                                                {genetics.breeder && (
+                                                    <span style={{
+                                                        fontSize: `${10 * fontScale}px`,
+                                                        color: 'rgba(255,255,255,0.5)',
+                                                        fontWeight: 600
+                                                    }}>
+                                                        {genetics.breeder}
+                                                    </span>
+                                                )}
+                                                {genetics.variety && (
+                                                    <span style={{
+                                                        fontSize: `${10 * fontScale}px`,
+                                                        color: 'rgba(255,255,255,0.4)'
+                                                    }}>
+                                                        · {genetics.variety}
+                                                    </span>
+                                                )}
+                                                {genetics.indicaPercent != null && (
+                                                    <span style={{
+                                                        fontSize: `${9 * fontScale}px`,
+                                                        color: 'rgba(139,92,246,0.8)',
+                                                        background: 'rgba(139,92,246,0.1)',
+                                                        padding: `${1 * fontScale}px ${5 * fontScale}px`,
+                                                        borderRadius: '10px'
+                                                    }}>
+                                                        {genetics.indicaPercent}% I
+                                                    </span>
+                                                )}
+                                                {genetics.sativaPercent != null && (
+                                                    <span style={{
+                                                        fontSize: `${9 * fontScale}px`,
+                                                        color: 'rgba(34,197,94,0.8)',
+                                                        background: 'rgba(34,197,94,0.1)',
+                                                        padding: `${1 * fontScale}px ${5 * fontScale}px`,
+                                                        borderRadius: '10px'
+                                                    }}>
+                                                        {genetics.sativaPercent}% S
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* Content sections area */}
+                        <div style={{
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: `${12 * fontScale}px`,
+                            minHeight: 0,
+                            overflow: 'hidden'
+                        }}>
+                            {sectionsToRender.includes('analytics') && renderAnalyticsSection(layout)}
+                            {sectionsToRender.includes('ratings') && renderRatingsSection(layout)}
+                            {sectionsToRender.includes('aromas') && renderAromasSection(layout)}
+                            {sectionsToRender.includes('effects') && renderEffectsSection(layout)}
+
+                            {/* Additional sections for detailed templates */}
+                            {templateConfig.density === 'high' && sectionsToRender.includes('conclusion') && (
+                                <div style={{ marginBottom: `${16 * fontScale}px` }}>
+                                    <SectionCard title="Conclusion" icon="📝" sectionKey="conclusion" fontSize={fontScale}>
+                                        <p style={{
+                                            fontSize: `${11 * fontScale}px`,
+                                            color: 'rgba(255,255,255,0.7)',
+                                            lineHeight: 1.4,
+                                            margin: 0
+                                        }}>
+                                            {templateData.conclusion || 'Une expérience de qualité avec ce produit.'}
+                                        </p>
+                                    </SectionCard>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {sectionsToRender.includes('footer') && renderFooterSection(layout)}
+                </div>
+            </>
+        );
+    };
 
     return (
         <div className="fixed inset-0 z-[10001] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md sm:p-6">
@@ -1575,650 +1341,296 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 <div className="order-2 sm:order-1 flex-1 sm:flex-none w-full sm:w-80 border-t sm:border-t-0 sm:border-r border-white/10 flex flex-col bg-white/5 min-h-0">
                     <div className="p-4 border-b border-white/10 flex justify-between items-center flex-shrink-0 bg-white/5 z-10">
                         <h2 className="text-lg font-bold text-white flex items-center gap-2.5">
-                            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center text-white text-xs font-black shadow-lg shadow-purple-500/20">T</div>
-                            Export Maker
+                            <Download className="w-5 h-5" />
+                            Export
                         </h2>
-                        <button onClick={onClose} className="p-2 hover:bg-white/10 rounded-full text-gray-400 hover:text-white transition-colors">
+                        <button onClick={onClose} className="p-2 rounded-lg bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors shrink-0">
                             <X className="w-4 h-4" />
                         </button>
                     </div>
 
-                    {/* Sidebar tabs */}
-                    <div className="flex border-b border-white/10 flex-shrink-0">
-                        {[
-                            { id: 'template', label: 'Template', icon: <Layout className="w-3.5 h-3.5" /> },
-                            { id: 'contenu', label: 'Contenu', icon: <Grid className="w-3.5 h-3.5" /> },
-                            { id: 'apparence', label: 'Apparence', icon: <Palette className="w-3.5 h-3.5" /> },
-                            { id: 'prereglages', label: 'Préréglages', icon: <Save className="w-3.5 h-3.5" /> },
-                        ].map(tab => (
-                            <button
-                                key={tab.id}
-                                onClick={() => setSidebarTab(tab.id)}
-                                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] font-semibold uppercase tracking-wider transition-all border-b-2 ${sidebarTab === tab.id ? 'border-purple-500 text-purple-300 bg-purple-500/5' : 'border-transparent text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]'}`}
-                            >
-                                {tab.icon}
-                                <span className="hidden sm:inline">{tab.label}</span>
-                            </button>
-                        ))}
-                    </div>
+                    {/* Sidebar Content */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar">
+                        <div className="p-4 space-y-6">
 
-                    {/* Tab content */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-5">
-
-                        {/* ===== TEMPLATE TAB ===== */}
-                        {sidebarTab === 'template' && (
-                            <>
-                                {/* Template Selection */}
-                                <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Template</h3>
-                                    <div className="grid grid-cols-1 gap-2">
-                                        {templates.map(t => {
-                                            const locked = !!t.premium;
-                                            const active = selectedTemplate === t.id;
-                                            const previewColors = {
-                                                modernCompact: ['#8B5CF6', '#22C55E', '#F59E0B'],
-                                                blogArticle: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4'],
-                                                detailedCard: ['#8B5CF6', '#22C55E', '#F59E0B', '#06B6D4', '#F472B6'],
-                                                socialStory: ['#F472B6', '#8B5CF6', '#22C55E'],
-                                            };
-                                            const colors = previewColors[t.id] || previewColors.blogArticle;
-                                            return (
-                                                <button
-                                                    key={t.id}
-                                                    onClick={() => !locked && setSelectedTemplate(t.id)}
-                                                    disabled={locked}
-                                                    title={locked ? 'Réservé aux comptes Producteur / Influenceur' : ''}
-                                                    className={`w-full text-left p-3 rounded-xl border transition-all ${active ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'} ${locked ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
-                                                >
-                                                    <div className="flex items-center gap-3">
-                                                        <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${active ? 'bg-purple-500/20' : 'bg-white/5'}`}>
-                                                            <div className="flex gap-[2px]">
-                                                                {colors.slice(0, 3).map((c, ci) => (
-                                                                    <div key={ci} style={{ width: '3px', height: `${10 + ci * 4}px`, borderRadius: '1px', background: active ? c : 'rgba(255,255,255,0.2)' }} />
-                                                                ))}
-                                                            </div>
-                                                        </div>
-                                                        <div className="flex-1 min-w-0">
-                                                            <div className="font-semibold text-sm text-white flex items-center gap-2">
-                                                                {t.name}
-                                                                {t.premium && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
-                                                            </div>
-                                                            <div className="text-[11px] text-gray-500 mt-0.5">{t.description}</div>
-                                                        </div>
-                                                        {active && <div className="w-2 h-2 rounded-full bg-purple-400 shadow-[0_0_6px_rgba(139,92,246,0.5)]" />}
-                                                    </div>
-                                                </button>
-                                            );
-                                        })}
-                                    </div>
-
-                                    {/* Create Custom Template Button (Premium only) */}
-                                    {canCreateCustomTemplate && (
+                            {/* Template Selection */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/70 mb-3 flex items-center gap-2">
+                                    <Layout className="w-4 h-4" />
+                                    Template
+                                </h3>
+                                <div className="space-y-2">
+                                    {templates.map(template => (
                                         <button
-                                            onClick={() => setCreatingTemplate(true)}
-                                            className="w-full mt-3 p-3 rounded-xl border border-dashed border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all group"
+                                            key={template.id}
+                                            onClick={() => setSelectedTemplate(template.id)}
+                                            className={`w-full p-3 rounded-lg border transition-all text-left ${selectedTemplate === template.id
+                                                ? 'border-purple-500/50 bg-purple-500/10'
+                                                : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                                                }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
-                                                    <Plus className="w-5 h-5 text-purple-400" />
-                                                </div>
-                                                <div className="flex-1 text-left">
-                                                    <div className="font-semibold text-sm text-purple-400 flex items-center gap-2">
-                                                        Créer un template
-                                                        <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
-                                                    </div>
-                                                    <div className="text-[11px] text-purple-300/60 mt-0.5">Sauvegardez votre configuration actuelle</div>
+                                                <template.icon className="w-4 h-4 text-purple-400 shrink-0" />
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="text-sm font-medium text-white">{template.name}</div>
+                                                    <div className="text-xs text-white/50 truncate">{template.description}</div>
                                                 </div>
                                             </div>
                                         </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Format Selection */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/70 mb-3">Format</h3>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {[
+                                        { id: '1:1', name: 'Carré', ratio: '1:1', desc: 'Instagram Post' },
+                                        { id: '16:9', name: 'Paysage', ratio: '16:9', desc: 'YouTube, desktop' },
+                                        { id: '9:16', name: 'Portrait', ratio: '9:16', desc: 'Stories, mobile' },
+                                        { id: 'A4', name: 'A4', ratio: 'A4', desc: 'Print, document' }
+                                    ].map(fmt => (
+                                        <button
+                                            key={fmt.id}
+                                            onClick={() => setFormat(fmt.id)}
+                                            className={`p-3 rounded-lg border text-left transition-all ${format === fmt.id
+                                                ? 'border-purple-500/50 bg-purple-500/10'
+                                                : 'border-white/10 bg-white/5 hover:border-white/20 hover:bg-white/10'
+                                                }`}
+                                        >
+                                            <div className="text-sm font-medium text-white">{fmt.name}</div>
+                                            <div className="text-xs text-white/50">{fmt.desc}</div>
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            {/* Export Options */}
+                            <div>
+                                <h3 className="text-sm font-semibold text-white/70 mb-3">Options</h3>
+                                <label className="flex items-center gap-3 p-3 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 transition-colors cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        checked={highQuality}
+                                        onChange={(e) => setHighQuality(e.target.checked)}
+                                        className="w-4 h-4 rounded border-white/20 bg-white/10 text-purple-500 focus:ring-purple-500/50"
+                                        disabled={!canExportAdvanced}
+                                    />
+                                    <div className="flex-1">
+                                        <div className="text-sm text-white">Haute qualité</div>
+                                        <div className="text-xs text-white/50">3x resolution</div>
+                                    </div>
+                                    {!canExportAdvanced && (
+                                        <div className="text-xs text-orange-400 bg-orange-400/10 px-2 py-1 rounded">Pro</div>
                                     )}
-                                </div>
+                                </label>
+                            </div>
 
-                                {/* Format Selection */}
+                            {/* Template Creation */}
+                            {canCreateCustomTemplate && (
                                 <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Format</h3>
-                                    <div className="grid grid-cols-4 gap-2">
-                                        {[
-                                            { id: '1:1', label: 'Carré', w: 20, h: 20 },
-                                            { id: '16:9', label: 'Paysage', w: 24, h: 14 },
-                                            { id: '9:16', label: 'Portrait', w: 14, h: 24 },
-                                            { id: 'A4', label: 'A4', w: 16, h: 22 },
-                                        ].map(f => (
-                                            <button
-                                                key={f.id}
-                                                onClick={() => setFormat(f.id)}
-                                                className={`flex flex-col items-center gap-1.5 p-2 rounded-lg border transition-all ${format === f.id ? 'border-purple-500/50 bg-purple-500/10' : 'border-white/5 bg-white/[0.02] hover:bg-white/5'}`}
-                                            >
-                                                <div
-                                                    className={`rounded-sm border ${format === f.id ? 'border-purple-400/60' : 'border-white/10'}`}
-                                                    style={{ width: `${f.w}px`, height: `${f.h}px`, background: format === f.id ? 'rgba(139,92,246,0.15)' : 'rgba(255,255,255,0.03)' }}
-                                                />
-                                                <span className={`text-[10px] font-medium ${format === f.id ? 'text-purple-300' : 'text-gray-500'}`}>{f.label}</span>
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                {/* Pagination Controls */}
-                                {totalPages > 1 && (
-                                    <div>
-                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Pages ({safePage + 1}/{totalPages})</h3>
-                                        <div className="flex items-center justify-center gap-2">
-                                            <button
-                                                onClick={() => setCurrentPage(Math.max(0, safePage - 1))}
-                                                disabled={safePage === 0}
-                                                className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
-                                            >
-                                                <ChevronsRight className="w-3.5 h-3.5 rotate-180" />
-                                            </button>
-                                            <div className="flex gap-1.5">
-                                                {Array.from({ length: totalPages }).map((_, i) => (
-                                                    <button
-                                                        key={i}
-                                                        onClick={() => setCurrentPage(i)}
-                                                        className={`w-7 h-7 rounded-lg text-xs font-bold transition-all ${safePage === i ? 'bg-purple-500/30 text-purple-300 border border-purple-500/40' : 'bg-white/5 text-gray-500 hover:bg-white/10 border border-transparent'}`}
-                                                    >
-                                                        {i + 1}
-                                                    </button>
-                                                ))}
-                                            </div>
-                                            <button
-                                                onClick={() => setCurrentPage(Math.min(totalPages - 1, safePage + 1))}
-                                                disabled={safePage === totalPages - 1}
-                                                className="p-1.5 bg-white/5 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed rounded-lg text-white transition-colors"
-                                            >
-                                                <ChevronsRight className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* Render Style */}
-                                <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">Style de rendu</h3>
-                                    <div className="space-y-2">
-                                        <div>
-                                            <div className="text-[10px] text-gray-500 mb-1.5">Notes / Scores</div>
-                                            <div className="grid grid-cols-4 gap-1">
-                                                {[
-                                                    { id: 'bar', label: 'Barres' },
-                                                    { id: 'gauge', label: 'Jauges' },
-                                                    { id: 'pill', label: 'Pilules' },
-                                                    { id: 'number', label: 'Nombres' },
-                                                ].map(s => (
-                                                    <button
-                                                        key={s.id}
-                                                        onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, scores: s.id } })}
-                                                        className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.scores || 'bar') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
-                                                    >{s.label}</button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <div className="text-[10px] text-gray-500 mb-1.5">Arômes / Effets</div>
-                                            <div className="grid grid-cols-3 gap-1">
-                                                {[
-                                                    { id: 'pills', label: 'Pilules' },
-                                                    { id: 'comma', label: 'Texte' },
-                                                    { id: 'grid', label: 'Grille' },
-                                                ].map(s => (
-                                                    <button
-                                                        key={s.id}
-                                                        onClick={() => useOrchardStore.getState().setConfig({ ...orchardConfig, renderModes: { ...renderModes, lists: s.id } })}
-                                                        className={`py-1.5 text-[9px] font-medium rounded-md border transition-all ${(renderModes.lists || 'pills') === s.id ? 'border-purple-500/50 bg-purple-500/10 text-purple-300' : 'border-white/5 bg-white/[0.02] text-gray-500 hover:bg-white/5'}`}
-                                                    >{s.label}</button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </>
-                        )}
-
-                        {/* ===== CONTENU TAB ===== */}
-                        {sidebarTab === 'contenu' && (
-                            <>
-                                <ContentModuleControls />
-                                {/* Note: Custom Layout removed - replaced by template creation system */}
-                            </>
-                        )}
-
-                        {/* ===== APPARENCE TAB ===== */}
-                        {sidebarTab === 'apparence' && (
-                            <>
-                                <TypographyControls />
-                                <ColorPaletteControls />
-                                <ImageBrandingControls />
-
-                                {/* Watermark section */}
-                                <div>
-                                    <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                        Filigrane
-                                        {!permissions.export?.features?.watermark && <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>}
+                                    <h3 className="text-sm font-semibold text-white/70 mb-3 flex items-center gap-2">
+                                        <Plus className="w-4 h-4" />
+                                        Créer un template
                                     </h3>
-                                    {permissions.export?.features?.watermark ? (
-                                        <WatermarkEditor
-                                            watermark={watermark}
-                                            onWatermarkChange={setWatermark}
-                                        />
+                                    {!creatingTemplate ? (
+                                        <button
+                                            onClick={() => setCreatingTemplate(true)}
+                                            className="w-full p-3 rounded-lg border border-dashed border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 text-purple-300 hover:text-purple-200 transition-colors text-sm font-medium"
+                                        >
+                                            + Nouveau template
+                                        </button>
                                     ) : (
-                                        <div className="p-3 bg-white/5 rounded-lg">
-                                            <div className="text-xs text-gray-400">Le filigrane Terpologie est appliqué automatiquement.</div>
-                                            <div className="text-[10px] text-gray-600 mt-1">Personnalisez-le avec un compte Producteur ou Influenceur.</div>
+                                        <div className="space-y-3 p-3 rounded-lg border border-white/10 bg-white/5">
+                                            <input
+                                                type="text"
+                                                placeholder="Nom du template"
+                                                value={templateName}
+                                                onChange={(e) => setTemplateName(e.target.value)}
+                                                className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/15 text-white placeholder-white/40 text-sm focus:outline-none focus:border-purple-500/50"
+                                            />
+                                            <textarea
+                                                placeholder="Description (optionnelle)"
+                                                value={templateDescription}
+                                                onChange={(e) => setTemplateDescription(e.target.value)}
+                                                className="w-full px-3 py-2 rounded-md bg-white/10 border border-white/15 text-white placeholder-white/40 text-sm resize-none h-16 focus:outline-none focus:border-purple-500/50"
+                                            />
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={handleCreateTemplate}
+                                                    disabled={!templateName.trim()}
+                                                    className="flex-1 px-3 py-2 rounded-md bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white text-sm font-medium transition-colors"
+                                                >
+                                                    Créer
+                                                </button>
+                                                <button
+                                                    onClick={resetTemplateForm}
+                                                    className="px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 text-white text-sm transition-colors"
+                                                >
+                                                    Annuler
+                                                </button>
+                                            </div>
                                         </div>
                                     )}
                                 </div>
-                            </>
-                        )}
+                            )}
 
-                        {/* ===== PREREGLAGES TAB ===== */}
-                        {sidebarTab === 'prereglages' && (
-                            <PresetManager />
-                        )}
+                        </div>
                     </div>
 
-                    {/* Actions footer */}
-                    <div className="px-4 py-3 border-t border-white/10 space-y-2 bg-black/20 flex-shrink-0">
-
-                        {/* Bouton principal PNG */}
+                    {/* Export Actions - Compact Footer */}
+                    <div className="p-4 border-t border-white/10 bg-white/5 space-y-3 flex-shrink-0">
+                        {/* Primary export */}
                         <button
                             onClick={() => handleExport('png')}
                             disabled={exporting}
-                            className="w-full py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl text-white font-bold shadow-lg shadow-purple-500/20 hover:shadow-purple-500/30 transition-all flex items-center justify-center gap-2 text-sm"
+                            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-purple-600 hover:bg-purple-700 disabled:bg-purple-600/50 text-white font-medium transition-colors"
                         >
                             {exporting ? (
-                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                <>
+                                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                    Export en cours...
+                                </>
                             ) : (
-                                <Download className="w-4 h-4" />
+                                <>
+                                    <Download className="w-4 h-4" />
+                                    Exporter PNG
+                                </>
                             )}
-                            Exporter PNG
                         </button>
 
-                        {/* Sauvegarder + Partager */}
-                        <div className="grid grid-cols-2 gap-2">
-                            <button
-                                onClick={() => setSavingToLibrary(true)}
-                                disabled={saveLoading}
-                                className="py-2 bg-white/5 rounded-xl text-white text-xs font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-1.5"
-                            >
-                                <Save className="w-3.5 h-3.5" />
-                                Sauvegarder
-                            </button>
-                            {/* Partage — Web Share API (mobile) ou copie du lien */}
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        const { toPng } = await import('html-to-image');
-                                        const dataUrl = await toPng(exportRef.current, {
-                                            cacheBust: true,
-                                            pixelRatio: highQuality ? 3 : 2,
-                                            backgroundColor: null,
-                                        });
-                                        if (navigator.share) {
-                                            const imgResp = await fetch(dataUrl);
-                                            const blob = await imgResp.blob();
-                                            const file = new File([blob], `review-${reviewName}.png`, { type: 'image/png' });
-                                            const canShareFiles = navigator.canShare && navigator.canShare({ files: [file] });
-                                            if (canShareFiles) {
-                                                await navigator.share({ title: `Review ${reviewName}`, text: `Découvrez cette review sur Terpologie`, files: [file] });
-                                            } else {
-                                                await navigator.share({ title: `Review ${reviewName}`, text: `Découvrez cette review sur Terpologie`, url: window.location.href });
-                                            }
-                                        } else if (navigator.clipboard && window.ClipboardItem) {
-                                            const imgResp = await fetch(dataUrl);
-                                            const blob = await imgResp.blob();
-                                            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
-                                            alert('Image copiée dans le presse-papier !');
-                                        } else {
-                                            await navigator.clipboard.writeText(window.location.href);
-                                            alert('Lien copié dans le presse-papier !');
-                                        }
-                                    } catch (err) {
-                                        if (err.name !== 'AbortError') {
-                                            console.error('[ExportMaker] Share failed:', err);
-                                            alert('Partage non disponible. Utilisez "Exporter PNG".');
-                                        }
-                                    }
-                                }}
-                                className="py-2 bg-white/5 rounded-xl text-white text-xs font-medium border border-white/5 hover:bg-white/10 flex items-center justify-center gap-1.5"
-                            >
-                                <Share2 className="w-3.5 h-3.5" />
-                                Partager
-                            </button>
-                        </div>
-
-                        {/* Formats secondaires + qualité */}
-                        <div className="flex gap-1.5 items-center">
-                            <button onClick={() => handleExport('jpg')} className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 font-medium">JPEG</button>
-                            <FeatureGate hasAccess={canExportSVG} upgradeType="producer" showOverlay={false}>
-                                <button onClick={() => handleExport('svg')} className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 font-medium">SVG</button>
-                            </FeatureGate>
-                            <button onClick={() => handleExport('pdf')} className="flex-1 py-1.5 text-xs bg-white/5 hover:bg-white/10 rounded-lg text-gray-300 font-medium">PDF</button>
-                            {permissions.export?.quality && (
-                                <button
-                                    onClick={() => setHighQuality(h => !h)}
-                                    disabled={!canExportAdvanced}
-                                    title={!canExportAdvanced ? 'Haute qualité réservé aux comptes payants' : 'Activer la haute qualité (300dpi)'}
-                                    className={`px-2.5 py-1.5 text-xs rounded-lg font-semibold ${canExportAdvanced ? (highQuality ? 'bg-emerald-600 text-white' : 'bg-white/5 text-gray-400 hover:bg-white/10') : 'opacity-40 cursor-not-allowed bg-white/5 text-gray-500'}`}
-                                >
-                                    HQ
-                                </button>
-                            )}
-                        </div>
-
-                        {/* Export GIF — si pipeline présent */}
-                        {(reviewData?.pipelineGlobal || reviewData?.pipelineSeparation ||
-                            reviewData?.pipelineExtraction || reviewData?.pipelineCuring) && (
-                                <FeatureGate hasAccess={canExportGIF} upgradeType="producer">
-                                    <button
-                                        onClick={handleExportGIF}
-                                        disabled={exportingGIF}
-                                        className="w-full py-2 bg-gradient-to-r from-amber-600 to-orange-600 rounded-xl text-white font-bold text-xs hover:shadow-amber-500/30 transition-all flex items-center justify-center gap-1.5"
-                                    >
-                                        {exportingGIF ? (
-                                            <>
-                                                <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full" />
-                                                <span>{gifProgress}%</span>
-                                            </>
-                                        ) : (
-                                            <>
-                                                <Film className="w-4 h-4" />
-                                                <span>Pipeline en GIF</span>
-                                            </>
-                                        )}
+                        {/* Secondary export grid */}
+                        <div className="grid grid-cols-3 gap-2">
+                            <FeatureGate
+                                type="export"
+                                feature="formats.jpeg"
+                                fallback={
+                                    <button disabled className="w-full px-3 py-2 rounded-md bg-white/10 text-white/50 text-xs font-medium opacity-50 cursor-not-allowed">
+                                        JPEG
                                     </button>
-                                </FeatureGate>
-                            )}
+                                }
+                            >
+                                <button
+                                    onClick={() => handleExport('jpeg')}
+                                    disabled={exporting}
+                                    className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
+                                >
+                                    JPEG
+                                </button>
+                            </FeatureGate>
+
+                            <FeatureGate
+                                type="export"
+                                feature="formats.svg"
+                                fallback={
+                                    <button disabled className="w-full px-3 py-2 rounded-md bg-white/10 text-white/50 text-xs font-medium opacity-50 cursor-not-allowed">
+                                        SVG
+                                    </button>
+                                }
+                            >
+                                <button
+                                    onClick={() => handleExport('svg')}
+                                    disabled={exporting}
+                                    className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
+                                >
+                                    SVG
+                                </button>
+                            </FeatureGate>
+
+                            <FeatureGate
+                                type="export"
+                                feature="formats.pdf"
+                                fallback={
+                                    <button disabled className="w-full px-3 py-2 rounded-md bg-white/10 text-white/50 text-xs font-medium opacity-50 cursor-not-allowed">
+                                        PDF
+                                    </button>
+                                }
+                            >
+                                <button
+                                    onClick={() => handleExport('pdf')}
+                                    disabled={exporting}
+                                    className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
+                                >
+                                    PDF
+                                </button>
+                            </FeatureGate>
+                        </div>
+
+                        {/* GIF export row */}
+                        <FeatureGate
+                            type="export"
+                            feature="features.dragDrop"
+                            fallback={null}
+                        >
+                            <button
+                                onClick={handleExportGIF}
+                                disabled={exportingGIF}
+                                className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-sm font-medium transition-colors"
+                            >
+                                {exportingGIF ? (
+                                    <>
+                                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                        GIF {gifProgress}%
+                                    </>
+                                ) : (
+                                    <>
+                                        <Film className="w-4 h-4" />
+                                        Export GIF animé
+                                    </>
+                                )}
+                            </button>
+                        </FeatureGate>
                     </div>
                 </div>
 
                 {/* Preview Area */}
-                <div ref={previewAreaRef} className="order-1 sm:order-2 flex shrink-0 sm:shrink sm:flex-1 h-[40vh] sm:h-auto min-h-0 bg-gray-950/80 p-3 sm:p-6 items-center justify-center overflow-hidden relative">
-                    <div className="absolute inset-0 opacity-[0.03] pointer-events-none" style={{ backgroundImage: 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.15) 1px, transparent 0)', backgroundSize: '20px 20px' }} />
-
-                    {/* Contextual right-click menu for per-section styling */}
-                    <OrchardContextMenu />
-
-                    {/* Size placeholder: flex centering uses SCALED dimensions, not raw design dimensions */}
-                    <div style={{ width: designSize.w * canvasScale, height: designSize.h * canvasScale, position: 'relative', flexShrink: 0, lineHeight: 0 }}>
-                        <div style={{ transform: `scale(${canvasScale})`, transformOrigin: 'top left', position: 'absolute', top: 0, left: 0, lineHeight: 0 }}>
-                            <div
-                                ref={exportRef}
-                                className="shadow-2xl relative overflow-hidden"
-                                style={{
-                                    width: designSize.w,
-                                    height: designSize.h,
-                                    background: previewBackground,
-                                    fontFamily: `"${previewFont}", Inter, sans-serif`,
-                                    color: previewTextColor,
-                                    '--accent': previewAccent,
-                                    borderRadius: '12px',
-                                }}
-                            >
-                                {/* Template Canvas Content */}
-                                {renderCanvasContent()}
-                                {/* Filigrane Overlay */}
-                                {watermark.visible && (
-                                    <div
-                                        className="absolute pointer-events-none z-50"
-                                        style={{
-                                            left: `${watermark.position.x}%`,
-                                            top: `${watermark.position.y}%`,
-                                            transform: `translate(-50%, -50%) rotate(${watermark.rotation}deg)`,
-                                            opacity: watermark.opacity / 100,
-                                        }}
-                                    >
-                                        {watermark.type === 'image' && watermark.imageUrl ? (
-                                            <img
-                                                src={watermark.imageUrl}
-                                                alt="Watermark"
-                                                style={{ width: `${watermark.size * 5}px` }}
-                                            />
-                                        ) : (
-                                            <div
-                                                style={{
-                                                    fontSize: `${watermark.size}px`,
-                                                    color: watermark.color || '#ffffff',
-                                                    fontWeight: 'bold',
-                                                    textShadow: '0 2px 4px rgba(0,0,0,0.5)'
-                                                }}
-                                            >
-                                                {watermark.content}
-                                            </div>
-                                        )}
-                                    </div>
-                                )}
-
-                                {/* Filigrane Terpologie forcé pour comptes Amateur */}
-                                {(!permissions.export?.features?.watermark) && (
-                                    <div
-                                        className="absolute pointer-events-none z-[60]"
-                                        style={{
-                                            bottom: '16px',
-                                            right: '16px',
-                                            opacity: 0.35,
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '5px',
-                                        }}
-                                    >
-                                        <div
-                                            style={{
-                                                width: '18px',
-                                                height: '18px',
-                                                borderRadius: '5px',
-                                                background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center',
-                                                fontSize: '10px',
-                                                fontWeight: 900,
-                                                color: '#fff',
-                                                boxShadow: '0 2px 6px rgba(139, 92, 246, 0.4)',
-                                            }}
-                                        >T</div>
-                                        <div
-                                            style={{
-                                                fontSize: '12px',
-                                                fontWeight: 700,
-                                                color: '#A78BFA',
-                                                textShadow: '0 0 8px rgba(139, 92, 246, 0.4), 0 1px 3px rgba(0,0,0,0.3)',
-                                                letterSpacing: '0.12em',
-                                                textTransform: 'uppercase',
-                                                userSelect: 'none',
-                                            }}
-                                        >
-                                            terpologie
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                            {/* Close scale wrapper */}
+                <div className="order-1 sm:order-2 flex shrink-0 sm:shrink sm:flex-1 h-[40vh] sm:h-auto bg-gradient-to-br from-gray-900 to-black p-4 flex items-center justify-center relative">
+                    <div ref={previewAreaRef} className="w-full h-full flex items-center justify-center">
+                        <div
+                            ref={exportRef}
+                            style={{
+                                width: `${designSize.w}px`,
+                                height: `${designSize.h}px`,
+                                transform: `scale(${canvasScale})`,
+                                transformOrigin: 'center',
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                overflow: 'hidden',
+                                position: 'relative'
+                            }}
+                        >
+                            {renderCanvasContent()}
                         </div>
-                        {/* Close size placeholder */}
                     </div>
 
-                    {/* Save to Library Modal — outside exportRef to avoid being captured in exports */}
-                    {savingToLibrary && (
-                        <div className="absolute inset-0 z-60 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
-                            <div className="bg-[#0f0f1a]/95 border border-white/10 p-6 rounded-xl w-[380px] max-w-[90%] shadow-2xl">
-                                <h3 className="text-lg font-semibold text-white mb-3">Sauvegarder l'export</h3>
-                                <div className="space-y-2">
-                                    <label className="text-xs text-gray-400">Nom</label>
-                                    <input value={saveName} onChange={(e) => setSaveName(e.target.value)} className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-purple-500/50 outline-none" placeholder={`Export ${new Date().toLocaleDateString()}`} />
-
-                                    <label className="text-xs text-gray-400">Description (optionnel)</label>
-                                    <textarea value={saveDescription} onChange={(e) => setSaveDescription(e.target.value)} className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white text-sm focus:border-purple-500/50 outline-none" rows={3} />
-
-                                    <div className="flex items-start gap-2">
-                                        <input id="publish" type="checkbox" checked={savePublic} onChange={(e) => setSavePublic(e.target.checked)} disabled={!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)} />
-                                        <div className="flex flex-col">
-                                            <label htmlFor="publish" className="text-sm text-gray-300">Publier dans la galerie publique</label>
-                                            {(!user || (reviewData && reviewData.author && reviewData.author.id !== user.id)) && (
-                                                <div className="text-xs text-gray-500">Seul le propriétaire de la review peut la publier</div>
-                                            )}
-                                        </div>
-                                    </div>
-
-                                    {saveError && (<div className="text-sm text-rose-400">{saveError}</div>)}
-
-                                    <div className="flex items-center justify-end gap-2 mt-4">
-                                        <button onClick={() => setSavingToLibrary(false)} className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-sm text-gray-300 hover:bg-white/10 transition-colors">Annuler</button>
-                                        <button
-                                            onClick={async () => {
-                                                setSaveError(null)
-                                                setSaveLoading(true)
-                                                try {
-                                                    if (!exportRef.current) throw new Error('Aucune preview disponible')
-
-                                                    // 🔥 ERROR HANDLING FIX: Protect dynamic import
-                                                    let _toPng;
-                                                    try {
-                                                        const htmlToImage = await import('html-to-image');
-                                                        _toPng = htmlToImage.toPng;
-                                                    } catch (importErr) {
-                                                        console.error('[ExportMaker] Failed to load html-to-image for save:', importErr);
-                                                        throw new Error('Impossible de charger la bibliothèque d\'export');
-                                                    }
-
-                                                    const dataUrl = await _toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
-                                                    const imgResp = await fetch(dataUrl)
-                                                    const blob = await imgResp.blob()
-                                                    const filename = `export-${reviewName.replace(/\s+/g, '-')}-${Date.now()}.png`
-                                                    const form = new FormData()
-                                                    form.append('file', blob, filename)
-                                                    if (reviewData?.id) form.append('reviewId', reviewData.id)
-                                                    form.append('name', saveName || '')
-                                                    form.append('description', saveDescription || '')
-                                                    form.append('format', 'png')
-                                                    form.append('templateName', selectedTemplate || 'modernCompact')
-                                                    form.append('isPublic', savePublic ? 'true' : 'false')
-
-                                                    const resp = await fetch('/api/library/exports', {
-                                                        method: 'POST',
-                                                        body: form,
-                                                        credentials: 'include'
-                                                    })
-                                                    if (!resp.ok) {
-                                                        const json = await resp.json().catch(() => ({ message: 'Erreur' }))
-                                                        throw new Error(json.message || 'Erreur lors de l\'upload')
-                                                    }
-
-                                                    if (savePublic && reviewData?.id) {
-                                                        try {
-                                                            await fetch(`/api/reviews/${reviewData.id}/visibility`, {
-                                                                method: 'PATCH',
-                                                                headers: { 'Content-Type': 'application/json' },
-                                                                body: JSON.stringify({ isPublic: true }),
-                                                                credentials: 'include'
-                                                            })
-                                                        } catch (visErr) {
-                                                            console.warn('[ExportMaker] Failed to update review visibility:', visErr)
-                                                        }
-                                                    }
-
-                                                    setSavingToLibrary(false)
-                                                    alert(savePublic
-                                                        ? 'Export enregistré et review publiée dans la galerie !'
-                                                        : 'Export enregistré dans votre bibliothèque'
-                                                    )
-                                                } catch (err) {
-                                                    console.error(err)
-                                                    setSaveError(err.message)
-                                                } finally {
-                                                    setSaveLoading(false)
-                                                }
-                                            }}
-                                            disabled={saveLoading}
-                                            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition-colors"
-                                        >
-                                            {saveLoading ? 'Enregistrement...' : 'Enregistrer'}
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Template Creation Modal */}
-                    {creatingTemplate && (
-                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                            <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 shadow-2xl w-full max-w-md">
-                                <div className="flex items-center justify-between mb-6">
-                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                                        <Plus className="w-5 h-5 text-purple-400" />
-                                        Créer un template
-                                    </h3>
-                                    <button
-                                        onClick={resetTemplateForm}
-                                        className="p-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-sm font-medium text-white/80 mb-2">
-                                            Nom du template *
-                                        </label>
-                                        <input
-                                            type="text"
-                                            value={templateName}
-                                            onChange={(e) => setTemplateName(e.target.value)}
-                                            placeholder="Mon template personnalisé"
-                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none"
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-white/80 mb-2">
-                                            Description
-                                        </label>
-                                        <textarea
-                                            value={templateDescription}
-                                            onChange={(e) => setTemplateDescription(e.target.value)}
-                                            placeholder="Description de votre template..."
-                                            rows={3}
-                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none resize-none"
-                                        />
-                                    </div>
-
-                                    <div className="text-xs text-white/50 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
-                                        <strong className="text-purple-400">Configuration sauvegardée :</strong>
-                                        <br />• Template : {templates.find(t => t.id === selectedTemplate)?.name}
-                                        <br />• Format : {format}
-                                        <br />• Type produit : {productType === 'flower' ? 'Fleur' : productType === 'hash' ? 'Hash' : productType === 'concentrate' ? 'Concentré' : 'Comestible'}
-                                    </div>
-                                </div>
-
-                                <div className="flex gap-3 mt-6 pt-4 border-t border-white/10">
-                                    <button
-                                        onClick={resetTemplateForm}
-                                        className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
-                                    >
-                                        Annuler
-                                    </button>
-                                    <button
-                                        onClick={handleCreateTemplate}
-                                        disabled={!templateName.trim()}
-                                        className="flex-1 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white font-medium transition-colors"
-                                    >
-                                        Créer
-                                    </button>
-                                </div>
-                            </div>
+                    {/* Watermark overlay */}
+                    {watermark.visible && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                left: `${watermark.position.x}%`,
+                                top: `${watermark.position.y}%`,
+                                transform: `translate(-50%, -50%) rotate(${watermark.rotation}deg)`,
+                                fontSize: `${watermark.size}px`,
+                                opacity: watermark.opacity / 100,
+                                color: watermark.color,
+                                fontWeight: 'bold',
+                                pointerEvents: 'none',
+                                zIndex: 100,
+                                textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                                whiteSpace: 'nowrap',
+                                userSelect: 'none'
+                            }}
+                        >
+                            {watermark.content || 'Terpologie'}
                         </div>
                     )}
                 </div>
+
             </LiquidGlass>
         </div>
     );
 };
 
 export default ExportMaker;
-
-
-
-
-
