@@ -1191,8 +1191,87 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                            formatSpecs.orientation === 'story' ? 16 : 24;
         const padding = `${basePadding * fontScale}px ${(basePadding * 1.2 * fontScale)}px`;
 
-        // Get sections to render based on template configuration
-        const sectionsToRender = templateConfig.sections.slice(0, templateConfig.maxSectionsPerPage);
+        // Helper to render cannabinoid badges
+        const renderCannabinoidBadges = () => {
+            const cannabinoids = [
+                { key: 'thc', value: resolveReviewField('thc'), color: '#F87171', label: 'THC' },
+                { key: 'cbd', value: resolveReviewField('cbd'), color: '#34D399', label: 'CBD' },
+                { key: 'cbg', value: resolveReviewField('cbg'), color: '#FCD34D', label: 'CBG' },
+                { key: 'cbc', value: resolveReviewField('cbc'), color: '#6EE7B7', label: 'CBC' },
+                { key: 'cbn', value: resolveReviewField('cbn'), color: '#F9A8D4', label: 'CBN' },
+                { key: 'thcv', value: resolveReviewField('thcv'), color: '#C4B5FD', label: 'THCV' }
+            ].filter(c => c.value != null && c.value !== '-' && c.value !== '0');
+
+            if (!cannabinoids.length) return null;
+
+            return (
+                <div style={{
+                    display: 'flex',
+                    gap: `${4 * fontScale}px`,
+                    flexWrap: 'wrap',
+                    marginTop: `${6 * fontScale}px`
+                }}>
+                    {cannabinoids.map(c => (
+                        <span key={c.key} style={{
+                            padding: `${2 * fontScale}px ${6 * fontScale}px`,
+                            borderRadius: '16px',
+                            background: `${c.color}15`,
+                            border: `1px solid ${c.color}30`,
+                            fontSize: `${8 * fontScale}px`,
+                            fontWeight: 600,
+                            color: c.color
+                        }}>
+                            {c.label} {Number(c.value).toFixed(1)}%
+                        </span>
+                    ))}
+                </div>
+            );
+        };
+
+        // Helper to render terpenes
+        const renderTerpenes = () => {
+            const terpenes = resolveReviewField('terpenes') || resolveReviewField('terpeneProfile') || [];
+            const normTerpenes = Array.isArray(terpenes) ? terpenes : [];
+            const topTerpenes = normTerpenes
+                .filter(t => t && t.percentage != null && t.percentage > 0)
+                .sort((a, b) => b.percentage - a.percentage)
+                .slice(0, formatSpecs.orientation === 'story' ? 3 : 6);
+
+            if (!topTerpenes.length) return null;
+
+            return (
+                <div style={{ marginBottom: `${12 * fontScale}px` }}>
+                    <h3 style={{
+                        fontSize: `${12 * fontScale}px`,
+                        fontWeight: 700,
+                        color: 'rgba(255,255,255,0.7)',
+                        margin: `0 0 ${6 * fontScale}px 0`
+                    }}>
+                        Terpènes
+                    </h3>
+                    <div style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: `${3 * fontScale}px`
+                    }}>
+                        {topTerpenes.map((terp, i) => (
+                            <TerpeneBar
+                                key={i}
+                                name={terp.name}
+                                percentage={terp.percentage}
+                                compact
+                                fontSize={fontScale}
+                            />
+                        ))}
+                    </div>
+                </div>
+            );
+        };
+
+        // Comprehensive sections rendering based on template
+        const isMinimal = templateConfig.density === 'minimal';
+        const isCompact = templateConfig.density === 'low' || formatSpecs.orientation === 'story';
+        const isDetailed = templateConfig.density === 'high';
 
         return (
             <>
@@ -1204,14 +1283,35 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: `${14 * fontScale}px`,
+                    gap: `${12 * fontScale}px`,
                     fontFamily: `"${previewFont}", Inter, system-ui, sans-serif`,
                     overflow: 'hidden'
                 }}>
-                    {/* Render sections based on template configuration */}
-                    {sectionsToRender.includes('header') && renderHeaderSection(layout)}
+                    {/* Header with branding and product type */}
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: `${8 * fontScale}px`
+                    }}>
+                        <BrandMark size={isMinimal ? "xs" : "sm"} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * fontScale}px` }}>
+                            <span style={{
+                                fontSize: `${9 * fontScale}px`,
+                                fontWeight: 600,
+                                color: 'rgba(255,255,255,0.4)',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.1em'
+                            }}>
+                                {typeName}
+                            </span>
+                            <span style={{ fontSize: `${12 * fontScale}px` }}>
+                                {TYPE_ICONS[typeName] || '🌿'}
+                            </span>
+                        </div>
+                    </div>
 
-                    {/* Main content area */}
+                    {/* Main Content Layout */}
                     <div style={{
                         display: 'flex',
                         flexDirection: formatSpecs.orientation === 'portrait' || formatSpecs.orientation === 'story' ? 'column' : 'row',
@@ -1219,115 +1319,314 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         flex: 1,
                         minHeight: 0
                     }}>
-                        {/* Visual section (photo + infos) */}
-                        {sectionsToRender.includes('visual') && (
-                            <div style={{
-                                flex: formatSpecs.orientation === 'landscape' ? '0 0 42%' : undefined,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: `${10 * fontScale}px`
-                            }}>
-                                {renderVisualSection(layout)}
+                        {/* Photo and Basic Info Section */}
+                        <div style={{
+                            flex: formatSpecs.orientation === 'landscape' ? '0 0 42%' : undefined,
+                            display: 'flex',
+                            flexDirection: 'column',
+                            gap: `${10 * fontScale}px`
+                        }}>
+                            {/* Product Image */}
+                            {imgUrl && (
+                                <div style={{
+                                    height: formatSpecs.orientation === 'portrait' ? `${160 * fontScale}px` :
+                                           formatSpecs.orientation === 'story' ? `${120 * fontScale}px` : 'auto',
+                                    aspectRatio: formatSpecs.orientation === 'landscape' ? '1' : undefined,
+                                    borderRadius: `${12 * fontScale}px`,
+                                    overflow: 'hidden',
+                                    position: 'relative',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(0,0,0,0.2)'
+                                }}>
+                                    <img
+                                        src={imgUrl}
+                                        style={{
+                                            width: '100%',
+                                            height: '100%',
+                                            objectFit: 'cover',
+                                            display: 'block'
+                                        }}
+                                        alt={reviewName}
+                                    />
+                                </div>
+                            )}
 
-                                {/* Title and basic info */}
-                                {isSectionVisible('infos') && (
-                                    <div>
-                                        <h1 style={{
-                                            fontSize: `${24 * fontScale}px`,
-                                            fontWeight: 900,
-                                            color: '#fff',
-                                            margin: 0,
-                                            lineHeight: 1.1
-                                        }}>
-                                            {reviewName || 'Sans nom'}
-                                        </h1>
-                                        {genetics && (genetics.breeder || genetics.variety) && (
-                                            <div style={{
-                                                display: 'flex',
-                                                gap: `${4 * fontScale}px`,
-                                                flexWrap: 'wrap',
-                                                marginTop: `${6 * fontScale}px`,
-                                                alignItems: 'center'
+                            {/* Title and Basic Info */}
+                            <div>
+                                <h1 style={{
+                                    fontSize: `${isMinimal ? 18 : 22} * ${fontScale}px`,
+                                    fontWeight: 900,
+                                    color: '#fff',
+                                    margin: 0,
+                                    lineHeight: 1.1,
+                                    marginBottom: `${4 * fontScale}px`
+                                }}>
+                                    {reviewName || 'Sans nom'}
+                                </h1>
+
+                                {/* Genetics info */}
+                                {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null) && (
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: `${3 * fontScale}px`,
+                                        flexWrap: 'wrap',
+                                        alignItems: 'center',
+                                        marginBottom: `${4 * fontScale}px`
+                                    }}>
+                                        {genetics.breeder && (
+                                            <span style={{
+                                                fontSize: `${8 * fontScale}px`,
+                                                color: 'rgba(255,255,255,0.5)',
+                                                fontWeight: 600
                                             }}>
-                                                {genetics.breeder && (
-                                                    <span style={{
-                                                        fontSize: `${10 * fontScale}px`,
-                                                        color: 'rgba(255,255,255,0.5)',
-                                                        fontWeight: 600
-                                                    }}>
-                                                        {genetics.breeder}
-                                                    </span>
-                                                )}
-                                                {genetics.variety && (
-                                                    <span style={{
-                                                        fontSize: `${10 * fontScale}px`,
-                                                        color: 'rgba(255,255,255,0.4)'
-                                                    }}>
-                                                        · {genetics.variety}
-                                                    </span>
-                                                )}
-                                                {genetics.indicaPercent != null && (
-                                                    <span style={{
-                                                        fontSize: `${9 * fontScale}px`,
-                                                        color: 'rgba(139,92,246,0.8)',
-                                                        background: 'rgba(139,92,246,0.1)',
-                                                        padding: `${1 * fontScale}px ${5 * fontScale}px`,
-                                                        borderRadius: '10px'
-                                                    }}>
-                                                        {genetics.indicaPercent}% I
-                                                    </span>
-                                                )}
-                                                {genetics.sativaPercent != null && (
-                                                    <span style={{
-                                                        fontSize: `${9 * fontScale}px`,
-                                                        color: 'rgba(34,197,94,0.8)',
-                                                        background: 'rgba(34,197,94,0.1)',
-                                                        padding: `${1 * fontScale}px ${5 * fontScale}px`,
-                                                        borderRadius: '10px'
-                                                    }}>
-                                                        {genetics.sativaPercent}% S
-                                                    </span>
-                                                )}
-                                            </div>
+                                                {genetics.breeder}
+                                            </span>
+                                        )}
+                                        {genetics.variety && (
+                                            <span style={{
+                                                fontSize: `${8 * fontScale}px`,
+                                                color: 'rgba(255,255,255,0.4)'
+                                            }}>
+                                                {genetics.breeder ? '·' : ''} {genetics.variety}
+                                            </span>
+                                        )}
+                                        {genetics.indicaPercent != null && (
+                                            <span style={{
+                                                fontSize: `${7 * fontScale}px`,
+                                                color: 'rgba(139,92,246,0.8)',
+                                                background: 'rgba(139,92,246,0.1)',
+                                                padding: `${1 * fontScale}px ${4 * fontScale}px`,
+                                                borderRadius: `${6 * fontScale}px`
+                                            }}>
+                                                {genetics.indicaPercent}% I
+                                            </span>
+                                        )}
+                                        {genetics.sativaPercent != null && (
+                                            <span style={{
+                                                fontSize: `${7 * fontScale}px`,
+                                                color: 'rgba(34,197,94,0.8)',
+                                                background: 'rgba(34,197,94,0.1)',
+                                                padding: `${1 * fontScale}px ${4 * fontScale}px`,
+                                                borderRadius: `${6 * fontScale}px`
+                                            }}>
+                                                {genetics.sativaPercent}% S
+                                            </span>
                                         )}
                                     </div>
                                 )}
-                            </div>
-                        )}
 
-                        {/* Content sections area */}
+                                {/* Cannabinoids badges */}
+                                {renderCannabinoidBadges()}
+                            </div>
+                        </div>
+
+                        {/* Details and Scores Section */}
                         <div style={{
                             flex: 1,
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: `${12 * fontScale}px`,
+                            gap: `${10 * fontScale}px`,
                             minHeight: 0,
                             overflow: 'hidden'
                         }}>
-                            {sectionsToRender.includes('analytics') && renderAnalyticsSection(layout)}
-                            {sectionsToRender.includes('ratings') && renderRatingsSection(layout)}
-                            {sectionsToRender.includes('aromas') && renderAromasSection(layout)}
-                            {sectionsToRender.includes('effects') && renderEffectsSection(layout)}
+                            {/* Overall Rating and Category Scores */}
+                            {(rating > 0 || categories.length > 0) && (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: `${12 * fontScale}px`,
+                                    marginBottom: `${8 * fontScale}px`
+                                }}>
+                                    {rating > 0 && (
+                                        <ScoreGauge
+                                            score={rating}
+                                            size={Math.max(40, 48 * fontScale)}
+                                            label="Note"
+                                        />
+                                    )}
+                                    {categories.length > 0 && (
+                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                            <MiniBars
+                                                items={categories.slice(0, isMinimal ? 3 : 5).map(c => ({
+                                                    label: c.label,
+                                                    value: c.score,
+                                                    color: c.color
+                                                }))}
+                                                max={10}
+                                                compact
+                                                fontSize={fontScale}
+                                            />
+                                        </div>
+                                    )}
+                                </div>
+                            )}
 
-                            {/* Additional sections for detailed templates */}
-                            {templateConfig.density === 'high' && sectionsToRender.includes('conclusion') && (
-                                <div style={{ marginBottom: `${16 * fontScale}px` }}>
-                                    <SectionCard title="Conclusion" icon="📝" sectionKey="conclusion" fontSize={fontScale}>
-                                        <p style={{
-                                            fontSize: `${11 * fontScale}px`,
-                                            color: 'rgba(255,255,255,0.7)',
-                                            lineHeight: 1.4,
-                                            margin: 0
-                                        }}>
-                                            {templateData.conclusion || 'Une expérience de qualité avec ce produit.'}
-                                        </p>
-                                    </SectionCard>
+                            {/* Terpenes */}
+                            {!isMinimal && renderTerpenes()}
+
+                            {/* Sensorial Grid - Only for detailed templates */}
+                            {isDetailed && (
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: formatSpecs.orientation === 'portrait' ? '1fr' :
+                                                       formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
+                                    gap: `${6 * fontScale}px`,
+                                    flex: 1,
+                                    minHeight: 0,
+                                    overflow: 'hidden'
+                                }}>
+                                    {/* Odor */}
+                                    {(() => {
+                                        const odor = templateData.odor || {};
+                                        if (!odor.intensity && !odor.dominant?.length && !odor.secondary?.length) return null;
+                                        return (
+                                            <SectionCard title="Odeur" icon="👃" sectionKey="odor" fontSize={fontScale}>
+                                                {odor.intensity != null && renderScore(odor.intensity, 'Intensité', '#22C55E', fontScale)}
+                                                {(odor.dominant?.length || odor.secondary?.length) && (
+                                                    <div style={{ marginTop: `${4 * fontScale}px` }}>
+                                                        {renderList(
+                                                            [...(odor.dominant || []), ...(odor.secondary || [])].slice(0, 4),
+                                                            'rgba(34,197,94,0.12)',
+                                                            '#22C55E',
+                                                            fontScale,
+                                                            undefined,
+                                                            4
+                                                        )}
+                                                    </div>
+                                                )}
+                                            </SectionCard>
+                                        );
+                                    })()}
+
+                                    {/* Taste */}
+                                    {(() => {
+                                        const taste = templateData.taste || {};
+                                        if (!taste.intensity && !taste.aggressiveness && !taste.dryPuff?.length && !taste.inhalation?.length && !taste.expiration?.length) return null;
+                                        return (
+                                            <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={fontScale}>
+                                                {(taste.intensity != null || taste.aggressiveness != null) && (
+                                                    <div style={{ marginBottom: `${4 * fontScale}px` }}>
+                                                        <MiniBars
+                                                            items={[
+                                                                taste.intensity != null && { label: 'Int.', value: taste.intensity, color: '#F59E0B' },
+                                                                taste.aggressiveness != null && { label: 'Agr.', value: taste.aggressiveness, color: '#FB923C' }
+                                                            ].filter(Boolean)}
+                                                            max={10}
+                                                            compact
+                                                            fontSize={fontScale}
+                                                        />
+                                                    </div>
+                                                )}
+                                                {(taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) && (
+                                                    renderList(
+                                                        [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])].slice(0, 4),
+                                                        'rgba(245,158,11,0.12)',
+                                                        '#F59E0B',
+                                                        fontScale,
+                                                        undefined,
+                                                        4
+                                                    )
+                                                )}
+                                            </SectionCard>
+                                        );
+                                    })()}
+
+                                    {/* Effects */}
+                                    {(() => {
+                                        const effects = templateData.effects || {};
+                                        if (!effects.intensity && !effects.onset && !effects.selected?.length) return null;
+                                        return (
+                                            <SectionCard title="Effets" icon="💥" sectionKey="effects" fontSize={fontScale}>
+                                                {(effects.intensity != null || effects.onset != null) && (
+                                                    <div style={{ marginBottom: `${4 * fontScale}px` }}>
+                                                        <MiniBars
+                                                            items={[
+                                                                effects.intensity != null && { label: 'Int.', value: effects.intensity, color: '#06B6D4' },
+                                                                effects.onset != null && { label: 'Mont.', value: effects.onset, color: '#34D399' }
+                                                            ].filter(Boolean)}
+                                                            max={10}
+                                                            compact
+                                                            fontSize={fontScale}
+                                                        />
+                                                    </div>
+                                                )}
+                                                {effects.selected?.length > 0 && (
+                                                    renderList(
+                                                        effects.selected.slice(0, 5),
+                                                        'rgba(6,182,212,0.12)',
+                                                        '#06B6D4',
+                                                        fontScale,
+                                                        undefined,
+                                                        5
+                                                    )
+                                                )}
+                                            </SectionCard>
+                                        );
+                                    })()}
+
+                                    {/* Visual & Texture for concentrates */}
+                                    {(() => {
+                                        const visual = templateData.visual || {};
+                                        const texture = templateData.texture || {};
+                                        const hasVisualData = Object.values(visual).some(v => v != null);
+                                        const hasTextureData = Object.values(texture).some(v => v != null);
+
+                                        if (!hasVisualData && !hasTextureData) return null;
+                                        return (
+                                            <SectionCard title="Aspect" icon="🔍" sectionKey="visual" fontSize={fontScale}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: `${3 * fontScale}px` }}>
+                                                    {Object.entries(visual).filter(([_, value]) => value != null).slice(0, 2).map(([key, value]) =>
+                                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: `${6 * fontScale}px` }}>
+                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: 'rgba(255,255,255,0.5)', minWidth: `${35 * fontScale}px` }}>{key}</span>
+                                                            <div style={{ flex: 1, height: `${3 * fontScale}px`, background: 'rgba(167,139,250,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                                <div style={{ width: `${(value / 10) * 100}%`, height: '100%', background: '#A78BFA' }} />
+                                                            </div>
+                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: '#A78BFA', fontWeight: 600, minWidth: `${12 * fontScale}px` }}>{value}</span>
+                                                        </div>
+                                                    )}
+                                                    {Object.entries(texture).filter(([_, value]) => value != null).slice(0, 2).map(([key, value]) =>
+                                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: `${6 * fontScale}px` }}>
+                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: 'rgba(255,255,255,0.5)', minWidth: `${35 * fontScale}px` }}>{key}</span>
+                                                            <div style={{ flex: 1, height: `${3 * fontScale}px`, background: 'rgba(251,113,133,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                                <div style={{ width: `${(value / 10) * 100}%`, height: '100%', background: '#FB7185' }} />
+                                                            </div>
+                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: '#FB7185', fontWeight: 600, minWidth: `${12 * fontScale}px` }}>{value}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </SectionCard>
+                                        );
+                                    })()}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    {sectionsToRender.includes('footer') && renderFooterSection(layout)}
+                    {/* Footer */}
+                    <div style={{
+                        marginTop: 'auto',
+                        paddingTop: `${8 * fontScale}px`,
+                        borderTop: '1px solid rgba(255,255,255,0.05)',
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center'
+                    }}>
+                        <div style={{
+                            fontSize: `${8 * fontScale}px`,
+                            color: 'rgba(255,255,255,0.3)',
+                            fontWeight: 500
+                        }}>
+                            terpologie.fr
+                        </div>
+                        {reviewData?.createdAt && (
+                            <div style={{
+                                fontSize: `${8 * fontScale}px`,
+                                color: 'rgba(255,255,255,0.3)'
+                            }}>
+                                {new Date(reviewData.createdAt).toLocaleDateString('fr-FR')}
+                            </div>
+                        )}
+                    </div>
                 </div>
             </>
         );
