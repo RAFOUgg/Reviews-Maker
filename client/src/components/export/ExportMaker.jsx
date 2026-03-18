@@ -221,7 +221,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             formatSpecs,
             templateConfig,
             pages: calculatedPages,
-            fontScale: finalFontScale,
+            safeFontScale: finalFontScale,
             needsPagination,
             layout: formatSpecs.layout
         };
@@ -231,8 +231,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Adaptive section rendering based on format and content availability
 
     const renderHeaderSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
         const isCompact = formatSpecs.orientation === 'story' || layout.templateConfig.density === 'minimal';
 
         return (
@@ -262,8 +262,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     const renderAnalyticsSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
         const isCompact = layout.templateConfig.density === 'minimal';
 
         if (!isSectionVisible('analytics')) return null;
@@ -325,8 +325,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     const renderRatingsSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
         const isVertical = formatSpecs.orientation === 'portrait' || formatSpecs.orientation === 'story';
 
         if (!isSectionVisible('rating') && !categories.length) return null;
@@ -365,8 +365,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     const renderVisualSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
 
         if (!isSectionVisible('photo') && !isSectionVisible('visual')) return null;
 
@@ -450,8 +450,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     const renderAromasSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
 
         if (!isSectionVisible('odor') && !isSectionVisible('taste')) return null;
 
@@ -505,8 +505,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     const renderEffectsSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
 
         if (!isSectionVisible('effects')) return null;
 
@@ -538,8 +538,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     };
 
     const renderFooterSection = (layout) => {
-        const { fontScale, formatSpecs } = layout;
-        const fontSize = formatSpecs.fontSize * fontScale;
+        const { safeFontScale, formatSpecs } = layout;
+        const fontSize = formatSpecs.fontSize * safeFontScale;
 
         return (
             <div style={{
@@ -1060,11 +1060,11 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     const getMainImage = () => {
         if (!reviewData) return null
-        // Multiple image sources possible
+        // Multiple image sources possible with safety checks
         return reviewData.mainImage ||
                reviewData.image ||
                reviewData.photo ||
-               (reviewData.gallery && reviewData.gallery[0]) ||
+               (Array.isArray(reviewData.gallery) && reviewData.gallery.length > 0 && reviewData.gallery[0]) ||
                null
     }
 
@@ -1183,76 +1183,94 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const renderCanvasContent = () => {
         // Use new adaptive template system with modular sections
         const layout = calculateOptimalLayout();
-        const { templateConfig, formatSpecs, fontScale } = layout;
+        const { templateConfig, formatSpecs, safeFontScale } = layout;
+
+        // 🔧 FontScale protection to prevent zero or negative values
+        const safeFontScale = Math.max(0.5, safeFontScale || 1);
 
         // Calculate responsive padding based on format
         const basePadding = formatSpecs.orientation === 'portrait' ? 20 :
                            formatSpecs.orientation === 'landscape' ? 28 :
                            formatSpecs.orientation === 'story' ? 16 : 24;
-        const padding = `${basePadding * fontScale}px ${(basePadding * 1.2 * fontScale)}px`;
+        const padding = `${basePadding * safeFontScale}px ${(basePadding * 1.2 * safeFontScale)}px`;
 
-        // Helper to render cannabinoid badges
+        // Helper to render cannabinoid badges - Optimized with templateData
         const renderCannabinoidBadges = () => {
+            const analytics = templateData.analytics || {};
             const cannabinoids = [
-                { key: 'thc', value: resolveReviewField('thc'), color: '#F87171', label: 'THC' },
-                { key: 'cbd', value: resolveReviewField('cbd'), color: '#34D399', label: 'CBD' },
-                { key: 'cbg', value: resolveReviewField('cbg'), color: '#FCD34D', label: 'CBG' },
-                { key: 'cbc', value: resolveReviewField('cbc'), color: '#6EE7B7', label: 'CBC' },
-                { key: 'cbn', value: resolveReviewField('cbn'), color: '#F9A8D4', label: 'CBN' },
-                { key: 'thcv', value: resolveReviewField('thcv'), color: '#C4B5FD', label: 'THCV' }
-            ].filter(c => c.value != null && c.value !== '-' && c.value !== '0');
+                { key: 'thc', value: analytics.thc, color: '#F87171', label: 'THC' },
+                { key: 'cbd', value: analytics.cbd, color: '#34D399', label: 'CBD' },
+                { key: 'cbg', value: analytics.cbg, color: '#FCD34D', label: 'CBG' },
+                { key: 'cbc', value: analytics.cbc, color: '#6EE7B7', label: 'CBC' },
+                { key: 'cbn', value: analytics.cbn, color: '#F9A8D4', label: 'CBN' },
+                { key: 'thcv', value: analytics.thcv, color: '#C4B5FD', label: 'THCV' }
+            ].filter(c => {
+                // More lenient filtering - include even small values but exclude null, undefined, '-', '', and exactly '0'
+                return c.value != null && c.value !== '' && c.value !== '-' &&
+                       c.value !== 0 && c.value !== '0' && c.value !== '0.0' &&
+                       !isNaN(parseFloat(c.value)) && parseFloat(c.value) > 0;
+            });
 
             if (!cannabinoids.length) return null;
 
             return (
                 <div style={{
                     display: 'flex',
-                    gap: `${4 * fontScale}px`,
+                    gap: `${4 * safeFontScale}px`,
                     flexWrap: 'wrap',
-                    marginTop: `${6 * fontScale}px`
+                    marginTop: `${6 * safeFontScale}px`
                 }}>
                     {cannabinoids.map(c => (
                         <span key={c.key} style={{
-                            padding: `${2 * fontScale}px ${6 * fontScale}px`,
+                            padding: `${2 * safeFontScale}px ${6 * safeFontScale}px`,
                             borderRadius: '16px',
                             background: `${c.color}15`,
                             border: `1px solid ${c.color}30`,
-                            fontSize: `${8 * fontScale}px`,
+                            fontSize: `${8 * safeFontScale}px`,
                             fontWeight: 600,
                             color: c.color
                         }}>
-                            {c.label} {Number(c.value).toFixed(1)}%
+                            {c.label} {parseFloat(c.value).toFixed(1)}%
                         </span>
                     ))}
                 </div>
             );
         };
 
-        // Helper to render terpenes
+        // Helper to render terpenes - Enhanced with better fallbacks
         const renderTerpenes = () => {
             const terpenes = resolveReviewField('terpenes') || resolveReviewField('terpeneProfile') || [];
             const normTerpenes = Array.isArray(terpenes) ? terpenes : [];
+
+            // More robust filtering and validation
             const topTerpenes = normTerpenes
-                .filter(t => t && t.percentage != null && t.percentage > 0)
+                .filter(t => {
+                    return t && t.name && t.percentage != null &&
+                           !isNaN(parseFloat(t.percentage)) && parseFloat(t.percentage) > 0;
+                })
+                .map(t => ({
+                    ...t,
+                    percentage: parseFloat(t.percentage)
+                }))
                 .sort((a, b) => b.percentage - a.percentage)
                 .slice(0, formatSpecs.orientation === 'story' ? 3 : 6);
 
             if (!topTerpenes.length) return null;
 
             return (
-                <div style={{ marginBottom: `${12 * fontScale}px` }}>
+                <div style={{ marginBottom: `${12 * safeFontScale}px` }}>
                     <h3 style={{
-                        fontSize: `${12 * fontScale}px`,
+                        fontSize: `${12 * safeFontScale}px`,
                         fontWeight: 700,
                         color: 'rgba(255,255,255,0.7)',
-                        margin: `0 0 ${6 * fontScale}px 0`
+                        margin: `0 0 ${6 * safeFontScale}px 0`
                     }}>
                         Terpènes
                     </h3>
                     <div style={{
                         display: 'flex',
                         flexDirection: 'column',
-                        gap: `${3 * fontScale}px`
+                        gap: `${3 * safeFontScale}px`
                     }}>
                         {topTerpenes.map((terp, i) => (
                             <TerpeneBar
@@ -1260,10 +1278,63 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 name={terp.name}
                                 percentage={terp.percentage}
                                 compact
-                                fontSize={fontScale}
+                                fontSize={safeFontScale}
                             />
                         ))}
                     </div>
+                </div>
+            );
+        };
+
+        // Helper to render variety info badges (enhanced)
+        const renderVarietyInfo = () => {
+            const varietyType = reviewData?.varietyType;
+            if (!varietyType && !genetics?.breeder && !genetics?.variety && genetics?.indicaPercent == null && genetics?.sativaPercent == null) {
+                return null;
+            }
+
+            return (
+                <div style={{
+                    display: 'flex',
+                    gap: `${4 * safeFontScale}px`,
+                    flexWrap: 'wrap',
+                    marginTop: `${4 * safeFontScale}px`
+                }}>
+                    {varietyType && (
+                        <span style={{
+                            padding: `${2 * safeFontScale}px ${6 * safeFontScale}px`,
+                            borderRadius: '16px',
+                            background: 'rgba(139,92,246,0.12)',
+                            border: '1px solid rgba(139,92,246,0.25)',
+                            fontSize: `${7 * safeFontScale}px`,
+                            fontWeight: 600,
+                            color: '#A78BFA'
+                        }}>
+                            {varietyType}
+                        </span>
+                    )}
+                    {genetics?.indicaPercent != null && (
+                        <span style={{
+                            fontSize: `${7 * safeFontScale}px`,
+                            color: 'rgba(139,92,246,0.8)',
+                            background: 'rgba(139,92,246,0.1)',
+                            padding: `${1 * safeFontScale}px ${4 * safeFontScale}px`,
+                            borderRadius: `${6 * safeFontScale}px`
+                        }}>
+                            {genetics.indicaPercent}% I
+                        </span>
+                    )}
+                    {genetics?.sativaPercent != null && (
+                        <span style={{
+                            fontSize: `${7 * safeFontScale}px`,
+                            color: 'rgba(34,197,94,0.8)',
+                            background: 'rgba(34,197,94,0.1)',
+                            padding: `${1 * safeFontScale}px ${4 * safeFontScale}px`,
+                            borderRadius: `${6 * safeFontScale}px`
+                        }}>
+                            {genetics.sativaPercent}% S
+                        </span>
+                    )}
                 </div>
             );
         };
@@ -1283,7 +1354,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     height: '100%',
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: `${12 * fontScale}px`,
+                    gap: `${12 * safeFontScale}px`,
                     fontFamily: `"${previewFont}", Inter, system-ui, sans-serif`,
                     overflow: 'hidden'
                 }}>
@@ -1292,12 +1363,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center',
-                        marginBottom: `${8 * fontScale}px`
+                        marginBottom: `${8 * safeFontScale}px`
                     }}>
                         <BrandMark size={isMinimal ? "xs" : "sm"} />
-                        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * fontScale}px` }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: `${6 * safeFontScale}px` }}>
                             <span style={{
-                                fontSize: `${9 * fontScale}px`,
+                                fontSize: `${9 * safeFontScale}px`,
                                 fontWeight: 600,
                                 color: 'rgba(255,255,255,0.4)',
                                 textTransform: 'uppercase',
@@ -1305,7 +1376,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             }}>
                                 {typeName}
                             </span>
-                            <span style={{ fontSize: `${12 * fontScale}px` }}>
+                            <span style={{ fontSize: `${12 * safeFontScale}px` }}>
                                 {TYPE_ICONS[typeName] || '🌿'}
                             </span>
                         </div>
@@ -1315,7 +1386,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     <div style={{
                         display: 'flex',
                         flexDirection: formatSpecs.orientation === 'portrait' || formatSpecs.orientation === 'story' ? 'column' : 'row',
-                        gap: `${14 * fontScale}px`,
+                        gap: `${14 * safeFontScale}px`,
                         flex: 1,
                         minHeight: 0
                     }}>
@@ -1324,15 +1395,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             flex: formatSpecs.orientation === 'landscape' ? '0 0 42%' : undefined,
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: `${10 * fontScale}px`
+                            gap: `${10 * safeFontScale}px`
                         }}>
                             {/* Product Image */}
                             {imgUrl && (
                                 <div style={{
-                                    height: formatSpecs.orientation === 'portrait' ? `${160 * fontScale}px` :
-                                           formatSpecs.orientation === 'story' ? `${120 * fontScale}px` : 'auto',
+                                    height: formatSpecs.orientation === 'portrait' ? `${160 * safeFontScale}px` :
+                                           formatSpecs.orientation === 'story' ? `${120 * safeFontScale}px` : 'auto',
                                     aspectRatio: formatSpecs.orientation === 'landscape' ? '1' : undefined,
-                                    borderRadius: `${12 * fontScale}px`,
+                                    borderRadius: `${12 * safeFontScale}px`,
                                     overflow: 'hidden',
                                     position: 'relative',
                                     border: '1px solid rgba(255,255,255,0.1)',
@@ -1354,28 +1425,28 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             {/* Title and Basic Info */}
                             <div>
                                 <h1 style={{
-                                    fontSize: `${isMinimal ? 18 : 22} * ${fontScale}px`,
+                                    fontSize: `${(isMinimal ? 18 : 22) * safeFontScale}px`,
                                     fontWeight: 900,
                                     color: '#fff',
                                     margin: 0,
                                     lineHeight: 1.1,
-                                    marginBottom: `${4 * fontScale}px`
+                                    marginBottom: `${4 * safeFontScale}px`
                                 }}>
                                     {reviewName || 'Sans nom'}
                                 </h1>
 
                                 {/* Genetics info */}
-                                {genetics && (genetics.breeder || genetics.variety || genetics.indicaPercent != null) && (
+                                {genetics && (genetics.breeder || genetics.variety) && (
                                     <div style={{
                                         display: 'flex',
-                                        gap: `${3 * fontScale}px`,
+                                        gap: `${3 * safeFontScale}px`,
                                         flexWrap: 'wrap',
                                         alignItems: 'center',
-                                        marginBottom: `${4 * fontScale}px`
+                                        marginBottom: `${4 * safeFontScale}px`
                                     }}>
                                         {genetics.breeder && (
                                             <span style={{
-                                                fontSize: `${8 * fontScale}px`,
+                                                fontSize: `${8 * safeFontScale}px`,
                                                 color: 'rgba(255,255,255,0.5)',
                                                 fontWeight: 600
                                             }}>
@@ -1384,36 +1455,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         )}
                                         {genetics.variety && (
                                             <span style={{
-                                                fontSize: `${8 * fontScale}px`,
+                                                fontSize: `${8 * safeFontScale}px`,
                                                 color: 'rgba(255,255,255,0.4)'
                                             }}>
                                                 {genetics.breeder ? '·' : ''} {genetics.variety}
                                             </span>
                                         )}
-                                        {genetics.indicaPercent != null && (
-                                            <span style={{
-                                                fontSize: `${7 * fontScale}px`,
-                                                color: 'rgba(139,92,246,0.8)',
-                                                background: 'rgba(139,92,246,0.1)',
-                                                padding: `${1 * fontScale}px ${4 * fontScale}px`,
-                                                borderRadius: `${6 * fontScale}px`
-                                            }}>
-                                                {genetics.indicaPercent}% I
-                                            </span>
-                                        )}
-                                        {genetics.sativaPercent != null && (
-                                            <span style={{
-                                                fontSize: `${7 * fontScale}px`,
-                                                color: 'rgba(34,197,94,0.8)',
-                                                background: 'rgba(34,197,94,0.1)',
-                                                padding: `${1 * fontScale}px ${4 * fontScale}px`,
-                                                borderRadius: `${6 * fontScale}px`
-                                            }}>
-                                                {genetics.sativaPercent}% S
-                                            </span>
-                                        )}
                                     </div>
                                 )}
+
+                                {/* Variety type and genetics percentages */}
+                                {renderVarietyInfo()}
 
                                 {/* Cannabinoids badges */}
                                 {renderCannabinoidBadges()}
@@ -1425,7 +1477,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             flex: 1,
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: `${10 * fontScale}px`,
+                            gap: `${10 * safeFontScale}px`,
                             minHeight: 0,
                             overflow: 'hidden'
                         }}>
@@ -1434,13 +1486,13 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div style={{
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: `${12 * fontScale}px`,
-                                    marginBottom: `${8 * fontScale}px`
+                                    gap: `${12 * safeFontScale}px`,
+                                    marginBottom: `${8 * safeFontScale}px`
                                 }}>
                                     {rating > 0 && (
                                         <ScoreGauge
                                             score={rating}
-                                            size={Math.max(40, 48 * fontScale)}
+                                            size={Math.max(40, 48 * safeFontScale)}
                                             label="Note"
                                         />
                                     )}
@@ -1454,7 +1506,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                 }))}
                                                 max={10}
                                                 compact
-                                                fontSize={fontScale}
+                                                fontSize={safeFontScale}
                                             />
                                         </div>
                                     )}
@@ -1464,33 +1516,38 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             {/* Terpenes */}
                             {!isMinimal && renderTerpenes()}
 
-                            {/* Sensorial Grid - Only for detailed templates */}
-                            {isDetailed && (
+                            {/* Sensorial Grid - More lenient display conditions */}
+                            {(isDetailed || (!isMinimal && (templateData.odor || templateData.taste || templateData.effects))) && (
                                 <div style={{
                                     display: 'grid',
                                     gridTemplateColumns: formatSpecs.orientation === 'portrait' ? '1fr' :
                                                        formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
-                                    gap: `${6 * fontScale}px`,
-                                    flex: 1,
+                                    gap: `${6 * safeFontScale}px`,
+                                    flex: isDetailed ? 1 : 'none',
                                     minHeight: 0,
                                     overflow: 'hidden'
                                 }}>
-                                    {/* Odor */}
+                                    {/* Odor - Show if any odor data exists */}
                                     {(() => {
                                         const odor = templateData.odor || {};
-                                        if (!odor.intensity && !odor.dominant?.length && !odor.secondary?.length) return null;
+                                        const hasOdorData = odor.intensity != null ||
+                                                          (odor.dominant && odor.dominant.length > 0) ||
+                                                          (odor.secondary && odor.secondary.length > 0);
+
+                                        if (!hasOdorData) return null;
+
                                         return (
-                                            <SectionCard title="Odeur" icon="👃" sectionKey="odor" fontSize={fontScale}>
-                                                {odor.intensity != null && renderScore(odor.intensity, 'Intensité', '#22C55E', fontScale)}
+                                            <SectionCard title="Odeur" icon="👃" sectionKey="odor" fontSize={safeFontScale}>
+                                                {odor.intensity != null && renderScore(odor.intensity, 'Intensité', '#22C55E', safeFontScale)}
                                                 {(odor.dominant?.length || odor.secondary?.length) && (
-                                                    <div style={{ marginTop: `${4 * fontScale}px` }}>
+                                                    <div style={{ marginTop: `${4 * safeFontScale}px` }}>
                                                         {renderList(
-                                                            [...(odor.dominant || []), ...(odor.secondary || [])].slice(0, 4),
+                                                            [...(odor.dominant || []), ...(odor.secondary || [])].slice(0, isMinimal ? 3 : 6),
                                                             'rgba(34,197,94,0.12)',
                                                             '#22C55E',
-                                                            fontScale,
+                                                            safeFontScale,
                                                             undefined,
-                                                            4
+                                                            isMinimal ? 3 : 6
                                                         )}
                                                     </div>
                                                 )}
@@ -1498,14 +1555,21 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         );
                                     })()}
 
-                                    {/* Taste */}
+                                    {/* Taste - Show if any taste data exists */}
                                     {(() => {
                                         const taste = templateData.taste || {};
-                                        if (!taste.intensity && !taste.aggressiveness && !taste.dryPuff?.length && !taste.inhalation?.length && !taste.expiration?.length) return null;
+                                        const hasTasteData = taste.intensity != null ||
+                                                           taste.aggressiveness != null ||
+                                                           (taste.dryPuff && taste.dryPuff.length > 0) ||
+                                                           (taste.inhalation && taste.inhalation.length > 0) ||
+                                                           (taste.expiration && taste.expiration.length > 0);
+
+                                        if (!hasTasteData) return null;
+
                                         return (
-                                            <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={fontScale}>
+                                            <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={safeFontScale}>
                                                 {(taste.intensity != null || taste.aggressiveness != null) && (
-                                                    <div style={{ marginBottom: `${4 * fontScale}px` }}>
+                                                    <div style={{ marginBottom: `${4 * safeFontScale}px` }}>
                                                         <MiniBars
                                                             items={[
                                                                 taste.intensity != null && { label: 'Int.', value: taste.intensity, color: '#F59E0B' },
@@ -1513,32 +1577,37 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                             ].filter(Boolean)}
                                                             max={10}
                                                             compact
-                                                            fontSize={fontScale}
+                                                            fontSize={safeFontScale}
                                                         />
                                                     </div>
                                                 )}
                                                 {(taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) && (
                                                     renderList(
-                                                        [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])].slice(0, 4),
+                                                        [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])].slice(0, isMinimal ? 3 : 6),
                                                         'rgba(245,158,11,0.12)',
                                                         '#F59E0B',
-                                                        fontScale,
+                                                        safeFontScale,
                                                         undefined,
-                                                        4
+                                                        isMinimal ? 3 : 6
                                                     )
                                                 )}
                                             </SectionCard>
                                         );
                                     })()}
 
-                                    {/* Effects */}
+                                    {/* Effects - Show if any effects data exists */}
                                     {(() => {
                                         const effects = templateData.effects || {};
-                                        if (!effects.intensity && !effects.onset && !effects.selected?.length) return null;
+                                        const hasEffectsData = effects.intensity != null ||
+                                                             effects.onset != null ||
+                                                             (effects.selected && effects.selected.length > 0);
+
+                                        if (!hasEffectsData) return null;
+
                                         return (
-                                            <SectionCard title="Effets" icon="💥" sectionKey="effects" fontSize={fontScale}>
+                                            <SectionCard title="Effets" icon="💥" sectionKey="effects" fontSize={safeFontScale}>
                                                 {(effects.intensity != null || effects.onset != null) && (
-                                                    <div style={{ marginBottom: `${4 * fontScale}px` }}>
+                                                    <div style={{ marginBottom: `${4 * safeFontScale}px` }}>
                                                         <MiniBars
                                                             items={[
                                                                 effects.intensity != null && { label: 'Int.', value: effects.intensity, color: '#06B6D4' },
@@ -1546,51 +1615,56 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                             ].filter(Boolean)}
                                                             max={10}
                                                             compact
-                                                            fontSize={fontScale}
+                                                            fontSize={safeFontScale}
                                                         />
                                                     </div>
                                                 )}
                                                 {effects.selected?.length > 0 && (
                                                     renderList(
-                                                        effects.selected.slice(0, 5),
+                                                        effects.selected.slice(0, isMinimal ? 4 : 8),
                                                         'rgba(6,182,212,0.12)',
                                                         '#06B6D4',
-                                                        fontScale,
+                                                        safeFontScale,
                                                         undefined,
-                                                        5
+                                                        isMinimal ? 4 : 8
                                                     )
                                                 )}
                                             </SectionCard>
                                         );
                                     })()}
 
-                                    {/* Visual & Texture for concentrates */}
+                                    {/* Visual & Texture for concentrates - Enhanced display */}
                                     {(() => {
                                         const visual = templateData.visual || {};
                                         const texture = templateData.texture || {};
-                                        const hasVisualData = Object.values(visual).some(v => v != null);
-                                        const hasTextureData = Object.values(texture).some(v => v != null);
+                                        const hasVisualData = Object.values(visual).some(v => v != null && v !== '' && v !== 0);
+                                        const hasTextureData = Object.values(texture).some(v => v != null && v !== '' && v !== 0);
 
                                         if (!hasVisualData && !hasTextureData) return null;
+
                                         return (
-                                            <SectionCard title="Aspect" icon="🔍" sectionKey="visual" fontSize={fontScale}>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: `${3 * fontScale}px` }}>
-                                                    {Object.entries(visual).filter(([_, value]) => value != null).slice(0, 2).map(([key, value]) =>
-                                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: `${6 * fontScale}px` }}>
-                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: 'rgba(255,255,255,0.5)', minWidth: `${35 * fontScale}px` }}>{key}</span>
-                                                            <div style={{ flex: 1, height: `${3 * fontScale}px`, background: 'rgba(167,139,250,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                                                                <div style={{ width: `${(value / 10) * 100}%`, height: '100%', background: '#A78BFA' }} />
+                                            <SectionCard title="Aspect" icon="🔍" sectionKey="visual" fontSize={safeFontScale}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: `${3 * safeFontScale}px` }}>
+                                                    {Object.entries(visual).filter(([_, value]) => value != null && value !== '' && value !== 0).slice(0, 3).map(([key, value]) =>
+                                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: `${6 * safeFontScale}px` }}>
+                                                            <span style={{ fontSize: `${7 * safeFontScale}px`, color: 'rgba(255,255,255,0.5)', minWidth: `${40 * safeFontScale}px`, textTransform: 'capitalize' }}>
+                                                                {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                                                            </span>
+                                                            <div style={{ flex: 1, height: `${3 * safeFontScale}px`, background: 'rgba(167,139,250,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                                <div style={{ width: `${Math.min(100, (value / 10) * 100)}%`, height: '100%', background: '#A78BFA' }} />
                                                             </div>
-                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: '#A78BFA', fontWeight: 600, minWidth: `${12 * fontScale}px` }}>{value}</span>
+                                                            <span style={{ fontSize: `${7 * safeFontScale}px`, color: '#A78BFA', fontWeight: 600, minWidth: `${15 * safeFontScale}px`, textAlign: 'right' }}>{value}</span>
                                                         </div>
                                                     )}
-                                                    {Object.entries(texture).filter(([_, value]) => value != null).slice(0, 2).map(([key, value]) =>
-                                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: `${6 * fontScale}px` }}>
-                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: 'rgba(255,255,255,0.5)', minWidth: `${35 * fontScale}px` }}>{key}</span>
-                                                            <div style={{ flex: 1, height: `${3 * fontScale}px`, background: 'rgba(251,113,133,0.1)', borderRadius: '2px', overflow: 'hidden' }}>
-                                                                <div style={{ width: `${(value / 10) * 100}%`, height: '100%', background: '#FB7185' }} />
+                                                    {Object.entries(texture).filter(([_, value]) => value != null && value !== '' && value !== 0).slice(0, 3).map(([key, value]) =>
+                                                        <div key={key} style={{ display: 'flex', alignItems: 'center', gap: `${6 * safeFontScale}px` }}>
+                                                            <span style={{ fontSize: `${7 * safeFontScale}px`, color: 'rgba(255,255,255,0.5)', minWidth: `${40 * safeFontScale}px`, textTransform: 'capitalize' }}>
+                                                                {key.replace(/([A-Z])/g, ' $1').toLowerCase()}
+                                                            </span>
+                                                            <div style={{ flex: 1, height: `${3 * safeFontScale}px`, background: 'rgba(251,113,133,0.15)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                                <div style={{ width: `${Math.min(100, (value / 10) * 100)}%`, height: '100%', background: '#FB7185' }} />
                                                             </div>
-                                                            <span style={{ fontSize: `${7 * fontScale}px`, color: '#FB7185', fontWeight: 600, minWidth: `${12 * fontScale}px` }}>{value}</span>
+                                                            <span style={{ fontSize: `${7 * safeFontScale}px`, color: '#FB7185', fontWeight: 600, minWidth: `${15 * safeFontScale}px`, textAlign: 'right' }}>{value}</span>
                                                         </div>
                                                     )}
                                                 </div>
@@ -1605,14 +1679,14 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                     {/* Footer */}
                     <div style={{
                         marginTop: 'auto',
-                        paddingTop: `${8 * fontScale}px`,
+                        paddingTop: `${8 * safeFontScale}px`,
                         borderTop: '1px solid rgba(255,255,255,0.05)',
                         display: 'flex',
                         justifyContent: 'space-between',
                         alignItems: 'center'
                     }}>
                         <div style={{
-                            fontSize: `${8 * fontScale}px`,
+                            fontSize: `${8 * safeFontScale}px`,
                             color: 'rgba(255,255,255,0.3)',
                             fontWeight: 500
                         }}>
@@ -1620,7 +1694,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         </div>
                         {reviewData?.createdAt && (
                             <div style={{
-                                fontSize: `${8 * fontScale}px`,
+                                fontSize: `${8 * safeFontScale}px`,
                                 color: 'rgba(255,255,255,0.3)'
                             }}>
                                 {new Date(reviewData.createdAt).toLocaleDateString('fr-FR')}
