@@ -10,6 +10,16 @@ export default defineConfig({
             '@': path.resolve(__dirname, './src'),
         },
     },
+    // Configuration des tests
+    test: {
+        environment: 'jsdom',
+        setupFiles: ['./src/test/setup.js'],
+        globals: true,
+        coverage: {
+            reporter: ['text', 'html'],
+            exclude: ['node_modules/', 'src/test/', '**/*.test.{js,jsx}']
+        }
+    },
     // Base path - empty for root deployment via Nginx
     base: '/',
     server: {

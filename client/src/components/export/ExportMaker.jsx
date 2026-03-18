@@ -49,6 +49,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const canExportGIF = permissions.export?.features?.dragDrop === true;
     const exportRef = useRef(null);
     const previewAreaRef = useRef(null);
+
+    // 🔥 MEMORY LEAK FIX: Track blob URLs pour cleanup au démontage
+    const blobUrlsRef = useRef([]);
     const [canvasScale, setCanvasScale] = useState(1);
     const [selectedTemplate, setSelectedTemplate] = useState('modernCompact');
     const [format, setFormat] = useState('1:1');
@@ -83,6 +86,21 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             setWatermark(w => ({ ...w, visible: true }));
         }
     }, [permissions]);
+
+    // 🔥 MEMORY LEAK FIX: Cleanup blob URLs au démontage
+    useEffect(() => {
+        return () => {
+            // Révoquer tous les blob URLs créés pour éviter les memory leaks
+            blobUrlsRef.current.forEach(url => {
+                try {
+                    URL.revokeObjectURL(url);
+                } catch (err) {
+                    console.warn('[ExportMaker] Failed to revoke blob URL:', err);
+                }
+            });
+            blobUrlsRef.current = [];
+        };
+    }, []);
 
     const { user } = useAuth()
 
@@ -161,11 +179,30 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             const node = exportRef.current;
             const scale = highQuality ? 3 : 2;
 
-            // lazy-load heavy export libraries only when needed
-            const { toPng, toJpeg, toSvg } = await import('html-to-image');
-            let jsPDF;
+            // 🔥 ERROR HANDLING FIX: Protect dynamic imports
+            let toPng, toJpeg, toSvg, jsPDF;
+
+            try {
+                // lazy-load heavy export libraries only when needed
+                const htmlToImage = await import('html-to-image');
+                toPng = htmlToImage.toPng;
+                toJpeg = htmlToImage.toJpeg;
+                toSvg = htmlToImage.toSvg;
+            } catch (importErr) {
+                console.error('[ExportMaker] Failed to load html-to-image library:', importErr);
+                alert('Impossible de charger la bibliothèque d\'export. Veuillez rafraîchir la page et réessayer.');
+                return;
+            }
+
             if (exportFormat === 'pdf') {
-                ({ jsPDF } = await import('jspdf'));
+                try {
+                    const jsPDFModule = await import('jspdf');
+                    jsPDF = jsPDFModule.jsPDF;
+                } catch (importErr) {
+                    console.error('[ExportMaker] Failed to load jsPDF library:', importErr);
+                    alert('Impossible de charger la bibliothèque PDF. Veuillez rafraîchir la page et réessayer.');
+                    return;
+                }
             }
 
             // PNG
@@ -209,11 +246,21 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 });
                 const blob = new Blob([svgString], { type: 'image/svg+xml;charset=utf-8' });
                 const url = URL.createObjectURL(blob);
+
+                // 🔥 MEMORY LEAK FIX: Track blob URL pour cleanup
+                blobUrlsRef.current.push(url);
+
                 const link = document.createElement('a');
                 link.download = `review-${reviewName.replace(/[^a-z0-9-]/gi, '-')}-${Date.now()}.svg`;
                 link.href = url;
                 link.click();
-                setTimeout(() => URL.revokeObjectURL(url), 20000);
+
+                // Cleanup immédiat après un court délai (le temps que le download se déclenche)
+                setTimeout(() => {
+                    URL.revokeObjectURL(url);
+                    // Retirer de la liste de tracking
+                    blobUrlsRef.current = blobUrlsRef.current.filter(u => u !== url);
+                }, 1000);
                 return;
             }
 
@@ -322,230 +369,295 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // Helper to resolve common field ids into actual review fields
     // Searches: top-level reviewData → type-specific sub-object (flowerData/hashData/etc.) → extraData
-    const resolveReviewField = (id) => {
-        const f = reviewData || {};
-        // Type-specific sub-object
-        const sub = f.flowerData || f.hashData || f.concentrateData || f.edibleData || {};
+    // 🔥 PERFORMANCE FIX: Mémoriser resolveReviewField avec cache Map
+    const resolveReviewField = useMemo(() => {
+        // Cache pour éviter recalculs inutiles
+        const cache = new Map();
 
-        // Lookup helper: checks top-level, sub-object, then extraData
-        const lookup = (...keys) => {
-            for (const k of keys) {
-                if (!k) continue;
-                if (f[k] !== undefined && f[k] !== null && f[k] !== '') return f[k];
-                if (sub[k] !== undefined && sub[k] !== null && sub[k] !== '') return sub[k];
-                if (f.extraData && typeof f.extraData === 'object' && f.extraData[k] !== undefined && f.extraData[k] !== null && f.extraData[k] !== '') return f.extraData[k];
+        // Fonction interne qui fait le vrai calcul
+        const computeField = (id) => {
+            const f = reviewData || {};
+            // Type-specific sub-object
+            const sub = f.flowerData || f.hashData || f.concentrateData || f.edibleData || {};
+
+            // Lookup helper: checks top-level, sub-object, then extraData
+            const lookup = (...keys) => {
+                for (const k of keys) {
+                    if (!k) continue;
+                    if (f[k] !== undefined && f[k] !== null && f[k] !== '') return f[k];
+                    if (sub[k] !== undefined && sub[k] !== null && sub[k] !== '') return sub[k];
+                    if (f.extraData && typeof f.extraData === 'object' && f.extraData[k] !== undefined && f.extraData[k] !== null && f.extraData[k] !== '') return f.extraData[k];
+                }
+                return undefined;
+            };
+            // Parse JSON strings from DB into arrays/objects
+            const parseJSON = (v, def = []) => {
+                if (!v) return def
+                if (Array.isArray(v)) return v
+                if (typeof v === 'object' && v !== null) return v
+                try { return JSON.parse(v) } catch { return def }
             }
-            return undefined;
+
+            switch (id) {
+                case 'productName':
+                case 'product_name':
+                    return lookup('holderName', 'nomCommercial', 'productName', 'name', 'title') || '-';
+
+                case 'photo':
+                case 'mainImage':
+                case 'mainImageUrl':
+                    // Prefer pre-resolved mainImageUrl from API, then build from images array
+                    return lookup('mainImageUrl') || null;
+
+                case 'photos':
+                case 'gallery':
+                case 'images':
+                    return parseJSON(lookup('images', 'gallery', 'photos'), []);
+
+                case 'genetics':
+                    // Retourne un objet complet pour un rendu riche
+                    return {
+                        breeder: lookup('breeder') || null,
+                        variety: lookup('variety', 'cultivar', 'cultivars') || null,
+                        geneticType: lookup('geneticType', 'varietyType', 'strainType') || null,
+                        indicaPercent: lookup('indicaPercent') ?? null,
+                        sativaPercent: lookup('sativaPercent') ?? null,
+                        phenotype: lookup('phenotypeCode', 'phenotype') || null,
+                        parentage: parseJSON(lookup('parentage'), null),
+                    };
+
+                case 'genetics_str':
+                    // Version string pour compatibilité descendante
+                    return lookup('breeder', 'variety', 'cultivar', 'geneticType') || null;
+
+                case 'breeder':
+                    return lookup('breeder') || '-';
+
+                case 'farm':
+                    return lookup('farm') || '-';
+
+                case 'cultivar':
+                    return lookup('cultivar', 'cultivars', 'variety') || '-';
+
+                case 'varietyType':
+                    return lookup('varietyType', 'strainType') || null;
+
+                case 'thc':
+                case 'thcPercent':
+                    return lookup('thcPercent', 'thcLevel', 'thc') ?? '-';
+
+                case 'cbd':
+                case 'cbdPercent':
+                    return lookup('cbdPercent', 'cbdLevel', 'cbd') ?? '-';
+
+                case 'cbg':
+                    return lookup('cbgPercent', 'cbg') ?? null;
+
+                case 'cbc':
+                    return lookup('cbcPercent', 'cbc') ?? null;
+
+                case 'cbn':
+                    return lookup('cbnPercent', 'cbn') ?? null;
+
+                case 'thcv':
+                    return lookup('thcvPercent', 'thcv') ?? null;
+
+                case 'labReport':
+                case 'labReportUrl':
+                    return lookup('labReportUrl', 'labReport') || null;
+
+                case 'laboratoire':
+                    return lookup('laboratoire') || null;
+
+                case 'terpeneProfile':
+                case 'terpenes':
+                    return parseJSON(lookup('terpeneProfile', 'terpenes'), []);
+
+                case 'visual':
+                    return {
+                        couleur: lookup('couleurScore', 'couleur', 'couleurTransparence') ?? null,
+                        densite: lookup('densiteVisuelle', 'densite', 'pureteVisuelle') ?? null,
+                        trichomes: lookup('trichomesScore', 'trichome') ?? null,
+                        pistils: lookup('pistilsScore', 'pistil') ?? null,
+                        manucure: lookup('manucureScore', 'manucure') ?? null,
+                        moisissure: lookup('moisissureScore', 'moisissure') ?? null,
+                        graines: lookup('grainesScore', 'graines') ?? null,
+                        // Hash/Concentrate specific
+                        transparence: lookup('couleurTransparence') ?? null,
+                        viscosite: lookup('viscosite') ?? null,
+                        melting: lookup('melting') ?? null,
+                        residus: lookup('residus') ?? null,
+                    };
+
+                case 'odor':
+                case 'odors':
+                    return {
+                        dominant: parseJSON(lookup('notesOdeursDominantes', 'notesDominantesOdeur', 'notesDominantes', 'aromas'), []),
+                        secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur', 'notesSecondaires'), []),
+                        intensity: lookup('intensiteAromeScore', 'intensiteAromatique', 'aromasIntensity') ?? null,
+                        complexity: lookup('complexiteAromeScore') ?? null,
+                        fidelity: lookup('fideliteAromeScore', 'fideliteCultivars') ?? null,
+                    };
+
+                case 'taste':
+                case 'tastes':
+                    return {
+                        intensity: lookup('intensiteGoutScore', 'intensite', 'intensiteFumee', 'tastesIntensity', 'goutIntensity', 'intensiteGout') ?? null,
+                        aggressiveness: lookup('agressiviteScore', 'agressivitePiquant', 'agressivite') ?? null,
+                        dryPuff: parseJSON(lookup('dryPuffNotes', 'dryPuff'), []),
+                        inhalation: parseJSON(lookup('inhalationNotes', 'inhalation'), []),
+                        expiration: parseJSON(lookup('expirationNotes', 'expiration'), []),
+                    };
+
+                case 'effects': {
+                    const arr = parseJSON(lookup('effetsChoisis', 'effects', 'selectedEffects'), []);
+                    return {
+                        selected: arr,
+                        intensity: lookup('intensiteEffetScore', 'intensiteEffets', 'intensiteEffet', 'effectsIntensity') ?? null,
+                        onset: lookup('monteeScore', 'monteeRapidite', 'montee') ?? null,
+                        duration: lookup('effectDuration', 'dureeEffet', 'dureeEffets') || null,
+                        method: lookup('consumptionMethod', 'methodeConsommation') || null,
+                        dosage: lookup('dosage', 'dosageUtilise') || null,
+                        dosageUnit: lookup('dosageUnit') || null,
+                        onset_text: lookup('effectOnset', 'debutEffets') || null,
+                        length: lookup('effectLength', 'dureeEffetsCategorie') || null,
+                        profiles: parseJSON(lookup('effectProfiles', 'profilsEffets'), []),
+                        sideEffects: parseJSON(lookup('sideEffects', 'effetsSecondaires'), []),
+                        preferredUse: parseJSON(lookup('preferredUse', 'usagesPreferes'), []),
+                    };
+                }
+
+                case 'cultivarsList':
+                case 'cultivars':
+                    return parseJSON(lookup('cultivarsList', 'cultivars'), []);
+
+                case 'substratMix':
+                    return parseJSON(lookup('substratMix', 'substrat', 'cultureSubstrat'), []);
+
+                case 'categoryRatings':
+                    return lookup('categoryRatings', 'sectionScores', 'ratings') || undefined;
+
+                case 'overallRating':
+                case 'rating':
+                    return lookup('computedOverall', 'overallRating', 'note', 'rating') || null;
+
+                case 'culture':
+                    return {
+                        config: parseJSON(lookup('cultureTimelineConfig'), {}),
+                        data: parseJSON(lookup('cultureTimelineData'), []),
+                        mode: lookup('cultureMode') || null,
+                    };
+
+                case 'curing':
+                    return {
+                        config: parseJSON(lookup('curingTimelineConfig'), {}),
+                        data: parseJSON(lookup('curingTimelineData', 'cureTimelineData'), []),
+                    };
+
+                case 'texture':
+                    return {
+                        hardness: lookup('dureteScore', 'durete') ?? null,
+                        density: lookup('densiteTactileScore', 'densiteTexture') ?? null,
+                        elasticity: lookup('elasticiteScore', 'elasticite') ?? null,
+                        stickiness: lookup('collantScore', 'collant') ?? null,
+                        melting: lookup('meltingScore', 'meltingResidus') ?? null,
+                        friability: lookup('friabiliteScore', 'friabiliteViscosite') ?? null,
+                        viscosity: lookup('viscositeScore', 'viscositeTexture') ?? null,
+                        residue: lookup('residuScore', 'residus') ?? null,
+                    };
+
+                case 'recolte':
+                    return {
+                        trichomesTranslucides: lookup('trichomesTranslucides') || 0,
+                        trichomesLaiteux: lookup('trichomesLaiteux') || 0,
+                        trichomesAmbres: lookup('trichomesAmbres') || 0,
+                        modeRecolte: lookup('modeRecolte') || null,
+                        poidsBrut: lookup('poidsBrut') || null,
+                        poidsNet: lookup('poidsNet') || null,
+                    };
+
+                case 'experience':
+                    return {
+                        method: lookup('consumptionMethod') || null,
+                        dosage: lookup('dosage') || null,
+                        dosageUnit: lookup('dosageUnit') || null,
+                        effectDuration: lookup('effectDuration') || null,
+                        effectProfiles: parseJSON(lookup('effectProfiles'), []),
+                        sideEffects: parseJSON(lookup('sideEffects'), []),
+                        effectOnset: lookup('effectOnset') || null,
+                        preferredUse: parseJSON(lookup('preferredUse'), []),
+                    };
+
+                case 'notes':
+                case 'description':
+                    return lookup('description', 'notes') || '-';
+
+                case 'hashmaker':
+                    return lookup('hashmaker') || '-';
+
+                default:
+                    return lookup(id) ?? sub[id] ?? undefined;
+            }
         };
-        // Parse JSON strings from DB into arrays/objects
-        const parseJSON = (v, def = []) => {
-            if (!v) return def
-            if (Array.isArray(v)) return v
-            if (typeof v === 'object' && v !== null) return v
-            try { return JSON.parse(v) } catch { return def }
-        }
 
-        switch (id) {
-            case 'productName':
-            case 'product_name':
-                return lookup('holderName', 'nomCommercial', 'productName', 'name', 'title') || '-';
-
-            case 'photo':
-            case 'mainImage':
-            case 'mainImageUrl':
-                // Prefer pre-resolved mainImageUrl from API, then build from images array
-                return lookup('mainImageUrl') || null;
-
-            case 'photos':
-            case 'gallery':
-            case 'images':
-                return parseJSON(lookup('images', 'gallery', 'photos'), []);
-
-            case 'genetics':
-                // Retourne un objet complet pour un rendu riche
-                return {
-                    breeder: lookup('breeder') || null,
-                    variety: lookup('variety', 'cultivar', 'cultivars') || null,
-                    geneticType: lookup('geneticType', 'varietyType', 'strainType') || null,
-                    indicaPercent: lookup('indicaPercent') ?? null,
-                    sativaPercent: lookup('sativaPercent') ?? null,
-                    phenotype: lookup('phenotypeCode', 'phenotype') || null,
-                    parentage: parseJSON(lookup('parentage'), null),
-                };
-
-            case 'genetics_str':
-                // Version string pour compatibilité descendante
-                return lookup('breeder', 'variety', 'cultivar', 'geneticType') || null;
-
-            case 'breeder':
-                return lookup('breeder') || '-';
-
-            case 'farm':
-                return lookup('farm') || '-';
-
-            case 'cultivar':
-                return lookup('cultivar', 'cultivars', 'variety') || '-';
-
-            case 'varietyType':
-                return lookup('varietyType', 'strainType') || null;
-
-            case 'thc':
-            case 'thcPercent':
-                return lookup('thcPercent', 'thcLevel', 'thc') ?? '-';
-
-            case 'cbd':
-            case 'cbdPercent':
-                return lookup('cbdPercent', 'cbdLevel', 'cbd') ?? '-';
-
-            case 'cbg':
-                return lookup('cbgPercent', 'cbg') ?? null;
-
-            case 'cbc':
-                return lookup('cbcPercent', 'cbc') ?? null;
-
-            case 'cbn':
-                return lookup('cbnPercent', 'cbn') ?? null;
-
-            case 'thcv':
-                return lookup('thcvPercent', 'thcv') ?? null;
-
-            case 'labReport':
-            case 'labReportUrl':
-                return lookup('labReportUrl', 'labReport') || null;
-
-            case 'laboratoire':
-                return lookup('laboratoire') || null;
-
-            case 'terpeneProfile':
-            case 'terpenes':
-                return parseJSON(lookup('terpeneProfile', 'terpenes'), []);
-
-            case 'visual':
-                return {
-                    couleur: lookup('couleurScore', 'couleur', 'couleurTransparence') ?? null,
-                    densite: lookup('densiteVisuelle', 'densite', 'pureteVisuelle') ?? null,
-                    trichomes: lookup('trichomesScore', 'trichome') ?? null,
-                    pistils: lookup('pistilsScore', 'pistil') ?? null,
-                    manucure: lookup('manucureScore', 'manucure') ?? null,
-                    moisissure: lookup('moisissureScore', 'moisissure') ?? null,
-                    graines: lookup('grainesScore', 'graines') ?? null,
-                    // Hash/Concentrate specific
-                    transparence: lookup('couleurTransparence') ?? null,
-                    viscosite: lookup('viscosite') ?? null,
-                    melting: lookup('melting') ?? null,
-                    residus: lookup('residus') ?? null,
-                };
-
-            case 'odor':
-            case 'odors':
-                return {
-                    dominant: parseJSON(lookup('notesOdeursDominantes', 'notesDominantesOdeur', 'notesDominantes', 'aromas'), []),
-                    secondary: parseJSON(lookup('notesOdeursSecondaires', 'notesSecondairesOdeur', 'notesSecondaires'), []),
-                    intensity: lookup('intensiteAromeScore', 'intensiteAromatique', 'aromasIntensity') ?? null,
-                    complexity: lookup('complexiteAromeScore') ?? null,
-                    fidelity: lookup('fideliteAromeScore', 'fideliteCultivars') ?? null,
-                };
-
-            case 'taste':
-            case 'tastes':
-                return {
-                    intensity: lookup('intensiteGoutScore', 'intensite', 'intensiteFumee', 'tastesIntensity', 'goutIntensity', 'intensiteGout') ?? null,
-                    aggressiveness: lookup('agressiviteScore', 'agressivitePiquant', 'agressivite') ?? null,
-                    dryPuff: parseJSON(lookup('dryPuffNotes', 'dryPuff'), []),
-                    inhalation: parseJSON(lookup('inhalationNotes', 'inhalation'), []),
-                    expiration: parseJSON(lookup('expirationNotes', 'expiration'), []),
-                };
-
-            case 'effects': {
-                const arr = parseJSON(lookup('effetsChoisis', 'effects', 'selectedEffects'), []);
-                return {
-                    selected: arr,
-                    intensity: lookup('intensiteEffetScore', 'intensiteEffets', 'intensiteEffet', 'effectsIntensity') ?? null,
-                    onset: lookup('monteeScore', 'monteeRapidite', 'montee') ?? null,
-                    duration: lookup('effectDuration', 'dureeEffet', 'dureeEffets') || null,
-                    method: lookup('consumptionMethod', 'methodeConsommation') || null,
-                    dosage: lookup('dosage', 'dosageUtilise') || null,
-                    dosageUnit: lookup('dosageUnit') || null,
-                    onset_text: lookup('effectOnset', 'debutEffets') || null,
-                    length: lookup('effectLength', 'dureeEffetsCategorie') || null,
-                    profiles: parseJSON(lookup('effectProfiles', 'profilsEffets'), []),
-                    sideEffects: parseJSON(lookup('sideEffects', 'effetsSecondaires'), []),
-                    preferredUse: parseJSON(lookup('preferredUse', 'usagesPreferes'), []),
-                };
+        // Wrapper avec cache
+        return (id) => {
+            // Vérifier cache d'abord
+            if (cache.has(id)) {
+                return cache.get(id);
             }
 
-            case 'cultivarsList':
-            case 'cultivars':
-                return parseJSON(lookup('cultivarsList', 'cultivars'), []);
+            // Calculer le résultat
+            const result = computeField(id);
 
-            case 'substratMix':
-                return parseJSON(lookup('substratMix', 'substrat', 'cultureSubstrat'), []);
+            // Mettre en cache
+            cache.set(id, result);
 
-            case 'categoryRatings':
-                return lookup('categoryRatings', 'sectionScores', 'ratings') || undefined;
+            return result;
+        };
+    }, [reviewData]);
 
-            case 'overallRating':
-            case 'rating':
-                return lookup('computedOverall', 'overallRating', 'note', 'rating') || null;
+    // 🔥 PERFORMANCE FIX: Pré-calculer les données template pour éviter appels répétés
+    const templateData = useMemo(() => {
+        if (!reviewData) return null;
 
-            case 'culture':
-                return {
-                    config: parseJSON(lookup('cultureTimelineConfig'), {}),
-                    data: parseJSON(lookup('cultureTimelineData'), []),
-                    mode: lookup('cultureMode') || null,
-                };
+        return {
+            // Données de base
+            productName: resolveReviewField('productName'),
+            mainImage: resolveReviewField('mainImage'),
+            rating: resolveReviewField('overallRating'),
 
-            case 'curing':
-                return {
-                    config: parseJSON(lookup('curingTimelineConfig'), {}),
-                    data: parseJSON(lookup('curingTimelineData', 'cureTimelineData'), []),
-                };
+            // Genetics
+            genetics: resolveReviewField('genetics'),
+            breeder: resolveReviewField('breeder'),
+            cultivar: resolveReviewField('cultivar'),
 
-            case 'texture':
-                return {
-                    hardness: lookup('dureteScore', 'durete') ?? null,
-                    density: lookup('densiteTactileScore', 'densiteTexture') ?? null,
-                    elasticity: lookup('elasticiteScore', 'elasticite') ?? null,
-                    stickiness: lookup('collantScore', 'collant') ?? null,
-                    melting: lookup('meltingScore', 'meltingResidus') ?? null,
-                    friability: lookup('friabiliteScore', 'friabiliteViscosite') ?? null,
-                    viscosity: lookup('viscositeScore', 'viscositeTexture') ?? null,
-                    residue: lookup('residuScore', 'residus') ?? null,
-                };
+            // Cannabinoids
+            thc: resolveReviewField('thc'),
+            cbd: resolveReviewField('cbd'),
+            cbg: resolveReviewField('cbg'),
+            cbc: resolveReviewField('cbc'),
+            cbn: resolveReviewField('cbn'),
+            thcv: resolveReviewField('thcv'),
 
-            case 'recolte':
-                return {
-                    trichomesTranslucides: lookup('trichomesTranslucides') || 0,
-                    trichomesLaiteux: lookup('trichomesLaiteux') || 0,
-                    trichomesAmbres: lookup('trichomesAmbres') || 0,
-                    modeRecolte: lookup('modeRecolte') || null,
-                    poidsBrut: lookup('poidsBrut') || null,
-                    poidsNet: lookup('poidsNet') || null,
-                };
+            // Terpenes
+            terpeneProfile: resolveReviewField('terpeneProfile'),
 
-            case 'experience':
-                return {
-                    method: lookup('consumptionMethod') || null,
-                    dosage: lookup('dosage') || null,
-                    dosageUnit: lookup('dosageUnit') || null,
-                    effectDuration: lookup('effectDuration') || null,
-                    effectProfiles: parseJSON(lookup('effectProfiles'), []),
-                    sideEffects: parseJSON(lookup('sideEffects'), []),
-                    effectOnset: lookup('effectOnset') || null,
-                    preferredUse: parseJSON(lookup('preferredUse'), []),
-                };
+            // Profils sensoriels
+            visual: resolveReviewField('visual'),
+            odor: resolveReviewField('odor'),
+            taste: resolveReviewField('taste'),
+            effects: resolveReviewField('effects'),
 
-            case 'notes':
-            case 'description':
-                return lookup('description', 'notes') || '-';
+            // Hash/Concentrate specific
+            hashmaker: resolveReviewField('hashmaker'),
+            texture: resolveReviewField('texture'),
 
-            case 'hashmaker':
-                return lookup('hashmaker') || '-';
-
-            default:
-                return lookup(id) ?? sub[id] ?? undefined;
-        }
-    };
+            // Metadata
+            description: resolveReviewField('description'),
+            categoryRatings: resolveReviewField('categoryRatings'),
+        };
+    }, [reviewData, resolveReviewField]);
 
     // ========== BRAND & TEMPLATE RENDERING SYSTEM ==========
     const TYPE_ICONS = { Fleurs: '🌿', Hash: '🟤', Concentrés: '💎', Comestibles: '🍪' }
@@ -709,9 +821,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
     };
 
+    // 🔧 FIX: avgScore devrait accepter les scores à 0 (légitimes)
     const avgScore = (obj) => {
         if (!obj || typeof obj !== 'object') return null
-        const vals = Object.values(obj).filter(v => typeof v === 'number' && !isNaN(v) && v > 0)
+        const vals = Object.values(obj).filter(v => typeof v === 'number' && !isNaN(v) && v >= 0)
         if (!vals.length) return null
         return parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
     }
@@ -1850,7 +1963,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                 setSaveLoading(true)
                                                 try {
                                                     if (!exportRef.current) throw new Error('Aucune preview disponible')
-                                                    const { toPng: _toPng } = await import('html-to-image')
+
+                                                    // 🔥 ERROR HANDLING FIX: Protect dynamic import
+                                                    let _toPng;
+                                                    try {
+                                                        const htmlToImage = await import('html-to-image');
+                                                        _toPng = htmlToImage.toPng;
+                                                    } catch (importErr) {
+                                                        console.error('[ExportMaker] Failed to load html-to-image for save:', importErr);
+                                                        throw new Error('Impossible de charger la bibliothèque d\'export');
+                                                    }
+
                                                     const dataUrl = await _toPng(exportRef.current, { cacheBust: true, pixelRatio: highQuality ? 3 : 2, backgroundColor: null, style: { transform: 'none' } })
                                                     const imgResp = await fetch(dataUrl)
                                                     const blob = await imgResp.blob()
