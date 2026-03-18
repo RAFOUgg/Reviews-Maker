@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { reviewsService } from '../../services/apiService';
 import {
   Search, Grid, List, Heart, MessageCircle, Eye, Star,
-  Calendar, TrendingUp
+  Calendar, TrendingUp, MoreVertical, ExternalLink
 } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
-import { LiquidCard, LiquidChip, LiquidInput } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidChip, LiquidInput, LiquidButton } from '@/components/ui/LiquidUI';
+import GalleryReviewCard from '../../components/gallery/GalleryReviewCard';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -35,83 +36,13 @@ const TIME_PERIODS = [
 ];
 
 /**
- * ReviewCard - Carte de preview pour une review
+ * InteractiveGallery - Enhanced gallery with context menu, modals, and templates
  */
-const ReviewCard = ({ review, onLike, onView }) => {
-  const [isLiked, setIsLiked] = useState(false);
-
-  const handleLike = (e) => {
-    e.stopPropagation();
-    setIsLiked((s) => !s);
-    onLike?.(review.id, !isLiked);
-  };
-
-  const getTypeIcon = (type) => {
-    const types = { flower: '🌸', hash: '🟤', concentrate: '💎', edible: '🍪' };
-    return types[type] || '🌿';
-  };
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      whileHover={{ y: -5 }}
-      onClick={() => onView?.(review.id)}
-      className="cursor-pointer group"
-    >
-      <LiquidCard glow="purple" padding="none">
-        <div className="relative aspect-square overflow-hidden rounded-t-2xl">
-          <img
-            src={review.imageUrl || review.mainImageUrl || '/placeholder-review.jpg'}
-            alt={review.name}
-            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-          />
-
-          <div className="absolute top-3 left-3 px-3 py-1 bg-black/40 backdrop-blur-md rounded-full text-white text-sm font-medium flex items-center gap-1">
-            <span>{getTypeIcon(review.type)}</span>
-            {review.typeName || 'Produit'}
-          </div>
-
-          {/* Badge aperçu visuel défini */}
-          {review.orchardPreset && (
-            <div className="absolute bottom-3 left-3 px-2 py-0.5 bg-violet-600/70 backdrop-blur-sm rounded-full text-white text-xs font-medium flex items-center gap-1">
-              🎨 Aperçu
-            </div>
-          )}
-
-          <div className="absolute top-3 right-3 w-12 h-12 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shadow-lg shadow-purple-500/30">
-            {review.rating?.toFixed(1) || '-'}
-          </div>
-
-          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-            <div className="absolute bottom-4 left-4 right-4">
-              <button className="w-full py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity">Voir la review</button>
-            </div>
-          </div>
-        </div>
-
-        <div className="p-4">
-          <h3 className="font-semibold text-white truncate mb-1">{review.name || 'Sans nom'}</h3>
-          <p className="text-sm text-white/50 truncate mb-3">par @{review.author?.username || 'anonyme'}</p>
-
-          <div className="flex items-center justify-between text-sm text-white/60">
-            <button onClick={handleLike} className={`flex items-center gap-1 transition-colors ${isLiked ? 'text-red-500' : 'hover:text-red-500'}`}>
-              <Heart className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
-              {(review.likes || 0) + (isLiked ? 1 : 0)}
-            </button>
-            <div className="flex items-center gap-1"><MessageCircle className="w-4 h-4" />{review.comments || 0}</div>
-            <div className="flex items-center gap-1"><Eye className="w-4 h-4" />{review.views || 0}</div>
-          </div>
-        </div>
-      </LiquidCard>
-    </motion.div>
-  );
-};
-
 export default function GalleryPage() {
   const navigate = useNavigate();
   const { user } = useStore();
 
+  // Existing states
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -120,6 +51,45 @@ export default function GalleryPage() {
   const [timePeriod, setTimePeriod] = useState('month');
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
+
+  // New interactive states
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedReview, setSelectedReview] = useState(null);
+  const [showDetailModal, setShowDetailModal] = useState(false);
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
+
+  // Context menu handler
+  const handleContextMenu = (e, review) => {
+    e.preventDefault();
+    setContextMenu({
+      x: e.clientX,
+      y: e.clientY,
+      review
+    });
+  };
+
+  const closeContextMenu = () => setContextMenu(null);
+
+  const handleShowDetails = (review) => {
+    setSelectedReview(review);
+    setShowDetailModal(true);
+    closeContextMenu();
+  };
+
+  const handleSelectTemplate = (review) => {
+    setSelectedReview(review);
+    setShowTemplateSelector(true);
+    closeContextMenu();
+  };
+
+  const handleViewReview = (reviewId) => {
+    navigate(`/reviews/${reviewId}`);
+  };
+
+  const handleLike = async (reviewId, liked) => {
+    // TODO: Implement like functionality
+    console.log('Like review:', reviewId, liked);
+  };
 
   useEffect(() => {
     const fetchReviews = async () => {
@@ -157,9 +127,6 @@ export default function GalleryPage() {
     }
     return result;
   }, [reviews, searchQuery, selectedType, sortBy]);
-
-  const handleViewReview = (id) => navigate(`/review/${id}`);
-  const handleLike = (id, liked) => console.log('Like:', id, liked);
 
   return (
     <div className="min-h-screen relative">
@@ -222,12 +189,117 @@ export default function GalleryPage() {
         ) : filteredReviews.length === 0 ? (
           <div className="text-center py-16 text-white/50">Aucune review trouvée</div>
         ) : (
-          <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4' : 'grid-cols-1'}`}>
+          <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
             {filteredReviews.map((review) => (
-              <ReviewCard key={review.id} review={review} onView={handleViewReview} onLike={handleLike} />
+              <div
+                key={review.id}
+                className="relative group"
+                onContextMenu={(e) => handleContextMenu(e, review)}
+              >
+                <GalleryReviewCard
+                  reviewData={review}
+                  orchardConfig={review.orchardPreset || {}}
+                  compact={viewMode === 'grid'}
+                  onView={() => handleViewReview(review.id)}
+                  showInteractiveElements={true}
+                />
+              </div>
             ))}
           </div>
         )}
+
+        {/* Context Menu */}
+        <AnimatePresence>
+          {contextMenu && (
+            <>
+              <div
+                className="fixed inset-0 z-20"
+                onClick={closeContextMenu}
+              />
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="fixed z-30 bg-[#1a1a2e] border border-white/15 rounded-xl shadow-2xl py-2 min-w-48"
+                style={{
+                  left: contextMenu.x,
+                  top: contextMenu.y,
+                  transform: 'translate(-50%, 0)'
+                }}
+              >
+                <button
+                  onClick={() => handleShowDetails(contextMenu.review)}
+                  className="w-full px-4 py-2 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-3"
+                >
+                  <Eye className="w-4 h-4" />
+                  Voir les détails complets
+                </button>
+
+                <button
+                  onClick={() => handleSelectTemplate(contextMenu.review)}
+                  className="w-full px-4 py-2 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-3"
+                >
+                  <Grid className="w-4 h-4" />
+                  Exporter avec template
+                </button>
+
+                <div className="h-px bg-white/10 my-1 mx-2" />
+
+                <button
+                  onClick={() => {
+                    navigator.share?.({
+                      title: contextMenu.review.name,
+                      url: window.location.origin + `/reviews/${contextMenu.review.id}`
+                    });
+                    closeContextMenu();
+                  }}
+                  className="w-full px-4 py-2 text-left text-white/80 hover:text-white hover:bg-white/10 transition-colors flex items-center gap-3"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  Partager
+                </button>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* Detail Modal */}
+        <AnimatePresence>
+          {showDetailModal && selectedReview && (
+            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-40 p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-[#1a1a2e] border border-white/15 rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden"
+              >
+                <div className="flex items-center justify-between p-6 border-b border-white/10">
+                  <h2 className="text-xl font-bold text-white">
+                    {selectedReview.name || 'Review détaillée'}
+                  </h2>
+                  <button
+                    onClick={() => setShowDetailModal(false)}
+                    className="p-2 rounded-lg bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
+                  <GalleryReviewCard
+                    reviewData={selectedReview}
+                    orchardConfig={selectedReview.orchardPreset || {}}
+                    compact={false}
+                    fullDetails={true}
+                    showInteractiveElements={true}
+                  />
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
       </div>
     </div>
   );

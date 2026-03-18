@@ -96,7 +96,39 @@ function validateConcentrateReviewData(data, options = {}) {
         cleaned.purificationPipelineId = data.purificationPipelineId
     }
 
-    // ===== SECTION 4: Visuel & Technique =====
+    // ===== SECTION 4: Analytics =====
+    const cannabinoids = ['thcPercent', 'cbdPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
+    cannabinoids.forEach(field => {
+        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+            const val = parseFloat(data[field])
+            if (!isNaN(val) && val >= 0 && val <= 100) {
+                cleaned[field] = val
+            }
+        }
+    })
+    if (data.terpeneProfile) {
+        if (typeof data.terpeneProfile === 'string') {
+            try {
+                cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
+            } catch {
+                cleaned.terpeneProfile = data.terpeneProfile
+            }
+        } else {
+            cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
+        }
+    }
+    if (data.labReportUrl && typeof data.labReportUrl === 'string') {
+        cleaned.labReportUrl = data.labReportUrl.trim()
+    }
+    if (data.otherCannabinoids) {
+        if (typeof data.otherCannabinoids === 'string') {
+            try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
+        } else {
+            cleaned.otherCannabinoids = JSON.stringify(data.otherCannabinoids)
+        }
+    }
+
+    // ===== SECTION 5: Visuel & Technique =====
     // Direct fields
     ;['couleurTransparence', 'pureteVisuelle'].forEach(field => {
         if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
@@ -119,7 +151,7 @@ function validateConcentrateReviewData(data, options = {}) {
         }
     })
 
-    // ===== SECTION 5: Odeurs =====
+    // ===== SECTION 6: Odeurs =====
     if (data.fideliteCultivars !== undefined && data.fideliteCultivars !== null && data.fideliteCultivars !== '') {
         const val = parseFloat(data.fideliteCultivars); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.fideliteCultivars = val
     }
@@ -146,7 +178,7 @@ function validateConcentrateReviewData(data, options = {}) {
         } else if (Array.isArray(notesSec)) { cleaned.notesSecondaires = JSON.stringify(notesSec.slice(0, 7)) }
     }
 
-    // ===== SECTION 6: Texture =====
+    // ===== SECTION 7: Texture =====
     // Frontend sends dureteScore, densiteTactileScore, friabiliteScore; schema: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
     const textureAliasMap = {
         durete: ['dureteScore', 'durete'],
@@ -161,7 +193,7 @@ function validateConcentrateReviewData(data, options = {}) {
         }
     })
 
-    // ===== SECTION 7: Goûts =====
+    // ===== SECTION 8: Goûts =====
     // Frontend sends intensiteGoutScore, agressiviteScore; schema: intensite, agressivitePiquant
     const tasteSingleMap = {
         intensite: ['intensiteGoutScore', 'intensite'],
@@ -185,7 +217,7 @@ function validateConcentrateReviewData(data, options = {}) {
     const inh = parseListField(data.inhalationNotes || data.inhalation, 7); if (inh) cleaned.inhalation = inh
     const exp = parseListField(data.expirationNotes || data.expiration, 7); if (exp) cleaned.expiration = exp
 
-    // ===== SECTION 8: Effets =====
+    // ===== SECTION 9: Effets =====
     // Frontend sends monteeScore, intensiteEffetScore; schema: monteeRapidite, intensiteEffets
     const effectSingleMap = {
         monteeRapidite: ['monteeScore', 'monteeRapidite'],
@@ -222,7 +254,7 @@ function validateConcentrateReviewData(data, options = {}) {
         cleaned.dureeEffets = data.dureeEffets
     }
 
-    // ===== SECTION 9: Pipeline Curing =====
+    // ===== SECTION 10: Pipeline Curing =====
     if (data.curingPipelineId && typeof data.curingPipelineId === 'string') {
         cleaned.curingPipelineId = data.curingPipelineId
     }

@@ -20,7 +20,7 @@ import {
     RATIO_DIMENSIONS
 } from '../../../utils/orchardHelpers';
 import InteractivePipelineViewer from '../../gallery/InteractivePipelineViewer';
-import GenealogyTree2D from './GenealogyTree2D';
+import GenealogyTree2DInteractive from './GenealogyTree2DInteractive';
 import { Star, ChevronDown, Eye, Image as ImageIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
 /* ══════════════════════════════════════════════════════════════════════════════
@@ -927,10 +927,11 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         if (isVisible('genetics') && genealogyData) {
             secs.push(
                 <Section key="genealogy" title={genealogyData.name} icon="🌳" defaultOpen={!isCompact} badge={`${genealogyData.nodes.length}`} compact={isCompact} sectionStyles={secStyles} forceOpen={sectionForceOpen}>
-                    <GenealogyTree2D
+                    <GenealogyTree2DInteractive
                         nodes={genealogyData.nodes}
                         edges={genealogyData.edges}
                         compact={isCompact}
+                        title={genealogyData.name || "Arbre Généalogique"}
                     />
                 </Section>
             );

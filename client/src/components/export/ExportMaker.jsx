@@ -3,17 +3,15 @@ import { useState, useRef, useEffect } from 'react';
 import {
     Download, Palette,
     Grid, Layout, Maximize2, Save, X, ChevronsRight,
-    Share2, Film
+    Share2, Film, Plus
 } from 'lucide-react';
 import LiquidGlass from '../ui/LiquidGlass';
 import { useAccountType } from '../../hooks/useAccountType';
 import { useAuth } from '../../hooks/useAuth';
 import { FeatureGate } from '../account/FeatureGate';
-import DragDropExport from './DragDropExport';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
-import { getModulesByProductType } from '../../utils/orchard/moduleMappings';
 import { useOrchardStore } from '../../store/orchardStore';
 import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
@@ -45,7 +43,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const { permissions } = useAccountType();
     const canExportSVG = permissions.export?.formats?.svg === true;
     const canExportAdvanced = permissions.export?.quality?.high === true;
-    const canUseCustomLayout = permissions.export?.templates?.custom === true;
+    const canCreateCustomTemplate = permissions.export?.templates?.create === true; // Nouveau pour création templates
     const canExportGIF = permissions.export?.features?.dragDrop === true;
     const exportRef = useRef(null);
     const previewAreaRef = useRef(null);
@@ -66,11 +64,15 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         rotation: 0,
         color: '#ffffff'
     });
-    const [customSections, setCustomSections] = useState([]);
     const [exporting, setExporting] = useState(false);
     const [exportingGIF, setExportingGIF] = useState(false);
     const [gifProgress, setGifProgress] = useState(0);
     const [sidebarTab, setSidebarTab] = useState('template'); // 'template' | 'contenu' | 'apparence' | 'prereglages'
+
+    // Template creation system states
+    const [creatingTemplate, setCreatingTemplate] = useState(false);
+    const [templateName, setTemplateName] = useState('');
+    const [templateDescription, setTemplateDescription] = useState('');
 
     // Save to library modal state
     const [savingToLibrary, setSavingToLibrary] = useState(false);
@@ -147,9 +149,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Templates — basés sur DEFAULT_TEMPLATES d'orchardConstants
     const productKey = productType || 'flower';
 
-    // Modules relevant to this product type
-    const relevantModules = getModulesByProductType(productType || productKey);
-
     const templates = Object.entries(DEFAULT_TEMPLATES).map(([key, tpl]) => {
         const icon = key === 'detailedCard' ? Layout : key === 'modernCompact' ? Grid : key === 'socialStory' ? Film : Maximize2;
         return {
@@ -164,6 +163,56 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Pagination simplifiée — pas de système d'éléments, le contenu est contrôlé par les renderers
     const totalPages = 1;
     const safePage = 0;
+
+    // Template creation functions
+    const handleCreateTemplate = async () => {
+        if (!templateName.trim()) {
+            alert('Veuillez saisir un nom pour le template');
+            return;
+        }
+
+        try {
+            // Capturer la configuration actuelle
+            const templateConfig = {
+                name: templateName.trim(),
+                description: templateDescription.trim(),
+                baseTemplate: selectedTemplate,
+                format: format,
+                watermark: watermark,
+                productType: productType,
+                createdAt: new Date().toISOString()
+            };
+
+            // Sauvegarder via API
+            const response = await fetch('/api/library/templates', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(templateConfig)
+            });
+
+            if (!response.ok) {
+                throw new Error('Erreur lors de la sauvegarde du template');
+            }
+
+            // Reset form
+            setTemplateName('');
+            setTemplateDescription('');
+            setCreatingTemplate(false);
+
+            alert('Template créé avec succès !');
+
+        } catch (error) {
+            console.error('Erreur création template:', error);
+            alert('Erreur lors de la création du template');
+        }
+    };
+
+    const resetTemplateForm = () => {
+        setTemplateName('');
+        setTemplateDescription('');
+        setCreatingTemplate(false);
+    };
 
     const handleExport = async (exportFormat = 'png') => {
         console.debug('[ExportMaker] handleExport called', { exportFormat, exportRefCurrent: !!exportRef.current })
@@ -1602,6 +1651,27 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             );
                                         })}
                                     </div>
+
+                                    {/* Create Custom Template Button (Premium only) */}
+                                    {canCreateCustomTemplate && (
+                                        <button
+                                            onClick={() => setCreatingTemplate(true)}
+                                            className="w-full mt-3 p-3 rounded-xl border border-dashed border-purple-500/30 bg-purple-500/5 hover:bg-purple-500/10 transition-all group"
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center group-hover:bg-purple-500/30 transition-colors">
+                                                    <Plus className="w-5 h-5 text-purple-400" />
+                                                </div>
+                                                <div className="flex-1 text-left">
+                                                    <div className="font-semibold text-sm text-purple-400 flex items-center gap-2">
+                                                        Créer un template
+                                                        <span className="text-[10px] bg-purple-500/20 text-purple-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
+                                                    </div>
+                                                    <div className="text-[11px] text-purple-300/60 mt-0.5">Sauvegardez votre configuration actuelle</div>
+                                                </div>
+                                            </div>
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* Format Selection */}
@@ -1709,22 +1779,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         {sidebarTab === 'contenu' && (
                             <>
                                 <ContentModuleControls />
-
-                                {/* Custom Layout (premium, with DragDrop) */}
-                                {canUseCustomLayout && (
-                                    <div>
-                                        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                                            Agencement personnalisé
-                                            <span className="text-[10px] bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded-full font-bold">PRO</span>
-                                        </h3>
-                                        <DragDropExport
-                                            productType={productType}
-                                            selectedSections={customSections}
-                                            onSectionsChange={setCustomSections}
-                                            allowedModules={relevantModules}
-                                        />
-                                    </div>
-                                )}
+                                {/* Note: Custom Layout removed - replaced by template creation system */}
                             </>
                         )}
 
@@ -2080,6 +2135,77 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             {saveLoading ? 'Enregistrement...' : 'Enregistrer'}
                                         </button>
                                     </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Template Creation Modal */}
+                    {creatingTemplate && (
+                        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+                            <div className="bg-[#1a1a2e] border border-white/10 rounded-2xl p-6 shadow-2xl w-full max-w-md">
+                                <div className="flex items-center justify-between mb-6">
+                                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                                        <Plus className="w-5 h-5 text-purple-400" />
+                                        Créer un template
+                                    </h3>
+                                    <button
+                                        onClick={resetTemplateForm}
+                                        className="p-1.5 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white transition-colors"
+                                    >
+                                        <X className="w-4 h-4" />
+                                    </button>
+                                </div>
+
+                                <div className="space-y-4">
+                                    <div>
+                                        <label className="block text-sm font-medium text-white/80 mb-2">
+                                            Nom du template *
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={templateName}
+                                            onChange={(e) => setTemplateName(e.target.value)}
+                                            placeholder="Mon template personnalisé"
+                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none"
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-sm font-medium text-white/80 mb-2">
+                                            Description
+                                        </label>
+                                        <textarea
+                                            value={templateDescription}
+                                            onChange={(e) => setTemplateDescription(e.target.value)}
+                                            placeholder="Description de votre template..."
+                                            rows={3}
+                                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/40 focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 outline-none resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="text-xs text-white/50 p-3 bg-purple-500/5 border border-purple-500/20 rounded-lg">
+                                        <strong className="text-purple-400">Configuration sauvegardée :</strong>
+                                        <br />• Template : {templates.find(t => t.id === selectedTemplate)?.name}
+                                        <br />• Format : {format}
+                                        <br />• Type produit : {productType === 'flower' ? 'Fleur' : productType === 'hash' ? 'Hash' : productType === 'concentrate' ? 'Concentré' : 'Comestible'}
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 mt-6 pt-4 border-t border-white/10">
+                                    <button
+                                        onClick={resetTemplateForm}
+                                        className="flex-1 px-4 py-2 rounded-lg border border-white/10 text-white/70 hover:text-white hover:bg-white/5 transition-colors"
+                                    >
+                                        Annuler
+                                    </button>
+                                    <button
+                                        onClick={handleCreateTemplate}
+                                        disabled={!templateName.trim()}
+                                        className="flex-1 px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 disabled:bg-purple-600/50 disabled:cursor-not-allowed text-white font-medium transition-colors"
+                                    >
+                                        Créer
+                                    </button>
                                 </div>
                             </div>
                         </div>

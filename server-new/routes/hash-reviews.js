@@ -152,7 +152,39 @@ function validateHashReviewData(data, options = {}) {
         cleaned.purificationPipelineId = data.purificationPipelineId
     }
 
-    // ===== SECTION 4: Visuel & Technique =====
+    // ===== SECTION 4: Analytics =====
+    const cannabinoids = ['thcPercent', 'cbdPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
+    cannabinoids.forEach(field => {
+        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
+            const val = parseFloat(data[field])
+            if (!isNaN(val) && val >= 0 && val <= 100) {
+                cleaned[field] = val
+            }
+        }
+    })
+    if (data.terpeneProfile) {
+        if (typeof data.terpeneProfile === 'string') {
+            try {
+                cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
+            } catch {
+                cleaned.terpeneProfile = data.terpeneProfile
+            }
+        } else {
+            cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
+        }
+    }
+    if (data.labReportUrl && typeof data.labReportUrl === 'string') {
+        cleaned.labReportUrl = data.labReportUrl.trim()
+    }
+    if (data.otherCannabinoids) {
+        if (typeof data.otherCannabinoids === 'string') {
+            try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
+        } else {
+            cleaned.otherCannabinoids = JSON.stringify(data.otherCannabinoids)
+        }
+    }
+
+    // ===== SECTION 5: Visuel & Technique =====
     // Frontend sends: couleurTransparence, pureteVisuelle, densiteVisuelle (direct match)
     // But also sends pistilsScore, moisissureScore, grainesScore (with suffix)
     const visualSingleFields = ['couleurTransparence', 'pureteVisuelle', 'densiteVisuelle']
@@ -177,7 +209,7 @@ function validateHashReviewData(data, options = {}) {
         }
     })
 
-    // ===== SECTION 5: Odeurs =====
+    // ===== SECTION 6: Odeurs =====
     // Fidélité aux cultivars /10 — frontend sends fideliteCultivars
     if (data.fideliteCultivars !== undefined && data.fideliteCultivars !== null && data.fideliteCultivars !== '') {
         const val = parseFloat(data.fideliteCultivars)
@@ -225,7 +257,7 @@ function validateHashReviewData(data, options = {}) {
         }
     }
 
-    // ===== SECTION 6: Texture =====
+    // ===== SECTION 7: Texture =====
     // Frontend sends dureteScore, densiteTactileScore, friabiliteScore, meltingScore, residuScore, etc.
     // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
     const textureMap = {
@@ -246,7 +278,7 @@ function validateHashReviewData(data, options = {}) {
         }
     })
 
-    // ===== SECTION 7: Goûts =====
+    // ===== SECTION 8: Goûts =====
     // Frontend sends intensiteGoutScore, agressiviteScore; schema expects intensite, agressivitePiquant
     const tasteSingleMap = {
         intensite: ['intensiteGoutScore', 'intensite'],
@@ -290,7 +322,7 @@ function validateHashReviewData(data, options = {}) {
         }
     }
 
-    // ===== SECTION 8: Effets =====
+    // ===== SECTION 9: Effets =====
     // Frontend sends monteeScore, intensiteEffetScore; schema expects monteeRapidite, intensiteEffets
     const effectSingleMap = {
         monteeRapidite: ['monteeScore', 'monteeRapidite'],
@@ -331,7 +363,7 @@ function validateHashReviewData(data, options = {}) {
         cleaned.dureeEffets = data.dureeEffets
     }
 
-    // ===== SECTION 9: Pipeline Curing =====
+    // ===== SECTION 10: Pipeline Curing =====
     if (data.curingPipelineId && typeof data.curingPipelineId === 'string') {
         cleaned.curingPipelineId = data.curingPipelineId
     }
