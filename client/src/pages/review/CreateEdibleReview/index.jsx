@@ -4,7 +4,9 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { edibleReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, lazy } from 'react'
+
+const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -29,6 +31,7 @@ export default function CreateEdibleReview() {
 
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+    const [showOrchard, setShowOrchard] = useState(false)
 
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
@@ -156,6 +159,7 @@ export default function CreateEdibleReview() {
             photos={photos}
             handlePhotoUpload={handlePhotoUpload}
             removePhoto={removePhoto}
+            onOpenPreview={() => setShowOrchard(true)}
             onSave={handleSave}
             onSubmit={handleSubmit}
             title="Créer une review Comestible"
@@ -201,5 +205,31 @@ export default function CreateEdibleReview() {
                 </motion.div>
             </AnimatePresence>
         </ResponsiveCreateReviewLayout>
+
+        <AnimatePresence>
+            {showOrchard && (
+                <OrchardPanel
+                    productType="Edible"
+                    reviewData={{
+                        title: formData.nomProduit || 'Aperçu comestible',
+                        holderName: formData.nomProduit || '',
+                        description: formData.description || '',
+                        productType: formData.typeComestible || '',
+                        images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                        isPublic: false,
+                        ...formData
+                    }}
+                    onClose={() => setShowOrchard(false)}
+                    onPresetApplied={(orchardData) => {
+                        if (orchardData?.orchardPreset) {
+                            handleChange('orchardPreset', orchardData.orchardPreset)
+                        }
+                        if (orchardData?.orchardConfig) {
+                            handleChange('orchardConfig', orchardData.orchardConfig)
+                        }
+                    }}
+                />
+            )}
+        </AnimatePresence>
     )
 }

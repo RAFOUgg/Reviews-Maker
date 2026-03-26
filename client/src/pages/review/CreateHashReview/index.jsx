@@ -4,7 +4,9 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { hashReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, lazy } from 'react'
+
+const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -30,6 +32,7 @@ export default function CreateHashReview() {
     const { id } = useParams()
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
+    const [showOrchard, setShowOrchard] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useHashForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -167,6 +170,7 @@ export default function CreateHashReview() {
             photos={photos}
             handlePhotoUpload={handlePhotoUpload}
             removePhoto={removePhoto}
+            onOpenPreview={() => setShowOrchard(true)}
             onSave={handleSave}
             onSubmit={handleSubmit}
             title="Créer une review Hash"
@@ -246,5 +250,33 @@ export default function CreateHashReview() {
                 </motion.div>
             </AnimatePresence>
         </ResponsiveCreateReviewLayout>
+
+        <AnimatePresence>
+            {showOrchard && (
+                <OrchardPanel
+                    productType="Hash"
+                    reviewData={{
+                        title: formData.nomCommercial || 'Aperçu de la review Hash',
+                        holderName: formData.nomCommercial || '',
+                        description: formData.description || '',
+                        hashmaker: formData.hashmaker || '',
+                        lab: formData.laboratoire || '',
+                        cultivars: formData.cultivarsUtilises || [],
+                        images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                        isPublic: false,
+                        ...formData
+                    }}
+                    onClose={() => setShowOrchard(false)}
+                    onPresetApplied={(orchardData) => {
+                        if (orchardData?.orchardPreset) {
+                            handleChange('orchardPreset', orchardData.orchardPreset)
+                        }
+                        if (orchardData?.orchardConfig) {
+                            handleChange('orchardConfig', orchardData.orchardConfig)
+                        }
+                    }}
+                />
+            )}
+        </AnimatePresence>
     )
 }

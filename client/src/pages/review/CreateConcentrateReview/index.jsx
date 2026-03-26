@@ -4,7 +4,9 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { concentrateReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState } from 'react'
+import { useState, lazy } from 'react'
+
+const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -30,6 +32,7 @@ export default function CreateConcentrateReview() {
     const { id } = useParams()
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
+    const [showOrchard, setShowOrchard] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useConcentrateForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -165,6 +168,7 @@ export default function CreateConcentrateReview() {
             photos={photos}
             handlePhotoUpload={handlePhotoUpload}
             removePhoto={removePhoto}
+            onOpenPreview={() => setShowOrchard(true)}
             onSave={handleSave}
             onSubmit={handleSubmit}
             title="Créer une review Concentré"
@@ -244,5 +248,32 @@ export default function CreateConcentrateReview() {
                 </motion.div>
             </AnimatePresence>
         </ResponsiveCreateReviewLayout>
+
+        <AnimatePresence>
+            {showOrchard && (
+                <OrchardPanel
+                    productType="Concentrate"
+                    reviewData={{
+                        title: formData.nomCommercial || 'Aperçu concentré',
+                        holderName: formData.nomCommercial || '',
+                        description: formData.description || '',
+                        lab: formData.laboratoire || '',
+                        cultivars: formData.cultivarsList || [],
+                        images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                        isPublic: false,
+                        ...formData
+                    }}
+                    onClose={() => setShowOrchard(false)}
+                    onPresetApplied={(orchardData) => {
+                        if (orchardData?.orchardPreset) {
+                            handleChange('orchardPreset', orchardData.orchardPreset)
+                        }
+                        if (orchardData?.orchardConfig) {
+                            handleChange('orchardConfig', orchardData.orchardConfig)
+                        }
+                    }}
+                />
+            )}
+        </AnimatePresence>
     )
 }
