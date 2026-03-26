@@ -159,6 +159,7 @@ export default function CreateHashReview() {
     return (
         <ResponsiveCreateReviewLayout
             sections={sections}
+            sectionEmojis={sections.map(s => s.icon)}
             currentSection={currentSection}
             onPrevious={handlePrevious}
             onNext={handleNext}

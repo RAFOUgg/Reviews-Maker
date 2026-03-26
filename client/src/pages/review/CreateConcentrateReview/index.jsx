@@ -157,6 +157,7 @@ export default function CreateConcentrateReview() {
     return (
         <ResponsiveCreateReviewLayout
             sections={sections}
+            sectionEmojis={sections.map(s => s.icon)}
             currentSection={currentSection}
             onPrevious={handlePrevious}
             onNext={handleNext}
