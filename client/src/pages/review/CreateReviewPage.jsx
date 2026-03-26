@@ -30,12 +30,37 @@ export default function CreateReviewPage() {
     const editId = searchParams.get('id');
     const isEditing = !!editId;
 
-    // Redirection vers le nouveau système FlowerReview pour les fleurs
+    // Redirection vers les formulaires modulaire dédiés pour chaque type de produit
     useEffect(() => {
-        if (typeFromUrl === 'flower') {
+        if (!typeFromUrl) return;
+
+        const normalizedType = String(typeFromUrl).toLowerCase();
+        const mapping = {
+            flower: 'flower',
+            fleurs: 'flower',
+            hash: 'hash',
+            concentrate: 'concentrate',
+            concentré: 'concentrate',
+            edible: 'edible',
+            comestible: 'edible'
+        };
+
+        const targetType = mapping[normalizedType];
+
+        if (!targetType) {
+            console.warn('CreateReviewPage: type non reconnu, redirection vers flower par défaut', typeFromUrl)
+            navigate('/create/flower', { replace: true });
+            return;
+        }
+
+        if (targetType === 'flower') {
             const redirectPath = isEditing ? `/edit/flower/${editId}` : '/create/flower';
             navigate(redirectPath, { replace: true });
+            return;
         }
+
+        const redirectPath = isEditing ? `/edit/${targetType}/${editId}` : `/create/${targetType}`;
+        navigate(redirectPath, { replace: true });
     }, [typeFromUrl, isEditing, editId, navigate]);
     const [structure, setStructure] = useState(productStructures[typeFromUrl] || productStructures.flower);
     // Keep structure in sync if the type param in URL changes
