@@ -23,6 +23,8 @@ export const ResponsiveCreateReviewLayout = ({
     currentSection,
     totalSections,
     onSectionChange,
+    onPrevious,
+    onNext,
     children,
     title,
     subtitle,
@@ -48,12 +50,43 @@ export const ResponsiveCreateReviewLayout = ({
     const VISIBLE_ITEMS = 5;
     const FALLBACK_ITEM_WIDTH = 70;
 
+    const effectiveChangeSection = (index) => {
+        if (typeof onSectionChange === 'function') {
+            onSectionChange(index)
+            return
+        }
+
+        if (index < currentSection && typeof onPrevious === 'function') {
+            onPrevious()
+            return
+        }
+
+        if (index > currentSection && typeof onNext === 'function') {
+            onNext()
+            return
+        }
+    }
+
     const handlePrevious = () => {
-        if (currentSection > 0) onSectionChange(currentSection - 1);
+        if (typeof onPrevious === 'function') {
+            onPrevious()
+            return
+        }
+
+        if (currentSection > 0 && typeof onSectionChange === 'function') {
+            onSectionChange(currentSection - 1)
+        }
     };
 
     const handleNext = () => {
-        if (currentSection < totalSections - 1) onSectionChange(currentSection + 1);
+        if (typeof onNext === 'function') {
+            onNext()
+            return
+        }
+
+        if (currentSection < totalSections - 1 && typeof onSectionChange === 'function') {
+            onSectionChange(currentSection + 1)
+        }
     };
 
     // Scroll-snap helpers (Apple-like UX)
@@ -265,7 +298,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                                 key={index}
                                                                 role="tab"
                                                                 aria-selected={isActive}
-                                                                onClick={(e) => { e.preventDefault(); scrollToIndex(index); onSectionChange(index); }}
+                                                                onClick={(e) => { e.preventDefault(); scrollToIndex(index); effectiveChangeSection(index); }}
                                                                 className={`flex-shrink-0 scroll-item rounded-xl px-4 py-3 transition-all duration-200 ease-out text-2xl font-medium ${isActive ? 'scale-110 backdrop-blur-md bg-white/6 border border-white/10 shadow-[0_6px_24px_rgba(0,0,0,0.4)]' : 'bg-white/5 hover:bg-white/10'}`}
                                                                 style={{
                                                                     scrollSnapAlign: 'center',
@@ -289,7 +322,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                 {sectionEmojis.map((emoji, idx) => (
                                                     <motion.button
                                                         key={idx}
-                                                        onClick={() => onSectionChange(idx)}
+                                                        onClick={() => effectiveChangeSection(idx)}
                                                         className={`px-4 py-2 rounded-lg transition-all ${idx === currentSection
                                                             ? 'bg-purple-600 ring-2 ring-purple-400 scale-110'
                                                             : 'bg-white/10 hover:bg-white/20'

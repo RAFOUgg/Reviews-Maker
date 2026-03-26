@@ -154,6 +154,8 @@ export default function CreateEdibleReview() {
                 sections={sections}
                 sectionEmojis={sections.map(s => s.icon)}
                 currentSection={currentSection}
+                totalSections={sections.length}
+                onSectionChange={setCurrentSection}
                 onPrevious={handlePrevious}
                 onNext={handleNext}
                 formData={formData}
