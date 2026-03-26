@@ -463,7 +463,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             <div style={{
                 display: 'grid',
                 gridTemplateColumns: formatSpecs.orientation === 'portrait' ? '1fr' :
-                                   formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
+                    formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
                 gap: `${8 * fontSize}px`,
                 marginBottom: `${16 * fontSize}px`
             }}>
@@ -483,23 +483,23 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 )}
 
                 {isSectionVisible('taste') && (taste.intensity != null || taste.aggressiveness != null ||
-                 (taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length)) && (
-                    <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={fontSize}>
-                        {renderScoreGroup([
-                            taste.intensity != null && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
-                            taste.aggressiveness != null && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
-                        ].filter(Boolean), fontSize)}
-                        <div style={{ marginTop: `${4 * fontSize}px` }}>
-                            {renderList(
-                                [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])]
-                                    .slice(0, isCompact ? 2 : 6),
-                                'rgba(245,158,11,0.12)',
-                                '#F59E0B',
-                                fontSize
-                            )}
-                        </div>
-                    </SectionCard>
-                )}
+                    (taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length)) && (
+                        <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={fontSize}>
+                            {renderScoreGroup([
+                                taste.intensity != null && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
+                                taste.aggressiveness != null && { label: 'Agressivité', value: taste.aggressiveness, color: '#FB923C' },
+                            ].filter(Boolean), fontSize)}
+                            <div style={{ marginTop: `${4 * fontSize}px` }}>
+                                {renderList(
+                                    [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])]
+                                        .slice(0, isCompact ? 2 : 6),
+                                    'rgba(245,158,11,0.12)',
+                                    '#F59E0B',
+                                    fontSize
+                                )}
+                            </div>
+                        </SectionCard>
+                    )}
             </div>
         );
     };
@@ -829,10 +829,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             // Backup with product-type-specific naming
             else if (fieldKey === 'genetics') {
                 result = reviewData.genetics ||
-                         reviewData.strain ||
-                         (reviewData.infosProduit ?
-                          (typeof reviewData.infosProduit === 'string' ?
-                           JSON.parse(reviewData.infosProduit) : reviewData.infosProduit) : null);
+                    reviewData.strain ||
+                    (reviewData.infosProduit ?
+                        (typeof reviewData.infosProduit === 'string' ?
+                            JSON.parse(reviewData.infosProduit) : reviewData.infosProduit) : null);
             }
             // Sensory data (nested in JSON fields)
             else if (['visual', 'texture', 'odor', 'taste', 'effects', 'terpenes', 'terpeneProfile'].includes(fieldKey)) {
@@ -844,7 +844,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 for (const field of checkFields) {
                     if (reviewData[field]) {
                         let parsed = typeof reviewData[field] === 'string' ?
-                                    JSON.parse(reviewData[field]) : reviewData[field];
+                            JSON.parse(reviewData[field]) : reviewData[field];
 
                         if (parsed && parsed[fieldKey]) {
                             result = parsed[fieldKey];
@@ -860,7 +860,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 for (const field of analyticsFields) {
                     if (reviewData[field]) {
                         let parsed = typeof reviewData[field] === 'string' ?
-                                    JSON.parse(reviewData[field]) : reviewData[field];
+                            JSON.parse(reviewData[field]) : reviewData[field];
 
                         if (parsed && parsed[fieldKey] !== undefined) {
                             result = parsed[fieldKey];
@@ -1062,10 +1062,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         if (!reviewData) return null
         // Multiple image sources possible with safety checks
         return reviewData.mainImage ||
-               reviewData.image ||
-               reviewData.photo ||
-               (Array.isArray(reviewData.gallery) && reviewData.gallery.length > 0 && reviewData.gallery[0]) ||
-               null
+            reviewData.image ||
+            reviewData.photo ||
+            (Array.isArray(reviewData.gallery) && reviewData.gallery.length > 0 && reviewData.gallery[0]) ||
+            null
     }
 
     // Canvas background component
@@ -1190,8 +1190,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
         // Calculate responsive padding based on format
         const basePadding = formatSpecs.orientation === 'portrait' ? 20 :
-                           formatSpecs.orientation === 'landscape' ? 28 :
-                           formatSpecs.orientation === 'story' ? 16 : 24;
+            formatSpecs.orientation === 'landscape' ? 28 :
+                formatSpecs.orientation === 'story' ? 16 : 24;
         const padding = `${basePadding * safeFontScale}px ${(basePadding * 1.2 * safeFontScale)}px`;
 
         // Helper to render cannabinoid badges - Optimized with templateData
@@ -1207,8 +1207,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             ].filter(c => {
                 // More lenient filtering - include even small values but exclude null, undefined, '-', '', and exactly '0'
                 return c.value != null && c.value !== '' && c.value !== '-' &&
-                       c.value !== 0 && c.value !== '0' && c.value !== '0.0' &&
-                       !isNaN(parseFloat(c.value)) && parseFloat(c.value) > 0;
+                    c.value !== 0 && c.value !== '0' && c.value !== '0.0' &&
+                    !isNaN(parseFloat(c.value)) && parseFloat(c.value) > 0;
             });
 
             if (!cannabinoids.length) return null;
@@ -1246,7 +1246,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
             const topTerpenes = normTerpenes
                 .filter(t => {
                     return t && t.name && t.percentage != null &&
-                           !isNaN(parseFloat(t.percentage)) && parseFloat(t.percentage) > 0;
+                        !isNaN(parseFloat(t.percentage)) && parseFloat(t.percentage) > 0;
                 })
                 .map(t => ({
                     ...t,
@@ -1401,7 +1401,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             {imgUrl && (
                                 <div style={{
                                     height: formatSpecs.orientation === 'portrait' ? `${160 * safeFontScale}px` :
-                                           formatSpecs.orientation === 'story' ? `${120 * safeFontScale}px` : 'auto',
+                                        formatSpecs.orientation === 'story' ? `${120 * safeFontScale}px` : 'auto',
                                     aspectRatio: formatSpecs.orientation === 'landscape' ? '1' : undefined,
                                     borderRadius: `${12 * safeFontScale}px`,
                                     overflow: 'hidden',
@@ -1521,7 +1521,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 <div style={{
                                     display: 'grid',
                                     gridTemplateColumns: formatSpecs.orientation === 'portrait' ? '1fr' :
-                                                       formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
+                                        formatSpecs.maxSections >= 12 ? 'repeat(2, 1fr)' : '1fr',
                                     gap: `${6 * safeFontScale}px`,
                                     flex: isDetailed ? 1 : 'none',
                                     minHeight: 0,
@@ -1531,8 +1531,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     {(() => {
                                         const odor = templateData.odor || {};
                                         const hasOdorData = odor.intensity != null ||
-                                                          (odor.dominant && odor.dominant.length > 0) ||
-                                                          (odor.secondary && odor.secondary.length > 0);
+                                            (odor.dominant && odor.dominant.length > 0) ||
+                                            (odor.secondary && odor.secondary.length > 0);
 
                                         if (!hasOdorData) return null;
 
@@ -1559,10 +1559,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     {(() => {
                                         const taste = templateData.taste || {};
                                         const hasTasteData = taste.intensity != null ||
-                                                           taste.aggressiveness != null ||
-                                                           (taste.dryPuff && taste.dryPuff.length > 0) ||
-                                                           (taste.inhalation && taste.inhalation.length > 0) ||
-                                                           (taste.expiration && taste.expiration.length > 0);
+                                            taste.aggressiveness != null ||
+                                            (taste.dryPuff && taste.dryPuff.length > 0) ||
+                                            (taste.inhalation && taste.inhalation.length > 0) ||
+                                            (taste.expiration && taste.expiration.length > 0);
 
                                         if (!hasTasteData) return null;
 
@@ -1599,8 +1599,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                     {(() => {
                                         const effects = templateData.effects || {};
                                         const hasEffectsData = effects.intensity != null ||
-                                                             effects.onset != null ||
-                                                             (effects.selected && effects.selected.length > 0);
+                                            effects.onset != null ||
+                                            (effects.selected && effects.selected.length > 0);
 
                                         if (!hasEffectsData) return null;
 
@@ -2006,4 +2006,4 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     );
 };
 
-export default ExportMaker;
+export default ExportMaker; 

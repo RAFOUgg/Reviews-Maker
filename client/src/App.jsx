@@ -45,6 +45,7 @@ const ManageSubscription = lazy(() => import('./pages/account/ManageSubscription
 const PhenoHuntPage = lazy(() => import('./pages/public/PhenoHuntPage'))
 const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'))
 const LiquidPreview = lazy(() => import('./pages/demo/LiquidPreview'))
+const ExportValidationDashboard = lazy(() => import('./components/export/ExportValidationDashboard'))
 
 // Loading fallback component
 const PageLoader = () => (
@@ -164,6 +165,7 @@ function App() {
                                     <Route path="/manage-subscription" element={<Navigate to="/account?tab=subscription" replace />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/liquid-preview" element={<LiquidPreview />} />
+                                    <Route path="/export-validation" element={<ExportValidationDashboard />} />
 
                                     <Route path="/example-pipeline" element={<ExamplePipelineIntegration />} />
 
