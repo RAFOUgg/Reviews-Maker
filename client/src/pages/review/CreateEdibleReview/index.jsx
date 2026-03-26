@@ -149,87 +149,89 @@ export default function CreateEdibleReview() {
     }
 
     return (
-        <ResponsiveCreateReviewLayout
-            sections={sections}
-            sectionEmojis={sections.map(s => s.icon)}
-            currentSection={currentSection}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-            formData={formData}
-            photos={photos}
-            handlePhotoUpload={handlePhotoUpload}
-            removePhoto={removePhoto}
-            onOpenPreview={() => setShowOrchard(true)}
-            onSave={handleSave}
-            onSubmit={handleSubmit}
-            title="Créer une review Comestible"
-            subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
-            loading={loading}
-            saving={saving}
-        >
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentSection}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    {currentSection === 0 && (
-                        <InfosGenerales
-                            formData={formData}
-                            handleChange={handleChange}
-                            photos={photos}
-                            handlePhotoUpload={handlePhotoUpload}
-                            removePhoto={removePhoto}
-                        />
-                    )}
-                    {currentSection === 1 && (
-                        <RecipePipelineSection
-                            data={formData.recipe || {}}
-                            onChange={(data) => handleChange('recipe', data)}
-                        />
-                    )}
-                    {currentSection === 2 && (
-                        <TasteSection
-                            data={formData.gouts || {}}
-                            onChange={(goutsData) => handleChange('gouts', goutsData)}
-                        />
-                    )}
-                    {currentSection === 3 && (
-                        <EffectsSection
-                            data={formData.effets || {}}
-                            onChange={(data) => handleChange('effets', data)}
-                        />
-                    )}
-                </motion.div>
-            </AnimatePresence>
-        </ResponsiveCreateReviewLayout>
+        <>
+            <ResponsiveCreateReviewLayout
+                sections={sections}
+                sectionEmojis={sections.map(s => s.icon)}
+                currentSection={currentSection}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                formData={formData}
+                photos={photos}
+                handlePhotoUpload={handlePhotoUpload}
+                removePhoto={removePhoto}
+                onOpenPreview={() => setShowOrchard(true)}
+                onSave={handleSave}
+                onSubmit={handleSubmit}
+                title="Créer une review Comestible"
+                subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
+                loading={loading}
+                saving={saving}
+            >
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSection}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {currentSection === 0 && (
+                            <InfosGenerales
+                                formData={formData}
+                                handleChange={handleChange}
+                                photos={photos}
+                                handlePhotoUpload={handlePhotoUpload}
+                                removePhoto={removePhoto}
+                            />
+                        )}
+                        {currentSection === 1 && (
+                            <RecipePipelineSection
+                                data={formData.recipe || {}}
+                                onChange={(data) => handleChange('recipe', data)}
+                            />
+                        )}
+                        {currentSection === 2 && (
+                            <TasteSection
+                                data={formData.gouts || {}}
+                                onChange={(goutsData) => handleChange('gouts', goutsData)}
+                            />
+                        )}
+                        {currentSection === 3 && (
+                            <EffectsSection
+                                data={formData.effets || {}}
+                                onChange={(data) => handleChange('effets', data)}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            </ResponsiveCreateReviewLayout>
 
-        <AnimatePresence>
-            {showOrchard && (
-                <OrchardPanel
-                    productType="Edible"
-                    reviewData={{
-                        title: formData.nomProduit || 'Aperçu comestible',
-                        holderName: formData.nomProduit || '',
-                        description: formData.description || '',
-                        productType: formData.typeComestible || '',
-                        images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
-                        isPublic: false,
-                        ...formData
-                    }}
-                    onClose={() => setShowOrchard(false)}
-                    onPresetApplied={(orchardData) => {
-                        if (orchardData?.orchardPreset) {
-                            handleChange('orchardPreset', orchardData.orchardPreset)
-                        }
-                        if (orchardData?.orchardConfig) {
-                            handleChange('orchardConfig', orchardData.orchardConfig)
-                        }
-                    }}
-                />
-            )}
-        </AnimatePresence>
+            <AnimatePresence>
+                {showOrchard && (
+                    <OrchardPanel
+                        productType="Edible"
+                        reviewData={{
+                            title: formData.nomProduit || 'Aperçu comestible',
+                            holderName: formData.nomProduit || '',
+                            description: formData.description || '',
+                            productType: formData.typeComestible || '',
+                            images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                            isPublic: false,
+                            ...formData
+                        }}
+                        onClose={() => setShowOrchard(false)}
+                        onPresetApplied={(orchardData) => {
+                            if (orchardData?.orchardPreset) {
+                                handleChange('orchardPreset', orchardData.orchardPreset)
+                            }
+                            if (orchardData?.orchardConfig) {
+                                handleChange('orchardConfig', orchardData.orchardConfig)
+                            }
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+        </>
     )
 }

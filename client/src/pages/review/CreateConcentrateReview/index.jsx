@@ -158,122 +158,124 @@ export default function CreateConcentrateReview() {
     }
 
     return (
-        <ResponsiveCreateReviewLayout
-            sections={sections}
-            sectionEmojis={sections.map(s => s.icon)}
-            currentSection={currentSection}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-            formData={formData}
-            photos={photos}
-            handlePhotoUpload={handlePhotoUpload}
-            removePhoto={removePhoto}
-            onOpenPreview={() => setShowOrchard(true)}
-            onSave={handleSave}
-            onSubmit={handleSubmit}
-            title="Créer une review Concentré"
-            subtitle="Documentez votre rosin, BHO ou autre concentré"
-            loading={loading}
-            saving={saving}
-        >
-            <AnimatePresence mode="wait">
-                <motion.div
-                    key={currentSection}
-                    initial={{ opacity: 0, x: 20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    exit={{ opacity: 0, x: -20 }}
-                    transition={{ duration: 0.2 }}
-                >
-                    {currentSection === 0 && (
-                        <InfosGenerales
-                            formData={formData}
-                            handleChange={handleChange}
-                            photos={photos}
-                            handlePhotoUpload={handlePhotoUpload}
-                            removePhoto={removePhoto}
-                        />
-                    )}
-                    {currentSection === 1 && (
-                        <ExtractionPipelineAdapter
-                            productType="concentrate"
-                            data={formData.extractionPipeline || {}}
-                            onChange={(data) => handleChange('extractionPipeline', data)}
-                        />
-                    )}
-                    {currentSection === 2 && (
-                        <AnalyticsSection
-                            data={formData.analytics || {}}
-                            onChange={(analyticsData) => handleChange('analytics', analyticsData)}
-                        />
-                    )}
-                    {currentSection === 3 && (
-                        <VisualSection
-                            productType="Concentrate"
-                            data={formData.visuel || {}}
-                            onChange={(visuelData) => handleChange('visuel', visuelData)}
-                        />
-                    )}
-                    {currentSection === 4 && (
-                        <OdorSection
-                            data={formData.odeurs || {}}
-                            onChange={(odeursData) => handleChange('odeurs', odeursData)}
-                        />
-                    )}
-                    {currentSection === 5 && (
-                        <TextureSection
-                            productType="Concentrate"
-                            data={formData.texture || {}}
-                            onChange={(textureData) => handleChange('texture', textureData)}
-                        />
-                    )}
-                    {currentSection === 6 && (
-                        <TasteSection
-                            data={formData.gouts || {}}
-                            onChange={(goutsData) => handleChange('gouts', goutsData)}
-                        />
-                    )}
-                    {currentSection === 7 && (
-                        <EffectsSection
-                            data={formData.effets || {}}
-                            onChange={(data) => handleChange('effets', data)}
-                        />
-                    )}
-                    {currentSection === 8 && (
-                        <CuringMaturationAdapter
-                            productType="concentrate"
-                            data={formData.curing || {}}
-                            onChange={(data) => handleChange('curing', data)}
-                        />
-                    )}
-                </motion.div>
-            </AnimatePresence>
-        </ResponsiveCreateReviewLayout>
+        <>
+            <ResponsiveCreateReviewLayout
+                sections={sections}
+                sectionEmojis={sections.map(s => s.icon)}
+                currentSection={currentSection}
+                onPrevious={handlePrevious}
+                onNext={handleNext}
+                formData={formData}
+                photos={photos}
+                handlePhotoUpload={handlePhotoUpload}
+                removePhoto={removePhoto}
+                onOpenPreview={() => setShowOrchard(true)}
+                onSave={handleSave}
+                onSubmit={handleSubmit}
+                title="Créer une review Concentré"
+                subtitle="Documentez votre rosin, BHO ou autre concentré"
+                loading={loading}
+                saving={saving}
+            >
+                <AnimatePresence mode="wait">
+                    <motion.div
+                        key={currentSection}
+                        initial={{ opacity: 0, x: 20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -20 }}
+                        transition={{ duration: 0.2 }}
+                    >
+                        {currentSection === 0 && (
+                            <InfosGenerales
+                                formData={formData}
+                                handleChange={handleChange}
+                                photos={photos}
+                                handlePhotoUpload={handlePhotoUpload}
+                                removePhoto={removePhoto}
+                            />
+                        )}
+                        {currentSection === 1 && (
+                            <ExtractionPipelineAdapter
+                                productType="concentrate"
+                                data={formData.extractionPipeline || {}}
+                                onChange={(data) => handleChange('extractionPipeline', data)}
+                            />
+                        )}
+                        {currentSection === 2 && (
+                            <AnalyticsSection
+                                data={formData.analytics || {}}
+                                onChange={(analyticsData) => handleChange('analytics', analyticsData)}
+                            />
+                        )}
+                        {currentSection === 3 && (
+                            <VisualSection
+                                productType="Concentrate"
+                                data={formData.visuel || {}}
+                                onChange={(visuelData) => handleChange('visuel', visuelData)}
+                            />
+                        )}
+                        {currentSection === 4 && (
+                            <OdorSection
+                                data={formData.odeurs || {}}
+                                onChange={(odeursData) => handleChange('odeurs', odeursData)}
+                            />
+                        )}
+                        {currentSection === 5 && (
+                            <TextureSection
+                                productType="Concentrate"
+                                data={formData.texture || {}}
+                                onChange={(textureData) => handleChange('texture', textureData)}
+                            />
+                        )}
+                        {currentSection === 6 && (
+                            <TasteSection
+                                data={formData.gouts || {}}
+                                onChange={(goutsData) => handleChange('gouts', goutsData)}
+                            />
+                        )}
+                        {currentSection === 7 && (
+                            <EffectsSection
+                                data={formData.effets || {}}
+                                onChange={(data) => handleChange('effets', data)}
+                            />
+                        )}
+                        {currentSection === 8 && (
+                            <CuringMaturationAdapter
+                                productType="concentrate"
+                                data={formData.curing || {}}
+                                onChange={(data) => handleChange('curing', data)}
+                            />
+                        )}
+                    </motion.div>
+                </AnimatePresence>
+            </ResponsiveCreateReviewLayout>
 
-        <AnimatePresence>
-            {showOrchard && (
-                <OrchardPanel
-                    productType="Concentrate"
-                    reviewData={{
-                        title: formData.nomCommercial || 'Aperçu concentré',
-                        holderName: formData.nomCommercial || '',
-                        description: formData.description || '',
-                        lab: formData.laboratoire || '',
-                        cultivars: formData.cultivarsList || [],
-                        images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
-                        isPublic: false,
-                        ...formData
-                    }}
-                    onClose={() => setShowOrchard(false)}
-                    onPresetApplied={(orchardData) => {
-                        if (orchardData?.orchardPreset) {
-                            handleChange('orchardPreset', orchardData.orchardPreset)
-                        }
-                        if (orchardData?.orchardConfig) {
-                            handleChange('orchardConfig', orchardData.orchardConfig)
-                        }
-                    }}
-                />
-            )}
-        </AnimatePresence>
+            <AnimatePresence>
+                {showOrchard && (
+                    <OrchardPanel
+                        productType="Concentrate"
+                        reviewData={{
+                            title: formData.nomCommercial || 'Aperçu concentré',
+                            holderName: formData.nomCommercial || '',
+                            description: formData.description || '',
+                            lab: formData.laboratoire || '',
+                            cultivars: formData.cultivarsList || [],
+                            images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                            isPublic: false,
+                            ...formData
+                        }}
+                        onClose={() => setShowOrchard(false)}
+                        onPresetApplied={(orchardData) => {
+                            if (orchardData?.orchardPreset) {
+                                handleChange('orchardPreset', orchardData.orchardPreset)
+                            }
+                            if (orchardData?.orchardConfig) {
+                                handleChange('orchardConfig', orchardData.orchardConfig)
+                            }
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+        </>
     )
 }

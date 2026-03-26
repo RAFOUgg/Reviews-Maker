@@ -1183,10 +1183,10 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const renderCanvasContent = () => {
         // Use new adaptive template system with modular sections
         const layout = calculateOptimalLayout();
-        const { templateConfig, formatSpecs, safeFontScale } = layout;
+        const { templateConfig, formatSpecs, safeFontScale: rawFontScale } = layout;
 
         // 🔧 FontScale protection to prevent zero or negative values
-        const safeFontScale = Math.max(0.5, safeFontScale || 1);
+        const safeFontScale = Math.max(0.5, rawFontScale || 1);
 
         // Calculate responsive padding based on format
         const basePadding = formatSpecs.orientation === 'portrait' ? 20 :
