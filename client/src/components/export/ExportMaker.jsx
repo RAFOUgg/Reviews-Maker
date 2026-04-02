@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 // Note: heavy export libs (html-to-image, jspdf) are dynamically imported only when the user triggers an export
 import {
     Download, Palette,
@@ -13,6 +13,9 @@ import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
 import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
 import { useOrchardStore } from '../../store/orchardStore';
+import useReviewData from './hooks/useReviewData';
+import useCanvasLayout from './hooks/useCanvasLayout';
+import { exportToPng, exportToJpeg, exportToSvg, exportToPdf, downloadDataUrl, downloadBlob } from './services/exportService';
 import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
 import ScoreGauge from './ScoreGauge'
@@ -50,7 +53,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     // 🔥 MEMORY LEAK FIX: Track blob URLs pour cleanup au démontage
     const blobUrlsRef = useRef([]);
-    const [canvasScale, setCanvasScale] = useState(1);
     const [selectedTemplate, setSelectedTemplate] = useState('modernCompact');
     const [format, setFormat] = useState('1:1');
     const [highQuality, setHighQuality] = useState(false);
@@ -113,35 +115,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const previewAccent = orchardConfig?.colors?.accent || '#ffd700';
     const previewTextColor = orchardConfig?.colors?.textPrimary || '#ffffff';
 
-    // Design sizes — tailles de référence pour chaque format (le canvas est rendu à cette taille
-    // puis mis à l'échelle via CSS transform pour le preview, et exporté en haute résolution via pixelRatio)
-    const DESIGN_SIZES = {
-        '1:1': { w: 540, h: 540 },
-        '16:9': { w: 720, h: 405 },
-        '9:16': { w: 405, h: 720 },
-        'A4': { w: 530, h: 750 },
-    };
-    const designSize = DESIGN_SIZES[format] || DESIGN_SIZES['1:1'];
-
-    // Calcul du scale pour faire tenir le canvas dans la zone preview
-    useEffect(() => {
-        const el = previewAreaRef.current;
-        if (!el) return;
-        const compute = () => {
-            const rect = el.getBoundingClientRect();
-            // Laisser un petit padding (16px de chaque côté)
-            const availW = rect.width - 32;
-            const availH = rect.height - 32;
-            if (availW <= 0 || availH <= 0) return;
-            const scaleW = availW / designSize.w;
-            const scaleH = availH / designSize.h;
-            setCanvasScale(Math.min(scaleW, scaleH, 1));
-        };
-        compute();
-        const observer = new ResizeObserver(compute);
-        observer.observe(el);
-        return () => observer.disconnect();
-    }, [format, designSize.w, designSize.h]);
+    // Layout hook: design size and canvas scale for preview
+    const { designSize, canvasScale } = useCanvasLayout(previewAreaRef, format);
 
     // Résolution du nom de la review (plusieurs champs possibles selon le type de produit)
     const reviewName = (reviewData?.holderName || reviewData?.nomCommercial || reviewData?.name || '').trim() || 'export';
@@ -637,66 +612,19 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         try {
             const node = exportRef.current;
             const scale = highQuality ? 3 : 2;
+            const filter = (n) => !n?.classList?.contains?.('no-export');
 
-            // 🔥 ERROR HANDLING FIX: Protect dynamic imports
             if (exportFormat === 'svg') {
-                // SVG export requires specialized handling
                 try {
-                    const { toPng } = await import('html-to-image');
-                    const dataUrl = await toPng(node, {
-                        quality: 1,
-                        pixelRatio: scale,
-                        backgroundColor: 'transparent',
-                        filter: (node) => {
-                            // Filter out any problematic nodes
-                            return !node?.classList?.contains?.('no-export');
-                        }
-                    });
-
-                    // Convert to SVG wrapper for better quality
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-                    const img = new Image();
-
-                    img.onload = () => {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                        ctx.drawImage(img, 0, 0);
-
-                        // Create SVG wrapper
-                        const svgContent = `
-                            <svg xmlns="http://www.w3.org/2000/svg" width="${img.width}" height="${img.height}">
-                                <image href="${dataUrl}" width="${img.width}" height="${img.height}"/>
-                            </svg>
-                        `;
-
-                        const blob = new Blob([svgContent], { type: 'image/svg+xml' });
-                        const url = URL.createObjectURL(blob);
-                        blobUrlsRef.current.push(url);
-
-                        const link = document.createElement('a');
-                        link.href = url;
-                        link.download = `${reviewName}.svg`;
-                        link.click();
-                    };
-
-                    img.src = dataUrl;
-
-                } catch (error) {
-                    console.error('SVG export error:', error);
-                    throw new Error('SVG export failed. Fallback to PNG.');
+                    const svgContent = await exportToSvg(node, { pixelRatio: scale, backgroundColor: 'transparent', filter });
+                    // svgContent can be either an SVG string or a data URL; download accordingly
+                    downloadDataUrl(svgContent, `${reviewName}.svg`);
+                } catch (err) {
+                    console.error('SVG export error:', err);
+                    throw new Error('SVG export failed.');
                 }
             } else if (exportFormat === 'pdf') {
                 try {
-                    const { toPng } = await import('html-to-image');
-                    const jsPDF = (await import('jspdf')).default;
-
-                    const dataUrl = await toPng(node, {
-                        quality: 1,
-                        pixelRatio: scale,
-                        backgroundColor: '#ffffff'
-                    });
-
                     const orientations = {
                         '1:1': 'portrait',
                         '16:9': 'landscape',
@@ -704,42 +632,21 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                         'A4': 'portrait'
                     };
 
-                    const pdf = new jsPDF({
-                        orientation: orientations[format] || 'portrait',
-                        unit: 'mm',
-                        format: 'a4'
-                    });
-
-                    const imgWidth = pdf.internal.pageSize.getWidth();
-                    const imgHeight = (designSize.h / designSize.w) * imgWidth;
-
-                    pdf.addImage(dataUrl, 'PNG', 0, 0, imgWidth, imgHeight);
-                    pdf.save(`${reviewName}.pdf`);
-
-                } catch (error) {
-                    console.error('PDF export error:', error);
+                    const pdfBlob = await exportToPdf(node, { pixelRatio: scale, backgroundColor: '#ffffff', format: 'a4', orientation: orientations[format] || 'portrait', designSize });
+                    await downloadBlob(pdfBlob, `${reviewName}.pdf`);
+                } catch (err) {
+                    console.error('PDF export error:', err);
                     throw new Error('PDF export failed.');
                 }
             } else {
-                // PNG/JPEG export
                 try {
-                    const { toPng, toJpeg } = await import('html-to-image');
-                    const exportFn = exportFormat === 'jpeg' ? toJpeg : toPng;
+                    const dataUrl = exportFormat === 'jpeg'
+                        ? await exportToJpeg(node, { pixelRatio: scale, backgroundColor: '#ffffff', quality: 0.95, filter })
+                        : await exportToPng(node, { pixelRatio: scale, backgroundColor: exportFormat === 'jpeg' ? '#ffffff' : 'transparent', quality: 1, filter });
 
-                    const dataUrl = await exportFn(node, {
-                        quality: exportFormat === 'jpeg' ? 0.95 : 1,
-                        pixelRatio: scale,
-                        backgroundColor: exportFormat === 'jpeg' ? '#ffffff' : 'transparent'
-                    });
-
-                    const link = document.createElement('a');
-                    link.href = dataUrl;
-                    link.download = `${reviewName}.${exportFormat}`;
-                    blobUrlsRef.current.push(dataUrl);
-                    link.click();
-
-                } catch (error) {
-                    console.error(`${exportFormat.toUpperCase()} export error:`, error);
+                    downloadDataUrl(dataUrl, `${reviewName}.${exportFormat}`);
+                } catch (err) {
+                    console.error(`${exportFormat.toUpperCase()} export error:`, err);
                     throw new Error(`${exportFormat.toUpperCase()} export failed.`);
                 }
             }
@@ -783,106 +690,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
     };
 
-    // Helper to resolve common field ids into actual review fields
-    // 🔧 templateData cache — éviter les re-calculs sur chaque render
-    const templateData = React.useMemo(() => {
-        if (!reviewData) return {};
-
-        return {
-            genetics: resolveReviewField('genetics'),
-            analytics: {
-                thc: resolveReviewField('thc'),
-                cbd: resolveReviewField('cbd'),
-                cbg: resolveReviewField('cbg'),
-                cbc: resolveReviewField('cbc'),
-                cbn: resolveReviewField('cbn'),
-                thcv: resolveReviewField('thcv'),
-            },
-            visual: resolveReviewField('visual'),
-            texture: resolveReviewField('texture'),
-            odor: resolveReviewField('odor'),
-            taste: resolveReviewField('taste'),
-            effects: resolveReviewField('effects'),
-            terpenes: resolveReviewField('terpenes') || resolveReviewField('terpeneProfile'),
-            rating: resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating,
-        };
-    }, [reviewData]);
-
-    const resolveReviewField = (fieldKey) => {
-        if (!reviewData || !fieldKey) return null;
-
-        // 🔧 Cache to avoid repeated JSON parsing
-        if (resolveReviewField._cache && resolveReviewField._cache.reviewId === reviewData.id) {
-            const cached = resolveReviewField._cache.data[fieldKey];
-            if (cached !== undefined) return cached;
-        } else {
-            resolveReviewField._cache = { reviewId: reviewData.id, data: {} };
-        }
-
-        let result = null;
-
-        try {
-            // Direct field access first
-            if (reviewData[fieldKey] !== undefined) {
-                result = reviewData[fieldKey];
-            }
-            // Backup with product-type-specific naming
-            else if (fieldKey === 'genetics') {
-                result = reviewData.genetics ||
-                    reviewData.strain ||
-                    (reviewData.infosProduit ?
-                        (typeof reviewData.infosProduit === 'string' ?
-                            JSON.parse(reviewData.infosProduit) : reviewData.infosProduit) : null);
-            }
-            // Sensory data (nested in JSON fields)
-            else if (['visual', 'texture', 'odor', 'taste', 'effects', 'terpenes', 'terpeneProfile'].includes(fieldKey)) {
-                const checkFields = [
-                    'sensoryData', 'sensorielle', 'evaluation',
-                    'infosProduit', 'productInfo', 'data'
-                ];
-
-                for (const field of checkFields) {
-                    if (reviewData[field]) {
-                        let parsed = typeof reviewData[field] === 'string' ?
-                            JSON.parse(reviewData[field]) : reviewData[field];
-
-                        if (parsed && parsed[fieldKey]) {
-                            result = parsed[fieldKey];
-                            break;
-                        }
-                    }
-                }
-            }
-            // Analytics fields (THC, CBD, etc.)
-            else if (['thc', 'cbd', 'cbg', 'cbc', 'cbn', 'thcv', 'labReport', 'labReportUrl'].includes(fieldKey)) {
-                const analyticsFields = ['analytics', 'analytiques', 'dosages', 'infosProduit'];
-
-                for (const field of analyticsFields) {
-                    if (reviewData[field]) {
-                        let parsed = typeof reviewData[field] === 'string' ?
-                            JSON.parse(reviewData[field]) : reviewData[field];
-
-                        if (parsed && parsed[fieldKey] !== undefined) {
-                            result = parsed[fieldKey];
-                            break;
-                        }
-                    }
-                }
-            }
-            // Rating fields
-            else if (fieldKey === 'overallRating') {
-                result = reviewData.overallRating ?? reviewData.rating ?? reviewData.score;
-            }
-
-        } catch (error) {
-            console.warn(`[resolveReviewField] Error parsing ${fieldKey}:`, error);
-            result = null;
-        }
-
-        // Cache result
-        resolveReviewField._cache.data[fieldKey] = result;
-        return result;
-    };
+    const { templateData, resolveReviewField, getCategoryScores, getMainImage } = useReviewData(reviewData);
 
     const isSectionVisible = (sectionKey) => {
         const visibility = orchardConfig?.contentModules?.[sectionKey]?.visible;
@@ -1043,30 +851,6 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         return parseFloat((vals.reduce((a, b) => a + b, 0) / vals.length).toFixed(1))
     }
 
-    const getCategoryScores = () => {
-        const visual = resolveReviewField('visual') || {}
-        const odor = resolveReviewField('odor') || {}
-        const taste = resolveReviewField('taste') || {}
-        const effects = resolveReviewField('effects') || {}
-        const texture = resolveReviewField('texture') || {}
-        return [
-            { key: 'visual', label: 'Visuel', score: avgScore(visual), color: '#A78BFA' },
-            { key: 'odor', label: 'Odeur', score: avgScore(odor), color: '#22C55E' },
-            { key: 'taste', label: 'Goût', score: avgScore(taste), color: '#F59E0B' },
-            { key: 'effects', label: 'Effets', score: avgScore(effects), color: '#06B6D4' },
-            { key: 'texture', label: 'Texture', score: avgScore(texture), color: '#FB7185' },
-        ].filter(c => c.score != null)
-    }
-
-    const getMainImage = () => {
-        if (!reviewData) return null
-        // Multiple image sources possible with safety checks
-        return reviewData.mainImage ||
-            reviewData.image ||
-            reviewData.photo ||
-            (Array.isArray(reviewData.gallery) && reviewData.gallery.length > 0 && reviewData.gallery[0]) ||
-            null
-    }
 
     // Canvas background component
     const CanvasBackground = () => (

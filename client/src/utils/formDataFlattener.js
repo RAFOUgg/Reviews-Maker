@@ -159,6 +159,9 @@ export function flattenFlowerFormData(data) {
         if (flat.cbgPercent === undefined && data.analytics.cbg !== undefined) flat.cbgPercent = data.analytics.cbg
         if (flat.cbcPercent === undefined && data.analytics.cbc !== undefined) flat.cbcPercent = data.analytics.cbc
         if (data.analytics.terpeneProfile) flat.terpeneProfile = data.analytics.terpeneProfile
+        // Fichiers analytiques (certificats cannabinoïdes et terpènes)
+        if (data.analytics.certificateFile) flat.certificateFile = data.analytics.certificateFile
+        if (data.analytics.terpeneFile) flat.terpeneFile = data.analytics.terpeneFile
     }
 
     // Section 5 - Visuel & Technique
@@ -319,8 +322,16 @@ export function flattenEdibleFormData(data) {
 export function createFormDataFromFlat(flatData, photos = [], status = 'draft', existingImages = []) {
     const formData = new FormData()
 
-    // Ajouter toutes les données aplaties
+    // Extraire les fichiers analytiques AVANT de les passer dans la boucle
+    // (ce sont des objets File, pas des données sérialisables)
+    const certificateFile = flatData.certificateFile
+    const terpeneFile = flatData.terpeneFile
+    
+    // Ajouter toutes les données aplaties (sauf les fichiers)
     Object.keys(flatData).forEach(key => {
+        // Skip les fichiers - ils seront ajoutés séparément comme File objects
+        if (key === 'certificateFile' || key === 'terpeneFile') return
+        
         const value = flatData[key]
         if (value !== undefined && value !== null) {
             if (Array.isArray(value) || (typeof value === 'object' && value !== null)) {
@@ -343,6 +354,14 @@ export function createFormDataFromFlat(flatData, photos = [], status = 'draft', 
                 formData.append('images', photo.file)
             }
         })
+    }
+
+    // Ajouter les fichiers analytiques (certificats)
+    if (certificateFile && certificateFile instanceof File) {
+        formData.append('certificateFile', certificateFile)
+    }
+    if (terpeneFile && terpeneFile instanceof File) {
+        formData.append('terpeneFile', terpeneFile)
     }
 
     formData.append('status', status)

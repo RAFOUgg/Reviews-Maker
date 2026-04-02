@@ -1,0 +1,282 @@
+/* PhenoHuntPage Styles */
+
+.phenohunt-page {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.phenohunt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 64px;
+    background: linear-gradient(to right, #0f172a, #1e293b);
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    padding: 0 24px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    flex-shrink: 0;
+}
+
+.phenohunt-content {
+    flex: 1;
+    display: flex;
+    overflow: hidden;
+}
+
+/* Sidebar */
+.phenohunt-sidebar {
+    width: 320px;
+    background: linear-gradient(to bottom, #0f172a, #1e293b);
+    border-right: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.phenohunt-sidebar-header {
+    padding: 24px;
+    border-bottom: 1px solid rgba(34, 197, 94, 0.2);
+    background: rgba(34, 197, 94, 0.05);
+    flex-shrink: 0;
+}
+
+.phenohunt-sidebar-title {
+    font-size: 24px;
+    font-weight: bold;
+    color: white;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+}
+
+.phenohunt-sidebar-subtitle {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.phenohunt-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+}
+
+.phenohunt-section {
+    margin-bottom: 24px;
+}
+
+.phenohunt-section-label {
+    font-size: 11px;
+    color: #64748b;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    margin-bottom: 8px;
+    display: block;
+}
+
+.phenohunt-tree-list,
+.phenohunt-cultivar-group {
+    space-y: 8px;
+}
+
+.phenohunt-tree-item,
+.phenohunt-cultivar-item {
+    padding: 8px 12px;
+    background-color: rgba(71, 85, 105, 0.3);
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    cursor: grab;
+    transition: all 0.2s ease;
+    margin-bottom: 8px;
+    font-size: 13px;
+}
+
+.phenohunt-tree-item:hover,
+.phenohunt-cultivar-item:hover {
+    background-color: rgba(71, 85, 105, 0.5);
+    border-color: rgba(34, 197, 94, 0.3);
+}
+
+.phenohunt-tree-item.active {
+    background-color: rgba(34, 197, 94, 0.2);
+    border-color: #22c55e;
+    color: #22c55e;
+    font-weight: 500;
+}
+
+.phenohunt-cultivar-item:active {
+    cursor: grabbing;
+}
+
+/* Canvas Container */
+.phenohunt-canvas {
+    flex: 1;
+    overflow: hidden;
+    position: relative;
+}
+
+.phenohunt-canvas-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+}
+
+.phenohunt-canvas-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #64748b;
+}
+
+.phenohunt-canvas-empty p {
+    text-align: center;
+    max-width: 320px;
+}
+
+/* Modal */
+.phenohunt-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 50;
+    backdrop-filter: blur(4px);
+}
+
+.phenohunt-modal-content {
+    background-color: #1e293b;
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 12px;
+    padding: 24px;
+    width: 384px;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+}
+
+.phenohunt-modal-content h2 {
+    font-size: 20px;
+    font-weight: bold;
+    color: white;
+    margin: 0 0 16px 0;
+}
+
+.phenohunt-modal-input {
+    width: 100%;
+    padding: 10px 12px;
+    background-color: #0f172a;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    border-radius: 8px;
+    color: white;
+    font-size: 14px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+}
+
+.phenohunt-modal-input:focus {
+    outline: none;
+    border-color: #22c55e;
+    box-shadow: 0 0 12px rgba(34, 197, 94, 0.2);
+}
+
+.phenohunt-modal-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+    margin-top: 24px;
+}
+
+.phenohunt-modal-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.phenohunt-modal-btn-cancel {
+    background-color: rgba(71, 85, 105, 0.5);
+    color: white;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.phenohunt-modal-btn-cancel:hover {
+    background-color: rgba(71, 85, 105, 0.7);
+}
+
+.phenohunt-modal-btn-create {
+    background-color: #22c55e;
+    color: white;
+}
+
+.phenohunt-modal-btn-create:hover {
+    background-color: #16a34a;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* Scrollbar */
+.phenohunt-sidebar-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.phenohunt-sidebar-content::-webkit-scrollbar-track {
+    background: rgba(71, 85, 105, 0.1);
+}
+
+.phenohunt-sidebar-content::-webkit-scrollbar-thumb {
+    background: rgba(71, 85, 105, 0.4);
+    border-radius: 3px;
+}
+
+.phenohunt-sidebar-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(71, 85, 105, 0.6);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .phenohunt-sidebar {
+        width: 280px;
+    }
+}
+
+@media (max-width: 640px) {
+    .phenohunt-page {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .phenohunt-content {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .phenohunt-sidebar {
+        width: 100%;
+        height: 200px;
+        border-right: none;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.2);
+    }
+
+    .phenohunt-canvas {
+        flex: 1;
+    }
+
+    .phenohunt-modal-content {
+        width: 90vw;
+    }
+}
