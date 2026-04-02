@@ -4,6 +4,7 @@ import { ReactFlowProvider } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import UnifiedGeneticsCanvas from '../../components/genetics/UnifiedGeneticsCanvas';
 import { Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight, GitBranch } from 'lucide-react';
+import './PhenoHuntPage.css';
 
 /**
  * PhenoHuntPage - Page principale du module PhenoHunt

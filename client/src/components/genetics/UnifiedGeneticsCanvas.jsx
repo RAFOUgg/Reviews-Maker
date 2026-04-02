@@ -26,6 +26,7 @@ import ReactFlow, {
     MarkerType
 } from 'reactflow';
 import 'reactflow/dist/style.css';
+import './UnifiedGeneticsCanvas.css';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import CultivarNode from './CultivarNode';
 import NodeContextMenu from './NodeContextMenu';

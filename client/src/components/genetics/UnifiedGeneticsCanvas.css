@@ -1,0 +1,355 @@
+/* UnifiedGeneticsCanvas Styles */
+
+.unified-genetics-canvas {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.unified-genetics-canvas .react-flow {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
+
+.unified-genetics-canvas .react-flow__background {
+    background-color: #0f172a;
+}
+
+.unified-genetics-canvas .react-flow__background pattern {
+    fill: #334155;
+}
+
+/* Cultivar Node Styling */
+.react-flow__node-cultivar {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border: 2px solid #334155;
+    border-radius: 12px;
+    padding: 10px 15px;
+    min-width: 150px;
+    font-weight: 600;
+    color: white;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
+}
+
+.react-flow__node-cultivar:hover {
+    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+    border-color: #10b981;
+}
+
+.react-flow__node.selected .react-flow__node-cultivar {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    border-color: #fbbf24;
+    box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3);
+}
+
+/* Canvas Edges */
+.react-flow__edges {
+    z-index: 1;
+}
+
+.react-flow__edge path {
+    stroke: #64748b;
+    stroke-width: 2;
+}
+
+.react-flow__edge.selected path {
+    stroke: #fbbf24;
+    stroke-width: 3;
+}
+
+.react-flow__edge.animated path {
+    stroke-dasharray: 10;
+}
+
+.react-flow__edge-label {
+    background: rgba(15, 23, 42, 0.8);
+    color: #cbd5e1;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* Canvas Controls */
+.react-flow__controls {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: 8px !important;
+}
+
+.react-flow__controls button {
+    background-color: rgba(51, 65, 85, 0.6) !important;
+    color: #cbd5e1 !important;
+    border: 1px solid rgba(71, 85, 105, 0.5) !important;
+}
+
+.react-flow__controls button:hover {
+    background-color: rgba(71, 85, 105, 0.8) !important;
+    color: #10b981 !important;
+}
+
+/* MiniMap */
+.react-flow__minimap {
+    background-color: rgba(30, 41, 59, 0.8) !important;
+    border: 1px solid rgba(59, 130, 246, 0.2) !important;
+    border-radius: 8px !important;
+}
+
+/* Panels */
+.canvas-toolbar {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 12px !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.node-info-panel {
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 16px !important;
+    max-width: 300px !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+.node-info-panel .info-content {
+    color: #cbd5e1;
+}
+
+.node-info-panel .info-content h4 {
+    color: #10b981;
+    font-weight: 600;
+    margin: 0 0 8px 0;
+}
+
+.node-info-panel .info-content p {
+    font-size: 12px;
+    color: #94a3b8;
+    margin: 4px 0;
+}
+
+.node-info-panel .btn-edit {
+    width: 100%;
+    padding: 8px 12px;
+    margin-top: 12px;
+    background-color: #10b981 !important;
+    color: white !important;
+    border: none !important;
+    border-radius: 6px !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+    cursor: pointer !important;
+    transition: all 0.3s ease !important;
+}
+
+.node-info-panel .btn-edit:hover {
+    background-color: #059669 !important;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Canvas Error States */
+.canvas-error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: #ef4444;
+    font-size: 14px;
+    padding: 20px;
+    text-align: center;
+}
+
+.canvas-error button {
+    margin-top: 12px;
+    padding: 8px 16px;
+    background-color: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.canvas-error button:hover {
+    background-color: #dc2626;
+}
+
+/* Context Menus */
+.context-menu {
+    position: fixed;
+    background-color: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    min-width: 150px;
+    backdrop-filter: blur(10px);
+}
+
+.context-menu button {
+    width: 100%;
+    padding: 10px 16px;
+    text-align: left;
+    background: none;
+    border: none;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.context-menu button:first-child {
+    border-top-left-radius: 7px;
+    border-top-right-radius: 7px;
+}
+
+.context-menu button:last-child {
+    border-bottom-left-radius: 7px;
+    border-bottom-right-radius: 7px;
+}
+
+.context-menu button:hover {
+    background-color: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+}
+
+/* Modal Styles */
+.genetics-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(4px);
+}
+
+.genetics-modal-content {
+    background-color: rgba(30, 41, 59, 0.95);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    padding: 24px;
+    max-width: 500px;
+    width: 90%;
+    max-height: 80vh;
+    overflow-y: auto;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(10px);
+}
+
+.genetics-modal-content h2 {
+    color: #10b981;
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.genetics-modal-content .form-group {
+    margin-bottom: 16px;
+}
+
+.genetics-modal-content label {
+    display: block;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-weight: 500;
+    margin-bottom: 6px;
+}
+
+.genetics-modal-content input,
+.genetics-modal-content textarea,
+.genetics-modal-content select {
+    width: 100%;
+    padding: 10px;
+    background-color: rgba(51, 65, 85, 0.5);
+    border: 1px solid rgba(71, 85, 105, 0.5);
+    border-radius: 6px;
+    color: #cbd5e1;
+    font-size: 13px;
+    font-family: inherit;
+    transition: all 0.3s ease;
+}
+
+.genetics-modal-content input:focus,
+.genetics-modal-content textarea:focus,
+.genetics-modal-content select:focus {
+    outline: none;
+    border-color: #10b981;
+    background-color: rgba(51, 65, 85, 0.7);
+    box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+}
+
+.genetics-modal-content textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.genetics-modal-content .form-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.genetics-modal-content button {
+    flex: 1;
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 13px;
+    transition: all 0.3s ease;
+}
+
+.genetics-modal-content .btn-primary {
+    background-color: #10b981;
+    color: white;
+}
+
+.genetics-modal-content .btn-primary:hover {
+    background-color: #059669;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.genetics-modal-content .btn-secondary {
+    background-color: rgba(71, 85, 105, 0.5);
+    color: #cbd5e1;
+    border: 1px solid rgba(71, 85, 105, 0.5);
+}
+
+.genetics-modal-content .btn-secondary:hover {
+    background-color: rgba(71, 85, 105, 0.7);
+    border-color: #64748b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .canvas-toolbar {
+        font-size: 12px !important;
+        padding: 8px !important;
+    }
+
+    .node-info-panel {
+        max-width: 80vw !important;
+    }
+
+    .react-flow__controls {
+        bottom: 20px !important;
+        right: 20px !important;
+    }
+}

@@ -175,6 +175,211 @@ router.get('/formats',
 )
 
 /**
+ * POST /api/export/config/save
+ * Save export configuration
+ */
+router.post('/config/save',
+    requireAuth,
+    asyncHandler(async (req, res) => {
+        const { name, reviewId, templateName, format, colors, typography, contentModules, watermark, branding, imageSettings, description, isDefault } = req.body
+
+        try {
+            // Upsert configuration (update by unique key or create new)
+            const uniqueName = name || `Export ${new Date().toISOString().split('T')[0]}`
+
+            const config = await prisma.exportConfiguration.upsert({
+                where: {
+                    userId_name: {
+                        userId: req.user.id,
+                        name: uniqueName
+                    }
+                },
+                update: {
+                    templateName: templateName || 'modernCompact',
+                    format: format || '1:1',
+                    ratio: format || '1:1',
+                    colors: JSON.stringify(colors || {}),
+                    typography: JSON.stringify(typography || {}),
+                    contentModules: JSON.stringify(contentModules || {}),
+                    watermark: watermark ? JSON.stringify(watermark) : null,
+                    branding: branding ? JSON.stringify(branding) : null,
+                    imageSettings: imageSettings ? JSON.stringify(imageSettings) : null,
+                    description,
+                    reviewId: reviewId || null,
+                    isDefault: isDefault === true,
+                    lastUsedAt: new Date(),
+                    useCount: { increment: 1 }
+                },
+                create: {
+                    userId: req.user.id,
+                    name: uniqueName,
+                    reviewId: reviewId || null,
+                    templateName: templateName || 'modernCompact',
+                    format: format || '1:1',
+                    ratio: format || '1:1',
+                    colors: JSON.stringify(colors || {}),
+                    typography: JSON.stringify(typography || {}),
+                    contentModules: JSON.stringify(contentModules || {}),
+                    watermark: watermark ? JSON.stringify(watermark) : null,
+                    branding: branding ? JSON.stringify(branding) : null,
+                    imageSettings: imageSettings ? JSON.stringify(imageSettings) : null,
+                    description,
+                    isDefault: isDefault === true,
+                    useCount: 1
+                }
+            })
+
+            res.json({
+                success: true,
+                message: 'Configuration saved successfully',
+                config: {
+                    id: config.id,
+                    name: config.name,
+                    templateName: config.templateName,
+                    format: config.format,
+                    createdAt: config.createdAt,
+                    updatedAt: config.updatedAt
+                }
+            })
+        } catch (error) {
+            throw Errors.INTERNAL_ERROR(`Failed to save export configuration: ${error.message}`)
+        }
+    })
+)
+
+/**
+ * GET /api/export/config/:configId
+ * Load export configuration by ID
+ */
+router.get('/config/:configId',
+    requireAuth,
+    asyncHandler(async (req, res) => {
+        const { configId } = req.params
+
+        try {
+            const config = await prisma.exportConfiguration.findUnique({
+                where: { id: configId }
+            })
+
+            if (!config) {
+                throw Errors.NOT_FOUND(`Export configuration not found: ${configId}`)
+            }
+
+            // Ensure user owns this config
+            if (config.userId !== req.user.id) {
+                throw Errors.FORBIDDEN('Not authorized to access this configuration')
+            }
+
+            // Update last used
+            await prisma.exportConfiguration.update({
+                where: { id: configId },
+                data: { lastUsedAt: new Date() }
+            })
+
+            res.json({
+                success: true,
+                config: {
+                    id: config.id,
+                    name: config.name,
+                    description: config.description,
+                    reviewId: config.reviewId,
+                    templateName: config.templateName,
+                    format: config.format,
+                    ratio: config.ratio,
+                    colors: config.colors ? JSON.parse(config.colors) : {},
+                    typography: config.typography ? JSON.parse(config.typography) : {},
+                    contentModules: config.contentModules ? JSON.parse(config.contentModules) : {},
+                    watermark: config.watermark ? JSON.parse(config.watermark) : null,
+                    branding: config.branding ? JSON.parse(config.branding) : null,
+                    imageSettings: config.imageSettings ? JSON.parse(config.imageSettings) : null,
+                    isDefault: config.isDefault,
+                    useCount: config.useCount,
+                    lastUsedAt: config.lastUsedAt,
+                    createdAt: config.createdAt,
+                    updatedAt: config.updatedAt
+                }
+            })
+        } catch (error) {
+            if (error.code !== 'VALIDATION_ERROR') {
+                throw error
+            }
+            throw Errors.INTERNAL_ERROR(`Failed to load configuration: ${error.message}`)
+        }
+    })
+)
+
+/**
+ * DELETE /api/export/config/:configId
+ * Delete export configuration
+ */
+router.delete('/config/:configId',
+    requireAuth,
+    asyncHandler(async (req, res) => {
+        const { configId } = req.params
+
+        try {
+            const config = await prisma.exportConfiguration.findUnique({
+                where: { id: configId }
+            })
+
+            if (!config) {
+                throw Errors.NOT_FOUND(`Export configuration not found: ${configId}`)
+            }
+
+            if (config.userId !== req.user.id) {
+                throw Errors.FORBIDDEN('Not authorized to delete this configuration')
+            }
+
+            await prisma.exportConfiguration.delete({
+                where: { id: configId }
+            })
+
+            res.json({
+                success: true,
+                message: 'Configuration deleted successfully'
+            })
+        } catch (error) {
+            throw Errors.INTERNAL_ERROR(`Failed to delete configuration: ${error.message}`)
+        }
+    })
+)
+
+/**
+ * GET /api/export/configs
+ * List all user's export configurations
+ */
+router.get('/configs',
+    requireAuth,
+    asyncHandler(async (req, res) => {
+        try {
+            const configs = await prisma.exportConfiguration.findMany({
+                where: { userId: req.user.id },
+                orderBy: { lastUsedAt: 'desc' },
+                take: 50
+            })
+
+            res.json({
+                success: true,
+                configs: configs.map(c => ({
+                    id: c.id,
+                    name: c.name,
+                    description: c.description,
+                    templateName: c.templateName,
+                    format: c.format,
+                    isDefault: c.isDefault,
+                    useCount: c.useCount,
+                    lastUsedAt: c.lastUsedAt,
+                    createdAt: c.createdAt
+                })),
+                total: configs.length
+            })
+        } catch (error) {
+            throw Errors.INTERNAL_ERROR(`Failed to list configurations: ${error.message}`)
+        }
+    })
+)
+
+/**
  * POST /api/export/batch
  * Batch export multiple reviews (Producer only)
  */
