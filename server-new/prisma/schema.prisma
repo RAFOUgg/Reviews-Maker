@@ -104,6 +104,7 @@ model User {
   comments            ReviewComment[]
   exports             Export[]
   exportTemplates     ExportTemplate[]
+  exportConfigs       ExportConfiguration[] @relation("userExportConfigs")
   presets             UserPreset[]
 
   @@index([email])
@@ -275,6 +276,7 @@ model Review {
   pipeline    Pipeline? // Pipeline culture (Phase 1)
   views       ReviewView[]
   comments    ReviewComment[]
+  exportConfigs ExportConfiguration[] @relation("reviewExportConfigs")
 
   @@index([authorId])
   @@index([type])
@@ -1267,6 +1269,53 @@ model ExportTemplate {
   @@index([isCustom])
   @@index([isDefault])
   @@map("export_templates")
+}
+
+// Modèle ExportConfiguration (configurations d'export sauvegardées)
+model ExportConfiguration {
+  id                String    @id @default(uuid())
+  userId            String
+  user              User      @relation("userExportConfigs", fields: [userId], references: [id], onDelete: Cascade)
+  
+  reviewId          String?   // Linked review si config spécifique (nullable)
+  review            Review?   @relation("reviewExportConfigs", fields: [reviewId], references: [id], onDelete: SetNull)
+
+  // Nom et description
+  name              String    @default("Ma Configuration")
+  description       String?
+  isDefault         Boolean   @default(false)
+
+  // Template et format
+  templateName      String    @default("modernCompact")
+  format            String    @default("1:1")
+  ratio             String    @default("1:1")
+
+  // Couleurs et apparence (JSON strings)
+  colors            String    // JSON: { background, accent, textPrimary, textSecondary, border }
+  typography        String    // JSON: { fontFamily, fontSize, fontWeight, lineHeight }
+  
+  // Configuration des contenus visibles
+  contentModules    String    // JSON: { title: true, images: true, aromas: true, effects: true, ... }
+  
+  // Branding
+  watermark         String?   // JSON: { visible, type, content, position, size, opacity, rotation, color }
+  branding          String?   // JSON: { logo, filigrane, customFont }
+  
+  // Image settings
+  imageSettings     String?   // JSON: { selectedIndex, effects, border, qualityHighRes }
+
+  // Métadonnées
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  lastUsedAt        DateTime?
+
+  // Statistics
+  useCount          Int       @default(0)
+
+  @@unique([userId, name])
+  @@index([userId])
+  @@index([reviewId])
+  @@map("export_configurations")
 }
 
 // Modèle UserPreset (préréglages de champs pipeline pour l'utilisateur)
