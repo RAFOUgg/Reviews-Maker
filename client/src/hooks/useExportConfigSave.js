@@ -7,13 +7,12 @@
  */
 
 import { useCallback, useRef } from 'react';
-import useStore from './useStore';
+import { useAuth } from './useAuth';
 
 const API_BASE = '/api/export/config';
 
 export function useExportConfigSave() {
-    const user = useStore((state) => state.user);
-    const debounceTimer = useRef(null);
+    const { user } = useAuth();
     const configCache = useRef({}); // Cache local temporaire
 
     /**

@@ -14,7 +14,7 @@ export function PipelineExportRenderer({ pipeline, type = 'culture', maxItems = 
         return null;
     }
 
-    const stages = Array.isArray(pipeline.stages) 
+    const stages = Array.isArray(pipeline.stages)
         ? pipeline.stages.slice(0, maxItems)
         : [];
 
@@ -104,7 +104,7 @@ export function EnvironmentDataRenderer({ environment, compact = true }) {
 export function TerpeneProfileRenderer({ terpenes, maxItems = 5 }) {
     if (!terpenes || terpenes.length === 0) return null;
 
-    const list = Array.isArray(terpenes) 
+    const list = Array.isArray(terpenes)
         ? terpenes.slice(0, maxItems)
         : [];
 
@@ -200,7 +200,7 @@ export function CompleteDataSection({ reviewData, theme = 'dark' }) {
                     }}>
                         Culture
                     </h4>
-                    <PipelineExportRenderer 
+                    <PipelineExportRenderer
                         pipeline={reviewData.culturePipeline}
                         type="culture"
                     />
@@ -220,7 +220,7 @@ export function CompleteDataSection({ reviewData, theme = 'dark' }) {
                     }}>
                         Curing / Maturation
                     </h4>
-                    <PipelineExportRenderer 
+                    <PipelineExportRenderer
                         pipeline={reviewData.curingPipeline}
                         type="curing"
                     />
@@ -257,7 +257,7 @@ export function CompleteDataSection({ reviewData, theme = 'dark' }) {
                     }}>
                         Terphénol
                     </h4>
-                    <TerpeneProfileRenderer 
+                    <TerpeneProfileRenderer
                         terpenes={reviewData.terpeneAnalysis || reviewData.terpenes}
                     />
                 </div>
