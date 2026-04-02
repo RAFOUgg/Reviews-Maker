@@ -186,7 +186,7 @@ router.post('/config/save',
         try {
             // Upsert configuration (update by unique key or create new)
             const uniqueName = name || `Export ${new Date().toISOString().split('T')[0]}`
-            
+
             const config = await prisma.exportConfiguration.upsert({
                 where: {
                     userId_name: {
