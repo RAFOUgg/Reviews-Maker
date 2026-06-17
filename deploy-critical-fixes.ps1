@@ -19,29 +19,35 @@ try {
     Write-Host "📥 [Step 1/4] Pulling latest code from main..." -ForegroundColor Yellow
     ssh $VPS_HOST "cd $DEPLOY_PATH && git fetch origin && git checkout main && git pull origin main"
     
-    # Step 2: Install dependencies
+    # Step 2: Install server dependencies
     Write-Host ""
-    Write-Host "📦 [Step 2/4] Installing dependencies..." -ForegroundColor Yellow
+    Write-Host "📦 [Step 2/5] Installing server dependencies..." -ForegroundColor Yellow
     ssh $VPS_HOST "cd $DEPLOY_PATH/server-new && npm install --omit=dev"
-    
-    # Step 3: Run database migrations
+
+    # Step 3: Build frontend
     Write-Host ""
-    Write-Host "🔄 [Step 3/4] Running database migrations..." -ForegroundColor Yellow
-    ssh $VPS_HOST "cd $DEPLOY_PATH/server-new && npm run prisma:migrate -- --skip-generate" | Out-Null
-    
-    # Step 4: Restart PM2 process
+    Write-Host "🏗️  [Step 3/5] Building frontend (Vite)..." -ForegroundColor Yellow
+    ssh $VPS_HOST "cd $DEPLOY_PATH/client && npm install && npm run build"
+
+    # Step 4: Run database migrations
     Write-Host ""
-    Write-Host "🔃 [Step 4/4] Restarting PM2 processes..." -ForegroundColor Yellow
-    ssh $VPS_HOST "cd $DEPLOY_PATH && pm2 restart reviews-maker || pm2 start ecosystem.config.cjs"
-    
+    Write-Host "🔄 [Step 4/5] Running database migrations..." -ForegroundColor Yellow
+    ssh $VPS_HOST "cd $DEPLOY_PATH/server-new && npx prisma migrate deploy"
+
+    # Step 5: Restart PM2 process
+    Write-Host ""
+    Write-Host "🔃 [Step 5/5] Restarting PM2 processes..." -ForegroundColor Yellow
+    ssh $VPS_HOST "cd $DEPLOY_PATH && npx pm2 restart reviews-maker"
+
     Write-Host ""
     Write-Host "✅ DEPLOYMENT COMPLETED SUCCESSFULLY!" -ForegroundColor Green
     Write-Host ""
     Write-Host "📊 Deployment Summary:" -ForegroundColor Cyan
     Write-Host "  - Latest code pulled from GitHub"
-    Write-Host "  - Dependencies installed"
+    Write-Host "  - Server dependencies installed"
+    Write-Host "  - Frontend built (Vite)"
     Write-Host "  - Database migrations applied"
-    Write-Host "  - PM2 processes restarted"
+    Write-Host "  - PM2 process restarted"
     Write-Host ""
     Write-Host "🔗 Access your application at:" -ForegroundColor Cyan
     Write-Host "  - Frontend: npm run dev (localhost:5173)"
