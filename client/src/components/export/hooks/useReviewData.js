@@ -78,28 +78,65 @@ export default function useReviewData(reviewData) {
                         }
                     }
                 }
-            } else if (['visual', 'texture', 'terpenes', 'terpeneProfile'].includes(fieldKey)) {
-                // Standard sensory data lookup
-                const checkFields = ['sensoryData', 'sensorielle', 'evaluation', 'infosProduit', 'productInfo', 'data'];
-                for (const field of checkFields) {
-                    if (reviewData[field]) {
-                        const parsed = safeParse(reviewData[field]);
-                        if (parsed && parsed[fieldKey]) {
-                            result = parsed[fieldKey];
-                            break;
+            } else if (['visual', 'texture'].includes(fieldKey)) {
+                // Check French key aliases first (visuel, texture already covered by early check)
+                if (fieldKey === 'visual') {
+                    result = reviewData.visuel || reviewData.visual || null;
+                } else {
+                    result = reviewData.texture || null;
+                }
+                // Fallback: search nested JSON fields
+                if (!result) {
+                    const checkFields = ['sensoryData', 'sensorielle', 'evaluation', 'infosProduit', 'productInfo', 'data'];
+                    for (const field of checkFields) {
+                        if (reviewData[field]) {
+                            const parsed = safeParse(reviewData[field]);
+                            if (parsed && parsed[fieldKey]) { result = parsed[fieldKey]; break; }
                         }
                     }
                 }
             } else if (['thc', 'cbd', 'cbg', 'cbc', 'cbn', 'thcv', 'labReport', 'labReportUrl'].includes(fieldKey)) {
-                const analyticsFields = ['analytics', 'analytiques', 'dosages', 'infosProduit'];
-                for (const field of analyticsFields) {
-                    if (reviewData[field]) {
-                        const parsed = safeParse(reviewData[field]);
-                        if (parsed && parsed[fieldKey] !== undefined) {
-                            result = parsed[fieldKey];
-                            break;
+                // Check for thcPercent/cbdPercent etc. variants first (new form structure)
+                const percentKey = fieldKey + 'Percent';
+                if (reviewData[percentKey] !== undefined && reviewData[percentKey] !== null) {
+                    result = reviewData[percentKey];
+                } else if (reviewData.analytics?.[percentKey] !== undefined && reviewData.analytics[percentKey] !== null) {
+                    result = reviewData.analytics[percentKey];
+                } else if (reviewData.analytics?.[fieldKey] !== undefined && reviewData.analytics[fieldKey] !== null) {
+                    result = reviewData.analytics[fieldKey];
+                }
+                // Fallback: search nested JSON fields
+                if (result == null) {
+                    const analyticsFields = ['analytics', 'analytiques', 'dosages', 'infosProduit'];
+                    for (const field of analyticsFields) {
+                        if (reviewData[field]) {
+                            const parsed = safeParse(reviewData[field]);
+                            if (parsed) {
+                                const v = parsed[fieldKey] ?? parsed[percentKey];
+                                if (v !== undefined && v !== null) { result = v; break; }
+                            }
                         }
                     }
+                }
+                // labReportUrl also accessible via top-level
+                if (result == null && (fieldKey === 'labReport' || fieldKey === 'labReportUrl')) {
+                    result = reviewData.labReportUrl ?? null;
+                }
+            } else if (['terpenes', 'terpeneProfile'].includes(fieldKey)) {
+                // Terpenes can be in analytics.terpeneProfile (array) or top-level
+                const tp = reviewData.analytics?.terpeneProfile ?? reviewData.terpeneProfile ?? reviewData.terpenes;
+                if (tp != null) {
+                    result = Array.isArray(tp) ? tp : safeParse(tp);
+                }
+            } else if (['cultivar', 'cultivarsList', 'cultivars'].includes(fieldKey)) {
+                // Cultivar list: check multiple key variants (flower vs hash/concentrate naming)
+                const list = reviewData.cultivarsList || reviewData.cultivars || reviewData.cultivarsUtilises;
+                if (Array.isArray(list)) {
+                    result = list;
+                } else if (typeof list === 'string' && list) {
+                    result = list.split(',').map(s => s.trim()).filter(Boolean);
+                } else {
+                    result = null;
                 }
             } else if (fieldKey === 'overallRating') {
                 result = reviewData.overallRating ?? reviewData.rating ?? reviewData.score;
@@ -123,9 +160,9 @@ export default function useReviewData(reviewData) {
             return {
                 dominant: odor.dominant || odor.dominantNotes || [],
                 secondary: odor.secondary || odor.secondaryNotes || [],
-                intensity: odor.intensity ?? odor.intensite ?? null,
+                intensity: odor.intensity ?? odor.intensite ?? odor.intensiteAromatique ?? null,
                 complexity: odor.complexity ?? odor.complexite ?? null,
-                fidelity: odor.fidelity ?? odor.fidelite ?? null
+                fidelity: odor.fidelity ?? odor.fidelite ?? odor.fideliteCultivars ?? null
             };
         };
 
@@ -133,7 +170,7 @@ export default function useReviewData(reviewData) {
             if (!taste) return null;
             return {
                 intensity: taste.intensity ?? taste.intensite ?? null,
-                aggressiveness: taste.aggressiveness ?? taste.agressiveness ?? taste.agressivite ?? null,
+                aggressiveness: taste.aggressiveness ?? taste.agressiveness ?? taste.agressivite ?? taste.agressivitePiquant ?? null,
                 dryPuff: taste.dryPuff || taste.dryPuffNotes || [],
                 inhalation: taste.inhalation || taste.inhalationNotes || [],
                 exhalation: taste.exhalation || taste.exhalationNotes || taste.expirationNotes || []
@@ -143,8 +180,8 @@ export default function useReviewData(reviewData) {
         const normalizeEffects = (effects) => {
             if (!effects) return null;
             return {
-                onset: effects.onset ?? effects.montee ?? null,
-                intensity: effects.intensity ?? effects.intensite ?? null,
+                onset: effects.onset ?? effects.montee ?? effects.monteeRapidite ?? null,
+                intensity: effects.intensity ?? effects.intensite ?? effects.intensiteEffets ?? null,
                 duration: effects.duration ?? effects.duree ?? null,
                 effects: effects.effects || effects.effetsChoisis || []
             };
@@ -154,22 +191,33 @@ export default function useReviewData(reviewData) {
         const rawTaste = resolveReviewField('taste');
         const rawEffects = resolveReviewField('effects');
 
+        const geneticsObj = resolveReviewField('genetics');
+        const cultivarsList = resolveReviewField('cultivars');
+
         return {
-            genetics: resolveReviewField('genetics'),
+            genetics: geneticsObj,
+            geneticsInfo: {
+                breeder: geneticsObj?.breeder ?? reviewData.genetics?.breeder ?? null,
+                geneticType: geneticsObj?.geneticType ?? reviewData.genetics?.geneticType ?? null,
+                indicaPercent: geneticsObj?.indicaPercent ?? reviewData.genetics?.indicaPercent ?? null,
+                sativaPercent: geneticsObj?.sativaPercent ?? reviewData.genetics?.sativaPercent ?? null,
+            },
+            cultivars: cultivarsList,
             analytics: {
                 thc: resolveReviewField('thc'),
                 cbd: resolveReviewField('cbd'),
                 cbg: resolveReviewField('cbg'),
                 cbc: resolveReviewField('cbc'),
                 cbn: resolveReviewField('cbn'),
-                thcv: resolveReviewField('thcv')
+                thcv: resolveReviewField('thcv'),
+                labReportUrl: resolveReviewField('labReportUrl'),
             },
             visual: resolveReviewField('visual'),
             texture: resolveReviewField('texture'),
             odor: normalizeOdor(rawOdor),
             taste: normalizeTaste(rawTaste),
             effects: normalizeEffects(rawEffects),
-            terpenes: resolveReviewField('terpenes') || resolveReviewField('terpeneProfile'),
+            terpenes: resolveReviewField('terpenes'),
             rating: resolveReviewField('overallRating') || reviewData?.rating || reviewData?.overallRating
         };
     }, [reviewData]);
@@ -198,7 +246,30 @@ export default function useReviewData(reviewData) {
 
     const getMainImage = () => {
         if (!reviewData) return null;
-        return reviewData.mainImage || reviewData.image || reviewData.photo || (Array.isArray(reviewData.gallery) && reviewData.gallery.length > 0 && reviewData.gallery[0]) || null;
+        // Direct URL fields
+        if (reviewData.mainImage) return reviewData.mainImage;
+        if (reviewData.image) return reviewData.image;
+        if (reviewData.photo) return reviewData.photo;
+        // photos array (FlowerReview/HashReview/ConcentrateReview form state)
+        if (Array.isArray(reviewData.photos) && reviewData.photos.length > 0) {
+            const p = reviewData.photos[0];
+            return typeof p === 'string' ? p : (p?.url || p?.preview || null);
+        }
+        // gallery array
+        if (Array.isArray(reviewData.gallery) && reviewData.gallery.length > 0) {
+            const g = reviewData.gallery[0];
+            return typeof g === 'string' ? g : (g?.url || g?.preview || null);
+        }
+        // images JSON string or array (FlowerReview DB field)
+        const imgs = reviewData.images;
+        if (imgs) {
+            const arr = Array.isArray(imgs) ? imgs : (typeof imgs === 'string' ? (() => { try { return JSON.parse(imgs); } catch { return []; } })() : []);
+            if (arr.length > 0) {
+                const img = arr[0];
+                return typeof img === 'string' ? img : (img?.url || img?.preview || null);
+            }
+        }
+        return null;
     };
 
     return { templateData, resolveReviewField, getCategoryScores, getMainImage };

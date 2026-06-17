@@ -1,15 +1,15 @@
 /**
- * CuringMaturationAdapter - Adapter pour CreateReviewFormWrapper
- * Convertit formData/handleChange → data/onChange
+ * CuringMaturationAdapter - Adapter pour le pipeline Curing & Maturation
+ * Accepte props data/onChange (API canonique des sections)
  */
 
 import CuringMaturationSection from '../../sections/CuringMaturationSection';
 
-const CuringMaturationAdapter = ({ formData, handleChange, productType }) => {
+const CuringMaturationAdapter = ({ data = {}, onChange, productType }) => {
     return (
         <CuringMaturationSection
-            data={formData.curing || {}}
-            onChange={(curingData) => handleChange('curing', curingData)}
+            data={data}
+            onChange={onChange}
             productType={productType || 'hash'}
         />
     );

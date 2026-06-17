@@ -82,9 +82,42 @@ function validateConcentrateReviewData(data, options = {}) {
         }
     }
 
+    // Lien review fleur parente (optionnel)
+    if (data.parentFlowerReviewId && typeof data.parentFlowerReviewId === 'string') {
+        cleaned.parentFlowerReviewId = data.parentFlowerReviewId
+    } else {
+        cleaned.parentFlowerReviewId = null
+    }
+
     // ===== SECTION 2: Pipeline Extraction =====
     if (data.extractionPipelineId && typeof data.extractionPipelineId === 'string') {
         cleaned.extractionPipelineId = data.extractionPipelineId
+    }
+
+    // Inline timeline data (from ExtractionPipelineSection / ExtractionPipelineAdapter)
+    const extractionPipeline = data.extractionPipeline
+        ? (typeof data.extractionPipeline === 'string' ? JSON.parse(data.extractionPipeline) : data.extractionPipeline)
+        : null
+    if (extractionPipeline) {
+        if (extractionPipeline.extractionTimelineConfig !== undefined) {
+            cleaned.extractionTimelineConfig = typeof extractionPipeline.extractionTimelineConfig === 'string'
+                ? extractionPipeline.extractionTimelineConfig
+                : JSON.stringify(extractionPipeline.extractionTimelineConfig)
+        }
+        if (extractionPipeline.extractionTimelineData !== undefined) {
+            cleaned.extractionTimelineData = typeof extractionPipeline.extractionTimelineData === 'string'
+                ? extractionPipeline.extractionTimelineData
+                : JSON.stringify(extractionPipeline.extractionTimelineData)
+        }
+    }
+    // Also accept flat keys
+    if (data.extractionTimelineConfig !== undefined) {
+        cleaned.extractionTimelineConfig = typeof data.extractionTimelineConfig === 'string'
+            ? data.extractionTimelineConfig : JSON.stringify(data.extractionTimelineConfig)
+    }
+    if (data.extractionTimelineData !== undefined) {
+        cleaned.extractionTimelineData = typeof data.extractionTimelineData === 'string'
+            ? data.extractionTimelineData : JSON.stringify(data.extractionTimelineData)
     }
 
     if (data.methodeExtraction && typeof data.methodeExtraction === 'string') {
@@ -281,7 +314,11 @@ function validateConcentrateReviewData(data, options = {}) {
  * POST /api/concentrate-reviews
  * Créer une nouvelle ConcentrateReview
  */
-router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, upload.fields([
+    { name: 'photos', maxCount: 4 },
+    { name: 'certificateFile', maxCount: 1 },
+    { name: 'terpeneFile', maxCount: 1 }
+]), asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -293,6 +330,16 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
         }
     } else {
         bodyData = req.body
+    }
+
+    // Merge analytics nested object into top-level for validation
+    if (bodyData.analytics) {
+        try {
+            const analyticsObj = typeof bodyData.analytics === 'string'
+                ? JSON.parse(bodyData.analytics)
+                : bodyData.analytics
+            Object.assign(bodyData, analyticsObj)
+        } catch {}
     }
 
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
@@ -312,13 +359,21 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
         }
     })
 
-    const photos = req.files?.map(f => `/images/${f.filename}`) || []
+    const photos = req.files?.photos?.map(f => `/images/${f.filename}`) || []
+    const certificateFileUrl = req.files?.certificateFile?.[0]
+        ? `/images/${req.files.certificateFile[0].filename}`
+        : null
+    const terpeneFileUrl = req.files?.terpeneFile?.[0]
+        ? `/images/${req.files.terpeneFile[0].filename}`
+        : null
 
     const concentrateReview = await prisma.concentrateReview.create({
         data: {
             reviewId: review.id,
             ...cleanedData,
-            photos: photos.length > 0 ? JSON.stringify(photos) : null
+            photos: photos.length > 0 ? JSON.stringify(photos) : null,
+            ...(certificateFileUrl && { labReportUrl: certificateFileUrl }),
+            ...(terpeneFileUrl && { terpeneFileUrl })
         }
     })
 
@@ -361,7 +416,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
  * PUT /api/concentrate-reviews/:id
  */
-router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, upload.fields([
+    { name: 'photos', maxCount: 4 },
+    { name: 'certificateFile', maxCount: 1 },
+    { name: 'terpeneFile', maxCount: 1 }
+]), asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 
@@ -384,6 +443,16 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
         bodyData = req.body
     }
 
+    // Merge analytics nested object into top-level for validation
+    if (bodyData.analytics) {
+        try {
+            const analyticsObj = typeof bodyData.analytics === 'string'
+                ? JSON.parse(bodyData.analytics)
+                : bodyData.analytics
+            Object.assign(bodyData, analyticsObj)
+        } catch {}
+    }
+
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
     const validation = validateConcentrateReviewData(bodyData, { isDraft })
     if (!validation.valid) {
@@ -401,24 +470,30 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
     })
 
     let photos = []
-    if (req.files && req.files.length > 0) {
-        photos = req.files.map(f => `/images/${f.filename}`)
+    const newPhotos = req.files?.photos
+    if (newPhotos && newPhotos.length > 0) {
+        photos = newPhotos.map(f => `/images/${f.filename}`)
     } else {
         const existing = await prisma.concentrateReview.findUnique({ where: { reviewId } })
-        if (existing && existing.photos) {
-            try {
-                photos = JSON.parse(existing.photos)
-            } catch (e) {
-                photos = []
-            }
+        if (existing?.photos) {
+            try { photos = JSON.parse(existing.photos) } catch {}
         }
     }
+
+    const certificateFileUrl = req.files?.certificateFile?.[0]
+        ? `/images/${req.files.certificateFile[0].filename}`
+        : undefined
+    const terpeneFileUrl = req.files?.terpeneFile?.[0]
+        ? `/images/${req.files.terpeneFile[0].filename}`
+        : undefined
 
     const concentrateReview = await prisma.concentrateReview.update({
         where: { reviewId },
         data: {
             ...cleanedData,
-            photos: photos.length > 0 ? JSON.stringify(photos) : null
+            photos: photos.length > 0 ? JSON.stringify(photos) : null,
+            ...(certificateFileUrl !== undefined && { labReportUrl: certificateFileUrl }),
+            ...(terpeneFileUrl !== undefined && { terpeneFileUrl })
         }
     })
 

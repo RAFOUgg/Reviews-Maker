@@ -86,10 +86,44 @@ function validateHashReviewData(data, options = {}) {
         }
     }
 
+    // Lien review fleur parente (optionnel)
+    if (data.parentFlowerReviewId && typeof data.parentFlowerReviewId === 'string') {
+        cleaned.parentFlowerReviewId = data.parentFlowerReviewId
+    } else {
+        cleaned.parentFlowerReviewId = null
+    }
+
     // ===== SECTION 2: Pipeline Séparation =====
     // separationPipelineId (optionnel)
     if (data.separationPipelineId && typeof data.separationPipelineId === 'string') {
         cleaned.separationPipelineId = data.separationPipelineId
+    }
+
+    // Inline timeline data (from SeparationPipelineSection / SeparationPipelineAdapter)
+    // separationPipeline is the top-level object sent by CreateHashReview
+    const separationPipeline = data.separationPipeline
+        ? (typeof data.separationPipeline === 'string' ? JSON.parse(data.separationPipeline) : data.separationPipeline)
+        : null
+    if (separationPipeline) {
+        if (separationPipeline.separationTimelineConfig !== undefined) {
+            cleaned.separationTimelineConfig = typeof separationPipeline.separationTimelineConfig === 'string'
+                ? separationPipeline.separationTimelineConfig
+                : JSON.stringify(separationPipeline.separationTimelineConfig)
+        }
+        if (separationPipeline.separationTimelineData !== undefined) {
+            cleaned.separationTimelineData = typeof separationPipeline.separationTimelineData === 'string'
+                ? separationPipeline.separationTimelineData
+                : JSON.stringify(separationPipeline.separationTimelineData)
+        }
+    }
+    // Also accept flat keys
+    if (data.separationTimelineConfig !== undefined) {
+        cleaned.separationTimelineConfig = typeof data.separationTimelineConfig === 'string'
+            ? data.separationTimelineConfig : JSON.stringify(data.separationTimelineConfig)
+    }
+    if (data.separationTimelineData !== undefined) {
+        cleaned.separationTimelineData = typeof data.separationTimelineData === 'string'
+            ? data.separationTimelineData : JSON.stringify(data.separationTimelineData)
     }
 
     // Méthode de séparation
@@ -390,7 +424,11 @@ function validateHashReviewData(data, options = {}) {
  * POST /api/hash-reviews
  * Créer une nouvelle HashReview
  */
-router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, upload.fields([
+    { name: 'photos', maxCount: 4 },
+    { name: 'certificateFile', maxCount: 1 },
+    { name: 'terpeneFile', maxCount: 1 }
+]), asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     // Parse body data
@@ -403,6 +441,16 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
         }
     } else {
         bodyData = req.body
+    }
+
+    // Merge analytics nested object into top-level for validation
+    if (bodyData.analytics) {
+        try {
+            const analyticsObj = typeof bodyData.analytics === 'string'
+                ? JSON.parse(bodyData.analytics)
+                : bodyData.analytics
+            Object.assign(bodyData, analyticsObj)
+        } catch {}
     }
 
     // Validation
@@ -424,15 +472,23 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
         }
     })
 
-    // Gérer les photos
-    const photos = req.files?.map(f => `/images/${f.filename}`) || []
+    // Gérer les photos et fichiers analytics
+    const photos = req.files?.photos?.map(f => `/images/${f.filename}`) || []
+    const certificateFileUrl = req.files?.certificateFile?.[0]
+        ? `/images/${req.files.certificateFile[0].filename}`
+        : null
+    const terpeneFileUrl = req.files?.terpeneFile?.[0]
+        ? `/images/${req.files.terpeneFile[0].filename}`
+        : null
 
     // Créer la HashReview
     const hashReview = await prisma.hashReview.create({
         data: {
             reviewId: review.id,
             ...cleanedData,
-            photos: photos.length > 0 ? JSON.stringify(photos) : null
+            photos: photos.length > 0 ? JSON.stringify(photos) : null,
+            ...(certificateFileUrl && { labReportUrl: certificateFileUrl }),
+            ...(terpeneFileUrl && { terpeneFileUrl })
         }
     })
 
@@ -477,7 +533,11 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * PUT /api/hash-reviews/:id
  * Mettre à jour une HashReview
  */
-router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, upload.fields([
+    { name: 'photos', maxCount: 4 },
+    { name: 'certificateFile', maxCount: 1 },
+    { name: 'terpeneFile', maxCount: 1 }
+]), asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 
@@ -502,6 +562,16 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
         bodyData = req.body
     }
 
+    // Merge analytics nested object into top-level for validation
+    if (bodyData.analytics) {
+        try {
+            const analyticsObj = typeof bodyData.analytics === 'string'
+                ? JSON.parse(bodyData.analytics)
+                : bodyData.analytics
+            Object.assign(bodyData, analyticsObj)
+        } catch {}
+    }
+
     // Validation
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
     const validation = validateHashReviewData(bodyData, { isDraft })
@@ -522,25 +592,32 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
 
     // Gérer les photos (merge avec les anciennes si pas de nouvelles)
     let photos = []
-    if (req.files && req.files.length > 0) {
-        photos = req.files.map(f => `/images/${f.filename}`)
+    const newPhotos = req.files?.photos
+    if (newPhotos && newPhotos.length > 0) {
+        photos = newPhotos.map(f => `/images/${f.filename}`)
     } else {
         const existing = await prisma.hashReview.findUnique({ where: { reviewId } })
-        if (existing && existing.photos) {
-            try {
-                photos = JSON.parse(existing.photos)
-            } catch (e) {
-                photos = []
-            }
+        if (existing?.photos) {
+            try { photos = JSON.parse(existing.photos) } catch {}
         }
     }
+
+    // Gérer les fichiers analytics (conserver les anciens si pas de nouveaux)
+    const certificateFileUrl = req.files?.certificateFile?.[0]
+        ? `/images/${req.files.certificateFile[0].filename}`
+        : undefined
+    const terpeneFileUrl = req.files?.terpeneFile?.[0]
+        ? `/images/${req.files.terpeneFile[0].filename}`
+        : undefined
 
     // Mettre à jour la HashReview
     const hashReview = await prisma.hashReview.update({
         where: { reviewId },
         data: {
             ...cleanedData,
-            photos: photos.length > 0 ? JSON.stringify(photos) : null
+            photos: photos.length > 0 ? JSON.stringify(photos) : null,
+            ...(certificateFileUrl !== undefined && { labReportUrl: certificateFileUrl }),
+            ...(terpeneFileUrl !== undefined && { terpeneFileUrl })
         }
     })
 

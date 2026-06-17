@@ -532,82 +532,177 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     );
 }
 
-// Save / Load entire pipeline presets
-function SavePipelineModal({ isOpen, onClose, timelineConfig, timelineData, onSavePreset, onLoadPreset }) {
+// ── Bibliothèque de Setups Pipeline ──────────────────────────────────────────
+import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
+
+function SavePipelineModal({
+    isOpen, onClose,
+    timelineConfig, timelineData, groupedPresets,
+    onLoadPreset, pipelineType
+}) {
+    const [tab, setTab] = useState('mes'); // 'mes' | 'templates' | 'nouveau'
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
-    const [includeData, setIncludeData] = useState(true);
+    const [includeData, setIncludeData] = useState(false);
+
+    const storageKey = `pipeline-setups-${pipelineType || 'unknown'}`;
     const [saved, setSaved] = useState(() => {
-        try {
-            return JSON.parse(localStorage.getItem('pipeline-presets') || '[]');
-        } catch (e) { return []; }
+        try { return JSON.parse(localStorage.getItem(storageKey) || '[]'); }
+        catch { return []; }
     });
+
+    const builtins = PIPELINE_STARTER_SETUPS[pipelineType] || [];
 
     if (!isOpen) return null;
 
     const handleSave = () => {
-        if (!name.trim()) return alert('Veuillez donner un nom au préréglage');
-        const preset = {
+        if (!name.trim()) return;
+        const setup = {
             id: Date.now(),
             name: name.trim(),
             description: description.trim(),
             createdAt: new Date().toISOString(),
             config: timelineConfig || {},
+            groupedPresets: groupedPresets || [],
             data: includeData ? (timelineData || []) : []
         };
-        const next = [...saved, preset];
-        localStorage.setItem('pipeline-presets', JSON.stringify(next));
+        const next = [...saved, setup];
+        localStorage.setItem(storageKey, JSON.stringify(next));
         setSaved(next);
-        onSavePreset && onSavePreset(preset);
-        onClose();
+        setName(''); setDescription('');
+        setTab('mes');
     };
 
-    const handleLoad = (preset) => {
-        if (!confirm(`Charger le préréglage "${preset.name}" et remplacer la configuration actuelle ?`)) return;
-        onLoadPreset && onLoadPreset(preset);
+    const handleLoad = (setup) => {
+        onLoadPreset && onLoadPreset(setup);
         onClose();
     };
 
     const handleDelete = (id) => {
-        if (!confirm('Supprimer ce préréglage ?')) return;
         const next = saved.filter(s => s.id !== id);
-        localStorage.setItem('pipeline-presets', JSON.stringify(next));
+        localStorage.setItem(storageKey, JSON.stringify(next));
         setSaved(next);
     };
 
-    return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30">
-            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl p-6 min-w-[360px] max-w-[95vw] border border-white/10">
-                <h3 className="font-bold text-lg mb-3">Sauvegarder / Charger un préréglage de pipeline</h3>
-                <div className="mb-2">
-                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Nom du préréglage" value={name} onChange={e => setName(e.target.value)} />
-                    <input className="w-full px-3 py-2 border rounded mb-2" placeholder="Description (optionnel)" value={description} onChange={e => setDescription(e.target.value)} />
-                    <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} /> Inclure les données des cases</label>
-                </div>
-                <div className="flex gap-2 mt-4">
-                    <button className="liquid-btn liquid-btn--accent flex-1" onClick={handleSave}>Enregistrer</button>
-                    <button className="liquid-btn flex-1" onClick={onClose}>Fermer</button>
-                </div>
+    const tabClass = (t) =>
+        `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${tab === t
+            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
+            : 'text-white/50 hover:text-white/80 hover:bg-white/5'}`;
 
-                {saved.length > 0 && (
-                    <div className="mt-4 max-h-40 overflow-y-auto">
-                        <div className="font-semibold mb-2">Préréglages enregistrés</div>
-                        <div className="space-y-2">
-                            {saved.map(p => (
-                                <div key={p.id} className="flex items-center justify-between p-2 border rounded">
-                                    <div>
-                                        <div className="font-medium">{p.name}</div>
-                                        <div className="text-xs text-gray-500">{p.description}</div>
-                                    </div>
-                                    <div className="flex gap-2">
-                                        <button className="liquid-btn" onClick={() => handleLoad(p)}>Charger</button>
-                                        <button className="liquid-btn liquid-btn--danger" onClick={() => handleDelete(p.id)}>Suppr.</button>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+    const SetupCard = ({ setup, builtin = false }) => (
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-colors">
+            <span className="text-2xl flex-shrink-0">{setup.emoji || '⚙️'}</span>
+            <div className="flex-1 min-w-0">
+                <div className="font-semibold text-white text-sm">{setup.name}</div>
+                {setup.description && (
+                    <div className="text-xs text-white/50 mt-0.5 line-clamp-2">{setup.description}</div>
+                )}
+                {!builtin && (
+                    <div className="text-xs text-white/30 mt-1">
+                        {setup.groupedPresets?.length || 0} groupe(s) · {new Date(setup.createdAt).toLocaleDateString('fr-FR')}
                     </div>
                 )}
+                {builtin && setup.groupedPresets?.[0] && (
+                    <div className="text-xs text-purple-300/60 mt-1">{setup.groupedPresets[0].description}</div>
+                )}
+            </div>
+            <div className="flex flex-col gap-1 flex-shrink-0">
+                <button
+                    onClick={() => handleLoad(setup)}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
+                >
+                    Appliquer
+                </button>
+                {!builtin && (
+                    <button
+                        onClick={() => handleDelete(setup.id)}
+                        className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded-lg transition-colors"
+                    >
+                        Suppr.
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div
+                className="bg-[#0d0d1a] rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-white/10 max-h-[80vh] flex flex-col"
+                onClick={e => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/10 flex-shrink-0">
+                    <h3 className="font-bold text-white text-base">📚 Bibliothèque de setups</h3>
+                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors">✕</button>
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-2 px-5 py-3 border-b border-white/5 flex-shrink-0">
+                    <button className={tabClass('mes')} onClick={() => setTab('mes')}>
+                        Mes setups {saved.length > 0 && <span className="ml-1 text-purple-400">({saved.length})</span>}
+                    </button>
+                    <button className={tabClass('templates')} onClick={() => setTab('templates')}>
+                        Templates {builtins.length > 0 && <span className="ml-1 text-green-400">({builtins.length})</span>}
+                    </button>
+                    <button className={tabClass('nouveau')} onClick={() => setTab('nouveau')}>Sauvegarder</button>
+                </div>
+
+                {/* Content */}
+                <div className="flex-1 overflow-y-auto px-5 py-4">
+                    {tab === 'mes' && (
+                        saved.length === 0
+                            ? <div className="text-center py-10 text-white/40">
+                                <div className="text-4xl mb-3">📦</div>
+                                <p className="text-sm">Aucun setup sauvegardé.<br />Créez-en un depuis l'onglet "Sauvegarder".</p>
+                            </div>
+                            : <div className="space-y-2">
+                                {saved.map(s => <SetupCard key={s.id} setup={s} />)}
+                            </div>
+                    )}
+
+                    {tab === 'templates' && (
+                        builtins.length === 0
+                            ? <div className="text-center py-10 text-white/40 text-sm">Aucun template pour ce type de pipeline.</div>
+                            : <div className="space-y-2">
+                                <p className="text-xs text-white/40 mb-3">
+                                    Ces templates appliquent une configuration + groupes de préréglages prédéfinis. Vous pouvez ensuite les ajuster.
+                                </p>
+                                {builtins.map(s => <SetupCard key={s.id} setup={s} builtin />)}
+                            </div>
+                    )}
+
+                    {tab === 'nouveau' && (
+                        <div className="space-y-3">
+                            <p className="text-xs text-white/50">
+                                Sauvegarde la configuration actuelle + vos {groupedPresets?.length || 0} groupe(s) de préréglages.
+                            </p>
+                            <input
+                                className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:border-purple-500/50 outline-none"
+                                placeholder="Nom du setup (ex: Indoor DWC perso)"
+                                value={name}
+                                onChange={e => setName(e.target.value)}
+                            />
+                            <input
+                                className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:border-purple-500/50 outline-none"
+                                placeholder="Description (optionnel)"
+                                value={description}
+                                onChange={e => setDescription(e.target.value)}
+                            />
+                            <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
+                                <input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} className="accent-purple-500" />
+                                Inclure les données des cases
+                            </label>
+                            <button
+                                onClick={handleSave}
+                                disabled={!name.trim()}
+                                className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-white/10 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+                            >
+                                Sauvegarder ce setup
+                            </button>
+                        </div>
+                    )}
+                </div>
             </div>
         </div>
     );
@@ -1718,17 +1813,33 @@ const PipelineDragDropView = ({
         showToast(`✓ ${itemKey} assigné à toutes les cases`);
     };
 
-    // Appliquer un préréglage de pipeline (chargement) - remplace config et (optionnel) données
+    // Appliquer un setup de pipeline (chargement) - remplace config, données et groupedPresets
     const applyPipelinePreset = (preset) => {
         if (!preset) return;
-        // Apply config keys
         try {
+            // Apply config keys
             const cfg = preset.config || {};
             Object.entries(cfg).forEach(([k, v]) => {
                 try { onConfigChange(k, v); } catch (e) { console.warn('applyPipelinePreset config error', e); }
             });
 
-            // Apply data (record previous values for undo)
+            // Apply groupedPresets if present
+            if (Array.isArray(preset.groupedPresets) && preset.groupedPresets.length > 0) {
+                const mergedPresets = [...groupedPresets];
+                preset.groupedPresets.forEach(newGroup => {
+                    const existingIdx = mergedPresets.findIndex(g => g.name === newGroup.name);
+                    if (existingIdx >= 0) {
+                        mergedPresets[existingIdx] = newGroup;
+                    } else {
+                        mergedPresets.push(newGroup);
+                    }
+                });
+                setGroupedPresets(mergedPresets);
+                const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
+                localStorage.setItem(storageKey, JSON.stringify(mergedPresets));
+            }
+
+            // Apply cell data (optional)
             const allChanges = [];
             (preset.data || []).forEach(cell => {
                 const ts = cell.timestamp;
@@ -1743,9 +1854,9 @@ const PipelineDragDropView = ({
             });
 
             if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'load-preset', changes: allChanges });
-            showToast(`✓ Préréglage "${preset.name}" chargé`);
+            showToast(`✓ Setup "${preset.name}" appliqué`);
         } catch (e) {
-            console.error('Erreur lors du chargement du préréglage', e);
+            console.error('Erreur lors du chargement du setup', e);
         }
     };
 
@@ -2782,13 +2893,14 @@ const PipelineDragDropView = ({
                 type={type}
             />
 
-            {/* Modal save/load pipeline presets */}
+            {/* Modal bibliothèque de setups pipeline */}
             <SavePipelineModal
                 isOpen={showSavePipelineModal}
                 onClose={() => setShowSavePipelineModal(false)}
                 timelineConfig={timelineConfig}
                 timelineData={timelineData}
-                onSavePreset={(p) => { /* noop - preserved for external hooks */ }}
+                groupedPresets={groupedPresets}
+                pipelineType={type}
                 onLoadPreset={(p) => applyPipelinePreset(p)}
             />
 

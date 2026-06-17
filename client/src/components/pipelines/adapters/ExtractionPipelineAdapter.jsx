@@ -1,15 +1,16 @@
 /**
- * ExtractionPipelineAdapter - Adapter pour CreateReviewFormWrapper
- * Convertit formData/handleChange → data/onChange
+ * ExtractionPipelineAdapter - Adapter pour le pipeline extraction (Concentré)
+ * Accepte props data/onChange (API canonique des sections)
  */
 
 import ExtractionPipelineSection from '../sections/ExtractionPipelineSection';
 
-const ExtractionPipelineAdapter = ({ formData, handleChange, productType }) => {
+const ExtractionPipelineAdapter = ({ data = {}, onChange, productType }) => {
     return (
         <ExtractionPipelineSection
-            data={formData.extraction || {}}
-            onChange={(extractionData) => handleChange('extraction', extractionData)}
+            data={data}
+            onChange={onChange}
+            productType={productType}
         />
     );
 };

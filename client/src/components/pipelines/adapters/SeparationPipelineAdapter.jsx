@@ -1,15 +1,16 @@
 /**
- * SeparationPipelineAdapter - Adapter pour CreateReviewFormWrapper
- * Convertit formData/handleChange → data/onChange
+ * SeparationPipelineAdapter - Adapter pour le pipeline séparation (Hash)
+ * Accepte props data/onChange (API canonique des sections)
  */
 
 import SeparationPipelineSection from '../sections/SeparationPipelineSection';
 
-const SeparationPipelineAdapter = ({ formData, handleChange, productType }) => {
+const SeparationPipelineAdapter = ({ data = {}, onChange, productType }) => {
     return (
         <SeparationPipelineSection
-            data={formData.separation || {}}
-            onChange={(separationData) => handleChange('separation', separationData)}
+            data={data}
+            onChange={onChange}
+            productType={productType}
         />
     );
 };

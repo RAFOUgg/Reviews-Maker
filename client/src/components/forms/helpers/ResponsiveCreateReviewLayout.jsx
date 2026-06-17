@@ -32,6 +32,8 @@ export const ResponsiveCreateReviewLayout = ({
     sectionEmojis = [], // Array d'émojis pour chaque section
     // Optional callback to open a global preview/orchard panel from the footer
     onOpenPreview,
+    // Optional callback to open the export maker from the footer
+    onOpenExport,
     // Save / Publish callbacks
     onSave,               // async () => void  — save as draft
     onSubmit,             // async () => void  — publish (public)
@@ -428,6 +430,23 @@ export const ResponsiveCreateReviewLayout = ({
                                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                                             </svg>
                                             {!layout.isMobile && <span>Aperçu</span>}
+                                        </button>
+                                    </div>
+                                )}
+
+                                {/* Export button */}
+                                {onOpenExport && (
+                                    <div className="flex-shrink-0">
+                                        <button
+                                            onClick={onOpenExport}
+                                            className={`rounded-xl bg-white/5 text-white/70 hover:bg-white/10 transition-all font-medium flex items-center gap-1.5 ${layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'
+                                                }`}
+                                            title="Exporter"
+                                        >
+                                            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                                            </svg>
+                                            {!layout.isMobile && <span>Export</span>}
                                         </button>
                                     </div>
                                 )}

@@ -871,11 +871,13 @@ router.put('/:id',
         }
 
         // SPRINT 1: Check section-level permissions
-        // If user is trying to update genetics section, verify access
-        if (req.body.breeder || req.body.variety || req.body.genetics) {
+        // Basic genetics fields (breeder, geneticType, indica/sativa%) are available to all users.
+        // Only genealogy tree operations (parentage, phenotypeCode, geneticTreeId) are restricted to Producer+.
+        const hasTreeOperation = req.body.geneticTreeId || req.body.parentage || req.body.phenotypeCode
+        if (hasTreeOperation) {
             if (!canAccessSection(req.user.accountType || 'consumer', 'genetic')) {
                 throw Errors.FORBIDDEN(
-                    'Genetics section not available for your account type. Upgrade to Producer to access.'
+                    'Genetics tree operations are not available for your account type. Upgrade to Producer to access.'
                 )
             }
         }

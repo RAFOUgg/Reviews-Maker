@@ -105,10 +105,14 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }, [user?.id])
 
-    // Charger le premier arbre disponible si aucun n'est sélectionné
+    // Charger l'arbre lié à la review (mode édition) ou le premier disponible
     useEffect(() => {
         if (trees.length > 0 && !selectedTreeId && !canvasLoading) {
-            loadTree(trees[0].id)
+            const linkedTreeId = formData.genetics?.treeId || formData.geneticTreeId
+            const targetId = linkedTreeId && trees.find(t => t.id === linkedTreeId)
+                ? linkedTreeId
+                : trees[0].id
+            loadTree(targetId)
         }
     }, [trees, selectedTreeId])
 
@@ -130,12 +134,12 @@ export default function Genetiques({ formData, handleChange }) {
     const fetchUserFlowerReviews = async () => {
         setLoadingReviews(true)
         try {
-            const response = await fetch(`/api/reviews?userId=${user.id}&type=flower`, {
-                credentials: 'include'
-            })
+            const response = await fetch('/api/reviews/my', { credentials: 'include' })
             if (response.ok) {
                 const data = await response.json()
-                setUserReviews(data.reviews || data || [])
+                const all = Array.isArray(data) ? data : (data.reviews || [])
+                // type DB = 'Fleurs' — filtrer côté client
+                setUserReviews(all.filter(r => r.type === 'Fleurs' || r.productType === 'flower'))
             }
         } catch (error) {
             console.error('Error fetching reviews:', error)
@@ -261,9 +265,19 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }
 
-    // Drag & Drop handler pour reviews
-    const handleDragStart = (e, review) => {
-        e.dataTransfer.setData('reviewData', JSON.stringify(review))
+    // Drag & Drop handler pour reviews et cultivars de bibliothèque
+    const handleDragStart = (e, item) => {
+        // Format attendu par UnifiedGeneticsCanvas (application/json avec id + name/cultivarName)
+        const dragPayload = {
+            id: item.id || item.reviewId,
+            name: item.cultivarName || item.holderName || item.name || item.generalInfo?.commercialName,
+            cultivarName: item.cultivarName || item.holderName || item.name || item.generalInfo?.commercialName,
+            genetics: item.genetics || null,
+            image: null,
+            _source: item._source || 'review',
+            reviewId: item.id
+        }
+        e.dataTransfer.setData('application/json', JSON.stringify(dragPayload))
         e.dataTransfer.effectAllowed = 'copy'
     }
 
@@ -437,26 +451,26 @@ export default function Genetiques({ formData, handleChange }) {
                                                 className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-500/50 transition-all"
                                             >
                                                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center overflow-hidden">
-                                                    {(review.generalInfo?.photos?.[0] || review.photos?.[0]) ? (
-                                                        <img
-                                                            src={review.generalInfo?.photos?.[0] || review.photos?.[0]}
-                                                            alt={review.generalInfo?.commercialName || review.commercialName}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        <Leaf className="w-8 h-8 text-purple-400" />
-                                                    )}
+                                                    {(() => {
+                                                        const imgs = review.images
+                                                        const first = Array.isArray(imgs) ? imgs[0] : (typeof imgs === 'string' ? (() => { try { return JSON.parse(imgs)?.[0] } catch { return null } })() : null)
+                                                        return first ? (
+                                                            <img src={first} alt={review.holderName} className="w-full h-full object-cover" />
+                                                        ) : (
+                                                            <Leaf className="w-8 h-8 text-purple-400" />
+                                                        )
+                                                    })()}
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-semibold text-white truncate">
-                                                        {review.generalInfo?.commercialName || review.commercialName || 'Sans nom'}
+                                                        {review.holderName || review.name || 'Sans nom'}
                                                     </p>
                                                     <p className="text-xs text-white/50 truncate">
-                                                        {review.genetics?.variety || review.cultivars || 'Variété non définie'}
+                                                        {review.cultivars || review.strainType || 'Variété non définie'}
                                                     </p>
-                                                    {(review.genetics?.breeder || review.farm) && (
+                                                    {review.farm && (
                                                         <p className="text-xs text-white/30 truncate">
-                                                            {review.genetics?.breeder || review.farm}
+                                                            {review.farm}
                                                         </p>
                                                     )}
                                                 </div>

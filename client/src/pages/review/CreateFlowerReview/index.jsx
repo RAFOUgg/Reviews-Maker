@@ -15,6 +15,7 @@ import { flattenFlowerFormData, createFormDataFromFlat } from '../../../utils/fo
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
 import CulturePipelineSection from '../../../components/pipelines/sections/CulturePipelineSection'
+import Recolte from './sections/Recolte'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisuelTechnique from './sections/VisuelTechnique'
 import OdorSection from '../../../components/sections/OdorSection'
@@ -128,6 +129,7 @@ export default function CreateFlowerReview() {
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
         { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt', access: 'producteur' },
         { id: 'culture', icon: '🌱', title: 'Culture & Pipeline', access: 'producteur' },
+        { id: 'recolte', icon: '🌾', title: 'Récolte & Post-Récolte', access: 'producteur' },
         { id: 'analytics', icon: '🔬', title: 'Analytiques', access: 'all' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique', access: 'all' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs', access: 'all' },
@@ -326,6 +328,7 @@ export default function CreateFlowerReview() {
                 sectionEmojis={sectionEmojis}
                 showProgress={true}
                 onOpenPreview={() => setShowOrchard(true)}
+                onOpenExport={() => setShowExportMaker(true)}
                 onSave={handleSave}
                 onSubmit={handleSubmit}
                 reviewVisibility={currentVisibility}
@@ -370,6 +373,12 @@ export default function CreateFlowerReview() {
                             <CulturePipelineSection
                                 data={formData.culture || {}}
                                 onChange={(cultureData) => handleChange('culture', cultureData)}
+                            />
+                        )}
+                        {currentSectionData.id === 'recolte' && (
+                            <Recolte
+                                formData={formData}
+                                handleChange={handleChange}
                             />
                         )}
                         {currentSectionData.id === 'analytics' && (
@@ -481,7 +490,7 @@ export default function CreateFlowerReview() {
             {showExportMaker && (
                 <Suspense fallback={null}>
                     <ExportMaker
-                        reviewData={formData}
+                        reviewData={{ ...formData, photos }}
                         productType="flower"
                         onClose={() => setShowExportMaker(false)}
                     />

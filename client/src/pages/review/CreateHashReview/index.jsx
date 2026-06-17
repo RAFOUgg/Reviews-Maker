@@ -4,9 +4,10 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { hashReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, lazy } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -33,9 +34,19 @@ export default function CreateHashReview() {
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const [showExportMaker, setShowExportMaker] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useHashForm(id)
-    const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+    const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+
+    // Charger les photos existantes quand on édite une review
+    useEffect(() => {
+        if (!id || !formData._photos?.length) return
+        setPhotos(prev => {
+            if (prev.length > 0) return prev
+            return formData._photos
+        })
+    }, [id, formData._photos])
 
     // Définition des sections pour Hash
     const sections = [
@@ -62,29 +73,49 @@ export default function CreateHashReview() {
         }
     }
 
+    const buildFormData = (status) => {
+        const reviewFormData = new FormData()
+
+        // Extract File objects from analytics before stringify
+        const analyticsRaw = formData.analytics ? { ...formData.analytics } : null
+        let certificateFile = null
+        let terpeneFile = null
+        if (analyticsRaw) {
+            if (analyticsRaw.certificateFile instanceof File) {
+                certificateFile = analyticsRaw.certificateFile
+                delete analyticsRaw.certificateFile
+            }
+            if (analyticsRaw.terpeneFile instanceof File) {
+                terpeneFile = analyticsRaw.terpeneFile
+                delete analyticsRaw.terpeneFile
+            }
+        }
+
+        Object.keys(formData).forEach(key => {
+            if (key === 'photos' || key === '_photos') return
+            const val = formData[key]
+            if (val === undefined || val === null) return
+            if (key === 'analytics') {
+                if (analyticsRaw) reviewFormData.append(key, JSON.stringify(analyticsRaw))
+            } else {
+                reviewFormData.append(key, typeof val === 'object' ? JSON.stringify(val) : val)
+            }
+        })
+
+        if (photos?.length > 0) {
+            photos.forEach(photo => { if (photo.file) reviewFormData.append('photos', photo.file) })
+        }
+        if (certificateFile) reviewFormData.append('certificateFile', certificateFile)
+        if (terpeneFile) reviewFormData.append('terpeneFile', terpeneFile)
+
+        reviewFormData.append('status', status)
+        return reviewFormData
+    }
+
     const handleSave = async () => {
         try {
             setSaving(true)
-            const reviewFormData = new FormData()
-
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
-
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
-
-            reviewFormData.append('status', 'draft')
+            const reviewFormData = buildFormData('draft')
 
             let savedReview
             if (id) {
@@ -114,26 +145,7 @@ export default function CreateHashReview() {
 
         try {
             setSaving(true)
-            const reviewFormData = new FormData()
-
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
-
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
-
-            reviewFormData.append('status', 'published')
+            const reviewFormData = buildFormData('published')
 
             if (id) {
                 await hashReviewsService.update(id, reviewFormData)
@@ -174,6 +186,7 @@ export default function CreateHashReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
+                onOpenExport={() => setShowExportMaker(true)}
                 onSave={handleSave}
                 onSubmit={handleSubmit}
                 title="Créer une review Hash"
@@ -281,6 +294,17 @@ export default function CreateHashReview() {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
+            {showExportMaker && (
+                <Suspense fallback={null}>
+                    <ExportMaker
+                        reviewData={{ ...formData, photos }}
+                        productType="hash"
+                        onClose={() => setShowExportMaker(false)}
+                    />
+                </Suspense>
+            )}
         </>
     )
 }

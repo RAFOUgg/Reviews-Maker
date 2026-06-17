@@ -458,7 +458,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                 )}
 
                 {isSectionVisible('taste') && (taste.intensity != null || taste.aggressiveness != null ||
-                    (taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length)) && (
+                    (taste.dryPuff?.length || taste.inhalation?.length || taste.exhalation?.length)) && (
                         <SectionCard title="Goût" icon="😋" sectionKey="taste" fontSize={fontSize}>
                             {renderScoreGroup([
                                 taste.intensity != null && { label: 'Intensité', value: taste.intensity, color: '#F59E0B' },
@@ -466,7 +466,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                             ].filter(Boolean), fontSize)}
                             <div style={{ marginTop: `${4 * fontSize}px` }}>
                                 {renderList(
-                                    [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])]
+                                    [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.exhalation || [])]
                                         .slice(0, isCompact ? 2 : 6),
                                     'rgba(245,158,11,0.12)',
                                     '#F59E0B',
@@ -1072,8 +1072,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
         // Helper to render variety info badges (enhanced)
         const renderVarietyInfo = () => {
-            const varietyType = reviewData?.varietyType;
-            if (!varietyType && !genetics?.breeder && !genetics?.variety && genetics?.indicaPercent == null && genetics?.sativaPercent == null) {
+            const varietyType = reviewData?.varietyType || genetics?.geneticType;
+            if (!varietyType && !genetics?.breeder && !genetics?.variety && !genetics?.geneticType && genetics?.indicaPercent == null && genetics?.sativaPercent == null) {
                 return null;
             }
 
@@ -1220,7 +1220,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </h1>
 
                                 {/* Genetics info */}
-                                {genetics && (genetics.breeder || genetics.variety) && (
+                                {genetics && (genetics.breeder || genetics.variety || genetics.geneticType) && (
                                     <div style={{
                                         display: 'flex',
                                         gap: `${3 * safeFontScale}px`,
@@ -1237,12 +1237,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                 {genetics.breeder}
                                             </span>
                                         )}
-                                        {genetics.variety && (
+                                        {(genetics.variety || genetics.geneticType) && (
                                             <span style={{
                                                 fontSize: `${8 * safeFontScale}px`,
                                                 color: 'rgba(255,255,255,0.4)'
                                             }}>
-                                                {genetics.breeder ? '·' : ''} {genetics.variety}
+                                                {genetics.breeder ? '·' : ''} {genetics.variety || genetics.geneticType}
                                             </span>
                                         )}
                                     </div>
@@ -1346,7 +1346,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                             taste.aggressiveness != null ||
                                             (taste.dryPuff && taste.dryPuff.length > 0) ||
                                             (taste.inhalation && taste.inhalation.length > 0) ||
-                                            (taste.expiration && taste.expiration.length > 0);
+                                            (taste.exhalation && taste.exhalation.length > 0);
 
                                         if (!hasTasteData) return null;
 
@@ -1365,9 +1365,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                         />
                                                     </div>
                                                 )}
-                                                {(taste.dryPuff?.length || taste.inhalation?.length || taste.expiration?.length) && (
+                                                {(taste.dryPuff?.length || taste.inhalation?.length || taste.exhalation?.length) && (
                                                     renderList(
-                                                        [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.expiration || [])].slice(0, isMinimal ? 3 : 6),
+                                                        [...(taste.dryPuff || []), ...(taste.inhalation || []), ...(taste.exhalation || [])].slice(0, isMinimal ? 3 : 6),
                                                         'rgba(245,158,11,0.12)',
                                                         '#F59E0B',
                                                         safeFontScale,
@@ -1384,7 +1384,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                         const effects = templateData.effects || {};
                                         const hasEffectsData = effects.intensity != null ||
                                             effects.onset != null ||
-                                            (effects.selected && effects.selected.length > 0);
+                                            (effects.effects && effects.effects.length > 0);
 
                                         if (!hasEffectsData) return null;
 
@@ -1403,9 +1403,9 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                                         />
                                                     </div>
                                                 )}
-                                                {effects.selected?.length > 0 && (
+                                                {effects.effects?.length > 0 && (
                                                     renderList(
-                                                        effects.selected.slice(0, isMinimal ? 4 : 8),
+                                                        effects.effects.slice(0, isMinimal ? 4 : 8),
                                                         'rgba(6,182,212,0.12)',
                                                         '#06B6D4',
                                                         safeFontScale,

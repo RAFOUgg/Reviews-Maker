@@ -277,6 +277,8 @@ model Review {
   views       ReviewView[]
   comments    ReviewComment[]
   exportConfigs ExportConfiguration[] @relation("reviewExportConfigs")
+  derivedHashReviews        HashReview[]        @relation("hashFromFlower")
+  derivedConcentrateReviews ConcentrateReview[] @relation("concentrateFromFlower")
 
   @@index([authorId])
   @@index([type])
@@ -789,13 +791,21 @@ model HashReview {
   laboratoire     String?  // Laboratoire de production
   cultivarsUtilises String? // JSON ou texte: cultivars utilisés
   photos          String?  // JSON: ["/images/hash-xxx.jpg"]
-  
+
+  // Lien vers la review fleur parente (matière première)
+  parentFlowerReviewId String?
+  parentFlowerReview   Review?  @relation("hashFromFlower", fields: [parentFlowerReviewId], references: [id], onDelete: SetNull)
+
   // ===== PIPELINE SÉPARATION =====
   separationPipelineId String? // ID pipeline séparation (OLD)
-  
+
   // NEW: GitHub-style pipeline separation
   separationPipelineGithubId String? // ID PipelineGithub pour séparation
-  
+
+  // Inline timeline data (same pattern as FlowerReview.cultureTimeline*)
+  separationTimelineConfig   String? // JSON: {interval, separationType, batchSize, ...}
+  separationTimelineData     String? // JSON: [{timestamp, data: {...}}, ...]
+
   methodeSeparation   String?  // "manuelle", "tamisage à sec", "eau/glace", "autre"
   nombrePasses        Int?     // Nombre de passes (si eau/glace)
   temperatureEau      Float?   // Température eau (°C, si eau/glace)
@@ -807,10 +817,22 @@ model HashReview {
   
   // ===== PIPELINE PURIFICATION =====
   purificationPipelineId String? // ID pipeline purification (OLD)
-  
+
   // NEW: GitHub-style pipeline purification
   purificationPipelineGithubId String? // ID PipelineGithub pour purification
-  
+
+  // ===== DONNÉES ANALYTIQUES =====
+  thcPercent        Float?   // Taux THC (%)
+  cbdPercent        Float?   // Taux CBD (%)
+  cbgPercent        Float?   // Taux CBG (%)
+  cbcPercent        Float?   // Taux CBC (%)
+  cbnPercent        Float?   // Taux CBN (%)
+  thcvPercent       Float?   // Taux THCV (%)
+  otherCannabinoids String?  // JSON: autres cannabinoïdes
+  terpeneProfile    String?  // JSON: profil terpénique
+  labReportUrl      String?  // URL/chemin certificat cannabinoïdes
+  terpeneFileUrl    String?  // URL/chemin certificat terpènes
+
   // ===== VISUEL & TECHNIQUE =====
   couleurTransparence Float?   // Couleur/transparence /10 (nuancier noir->blanc)
   pureteVisuelle      Float?   // Pureté visuelle /10
@@ -880,21 +902,41 @@ model ConcentrateReview {
   laboratoire        String?  // Laboratoire de production
   cultivarsUtilises  String?  // JSON ou texte: cultivars utilisés
   photos             String?  // JSON: ["/images/concentrate-xxx.jpg"]
-  
+
+  // Lien vers la review fleur parente (matière première)
+  parentFlowerReviewId String?
+  parentFlowerReview   Review?  @relation("concentrateFromFlower", fields: [parentFlowerReviewId], references: [id], onDelete: SetNull)
+
   // ===== PIPELINE EXTRACTION =====
   extractionPipelineId String? // ID pipeline extraction (OLD)
-  
+
   // NEW: GitHub-style pipeline extraction
   extractionPipelineGithubId String? // ID PipelineGithub pour extraction
-  
+
+  // Inline timeline data (same pattern as FlowerReview.cultureTimeline*)
+  extractionTimelineConfig   String? // JSON: {interval, extractionMethod, batchSize, ...}
+  extractionTimelineData     String? // JSON: [{timestamp, data: {...}}, ...]
+
   methodeExtraction    String? // Méthode d'extraction
-  
+
   // ===== PIPELINE PURIFICATION =====
   purificationPipelineId String? // ID pipeline purification (OLD)
-  
+
   // NEW: GitHub-style pipeline purification
   purificationPipelineGithubId String? // ID PipelineGithub pour purification
-  
+
+  // ===== DONNÉES ANALYTIQUES =====
+  thcPercent        Float?   // Taux THC (%)
+  cbdPercent        Float?   // Taux CBD (%)
+  cbgPercent        Float?   // Taux CBG (%)
+  cbcPercent        Float?   // Taux CBC (%)
+  cbnPercent        Float?   // Taux CBN (%)
+  thcvPercent       Float?   // Taux THCV (%)
+  otherCannabinoids String?  // JSON: autres cannabinoïdes
+  terpeneProfile    String?  // JSON: profil terpénique
+  labReportUrl      String?  // URL/chemin certificat cannabinoïdes
+  terpeneFileUrl    String?  // URL/chemin certificat terpènes
+
   // ===== VISUEL & TECHNIQUE =====
   couleurTransparence Float?   // Couleur/Transparence /10
   viscosite           Float?   // Viscosité /10

@@ -1,6 +1,7 @@
 import React from 'react'
 import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
+import ParentFlowerSelector from '@/components/forms/helpers/ParentFlowerSelector'
 
 const CONCENTRATE_TYPES = [
     'Rosin',
@@ -88,11 +89,19 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div>
                         <LiquidInput
                             label="Cultivar(s) utilisés"
-                            value={formData.cultivars || ''}
-                            onChange={(e) => handleChange('cultivars', e.target.value)}
+                            value={formData.cultivarsUtilises || formData.cultivars || ''}
+                            onChange={(e) => handleChange('cultivarsUtilises', e.target.value)}
                             placeholder="Cultivars utilisés (séparés par des virgules)"
                         />
                         <p className="text-xs text-white/40 mt-1">(Séparés par des virgules si plusieurs)</p>
+                    </div>
+
+                    {/* Lien fleur parente */}
+                    <div>
+                        <ParentFlowerSelector
+                            value={formData.parentFlowerReviewId || null}
+                            onChange={(id) => handleChange('parentFlowerReviewId', id)}
+                        />
                     </div>
 
                     {/* Photos */}

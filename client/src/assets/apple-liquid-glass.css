@@ -1182,6 +1182,13 @@ input[type="range"].liquid-range::-moz-range-thumb,
     background: rgba(255, 255, 255, 0.04);
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.06);
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+}
+
+.liquid-tabs::-webkit-scrollbar {
+    display: none;
 }
 
 .liquid-tab {
@@ -1197,6 +1204,8 @@ input[type="range"].liquid-range::-moz-range-thumb,
     border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .liquid-tab:hover:not(.disabled) {

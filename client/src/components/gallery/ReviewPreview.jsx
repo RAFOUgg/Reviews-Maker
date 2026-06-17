@@ -59,7 +59,7 @@ export default function ReviewPreview({ formData = {}, photos = [] }) {
 
         return (
             <div className={`flex gap-3 py-2 border-b border-gray-700/50 ${className}`}>
-                <span className="font-medium text-gray-300 min-w-[200px]">{label}:</span>
+                <span className="font-medium text-gray-300 min-w-[100px] sm:min-w-[200px] shrink-0">{label}:</span>
                 <span className="text-gray-100 flex-1 whitespace-pre-wrap break-words">
                     {displayValue}
                 </span>

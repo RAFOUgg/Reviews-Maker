@@ -3,7 +3,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import UnifiedGeneticsCanvas from '../../components/genetics/UnifiedGeneticsCanvas';
-import { Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight, GitBranch } from 'lucide-react';
+import { Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight, GitBranch, Menu, X } from 'lucide-react';
 import './PhenoHuntPage.css';
 
 /**
@@ -22,6 +22,7 @@ export default function PhenoHuntPage() {
     const [newTreeName, setNewTreeName] = useState('');
     const [newTreeDesc, setNewTreeDesc] = useState('');
     const [expandedGroups, setExpandedGroups] = useState(new Set());
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     // Charger les arbres depuis le backend + la bibliothèque de cultivars
     useEffect(() => {
@@ -96,7 +97,7 @@ export default function PhenoHuntPage() {
     return (
         <div className="h-screen bg-slate-950 flex flex-col">
             {/* Header */}
-            <header className="h-16 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-emerald-500/20 px-6 flex items-center justify-between shadow-xl">
+            <header className="h-16 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-emerald-500/20 px-3 sm:px-6 flex items-center justify-between shadow-xl">
                 <div className="flex items-center gap-4">
                     <button
                         onClick={() => navigate(-1)}
@@ -109,23 +110,23 @@ export default function PhenoHuntPage() {
                 </div>
 
                 {/* Header Actions */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2 sm:gap-3">
                     <button
                         onClick={() => setShowNewTreeModal(true)}
-                        className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-lg"
+                        className="px-3 sm:px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-medium rounded-lg flex items-center gap-2 transition-colors shadow-lg"
                     >
                         <Plus className="w-4 h-4" />
-                        Nouvel arbre
+                        <span className="hidden sm:inline">Nouvel arbre</span>
                     </button>
 
                     <div className="w-px h-6 bg-slate-600" />
 
-                    {/* Tree Selector */}
+                    {/* Tree Selector - hidden on mobile, shown on sm+ */}
                     {store.trees.length > 0 && (
                         <select
                             value={store.selectedTreeId || ''}
                             onChange={(e) => handleSelectTree(e.target.value)}
-                            className="px-3 py-1.5 bg-slate-800 border border-slate-600 text-white text-sm rounded-lg focus:outline-none focus:border-emerald-400"
+                            className="hidden sm:block px-3 py-1.5 bg-slate-800 border border-slate-600 text-white text-sm rounded-lg focus:outline-none focus:border-emerald-400 max-w-[150px]"
                         >
                             <option value="">Choisir un arbre...</option>
                             {store.trees.map(tree => (
@@ -142,6 +143,15 @@ export default function PhenoHuntPage() {
                     >
                         <Settings className="w-5 h-5" />
                     </button>
+
+                    {/* Mobile sidebar toggle */}
+                    <button
+                        onClick={() => setMobileSidebarOpen(o => !o)}
+                        className="md:hidden p-1.5 text-slate-400 hover:text-emerald-400 transition-colors"
+                        title="Bibliothèque"
+                    >
+                        <Menu className="w-5 h-5" />
+                    </button>
                 </div>
             </header>
 
@@ -157,14 +167,36 @@ export default function PhenoHuntPage() {
                 ) : (
                     <>
                         {/* Sidebar */}
-                        <aside className="w-80 flex-shrink-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 border-r border-emerald-500/20 flex flex-col shadow-2xl overflow-hidden">
+                        {/* Mobile sidebar overlay */}
+                        {mobileSidebarOpen && (
+                            <div
+                                className="fixed inset-0 bg-black/60 z-30 md:hidden"
+                                onClick={() => setMobileSidebarOpen(false)}
+                            />
+                        )}
+
+                        <aside className={`
+                            flex-col shadow-2xl overflow-hidden
+                            bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900
+                            border-r border-emerald-500/20
+                            hidden md:flex md:w-80 md:flex-shrink-0
+                            ${mobileSidebarOpen ? '!flex fixed left-0 top-16 bottom-0 w-72 z-40' : ''}
+                        `}>
                             {/* Sidebar Header */}
-                            <div className="p-6 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-transparent">
-                                <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-                                    <Leaf className="w-6 h-6 text-emerald-400" />
-                                    PhénoHunt
-                                </h2>
-                                <p className="text-xs text-slate-400 mt-1">Gestion généalogique</p>
+                            <div className="p-4 sm:p-6 border-b border-emerald-500/20 bg-gradient-to-r from-emerald-950/40 to-transparent flex items-start justify-between">
+                                <div>
+                                    <h2 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
+                                        <Leaf className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
+                                        PhénoHunt
+                                    </h2>
+                                    <p className="text-xs text-slate-400 mt-1">Gestion généalogique</p>
+                                </div>
+                                <button
+                                    onClick={() => setMobileSidebarOpen(false)}
+                                    className="md:hidden p-1.5 text-slate-400 hover:text-white transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
                             </div>
 
                             {/* Arbre actif */}
@@ -272,7 +304,7 @@ export default function PhenoHuntPage() {
             {/* Modal : Nouvel arbre */}
             {showNewTreeModal && (
                 <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-                    <div className="bg-slate-800 border border-emerald-500/20 rounded-xl p-6 w-96 shadow-2xl">
+                    <div className="bg-slate-800 border border-emerald-500/20 rounded-xl p-6 w-[90vw] max-w-md shadow-2xl">
                         <h2 className="text-xl font-bold text-white mb-4">Créer un nouvel arbre</h2>
 
                         <input

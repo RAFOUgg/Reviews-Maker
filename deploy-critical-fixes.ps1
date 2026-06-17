@@ -51,7 +51,8 @@ try {
     Write-Host "  ssh $VPS_HOST 'pm2 logs reviews-maker --lines 50'"
     Write-Host ""
 
-} catch {
+}
+catch {
     Write-Host "❌ Deployment failed: $_" -ForegroundColor Red
     exit 1
 }
