@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, BookmarkPlus, Bookmark, CheckSquare, Square } from 'lucide-react';
 import ConfirmModal from '../../shared/ConfirmModal';
@@ -621,8 +622,9 @@ function PipelineDataModal({
 
     const itemsToDisplay = getItemsToDisplay();
 
-    return (
-        <AnimatePresence>
+    return createPortal(
+        <>
+            <AnimatePresence>
             {isOpen && (
                 <motion.div
                     initial={{ opacity: 0 }}
@@ -927,6 +929,7 @@ function PipelineDataModal({
                     </motion.div>
                 </motion.div>
             )}
+        </AnimatePresence>
             <GroupedPresetModal
                 isOpen={showCreateGroupedModal}
                 onClose={() => { setShowCreateGroupedModal(false); setCreateGroupedPrefill(null); }}
@@ -946,7 +949,8 @@ function PipelineDataModal({
                 type={pipelineType}
             />
             <ConfirmModal open={confirmState.open} title={confirmState.title} message={confirmState.message} onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))} onConfirm={() => setConfirmState(prev => { const cb = prev && prev.onConfirm; if (typeof cb === 'function') cb(); return { ...prev, open: false }; })} />
-        </AnimatePresence>
+        </>,
+        document.body
     );
 }
 

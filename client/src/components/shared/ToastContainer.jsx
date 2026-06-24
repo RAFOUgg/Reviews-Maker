@@ -3,6 +3,7 @@
  * Liquid Glass UI Design System
  */
 
+import { useMemo } from 'react';
 import { create } from 'zustand';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -37,7 +38,10 @@ export const useToastStore = create((set) => ({
 export const useToast = () => {
     const { addToast, removeToast, clearAll } = useToastStore();
 
-    return {
+    // Référence stable: sinon chaque composant qui met `toast` dans un tableau de deps
+    // (useCallback/useEffect) recrée sa fonction à chaque render et boucle indéfiniment
+    // (ex: DataTab.jsx avait un fetchData useCallback([toast]) qui spammait l'API en boucle).
+    return useMemo(() => ({
         success: (message, options = {}) => addToast({ type: 'success', message, ...options }),
         error: (message, options = {}) => addToast({ type: 'error', message, duration: 7000, ...options }),
         info: (message, options = {}) => addToast({ type: 'info', message, ...options }),
@@ -45,7 +49,7 @@ export const useToast = () => {
         loading: (message, options = {}) => addToast({ type: 'loading', message, duration: 0, ...options }),
         remove: removeToast,
         clear: clearAll
-    };
+    }), [addToast, removeToast, clearAll]);
 };
 
 export default function ToastContainer() {

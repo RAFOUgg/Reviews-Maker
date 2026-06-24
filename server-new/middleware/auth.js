@@ -14,7 +14,9 @@ export const requireAuth = (req, res, next) => {
             id: 'dev-test-user-id',
             email: 'test@example.com',
             username: 'DevTestUser',
-            tier: 'PRODUCTEUR',  // Donner accès à toutes les features en dev
+            tier: 'PRODUCTEUR',
+            accountType: 'producer',  // Donner accès à toutes les features en dev (lu par les routes via req.user.accountType)
+            roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
             consentRDR: true
@@ -45,6 +47,8 @@ export const optionalAuth = (req, res, next) => {
             email: 'test@example.com',
             username: 'DevTestUser',
             tier: 'PRODUCTEUR',
+            accountType: 'producer',
+            roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
             consentRDR: true

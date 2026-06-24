@@ -20,6 +20,7 @@
  */
 
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { createPortal } from 'react-dom';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
 import { LiquidModal, useEscapeClose } from '@/components/ui/LiquidUI';
@@ -296,7 +297,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         return null;
     };
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
             <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] h-[95vh] sm:h-[88vh] border border-white/10 flex flex-col overflow-hidden">
                 {/* Header */}
@@ -528,7 +529,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     </div>
                 )}
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -625,7 +627,7 @@ function SavePipelineModal({
         </div>
     );
 
-    return (
+    return createPortal(
         <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
             <div
                 className="bg-[#0d0d1a] rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-white/10 max-h-[80vh] flex flex-col"
@@ -704,7 +706,8 @@ function SavePipelineModal({
                     )}
                 </div>
             </div>
-        </div>
+        </div>,
+        document.body
     );
 }
 
@@ -2152,6 +2155,13 @@ const PipelineDragDropView = ({
                                     <Plus className="w-4 h-4" />
                                     <span>Groupe de préréglages</span>
                                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
+                                </button>
+                                <button
+                                    className="w-full mb-2 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 rounded-xl font-medium transition-colors"
+                                    onClick={() => setShowSavePipelineModal(true)}
+                                >
+                                    <Upload className="w-4 h-4" />
+                                    <span>Bibliothèque de setups</span>
                                 </button>
                                 {groupedPresets.length > 0 && (
                                     <div className="flex flex-wrap gap-2">

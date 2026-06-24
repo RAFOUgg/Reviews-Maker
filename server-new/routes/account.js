@@ -35,6 +35,8 @@ router.get('/info', asyncHandler(async (req, res) => {
             email: 'test@example.com',
             username: 'DevTestUser',
             tier: 'PRODUCTEUR',
+            accountType: 'producer',
+            roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
             consentRDR: true,

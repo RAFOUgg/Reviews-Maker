@@ -20,8 +20,12 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
     };
 
     // Data change handler
+    // NB: lit/écrit via timelineDataRef (pas la prop `data`) car onDataChange peut être
+    // appelé plusieurs fois de façon synchrone (ex: drop d'un groupe de préréglages multi-champs)
+    // avant que React ne re-render et ne rafraîchisse `data` — sinon chaque appel repart de la
+    // même valeur obsolète et seul le dernier champ appliqué est conservé.
     const handleDataChange = (timestamp, field, value) => {
-        const currentData = data.extractionTimelineData || [];
+        const currentData = timelineDataRef.current;
         const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
 
         let updatedData;
@@ -43,6 +47,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
             updatedData = [...currentData, { timestamp, [field]: value }];
         }
 
+        timelineDataRef.current = updatedData;
         onChange({ ...data, extractionTimelineData: updatedData });
     };
 

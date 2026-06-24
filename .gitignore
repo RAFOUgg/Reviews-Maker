@@ -41,6 +41,15 @@ db/backups/*
 !db/backups/.gitkeep
 *.bak
 
+# SQLite DBs living under server-new (gap: only db/*.sqlite was covered above,
+# so local/dev databases here were getting committed by accident)
+server-new/prisma/*.sqlite
+server-new/prisma/*.sqlite-journal
+server-new/prisma/*.sqlite-shm
+server-new/prisma/*.sqlite-wal
+server-new/prisma/db/*.sqlite
+server-new/db/*.sqlite
+
 # Logs & Debug
 logs/
 *.log

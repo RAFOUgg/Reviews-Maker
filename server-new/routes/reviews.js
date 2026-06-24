@@ -10,6 +10,7 @@ import { validateReviewData, validateReviewId } from '../utils/validation.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
 import { EXPORT_LIMITS } from '../middleware/permissions.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -46,15 +47,6 @@ const upload = multer({
         }
     }
 })
-
-// Middleware pour vérifier l'authentification
-const requireAuth = (req, res, next) => {
-    const _isAuthFunc = typeof req.isAuthenticated === 'function'
-    if (!_isAuthFunc || !req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Authentication required' })
-    }
-    next()
-}
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
 router.get('/', asyncHandler(async (req, res) => {

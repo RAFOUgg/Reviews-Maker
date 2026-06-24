@@ -78,6 +78,8 @@ passport.deserializeUser(async (id, done) => {
             email: 'test@example.com',
             username: 'DevTestUser',
             tier: 'PRODUCTEUR',
+            accountType: 'producer',
+            roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
             consentRDR: true

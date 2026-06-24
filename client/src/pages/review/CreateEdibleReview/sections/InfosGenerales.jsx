@@ -52,8 +52,8 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div>
                         <label className="block text-sm font-medium text-white/60 mb-1.5">Type de comestible</label>
                         <select
-                            value={formData.type || ''}
-                            onChange={(e) => handleChange('type', e.target.value)}
+                            value={formData.typeComestible || ''}
+                            onChange={(e) => handleChange('typeComestible', e.target.value)}
                             className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-green-500/50 focus:ring-1 focus:ring-green-500/30 outline-none transition-colors appearance-none"
                         >
                             <option value="" className="bg-[#0f0f1a]">Sélectionnez un type</option>
@@ -77,8 +77,8 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div>
                         <LiquidInput
                             label="Type de génétiques utilisées"
-                            value={formData.cultivars || ''}
-                            onChange={(e) => handleChange('cultivars', e.target.value)}
+                            value={formData.typeGenetiques || ''}
+                            onChange={(e) => handleChange('typeGenetiques', e.target.value)}
                             placeholder="Génétiques ou cultivars utilisés"
                         />
                         <p className="text-xs text-white/40 mt-1">(Optionnel)</p>

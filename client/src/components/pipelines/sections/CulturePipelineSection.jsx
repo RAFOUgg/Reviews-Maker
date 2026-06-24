@@ -3,18 +3,30 @@
  * Phase 1 - Modernisé avec CulturePipelineDragDrop (84 fields, 12 phases)
  */
 
-import React from 'react';
+import React, { useRef } from 'react';
 import CulturePipelineDragDrop from '../legacy/CulturePipelineDragDrop';
 
 const CulturePipelineSection = ({ data = {}, onChange }) => {
+    // Reference to timeline data for external access
+    const timelineDataRef = useRef(data.cultureTimelineData || []);
+
+    // Update ref when data changes
+    React.useEffect(() => {
+        timelineDataRef.current = data.cultureTimelineData || [];
+    }, [data.cultureTimelineData]);
+
     // Adapter les handlers pour PipelineDragDropView
     const handleConfigChange = (key, value) => {
         const updatedConfig = { ...(data.cultureTimelineConfig || {}), [key]: value };
         onChange({ ...data, cultureTimelineConfig: updatedConfig });
     };
 
+    // NB: lit/écrit via timelineDataRef (pas la prop `data`) car onDataChange peut être
+    // appelé plusieurs fois de façon synchrone (ex: drop d'un groupe de préréglages multi-champs)
+    // avant que React ne re-render et ne rafraîchisse `data` — sinon chaque appel repart de la
+    // même valeur obsolète et seul le dernier champ appliqué est conservé.
     const handleDataChange = (timestamp, field, value) => {
-        const currentData = data.cultureTimelineData || [];
+        const currentData = timelineDataRef.current;
         const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
 
         let updatedData;
@@ -40,6 +52,7 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
             updatedData = [...currentData, { timestamp, [field]: value }];
         }
 
+        timelineDataRef.current = updatedData;
         onChange({ ...data, cultureTimelineData: updatedData });
     };
 

@@ -147,6 +147,26 @@ process.on('SIGTERM', async () => {
     process.exit(0)
 })
 
+// DEV ONLY: ensure the mocked dev user (requireAuth/optionalAuth bypass) exists in DB,
+// otherwise any insert referencing authorId/userId (reviews, presets, etc.) fails on the FK constraint.
+if (process.env.NODE_ENV === 'development') {
+    await prisma.user.upsert({
+        where: { id: 'dev-test-user-id' },
+        update: {},
+        create: {
+            id: 'dev-test-user-id',
+            username: 'DevTestUser',
+            email: 'test@example.com',
+            roles: '{"roles":["producteur"]}',
+            accountType: 'producer',
+            emailVerified: true,
+            legalAge: true,
+            consentRDR: true
+        }
+    })
+    console.log('🧪 Dev user ensured in DB (dev-test-user-id)')
+}
+
 // Start server
 const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
