@@ -31,6 +31,21 @@ import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKe
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
 
+// Couleurs de badge par section (classes Tailwind statiques - jamais interpolées dynamiquement)
+const SECTION_BADGE_CLASSES = {
+    blue: 'bg-blue-500/20 text-blue-300',
+    green: 'bg-green-500/20 text-green-300',
+    cyan: 'bg-cyan-500/20 text-cyan-300',
+    yellow: 'bg-yellow-500/20 text-yellow-300',
+    amber: 'bg-amber-500/20 text-amber-300',
+    orange: 'bg-orange-500/20 text-orange-300',
+    red: 'bg-red-500/20 text-red-300',
+    purple: 'bg-purple-500/20 text-purple-300',
+    emerald: 'bg-emerald-500/20 text-emerald-300',
+    gray: 'bg-gray-500/20 text-gray-300',
+};
+const getSectionBadgeClass = (color) => SECTION_BADGE_CLASSES[color] || SECTION_BADGE_CLASSES.blue;
+
 // Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
@@ -41,7 +56,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     const [selectedFields, setSelectedFields] = useState([]);
     const [fieldValues, setFieldValues] = useState({});
     const [searchTerm, setSearchTerm] = useState('');
-    const [expandedSections, setExpandedSections] = useState({});
+    const [expandedSection, setExpandedSection] = useState(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
     // Close on Escape (topmost modal only)
@@ -63,10 +78,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         setSelectedFields([]);
         setFieldValues({});
         setSearchTerm('');
-        // Expand all sections by default for better visibility
-        const expanded = {};
-        (sidebarContent || []).forEach(s => { expanded[s.id || s.label] = true; });
-        setExpandedSections(expanded);
+        // Une seule section ouverte à la fois (comme l'onglet Données de la Bibliothèque)
+        setExpandedSection((sidebarContent || [])[0]?.id || (sidebarContent || [])[0]?.label || null);
     };
 
     const startCreate = () => {
@@ -85,9 +98,12 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         fields.forEach(f => { vals[f.key] = f.value; });
         setFieldValues(vals);
         setSearchTerm('');
-        const expanded = {};
-        (sidebarContent || []).forEach(s => { expanded[s.id || s.label] = true; });
-        setExpandedSections(expanded);
+        // Ouvre la section contenant le premier champ sélectionné, sinon la première section
+        const firstFieldKey = fields[0]?.key;
+        const sectionWithField = (sidebarContent || []).find(s =>
+            (s.items || []).some(i => (i.id || i.key) === firstFieldKey)
+        );
+        setExpandedSection((sectionWithField || (sidebarContent || [])[0])?.id || (sectionWithField || (sidebarContent || [])[0])?.label || null);
         setMode('edit');
     };
 
@@ -98,6 +114,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         id: section.id || section.label,
         label: section.label,
         icon: section.icon,
+        color: section.color || 'blue',
         items: (section.items || []).map(item => ({
             id: item.id || item.key || item.type,
             key: item.id || item.key || item.type,
@@ -121,8 +138,9 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         )
     })).filter(section => section.items.length > 0);
 
+    // Accordéon : une seule section ouverte à la fois (sauf pendant une recherche, où tout reste visible)
     const toggleSection = (sectionId) => {
-        setExpandedSections(prev => ({ ...prev, [sectionId]: !prev[sectionId] }));
+        setExpandedSection(prev => prev === sectionId ? null : sectionId);
     };
 
     const handleToggleField = (fieldId) => {
@@ -442,54 +460,65 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                             />
                         </div>
 
-                        {/* Fields grid - 2 columns on large screens */}
+                        {/* Sections en accordéon - une seule ouverte à la fois (comme Bibliothèque > Données) */}
                         <div className="flex-1 overflow-y-auto p-4">
-                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
-                                {filteredSections.map(section => (
-                                    <div key={section.id} className="border border-white/10 rounded-lg overflow-hidden">
-                                        <button
-                                            onClick={() => toggleSection(section.id)}
-                                            className="w-full flex items-center justify-between p-2 bg-white/5 hover:bg-white/10"
-                                        >
-                                            <div className="flex items-center gap-2">
-                                                <span>{section.icon}</span>
-                                                <span className="text-sm font-medium">{section.label}</span>
-                                                <span className="text-xs text-white/50">({section.items.length})</span>
-                                            </div>
-                                            <span className="text-white/50">{expandedSections[section.id] ? '▼' : '▶'}</span>
-                                        </button>
+                            <div className="space-y-2">
+                                {filteredSections.map(section => {
+                                    const isExpanded = searchTerm ? true : (expandedSection === section.id);
+                                    const selectedCount = section.items.filter(f => selectedFields.includes(f.id)).length;
+                                    return (
+                                        <div key={section.id} className="border border-white/10 rounded-xl overflow-hidden bg-white/[0.02]">
+                                            <button
+                                                onClick={() => toggleSection(section.id)}
+                                                className="w-full flex items-center gap-3 p-3 hover:bg-white/5 transition-colors"
+                                            >
+                                                <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${getSectionBadgeClass(section.color)}`}>
+                                                    <span className="text-base">{section.icon}</span>
+                                                </div>
+                                                <div className="flex-1 text-left min-w-0">
+                                                    <div className="text-sm font-medium text-white">{section.label}</div>
+                                                    <div className="text-xs text-white/40">{section.items.length} champ(s)</div>
+                                                </div>
+                                                {selectedCount > 0 && (
+                                                    <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-medium flex-shrink-0">
+                                                        {selectedCount} ✓
+                                                    </span>
+                                                )}
+                                                <span className="text-white/40 flex-shrink-0">{isExpanded ? '▼' : '▶'}</span>
+                                            </button>
 
-                                        {expandedSections[section.id] && (
-                                            <div className="p-2 space-y-1 max-h-[180px] overflow-y-auto">
-                                                {section.items.map(field => {
-                                                    const isSelected = selectedFields.includes(field.id);
-                                                    return (
-                                                        <div
-                                                            key={field.id}
-                                                            className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isSelected}
-                                                                onChange={() => handleToggleField(field.id)}
-                                                                className="w-4 h-4 accent-purple-600 flex-shrink-0"
-                                                            />
-                                                            <span className="text-base flex-shrink-0">{field.icon}</span>
-                                                            <span className="text-sm flex-1 truncate">{field.label}</span>
+                                            {isExpanded && (
+                                                <div className="p-2 space-y-1 border-t border-white/10">
+                                                    {section.items.map(field => {
+                                                        const isSelected = selectedFields.includes(field.id);
+                                                        return (
+                                                            <div
+                                                                key={field.id}
+                                                                className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isSelected}
+                                                                    onChange={() => handleToggleField(field.id)}
+                                                                    className="w-4 h-4 accent-purple-600 flex-shrink-0"
+                                                                />
+                                                                <span className="text-base flex-shrink-0">{field.icon}</span>
+                                                                <span className="text-sm flex-1 truncate">{field.label}</span>
 
-                                                            {isSelected && (
-                                                                <div className="flex items-center gap-1 flex-shrink-0">
-                                                                    {renderFieldInput(field)}
-                                                                    {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
+                                                                {isSelected && (
+                                                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                                                        {renderFieldInput(field)}
+                                                                        {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </div>
 
@@ -2581,7 +2610,13 @@ const PipelineDragDropView = ({
                                         Phases prédéfinies
                                     </label>
                                     <div className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white">
-                                        {type === 'culture' ? '13 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
+                                        {{
+                                            culture: '13 phases (Graine → Récolte)',
+                                            curing: '4 phases (Séchage → Affinage)',
+                                            separation: '4 phases (Pré-séparation → Finition)',
+                                            extraction: '4 phases (Préparation → Finition)',
+                                            recipe: '5 phases (Préparation → Finition)',
+                                        }[type] || `${(timelineConfig.phases?.length) || ''} phases`.trim()}
                                     </div>
                                 </div>
                             )}

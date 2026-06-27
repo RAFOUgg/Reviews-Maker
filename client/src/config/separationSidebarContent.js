@@ -429,11 +429,49 @@ export const SEPARATION_SIDEBAR_CONTENT = {
         color: '#8b5cf6',
         items: [
             {
-                id: 'rendement_info',
-                label: 'Rendement calculé automatiquement',
-                icon: 'ℹ️',
-                type: 'info',
-                tooltip: 'Les rendements sont calculés à partir des poids de chaque passe'
+                id: 'passes',
+                label: 'Passes / Washes',
+                icon: '🔄',
+                type: 'records-list',
+                recordLabel: 'Passe',
+                tooltip: 'Détail de chaque passe : les rendements ci-dessous sont calculés automatiquement à partir de ces données',
+                recordFields: [
+                    {
+                        key: 'microns', label: 'Microns', type: 'select', options: [
+                            { value: '220', label: '220µm' },
+                            { value: '190', label: '190µm' },
+                            { value: '160', label: '160µm' },
+                            { value: '120', label: '120µm' },
+                            { value: '90', label: '90µm' },
+                            { value: '73', label: '73µm' },
+                            { value: '45', label: '45µm' },
+                            { value: '25', label: '25µm' }
+                        ]
+                    },
+                    { key: 'weight', label: 'Poids', type: 'number', unit: 'g', min: 0, step: 0.1 },
+                    { key: 'quality', label: 'Qualité', type: 'slider', unit: '/10', min: 0, max: 10, step: 0.5 },
+                    { key: 'melt', label: 'Melt', type: 'slider', unit: '/10', min: 0, max: 10, step: 1 },
+                    {
+                        key: 'color', label: 'Couleur', type: 'select', options: [
+                            { value: 'blonde', label: 'Blonde' },
+                            { value: 'gold', label: 'Or' },
+                            { value: 'brown', label: 'Brune' },
+                            { value: 'green', label: 'Verte' },
+                            { value: 'dark', label: 'Foncée' }
+                        ]
+                    },
+                    {
+                        key: 'texture', label: 'Texture', type: 'select', options: [
+                            { value: 'sandy', label: 'Sableuse' },
+                            { value: 'greasy', label: 'Grasse' },
+                            { value: 'sticky', label: 'Collante' },
+                            { value: 'crumbly', label: 'Friable' },
+                            { value: 'full-melt', label: 'Full melt' }
+                        ]
+                    },
+                    { key: 'duration', label: 'Durée', type: 'number', unit: 'min', min: 0 },
+                    { key: 'notes', label: 'Notes', type: 'text' }
+                ]
             },
             {
                 id: 'totalYield',

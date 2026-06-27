@@ -285,42 +285,69 @@ export const CURING_SIDEBAR_CONTENT = {
             {
                 id: 'visualEvolution',
                 label: 'Évolution Visuel & Technique',
-                type: 'info',
+                type: 'subscore-group',
                 icon: '👁️',
-                tooltip: 'Couleur, densité, trichomes - Mesuré à chaque point de la timeline'
+                tooltip: 'Couleur, densité, trichomes - Mesuré à chaque point de la timeline',
+                subScores: [
+                    { key: 'color', label: 'Couleur', max: 10 },
+                    { key: 'density', label: 'Densité', max: 10 },
+                    { key: 'trichomes', label: 'Trichomes', max: 10 }
+                ]
             },
             {
                 id: 'odorEvolution',
                 label: 'Évolution Odeurs',
-                type: 'info',
+                type: 'subscore-group',
                 icon: '👃',
-                tooltip: 'Intensité, fidélité, complexité - Mesuré à chaque point'
+                tooltip: 'Intensité, fidélité, complexité - Mesuré à chaque point',
+                subScores: [
+                    { key: 'intensity', label: 'Intensité', max: 10 },
+                    { key: 'fidelity', label: 'Fidélité', max: 10 },
+                    { key: 'complexity', label: 'Complexité', max: 10 }
+                ]
             },
             {
                 id: 'tasteEvolution',
                 label: 'Évolution Goûts',
-                type: 'info',
+                type: 'subscore-group',
                 icon: '😋',
-                tooltip: 'Intensité, douceur, palette aromatique - Mesuré à chaque point'
+                tooltip: 'Intensité, douceur, palette aromatique - Mesuré à chaque point',
+                subScores: [
+                    { key: 'intensity', label: 'Intensité', max: 10 },
+                    { key: 'smoothness', label: 'Douceur', max: 10 },
+                    { key: 'palette', label: 'Palette', max: 10 }
+                ]
             },
             {
                 id: 'effectsEvolution',
                 label: 'Évolution Effets',
-                type: 'info',
+                type: 'subscore-group',
                 icon: '💥',
-                tooltip: 'Puissance, durée, profil - Mesuré à chaque point'
+                tooltip: 'Puissance, durée, profil - Mesuré à chaque point',
+                subScores: [
+                    { key: 'onset', label: 'Montée', max: 10 },
+                    { key: 'intensity', label: 'Puissance', max: 10 },
+                    { key: 'duration', label: 'Durée', max: 10 }
+                ]
             },
             {
                 id: 'moistureEvolution',
                 label: 'Évolution Humidité produit',
-                type: 'info',
+                type: 'slider',
+                min: 0,
+                max: 100,
+                step: 1,
+                unit: '%',
                 icon: '💧',
                 tooltip: 'Humidité interne mesurée - Tendance séchage/hydratation'
             },
             {
                 id: 'weightEvolution',
                 label: 'Évolution Poids',
-                type: 'info',
+                type: 'number',
+                unit: 'g',
+                min: 0,
+                step: 0.1,
                 icon: '⚖️',
                 tooltip: 'Perte de poids due à l\'évaporation - Suivi grammes'
             }

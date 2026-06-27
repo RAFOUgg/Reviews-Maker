@@ -46,7 +46,6 @@ function PipelineDataModal({
     onOpenStartMonth = null
 }) {
     const [formData, setFormData] = useState({});
-    const [activeTab, setActiveTab] = useState('data');
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
     const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
@@ -64,7 +63,6 @@ function PipelineDataModal({
         delete initialData._meta;
 
         setFormData(initialData);
-        setActiveTab('data');
     }, [cellData, timestamp, droppedItem, pipelineType]);
 
     // Obtenir tous les items disponibles depuis les sections
@@ -137,7 +135,6 @@ function PipelineDataModal({
     const applyPresetFields = (fields = {}) => {
         if (!fields || Object.keys(fields).length === 0) return;
         setFormData(prev => ({ ...prev, ...fields }));
-        setActiveTab('data');
     };
 
     const FieldWrapper = ({ item, children }) => {
@@ -225,7 +222,6 @@ function PipelineDataModal({
     const handleLoadPreset = (preset) => {
         if (preset && preset.data && preset.data.fieldKey && preset.data.value !== undefined) {
             handleChange(preset.data.fieldKey, preset.data.value);
-            setActiveTab('data');
         }
     };
 
@@ -443,6 +439,153 @@ function PipelineDataModal({
             );
         }
 
+        // SUBSCORE-GROUP - plusieurs sous-notes /max liées (ex: évolution visuelle = couleur+densité+trichomes)
+        if (type === 'subscore-group') {
+            const subScores = Array.isArray(item.subScores) ? item.subScores : [];
+            const groupValue = (value && typeof value === 'object') ? value : {};
+            const filled = subScores.filter(s => groupValue[s.key] !== undefined && groupValue[s.key] !== null && groupValue[s.key] !== '');
+            const overall = filled.length > 0
+                ? (filled.reduce((sum, s) => sum + Number(groupValue[s.key] || 0), 0) / filled.length).toFixed(1)
+                : null;
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="space-y-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        {subScores.map((sub) => {
+                            const max = sub.max || 10;
+                            const subVal = groupValue[sub.key] ?? '';
+                            return (
+                                <div key={sub.key} className="flex items-center gap-3">
+                                    <span className="text-xs text-gray-600 dark:text-gray-400 w-24 flex-shrink-0">{sub.label}</span>
+                                    <input
+                                        type="range"
+                                        value={subVal === '' ? 0 : subVal}
+                                        onChange={(e) => handleChange(itemKey, { ...groupValue, [sub.key]: parseFloat(e.target.value) })}
+                                        min={0}
+                                        max={max}
+                                        step={sub.step || 0.5}
+                                        className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                                    />
+                                    <span className="w-12 text-right text-sm text-gray-700 dark:text-gray-300 flex-shrink-0">
+                                        {subVal === '' ? '—' : subVal} /{max}
+                                    </span>
+                                </div>
+                            );
+                        })}
+                        <div className="pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center justify-between">
+                            <span className="text-xs font-medium text-gray-500 dark:text-gray-400">Moyenne (overall)</span>
+                            <span className="text-sm font-bold text-gray-900 dark:text-gray-100">{overall ?? '—'} /10</span>
+                        </div>
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
+        // RECORDS-LIST - liste répétable d'enregistrements (ex: passes de séparation, washes)
+        if (type === 'records-list') {
+            const recordFields = Array.isArray(item.recordFields) ? item.recordFields : [];
+            const records = Array.isArray(value) ? value : [];
+            const recordLabel = item.recordLabel || 'Entrée';
+
+            const updateRecord = (recordId, fieldKey, fieldValue) => {
+                const updated = records.map(r => r.id === recordId ? { ...r, [fieldKey]: fieldValue } : r);
+                handleChange(itemKey, updated);
+            };
+            const addRecord = () => {
+                const blank = { id: Date.now() };
+                recordFields.forEach(f => { blank[f.key] = f.defaultValue ?? ''; });
+                handleChange(itemKey, [...records, blank]);
+            };
+            const removeRecord = (recordId) => {
+                handleChange(itemKey, records.filter(r => r.id !== recordId));
+            };
+
+            const renderRecordInput = (record, field) => {
+                const val = record[field.key] ?? '';
+                if (field.type === 'select' && Array.isArray(field.options)) {
+                    return (
+                        <select
+                            value={val}
+                            onChange={(e) => updateRecord(record.id, field.key, e.target.value)}
+                            className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs text-gray-900 dark:text-gray-100"
+                        >
+                            <option value="" className="bg-white dark:bg-gray-800">—</option>
+                            {field.options.map((opt, idx) => {
+                                const optVal = typeof opt === 'string' ? opt : (opt.value ?? opt);
+                                const optLabel = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
+                                return <option key={idx} value={optVal} className="bg-white dark:bg-gray-800">{optLabel}</option>;
+                            })}
+                        </select>
+                    );
+                }
+                if (field.type === 'slider' || field.type === 'number') {
+                    return (
+                        <input
+                            type="number"
+                            value={val}
+                            onChange={(e) => updateRecord(record.id, field.key, e.target.value === '' ? '' : parseFloat(e.target.value))}
+                            min={field.min}
+                            max={field.max}
+                            step={field.step || 1}
+                            placeholder={field.unit || ''}
+                            className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs text-gray-900 dark:text-gray-100"
+                        />
+                    );
+                }
+                return (
+                    <input
+                        type="text"
+                        value={val}
+                        onChange={(e) => updateRecord(record.id, field.key, e.target.value)}
+                        className="w-full px-2 py-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded text-xs text-gray-900 dark:text-gray-100"
+                    />
+                );
+            };
+
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {icon && <span className="mr-2">{icon}</span>}
+                            {label}
+                        </label>
+                        {records.map((record, idx) => (
+                            <div key={record.id} className="p-2 bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 rounded-lg">
+                                <div className="flex items-center justify-between mb-1.5">
+                                    <span className="text-xs font-semibold text-gray-600 dark:text-gray-400">{recordLabel} {idx + 1}</span>
+                                    <button
+                                        type="button"
+                                        onClick={() => removeRecord(record.id)}
+                                        className="p-1 hover:bg-red-100 dark:hover:bg-red-900/30 rounded text-red-500"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
+                                    {recordFields.map(field => (
+                                        <div key={field.key}>
+                                            <label className="block text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">{field.label}{field.unit ? ` (${field.unit})` : ''}</label>
+                                            {renderRecordInput(record, field)}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                        <button
+                            type="button"
+                            onClick={addRecord}
+                            className="w-full py-1.5 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg text-xs text-gray-600 dark:text-gray-400 hover:border-blue-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+                        >
+                            ➕ Ajouter {recordLabel.toLowerCase()}
+                        </button>
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
         // MULTISELECT - cases where options is an array of option objects
         if (type === 'multiselect') {
             if (!Array.isArray(item.options)) {
@@ -560,7 +703,7 @@ function PipelineDataModal({
                             type="checkbox"
                             checked={Boolean(value)}
                             onChange={(e) => handleChange(itemKey, e.target.checked)}
-                            className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:"
+                            className="w-5 h-5 rounded border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500"
                         />
                         <label className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {icon && <span className="mr-2">{icon}</span>}
@@ -586,7 +729,7 @@ function PipelineDataModal({
                             onChange={(e) => handleChange(itemKey, e.target.value)}
                             rows={3}
                             maxLength={item.maxLength || 500}
-                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus: resize-none"
+                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 resize-none"
                             placeholder={item.placeholder || ''}
                         />
                         {item.maxLength && (
@@ -662,50 +805,40 @@ function PipelineDataModal({
                             </button>
                         </div>
 
-                        <div className="flex border-b border-gray-200 dark:border-gray-700">
-                            <button
-                                onClick={() => setActiveTab('data')}
-                                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'data'
-                                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-300'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
-                            >
-                                📝 Données de la cellule
-                            </button>
-                            <button
-                                onClick={() => setActiveTab('presets')}
-                                className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${activeTab === 'presets'
-                                    ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-300'
-                                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
-                            >
-                                <Bookmark className="w-4 h-4 inline mr-1" />
-                                Pré-réglages
-                            </button>
-                        </div>
+                        {/* Contenu unifié : champs de la cellule + ajout (drag&drop) + groupes de préréglages */}
+                        <form onSubmit={handleSubmit} className="p-6 space-y-3 overflow-y-auto flex-1 min-h-0">
+                            {itemsToDisplay.length === 0 ? (
+                                <div className="text-center py-6 text-gray-500 dark:text-gray-400">
+                                    <p className="text-base mb-1">Aucune donnée pour le moment</p>
+                                    <p className="text-sm">Glissez un élément depuis le panneau latéral, ou chargez un groupe ci-dessous</p>
+                                </div>
+                            ) : (
+                                <div className="space-y-3">
+                                    {itemsToDisplay.map((item, idx) => {
+                                        const rendered = renderField(item);
+                                        const itemKey = item?.key || item?.type;
+                                        if (!rendered) {
+                                            return (
+                                                <div key={idx} className="p-3 bg-yellow-900/30 border border-yellow-600 text-yellow-200 text-xs rounded">
+                                                    ⚠️ Item {idx} ({itemKey}) n'a pas d'input compatible (type={item?.type})
+                                                </div>
+                                            );
+                                        }
+                                        return <div key={itemKey || idx}>{rendered}</div>;
+                                    })}
+                                </div>
+                            )}
 
-                        {/* Zone drag & drop CDC pour ajouter plus de champs + Bouton pour cellules vides */}
-                        {!droppedItem && (
-                            <div className="p-4 m-4 space-y-3">
-                                {/* Bouton "Ajouter des données" si cellule vide */}
-                                {itemsToDisplay.length === 0 && (
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            // Ouvrir modal pour créer groupe préréglage si cellule vide
-                                            const filled = {};
-                                            Object.entries(formData).forEach(([k, v]) => {
-                                                if (v !== undefined && v !== null && v !== '') filled[k] = v;
-                                            });
-                                            setCreateGroupedPrefill(null);
-                                            setShowCreateGroupedModal(true);
-                                        }}
-                                        className="w-full px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-lg font-medium transition-all shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
-                                    >
-                                        <span className="text-xl">➕</span>
-                                        Ajouter des données à cette cellule
-                                    </button>
-                                )}
+                            {droppedItem && (
+                                <div className="mt-4 p-4 bg-white/5 dark:bg-gray-800/30 rounded-lg border border-white/5">
+                                    <p className="text-sm text-gray-200">
+                                        💡 <strong>Conformité CDC:</strong> Vous devez renseigner une valeur avant d'ajouter ce champ à la cellule.
+                                    </p>
+                                </div>
+                            )}
 
-                                {/* Zone drag & drop pour ajouter plus de champs */}
+                            {/* Zone drag & drop pour ajouter plus de champs */}
+                            {!droppedItem && (
                                 <div
                                     onDragOver={(e) => {
                                         e.preventDefault();
@@ -723,7 +856,6 @@ function PipelineDataModal({
                                             const data = e.dataTransfer.getData('application/json');
                                             if (data) {
                                                 const dropped = JSON.parse(data);
-                                                console.log('🎯 Drop dans modal:', dropped);
                                                 // Si c'est un groupe préréglage (multi-fields)
                                                 if (dropped.type === 'grouped-preset') {
                                                     const fields = dropped.data?.fields || dropped.fields || {};
@@ -740,7 +872,7 @@ function PipelineDataModal({
                                             }
                                         } catch (err) {
                                             console.error('Erreur drop:', err);
-                                        }// Erreur silencieuse
+                                        }
                                         onDrop && onDrop(e);
                                     }}
                                     className="p-4 border-2 border-dashed border-blue-300 dark:border-blue-700 rounded-lg bg-blue-50/30 dark:bg-blue-900/20 text-center transition-all"
@@ -752,144 +884,103 @@ function PipelineDataModal({
                                         Drag depuis le panneau latéral
                                     </p>
                                 </div>
-                            </div>
-                        )}
+                            )}
 
-                        {/* Contenu - TAB FORMULAIRE */}
-                        {activeTab === 'data' && (
-                            <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
-                                {itemsToDisplay.length === 0 ? (
-                                    <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-                                        <p className="text-lg mb-2">Aucun champ à afficher</p>
-                                        <p className="text-sm">Glissez-déposez des éléments depuis le panneau latéral</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-3">
-                                        {itemsToDisplay.map((item, idx) => {
-                                            const rendered = renderField(item);
-                                            const itemKey = item?.key || item?.type;
-                                            if (!rendered) {
-                                                return (
-                                                    <div key={idx} className="p-3 bg-yellow-900/30 border border-yellow-600 text-yellow-200 text-xs rounded">
-                                                        ⚠️ Item {idx} ({itemKey}) n'a pas d'input compatible (type={item?.type})
-                                                    </div>
-                                                );
-                                            }
-                                            return <div key={itemKey || idx}>{rendered}</div>;
-                                        })}
-                                    </div>
-                                )}
-
-                                {droppedItem && (
-                                    <div className="mt-4 p-4 bg-white/5 dark:bg-gray-800/30 rounded-lg border border-white/5">
-                                        <p className="text-sm text-gray-200">
-                                            💡 <strong>Conformité CDC:</strong> Vous devez renseigner une valeur avant d'ajouter ce champ à la cellule.
-                                        </p>
+                            {/* Groupes de préréglages - toujours visible, plus besoin d'onglet séparé */}
+                            {!droppedItem && (
+                                <div className="pt-3 mt-2 border-t border-gray-200 dark:border-gray-700">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <h3 className="text-sm font-semibold text-gray-900 dark:text-white flex items-center gap-1.5">
+                                            <Bookmark className="w-4 h-4" /> Groupes de préréglages
+                                        </h3>
                                         <button
                                             type="button"
-                                            onClick={() => setActiveTab('presets')}
-                                            className="mt-2 text-xs text-gray-300 hover:underline"
+                                            onClick={() => {
+                                                setCreateGroupedPrefill(null);
+                                                setShowCreateGroupedModal(true);
+                                            }}
+                                            className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded flex items-center gap-1 font-medium transition-colors"
                                         >
-                                            → Utiliser un préréglage sauvegardé
+                                            ➕ Nouveau
                                         </button>
                                     </div>
-                                )}
-                            </form>
-                        )}
 
-                        {/* Contenu - TAB PRÉRÉGLAGES */}
-                        {activeTab === 'presets' && (
-                            <div className="p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
-                                <div className="flex items-center justify-between">
-                                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">📦 Groupes de préréglages</h3>
-                                    <button
-                                        type="button"
-                                        onClick={() => {
-                                            setCreateGroupedPrefill(null);
-                                            setShowCreateGroupedModal(true);
-                                        }}
-                                        className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded flex items-center gap-1 font-medium transition-colors"
-                                    >
-                                        ➕ Nouveau
-                                    </button>
+                                    {(!groupedPresets || groupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
+                                        <div className="text-center py-6 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4">
+                                            <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
+                                            <p className="text-xs mt-1">Créez un groupe pour réutiliser rapidement des configurations</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {/* Groupes préréglage sauvegardés (serveur/localStorage) */}
+                                            {presets.grouped && presets.grouped.length > 0 && (
+                                                presets.grouped.map((group) => {
+                                                    const fieldCount = group.data?.selectedFields?.length || Object.keys(group.data?.fields || {}).length || 0;
+                                                    const preview = group.data?.selectedFields
+                                                        ? group.data.selectedFields.slice(0, 3).join(', ')
+                                                        : Object.keys(group.data?.fields || {}).slice(0, 3).join(', ');
+
+                                                    return (
+                                                        <div key={group.id} className="p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/20 hover:shadow-md transition-all">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{fieldCount} champ(s): {preview}</p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs transition-colors whitespace-nowrap flex-shrink-0"
+                                                                    onClick={() => {
+                                                                        const fields = {};
+                                                                        Object.entries(group.data?.fields || {}).forEach(([k, v]) => {
+                                                                            fields[k] = v;
+                                                                        });
+                                                                        applyPresetFields(fields);
+                                                                    }}
+                                                                >
+                                                                    Charger
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+
+                                            {/* Groupes locaux (groupedPresets prop) */}
+                                            {groupedPresets && groupedPresets.length > 0 && (
+                                                groupedPresets.map((group) => {
+                                                    const preview = (group.fields || []).slice(0, 3).map(f => f.key).join(', ');
+                                                    return (
+                                                        <div key={group.name} className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/20 hover:shadow-md transition-all">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
+                                                                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{group.fields?.length || 0} champ(s): {preview}</p>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors whitespace-nowrap flex-shrink-0"
+                                                                    onClick={() => {
+                                                                        const merged = {};
+                                                                        (group.fields || []).forEach(f => {
+                                                                            const key = f.key || f.id;
+                                                                            if (key) merged[key] = f.value;
+                                                                        });
+                                                                        applyPresetFields(merged);
+                                                                    }}
+                                                                >
+                                                                    Charger
+                                                                </button>
+                                                            </div>
+                                                        </div>
+                                                    );
+                                                })
+                                            )}
+                                        </div>
+                                    )}
                                 </div>
-
-                                {/* Affichage des groupes préréglage */}
-                                {(!groupedPresets || groupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
-                                    <div className="text-center py-12 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-6">
-                                        <p className="text-base font-medium">📦 Aucun groupe préréglage</p>
-                                        <p className="text-xs mt-2">Créez un groupe de préréglages pour réutiliser rapidement des configurations</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {/* Groupes préréglage sauvegardés (serveur/localStorage) */}
-                                        {presets.grouped && presets.grouped.length > 0 && (
-                                            presets.grouped.map((group) => {
-                                                const fieldCount = group.data?.selectedFields?.length || Object.keys(group.data?.fields || {}).length || 0;
-                                                const preview = group.data?.selectedFields
-                                                    ? group.data.selectedFields.slice(0, 3).join(', ')
-                                                    : Object.keys(group.data?.fields || {}).slice(0, 3).join(', ');
-
-                                                return (
-                                                    <div key={group.id} className="p-3 rounded-lg border border-purple-200 dark:border-purple-800 bg-purple-50/40 dark:bg-purple-900/20 hover:shadow-md transition-all">
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{fieldCount} champ(s): {preview}</p>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                className="px-3 py-1 bg-purple-600 hover:bg-purple-700 text-white rounded text-xs transition-colors whitespace-nowrap flex-shrink-0"
-                                                                onClick={() => {
-                                                                    const fields = {};
-                                                                    Object.entries(group.data?.fields || {}).forEach(([k, v]) => {
-                                                                        fields[k] = v;
-                                                                    });
-                                                                    applyPresetFields(fields);
-                                                                }}
-                                                            >
-                                                                Charger
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-
-                                        {/* Groupes locaux (groupedPresets prop) */}
-                                        {groupedPresets && groupedPresets.length > 0 && (
-                                            groupedPresets.map((group) => {
-                                                const preview = (group.fields || []).slice(0, 3).map(f => f.key).join(', ');
-                                                return (
-                                                    <div key={group.name} className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/20 hover:shadow-md transition-all">
-                                                        <div className="flex items-center justify-between gap-3">
-                                                            <div className="flex-1 min-w-0">
-                                                                <p className="font-medium text-sm text-gray-900 dark:text-white">{group.name}</p>
-                                                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate">{group.fields?.length || 0} champ(s): {preview}</p>
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                className="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs transition-colors whitespace-nowrap flex-shrink-0"
-                                                                onClick={() => {
-                                                                    const merged = {};
-                                                                    (group.fields || []).forEach(f => {
-                                                                        const key = f.key || f.id;
-                                                                        if (key) merged[key] = f.value;
-                                                                    });
-                                                                    applyPresetFields(merged);
-                                                                }}
-                                                            >
-                                                                Charger
-                                                            </button>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })
-                                        )}
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                            )}
+                        </form>
 
                         {/* Footer */}
                         <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700">
@@ -912,19 +1003,17 @@ function PipelineDataModal({
                                 Annuler
                             </button>
 
-                            {activeTab === 'data' && (
-                                <button
-                                    type="submit"
-                                    onClick={handleSubmit}
-                                    disabled={itemsToDisplay.length === 0}
-                                    className="px-4 py-2 hover: disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
-                                >
-                                    <Save className="w-4 h-4" />
-                                    {selectedCells && selectedCells.length > 1
-                                        ? `Appliquer à ${selectedCells.length} cases`
-                                        : 'Enregistrer'}
-                                </button>
-                            )}
+                            <button
+                                type="submit"
+                                onClick={handleSubmit}
+                                disabled={itemsToDisplay.length === 0}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded-lg transition-colors flex items-center gap-2"
+                            >
+                                <Save className="w-4 h-4" />
+                                {selectedCells && selectedCells.length > 1
+                                    ? `Appliquer à ${selectedCells.length} cases`
+                                    : 'Enregistrer'}
+                            </button>
                         </div>
                     </motion.div>
                 </motion.div>
