@@ -144,7 +144,7 @@ export default function ImageBrandingControls() {
                         max="40"
                         value={config.image.borderRadius}
                         onChange={(e) => updateImage({ borderRadius: parseInt(e.target.value) })}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-300 to-purple-600 dark:from-purple-700 dark:to-purple-400 shadow-inner"
                     />
                 </div>
 
@@ -160,7 +160,7 @@ export default function ImageBrandingControls() {
                         step="0.1"
                         value={config.image.opacity}
                         onChange={(e) => updateImage({ opacity: parseFloat(e.target.value) })}
-                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                        className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-300 to-purple-600 dark:from-purple-700 dark:to-purple-400 shadow-inner"
                     />
                 </div>
 
@@ -313,7 +313,7 @@ export default function ImageBrandingControls() {
                                 step="0.1"
                                 value={config.branding.opacity}
                                 onChange={(e) => updateBranding({ opacity: parseFloat(e.target.value) })}
-                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                                className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-300 to-purple-600 dark:from-purple-700 dark:to-purple-400 shadow-inner"
                             />
                         </div>
                     </motion.div>

@@ -12,6 +12,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
+import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Flower2, Plus, Trash2, Edit, Eye, GitBranch, Search,
@@ -42,6 +43,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isCreating, setIsCreating] = useState(false)
     const [editingCultivar, setEditingCultivar] = useState(null)
+    const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
 
     // Formulaire cultivar
     const [formData, setFormData] = useState({
@@ -363,9 +365,15 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     }
 
     // Supprimer un arbre
-    const handleDeleteTree = async (treeId, e) => {
+    const handleDeleteTree = (treeId, e) => {
         e?.stopPropagation()
-        if (!window.confirm('Supprimer cet arbre généalogique ? Cette action est irréversible.')) return
+        setConfirmDeleteTree({ open: true, treeId })
+    }
+
+    const confirmDeleteTreeNow = async () => {
+        const treeId = confirmDeleteTree.treeId
+        setConfirmDeleteTree({ open: false, treeId: null })
+        if (!treeId) return
         await deleteTreeApi(treeId)
         toast.success('Arbre supprimé')
     }
@@ -486,6 +494,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     }
 
     return (
+        <>
         <div className="space-y-6">
             {/* Tabs Bibliothèque / PhenoHunt / Arbres */}
             <div className="flex gap-4 border-b border-white/10 pb-4">
@@ -851,5 +860,14 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 </>
             )}
         </div>
+        <ConfirmModal
+            open={confirmDeleteTree.open}
+            title="Supprimer cet arbre"
+            message="Supprimer cet arbre généalogique ? Cette action est irréversible."
+            confirmLabel="Supprimer"
+            onCancel={() => setConfirmDeleteTree({ open: false, treeId: null })}
+            onConfirm={confirmDeleteTreeNow}
+        />
+        </>
     )
 }

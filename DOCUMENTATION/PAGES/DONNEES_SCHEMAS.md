@@ -1,548 +1,69 @@
-# Schémas de Données Complets
+# Schémas de Données — État réel (vérifié 2026-06-19)
 
-## 📊 Modèles de Données Principaux
+> ⚠️ Document entièrement réécrit. L'ancienne version décrivait un schéma générique (`Review` + `ReviewGeneralInfo` + `ReviewSection` + `Pipeline`/`PipelineStage`, requêtes GraphQL) qui **n'existe pas** dans le code réel. Le vrai schéma est dans `server-new/prisma/schema.prisma` (~1590 lignes) : un modèle `Review` commun + un modèle complet dédié par type de produit, chacun avec ses propres colonnes (pas de table de sections génériques).
 
-### 1. USER - Entité Utilisateur
+## Modèle `User` (l.14-116)
 
-```typescript
-model User {
-  id: String @id @default(cuid())
-  email: String @unique
-  username: String @unique
-  passwordHash: String?
-  tier: String @default("amateur") // "amateur" | "producteur" | "influenceur"
-  
-  // Profil
-  profile: UserProfile?
-  
-  // Authentification OAuth
-  oauthProviders: OAuthAccount[]
-  
-  // KYC
-  kycStatus: String @default("pending") // "pending" | "verified" | "rejected"
-  kycDocument: String?
-  
-  // Sessions
-  sessions: Session[]
-  
-  // Ressources
-  reviews: Review[]
-  templates: ExportTemplate[]
-  watermarks: Watermark[]
-  cultivars: Cultivar[]
-  
-  // Metadata
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-  lastLogin: DateTime?
-  isActive: Boolean @default(true)
-}
-```
+Champs clés réels :
+- `id`, `email` (unique), `username` (unique), `passwordHash`
+- `roles` (String JSON, défaut `{"roles":["consumer"]}`) — **champ qui détermine le tier réel**
+- `accountType` (String, défaut `"consumer"`) — legacy, maintenu en parallèle de `roles`
+- `kycStatus` (`none`/`pending`/`verified`/`rejected`), `kycDocuments` (String JSON), `kycVerifiedAt`, `kycRejectionReason`
+- `totpSecret`, `totpEnabled` (2FA — infra présente, voir [PROFILS/INDEX.md](./PROFILS/INDEX.md))
+- `isBanned` (+ raison, via panneau admin)
+- Relations OAuth (Discord/Google IDs, etc.)
+- Pas de modèle `UserProfile` séparé — les infos perso vivent directement sur `User` (à confirmer champ par champ si besoin précis)
 
-### 2. USER_PROFILE - Profil Utilisateur
+## Modèle `Subscription` (l.378-406)
 
-```typescript
-model UserProfile {
-  id: String @id @default(cuid())
-  userId: String @unique
-  user: User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Infos personnelles
-  firstName: String?
-  lastName: String?
-  avatar: String?
-  bio: String?
-  country: String?
-  language: String @default("fr")
-  
-  // Préférences
-  theme: String @default("light") // "light" | "dark"
-  emailNotifications: Boolean @default(true)
-  publicProfile: Boolean @default(false)
-  
-  // Infos professionnelles (Producteur/Influenceur)
-  companyName: String?
-  businessLicense: String?
-  farmLocation: String?
-  websiteUrl: String?
-  
-  // Statistiques
-  totalReviews: Int @default(0)
-  totalExports: Int @default(0)
-  totalLikes: Int @default(0)
-  totalComments: Int @default(0)
-  
-  updatedAt: DateTime @updatedAt
-}
-```
+- `plan` : `free`/`influencer_basic`/`influencer_pro`/`producer`/`merchant`
+- `status` : `active`/`canceled`/`past_due`/`trialing`
+- `stripeCustomerId`/`stripeSubscriptionId` — colonnes présentes mais **non utilisées réellement** (Stripe non intégré, voir [PROFILS/INDEX.md](./PROFILS/INDEX.md))
 
-### 3. REVIEW - Review Principale
+## Modèle `Review` (commun, parent)
 
-```typescript
-model Review {
-  id: String @id @default(cuid())
-  userId: String
-  user: User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Métadonnées
-  productType: String // "fleurs" | "hash" | "concentre" | "comestible"
-  title: String
-  description: String?
-  
-  // Visibilité
-  isPublic: Boolean @default(false)
-  isPublished: Boolean @default(false)
-  publishedAt: DateTime?
-  
-  // Contenu
-  generalInfo: ReviewGeneralInfo?
-  sections: ReviewSection[]
-  pipelines: Pipeline[]
-  
-  // Export
-  currentTemplate: ExportTemplate?
-  lastExportFormat: String?
-  lastExportedAt: DateTime?
-  exports: ExportRecord[]
-  
-  // Engagement
-  likes: Like[]
-  comments: Comment[]
-  
-  // Données
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-  deletedAt: DateTime?
-}
-```
+Métadonnées partagées entre tous les types de produit. Relations vers les sous-types et vers les reviews dérivées :
+- `derivedHashReviews: HashReview[]` (relation `hashFromFlower`, l.280)
+- `derivedConcentrateReviews: ConcentrateReview[]` (relation `concentrateFromFlower`, l.281)
 
-### 4. REVIEW_GENERAL_INFO - Infos Générales
+## Modèles par type de produit (un modèle complet par type, pas de table "sections" générique)
 
-```typescript
-model ReviewGeneralInfo {
-  id: String @id @default(cuid())
-  reviewId: String @unique
-  review: Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  
-  // Champs communs
-  commercialName: String
-  mainPhoto: String?
-  additionalPhotos: String[]
-  
-  // Spécifique Fleurs
-  cultivar: String?
-  farm: String?
-  type: String? // "indica" | "sativa" | "hybride" | etc
-  breeder: String?
-  
-  // Spécifique Hash
-  hashmaker: String?
-  lab: String?
-  
-  // Spécifique Concentré
-  extraction: String? // "BHO" | "Rosin" | "CO2" | etc
-  
-  // Spécifique Comestible
-  productType: String?
-  manufacturer: String?
-  
-  additionalData: Json? // Données flexibles supplémentaires
-  updatedAt: DateTime @updatedAt
-}
-```
+| Modèle | Lignes schema.prisma | Champs notables |
+|---|---|---|
+| `FlowerReview` | 631-778 | `nomCommercial`, `breeder`, `variety`, `geneticType`, `indicaPercent`/`sativaPercent`, `parentage` (JSON), `phenotypeCode`, `geneticTreeId` (FK `GeneticTree`), `cultureTimelineConfig`/`cultureTimelineData`, `curingTimelineConfig`/`curingTimelineData`, `thcPercent`/`cbdPercent`/`cbgPercent`/`cbcPercent`, `labReportUrl` (⚠️ pas de `terpeneFileUrl`) |
+| `HashReview` | 781-889 | `nomCommercial`, `hashmaker`, `laboratoire`, `cultivarsUtilises`, `parentFlowerReviewId` (FK `Review`), `separationTimelineConfig`/`separationTimelineData`, `labReportUrl`, `terpeneFileUrl` (l.834) |
+| `ConcentrateReview` | 892-994 | `nomCommercial`, `type` (16 valeurs), `hashmaker`, `laboratoire`, `parentFlowerReviewId`, `extractionTimelineConfig`/`extractionTimelineData`, `curingPipelineGithubIdConcentrate` (l.981), `labReportUrl`, `terpeneFileUrl` (l.938) |
+| `EdibleReview` | 997-1039 | `nomProduit`, `typeComestible`, `fabricant`, `ingredients` (JSON), `etapesPreparation` (JSON), `recipePipelineGithubId` (l.1011) — **pas de `labReportUrl`/`terpeneFileUrl`** (pas de section analytics, voir doc Comestibles) |
 
-### 5. REVIEW_SECTION - Sections Évaluatives
+## Génétiques / PhenoHunt
 
-```typescript
-model ReviewSection {
-  id: String @id @default(cuid())
-  reviewId: String
-  review: Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  
-  // Type de section
-  sectionType: String
-  // "visual_technique" | "odors" | "texture" | "tastes" | "effects"
-  
-  // Données évaluatives
-  scores: Json // {"dimension": 8.5, "another": 7}
-  notes: String?
-  selectedItems: String[] // Pour multi-select
-  
-  updatedAt: DateTime @updatedAt
-}
-```
+| Modèle | Lignes | Champs notables |
+|---|---|---|
+| `GeneticTree` | 1386-1410 | `userId`, `name`, `projectType` (`phenohunt`/`selection`/`crossing`/`hunt`), `isPublic`, `shareCode` (unique), relations `nodes`/`edges`/`flowerReviews` |
+| `GenNode` | 1413-1443 | `treeId`, `cultivarId?`, `cultivarName`, `position` (JSON `{x,y}` pour React Flow), `color`, `image?`, `genetics` (JSON), `notes?` |
+| `GenEdge` | 1446-1470 | `treeId`, `parentNodeId`, `childNodeId`, `relationshipType` (`parent`/`pollen_donor`/`sibling`/`clone`/`mutation`), contrainte unique `[parentNodeId, childNodeId, relationshipType]` |
+| `Cultivar` | 528-560 | `userId`, `name`, `breeder?`, `type?`, `indicaRatio?` (0-100), `parentage?` (JSON), `phenotype?`, `useCount`, contrainte unique `[userId, name]` |
 
-### 6. PIPELINE - Pipelines de Production
+## Bibliothèque / Export
 
-```typescript
-model Pipeline {
-  id: String @id @default(cuid())
-  reviewId: String
-  review: Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  
-  // Configuration
-  type: String // "culture" | "separation" | "extraction" | "recipe" | "curing"
-  mode: String // "days" | "weeks" | "phases" | "hours" | "minutes"
-  
-  // Timing
-  startDate: DateTime?
-  endDate: DateTime?
-  duration: Int? // en unités selon mode
-  
-  // Étapes
-  stages: PipelineStage[]
-  
-  // Configuration additionnelle
-  config: Json // Paramètres spécifiques par type
-  
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-}
-```
+| Modèle | Champs notables |
+|---|---|
+| `ExportTemplate` | `templateType`, `exportConfig` (JSON), `appearance` (JSON), `isDefault`, `usageCount` |
+| `TemplateShare` | code de partage unique pour templates |
+| `Watermark` | `type` (texte/image/logo), `position`, `opacity`, `scale`, `isDefault` |
+| `SavedData` | `dataType`, `category`, `data` (JSON) — substrats/engrais/matériel/techniques (Producer only) |
+| `UserPreset` | l.1364-1381 — `type` (`field`/`grouped`/`pipeline`), `pipelineType`, `data` (JSON), `useCount` — voir [CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md](./CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md) |
+| `UserStats` | `totalReviews`, `publicReviews`, compteurs par type produit, compteurs par format d'export, `totalLikes`/`totalViews`/`totalShares`/`totalComments` |
 
-### 7. PIPELINE_STAGE - Étapes Pipeline
+## Galerie publique
 
-```typescript
-model PipelineStage {
-  id: String @id @default(cuid())
-  pipelineId: String
-  pipeline: Pipeline @relation(fields: [pipelineId], references: [id], onDelete: Cascade)
-  
-  // Identification
-  stageName: String
-  stageOrder: Int
-  
-  // Timing
-  timestamp: DateTime?
-  duration: Int? // en unités du pipeline
-  
-  // Données
-  measurements: Json // Température, humidité, etc.
-  notes: String?
-  images: String[]
-  
-  // État modifié
-  modifiedSections: Json? // Sections modifiées (visual, odors, etc.)
-  
-  updatedAt: DateTime @updatedAt
-}
-```
+Pas de modèles `Like`/`Comment` génériques confirmés sous ces noms exacts dans cette passe d'audit — la galerie (`server-new/routes/gallery.js`) gère likes/commentaires/vues sur les reviews publiques (voir [Home/INDEX.md](./Home/INDEX.md)). À vérifier précisément les noms de modèles Prisma associés si du code doit s'y brancher.
 
-### 8. CULTIVAR - Génétique (Producteur)
+## Fichiers Statiques JSON
 
-```typescript
-model Cultivar {
-  id: String @id @default(cuid())
-  userId: String
-  user: User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Identification
-  name: String
-  breeder: String
-  type: String // "indica" | "sativa" | "hybrid"
-  
-  // Génétique
-  parents: Cultivar[] @relation("CultivarParents")
-  children: Cultivar[] @relation("CultivarParents")
-  phenotype: String?
-  
-  // Données
-  genetics: Json // %Indica, %Sativa, etc.
-  traits: String[]
-  notes: String?
-  
-  // Réference
-  reviews: Review[]
-  
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-}
-```
+`data/aromas.json`, `data/effects.json`, `data/tastes.json`, `data/terpenes.json` — non ré-audités dans cette passe, structure présumée stable.
 
-### 9. EXPORT_TEMPLATE - Template Export Sauvegardé
+## Fichiers référence
 
-```typescript
-model ExportTemplate {
-  id: String @id @default(cuid())
-  userId: String
-  user: User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Identification
-  name: String
-  description: String?
-  templateType: String // "compact" | "detailed" | "complete" | "influencer" | "custom"
-  
-  // Configuration Export
-  exportConfig: Json // {
-  //   formats: ["png", "pdf"],
-  //   canvaFormat: "1:1",
-  //   sections: [...],
-  //   includePipeline: true
-  // }
-  
-  // Personnalisation
-  appearance: Json // {
-  //   theme: "light",
-  //   colorScheme: {...},
-  //   fonts: {...},
-  //   watermark: {...}
-  // }
-  
-  // Réutilisation
-  isDefault: Boolean @default(false)
-  usageCount: Int @default(0)
-  lastUsed: DateTime?
-  
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-}
-```
-
-### 10. WATERMARK - Filigrane Personnalisé
-
-```typescript
-model Watermark {
-  id: String @id @default(cuid())
-  userId: String
-  user: User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  // Identification
-  name: String
-  
-  // Contenu
-  type: String // "text" | "image" | "logo"
-  content: String // Texte ou URL image
-  
-  // Style
-  position: String // "top-left" | "center" | "bottom-right" | etc.
-  opacity: Float // 0-1
-  scale: Float // 0.1-2.0
-  
-  // Métadonnées
-  isDefault: Boolean @default(false)
-  usageCount: Int @default(0)
-  
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-}
-```
-
-### 11. EXPORT_RECORD - Enregistrement Export Réalisé
-
-```typescript
-model ExportRecord {
-  id: String @id @default(cuid())
-  reviewId: String
-  review: Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  
-  // Export réalisé
-  format: String // "png" | "pdf" | "svg" | "json" | "csv" | etc.
-  fileUrl: String
-  fileName: String
-  fileSize: Int
-  
-  // Configuration utilisée
-  templateUsed: String?
-  settingsUsed: Json
-  
-  // Métadonnées
-  exportedAt: DateTime @default(now())
-  sharedAt: DateTime?
-  sharedOn: String[] // ["twitter", "instagram", "email"]
-}
-```
-
-### 12. LIKE - Likes sur Reviews Publiques
-
-```typescript
-model Like {
-  id: String @id @default(cuid())
-  reviewId: String
-  review: Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  
-  userId: String // Utilisateur ayant liké
-  
-  createdAt: DateTime @default(now())
-  
-  @@unique([reviewId, userId])
-}
-```
-
-### 13. COMMENT - Commentaires
-
-```typescript
-model Comment {
-  id: String @id @default(cuid())
-  reviewId: String
-  review: Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
-  
-  userId: String
-  content: String
-  
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-  isModerated: Boolean @default(false)
-}
-```
-
----
-
-## 🗂️ Fichiers Statiques JSON
-
-### data/aromas.json
-```json
-{
-  "categories": [
-    {
-      "name": "Fruité",
-      "aromas": [
-        "Citron",
-        "Orange",
-        "Pomme",
-        "Fraise",
-        "Raisin"
-      ]
-    },
-    {
-      "name": "Épicé",
-      "aromas": [
-        "Poivre",
-        "Clou de girofle",
-        "Cannelle"
-      ]
-    }
-  ]
-}
-```
-
-### data/effects.json
-```json
-{
-  "mental": [
-    "Créatif",
-    "Énergique",
-    "Euphorie",
-    "Concentration"
-  ],
-  "physical": [
-    "Relaxant",
-    "Soulagement douleur",
-    "Sommeil",
-    "Appétit"
-  ],
-  "therapeutic": [
-    "Anxiété",
-    "Insomnie",
-    "Inflammations",
-    "Nausées"
-  ]
-}
-```
-
-### data/tastes.json
-```json
-{
-  "categories": [
-    {
-      "name": "Sucré",
-      "tastes": ["Miel", "Vanille", "Chocolat"]
-    },
-    {
-      "name": "Amer",
-      "tastes": ["Café", "Cacao", "Herbe"]
-    }
-  ]
-}
-```
-
-### data/terpenes.json
-```json
-{
-  "terpenes": [
-    {
-      "name": "Myrcène",
-      "effects": ["Relaxant", "Anti-inflammatoire"],
-      "aroma": "Terreux, Herbacé"
-    },
-    {
-      "name": "Limonène",
-      "effects": ["Énergique", "Euphorie"],
-      "aroma": "Citronné"
-    }
-  ]
-}
-```
-
----
-
-## 🔄 Relations Principales
-
-```
-User 1:N Reviews
-User 1:N Templates
-User 1:N Watermarks
-User 1:N Cultivars
-User 1:1 UserProfile
-
-Review 1:1 ReviewGeneralInfo
-Review 1:N ReviewSection
-Review 1:N Pipeline
-Review 1:N ExportRecord
-Review 1:N Like
-Review 1:N Comment
-
-Pipeline 1:N PipelineStage
-
-Cultivar N:N Cultivar (Parents/Children)
-
-ExportTemplate 1:N ExportRecord (via config)
-```
-
----
-
-## 📝 Exemples de Requêtes
-
-### Créer une Review complète
-```graphql
-mutation CreateReview($input: ReviewInput!) {
-  createReview(input: $input) {
-    id
-    productType
-    generalInfo { commercialName }
-    sections { sectionType scores }
-    pipelines { type stages { stageName } }
-  }
-}
-```
-
-### Récupérer les reviews publiques
-```graphql
-query GetPublicReviews($type: String, $page: Int) {
-  publicReviews(productType: $type, page: $page) {
-    edges {
-      node {
-        id title user { username }
-        likes { totalCount }
-        comments { totalCount }
-      }
-    }
-  }
-}
-```
-
-### Sauvegarder un template export
-```graphql
-mutation SaveTemplate($input: TemplateInput!) {
-  saveExportTemplate(input: $input) {
-    id name isDefault usageCount
-  }
-}
-```
-
----
-
-## 🔗 Fichiers Référence
-
-- Schéma Prisma: `server-new/prisma/schema.prisma`
-- Migrations: `server-new/prisma/migrations/`
-- Types générés: `node_modules/@prisma/client` (généré après `prisma generate`)
+- Schéma Prisma complet : `server-new/prisma/schema.prisma` (~1590 lignes)
+- Migrations : `server-new/prisma/migrations/`

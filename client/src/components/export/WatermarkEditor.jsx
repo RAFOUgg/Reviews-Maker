@@ -101,14 +101,14 @@ const WatermarkEditor = ({
         <div className="flex gap-2 mb-4">
           <button
             onClick={() => handleChange('type', 'text')}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${currentWatermark.type === 'text' ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${currentWatermark.type === 'text' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             <Type className="w-4 h-4" />
             Texte
           </button>
           <button
             onClick={() => fileInputRef.current?.click()}
-            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${currentWatermark.type === 'image' ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
+            className={`flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg transition-all ${currentWatermark.type === 'image' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
           >
             <Image className="w-4 h-4" />
             Image
@@ -240,7 +240,7 @@ const WatermarkEditor = ({
                 <button
                   key={pos.name}
                   onClick={() => handleChange('position', { x: pos.x, y: pos.y })}
-                  className={`px-2 py-1 text-xs rounded transition-all ${Math.abs(currentWatermark.position.x - pos.x) < 5 && Math.abs(currentWatermark.position.y - pos.y) < 5 ? ' text-white' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
+                  className={`px-2 py-1 text-xs rounded transition-all ${Math.abs(currentWatermark.position.x - pos.x) < 5 && Math.abs(currentWatermark.position.y - pos.y) < 5 ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600'}`}
                 >
                   {pos.name}
                 </button>

@@ -1,311 +1,56 @@
-# Profils - Gestion des Comptes Utilisateur
+# Profils / Compte — État réel (vérifié 2026-06-19)
 
-## 📋 Overview
+> ⚠️ Document réécrit. La version précédente décrivait des modèles `UserProfile`/`KYCDocument` séparés et un vrai système de facturation (cartes, factures PDF, API keys, webhooks) — **rien de tout cela n'existe** dans le code réel actuel. Le profil est porté directement par le modèle `User`, et le paiement est entièrement mocké.
 
-Le système **PROFILS** gère tous les éléments de configuration et données personnelles de l'utilisateur.
+## Page
 
----
+`client/src/pages/account/AccountPage.jsx`, onglets : Profile, Subscription, Preferences, Security.
 
-## 🎯 Sections du Profil
+## Tier de compte — champ réel et valeurs
 
-### **1. INFORMATIONS PERSONNELLES**
+Le tier est déterminé par `User.roles` (string JSON, ex. `{"roles":["consumer"]}`), avec un champ `accountType` legacy en parallèle (string simple, `consumer`/`influencer`/`producer`) maintenu en rétrocompatibilité. Fonction `getUserAccountType()` (`server-new/services/account.js:71-98`) lit `roles` en priorité, ordre : `admin` > `producer` > `influencer` > `consumer`.
 
-**Disponibilité**: Tous les niveaux
+**Valeurs réelles possibles** : `consumer` (gratuit), `influencer` (15,99 €/mois visé), `producer` (29,99 €/mois visé), `admin`, `beta_tester`, `merchant`. Ce ne sont pas "Amateur/Producteur/Influenceur" comme l'ancienne doc le disait — les libellés FR existent seulement côté UI, pas en DB.
 
-#### Données Basiques
-- **Email** `email` - Unique, vérifié
-- **Nom d'utilisateur** `username` - Unique, alphanumeric
-- **Prénom** `string` - Optionnel
-- **Nom** `string` - Optionnel
-- **Pays** `select` - Liste pays
-- **Langue préférée** `select` - "Français" | "Anglais" | "Autres"
+⚠️ Le tier peut être changé **directement via le panneau admin ou en base de données, sans aucun paiement réel** — voir [PERMISSIONS.md](../PERMISSIONS.md) section paiement.
 
-#### Profil Public
-- **Avatar** `image-upload` - Photo de profil
-- **Bio** `textarea` - Description utilisateur (max 500 char)
-- **Profil public** `toggle` - Visible ou privé dans galerie
-- **Website URL** `url` - Site personnel/professionnel (optionnel)
+## KYC — réellement implémenté, mais vérification manuelle
 
-#### Compte Social Linked
-- **Discord** `oauth-link` - Lien Discord
-- **Google** `oauth-link` - Lien Google
-- **Facebook** `oauth-link` - Lien Facebook
-- **Apple** `oauth-link` - Lien Apple
-- **Amazon** `oauth-link` - Lien Amazon
+`server-new/routes/kyc.js` (359 lignes) :
+- Upload réel de documents (carte ID, passeport, permis, licence pro), max 10 Mo, JPEG/PNG/PDF
+- Stockage disque dans `/db/kyc_documents/{userId}/` + métadonnées DB
+- Champs `User.kycStatus` (`none`/`pending`/`verified`/`rejected`), `User.kycDocuments` (JSON array)
+- Réservé aux comptes Producer/Influencer
+- **Pas de vérification automatique** — un admin doit valider manuellement, pas d'API de vérification tierce (pas d'Onfido/Stripe Identity etc.)
 
-**Actions**:
-- Connecter nouveau compte
-- Déconnecter compte existant
-- Voir liste appareils/sessions actives
+## OAuth — providers réellement configurés
 
-#### Sécurité Compte
-- **Mot de passe** `password-input` - Changer mot de passe
-- **2FA (Two-Factor Auth)** `toggle` - Activer/désactiver
-  - Si activé: sélectionner authenticator (TOTP via app) ou SMS
-- **Session Management** `list` - Voir sessions actives, déconnecter à distance
+Endpoint `GET /api/auth/providers` détecte dynamiquement les providers utilisables (rejette les valeurs vides/placeholder dans les env vars) :
+- **Discord** ✅ configuré (credentials présents)
+- **Google** ✅ configuré
+- **Apple, Amazon, Facebook** ❌ non configurés (variables d'environnement vides ou placeholder) — le code de vérification existe pour les 5, mais seuls Discord/Google ont de vraies credentials actuellement
 
----
+Email/mot de passe fonctionnel (`POST /api/auth/email/signup`, `/login`, hash bcrypt).
 
-### **2. DONNÉES ENTREPRISE** (Producteur/Influenceur)
+## 2FA — infrastructure présente, branchement incomplet
 
-#### Informations Professionnelles
-- **Nom Entreprise** `string` - Nom légal
-- **Type Entreprise** `select` - "Producteur" | "Extracteur" | "Influenceur" | "Autre"
-- **SIRET/TVA** `string` - Numéro enregistrement (optionnel, pour vérification)
-- **Adresse** `address` - Adresse professionnelle
-- **Téléphone** `phone` - Numéro professionnel
+Champs `User.totpSecret`/`totpEnabled` existent, service `server-new/services/totp.js` existe, UI affichée dans `SecurityTab.jsx` — mais la logique de vérification au login n'a pas été confirmée comme pleinement branchée. À vérifier avant de communiquer "2FA disponible" comme une garantie produit.
 
-#### KYC & Vérification
+## Paiement / Abonnement — 🔴 mocké, pas fonctionnel
 
-**Statut KYC**
-- "Pending" → En attente de vérification
-- "Verified" → Compte vérifié
-- "Rejected" → Vérification refusée
-
-**Documents KYC**
-- **Pièce d'identité** `file-upload` - ID/Passeport (image/PDF)
-- **Justificatif d'adresse** `file-upload` - Facture utility/autre (image/PDF)
-- **Document professionnel** `file-upload` - Licence, certification, etc.
-
-**Historique Vérification**
-- Date soumission
-- Statut actuel
-- Messages de rejet (si applicable)
-- Date approbation (si approuvé)
-
-#### Données Entreprise Optionnelles
-- **Logo** `image-upload` - Logo entreprise
-- **Description Business** `textarea` - Qui êtes-vous, ce que vous faites
-- **Website Entreprise** `url` - Site officiel
-- **Instagram Pro** `text` - Compte Instagram lié
-- **Années d'expérience** `number` - Expérience production/expertise
-
----
-
-### **3. PRÉFÉRENCES & PARAMÈTRES**
-
-#### Préférences Interface
-- **Thème** `select` - "Light" | "Dark" | "Auto"
-- **Langue** `select` - Multilingue
-- **Format date** `select` - "JJ/MM/YYYY" | "MM/DD/YYYY" | "YYYY-MM-DD"
-- **Unités** `select` - "Métrique (°C, g, L)" | "Impérial (°F, oz, etc)"
-
-#### Notifications Email
-- **Review Likes** `toggle` - Notifié quand review reçoit un like
-- **Review Comments** `toggle` - Notifié commentaires sur reviews
-- **New Features** `toggle` - Alertes nouvelles fonctionnalités
-- **Newsletter** `toggle` - Emails marketing/tips
-- **Important Updates** `toggle` - Mises à jour importantes (obligatoire)
-
-#### Export Preferences
-- **Format par défaut** `select` - PNG | PDF | SVG | etc.
-- **Qualité par défaut** `select` - "Standard" | "Haute" (selon tier)
-- **Template par défaut** `select` - Sélectionner template à utiliser automatiquement
-- **Watermark par défaut** `select` - Filigrane automatique sur exports
-
-#### Privacy & Data
-- **Profil public** `toggle` - Visible galerie publique
-- **Reviews publiques** `toggle` - Possibilité publier reviews
-- **Voir compte stats** `toggle` - Permettre voir statistiques publiques
-- **Analytics tracking** `toggle` - Permettre tracking utilisation
-
-#### RGPD
-- **Télécharger mes données** `button` - Export complet compte (JSON/CSV)
-- **Supprimer compte** `button` - Suppression irréversible avec confirmation
-
----
-
-### **4. DONNÉES DE FACTURATION** (Producteur/Influenceur payants)
-
-#### Abonnement Actif
-- **Type abonnement** `display` - "Producteur 29.99€" | "Influenceur 15.99€"
-- **Date début** `display` - Date actuelle cycle
-- **Date renouvellement** `display` - Prochain renouvellement
-- **Statut** `display` - "Actif" | "En attente paiement" | "Expiré"
-
-#### Méthodes de Paiement
-- **Carte crédit** `list` - Cartes enregistrées
-  - Ajouter nouvelle carte
-  - Supprimer carte
-  - Marquer comme principale
-- **PayPal** `link` - Lié/Pas lié
-
-**Historique Factures**
-- Télécharger PDF factures
-- Voir détails paiement
-- Resend invoice email
-
-#### Changer Abonnement
-- Upgrade/Downgrade
-- Annuler abonnement
-- Mode pause (optionnel)
-
----
-
-### **5. INTÉGRATIONS EXTERNES**
-
-#### API Keys
-- **Générer API Key** `button` - Pour intégrations tierces
-- **API Keys existantes** `list`
-  - Voir clé (masked)
-  - Régénérer clé
-  - Supprimer clé
-  - Scope permissions
-
-#### Webhooks
-- **Configurer webhooks** - Pour notifications événements
-  - URL endpoint
-  - Événements sélectionnés
-  - Actif/Inactif
-  - Historique deliveries
-
-#### Social Media Links
-- **Partage automatique** `toggle` - Auto-publish reviews sur réseaux
-- **Instagram** `link` - Compte Instagram pro
-- **Twitter** `link` - Compte Twitter/X
-- **TikTok** `link` - Compte TikTok (optionnel)
-
----
-
-## 📊 Statistiques Utilisateur (Dashboard Profile)
-
-### Vue d'Ensemble
-
-**Card Principal**
+`server-new/routes/payment.js` : aucune intégration Stripe réelle. Le code Stripe est commenté (`// TODO`), et l'endpoint de checkout retourne une session **mock** :
+```js
+res.json({ sessionId: 'mock_session_' + Date.now(), url: `${clientUrl}/payment?...&mock_payment=success`, message: 'MOCK: Paiement simulé (Stripe non configuré)' })
 ```
-┌─────────────────────────────┐
-│ Profil: [Username]          │
-│ Tier: Producteur             │
-│ Member depuis: Jan 2024      │
-│ ┌──────────────────────────┐ │
-│ │ 42 Reviews | 156 Exports  │ │
-│ │ 3,245 Likes | 87 Comments │ │
-│ └──────────────────────────┘ │
-└─────────────────────────────┘
-```
+Le webhook Stripe est également mocké. Le modèle `Subscription` (schema.prisma:378-406) existe avec des champs `stripeCustomerId`/`stripeSubscriptionId` vides en pratique. **Aucun paiement réel ne transite actuellement par l'application.**
 
-### Statistiques Détaillées
+## Mode développement — bypass d'authentification
 
-**Par Type Produit**
-```
-Fleurs: 25 reviews
-Hash: 12 reviews
-Concentré: 4 reviews
-Comestible: 1 review
-```
+`server-new/middleware/auth.js` injecte automatiquement un faux utilisateur (`id: 'dev-test-user-id'`, tier `PRODUCTEUR`) sur toute route protégée quand `NODE_ENV === 'development'`. Une route `POST /api/auth/dev/quick-login` existe pour déclencher ce mode côté frontend (bouton visible uniquement en dev sur `LoginPage.jsx`). Implication pratique : certaines routes qui vont chercher cet ID factice en DB (ex. `/api/account/info`) renvoient quand même 401 si l'utilisateur réel n'existe pas — il faut créer/seed un utilisateur réel pour tester complètement en local (voir `server-new/seed-test-user.js`).
 
-**Engagement Public** (si profil public)
-- Nombre followers (optionnel feature)
-- Nombre reviews visionnées
-- Nombre likes reçus
-- Nombre commentaires reçus
-- Top reviews (by engagement)
+## Fichiers référence
 
-**Activité Récente**
-- Reviews créées: dernières 5
-- Exports réalisés: derniers 10
-- Engagements reçus: dernières 15
-
-**Ranking & Badges** (optionnel)
-- "Top Reviewer" si parmi top 100
-- "Active Producer" si 10+ reviews
-- "Expert Extractor" si spécialité concentré
-- Badges achievements
-
----
-
-## 💾 Modèle de Données
-
-### UserProfile
-```typescript
-model UserProfile {
-  id: String @id @default(cuid())
-  userId: String @unique
-  user: User @relation(fields: [userId], references: [id])
-  
-  // Personal
-  firstName: String?
-  lastName: String?
-  avatar: String?
-  bio: String?
-  country: String?
-  language: String @default("fr")
-  
-  // Professional (Producteur/Influenceur)
-  companyName: String?
-  companyType: String? // "producteur" | "extracteur" | "influenceur"
-  businessLicense: String?
-  website: String?
-  instagramPro: String?
-  yearsExperience: Int?
-  
-  // Preferences
-  theme: String @default("auto")
-  dateFormat: String @default("DD/MM/YYYY")
-  units: String @default("metric")
-  
-  // Privacy
-  isPublic: Boolean @default(false)
-  allowPublicReviews: Boolean @default(false)
-  showPublicStats: Boolean @default(false)
-  
-  // Notifications
-  emailNotifications: Json @default("{}")
-  
-  // Stats
-  totalReviews: Int @default(0)
-  totalExports: Int @default(0)
-  totalLikes: Int @default(0)
-  totalComments: Int @default(0)
-  
-  createdAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-}
-```
-
-### KYCDocument
-```typescript
-model KYCDocument {
-  id: String @id @default(cuid())
-  userId: String
-  user: User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  documentType: String // "id" | "address_proof" | "professional"
-  fileUrl: String
-  fileName: String
-  
-  verificationStatus: String @default("pending") // "pending" | "verified" | "rejected"
-  verificationNotes: String?
-  verifiedAt: DateTime?
-  
-  submittedAt: DateTime @default(now())
-  updatedAt: DateTime @updatedAt
-}
-```
-
----
-
-## 🔐 Sécurité & Confidentialité
-
-### Données Sensibles
-- Mot de passe: hashé (bcryptjs)
-- 2FA secrets: encrypté
-- Informations KYC: hautement sécurisées, conformes RGPD
-- Paiements: traité PCI-DSS compliant
-
-### Audit Trail
-- Log accès sessions
-- Log modifications paramètres
-- Log accès données sensibles
-- Durée rétention: 90 jours
-
----
-
-## 🔗 Fichiers Référence
-
-- Frontend: `client/src/pages/Profile*.jsx`
-- Backend: `server-new/routes/profile.js`
-- Auth: `server-new/routes/auth.js`
-- Schema: `server-new/prisma/schema.prisma`
-- Middleware: `server-new/middleware/auth.js`
-
+- Frontend : `client/src/pages/account/AccountPage.jsx` + `tabs/*.jsx`
+- Backend : `server-new/routes/auth.js`, `server-new/routes/kyc.js`, `server-new/routes/payment.js`, `server-new/services/account.js`
+- Middleware : `server-new/middleware/auth.js`, `server-new/middleware/permissions.js`
+- Schéma : `server-new/prisma/schema.prisma` (modèle `User`, l.14-116 ; `Subscription`, l.378-406)

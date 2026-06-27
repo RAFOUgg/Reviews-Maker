@@ -1,3 +1,5 @@
+> ⚠️ **Document historique** : spec détaillée champ-par-champ du Pipeline Culture, écrite avant l'implémentation réelle. Décrit un modèle de stockage (`pipeline: { mode: enum {...} }`) différent du code actuel (`FlowerReview.cultureTimelineConfig`/`cultureTimelineData`, JSON string). Voir [PAGES/CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md](./PAGES/CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md) pour l'état réel vérifié 2026-06-19. Conservé ci-dessous comme référence de l'intention de design originale (les 3 modes Jours/Semaines/Phases sont bien implémentés).
+
 # SECTION 3 - PIPELINE CULTURE (Fleurs)
 
 ## 📋 Finalité

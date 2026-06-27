@@ -27,7 +27,7 @@ import {
     validateNodeUpdate,
     validateEdgeCreation
 } from '../middleware/validateGenetics.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, optionalAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -98,7 +98,7 @@ router.post("/trees", requireAuth, validateTreeCreation, async (req, res) => {
  * GET /api/genetics/trees/:id
  * Récupérer un arbre avec tous ses nœuds et arêtes
  */
-router.get("/trees/:id", async (req, res) => {
+router.get("/trees/:id", optionalAuth, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id },
@@ -217,7 +217,7 @@ router.delete("/trees/:id", requireAuth, async (req, res) => {
  * GET /api/genetics/trees/:id/nodes
  * Lister tous les nœuds d'un arbre
  */
-router.get("/trees/:id/nodes", async (req, res) => {
+router.get("/trees/:id/nodes", optionalAuth, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id },
@@ -399,7 +399,7 @@ router.delete("/nodes/:nodeId", requireAuth, async (req, res) => {
  * GET /api/genetics/trees/:id/edges
  * Lister toutes les arêtes d'un arbre
  */
-router.get("/trees/:id/edges", async (req, res) => {
+router.get("/trees/:id/edges", optionalAuth, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id },

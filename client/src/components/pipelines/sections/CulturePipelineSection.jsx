@@ -1,6 +1,6 @@
 /**
  * Section Pipeline Culture (Fleurs)
- * Phase 1 - Modernisé avec CulturePipelineDragDrop (84 fields, 12 phases)
+ * Phase 1 - Modernisé avec CulturePipelineDragDrop (84 fields, 13 phases dont Récolte)
  */
 
 import React, { useRef } from 'react';

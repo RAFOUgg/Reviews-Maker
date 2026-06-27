@@ -46,7 +46,7 @@ export default function TypographyControls() {
                 <select
                     value={config.typography.fontFamily}
                     onChange={(e) => updateTypography({ fontFamily: e.target.value })}
-                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus: focus:border-transparent transition-all"
+                    className="w-full px-4 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all"
                     style={{ fontFamily: config.typography.fontFamily }}
                 >
                     {FONT_FAMILIES.map((font) => (
@@ -68,7 +68,7 @@ export default function TypographyControls() {
                     max="72"
                     value={config.typography.titleSize}
                     onChange={(e) => updateTypography({ titleSize: parseInt(e.target.value) })}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-300 to-purple-600 dark:from-purple-700 dark:to-purple-400 shadow-inner"
                 />
             </div>
 
@@ -102,7 +102,7 @@ export default function TypographyControls() {
                     max="32"
                     value={config.typography.textSize}
                     onChange={(e) => updateTypography({ textSize: parseInt(e.target.value) })}
-                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                    className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-300 to-purple-600 dark:from-purple-700 dark:to-purple-400 shadow-inner"
                 />
             </div>
 

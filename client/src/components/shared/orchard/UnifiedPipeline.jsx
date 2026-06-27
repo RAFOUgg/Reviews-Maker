@@ -154,11 +154,11 @@ const UnifiedPipeline = ({
             bordered
         >
             {/* Instructions utilisateur */}
-            <div className="mb-4 bg-gradient-to-r dark:/20 dark:/20 border dark: rounded-xl p-4">
-                <h4 className="text-sm font-semibold dark: mb-2 flex items-center gap-2">
+            <div className="mb-4 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-700 rounded-xl p-4">
+                <h4 className="text-sm font-semibold text-purple-800 dark:text-purple-300 mb-2 flex items-center gap-2">
                     🌱 {config.title} : Timeline interactive
                 </h4>
-                <ul className="text-xs dark: space-y-1 list-disc list-inside">
+                <ul className="text-xs text-purple-700 dark:text-purple-300 space-y-1 list-disc list-inside">
                     <li>📍 <strong>Glissez</strong> les contenus depuis le panneau latéral vers les cases de la timeline</li>
                     <li>🖱️ <strong>Drag & drop</strong> : Sélectionnez un contenu à gauche et déposez-le sur une case</li>
                     <li>📝 <strong>Édition</strong> : Cliquez sur une case pour modifier ses données</li>

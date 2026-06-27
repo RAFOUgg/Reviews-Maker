@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -34,7 +33,6 @@ export default function CreateConcentrateReview() {
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
-    const [showExportMaker, setShowExportMaker] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useConcentrateForm(id)
     const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -184,7 +182,6 @@ export default function CreateConcentrateReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
-                onOpenExport={() => setShowExportMaker(true)}
                 onSave={handleSave}
                 onSubmit={handleSubmit}
                 title="Créer une review Concentré"
@@ -267,41 +264,32 @@ export default function CreateConcentrateReview() {
 
             <AnimatePresence>
                 {showOrchard && (
-                    <OrchardPanel
-                        productType="Concentrate"
-                        reviewData={{
-                            title: formData.nomCommercial || 'Aperçu concentré',
-                            holderName: formData.nomCommercial || '',
-                            description: formData.description || '',
-                            lab: formData.laboratoire || '',
-                            cultivars: formData.cultivarsList || [],
-                            images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
-                            isPublic: false,
-                            ...formData
-                        }}
-                        onClose={() => setShowOrchard(false)}
-                        onPresetApplied={(orchardData) => {
-                            if (orchardData?.orchardPreset) {
-                                handleChange('orchardPreset', orchardData.orchardPreset)
-                            }
-                            if (orchardData?.orchardConfig) {
-                                handleChange('orchardConfig', orchardData.orchardConfig)
-                            }
-                        }}
-                    />
+                    <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
+                        <OrchardPanel
+                            productType="Concentrate"
+                            reviewData={{
+                                title: formData.nomCommercial || 'Aperçu concentré',
+                                holderName: formData.nomCommercial || '',
+                                description: formData.description || '',
+                                lab: formData.laboratoire || '',
+                                cultivars: formData.cultivarsList || [],
+                                images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                                isPublic: false,
+                                ...formData
+                            }}
+                            onClose={() => setShowOrchard(false)}
+                            onPresetApplied={(orchardData) => {
+                                if (orchardData?.orchardPreset) {
+                                    handleChange('orchardPreset', orchardData.orchardPreset)
+                                }
+                                if (orchardData?.orchardConfig) {
+                                    handleChange('orchardConfig', orchardData.orchardConfig)
+                                }
+                            }}
+                        />
+                    </Suspense>
                 )}
             </AnimatePresence>
-
-            {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
-            {showExportMaker && (
-                <Suspense fallback={null}>
-                    <ExportMaker
-                        reviewData={{ ...formData, photos }}
-                        productType="concentrate"
-                        onClose={() => setShowExportMaker(false)}
-                    />
-                </Suspense>
-            )}
         </>
     )
 }

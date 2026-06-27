@@ -7,7 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -33,7 +32,6 @@ export default function CreateEdibleReview() {
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
     const [showOrchard, setShowOrchard] = useState(false)
-    const [showExportMaker, setShowExportMaker] = useState(false)
 
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
@@ -162,7 +160,6 @@ export default function CreateEdibleReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
-                onOpenExport={() => setShowExportMaker(true)}
                 onSave={handleSave}
                 onSubmit={handleSubmit}
                 title="Créer une review Comestible"
@@ -211,40 +208,31 @@ export default function CreateEdibleReview() {
 
             <AnimatePresence>
                 {showOrchard && (
-                    <OrchardPanel
-                        productType="Edible"
-                        reviewData={{
-                            title: formData.nomProduit || 'Aperçu comestible',
-                            holderName: formData.nomProduit || '',
-                            description: formData.description || '',
-                            productType: formData.typeComestible || '',
-                            images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
-                            isPublic: false,
-                            ...formData
-                        }}
-                        onClose={() => setShowOrchard(false)}
-                        onPresetApplied={(orchardData) => {
-                            if (orchardData?.orchardPreset) {
-                                handleChange('orchardPreset', orchardData.orchardPreset)
-                            }
-                            if (orchardData?.orchardConfig) {
-                                handleChange('orchardConfig', orchardData.orchardConfig)
-                            }
-                        }}
-                    />
+                    <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
+                        <OrchardPanel
+                            productType="Edible"
+                            reviewData={{
+                                title: formData.nomProduit || 'Aperçu comestible',
+                                holderName: formData.nomProduit || '',
+                                description: formData.description || '',
+                                productType: formData.typeComestible || '',
+                                images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
+                                isPublic: false,
+                                ...formData
+                            }}
+                            onClose={() => setShowOrchard(false)}
+                            onPresetApplied={(orchardData) => {
+                                if (orchardData?.orchardPreset) {
+                                    handleChange('orchardPreset', orchardData.orchardPreset)
+                                }
+                                if (orchardData?.orchardConfig) {
+                                    handleChange('orchardConfig', orchardData.orchardConfig)
+                                }
+                            }}
+                        />
+                    </Suspense>
                 )}
             </AnimatePresence>
-
-            {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
-            {showExportMaker && (
-                <Suspense fallback={null}>
-                    <ExportMaker
-                        reviewData={{ ...formData, photos }}
-                        productType="edible"
-                        onClose={() => setShowExportMaker(false)}
-                    />
-                </Suspense>
-            )}
         </>
     )
 }

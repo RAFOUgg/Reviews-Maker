@@ -589,7 +589,8 @@ router.post('/',
     // Basic review creation is open to all authenticated users.
     upload.fields([
         { name: 'images', maxCount: 4 }, // Photos produit (max 4)
-        { name: 'analyticsPdf', maxCount: 1 } // PDF analytics (optionnel)
+        { name: 'certificateFile', maxCount: 1 }, // Certificat cannabinoïdes (optionnel)
+        { name: 'terpeneFile', maxCount: 1 } // Certificat profil terpénique (optionnel)
     ]), asyncHandler(async (req, res) => {
         console.log('🌿 Creating FlowerReview with data:', JSON.stringify(req.body, null, 2))
         console.log('📎 Files uploaded:', req.files)
@@ -625,9 +626,13 @@ router.post('/',
         const photo3 = imageFilenames[2] || null
         const photo4 = imageFilenames[3] || null
 
-        // PDF analytics (optionnel)
-        const pdfFile = req.files?.analyticsPdf?.[0]
-        const analyticsPdfUrl = pdfFile ? pdfFile.filename : null
+        // Certificats analytics (optionnels)
+        const certificateFileUrl = req.files?.certificateFile?.[0]
+            ? `/images/${req.files.certificateFile[0].filename}`
+            : null
+        const terpeneFileUrl = req.files?.terpeneFile?.[0]
+            ? `/images/${req.files.terpeneFile[0].filename}`
+            : null
 
         // Créer la Review de base (compatible avec système existant)
         const baseReviewData = {
@@ -671,7 +676,8 @@ router.post('/',
             const flowerReviewData = {
                 reviewId: review.id,
                 ...validation.cleaned,
-                labReportUrl: analyticsPdfUrl
+                ...(certificateFileUrl && { labReportUrl: certificateFileUrl }),
+                ...(terpeneFileUrl && { terpeneFileUrl })
             }
 
             // Convertir les champs JSON en strings pour Prisma
@@ -820,7 +826,8 @@ router.put('/:id',
     requireAuth,
     upload.fields([
         { name: 'images', maxCount: 4 },
-        { name: 'analyticsPdf', maxCount: 1 }
+        { name: 'certificateFile', maxCount: 1 },
+        { name: 'terpeneFile', maxCount: 1 }
     ]), asyncHandler(async (req, res) => {
         console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)
 
@@ -914,9 +921,13 @@ router.put('/:id',
         const photo3 = allImages[2] || existingPhotos.photo3
         const photo4 = allImages[3] || existingPhotos.photo4
 
-        // Gérer le PDF analytics
-        const pdfFile = req.files?.analyticsPdf?.[0]
-        const analyticsPdfUrl = pdfFile ? pdfFile.filename : (review.flowerData?.labReportUrl || null)
+        // Gérer les certificats analytics (ne change que si un nouveau fichier est envoyé)
+        const certificateFileUrl = req.files?.certificateFile?.[0]
+            ? `/images/${req.files.certificateFile[0].filename}`
+            : undefined
+        const terpeneFileUrl = req.files?.terpeneFile?.[0]
+            ? `/images/${req.files.terpeneFile[0].filename}`
+            : undefined
 
         // Mettre à jour dans une transaction
         const result = await prisma.$transaction(async (tx) => {
@@ -960,7 +971,8 @@ router.put('/:id',
             // 2. Mettre à jour la FlowerReview
             const flowerReviewData = {
                 ...validation.cleaned,
-                labReportUrl: analyticsPdfUrl
+                ...(certificateFileUrl !== undefined && { labReportUrl: certificateFileUrl }),
+                ...(terpeneFileUrl !== undefined && { terpeneFileUrl })
             }
 
             // Convertir les champs JSON en strings

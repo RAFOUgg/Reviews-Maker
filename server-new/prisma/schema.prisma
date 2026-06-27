@@ -695,7 +695,8 @@ model FlowerReview {
   otherCannabinoids String? // JSON: autres cannabinoïdes (mg/g ou %)
   terpeneProfile  String?  // JSON: Profil terpénique complet (depuis PDF/image)
   labReportUrl    String?  // URL du certificat d'analyse
-  
+  terpeneFileUrl  String?  // URL/chemin certificat terpènes
+
   // ===== EXPÉRIENCE D'UTILISATION =====
   consumptionMethod String? // "Combustion", "Vapeur", "Infusion"
   dosage            Float?  // Dosage estimé (grammes/mg)

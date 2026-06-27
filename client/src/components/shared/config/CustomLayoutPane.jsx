@@ -81,7 +81,7 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
         >
             <div
                 ref={combinedRef}
-                className={`relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl ${isZone ? 'border-dashed border-2 /50' : '/50'} ${isOver ? 'border-green-500 bg-green-500/20' : ''}`}
+                className={`relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl ${isZone ? 'border-dashed border-2 border-purple-500/50' : 'border-blue-500/50'} ${isOver ? 'border-green-500 bg-green-500/20' : ''}`}
                 style={{
                     minHeight: '40px',
                     transform: `rotate(${rotation}deg)`
@@ -278,7 +278,7 @@ export default function CustomLayoutPane({ reviewData, layout, onLayoutChange, i
     }, [reviewData]);
 
     return (
-        <div ref={canvasRef} className="w-full h-full bg-gradient-to-br from-gray-900 /20 to-gray-900">
+        <div ref={canvasRef} className="w-full h-full bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
             <DropCanvas isOver={isCanvasOver}>
                 <AnimatePresence>
                     {placedFields.length === 0 && (

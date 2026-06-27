@@ -173,14 +173,14 @@ const DragDropExport = ({
 
                   {/* Required badge */}
                   {section.required && (
-                    <span className="px-2 py-0.5 dark: dark: text-xs rounded-full">
+                    <span className="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 text-xs rounded-full">
                       Requis
                     </span>
                   )}
 
                   {/* Producer badge */}
                   {section.producerOnly && (
-                    <span className="px-2 py-0.5 dark: dark: text-xs rounded-full">
+                    <span className="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 text-xs rounded-full">
                       Pro
                     </span>
                   )}
@@ -237,7 +237,7 @@ const DragDropExport = ({
                 key={section.id}
                 onClick={() => handleAddSection(section)}
                 disabled={section.producerOnly && !isProducer}
-                className={`flex items-center gap-2 p-3 rounded-lg border-2 border-dashed transition-all text-left ${section.producerOnly && !isProducer ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 hover: hover: dark:hover: cursor-pointer'}`}
+                className={`flex items-center gap-2 p-3 rounded-lg border-2 border-dashed transition-all text-left ${section.producerOnly && !isProducer ? 'border-gray-200 dark:border-gray-700 opacity-50 cursor-not-allowed' : 'border-gray-300 dark:border-gray-600 hover:border-purple-400 hover:bg-purple-50 dark:hover:border-purple-600 dark:hover:bg-purple-900/20 cursor-pointer'}`}
               >
                 <Plus className="w-4 h-4 text-gray-400" />
                 <span className="text-lg">{section.icon}</span>

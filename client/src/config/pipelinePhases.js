@@ -16,7 +16,8 @@ export const CULTURE_PHASES = {
         { id: 'stretch-late', label: 'Fin Stretch', order: 8, duration: 7 },
         { id: 'flower-early', label: 'Début Floraison', order: 9, duration: 14 },
         { id: 'flower-mid', label: 'Milieu Floraison', order: 10, duration: 14 },
-        { id: 'flower-late', label: 'Fin Floraison', order: 11, duration: 14 }
+        { id: 'flower-late', label: 'Fin Floraison', order: 11, duration: 14 },
+        { id: 'harvest', label: 'Récolte', order: 12, duration: 1 }
     ]
 }
 

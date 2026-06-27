@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle, Dna } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import { LiquidCard, LiquidChip, LiquidButton, LiquidDivider, LiquidModal } from '@/components/ui/LiquidUI'
+import ConfirmModal from '../../../../components/shared/ConfirmModal'
 import PhenoCodeGenerator from '../../../../components/forms/helpers/PhenoCodeGenerator'
 import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneticsCanvas'
 import useGeneticsStore from '../../../../store/useGeneticsStore'
@@ -21,6 +22,7 @@ export default function Genetiques({ formData, handleChange }) {
     const [libraryCultivars, setLibraryCultivars] = useState([])
     const [loadingReviews, setLoadingReviews] = useState(false)
     const [creatingTree, setCreatingTree] = useState(false)
+    const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
 
     const { user } = useStore()
     const genetics = formData.genetics || {}
@@ -244,10 +246,16 @@ export default function Genetiques({ formData, handleChange }) {
     }
 
     // Supprimer un arbre
-    const deleteTree = async (treeId, e) => {
+    const deleteTree = (treeId, e) => {
         e?.stopPropagation()
         if (trees.length <= 1) return
-        if (!confirm('Supprimer cet arbre ?')) return
+        setConfirmDeleteTree({ open: true, treeId })
+    }
+
+    const confirmDeleteTreeNow = async () => {
+        const treeId = confirmDeleteTree.treeId
+        setConfirmDeleteTree({ open: false, treeId: null })
+        if (!treeId) return
 
         await deleteTreeApi(treeId)
 
@@ -282,6 +290,7 @@ export default function Genetiques({ formData, handleChange }) {
     }
 
     return (
+        <>
         <LiquidCard glow="purple" padding="lg">
             <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-violet-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
@@ -773,5 +782,14 @@ export default function Genetiques({ formData, handleChange }) {
                 )}
             </AnimatePresence>
         </LiquidCard>
+        <ConfirmModal
+            open={confirmDeleteTree.open}
+            title="Supprimer cet arbre"
+            message="Supprimer cet arbre généalogique ? Cette action est irréversible."
+            confirmLabel="Supprimer"
+            onCancel={() => setConfirmDeleteTree({ open: false, treeId: null })}
+            onConfirm={confirmDeleteTreeNow}
+        />
+        </>
     )
 }

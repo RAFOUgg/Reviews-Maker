@@ -24,7 +24,7 @@ function SortablePage({ page, pageNumber, isActive, onClick, onRemove }) {
             <motion.div
                 whileHover={{ scale: 1.02 }}
                 onClick={onClick}
-                className={`p-3 rounded-lg border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${isActive ? ' bg-gradient-to-br dark:/30 dark:/30 ring-2 dark: shadow-lg shadow-purple-500/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover: dark:hover:'}`}
+                className={`p-3 rounded-lg border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${isActive ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 ring-2 ring-purple-300 dark:ring-purple-700 shadow-lg shadow-purple-500/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300 dark:hover:border-purple-600'}`}
             >
                 <div className="flex items-center gap-3">
                     {/* Drag Handle */}
@@ -73,7 +73,7 @@ function SortablePage({ page, pageNumber, isActive, onClick, onRemove }) {
                             {page.modules.slice(0, 6).map((module, i) => (
                                 <span
                                     key={i}
-                                    className="text-xs px-2 py-1 dark: dark: rounded"
+                                    className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded"
                                 >
                                     {module}
                                 </span>
@@ -154,7 +154,7 @@ export default function PageManager({ embedded = false }) {
                 <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br flex items-center justify-center flex-shrink-0">
+                            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
                                 <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
                                 </svg>
@@ -168,7 +168,7 @@ export default function PageManager({ embedded = false }) {
                         </div>
                         <button
                             onClick={togglePagesMode}
-                            className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${pagesEnabled ? 'bg-gradient-to-r text-white shadow-lg shadow-purple-500/30 ring-2 dark:' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+                            className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${pagesEnabled ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-300 dark:ring-purple-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
                         >
                             <span>{pagesEnabled ? 'ON' : 'OFF'}</span>
                         </button>
@@ -244,7 +244,7 @@ export default function PageManager({ embedded = false }) {
                         >
                             ← Précédent
                         </button>
-                        <div className="px-3 py-2 dark: rounded-lg font-bold dark:">
+                        <div className="px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg font-bold">
                             {currentPageIndex + 1} / {pages.length}
                         </div>
                         <button

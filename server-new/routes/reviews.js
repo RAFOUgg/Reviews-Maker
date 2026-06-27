@@ -10,7 +10,7 @@ import { validateReviewData, validateReviewId } from '../utils/validation.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
 import { EXPORT_LIMITS } from '../middleware/permissions.js'
-import { requireAuth } from '../middleware/auth.js'
+import { requireAuth, optionalAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -49,7 +49,7 @@ const upload = multer({
 })
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
-router.get('/', asyncHandler(async (req, res) => {
+router.get('/', optionalAuth, asyncHandler(async (req, res) => {
     const { type, search, sortBy = 'createdAt', order = 'desc', publicOnly, hasOrchard, userId } = req.query
 
     // Valider les paramètres de tri
@@ -135,7 +135,7 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 // GET /api/reviews/:id - Récupérer une review spécifique
-router.get('/:id', asyncHandler(async (req, res) => {
+router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     console.log(`🔍 GET /api/reviews/${req.params.id}`)
     console.log('👤 Authenticated:', typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false)
     console.log('👤 User:', req.user ? { id: req.user.id, username: req.user.username } : null)
@@ -839,7 +839,7 @@ router.post('/:id/dislike', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 // GET /api/reviews/:id/likes - Obtenir les stats de likes/dislikes d'une review
-router.get('/:id/likes', async (req, res) => {
+router.get('/:id/likes', optionalAuth, async (req, res) => {
     try {
         const { id } = req.params
 

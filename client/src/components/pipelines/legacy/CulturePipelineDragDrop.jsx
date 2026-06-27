@@ -8,7 +8,7 @@ import { CULTURE_PHASES } from '../../../config/pipelinePhases'
  * 
  * Wrapper qui configure PipelineDragDropView pour la culture :
  * - 84+ champs (cultureSidebarContent.js) convertis en format array
- * - Support des phases (12 phases de croissance)
+ * - Support des phases (13 phases : croissance + récolte)
  * - Graphiques d'évolution
  * - Export CSV détaillé
  */

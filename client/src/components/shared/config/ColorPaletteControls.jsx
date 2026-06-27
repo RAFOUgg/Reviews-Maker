@@ -47,7 +47,7 @@ export default function ColorPaletteControls() {
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => applyColorPalette(key)}
-                            className={`w-full p-4 rounded-xl transition-all border-2 text-left ${config.colors.palette === key ? ' shadow-lg' : 'border-gray-200 dark:border-gray-700 hover:' }`}
+                            className={`w-full p-4 rounded-xl transition-all border-2 text-left ${config.colors.palette === key ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-lg' : 'border-gray-200 dark:border-gray-700 hover:border-purple-300' }`}
                         >
                             <div className="flex items-center justify-between mb-3">
                                 <span className="font-semibold text-gray-900 dark:text-white">

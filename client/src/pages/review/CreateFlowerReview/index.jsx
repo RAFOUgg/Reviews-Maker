@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Save, Eye, Lock, Download } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Save, Eye, Lock } from 'lucide-react'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
@@ -15,7 +14,6 @@ import { flattenFlowerFormData, createFormDataFromFlat } from '../../../utils/fo
 import InfosGenerales from './sections/InfosGenerales'
 import Genetiques from './sections/Genetiques'
 import CulturePipelineSection from '../../../components/pipelines/sections/CulturePipelineSection'
-import Recolte from './sections/Recolte'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisuelTechnique from './sections/VisuelTechnique'
 import OdorSection from '../../../components/sections/OdorSection'
@@ -67,7 +65,6 @@ export default function CreateFlowerReview() {
 
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
-    const [showExportMaker, setShowExportMaker] = useState(false)
     const scrollContainerRef = useRef(null)
     // Curing section: optionnelle, activée seulement si l'utilisateur le souhaite
     // Auto-activée en édition si des données curing existent déjà
@@ -129,7 +126,6 @@ export default function CreateFlowerReview() {
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true, access: 'all' },
         { id: 'genetics', icon: '🧬', title: 'Génétiques & PhenoHunt', access: 'producteur' },
         { id: 'culture', icon: '🌱', title: 'Culture & Pipeline', access: 'producteur' },
-        { id: 'recolte', icon: '🌾', title: 'Récolte & Post-Récolte', access: 'producteur' },
         { id: 'analytics', icon: '🔬', title: 'Analytiques', access: 'all' },
         { id: 'visual', icon: '👁️', title: 'Visuel & Technique', access: 'all' },
         { id: 'odeurs', icon: '👃', title: 'Odeurs', access: 'all' },
@@ -328,7 +324,6 @@ export default function CreateFlowerReview() {
                 sectionEmojis={sectionEmojis}
                 showProgress={true}
                 onOpenPreview={() => setShowOrchard(true)}
-                onOpenExport={() => setShowExportMaker(true)}
                 onSave={handleSave}
                 onSubmit={handleSubmit}
                 reviewVisibility={currentVisibility}
@@ -373,12 +368,6 @@ export default function CreateFlowerReview() {
                             <CulturePipelineSection
                                 data={formData.culture || {}}
                                 onChange={(cultureData) => handleChange('culture', cultureData)}
-                            />
-                        )}
-                        {currentSectionData.id === 'recolte' && (
-                            <Recolte
-                                formData={formData}
-                                handleChange={handleChange}
                             />
                         )}
                         {currentSectionData.id === 'analytics' && (
@@ -482,17 +471,6 @@ export default function CreateFlowerReview() {
                             setShowOrchard(false)
                         }}
                         onPublish={handleSubmitWithOrchardData}
-                    />
-                </Suspense>
-            )}
-
-            {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
-            {showExportMaker && (
-                <Suspense fallback={null}>
-                    <ExportMaker
-                        reviewData={{ ...formData, photos }}
-                        productType="flower"
-                        onClose={() => setShowExportMaker(false)}
                     />
                 </Suspense>
             )}

@@ -198,7 +198,7 @@ const CellEditModal = ({
                                 step="0.1"
                                 value={formData.temperature}
                                 onChange={(e) => setFormData({ ...formData, temperature: e.target.value })}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus: focus:ring-2 focus:/20 outline-none transition-all"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
                                 placeholder="18.5"
                             />
                         </div>
@@ -216,7 +216,7 @@ const CellEditModal = ({
                                 max="100"
                                 value={formData.humidity}
                                 onChange={(e) => setFormData({ ...formData, humidity: e.target.value })}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus: focus:ring-2 focus:/20 outline-none transition-all"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
                                 placeholder="62"
                             />
                         </div>
@@ -240,7 +240,7 @@ const CellEditModal = ({
                                         max="24"
                                         value={formData.lightHours}
                                         onChange={(e) => setFormData({ ...formData, lightHours: e.target.value })}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus: outline-none"
+                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 outline-none"
                                         placeholder="18"
                                     />
                                 </div>
@@ -254,7 +254,7 @@ const CellEditModal = ({
                                         type="number"
                                         value={formData.co2}
                                         onChange={(e) => setFormData({ ...formData, co2: e.target.value })}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus: outline-none"
+                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 outline-none"
                                         placeholder="400"
                                     />
                                 </div>
@@ -271,7 +271,7 @@ const CellEditModal = ({
                                         max="14"
                                         value={formData.ph}
                                         onChange={(e) => setFormData({ ...formData, ph: e.target.value })}
-                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus: outline-none"
+                                        className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-white text-sm focus:border-purple-500 outline-none"
                                         placeholder="6.5"
                                     />
                                 </div>
@@ -287,7 +287,7 @@ const CellEditModal = ({
                             <select
                                 value={formData.containerType}
                                 onChange={(e) => setFormData({ ...formData, containerType: e.target.value })}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus: outline-none transition-all"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
                             >
                                 <option value="glass">Verre</option>
                                 <option value="plastic">Plastique</option>
@@ -306,7 +306,7 @@ const CellEditModal = ({
                             <select
                                 value={formData.packaging}
                                 onChange={(e) => setFormData({ ...formData, packaging: e.target.value })}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus: outline-none transition-all"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-purple-500 outline-none transition-all"
                             >
                                 <option value="none">Aucun</option>
                                 <option value="cellophane">Cellophane</option>
@@ -329,7 +329,7 @@ const CellEditModal = ({
                                 onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
                                 rows={3}
                                 maxLength={500}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus: focus:ring-2 focus:/20 outline-none transition-all resize-none"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all resize-none"
                                 placeholder="Observations, actions effectuées, événements..."
                             />
                             <div className="text-xs text-gray-500 mt-1">
@@ -550,7 +550,7 @@ const PipelineGitHubGrid = ({
                                 onChange={(e) => handleConfigChange('duration', parseInt(e.target.value) || 1)}
                                 min={1}
                                 max={INTERVAL_TYPES.find(t => t.id === config.intervalType)?.max || 100}
-                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus: focus:ring-2 focus:/20 outline-none transition-all"
+                                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all"
                             />
                         )}
                     </div>
@@ -566,7 +566,7 @@ const PipelineGitHubGrid = ({
                         <select
                             value={config.curingType}
                             onChange={(e) => handleConfigChange('curingType', e.target.value)}
-                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus: outline-none transition-all"
+                            className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:border-purple-500 outline-none transition-all"
                         >
                             <option value="cold">❄️ Froid (&lt; 5°C)</option>
                             <option value="warm">🔥 Chaud (&gt; 5°C)</option>

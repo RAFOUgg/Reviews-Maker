@@ -89,7 +89,7 @@ export default function TemplateSelector() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setTemplate(template.id)}
-                        className={`p-3 rounded-lg text-left transition-all border-2 ${config.template === template.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:'}`}
+                        className={`p-3 rounded-lg text-left transition-all border-2 ${config.template === template.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'}`}
                     >
                         <div className="flex items-start justify-between mb-1.5">
                             <div>
@@ -142,7 +142,7 @@ export default function TemplateSelector() {
                                 whileTap={isSupported ? { scale: 0.99 } : {}}
                                 onClick={() => isSupported && setRatio(ratio.id)}
                                 disabled={!isSupported}
-                                className={`p-2 rounded-md text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r text-white shadow-md' : isSupported ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'}`}
+                                className={`p-2 rounded-md text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : isSupported ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'}`}
                             >
                                 <div className="flex items-center justify-center gap-1.5">
                                     <span className="text-sm">{ratio.icon}</span>

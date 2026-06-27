@@ -410,11 +410,11 @@ export default function ExportModal({ onClose }) {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 z-[9999] bg-black/50 backdrop-blur-sm"
+                className="fixed inset-0 z-[10003] bg-black/50 backdrop-blur-sm"
                 onClick={onClose}
             />
 
-            <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+            <div className="fixed inset-0 z-[10003] flex items-center justify-center p-4 pointer-events-none">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -463,9 +463,9 @@ export default function ExportModal({ onClose }) {
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
                                 <div className="flex gap-2">
-                                    <button onClick={() => setSelectedScope('full')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'full' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Entrée complète</button>
-                                    <button onClick={() => setSelectedScope('canvas')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'canvas' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Canvas uniquement</button>
-                                    <button onClick={() => setSelectedScope('openGraph')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'openGraph' ? ' text-white' : 'bg-gray-50 text-gray-700'}`}>Social (Open Graph)</button>
+                                    <button onClick={() => setSelectedScope('full')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'full' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-700'}`}>Entrée complète</button>
+                                    <button onClick={() => setSelectedScope('canvas')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'canvas' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-700'}`}>Canvas uniquement</button>
+                                    <button onClick={() => setSelectedScope('openGraph')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'openGraph' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-700'}`}>Social (Open Graph)</button>
                                 </div>
                                 <p className="text-xs text-gray-400 mt-2">Choisissez si vous voulez exporter l'aperçu complet, le rendu (canvas) seulement, ou optimiser l'export pour les réseaux sociaux.</p>
                             </div>
@@ -473,7 +473,7 @@ export default function ExportModal({ onClose }) {
                             <div>
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Format d'export</h4>
-                                    <span className="text-xs px-2 py-1 rounded-full dark: dark:">
+                                    <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
                                         {accountFeatures.name || 'Amateur'}
                                     </span>
                                 </div>
@@ -484,7 +484,7 @@ export default function ExportModal({ onClose }) {
                                             whileHover={{ scale: 1.02 }}
                                             whileTap={{ scale: 0.98 }}
                                             onClick={() => setSelectedFormat(format.id)}
-                                            className={`p-4 rounded-xl text-left transition-all border-2 ${selectedFormat === format.id ? ' dark:' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:'}`}
+                                            className={`p-4 rounded-xl text-left transition-all border-2 ${selectedFormat === format.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-purple-300'}`}
                                         >
                                             <div className="flex items-start justify-between mb-2">
                                                 <span className="text-3xl">{format.icon}</span>
@@ -513,8 +513,8 @@ export default function ExportModal({ onClose }) {
 
                                 {/* Message d'upgrade si format premium */}
                                 {accountType === ACCOUNT_TYPES.CONSUMER && (
-                                    <div className="mt-3 p-3 rounded-lg bg-gradient-to-r dark:/20 dark:/20 border dark:">
-                                        <p className="text-xs dark:">
+                                    <div className="mt-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 border border-purple-200 dark:border-purple-700">
+                                        <p className="text-xs text-purple-700 dark:text-purple-300">
                                             💎 <strong>Passez Premium</strong> pour débloquer SVG, CSV, JSON et HTML avec exports haute qualité (300 DPI)
                                         </p>
                                     </div>
@@ -542,7 +542,7 @@ export default function ExportModal({ onClose }) {
                                                             key={scale}
                                                             onClick={() => !isDisabled && setExportOptions({ ...exportOptions, pngScale: scale })}
                                                             disabled={isDisabled}
-                                                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pngScale === scale ? ' text-white' : isDisabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
+                                                            className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pngScale === scale ? 'bg-purple-600 text-white' : isDisabled ? 'bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200'}`}
                                                         >
                                                             {scale}x {isDisabled && '🔒'}
                                                         </button>
@@ -560,7 +560,7 @@ export default function ExportModal({ onClose }) {
                                                 type="checkbox"
                                                 checked={exportOptions.pngTransparent}
                                                 onChange={(e) => setExportOptions({ ...exportOptions, pngTransparent: e.target.checked })}
-                                                className="w-4 h-4 rounded border-gray-300 focus:"
+                                                className="w-4 h-4 rounded border-gray-300 focus:ring-purple-500"
                                             />
                                             <span className="text-sm text-gray-700 dark:text-gray-300">
                                                 Fond transparent
@@ -581,7 +581,7 @@ export default function ExportModal({ onClose }) {
                                             step="0.1"
                                             value={exportOptions.jpegQuality}
                                             onChange={(e) => setExportOptions({ ...exportOptions, jpegQuality: parseFloat(e.target.value) })}
-                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r dark: dark: shadow-inner"
+                                            className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-gradient-to-r from-purple-300 to-purple-600 dark:from-purple-700 dark:to-purple-400 shadow-inner"
                                         />
                                     </div>
                                 )}
@@ -609,13 +609,13 @@ export default function ExportModal({ onClose }) {
                                             <div className="flex gap-2">
                                                 <button
                                                     onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'portrait' })}
-                                                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'portrait' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                                                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'portrait' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                                                 >
                                                     Portrait
                                                 </button>
                                                 <button
                                                     onClick={() => setExportOptions({ ...exportOptions, pdfOrientation: 'landscape' })}
-                                                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'landscape' ? ' text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
+                                                    className={`flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all ${exportOptions.pdfOrientation === 'landscape' ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300'}`}
                                                 >
                                                     Paysage
                                                 </button>
@@ -638,7 +638,7 @@ export default function ExportModal({ onClose }) {
                                             checked={exportOptions.includeBranding}
                                             onChange={(e) => accountFeatures.brandingRemoval && setExportOptions({ ...exportOptions, includeBranding: e.target.checked })}
                                             disabled={!accountFeatures.brandingRemoval}
-                                            className="w-4 h-4 rounded border-gray-300 focus: disabled:opacity-50"
+                                            className="w-4 h-4 rounded border-gray-300 focus:ring-purple-500 disabled:opacity-50"
                                         />
                                         <span className="text-sm text-gray-700 dark:text-gray-300">
                                             Inclure le logo/filigrane
@@ -665,7 +665,7 @@ export default function ExportModal({ onClose }) {
                                     className="space-y-3"
                                 >
                                     <div
-                                        className={`p-3 rounded-lg text-sm font-medium text-center ${exportStatus.startsWith('✅') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : exportStatus.startsWith('❌') ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : ' dark: dark:'}`}
+                                        className={`p-3 rounded-lg text-sm font-medium text-center ${exportStatus.startsWith('✅') ? 'bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400' : exportStatus.startsWith('❌') ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400' : 'bg-purple-50 dark:bg-purple-900/20 text-purple-600 dark:text-purple-400'}`}
                                     >
                                         {exportStatus}
                                     </div>
@@ -674,7 +674,7 @@ export default function ExportModal({ onClose }) {
                                     {isExporting && exportProgress < 100 && (
                                         <div className="relative h-3 bg-gray-300 dark:bg-gray-600 rounded-full overflow-hidden border border-gray-400 dark:border-gray-500 shadow-inner">
                                             <motion.div
-                                                className="absolute inset-y-0 left-0 bg-gradient-to-r rounded-full shadow-lg"
+                                                className="absolute inset-y-0 left-0 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full shadow-lg"
                                                 initial={{ width: '0%' }}
                                                 animate={{ width: `${exportProgress}%` }}
                                                 transition={{ duration: 0.3, ease: 'easeOut' }}
@@ -719,7 +719,7 @@ export default function ExportModal({ onClose }) {
                             whileTap={{ scale: 0.98 }}
                             onClick={handleExport}
                             disabled={isExporting}
-                            className="flex-1 px-6 py-3 bg-gradient-to-r text-white rounded-xl font-medium shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                            className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-xl font-medium shadow-lg hover:shadow-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                         >
                             {isExporting ? (
                                 <>

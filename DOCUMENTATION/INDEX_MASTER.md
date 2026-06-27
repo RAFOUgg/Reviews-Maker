@@ -1,139 +1,50 @@
 # 📚 DOCUMENTATION REVIEWS-MAKER - INDEX MASTER
 
-**Dernière mise à jour** : 28 janvier 2026  
-**État du projet** : 65% conforme au CDD  
-**Prochaine action** : Implémenter gestion abonnements UI
+**Dernière mise à jour** : 19 juin 2026 (révision complète après audit du code réel)
+**Référence à jour** : [PAGES/INDEX.md](./PAGES/INDEX.md) — chaque document de ce dossier a été comparé au code réel et réécrit en conséquence.
 
 ---
 
 ## 🚀 COMMENCER ICI
 
-| Votre rôle | Document à lire | Temps |
-|-----------|-----------------|-------|
-| **CEO/Manager** | [AUDIT_OPERATIONNEL_JANVIER_2026.md](../AUDIT_OPERATIONNEL_JANVIER_2026.md) | 10 min |
-| **Tech Lead** | [IN_DEV/AUDIT_MVP_V1_JANVIER_2026.md](IN_DEV/AUDIT_MVP_V1_JANVIER_2026.md) | 45 min |
-| **Développeur** | [IN_DEV/PLAN_ACTION_IMMEDIATE_PRIORITY.md](IN_DEV/PLAN_ACTION_IMMEDIATE_PRIORITY.md) | 30 min |
-| **QA** | [IN_DEV/INCOHÉRENCES_DOCS_CODE_DETAILS.md](IN_DEV/INCOHÉRENCES_DOCS_CODE_DETAILS.md) | 30 min |
+Toute la documentation fonctionnelle à jour vit sous [PAGES/](./PAGES/INDEX.md) :
+
+| Domaine | Document |
+|---|---|
+| Création de reviews (4 types) | [PAGES/CREATE_REVIEWS/*/INDEX.md](./PAGES/INDEX.md#création-de-reviews) |
+| Système Pipeline | [PAGES/CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md](./PAGES/CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md) |
+| Bibliothèque / PhenoHunt | [PAGES/BIBLIOTHEQUE/INDEX.md](./PAGES/BIBLIOTHEQUE/INDEX.md) |
+| Compte / Profil | [PAGES/PROFILS/INDEX.md](./PAGES/PROFILS/INDEX.md) |
+| Home / Galerie | [PAGES/Home/INDEX.md](./PAGES/Home/INDEX.md) |
+| Admin | [PAGES/PANNEAU_ADMIN/ADMIN_PANEL_README.md](./PAGES/PANNEAU_ADMIN/ADMIN_PANEL_README.md) |
+| Permissions / Tiers | [PAGES/PERMISSIONS.md](./PAGES/PERMISSIONS.md) |
+| Systèmes globaux | [PAGES/SYSTEMES_GLOBAUX.md](./PAGES/SYSTEMES_GLOBAUX.md) |
+| Schémas de données | [PAGES/DONNEES_SCHEMAS.md](./PAGES/DONNEES_SCHEMAS.md) |
+
+## 📁 Dossier `IN_DEV/`
+
+`IN_DEV/` contient ~60 fichiers d'audits, sprints et rapports de session datés (janvier-avril 2026). C'est une **archive historique du développement**, pas une référence d'état actuel — beaucoup de ces audits ont des pourcentages de conformité et des listes de blockers qui ont depuis été traités (ou ont évolué différemment). Pour l'état courant, toujours préférer `PAGES/`.
+
+## 📁 Dossier `CDC/`
+
+`CDC/COMPONENTS/` documente un composant spécifique (`FertilizationPipeline`) en détail technique — non ré-audité dans cette révision, à vérifier avant usage si le composant a évolué.
 
 ---
 
-## 📂 STRUCTURE DOCUMENTATION
+## 🔴 Points critiques vérifiés (2026-06-19) — à connaître avant toute estimation produit
 
-```
-DOCUMENTATION/
-│
-├── 📋 INDEX_MASTER.md .............. CE FICHIER (point d'entrée)
-├── 📋 DATA.md ...................... Specs Pipeline Culture (998 lignes)
-├── 📋 PAGES_AUDIT_MISSING.md ....... Audit docs manquantes
-│
-├── 📁 PAGES/ ....................... SPECS FONCTIONNELLES
-│   ├── INDEX.md .................... Hub navigation pages
-│   ├── PERMISSIONS.md .............. Matrice 3 tiers × 20+ features
-│   ├── SYSTEMES_GLOBAUX.md ......... Architecture Export, Auth, DB
-│   ├── DONNEES_SCHEMAS.md .......... Référence modèles données
-│   │
-│   ├── 📁 CREATE_REVIEWS/ .......... Specs création reviews
-│   │   ├── FLEURS/ ................. 9 sections complètes (478 lignes)
-│   │   ├── HASHS/ .................. Partiellement documenté
-│   │   ├── CONCENTRES/ ............. Partiellement documenté
-│   │   ├── COMESTIBLES/ ............ Partiellement documenté
-│   │   └── PIPELINE_SYSTEME/ ....... Architecture pipelines
-│   │
-│   ├── 📁 BIBLIOTHEQUE/ ............ Specs bibliothèque
-│   ├── 📁 PROFILS/ ................. Specs page compte (312 lignes)
-│   ├── 📁 Home/ .................... Specs page accueil
-│   └── 📁 PANNEAU_ADMIN/ ........... Specs admin panel
-│
-└── 📁 IN_DEV/ ...................... AUDITS & PLANS D'ACTION
-    ├── 🚀_COMMENCE_ICI.md .......... Guide lecture rapide
-    ├── 00_CONCLUSION_AUDIT_FINAL.md  Verdict final (17/01/2026)
-    ├── AUDIT_MVP_V1_JANVIER_2026.md  Audit détaillé complet
-    ├── PLAN_ACTION_IMMEDIATE*.md ... Code snippets prêts
-    └── ... (60+ fichiers historiques)
-```
-
----
-
-## 📊 ÉTAT CONFORMITÉ PAR MODULE
-
-### Création Reviews
-| Module | Specs (lignes) | Code | Conformité |
-|--------|----------------|------|------------|
-| Fleurs | 478 | ✅ | 80% |
-| Hash | ~200 | ⚠️ | 67% |
-| Concentrés | ~200 | ⚠️ | 47% |
-| Comestibles | ~100 | ⚠️ | 50% |
-
-### Systèmes
-| Module | Specs (lignes) | Code | Conformité |
-|--------|----------------|------|------------|
-| Export Maker | 371 | ⚠️ | 60% |
-| Profils/Account | 312 | ❌ | **15%** |
-| Permissions | 226 | ❌ | **40%** |
-| Bibliothèque | ~200 | ⚠️ | 50% |
-| Admin Panel | ~100 | ⚠️ | 73% |
-
----
-
-## 🔴 PRIORITÉS IMMÉDIATES
-
-### P0 - Bloquant Production (Cette semaine)
-1. **Onglet Abonnement dans AccountPage**
-   - Afficher type de compte actuel
-   - Afficher dates début/fin/renouvellement
-   - Bouton upgrade/downgrade
-
-2. **Modal Upgrade avec tarifs**
-   - Afficher les 3 tiers avec prix
-   - Comparaison features
-   - Bouton vers paiement Stripe
-
-3. **Hook useAccountFeatures**
-   - Vérifier permissions par tier
-   - Retourner features accessibles
-   - Gating automatique des sections
-
-### P1 - Important (Semaine prochaine)
-4. Stats différenciées par tier
-5. Restrictions export par tier
-6. Dashboard Producteur/Influenceur
-
-### P2 - Amélioration (Backlog)
-7. Export PDF/SVG/CSV complets
-8. Admin Panel dark theme
-9. Galerie publique avancée
-
----
+1. **Paiement non implémenté** : `server-new/routes/payment.js` est un stub complet (Stripe commenté, sessions mock). Les tiers payants (Influencer/Producer) sont activables sans aucune transaction réelle, via le panneau admin ou en base directement. Voir [PERMISSIONS.md](./PAGES/PERMISSIONS.md) et [PROFILS/INDEX.md](./PAGES/PROFILS/INDEX.md).
+2. **Upload de certificats d'analyse cassé pour Flower et absent pour Edible** : fonctionne pour Hash/Concentrate. Voir mémoire projet `ARCHITECTURAL_AUDIT_2026-04-01.md` et [CREATE_REVIEWS/FLEURS/INDEX.md](./PAGES/CREATE_REVIEWS/FLEURS/INDEX.md).
+3. **Bypass d'authentification en développement** : `NODE_ENV=development` injecte un faux utilisateur tier Producer sur toute route protégée (`server-new/middleware/auth.js`). Pareil pour `ADMIN_MODE=true`. Ne jamais activer en production.
+4. **Code mort confirmé** dans le système Pipeline : `PipelineCore.jsx`, `PipelineCellEditor.jsx`, `PipelineManager.jsx`, et plusieurs composants `legacy/` référencés uniquement par des pages de redirection deprecated. Voir [PIPELINE_SYSTEME/sys.md](./PAGES/CREATE_REVIEWS/PIPELINE_SYSTEME/sys.md).
 
 ## 🔗 LIENS RAPIDES
 
-### Code Source
 - Frontend : `client/src/`
 - Backend : `server-new/`
 - Schéma DB : `server-new/prisma/schema.prisma`
-
-### Fichiers Clés à Modifier
-- `client/src/pages/account/AccountPage.jsx`
-- `client/src/hooks/useAccountType.js`
-- `client/src/components/account/FeatureGate.jsx`
-- `server-new/routes/account.js`
-
-### Données Statiques
-- `data/aromas.json`
-- `data/effects.json`
-- `data/tastes.json`
-- `data/terpenes.json`
+- Données statiques : `data/*.json`
 
 ---
 
-## 📝 HISTORIQUE AUDITS
-
-| Date | Fichier | Conclusion |
-|------|---------|------------|
-| 28/01/2026 | AUDIT_OPERATIONNEL_JANVIER_2026.md | 65% - 3 blockers |
-| 17/01/2026 | IN_DEV/00_CONCLUSION_AUDIT_FINAL.md | 65% - Plan 5 jours |
-| 16/01/2026 | IN_DEV/SESSION_REPORT_JAN16*.md | Sprint 1 complet |
-
----
-
-*Ce fichier est le point d'entrée unique pour naviguer la documentation.*
+*Ce fichier est le point d'entrée unique pour naviguer la documentation. Les anciens audits restent disponibles dans `IN_DEV/` à titre historique.*

@@ -1606,6 +1606,11 @@ const PipelineDragDropView = ({
     const startSelection = (e, startIdx, timestamp) => {
         // Begin potential drag-selection. We wait for small threshold movement
         if (e.button !== 0) return;
+        // Ctrl/Cmd/Shift+click are entirely handled by handleCellClick (toggle / range-select
+        // against the existing selection). If the marquee system also reacts to the same
+        // mousedown, it wipes selectedCells before handleCellClick's onClick even runs, so a
+        // ctrl+click toggle always looks like "remove" and never accumulates a multi-selection.
+        if (e.ctrlKey || e.metaKey || e.shiftKey) return;
         e.preventDefault();
         const clientX = e.clientX;
         const clientY = e.clientY;
@@ -2002,7 +2007,8 @@ const PipelineDragDropView = ({
                         { id: 'phase-8', name: 'Fin Stretch', duration: 7, emoji: '🌲' },
                         { id: 'phase-9', name: 'Début Floraison', duration: 21, emoji: '🌸' },
                         { id: 'phase-10', name: 'Milieu Floraison', duration: 21, emoji: '🌺' },
-                        { id: 'phase-11', name: 'Fin Floraison', duration: 14, emoji: '🏵️' }
+                        { id: 'phase-11', name: 'Fin Floraison', duration: 14, emoji: '🏵️' },
+                        { id: 'phase-12', name: 'Récolte', duration: 1, emoji: '🌾' }
                     ];
                     defaultPhases = (timelineConfig.phases && timelineConfig.phases.length) ? timelineConfig.phases : culturePhases;
             }
@@ -2575,7 +2581,7 @@ const PipelineDragDropView = ({
                                         Phases prédéfinies
                                     </label>
                                     <div className="w-full px-3 py-2 bg-white/10 border border-white/20 rounded-lg text-sm font-medium text-white">
-                                        {type === 'culture' ? '12 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
+                                        {type === 'culture' ? '13 phases (Graine → Récolte)' : '4 phases (Séchage → Affinage)'}
                                     </div>
                                 </div>
                             )}

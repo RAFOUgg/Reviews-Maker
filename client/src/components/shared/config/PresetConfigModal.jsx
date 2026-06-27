@@ -318,7 +318,7 @@ const PresetConfigModal = ({
                     className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl w-full max-w-6xl max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50"
                 >
                     {/* Header */}
-                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r dark:from-gray-800 dark:to-gray-850">
+                    <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
                         <div className="flex-1">
                             <h2 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                                 <BookmarkPlus className="w-6 h-6" />
@@ -395,7 +395,7 @@ const PresetConfigModal = ({
                                         <button
                                             key={idx}
                                             onClick={() => setActiveSection(idx)}
-                                            className={`flex-shrink-0 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeSection === idx ? ' dark: bg-white dark:bg-gray-900' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
+                                            className={`flex-shrink-0 px-6 py-3 text-sm font-medium transition-colors border-b-2 ${activeSection === idx ? 'border-purple-600 text-purple-700 dark:text-purple-400 bg-white dark:bg-gray-900' : 'border-transparent text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'}`}
                                         >
                                             {section.label}
                                             <span className="ml-2 text-xs bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded">
@@ -515,7 +515,7 @@ const PresetConfigModal = ({
                                 <button
                                     type="button"
                                     onClick={() => setActiveSection(prev => Math.min(sections.length - 1, prev + 1))}
-                                    className="px-4 py-2 hover: text-white rounded-lg transition-colors"
+                                    className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors"
                                 >
                                     Suivant →
                                 </button>

@@ -82,18 +82,18 @@ const FRENCH_LABELS = {
 
 // Couleurs par catégorie
 const CATEGORY_COLORS = {
-    purple: ' dark:  dark:  dark:',
-    blue: ' dark:  dark:  dark:',
+    purple: 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300',
+    blue: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
     green: 'bg-green-100 dark:bg-green-900/30 border-green-300 dark:border-green-700 text-green-700 dark:text-green-300',
     yellow: 'bg-yellow-100 dark:bg-yellow-900/30 border-yellow-300 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300',
-    pink: ' dark: border-pink-300 dark:border-pink-700  dark:',
-    cyan: ' dark: border-cyan-300 dark:border-cyan-700  dark:',
+    pink: 'bg-pink-100 dark:bg-pink-900/30 border-pink-300 dark:border-pink-700 text-pink-700 dark:text-pink-300',
+    cyan: 'bg-cyan-100 dark:bg-cyan-900/30 border-cyan-300 dark:border-cyan-700 text-cyan-700 dark:text-cyan-300',
     orange: 'bg-orange-100 dark:bg-orange-900/30 border-orange-300 dark:border-orange-700 text-orange-700 dark:text-orange-300',
     gray: 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300',
     emerald: 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300',
     amber: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300',
     red: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300',
-    violet: ' dark: border-violet-300 dark:border-violet-700  dark:',
+    violet: 'bg-violet-100 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300',
     lime: 'bg-lime-100 dark:bg-lime-900/30 border-lime-300 dark:border-lime-700 text-lime-700 dark:text-lime-300',
     slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
 };
@@ -198,7 +198,7 @@ function SortableModule({ id, module, isVisible, onToggle, hasData = null, compa
                 ref={setNodeRef}
                 style={style}
                 whileHover={{ scale: 1.02 }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? ' dark: border dark:' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-60'}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-60'}`}
                 onClick={onToggle}
             >
                 {/* Data availability indicator */}
@@ -225,7 +225,7 @@ function SortableModule({ id, module, isVisible, onToggle, hasData = null, compa
             style={style}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className={`flex items-center gap-3 p-3 rounded-xl transition-all shadow-sm ${isVisible ? 'bg-white dark:bg-gray-800 border-2 shadow-purple-100 dark:shadow-purple-900/20' : 'bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700'} ${isDragging ? 'shadow-lg ring-2 ' : ''}`}
+            className={`flex items-center gap-3 p-3 rounded-xl transition-all shadow-sm ${isVisible ? 'bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 shadow-purple-100 dark:shadow-purple-900/20' : 'bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700'} ${isDragging ? 'shadow-lg ring-2 ring-purple-500' : ''}`}
         >
             {/* Drag handle */}
             <button
@@ -263,7 +263,7 @@ function SortableModule({ id, module, isVisible, onToggle, hasData = null, compa
             {/* Toggle */}
             <button
                 onClick={onToggle}
-                className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${isVisible ? 'bg-gradient-to-r ' : 'bg-gray-300 dark:bg-gray-600'}`}
+                className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${isVisible ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-gray-300 dark:bg-gray-600'}`}
                 title={isVisible ? 'Désactiver' : 'Activer'}
             >
                 <motion.span
@@ -532,7 +532,7 @@ export default function ContentModuleControls() {
                             📊 {dataFilledCount}
                         </span>
                     )}
-                    <span className="px-3 py-1 rounded-full dark: dark: text-sm font-bold">
+                    <span className="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-bold">
                         {visibleCount}/{totalCount}
                     </span>
                 </div>
@@ -549,7 +549,7 @@ export default function ContentModuleControls() {
                         else setViewMode('categories');
                     }}
                     placeholder="🔍 Rechercher un module..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus: focus:border-transparent"
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 {searchQuery && (
                     <button
@@ -566,13 +566,13 @@ export default function ContentModuleControls() {
                 <div className="flex-1 flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
                     <button
                         onClick={() => setViewMode('categories')}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'categories' ? ' text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'categories' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                     >
                         📂 Catégories
                     </button>
                     <button
                         onClick={() => setViewMode('list')}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'list' ? ' text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
+                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
                     >
                         📋 Liste
                     </button>
@@ -655,7 +655,7 @@ export default function ContentModuleControls() {
                             if (!config.contentModules[key]) toggleContentModule(key);
                         });
                     }}
-                    className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r text-white text-sm font-medium hover: hover: transition-all shadow-sm"
+                    className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:shadow-lg transition-all shadow-sm"
                 >
                     ✓ Tout afficher
                 </motion.button>
