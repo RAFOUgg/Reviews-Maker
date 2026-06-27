@@ -11,17 +11,10 @@ import fs from 'fs'
 import { prisma } from '../server.js'
 import { fileURLToPath } from 'url'
 import { randomUUID } from 'crypto'
+import { requireAuth } from '../middleware/auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const router = express.Router()
-
-// Middleware: Authentication check
-const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({ error: 'Unauthorized' })
-    }
-    next()
-}
 
 // Multer config for KYC document uploads
 const storage = multer.diskStorage({

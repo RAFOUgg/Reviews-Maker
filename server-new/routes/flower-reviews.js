@@ -13,6 +13,7 @@ import {
     canAccessSection
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -78,15 +79,6 @@ const handleMulterError = (err, req, res, next) => {
     // Non-multer error: pass to the global error handler so it's properly logged
     // and returned with the correct status code
     next(err)
-}
-
-// Middleware pour vérifier l'authentification
-const requireAuth = (req, res, next) => {
-    const _isAuthFunc = typeof req.isAuthenticated === 'function'
-    if (!_isAuthFunc || !req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Authentication required' })
-    }
-    next()
 }
 
 /**

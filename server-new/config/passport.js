@@ -82,6 +82,8 @@ passport.deserializeUser(async (id, done) => {
             roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
+            birthdate: new Date('1995-01-01'),
+            country: 'FR',
             consentRDR: true
         }
         return done(null, mockUser)

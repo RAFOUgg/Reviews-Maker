@@ -9,16 +9,9 @@ import speakeasy from 'speakeasy'
 import QRCode from 'qrcode'
 import { prisma } from '../server.js'
 import { randomUUID } from 'crypto'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
-
-// Middleware: Authentication check
-const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({ error: 'Unauthorized' });
-    }
-    next();
-};
 
 // ==================== GET SETTINGS ====================
 // GET /api/user/settings

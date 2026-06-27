@@ -19,6 +19,8 @@ export const requireAuth = (req, res, next) => {
             roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
+            birthdate: new Date('1995-01-01'),
+            country: 'FR',
             consentRDR: true
         }
         req.isAuthenticated = () => true
@@ -51,6 +53,8 @@ export const optionalAuth = (req, res, next) => {
             roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
+            birthdate: new Date('1995-01-01'),
+            country: 'FR',
             consentRDR: true
         }
         req.isAuthenticated = () => true

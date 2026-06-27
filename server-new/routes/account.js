@@ -12,6 +12,7 @@ import {
     requestProducerVerification,
     ACCOUNT_TYPES,
 } from '../services/account.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -20,7 +21,7 @@ const prisma = new PrismaClient();
  * GET /api/account/info
  * Récupère les informations complètes du compte utilisateur
  */
-router.get('/info', asyncHandler(async (req, res) => {
+router.get('/info', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -39,6 +40,8 @@ router.get('/info', asyncHandler(async (req, res) => {
             roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
+            birthdate: new Date('1995-01-01'),
+            country: 'FR',
             consentRDR: true,
             createdAt: new Date(),
             updatedAt: new Date(),
@@ -134,7 +137,7 @@ router.get('/types', (req, res) => {
  * POST /api/account/change-type
  * Change le type de compte de l'utilisateur
  */
-router.post('/change-type', asyncHandler(async (req, res) => {
+router.post('/change-type', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -199,7 +202,7 @@ router.post('/change-type', asyncHandler(async (req, res) => {
  * POST /api/account/request-verification
  * Demande de vérification pour compte producteur
  */
-router.post('/request-verification', asyncHandler(async (req, res) => {
+router.post('/request-verification', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -257,7 +260,7 @@ router.post('/request-verification', asyncHandler(async (req, res) => {
  * GET /api/account/producer-profile
  * Récupère le profil producteur
  */
-router.get('/producer-profile', asyncHandler(async (req, res) => {
+router.get('/producer-profile', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -290,7 +293,7 @@ router.get('/producer-profile', asyncHandler(async (req, res) => {
  * GET /api/account/influencer-profile
  * Récupère le profil influenceur
  */
-router.get('/influencer-profile', asyncHandler(async (req, res) => {
+router.get('/influencer-profile', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -323,7 +326,7 @@ router.get('/influencer-profile', asyncHandler(async (req, res) => {
  * PATCH /api/account/influencer-profile
  * Met à jour le profil influenceur (branding Orchard)
  */
-router.patch('/influencer-profile', asyncHandler(async (req, res) => {
+router.patch('/influencer-profile', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -368,7 +371,7 @@ router.patch('/influencer-profile', asyncHandler(async (req, res) => {
  * PUT /api/account/update
  * Met à jour les informations de profil de l'utilisateur
  */
-router.put('/update', asyncHandler(async (req, res) => {
+router.put('/update', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -520,7 +523,7 @@ router.put('/update', asyncHandler(async (req, res) => {
  * GET /api/account/profile
  * Récupère le profil complet de l'utilisateur (alias pour /info)
  */
-router.get('/profile', asyncHandler(async (req, res) => {
+router.get('/profile', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -536,7 +539,7 @@ router.get('/profile', asyncHandler(async (req, res) => {
  * GET /api/account/multiple
  * Récupère la liste des comptes multicompte de l'utilisateur (future feature)
  */
-router.get('/multiple', asyncHandler(async (req, res) => {
+router.get('/multiple', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',
@@ -568,7 +571,7 @@ router.get('/multiple', asyncHandler(async (req, res) => {
  * PATCH /api/account/language
  * Met à jour la langue préférée de l'utilisateur
  */
-router.patch('/language', asyncHandler(async (req, res) => {
+router.patch('/language', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {
         return res.status(401).json({
             error: 'unauthorized',

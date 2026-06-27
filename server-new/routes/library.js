@@ -9,6 +9,7 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
 import { canAccessFeature } from '../middleware/permissions.js';
+import { requireAuth } from '../middleware/auth.js';
 import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -43,16 +44,6 @@ const uploadExport = multer({
     }
 })
 
-// Middleware d'authentification requis pour toutes les routes
-const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({
-            error: 'unauthorized',
-            message: 'Authentification requise',
-        });
-    }
-    next();
-};
 
 // ===========================
 // TEMPLATES SAUVEGARDÉS
@@ -827,12 +818,12 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
 
     // Reviews count
     const totalReviews = await prisma.review.count({
-        where: { userId: req.user.id }
+        where: { authorId: req.user.id }
     });
 
     const reviewsThisMonth = await prisma.review.count({
         where: {
-            userId: req.user.id,
+            authorId: req.user.id,
             createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth() - 1)) }
         }
     });
@@ -840,13 +831,13 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
     // Reviews by type
     const reviewsByType = await prisma.review.groupBy({
         by: ['type'],
-        where: { userId: req.user.id },
+        where: { authorId: req.user.id },
         _count: true
     });
 
     // Public vs Private
     const publicReviews = await prisma.review.count({
-        where: { userId: req.user.id, isPublic: true }
+        where: { authorId: req.user.id, isPublic: true }
     });
 
     // Engagement (placeholder - will be replaced with real metrics)
@@ -859,7 +850,7 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
 
     // Top reviews by views/likes (placeholder)
     const topReviews = await prisma.review.findMany({
-        where: { userId: req.user.id, isPublic: true },
+        where: { authorId: req.user.id, isPublic: true },
         take: 5,
         orderBy: { createdAt: 'desc' },
         select: {

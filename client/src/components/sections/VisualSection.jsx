@@ -15,8 +15,13 @@ import { Eye, X, Check } from 'lucide-react';
  * Utilisée pour Hash, Concentrés et Fleurs
  * Champs adaptés selon le type de produit
  */
-export default function VisualSection({ productType, formData = {}, handleChange }) {
-    const data = formData.visual || {};
+export default function VisualSection({ productType, data: directData, onChange, formData = {}, handleChange }) {
+    // Support both prop patterns: data/onChange (used by Hash/Concentrate) OR formData/handleChange
+    const data = directData || formData.visual || {};
+    const safeUpdate = (payload) => {
+        if (typeof onChange === 'function') return onChange(payload);
+        if (typeof handleChange === 'function') return handleChange('visual', payload);
+    };
     // Couleurs multiples avec pourcentages
     const [selectedColors, setSelectedColors] = useState(data?.colors || []);
     const [colorRating, setColorRating] = useState(data?.colorRating || 5);
@@ -37,7 +42,7 @@ export default function VisualSection({ productType, formData = {}, handleChange
             mold,
             seeds
         };
-        handleChange('visual', visualData);
+        safeUpdate(visualData);
     }, [selectedColors, colorRating, density, trichomes, transparency, mold, seeds, productType]);
 
     const allColors = getAllColorShades();

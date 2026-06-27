@@ -1659,27 +1659,17 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
                         {/* Secondary export grid */}
                         <div className="grid grid-cols-3 gap-2">
-                            <FeatureGate
-                                type="export"
-                                feature="formats.jpeg"
-                                fallback={
-                                    <button disabled className="w-full px-3 py-2 rounded-md bg-white/10 text-white/50 text-xs font-medium opacity-50 cursor-not-allowed">
-                                        JPEG
-                                    </button>
-                                }
+                            {/* JPEG/PDF: pas de restriction de compte (spec: Consumer = PNG/JPEG/PDF) */}
+                            <button
+                                onClick={() => handleExport('jpeg')}
+                                disabled={exporting}
+                                className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
                             >
-                                <button
-                                    onClick={() => handleExport('jpeg')}
-                                    disabled={exporting}
-                                    className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
-                                >
-                                    JPEG
-                                </button>
-                            </FeatureGate>
+                                JPEG
+                            </button>
 
                             <FeatureGate
-                                type="export"
-                                feature="formats.svg"
+                                hasAccess={canExportSVG}
                                 fallback={
                                     <button disabled className="w-full px-3 py-2 rounded-md bg-white/10 text-white/50 text-xs font-medium opacity-50 cursor-not-allowed">
                                         SVG
@@ -1695,30 +1685,19 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
                                 </button>
                             </FeatureGate>
 
-                            <FeatureGate
-                                type="export"
-                                feature="formats.pdf"
-                                fallback={
-                                    <button disabled className="w-full px-3 py-2 rounded-md bg-white/10 text-white/50 text-xs font-medium opacity-50 cursor-not-allowed">
-                                        PDF
-                                    </button>
-                                }
+                            <button
+                                onClick={() => handleExport('pdf')}
+                                disabled={exporting}
+                                className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
                             >
-                                <button
-                                    onClick={() => handleExport('pdf')}
-                                    disabled={exporting}
-                                    className="w-full px-3 py-2 rounded-md bg-white/10 hover:bg-white/20 disabled:bg-white/10 text-white text-xs font-medium transition-colors"
-                                >
-                                    PDF
-                                </button>
-                            </FeatureGate>
+                                PDF
+                            </button>
                         </div>
 
-                        {/* GIF export row */}
+                        {/* GIF export row — Producteur uniquement */}
                         <FeatureGate
-                            type="export"
-                            feature="features.dragDrop"
-                            fallback={null}
+                            hasAccess={canExportGIF}
+                            showOverlay={false}
                         >
                             <button
                                 onClick={handleExportGIF}

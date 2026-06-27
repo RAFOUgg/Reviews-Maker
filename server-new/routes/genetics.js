@@ -27,17 +27,10 @@ import {
     validateNodeUpdate,
     validateEdgeCreation
 } from '../middleware/validateGenetics.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
-
-// Middleware d'authentification requis
-const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({ error: "Unauthorized" });
-    }
-    next();
-};
 
 // =============================================================================
 // TREES ROUTES

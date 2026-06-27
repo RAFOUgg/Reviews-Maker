@@ -150,11 +150,11 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     onChange={(e) => handleValueChange(field.id, e.target.value)}
                     className={`${baseClass} min-w-[120px]`}
                 >
-                    <option value="">Sélectionner...</option>
+                    <option value="" className="bg-[#0f0f1a]">Sélectionner...</option>
                     {field.options.map((opt, idx) => {
                         const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
                         const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                        return <option key={idx} value={val}>{lab}</option>;
+                        return <option key={idx} value={val} className="bg-[#0f0f1a]">{lab}</option>;
                     })}
                 </select>
             );

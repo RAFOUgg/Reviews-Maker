@@ -241,6 +241,8 @@ if (process.env.NODE_ENV === 'development') {
                 roles: '{"roles":["producteur"]}',
                 emailVerified: true,
                 legalAge: true,
+                birthdate: new Date('1995-01-01'),
+                country: 'FR',
                 consentRDR: true
             }
         })
@@ -343,6 +345,8 @@ router.get('/me', asyncHandler(async (req, res) => {
             roles: '{"roles":["producteur"]}',
             emailVerified: true,
             legalAge: true,
+            birthdate: new Date('1995-01-01'),
+            country: 'FR',
             consentRDR: true
         }
 

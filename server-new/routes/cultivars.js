@@ -11,16 +11,9 @@
 import express from 'express'
 import { prisma } from '../server.js'
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
-
-// Middleware auth
-const requireAuth = (req, res, next) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Authentication required' })
-    }
-    next()
-}
 
 /**
  * GET /api/cultivars

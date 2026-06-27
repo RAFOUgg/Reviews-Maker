@@ -12,6 +12,7 @@ import {
     US_LEGAL_STATES_21,
     CA_PROVINCES_19,
 } from '../config/legal.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -20,7 +21,7 @@ const prisma = new PrismaClient();
  * POST /api/legal/verify-age
  * Vérifie et enregistre la date de naissance + pays
  */
-router.post('/verify-age', async (req, res) => {
+router.post('/verify-age', requireAuth, async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -133,7 +134,7 @@ router.post('/verify-age', async (req, res) => {
  * POST /api/legal/accept-consent
  * Enregistre le consentement RDR
  */
-router.post('/accept-consent', async (req, res) => {
+router.post('/accept-consent', requireAuth, async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -202,7 +203,7 @@ router.post('/accept-consent', async (req, res) => {
  * GET /api/legal/status
  * Récupère le statut légal de l'utilisateur connecté
  */
-router.get('/status', async (req, res) => {
+router.get('/status', requireAuth, async (req, res) => {
     try {
         // ✅ DEV MODE: Return mock legal status without DB
         if (process.env.NODE_ENV === 'development') {
@@ -430,7 +431,7 @@ router.get('/notice', (req, res) => {
  * POST /api/legal/consent
  * Enregistre le consentement de l\'utilisateur
  */
-router.post('/consent', async (req, res) => {
+router.post('/consent', requireAuth, async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -499,7 +500,7 @@ router.post('/consent', async (req, res) => {
  * GET /api/legal/user-preferences
  * Récupère les préférences pays/langue de l'utilisateur
  */
-router.get('/user-preferences', async (req, res) => {
+router.get('/user-preferences', requireAuth, async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({
@@ -526,7 +527,7 @@ router.get('/user-preferences', async (req, res) => {
  * POST /api/legal/update-preferences
  * Met à jour les préférences pays/langue de l'utilisateur
  */
-router.post('/update-preferences', async (req, res) => {
+router.post('/update-preferences', requireAuth, async (req, res) => {
     try {
         if (!req.user) {
             return res.status(401).json({

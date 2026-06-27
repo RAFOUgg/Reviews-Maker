@@ -12,16 +12,9 @@ import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import { prisma } from '../server.js'
 import { asyncHandler } from '../utils/errorHandler.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
-
-// Middleware auth
-const requireAuth = (req, res, next) => {
-    if (!req.isAuthenticated || !req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Authentication required' })
-    }
-    next()
-}
 
 /**
  * GET /api/pipelines/:pipelineId

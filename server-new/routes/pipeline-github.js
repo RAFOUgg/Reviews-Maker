@@ -1,17 +1,9 @@
 import express from 'express'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
-
-// Middleware pour vérifier l'authentification
-const requireAuth = (req, res, next) => {
-    const _isAuthFunc = typeof req.isAuthenticated === 'function'
-    if (!_isAuthFunc || !req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Authentication required' })
-    }
-    next()
-}
 
 /**
  * POST /api/pipeline-github

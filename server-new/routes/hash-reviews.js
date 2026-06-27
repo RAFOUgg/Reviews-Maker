@@ -7,6 +7,7 @@ import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
+import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -39,15 +40,6 @@ const upload = multer({
         }
     }
 })
-
-// Middleware auth
-const requireAuth = (req, res, next) => {
-    const _isAuthFunc = typeof req.isAuthenticated === 'function'
-    if (!_isAuthFunc || !req.isAuthenticated()) {
-        return res.status(401).json({ error: 'Authentication required' })
-    }
-    next()
-}
 
 /**
  * Validation des données HashReview

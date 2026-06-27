@@ -4,9 +4,10 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { edibleReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, lazy } from 'react'
+import { useState, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+const ExportMaker = lazy(() => import('../../../components/export/ExportMaker'))
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -32,6 +33,7 @@ export default function CreateEdibleReview() {
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
     const [showOrchard, setShowOrchard] = useState(false)
+    const [showExportMaker, setShowExportMaker] = useState(false)
 
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
@@ -52,27 +54,41 @@ export default function CreateEdibleReview() {
         }
     }
 
+    // RecipePipelineSection garde ingredients/steps imbriqués sous formData.recipe, mais le
+    // backend (edible-reviews.js) lit des champs à plat: `ingredients` et `etapesPreparation`
+    // (pas `recipe.steps`) — sans ce dépaquetage, la recette est silencieusement perdue.
+    const buildReviewFormData = () => {
+        const reviewFormData = new FormData()
+
+        Object.keys(formData).forEach(key => {
+            if (key === 'photos' || formData[key] === undefined || formData[key] === null) return
+            if (key === 'recipe') {
+                const recipe = formData.recipe || {}
+                if (recipe.ingredients) reviewFormData.append('ingredients', JSON.stringify(recipe.ingredients))
+                if (recipe.steps) reviewFormData.append('etapesPreparation', JSON.stringify(recipe.steps))
+                return
+            }
+            reviewFormData.append(key, typeof formData[key] === 'object'
+                ? JSON.stringify(formData[key])
+                : formData[key]
+            )
+        })
+
+        if (photos && photos.length > 0) {
+            photos.forEach((photo) => {
+                if (photo.file) {
+                    reviewFormData.append('photos', photo.file)
+                }
+            })
+        }
+
+        return reviewFormData
+    }
+
     const handleSave = async () => {
         try {
             setSaving(true)
-            const reviewFormData = new FormData()
-
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
-
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
+            const reviewFormData = buildReviewFormData()
 
             reviewFormData.append('status', 'draft')
 
@@ -104,24 +120,7 @@ export default function CreateEdibleReview() {
 
         try {
             setSaving(true)
-            const reviewFormData = new FormData()
-
-            Object.keys(formData).forEach(key => {
-                if (key !== 'photos' && formData[key] !== undefined && formData[key] !== null) {
-                    reviewFormData.append(key, typeof formData[key] === 'object'
-                        ? JSON.stringify(formData[key])
-                        : formData[key]
-                    )
-                }
-            })
-
-            if (photos && photos.length > 0) {
-                photos.forEach((photo) => {
-                    if (photo.file) {
-                        reviewFormData.append('photos', photo.file)
-                    }
-                })
-            }
+            const reviewFormData = buildReviewFormData()
 
             reviewFormData.append('status', 'published')
 
@@ -163,6 +162,7 @@ export default function CreateEdibleReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
+                onOpenExport={() => setShowExportMaker(true)}
                 onSave={handleSave}
                 onSubmit={handleSubmit}
                 title="Créer une review Comestible"
@@ -234,6 +234,17 @@ export default function CreateEdibleReview() {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Export Maker – OUTSIDE layout to avoid z-index stacking context issues */}
+            {showExportMaker && (
+                <Suspense fallback={null}>
+                    <ExportMaker
+                        reviewData={{ ...formData, photos }}
+                        productType="edible"
+                        onClose={() => setShowExportMaker(false)}
+                    />
+                </Suspense>
+            )}
         </>
     )
 }

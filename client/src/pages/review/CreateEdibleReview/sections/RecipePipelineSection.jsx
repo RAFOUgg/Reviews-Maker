@@ -139,11 +139,11 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     onChange={(e) => updateIngredient(ing.id, 'cannabinoidType', e.target.value)}
                                                     className="col-span-3 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white"
                                                 >
-                                                    <option value="fleur">Fleur</option>
-                                                    <option value="hash">Hash</option>
-                                                    <option value="concentre">Concentré</option>
-                                                    <option value="huile">Huile</option>
-                                                    <option value="beurre">Beurre</option>
+                                                    <option value="fleur" className="bg-[#1a1a2e]">Fleur</option>
+                                                    <option value="hash" className="bg-[#1a1a2e]">Hash</option>
+                                                    <option value="concentre" className="bg-[#1a1a2e]">Concentré</option>
+                                                    <option value="huile" className="bg-[#1a1a2e]">Huile</option>
+                                                    <option value="beurre" className="bg-[#1a1a2e]">Beurre</option>
                                                 </select>
                                                 <input
                                                     type="text"
@@ -164,7 +164,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     onChange={(e) => updateIngredient(ing.id, 'unit', e.target.value)}
                                                     className="col-span-2 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white"
                                                 >
-                                                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                                    {UNITS.map(u => <option key={u} value={u} className="bg-[#1a1a2e]">{u}</option>)}
                                                 </select>
                                                 <button
                                                     onClick={() => removeIngredient(ing.id)}
@@ -213,7 +213,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     onChange={(e) => updateIngredient(ing.id, 'unit', e.target.value)}
                                                     className="col-span-2 px-2 py-1 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white"
                                                 >
-                                                    {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
+                                                    {UNITS.map(u => <option key={u} value={u} className="bg-[#1a1a2e]">{u}</option>)}
                                                 </select>
                                                 <button
                                                     onClick={() => removeIngredient(ing.id)}
@@ -283,7 +283,7 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
                                                     className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/20 rounded-xl text-sm text-white"
                                                 >
                                                     {PREPARATION_ACTIONS.map(a => (
-                                                        <option key={a} value={a}>{a}</option>
+                                                        <option key={a} value={a} className="bg-[#1a1a2e]">{a}</option>
                                                     ))}
                                                 </select>
                                                 <textarea

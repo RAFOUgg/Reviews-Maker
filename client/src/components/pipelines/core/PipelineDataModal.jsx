@@ -271,11 +271,11 @@ function PipelineDataModal({
                             className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
                             required={droppedItem !== null}
                         >
-                            <option value="">Sélectionner...</option>
+                            <option value="" className="bg-white dark:bg-gray-800">Sélectionner...</option>
                             {item.options.map((opt, idx) => {
                                 const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
                                 const labelOpt = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
-                                return <option key={`${itemKey}-${idx}-${val}`} value={val}>{labelOpt}</option>;
+                                return <option key={`${itemKey}-${idx}-${val}`} value={val} className="bg-white dark:bg-gray-800">{labelOpt}</option>;
                             })}
                         </select>
                     </div>
@@ -362,10 +362,10 @@ function PipelineDataModal({
                                 onChange={(e) => handleChange(itemKey, { ...freqValue, period: e.target.value })}
                                 className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
                             >
-                                <option value="hour">heure</option>
-                                <option value="day">jour</option>
-                                <option value="week">semaine</option>
-                                <option value="month">mois</option>
+                                <option value="hour" className="bg-white dark:bg-gray-800">heure</option>
+                                <option value="day" className="bg-white dark:bg-gray-800">jour</option>
+                                <option value="week" className="bg-white dark:bg-gray-800">semaine</option>
+                                <option value="month" className="bg-white dark:bg-gray-800">mois</option>
                             </select>
                         </div>
                     </div>

@@ -10,20 +10,10 @@ import express from 'express';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../utils/errorHandler.js';
 import { getUserAccountType } from '../services/account.js';
+import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
-
-// Middleware d'authentification
-const requireAuth = (req, res, next) => {
-    if (!req.user) {
-        return res.status(401).json({
-            error: 'unauthorized',
-            message: 'Authentification requise',
-        });
-    }
-    next();
-};
 
 /**
  * GET /api/stats
@@ -58,10 +48,10 @@ router.get('/', requireAuth, asyncHandler(async (req, res) => {
     ] = await Promise.all([
         prisma.review.count({ where: { authorId: req.user.id } }),
         prisma.review.count({ where: { authorId: req.user.id, isPublic: true } }),
-        prisma.review.count({ where: { authorId: req.user.id, type: 'Fleur' } }),
-        prisma.review.count({ where: { authorId: req.user.id, type: 'Hash' } }),
-        prisma.review.count({ where: { authorId: req.user.id, type: 'Concentré' } }),
-        prisma.review.count({ where: { authorId: req.user.id, type: 'Comestible' } }),
+        prisma.review.count({ where: { authorId: req.user.id, type: 'Fleurs' } }),
+        prisma.review.count({ where: { authorId: req.user.id, type: 'hash' } }),
+        prisma.review.count({ where: { authorId: req.user.id, type: 'concentrate' } }),
+        prisma.review.count({ where: { authorId: req.user.id, type: 'edible' } }),
         prisma.reviewLike.count({
             where: {
                 review: {
@@ -313,7 +303,7 @@ router.get('/producer', requireAuth, asyncHandler(async (req, res) => {
     const flowerReviews = await prisma.review.findMany({
         where: {
             authorId: req.user.id,
-            type: 'Fleur',
+            type: 'Fleurs',
         },
         include: {
             flowerData: true,

@@ -75,9 +75,9 @@ export default function Recolte({ formData, handleChange }) {
                         </label>
                         <SegmentedControl
                             options={[
-                                { value: 'precoce', label: 'Précoce', emoji: '🌱' },
-                                { value: 'optimal', label: 'Optimal', emoji: '✨' },
-                                { value: 'tardif', label: 'Tardif', emoji: '🍂' }
+                                { id: 'precoce', label: 'Précoce', emoji: '🌱' },
+                                { id: 'optimal', label: 'Optimal', emoji: '✨' },
+                                { id: 'tardif', label: 'Tardif', emoji: '🍂' }
                             ]}
                             value={recolteData.fenetreRecolte || 'optimal'}
                             onChange={(value) => handleRecolteChange('fenetreRecolte', value)}
@@ -160,12 +160,12 @@ export default function Recolte({ formData, handleChange }) {
                             onChange={(e) => handleRecolteChange('modeRecolte', e.target.value)}
                             className="liquid-input liquid-select w-full"
                         >
-                            <option value="plante-entiere">Plante entière</option>
-                            <option value="branches">Branches</option>
-                            <option value="buds">Buds unitaires</option>
-                            <option value="machine-trim">Machine trim</option>
-                            <option value="hand-trim">Hand trim</option>
-                            <option value="mixte">Mixte</option>
+                            <option value="plante-entiere" className="bg-[#12121a] text-white">Plante entière</option>
+                            <option value="branches" className="bg-[#12121a] text-white">Branches</option>
+                            <option value="buds" className="bg-[#12121a] text-white">Buds unitaires</option>
+                            <option value="machine-trim" className="bg-[#12121a] text-white">Machine trim</option>
+                            <option value="hand-trim" className="bg-[#12121a] text-white">Hand trim</option>
+                            <option value="mixte" className="bg-[#12121a] text-white">Mixte</option>
                         </select>
                     </div>
 

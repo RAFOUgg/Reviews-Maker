@@ -111,7 +111,7 @@ export default function LibraryPage() {
             case 'cultivars':
                 return isProducer ? <CultivarsTab /> : null
             case 'templates':
-                return <TemplatesTab />
+                return <TemplatesTab userTier={user?.accountType} />
             case 'watermarks':
                 return <WatermarksTab />
             case 'data':
