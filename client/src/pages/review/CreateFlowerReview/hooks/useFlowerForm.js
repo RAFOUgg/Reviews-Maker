@@ -11,7 +11,7 @@ export function useFlowerForm(reviewId = null) {
         type: 'flower',
         // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
         // Start at 0 so empty reviews don't appear pre-filled in OrchardPanel
-        densite: 0, trichomes: 0, pistils: 0, manucure: 0, moisissure: 0, graines: 0,
+        colorRating: 0, densite: 0, trichomes: 0, pistils: 0, manucure: 0, moisissure: 0, graines: 0,
         selectedColors: [],
         // Visual sub-object — all scores start at 0
         visual: { colors: [], colorRating: 0, density: 0, trichomes: 0, mold: 0, seeds: 0 }
@@ -156,6 +156,7 @@ export function useFlowerForm(reviewId = null) {
                 ...fd,
                 // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
                 // These MUST come after ...fd to override fd.densiteVisuelle etc.
+                colorRating: fd.couleurScore ?? 0,
                 densite: fd.densiteVisuelle ?? 0,
                 trichomes: fd.trichomesScore ?? 0,
                 pistils: fd.pistilsScore ?? 0,

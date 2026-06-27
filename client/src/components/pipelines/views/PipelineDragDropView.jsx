@@ -569,12 +569,15 @@ import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
 function SavePipelineModal({
     isOpen, onClose,
     timelineConfig, timelineData, groupedPresets,
+    cells = [],
     onLoadPreset, pipelineType
 }) {
     const [tab, setTab] = useState('mes'); // 'mes' | 'templates' | 'nouveau'
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
     const [includeData, setIncludeData] = useState(false);
+    // Quelle case doit recevoir les données de quel groupe de préréglages, au chargement du setup
+    const [groupAssignments, setGroupAssignments] = useState({});
 
     const storageKey = `pipeline-setups-${pipelineType || 'unknown'}`;
     const [saved, setSaved] = useState(() => {
@@ -588,6 +591,10 @@ function SavePipelineModal({
 
     const handleSave = () => {
         if (!name.trim()) return;
+        // Ne garder que les assignations qui pointent vers une case choisie
+        const cleanAssignments = Object.fromEntries(
+            Object.entries(groupAssignments).filter(([, ts]) => !!ts)
+        );
         const setup = {
             id: Date.now(),
             name: name.trim(),
@@ -595,12 +602,13 @@ function SavePipelineModal({
             createdAt: new Date().toISOString(),
             config: timelineConfig || {},
             groupedPresets: groupedPresets || [],
+            groupAssignments: cleanAssignments,
             data: includeData ? (timelineData || []) : []
         };
         const next = [...saved, setup];
         localStorage.setItem(storageKey, JSON.stringify(next));
         setSaved(next);
-        setName(''); setDescription('');
+        setName(''); setDescription(''); setGroupAssignments({});
         setTab('mes');
     };
 
@@ -630,7 +638,11 @@ function SavePipelineModal({
                 )}
                 {!builtin && (
                     <div className="text-xs text-white/30 mt-1">
-                        {setup.groupedPresets?.length || 0} groupe(s) · {new Date(setup.createdAt).toLocaleDateString('fr-FR')}
+                        {setup.groupedPresets?.length || 0} groupe(s)
+                        {Object.keys(setup.groupAssignments || {}).length > 0 && (
+                            <> · {Object.keys(setup.groupAssignments).length} assigné(s) à une case</>
+                        )}
+                        {' · '}{new Date(setup.createdAt).toLocaleDateString('fr-FR')}
                     </div>
                 )}
                 {builtin && setup.groupedPresets?.[0] && (
@@ -724,6 +736,41 @@ function SavePipelineModal({
                                 <input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} className="accent-purple-500" />
                                 Inclure les données des cases
                             </label>
+
+                            {/* Assignation case → groupe : au chargement du setup, chaque groupe assigné
+                                se dépose automatiquement sur la case choisie, sans drag & drop manuel */}
+                            {groupedPresets && groupedPresets.length > 0 && (
+                                <div className="space-y-2 p-3 bg-white/5 border border-white/10 rounded-xl">
+                                    <p className="text-xs font-medium text-white/70">
+                                        Appliquer automatiquement un groupe à une case
+                                    </p>
+                                    {groupedPresets.map(group => {
+                                        const groupId = group.id || group.name;
+                                        return (
+                                            <div key={groupId} className="flex items-center gap-2">
+                                                <span className="text-base flex-shrink-0">{group.emoji || '🌱'}</span>
+                                                <span className="text-sm text-white/80 flex-1 truncate">{group.name}</span>
+                                                <select
+                                                    value={groupAssignments[groupId] || ''}
+                                                    onChange={e => setGroupAssignments(prev => ({ ...prev, [groupId]: e.target.value }))}
+                                                    className="px-2 py-1 bg-[#0d0d1a] border border-white/20 rounded-lg text-xs text-white max-w-[160px]"
+                                                >
+                                                    <option value="" className="bg-[#0d0d1a]">— Aucune case —</option>
+                                                    {cells.map(cell => (
+                                                        <option key={cell.timestamp} value={cell.timestamp} className="bg-[#0d0d1a]">
+                                                            {cell.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        );
+                                    })}
+                                    <p className="text-xs text-white/30">
+                                        Au chargement de ce setup, le(s) groupe(s) assigné(s) s'appliqueront directement sur leur case choisie.
+                                    </p>
+                                </div>
+                            )}
+
                             <button
                                 onClick={handleSave}
                                 disabled={!name.trim()}
@@ -1876,8 +1923,25 @@ const PipelineDragDropView = ({
                 localStorage.setItem(storageKey, JSON.stringify(mergedPresets));
             }
 
-            // Apply cell data (optional)
+            // Apply group → cell assignments (auto-drop each assigned group's fields onto its target cell)
             const allChanges = [];
+            if (preset.groupAssignments && typeof preset.groupAssignments === 'object') {
+                const presetGroups = Array.isArray(preset.groupedPresets) ? preset.groupedPresets : [];
+                Object.entries(preset.groupAssignments).forEach(([groupId, targetTimestamp]) => {
+                    if (!targetTimestamp) return;
+                    const group = presetGroups.find(g => (g.id || g.name) === groupId);
+                    if (!group) return;
+                    const prev = getCellData(targetTimestamp) || {};
+                    (group.fields || []).forEach(({ key, value }) => {
+                        if (!key) return;
+                        const prevValue = prev && prev[key] !== undefined ? prev[key] : (prev.data ? prev.data[key] : undefined);
+                        allChanges.push({ timestamp: targetTimestamp, field: key, previousValue: prevValue });
+                        onDataChange(targetTimestamp, key, value);
+                    });
+                });
+            }
+
+            // Apply cell data (optional)
             (preset.data || []).forEach(cell => {
                 const ts = cell.timestamp;
                 if (!ts) return;
@@ -2951,6 +3015,7 @@ const PipelineDragDropView = ({
                 timelineConfig={timelineConfig}
                 timelineData={timelineData}
                 groupedPresets={groupedPresets}
+                cells={cells}
                 pipelineType={type}
                 onLoadPreset={(p) => applyPipelinePreset(p)}
             />

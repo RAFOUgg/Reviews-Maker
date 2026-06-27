@@ -5,6 +5,7 @@ import ColorWheelPicker from '../../../../components/shared/charts/ColorWheelPic
 import { Eye } from 'lucide-react'
 
 const VISUAL_FIELDS = [
+    { key: 'colorRating', label: 'Couleur / Nuancier', max: 10 },
     { key: 'densite', label: 'Densité visuelle', max: 10 },
     { key: 'trichomes', label: 'Trichomes', max: 10 },
     { key: 'pistils', label: 'Pistils', max: 10 },

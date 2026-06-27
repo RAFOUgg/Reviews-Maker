@@ -177,6 +177,19 @@ export default function VisualSection({ productType, data: directData, onChange,
                 </div>
             </div>
 
+            {/* Note globale couleur / nuancier */}
+            <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <LiquidSlider
+                    label="Couleur / Nuancier"
+                    value={colorRating}
+                    min={1}
+                    max={10}
+                    step={1}
+                    color="purple"
+                    onChange={(val) => setColorRating(val)}
+                />
+            </div>
+
             {/* Transparence (Hash/Concentrés uniquement) */}
             {isHashOrConcentrate && (
                 <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">

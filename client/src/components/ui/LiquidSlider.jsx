@@ -36,8 +36,12 @@ const LiquidSlider = ({
 
     const percentage = ((value - min) / (max - min)) * 100;
 
-    // compute fill width so the fill's right edge aligns with the thumb center
-    const fillWidth = percentage <= 0 ? '0%' : `calc(${percentage}% - 4px)`;
+    // Track has 4px padding on each side. Fill and thumb must both be computed
+    // relative to that padded inner width (100% - 8px), otherwise the fill's
+    // right edge and the thumb's center drift apart near the min/max ends
+    // (fill stayed inside the padding while the thumb ignored it entirely).
+    const fillWidth = percentage <= 0 ? '0%' : `calc((100% - 8px) * ${percentage / 100})`;
+    const thumbLeft = `calc(4px + (100% - 8px) * ${percentage / 100})`;
 
     function setFromPointer(clientX) {
         const track = trackRef.current
@@ -112,8 +116,8 @@ const LiquidSlider = ({
                 {/* Thumb */}
                 <motion.div
                     className={`liquid-slider-thumb`}
-                    style={{ left: `${percentage}%` }}
-                    animate={{ left: `${percentage}%` }}
+                    style={{ left: thumbLeft }}
+                    animate={{ left: thumbLeft }}
                     transition={{ duration: 0.22, ease: [0.22, 1, 0.36, 1] }}
                 >
                     <div className="liquid-slider-thumb-inner">

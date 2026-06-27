@@ -167,6 +167,7 @@ export function flattenFlowerFormData(data) {
     // Section 5 - Visuel & Technique
     // Priority 1: flat keys from VisuelTechnique.jsx (most recent user input — always win)
     if (data.selectedColors) flat.couleurNuancier = data.selectedColors
+    if (data.colorRating !== undefined) flat.couleurScore = data.colorRating
     if (data.densite !== undefined) flat.densiteVisuelle = data.densite
     if (data.trichomes !== undefined) flat.trichomesScore = data.trichomes
     if (data.pistils !== undefined) flat.pistilsScore = data.pistils
@@ -176,7 +177,7 @@ export function flattenFlowerFormData(data) {
     // Priority 2: nested visual object (fallback when VisuelTechnique flat keys not set)
     if (data.visual) {
         if (!flat.couleurNuancier && data.visual.colors) flat.couleurNuancier = data.visual.colors
-        if (data.visual.colorRating !== undefined) flat.couleurScore = data.visual.colorRating
+        if (!flat.couleurScore && data.visual.colorRating !== undefined) flat.couleurScore = data.visual.colorRating
         if (!flat.densiteVisuelle && data.visual.density !== undefined) flat.densiteVisuelle = data.visual.density
         if (!flat.trichomesScore && data.visual.trichomes !== undefined) flat.trichomesScore = data.visual.trichomes
         if (data.visual.transparency !== undefined) flat.transparenceScore = data.visual.transparency
