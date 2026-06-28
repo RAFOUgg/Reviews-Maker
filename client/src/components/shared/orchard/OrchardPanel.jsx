@@ -4,6 +4,7 @@ import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useOrchardStore } from '../../../store/orchardStore';
 import { useExportConfigSave } from '../../../hooks/useExportConfigSave';
+import { useToast } from '../../shared/ToastContainer';
 import ConfigPane from '../config/ConfigPane';
 import PreviewPane from '../preview/PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
@@ -205,6 +206,7 @@ function normalizeReviewData(reviewData) {
 }
 
 export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
+    const toast = useToast();
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
     const [isCustomMode, setIsCustomMode] = useState(false); // Nouveau: mode template vs custom
@@ -275,11 +277,17 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
         if (onPresetApplied) {
             onPresetApplied({
                 orchardConfig: config,
-                orchardPreset: activePreset,
+                // activePreset ne reste renseigné que pour les presets sauvegardés (rare) —
+                // config.template est ce qui change réellement quand on choisit un template
+                // (Moderne Compact, Fiche Détaillée, etc.), donc c'est lui qui doit être
+                // persisté comme "orchardPreset" sinon le badge "Aperçu requis" de la
+                // bibliothèque ne disparaît jamais après un Appliquer
+                orchardPreset: activePreset || config.template,
                 customLayout: isCustomMode ? customLayout : null, // Sauvegarder le layout custom
                 layoutMode: isCustomMode ? 'custom' : 'template'
             });
         }
+        toast.success('✅ Aperçu appliqué — pense à sauvegarder la review pour le conserver');
         onClose();
     };
 
@@ -418,7 +426,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied }) {
                         </div>
                         <div>
                             <h2 className="text-lg font-bold text-gray-900 dark:text-white drop-shadow-sm">
-                                🌸 Orchard Studio
+                                Export Maker
                             </h2>
                             <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
                                 Système de rendu et d'exportation

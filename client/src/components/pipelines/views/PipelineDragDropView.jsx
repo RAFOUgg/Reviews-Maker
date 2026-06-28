@@ -49,6 +49,7 @@ const getSectionBadgeClass = (color) => SECTION_BADGE_CLASSES[color] || SECTION_
 
 // Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
 function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {
+    const toast = useToast();
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
     const [editingGroup, setEditingGroup] = useState(null);
     const [groupName, setGroupName] = useState('');
@@ -260,7 +261,14 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     };
 
     const handleSaveGroup = () => {
-        if (!groupName.trim() || selectedFields.length === 0) return;
+        if (!groupName.trim()) {
+            toast.error('Donne un nom au groupe avant de l\'enregistrer');
+            return;
+        }
+        if (selectedFields.length === 0) {
+            toast.error('Sélectionne au moins un champ pour créer le groupe');
+            return;
+        }
         const group = {
             id: editingGroup?.id || `group_${Date.now()}`,
             name: groupName.trim(),

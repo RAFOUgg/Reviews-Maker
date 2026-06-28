@@ -154,7 +154,7 @@ export default function ReviewDetailPage() {
                             color="cyan"
                         >
                             <Layout className="w-4 h-4" />
-                            <span>Aperçu Orchard</span>
+                            <span>Aperçu Export Maker</span>
                         </LiquidChip>
                     </div>
                 )}

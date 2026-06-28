@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { useStore } from '../../store/useStore';
 import { useToast } from '../../components/shared/ToastContainer';
 import WheelSelector from '../../components/shared/charts/WheelSelector';
@@ -21,6 +21,7 @@ import { reviewsService } from '../../services/apiService';
 export default function EditReviewPage() {
     const navigate = useNavigate();
     const { id } = useParams();
+    const [searchParams] = useSearchParams();
     const { isAuthenticated, user } = useStore();
     const toast = useToast();
 
@@ -278,6 +279,14 @@ export default function EditReviewPage() {
             });
         };
     }, [images]);
+
+    // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
+    useEffect(() => {
+        if (!loading && review && searchParams.get('openExport') === '1') {
+            setShowOrchardStudio(true);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading, review]);
 
     if (!isAuthenticated || loading) {
         return (

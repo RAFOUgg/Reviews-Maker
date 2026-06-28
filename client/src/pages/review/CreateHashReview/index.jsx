@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { hashReviewsService } from '../../../services/apiService'
@@ -30,12 +30,21 @@ export default function CreateHashReview() {
     const navigate = useNavigate()
     const toast = useToast()
     const { id } = useParams()
+    const [searchParams] = useSearchParams()
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useHashForm(id)
     const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+
+    // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
+    useEffect(() => {
+        if (!loading && searchParams.get('openExport') === '1') {
+            setShowOrchard(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading])
 
     // Charger les photos existantes quand on édite une review
     useEffect(() => {
@@ -276,9 +285,12 @@ export default function CreateHashReview() {
                                 hashmaker: formData.hashmaker || '',
                                 lab: formData.laboratoire || '',
                                 cultivars: formData.cultivarsUtilises || [],
-                                images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
                                 isPublic: false,
-                                ...formData
+                                // ...formData AVANT images : formData.images hérite de Review.images
+                                // (toujours null pour Hash, stocké sur sa propre sous-table) et écrasait
+                                // sinon le tableau de photos correctement calculé
+                                ...formData,
+                                images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
                             }}
                             onClose={() => setShowOrchard(false)}
                             onPresetApplied={(orchardData) => {

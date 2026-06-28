@@ -73,6 +73,16 @@ export function formatReview(review, currentUser = null) {
         mainImageUrl: null
     }
 
+    // Hash/Concentrate/Edible stockent leurs photos sur leur propre sous-table (photos),
+    // pas sur Review.images comme Flower — sans ce fallback, la bibliothèque/Export Maker/
+    // la galerie ne voient jamais les photos de ces 3 types tant que Review.images est vide
+    if (formatted.images.length === 0) {
+        const subTablePhotos = review.hashData?.photos || review.concentrateData?.photos || review.edibleData?.photos
+        if (subTablePhotos) {
+            formatted.images = safeJSONParse(subTablePhotos, [])
+        }
+    }
+
     // Formater l'avatar de l'auteur si présent
     if (review.author) {
         let avatarUrl = null

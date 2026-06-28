@@ -110,7 +110,12 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
                 select: {
                     farm: true
                 }
-            }
+            },
+            // Hash/Concentrate/Edible stockent leurs photos sur leur propre sous-table —
+            // sans ça, formatReview() ne peut jamais remonter une image pour ces 3 types
+            hashData: { select: { photos: true } },
+            concentrateData: { select: { photos: true } },
+            edibleData: { select: { photos: true } }
         },
         orderBy: { createdAt: 'desc' }
     })
@@ -149,6 +154,9 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     const review = await prisma.review.findUnique({
         where: { id: req.params.id },
         include: {
+            hashData: true,
+            concentrateData: true,
+            edibleData: true,
             author: {
                 select: {
                     id: true,

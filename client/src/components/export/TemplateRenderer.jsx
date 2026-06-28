@@ -25,7 +25,7 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'orchard-template-canvas' }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useOrchardStore((state) => state.templates);
 
@@ -70,7 +70,7 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
 
     return (
         <div
-            id="orchard-template-canvas"
+            id={canvasId}
             data-width={dimensions.width}
             data-height={dimensions.height}
             data-ratio={config.ratio}
@@ -105,7 +105,8 @@ TemplateRenderer.propTypes = {
     }).isRequired,
     reviewData: PropTypes.object.isRequired,
     activeModules: PropTypes.arrayOf(PropTypes.string),
-    pageMode: PropTypes.bool
+    pageMode: PropTypes.bool,
+    canvasId: PropTypes.string
 };
 
 

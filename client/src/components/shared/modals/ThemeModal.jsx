@@ -66,7 +66,7 @@ export default function ThemeModal({ isOpen, onClose, currentTheme, onThemeChang
         >
             <div className="space-y-6">
                 <p className="text-white/60">
-                    Sélectionnez un thème pour personnaliser votre expérience sur Orchard Studio
+                    Sélectionnez un thème pour personnaliser votre expérience sur Reviews Maker
                 </p>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">

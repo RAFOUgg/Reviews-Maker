@@ -1,10 +1,10 @@
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { edibleReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 
@@ -26,12 +26,21 @@ export default function CreateEdibleReview() {
     const navigate = useNavigate()
     const toast = useToast()
     const { id } = useParams()
+    const [searchParams] = useSearchParams()
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
 
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
     const [showOrchard, setShowOrchard] = useState(false)
+
+    // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
+    useEffect(() => {
+        if (!loading && searchParams.get('openExport') === '1') {
+            setShowOrchard(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading])
 
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
@@ -216,9 +225,12 @@ export default function CreateEdibleReview() {
                                 holderName: formData.nomProduit || '',
                                 description: formData.description || '',
                                 productType: formData.typeComestible || '',
-                                images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
                                 isPublic: false,
-                                ...formData
+                                // ...formData AVANT images : formData.images hérite de Review.images
+                                // (toujours null pour Edible, stocké sur sa propre sous-table) et écrasait
+                                // sinon le tableau de photos correctement calculé
+                                ...formData,
+                                images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
                             }}
                             onClose={() => setShowOrchard(false)}
                             onPresetApplied={(orchardData) => {

@@ -38,6 +38,15 @@ const TYPE_TO_ROUTE = {
     'Concentré': 'concentrate',
 }
 
+// Hash/Concentrate/Edible n'ont pas de champ mainImage sur la review de base (stocké sur leur
+// propre sous-table) — mainImageUrl/images sont déjà des URLs complètes remontées par le backend
+const getCardImageSrc = (review) => {
+    if (review.mainImageUrl) return review.mainImageUrl
+    if (review.mainImage) return `/api/images/${review.mainImage}`
+    if (Array.isArray(review.images) && review.images.length > 0) return review.images[0]
+    return null
+}
+
 const VIEW_MODES = [
     { id: 'grid', icon: Grid3X3, label: 'Grille' },
     { id: 'list', icon: List, label: 'Liste' },
@@ -193,9 +202,9 @@ export default function ReviewsTab() {
                         <div className="flex items-center gap-4">
                             {/* Image */}
                             <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
-                                {review.mainImage ? (
+                                {getCardImageSrc(review) ? (
                                     <img
-                                        src={`/api/images/${review.mainImage}`}
+                                        src={getCardImageSrc(review)}
                                         alt={review.holderName}
                                         className="w-full h-full object-cover"
                                     />
@@ -215,9 +224,13 @@ export default function ReviewsTab() {
                                         {review.isPublic ? 'Publique' : 'Privée'}
                                     </span>
                                     {!review.isPublic && !review.orchardPreset && (
-                                        <span className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400" title="Aperçu requis pour publier">
+                                        <button
+                                            onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}?openExport=1`)}
+                                            className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
+                                            title="Créer un aperçu avec Export Maker pour pouvoir publier"
+                                        >
                                             📸 Aperçu requis
-                                        </span>
+                                        </button>
                                     )}
                                 </div>
                                 <div className="flex items-center gap-3 text-sm text-white/50">
@@ -288,9 +301,9 @@ export default function ReviewsTab() {
                 <LiquidCard glow="none" padding="none" className="overflow-hidden hover:border-purple-500/30 transition-all">
                     {/* Image */}
                     <div className="aspect-square bg-white/5 relative overflow-hidden">
-                        {review.mainImage ? (
+                        {getCardImageSrc(review) ? (
                             <img
-                                src={`/api/images/${review.mainImage}`}
+                                src={getCardImageSrc(review)}
                                 alt={review.holderName}
                                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                             />
@@ -344,10 +357,16 @@ export default function ReviewsTab() {
 
                         {/* Badge aperçu (manquant = avertissement) */}
                         {!review.isPublic && !review.orchardPreset && (
-                            <div className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-amber-500/80 backdrop-blur text-white text-xs font-bold"
-                                title="Aperçu requis pour publier">
+                            <button
+                                onClick={(e) => {
+                                    e.stopPropagation();
+                                    navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}?openExport=1`);
+                                }}
+                                className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-amber-500/80 backdrop-blur text-white text-xs font-bold hover:bg-amber-500 transition-colors"
+                                title="Créer un aperçu avec Export Maker pour pouvoir publier"
+                            >
                                 📸 Aperçu
-                            </div>
+                            </button>
                         )}
                     </div>
 

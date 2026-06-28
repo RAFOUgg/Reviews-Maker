@@ -93,9 +93,14 @@ function validateHashReviewData(data, options = {}) {
 
     // Inline timeline data (from SeparationPipelineSection / SeparationPipelineAdapter)
     // separationPipeline is the top-level object sent by CreateHashReview
-    const separationPipeline = data.separationPipeline
-        ? (typeof data.separationPipeline === 'string' ? JSON.parse(data.separationPipeline) : data.separationPipeline)
-        : null
+    let separationPipeline = null
+    if (data.separationPipeline) {
+        if (typeof data.separationPipeline === 'string') {
+            try { separationPipeline = JSON.parse(data.separationPipeline) } catch { separationPipeline = null }
+        } else {
+            separationPipeline = data.separationPipeline
+        }
+    }
     if (separationPipeline) {
         if (separationPipeline.separationTimelineConfig !== undefined) {
             cleaned.separationTimelineConfig = typeof separationPipeline.separationTimelineConfig === 'string'
@@ -460,7 +465,13 @@ router.post('/', requireAuth, upload.fields([
             authorId: userId,
             type: 'hash',
             holderName: cleanedData.nomCommercial,
-            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true'
+            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
+            extraData: JSON.stringify({
+                ...(bodyData.orchardPreset ? { orchardPreset: bodyData.orchardPreset } : {}),
+                ...(bodyData.orchardConfig ? { orchardConfig: bodyData.orchardConfig } : {}),
+                ...(bodyData.orchardCustomLayout ? { orchardCustomLayout: bodyData.orchardCustomLayout } : {}),
+                ...(bodyData.orchardLayoutMode ? { orchardLayoutMode: bodyData.orchardLayoutMode } : {}),
+            })
         }
     })
 
@@ -578,7 +589,19 @@ router.put('/:id', requireAuth, upload.fields([
         where: { id: reviewId },
         data: {
             holderName: cleanedData.nomCommercial,
-            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true'
+            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
+            // Merge orchard/aperçu data into extraData (sinon orchardPreset/orchardConfig
+            // appliqués dans Export Maker ne sont jamais persistés pour ce type de review)
+            extraData: (() => {
+                let existing = {}
+                try { existing = JSON.parse(review.extraData || '{}') } catch (e) { }
+                const updated = { ...existing }
+                if (bodyData.orchardPreset) updated.orchardPreset = bodyData.orchardPreset
+                if (bodyData.orchardConfig) updated.orchardConfig = bodyData.orchardConfig
+                if (bodyData.orchardCustomLayout) updated.orchardCustomLayout = bodyData.orchardCustomLayout
+                if (bodyData.orchardLayoutMode) updated.orchardLayoutMode = bodyData.orchardLayoutMode
+                return JSON.stringify(updated)
+            })()
         }
     })
 

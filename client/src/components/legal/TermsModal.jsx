@@ -98,7 +98,7 @@ export default function TermsModal({ isOpen, onClose, onAccept }) {
                 <section>
                     <h3 className="font-semibold text-base text-white mb-2">5. Responsabilité et Exonération</h3>
                     <p>
-                        Orchard Studio est fourni « tel quel » sans garantie. Nous ne sommes pas responsables des dommages directs,
+                        Review Maker by Terpologie est fourni « tel quel » sans garantie. Nous ne sommes pas responsables des dommages directs,
                         indirects ou consécutifs découlant de votre utilisation de la plateforme.
                     </p>
                 </section>

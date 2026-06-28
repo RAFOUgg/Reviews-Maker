@@ -197,7 +197,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             return (
                 <div className="flex h-full" style={{ gap: `${spacing.section}px` }}>
                     {/* Image */}
-                    {contentModules.image && mainImage && (() => {
+                    {contentModules.mainImage !== false && mainImage && (() => {
                         const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
                         if (showGallery) {
                             return (

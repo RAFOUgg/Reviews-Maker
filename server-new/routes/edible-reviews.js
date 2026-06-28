@@ -219,7 +219,13 @@ router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req
             authorId: userId,
             type: 'edible',
             holderName: cleanedData.nomProduit,
-            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true'
+            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
+            extraData: JSON.stringify({
+                ...(bodyData.orchardPreset ? { orchardPreset: bodyData.orchardPreset } : {}),
+                ...(bodyData.orchardConfig ? { orchardConfig: bodyData.orchardConfig } : {}),
+                ...(bodyData.orchardCustomLayout ? { orchardCustomLayout: bodyData.orchardCustomLayout } : {}),
+                ...(bodyData.orchardLayoutMode ? { orchardLayoutMode: bodyData.orchardLayoutMode } : {}),
+            })
         }
     })
 
@@ -307,7 +313,19 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
         where: { id: reviewId },
         data: {
             holderName: cleanedData.nomProduit,
-            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true'
+            isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
+            // Merge orchard/aperçu data into extraData (sinon orchardPreset/orchardConfig
+            // appliqués dans Export Maker ne sont jamais persistés pour ce type de review)
+            extraData: (() => {
+                let existing = {}
+                try { existing = JSON.parse(review.extraData || '{}') } catch (e) { }
+                const updated = { ...existing }
+                if (bodyData.orchardPreset) updated.orchardPreset = bodyData.orchardPreset
+                if (bodyData.orchardConfig) updated.orchardConfig = bodyData.orchardConfig
+                if (bodyData.orchardCustomLayout) updated.orchardCustomLayout = bodyData.orchardCustomLayout
+                if (bodyData.orchardLayoutMode) updated.orchardLayoutMode = bodyData.orchardLayoutMode
+                return JSON.stringify(updated)
+            })()
         }
     })
 

@@ -66,6 +66,14 @@ export default function CreateFlowerReview() {
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
     const scrollContainerRef = useRef(null)
+
+    // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
+    useEffect(() => {
+        if (!loading && searchParams.get('openExport') === '1') {
+            setShowOrchard(true)
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [loading])
     // Curing section: optionnelle, activée seulement si l'utilisateur le souhaite
     // Auto-activée en édition si des données curing existent déjà
     const [curingEnabled, setCuringEnabled] = useState(false)

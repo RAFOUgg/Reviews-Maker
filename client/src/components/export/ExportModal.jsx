@@ -11,9 +11,9 @@ import {
     getAccountFeatures,
     ACCOUNT_TYPES
 } from '../../config/exportConfig';
-import InteractiveReviewCard from '../shared/orchard/InteractiveReviewCard';
+import TemplateRenderer from './TemplateRenderer';
 
-// Ratio dimensions must match InteractiveReviewCard
+// Ratio dimensions must match TemplateRenderer
 const RATIO_DIMS = {
     '1:1': { width: 800, height: 800 },
     '16:9': { width: 1920, height: 1080 },
@@ -22,11 +22,18 @@ const RATIO_DIMS = {
     'A4': { width: 1754, height: 2480 },
 };
 
-/** Mini scaled preview that fits export-sized card into a small container */
-function MiniPreview({ ratio }) {
+/**
+ * Mini scaled preview that fits export-sized card into a small container.
+ * Utilise TemplateRenderer (le même moteur que l'aperçu principal d'Orchard Studio /
+ * Export Maker) pour que ce qui s'exporte corresponde exactement à ce qui est prévisualisé —
+ * avant ce composant rendait InteractiveReviewCard, un renderer différent qui pouvait
+ * afficher un template/des couleurs différents de ce que l'utilisateur venait de configurer.
+ * canvasId distinct du canvas principal pour éviter un id dupliqué dans le DOM.
+ */
+function MiniPreview({ config, reviewData }) {
     const containerRef = useRef(null);
     const [scale, setScale] = useState(0.15);
-    const dims = RATIO_DIMS[ratio] || RATIO_DIMS['1:1'];
+    const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];
 
     useEffect(() => {
         const el = containerRef.current;
@@ -40,6 +47,8 @@ function MiniPreview({ ratio }) {
         observer.observe(el);
         return () => observer.disconnect();
     }, [dims.width, dims.height]);
+
+    if (!config || !reviewData) return null;
 
     return (
         <div ref={containerRef} className="w-full h-full flex items-center justify-center overflow-hidden bg-black/20 rounded-xl">
@@ -55,7 +64,7 @@ function MiniPreview({ ratio }) {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
                 }}
             >
-                <InteractiveReviewCard mode="preview-export" />
+                <TemplateRenderer config={config} reviewData={reviewData} canvasId="orchard-template-canvas-mini" />
             </div>
         </div>
     );
@@ -65,7 +74,7 @@ export default function ExportModal({ onClose }) {
     const reviewData = useOrchardStore((state) => state.reviewData);
     const config = useOrchardStore((state) => state.config);
     const user = useStore((state) => state.user);
-    const authorName = reviewData?.ownerName || (reviewData?.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Orchard Studio'
+    const authorName = reviewData?.ownerName || (reviewData?.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Export Maker'
 
     // Déterminer le type de compte utilisateur
     const accountType = user?.accountType?.type || ACCOUNT_TYPES.CONSUMER;
@@ -330,9 +339,9 @@ export default function ExportModal({ onClose }) {
 
         pdf.setProperties({
             title: reviewData.title || 'Review',
-            author: reviewData.author || 'Orchard Studio',
+            author: reviewData.author || 'Export Maker',
             subject: 'Review Export',
-            creator: 'Reviews-Maker Orchard Studio',
+            creator: 'Reviews-Maker Export Maker',
         });
 
         setExportProgress(95);
@@ -393,7 +402,7 @@ export default function ExportModal({ onClose }) {
             markdown += reviewData.tags.map(tag => `#${tag}`).join(' ') + '\n\n';
         }
 
-        markdown += `---\n\n*Exporté depuis Orchard Studio - Reviews-Maker*\n`;
+        markdown += `---\n\n*Exporté depuis Export Maker - Reviews-Maker*\n`;
 
         const blob = new Blob([markdown], { type: 'text/markdown' });
         const url = URL.createObjectURL(blob);
@@ -449,7 +458,7 @@ export default function ExportModal({ onClose }) {
                         <div className="hidden md:flex flex-col flex-shrink-0 w-[340px]">
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Aperçu de l'export</h4>
                             <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-                                <MiniPreview ratio={config?.ratio || '1:1'} />
+                                <MiniPreview config={config} reviewData={reviewData} />
                             </div>
                             <div className="mt-2 text-center">
                                 <span className="text-[11px] text-gray-500 dark:text-gray-400">

@@ -71,7 +71,7 @@ export default function LegalNoticeModal({ isOpen, onClose }) {
                     <ul className="list-disc list-inside space-y-1 ml-4">
                         <li>Restent la propriété de l'utilisateur qui les a créés</li>
                         <li>Peuvent être modérés ou supprimés s'ils violent nos politiques</li>
-                        <li>Ne reflètent pas nécessairement l'opinion d'Orchard Studio</li>
+                        <li>Ne reflètent pas nécessairement l'opinion de Terpologie</li>
                         <li>Sont accessibles au public conformément aux paramètres de confidentialité</li>
                     </ul>
                 </section>
@@ -79,7 +79,7 @@ export default function LegalNoticeModal({ isOpen, onClose }) {
                 <section>
                     <h3 className="font-semibold text-base text-white mb-2">Limitation de Responsabilité</h3>
                     <p className="mb-2">
-                        Orchard Studio et ses propriétaires ne seront pas responsables des:
+                        Terpologie et ses propriétaires ne seront pas responsables des:
                     </p>
                     <ul className="list-disc list-inside space-y-1 ml-4">
                         <li>Dommages directs, indirects ou consécutifs</li>
