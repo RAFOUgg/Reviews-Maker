@@ -47,8 +47,7 @@ export default function Genetiques({ formData, handleChange }) {
         createTree,
         deleteTree: deleteTreeApi,
         addNode,
-        updateNode,
-        clearTree
+        updateNode
     } = useGeneticsStore()
 
     // Trouver le nœud sélectionné

@@ -409,7 +409,7 @@ const useGeneticsStore = create(
 
             updateNodeFormData: (updates) => {
                 set(state => ({
-                    nodeFormData: state.nodeFormData ? { ...state.nodeFormData, ...updates } : null
+                    nodeFormData: { ...(state.nodeFormData || {}), ...updates }
                 }));
             },
 

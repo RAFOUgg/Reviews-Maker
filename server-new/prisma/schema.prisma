@@ -775,6 +775,7 @@ model FlowerReview {
   @@index([reviewId])
   @@index([nomCommercial])
   @@index([variety])
+  @@index([geneticTreeId])
   @@map("flower_reviews")
 }
 
