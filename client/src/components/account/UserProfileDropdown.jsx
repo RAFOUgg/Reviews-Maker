@@ -4,8 +4,9 @@ import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useStore } from '../../store/useStore'
 import { usePermissions } from '../../hooks/usePermissions'
+import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 import { LiquidAvatar } from '@/components/ui/LiquidUI'
-import { User, Library, Dna, LogOut, ChevronDown, Settings } from 'lucide-react'
+import { User, Library, Dna, LogOut, ChevronDown, Settings, Brain, ExternalLink } from 'lucide-react'
 
 export default function UserProfileDropdown() {
     const [isOpen, setIsOpen] = useState(false)
@@ -13,6 +14,7 @@ export default function UserProfileDropdown() {
     const buttonRef = useRef(null)
     const { user, logout } = useStore()
     const { hasFeature } = usePermissions()
+    const { isProducteur } = useAccountFeatures()
 
     useLayoutEffect(() => {
         if (isOpen && buttonRef.current) {
@@ -95,6 +97,30 @@ export default function UserProfileDropdown() {
                             </Link>
                         ))}
                     </div>
+
+                    {/* GrowBrain - lien externe réservé aux comptes Producteur */}
+                    {isProducteur && (
+                        <div className="px-2 pb-2">
+                            <a
+                                href="https://growbrain.terpologie.eu"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-500/10 hover:bg-emerald-500/20 transition-all duration-200 group"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <div className="p-2 rounded-xl bg-emerald-500/10 group-hover:bg-emerald-500/20 transition-colors">
+                                    <Brain className="w-4 h-4 text-emerald-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-emerald-300 group-hover:text-emerald-200 transition-colors flex items-center gap-1.5">
+                                        GrowBrain
+                                        <ExternalLink className="w-3 h-3" />
+                                    </p>
+                                    <p className="text-xs text-white/40 truncate">Relevés automatiques & IA de culture</p>
+                                </div>
+                            </a>
+                        </div>
+                    )}
 
                     {/* Logout button */}
                     <div className="border-t border-white/10 p-2">

@@ -27,6 +27,7 @@ import { LiquidModal, useEscapeClose } from '@/components/ui/LiquidUI';
 import CellContextMenu from './CellContextMenu';
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
+import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
@@ -787,7 +788,7 @@ function SavePipelineModal({
     );
 }
 
-import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check, Brain, ExternalLink } from 'lucide-react';
 import PipelineDataModal from '../core/PipelineDataModal';
 import PipelineCellBadge from '../core/PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
@@ -814,6 +815,7 @@ const PipelineDragDropView = ({
 }) => {
     // toast helper
     const toast = useToast();
+    const { isProducteur } = useAccountFeatures();
     const showToast = (msg, type = 'success') => {
         try {
             if (!toast) return;
@@ -2418,6 +2420,21 @@ const PipelineDragDropView = ({
                                 <span className="truncate">Pipeline {({ culture: 'Culture', curing: 'Curing', separation: 'Séparation', extraction: 'Extraction', recipe: 'Recette' }[type] || 'Pipeline')}</span>
                             </h3>
                             <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                                {/* GrowBrain - relevés automatiques & IA de culture, réservé aux Producteurs */}
+                                {type === 'culture' && isProducteur && (
+                                    <a
+                                        href="https://growbrain.terpologie.eu"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex items-center gap-1 md:gap-2 px-2 md:px-3 py-1.5 md:py-2 rounded-lg md:rounded-xl font-medium text-xs md:text-sm transition-all duration-200 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200"
+                                        title="GrowBrain — Relevés automatiques & IA de culture"
+                                    >
+                                        <Brain className="w-3 h-3 md:w-4 md:h-4" />
+                                        <span className="hidden md:inline">GrowBrain</span>
+                                        <ExternalLink className="w-3 h-3 hidden md:inline" />
+                                    </a>
+                                )}
+
                                 {/* Undo button */}
                                 <button
                                     onClick={() => undoLastAction()}

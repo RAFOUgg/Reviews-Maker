@@ -22,7 +22,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
     Library, FileText, Leaf, Palette, Database, BarChart3,
     Plus, Settings, Download, Upload,
-    ChevronRight
+    ChevronRight, Brain, ExternalLink
 } from 'lucide-react'
 
 // Import des onglets
@@ -193,6 +193,19 @@ export default function LibraryPage() {
                                     <Plus className="w-4 h-4" />
                                     Nouvelle Review
                                 </button>
+                                {isProducer && (
+                                    <a
+                                        href="https://growbrain.terpologie.eu"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="w-full flex items-center gap-2 px-3 py-2 bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 rounded-xl transition-colors text-sm font-medium"
+                                        title="Relevés automatiques & IA de culture"
+                                    >
+                                        <Brain className="w-4 h-4" />
+                                        GrowBrain
+                                        <ExternalLink className="w-3 h-3 ml-auto" />
+                                    </a>
+                                )}
                                 <div className="flex gap-2">
                                     <button
                                         onClick={() => toast.info('Export bibliothèque bientôt disponible')}
