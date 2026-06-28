@@ -130,8 +130,11 @@ export function useFlowerForm(reviewId = null) {
             }
 
             // ── Section 3: Culture Pipeline ───────────────────────────────────
+            // CulturePipelineSection.jsx lit data.cultureTimelineData (pas cultureTimeline) —
+            // sans ce nom exact, les données de la pipeline déjà sauvegardées en base ne se
+            // rechargent jamais dans le formulaire et la pipeline réapparaît vide à l'édition
             const culture = {
-                cultureTimeline: parseArr(fd.cultureTimelineData, []),
+                cultureTimelineData: parseArr(fd.cultureTimelineData, []),
                 cultureTimelineConfig: parseObj(fd.cultureTimelineConfig, {}),
                 mode: fd.cultureMode ?? null,
                 spaceType: fd.cultureSpaceType ?? null,

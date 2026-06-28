@@ -13,6 +13,7 @@ import {
     colorWithOpacity,
     getResponsiveAdjustments,
 } from '../../utils/orchardHelpers';
+import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
 
 /**
  * DetailedCardTemplate - Template fiche technique complète et professionnelle
@@ -50,9 +51,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
-    const mainImage = (Array.isArray(reviewData.images) && reviewData.images.length > 0)
-        ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
-        : (reviewData.mainImageUrl || reviewData.imageUrl || null);
+    const mainImage = resolveImageUrl(
+        (Array.isArray(reviewData.images) && reviewData.images.length > 0)
+            ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+            : (reviewData.mainImageUrl || reviewData.imageUrl || null)
+    );
 
     // Visibilité des sections Informations et Provenance (évite les titres vides sur les pages paginées)
     const hasInfoSectionContent =

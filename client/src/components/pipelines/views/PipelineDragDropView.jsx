@@ -2781,7 +2781,7 @@ const PipelineDragDropView = ({
                             </p>
 
                             <div className="flex-1 overflow-hidden">
-                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min inline-grid px-3 md:px-4 pb-3 md:pb-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))', position: 'relative', minWidth: '100%' }}>
+                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min overflow-y-auto px-3 md:px-4 pb-3 md:pb-4 h-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))' }}>
                                     {/* Visual selection frame overlay */}
                                     {selectedCells.length > 1 && !isSelecting && (() => {
                                         // Compute aggregate bounding box of selected cells using DOM measurements

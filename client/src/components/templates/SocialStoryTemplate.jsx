@@ -6,6 +6,7 @@ import {
     extractCategoryRatings,
     colorWithOpacity,
 } from '../../utils/orchardHelpers';
+import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
 
 /**
  * SocialStoryTemplate - Template optimisé pour les stories Instagram/TikTok
@@ -31,8 +32,10 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const tastes = asArray(reviewData.tastes).slice(0, 3);
     const { filled, value: ratingValue } = formatRating(reviewData.rating || 0, 5);
 
-    const mainImage = reviewData.mainImageUrl || reviewData.imageUrl ||
-        (Array.isArray(reviewData.images) && reviewData.images[0]);
+    const mainImage = resolveImageUrl(
+        reviewData.mainImageUrl || reviewData.imageUrl ||
+        (Array.isArray(reviewData.images) && reviewData.images[0])
+    );
 
     const title = reviewData.title || reviewData.holderName || reviewData.productName || reviewData.name || '';
     const cultivar = Array.isArray(reviewData.cultivarsList) && reviewData.cultivarsList.length > 0

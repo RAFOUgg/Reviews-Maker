@@ -13,6 +13,7 @@ import {
     getResponsiveAdjustments,
     colorWithOpacity,
 } from '../../utils/orchardHelpers';
+import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
 
 /**
  * ModernCompactTemplate - Template moderne et compact
@@ -50,9 +51,11 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     // Image principale - respect du sélecteur d'index
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
-    const mainImage = (Array.isArray(reviewData.images) && reviewData.images.length > 0)
-        ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
-        : (reviewData.mainImageUrl || reviewData.imageUrl || null);
+    const mainImage = resolveImageUrl(
+        (Array.isArray(reviewData.images) && reviewData.images.length > 0)
+            ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+            : (reviewData.mainImageUrl || reviewData.imageUrl || null)
+    );
 
     // Styles dynamiques
     const styles = {

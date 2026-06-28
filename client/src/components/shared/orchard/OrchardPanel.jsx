@@ -115,20 +115,6 @@ function normalizeReviewData(reviewData) {
         normalized.holderName = normalized.title || normalized.productName || normalized.name || 'Sans nom';
     }
 
-    // Normaliser l'image principale
-    if (!normalized.mainImageUrl) {
-        if (normalized.imageUrl) {
-            normalized.mainImageUrl = normalized.imageUrl;
-        } else if (Array.isArray(normalized.images) && normalized.images.length > 0) {
-            const firstImg = normalized.images[0];
-            normalized.mainImageUrl = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
-        }
-    }
-    // Aussi dans l'autre sens
-    if (!normalized.imageUrl && normalized.mainImageUrl) {
-        normalized.imageUrl = normalized.mainImageUrl;
-    }
-
     // Fallback categoryRatings depuis ratings
     if (!normalized.categoryRatings || Object.keys(normalized.categoryRatings).length === 0) {
         if (normalized.ratings && typeof normalized.ratings === 'object') {
@@ -136,10 +122,12 @@ function normalizeReviewData(reviewData) {
         }
     }
 
-    // Parser les champs qui peuvent être en JSON string
+    // Parser les champs qui peuvent être en JSON string — 'images' DOIT être ici (et non dans
+    // le simple split(',') ci-dessous) car c'est un vrai JSON.stringify côté backend ; sinon la
+    // dérivation de mainImageUrl juste après lit un tableau qui n'a pas encore été parsé
     const jsonFields = ['aromas', 'tastes', 'effects', 'terpenes', 'cultivarsList', 'pipelineExtraction',
         'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline', 'substratMix',
-        'categoryRatings', 'tags'];
+        'categoryRatings', 'tags', 'images'];
 
     jsonFields.forEach(field => {
         if (typeof normalized[field] === 'string') {
@@ -172,6 +160,28 @@ function normalizeReviewData(reviewData) {
             normalized[field] = [];
         }
     });
+
+    // Normaliser l'image principale — après le parsing JSON ci-dessus, sinon 'images' est
+    // encore une string JSON et Array.isArray() est toujours faux
+    const resolveImagePath = (url) => {
+        if (!url || typeof url !== 'string') return null;
+        return url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/') ? url : `/images/${url}`;
+    };
+    if (!normalized.mainImageUrl) {
+        if (normalized.imageUrl) {
+            normalized.mainImageUrl = resolveImagePath(normalized.imageUrl);
+        } else if (Array.isArray(normalized.images) && normalized.images.length > 0) {
+            const firstImg = normalized.images[0];
+            const raw = typeof firstImg === 'string' ? firstImg : firstImg?.url || firstImg?.src;
+            normalized.mainImageUrl = resolveImagePath(raw);
+        }
+    } else {
+        normalized.mainImageUrl = resolveImagePath(normalized.mainImageUrl);
+    }
+    // Aussi dans l'autre sens
+    if (!normalized.imageUrl && normalized.mainImageUrl) {
+        normalized.imageUrl = normalized.mainImageUrl;
+    }
 
     // ============================================================================
     // NORMALISER LES CHAMPS SPÉCIAUX

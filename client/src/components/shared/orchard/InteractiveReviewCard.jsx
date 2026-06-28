@@ -249,12 +249,23 @@ function StrainRatioBar({ indica, sativa, compact }) {
 function ImageGallery({ images, mainImage, compact, imageConfig }) {
     const [lightboxIdx, setLightboxIdx] = useState(null);
     const [activeIdx, setActiveIdx] = useState(0);
+    // images peut contenir de simples noms de fichier (ex: "flower-123.png") plutôt que des
+    // URLs complètes — sans ce préfixe, le navigateur les résout comme un chemin relatif à la
+    // page courante (ex: /edit/flower/flower-123.png) au lieu de /images/flower-123.png
+    const resolveImageUrl = (url) => {
+        if (!url || typeof url !== 'string') return null;
+        if (url.startsWith('http') || url.startsWith('blob:') || url.startsWith('/')) return url;
+        return `/images/${url}`;
+    };
+
     const allImages = useMemo(() => {
         const imgs = [];
-        if (mainImage) imgs.push(mainImage);
+        const mainUrl = resolveImageUrl(mainImage);
+        if (mainUrl) imgs.push(mainUrl);
         if (Array.isArray(images)) {
             images.forEach(img => {
-                const url = typeof img === 'string' ? img : img?.url || img?.preview || img?.src;
+                const raw = typeof img === 'string' ? img : img?.url || img?.preview || img?.src;
+                const url = resolveImageUrl(raw);
                 if (url && !imgs.includes(url)) imgs.push(url);
             });
         }

@@ -291,6 +291,16 @@ export default function Genetiques({ formData, handleChange }) {
     }
 
     // Drag & Drop handler pour reviews et cultivars de bibliothèque
+    // Extrait la première photo d'une review (même logique que l'aperçu de la sidebar)
+    const getFirstReviewImage = (review) => {
+        const imgs = review?.images
+        const first = Array.isArray(imgs)
+            ? imgs[0]
+            : (typeof imgs === 'string' ? (() => { try { return JSON.parse(imgs)?.[0] } catch { return null } })() : null)
+        if (!first) return null
+        return first.startsWith('http') || first.startsWith('/') ? first : `/images/${first}`
+    }
+
     const handleDragStart = (e, item) => {
         // Format attendu par UnifiedGeneticsCanvas (application/json avec id + name/cultivarName)
         const dragPayload = {
@@ -298,7 +308,7 @@ export default function Genetiques({ formData, handleChange }) {
             name: item.cultivarName || item.holderName || item.name || item.generalInfo?.commercialName,
             cultivarName: item.cultivarName || item.holderName || item.name || item.generalInfo?.commercialName,
             genetics: item.genetics || null,
-            image: null,
+            image: item._source === 'library' ? null : getFirstReviewImage(item),
             _source: item._source || 'review',
             reviewId: item.id
         }
