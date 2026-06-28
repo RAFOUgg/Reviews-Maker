@@ -114,9 +114,29 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     </div>
                 </div>
 
+                {/* Photo */}
+                <LiquidInput
+                    label="Photo (URL)"
+                    value={formData.image || ''}
+                    onChange={(e) => handleChange('image', e.target.value)}
+                    placeholder="https://..."
+                    helperText="Affichée sur le nœud de l'arbre"
+                />
+
                 {/* Genetics Section */}
                 <LiquidCard className="p-4 space-y-4">
                     <h4 className="text-sm font-semibold text-white">Informations génétiques (optionnel)</h4>
+
+                    <LiquidSelect
+                        label="Sexe"
+                        value={formData.genetics?.sex || 'unknown'}
+                        onChange={(e) => handleGeneticsChange('sex', e.target.value)}
+                        options={[
+                            { value: 'unknown', label: '❓ Inconnu / non sexé' },
+                            { value: 'female', label: '♀ Femelle' },
+                            { value: 'male', label: '♂ Mâle' }
+                        ]}
+                    />
 
                     <LiquidSelect
                         label="Type"

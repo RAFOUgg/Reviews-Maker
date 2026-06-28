@@ -29,6 +29,7 @@ import 'reactflow/dist/style.css';
 import './UnifiedGeneticsCanvas.css';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import CultivarNode from './CultivarNode';
+import PhenoEdge from './PhenoEdge';
 import NodeContextMenu from './NodeContextMenu';
 import EdgeContextMenu from './EdgeContextMenu';
 import NodeFormModal from './NodeFormModal';
@@ -37,6 +38,10 @@ import TreeToolbar from './TreeToolbar';
 
 const nodeTypes = {
     cultivar: CultivarNode
+};
+
+const edgeTypes = {
+    pheno: PhenoEdge
 };
 
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
@@ -58,33 +63,36 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         }
 
         // Convertir les nœuds du store au format React Flow
-        const rfNodes = store.nodes.map(node => ({
-            id: node.id,
-            data: {
-                label: node.cultivarName,
-                cultivarId: node.cultivarId,
-                image: node.image,
-                genetics: node.genetics,
-                notes: node.notes
-            },
-            position: node.position || { x: 0, y: 0 },
-            style: {
-                background: node.color || '#FF6B9D',
-                borderColor: store.selectedNodeId === node.id ? '#000' : '#666',
-                borderWidth: store.selectedNodeId === node.id ? 3 : 2
-            },
-            type: 'cultivar'
-        }));
+        const rfNodes = store.nodes.map(node => {
+            // genetics est stocké en JSON string côté API — le parser ici une fois pour
+            // toutes, sinon CultivarNode.jsx ne peut jamais lire genetics.type/.breeder/.sex
+            let genetics = node.genetics;
+            if (typeof genetics === 'string') {
+                try { genetics = JSON.parse(genetics); } catch { genetics = {}; }
+            }
+            return {
+                id: node.id,
+                data: {
+                    label: node.cultivarName,
+                    cultivarId: node.cultivarId,
+                    image: node.image,
+                    color: node.color || '#FF6B9D',
+                    genetics: genetics || {},
+                    notes: node.notes,
+                    selected: store.selectedNodeId === node.id
+                },
+                position: node.position || { x: 0, y: 0 },
+                type: 'cultivar'
+            };
+        });
 
         // Convertir les arêtes du store au format React Flow
         const rfEdges = store.edges.map(edge => ({
             id: edge.id,
             source: edge.parentNodeId,
             target: edge.childNodeId,
-            animated: store.selectedEdgeId === edge.id,
-            style: {
-                stroke: store.selectedEdgeId === edge.id ? '#000' : '#999'
-            },
+            type: 'pheno',
+            selected: store.selectedEdgeId === edge.id,
             label: edge.relationshipType,
             markerEnd: { type: MarkerType.ArrowClosed },
             data: {
@@ -129,9 +137,15 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         const alreadyExists = store.nodes.some(n => n.cultivarId === cultivar.id);
         if (alreadyExists) return;
 
+        // cultivarId est une vraie clé étrangère vers la table Cultivar — ne la renseigner que
+        // pour les éléments venant réellement de la bibliothèque de cultivars. Les cartes de
+        // reviews utilisateur partagent le même format de drag mais leur `id` est un id de
+        // Review, pas de Cultivar : l'envoyer comme cultivarId casse la contrainte FK (500)
+        const isLibraryCultivar = cultivar._source === 'library';
+
         // Add the node via the store (backend API)
         await store.addNode({
-            cultivarId: cultivar.id,
+            cultivarId: isLibraryCultivar ? cultivar.id : null,
             cultivarName: cultivar.name || cultivar.cultivarName || 'Sans nom',
             image: cultivar.image || null,
             genetics: cultivar.genetics || null,
@@ -269,6 +283,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 onEdgeClick={handleEdgeClick}
                 onEdgeContextMenu={handleEdgeContextMenu}
                 nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
                 fitView
             >
                 <Background color="#aaa" gap={16} />

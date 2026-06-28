@@ -112,11 +112,11 @@ export default function DataTab() {
                 credentials: 'include'
             })
             if (response.ok) {
-                const data = await response.json()
+                const items = await response.json()
                 // Organiser par catégorie
                 const organized = {}
                 DATA_CATEGORIES.forEach(cat => {
-                    organized[cat.id] = data.items?.filter(d => d.category === cat.id) || []
+                    organized[cat.id] = (Array.isArray(items) ? items : []).filter(d => d.category === cat.id)
                 })
                 setSavedData(organized)
             }
@@ -179,6 +179,8 @@ export default function DataTab() {
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
                 body: JSON.stringify({
+                    dataType: 'custom',
+                    name: formData.name,
                     category: categoryId,
                     data: formData
                 })

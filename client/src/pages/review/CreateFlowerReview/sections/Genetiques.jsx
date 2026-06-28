@@ -23,6 +23,11 @@ export default function Genetiques({ formData, handleChange }) {
     const [loadingReviews, setLoadingReviews] = useState(false)
     const [creatingTree, setCreatingTree] = useState(false)
     const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
+    // Devient true une fois le premier fetchTrees() résolu — évite que la modale "créer un
+    // arbre" s'affiche pendant la fraction de seconde où trees=[] et treeLoading=false avant
+    // même que le fetch ait eu le temps de démarrer (sinon elle s'affiche par erreur en mode
+    // édition même quand un arbre est déjà lié à la review)
+    const [hasCheckedTrees, setHasCheckedTrees] = useState(false)
 
     const { user } = useStore()
     const genetics = formData.genetics || {}
@@ -50,7 +55,7 @@ export default function Genetiques({ formData, handleChange }) {
     const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null
 
     // Local state pour le panneau métadonnées du nœud sélectionné
-    const [nodeEditMeta, setNodeEditMeta] = useState({ breeder: '', type: '', relations: [], phenotypeCode: '' })
+    const [nodeEditMeta, setNodeEditMeta] = useState({ breeder: '', type: '', sex: 'unknown', relations: [], phenotypeCode: '' })
     const nodeUpdateTimerRef = useRef(null)
 
     // Synchroniser le state local quand le nœud sélectionné change
@@ -60,6 +65,7 @@ export default function Genetiques({ formData, handleChange }) {
             setNodeEditMeta({
                 breeder: g.breeder || '',
                 type: g.type || '',
+                sex: g.sex || 'unknown',
                 relations: Array.isArray(g.relations) ? g.relations : [],
                 phenotypeCode: g.phenotypeCode || selectedNode.data?.codePheno || ''
             })
@@ -101,7 +107,7 @@ export default function Genetiques({ formData, handleChange }) {
     // Charger les arbres, reviews et cultivars au montage
     useEffect(() => {
         if (user?.id) {
-            fetchTrees()
+            fetchTrees().finally(() => setHasCheckedTrees(true))
             fetchUserFlowerReviews()
             fetchLibraryCultivars()
         }
@@ -125,12 +131,23 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }, [selectedTreeId])
 
-    // Si pas d'arbres et pas de chargement, proposer d'en créer un
+    // Si pas d'arbres et pas de chargement, proposer d'en créer un — seulement une fois le
+    // premier fetch réellement terminé, sinon ça s'affiche à tort pendant l'instant où
+    // trees=[] et treeLoading=false avant même que fetchTrees() ait démarré
     useEffect(() => {
-        if (!treeLoading && trees.length === 0) {
+        if (hasCheckedTrees && !treeLoading && trees.length === 0) {
             setShowInitialModal(true)
         }
-    }, [treeLoading, trees.length])
+    }, [hasCheckedTrees, treeLoading, trees.length])
+
+    // Filet de sécurité : si la modale était affichée mais qu'un arbre a fini par être trouvé
+    // (lié à la review ou autre), on la referme automatiquement au lieu de laisser l'utilisateur
+    // avec une modale "créer un arbre" devant un arbre déjà chargé
+    useEffect(() => {
+        if (showInitialModal && trees.length > 0) {
+            setShowInitialModal(false)
+        }
+    }, [showInitialModal, trees.length])
 
     // Charger les reviews fleurs de l'utilisateur pour la sidebar
     const fetchUserFlowerReviews = async () => {
@@ -743,6 +760,19 @@ export default function Genetiques({ formData, handleChange }) {
                                     <option value="indica" className="bg-[#12121a] text-white">🌙 Indica</option>
                                     <option value="sativa" className="bg-[#12121a] text-white">☀️ Sativa</option>
                                     <option value="hybrid" className="bg-[#12121a] text-white">⚖️ Hybride</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Sexe</label>
+                                <select
+                                    value={nodeEditMeta.sex}
+                                    onChange={(e) => handleNodeMetaUpdate({ sex: e.target.value })}
+                                    className="liquid-input liquid-select w-full text-sm"
+                                >
+                                    <option value="unknown" className="bg-[#12121a] text-white">❓ Inconnu / non sexé</option>
+                                    <option value="female" className="bg-[#12121a] text-white">♀ Femelle</option>
+                                    <option value="male" className="bg-[#12121a] text-white">♂ Mâle</option>
                                 </select>
                             </div>
                         </div>

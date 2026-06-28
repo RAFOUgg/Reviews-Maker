@@ -445,7 +445,8 @@ router.get('/data', requireAuth, asyncHandler(async (req, res) => {
         ],
     });
 
-    res.json(data);
+    const parsed = data.map(d => ({ ...d, data: d.data ? JSON.parse(d.data) : null }));
+    res.json(parsed);
 }));
 
 /**
@@ -474,7 +475,43 @@ router.post('/data', requireAuth, asyncHandler(async (req, res) => {
         },
     });
 
-    res.status(201).json(savedData);
+    res.status(201).json({ ...savedData, data: typeof data === 'string' ? JSON.parse(data) : data });
+}));
+
+/**
+ * PUT /api/library/data/:id
+ * Met à jour une donnée sauvegardée existante
+ */
+router.put('/data/:id', requireAuth, asyncHandler(async (req, res) => {
+    const existing = await prisma.savedData.findFirst({
+        where: { id: req.params.id, userId: req.user.id },
+    });
+    if (!existing) {
+        return res.status(404).json({ error: 'not_found', message: 'Donnée non trouvée' });
+    }
+
+    const { dataType, name, description, data, category, tags } = req.body;
+
+    if (!name || !data) {
+        return res.status(400).json({
+            error: 'missing_fields',
+            message: 'Champs requis: name, data',
+        });
+    }
+
+    const updated = await prisma.savedData.update({
+        where: { id: req.params.id },
+        data: {
+            ...(dataType && { dataType }),
+            name,
+            description: description ?? existing.description,
+            data: JSON.stringify(typeof data === 'string' ? JSON.parse(data) : data),
+            category: category ?? existing.category,
+            ...(tags !== undefined && { tags: tags ? JSON.stringify(tags) : null }),
+        },
+    });
+
+    res.json({ ...updated, data: typeof data === 'string' ? JSON.parse(data) : data });
 }));
 
 /**

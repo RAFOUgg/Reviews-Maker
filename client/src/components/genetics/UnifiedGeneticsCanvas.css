@@ -23,28 +23,160 @@
     fill: #334155;
 }
 
-/* Cultivar Node Styling */
-.react-flow__node-cultivar {
-    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    border: 2px solid #334155;
-    border-radius: 12px;
-    padding: 10px 15px;
-    min-width: 150px;
-    font-weight: 600;
-    color: white;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    transition: all 0.3s ease;
+/* Cultivar Node Styling — forme par sexe : rond = femelle, carré = mâle, arrondi = inconnu */
+.cultivar-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 140px;
+    padding: 10px;
+    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+    border: 2px solid var(--accent-color, #FF6B9D);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    backdrop-filter: blur(6px);
+    transition: all 0.25s ease;
+    position: relative;
+    cursor: pointer;
 }
 
-.react-flow__node-cultivar:hover {
-    box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
-    border-color: #10b981;
+.cultivar-node:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--accent-color, #FF6B9D) 40%, transparent);
+    transform: translateY(-2px);
 }
 
-.react-flow__node.selected .react-flow__node-cultivar {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+.cultivar-node.selected {
     border-color: #fbbf24;
-    box-shadow: 0 8px 25px rgba(251, 191, 36, 0.3);
+    box-shadow: 0 8px 28px rgba(251, 191, 36, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+}
+
+/* Femelle = rond */
+.cultivar-node.shape-circle {
+    border-radius: 50%;
+    width: 140px;
+    height: 140px;
+    justify-content: center;
+}
+
+/* Mâle = carré (coins légèrement adoucis) */
+.cultivar-node.shape-square {
+    border-radius: 10px;
+    width: 140px;
+    height: 140px;
+    justify-content: center;
+}
+
+/* Sexe inconnu = carte arrondie classique */
+.cultivar-node.shape-rounded {
+    border-radius: 16px;
+}
+
+.node-photo {
+    position: relative;
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    background: rgba(255, 255, 255, 0.06);
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.node-photo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.node-photo-placeholder {
+    width: 24px;
+    height: 24px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.node-sex-badge {
+    position: absolute;
+    bottom: -2px;
+    right: -2px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-color, #FF6B9D);
+    color: #0f172a;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid rgba(15, 23, 42, 0.9);
+}
+
+.node-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.node-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 110px;
+}
+
+.node-genetics {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+    justify-content: center;
+}
+
+.genetics-type,
+.genetics-breeder {
+    font-size: 9px;
+    font-weight: 600;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    white-space: nowrap;
+}
+
+.genetics-type {
+    background: color-mix(in srgb, var(--accent-color, #FF6B9D) 25%, transparent);
+    color: #f1f5f9;
+}
+
+.node-notes {
+    position: absolute;
+    top: -6px;
+    left: -6px;
+    font-size: 12px;
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.node-handle {
+    width: 8px !important;
+    height: 8px !important;
+    background: var(--accent-color, #FF6B9D) !important;
+    border: 1.5px solid rgba(15, 23, 42, 0.9) !important;
 }
 
 /* Canvas Edges */
