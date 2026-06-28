@@ -2,7 +2,7 @@ import React, { useEffect, useState, Suspense } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { parseImages } from '../../utils/imageUtils'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
-import GalleryReviewCard from '../../components/gallery/GalleryReviewCard'
+import OrchardCardRenderer from '../../components/gallery/OrchardCardRenderer'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
@@ -159,28 +159,31 @@ export default function ReviewDetailPage() {
                     </div>
                 )}
 
-                {/* Orchard Interactive HTML Preview */}
+                {/* Orchard Interactive HTML Preview — même moteur (TemplateRenderer) que l'aperçu
+                    Orchard Studio, pour reproduire exactement le template/couleurs/modules choisis */}
                 {viewMode === 'orchard' && review.orchardConfig ? (
                     <LiquidCard glow="cyan" padding="lg">
-                        <GalleryReviewCard
-                            orchardConfig={typeof review.orchardConfig === 'string' ? (() => {
-                                try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
-                            })() : review.orchardConfig}
-                            reviewData={{
-                                ...review,
-                                title: review.holderName,
-                                rating: review.overallRating || review.note || 0,
-                                imageUrl: review.mainImageUrl || (review.images && review.images.length > 0 ? review.images[0] : null),
-                                images: review.images || [],
-                                category: review.type,
-                                description: review.description,
-                                ownerName: review.ownerName || review.author?.username || 'Anonyme',
-                                date: review.createdAt,
-                                cultivar: review.cultivars,
-                                breeder: review.breeder || review.hashmaker,
-                                farm: review.farm
-                            }}
-                        />
+                        <div className="h-[70vh] max-h-[800px]">
+                            <OrchardCardRenderer
+                                orchardConfig={typeof review.orchardConfig === 'string' ? (() => {
+                                    try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
+                                })() : review.orchardConfig}
+                                reviewData={{
+                                    ...review,
+                                    title: review.holderName,
+                                    rating: review.overallRating || review.note || 0,
+                                    imageUrl: review.mainImageUrl || (review.images && review.images.length > 0 ? review.images[0] : null),
+                                    images: review.images || [],
+                                    category: review.type,
+                                    description: review.description,
+                                    ownerName: review.ownerName || review.author?.username || 'Anonyme',
+                                    date: review.createdAt,
+                                    cultivar: review.cultivars,
+                                    breeder: review.breeder || review.hashmaker,
+                                    farm: review.farm
+                                }}
+                            />
+                        </div>
                     </LiquidCard>
                 ) : (
                     /* Full Review Display - Always show by default or if no Orchard config */

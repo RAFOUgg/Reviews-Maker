@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { LiquidCard, LiquidChip, LiquidInput, LiquidButton } from '@/components/ui/LiquidUI';
-import GalleryReviewCard from '../../components/gallery/GalleryReviewCard';
+import OrchardCardRenderer from '../../components/gallery/OrchardCardRenderer';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -193,15 +193,13 @@ export default function GalleryPage() {
             {filteredReviews.map((review) => (
               <div
                 key={review.id}
-                className="relative group"
+                className="relative group aspect-square cursor-pointer rounded-2xl overflow-hidden border border-white/10 hover:border-white/30 transition-colors"
                 onContextMenu={(e) => handleContextMenu(e, review)}
+                onClick={() => handleViewReview(review.id)}
               >
-                <GalleryReviewCard
+                <OrchardCardRenderer
                   reviewData={review}
-                  orchardConfig={review.orchardPreset || {}}
-                  compact={viewMode === 'grid'}
-                  onView={() => handleViewReview(review.id)}
-                  showInteractiveElements={true}
+                  orchardConfig={review.orchardConfig}
                 />
               </div>
             ))}
@@ -286,13 +284,10 @@ export default function GalleryPage() {
                   </button>
                 </div>
 
-                <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
-                  <GalleryReviewCard
+                <div className="h-[70vh] max-h-[700px]">
+                  <OrchardCardRenderer
                     reviewData={selectedReview}
-                    orchardConfig={selectedReview.orchardPreset || {}}
-                    compact={false}
-                    fullDetails={true}
-                    showInteractiveElements={true}
+                    orchardConfig={selectedReview.orchardConfig}
                   />
                 </div>
               </motion.div>

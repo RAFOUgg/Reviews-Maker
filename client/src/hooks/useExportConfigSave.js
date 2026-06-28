@@ -14,6 +14,7 @@ const API_BASE = '/api/export/config';
 export function useExportConfigSave() {
     const { user } = useAuth();
     const configCache = useRef({}); // Cache local temporaire
+    const debounceTimer = useRef(null);
 
     /**
      * Sauvegarder une configuration d'export

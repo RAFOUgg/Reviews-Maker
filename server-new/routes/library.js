@@ -288,6 +288,18 @@ router.get('/watermarks/default', requireAuth, asyncHandler(async (req, res) => 
 }));
 
 /**
+ * POST /api/library/watermarks/upload
+ * Upload une image de filigrane (logo) — route manquante, le frontend l'appelait déjà
+ * (WatermarksTab.jsx) mais sans endpoint backend correspondant, donc l'upload échouait toujours
+ */
+router.post('/watermarks/upload', requireAuth, uploadExport.single('watermark'), asyncHandler(async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({ error: 'missing_file', message: 'Fichier watermark requis (champ: watermark)' })
+    }
+    res.json({ url: `/images/${req.file.filename}` })
+}))
+
+/**
  * POST /api/library/watermarks
  * Crée un nouveau filigrane
  */

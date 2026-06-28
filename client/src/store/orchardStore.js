@@ -7,6 +7,7 @@ import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS } from './or
 
 // Les constantes sont maintenant réexportées pour maintenir la compatibilité
 export { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS };
+export { DEFAULT_CONFIG };
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FORCE RESET: Supprimer localStorage obsolète AVANT que zustand ne charge
