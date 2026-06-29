@@ -71,6 +71,15 @@ function validateEdibleReviewData(data, options = {}) {
         cleaned.typeGenetiques = data.typeGenetiques.trim()
     }
 
+    // Traçabilité multi-source (fleur/hash/concentré utilisés comme matière première)
+    if (data.sourceLineage !== undefined) {
+        if (typeof data.sourceLineage === 'string') {
+            try { cleaned.sourceLineage = JSON.stringify(JSON.parse(data.sourceLineage)) } catch { cleaned.sourceLineage = null }
+        } else if (Array.isArray(data.sourceLineage)) {
+            cleaned.sourceLineage = JSON.stringify(data.sourceLineage)
+        }
+    }
+
     // ===== SECTION 2: Pipeline Recette =====
     if (data.recipePipelineId && typeof data.recipePipelineId === 'string') {
         cleaned.recipePipelineId = data.recipePipelineId

@@ -132,8 +132,9 @@ export default function CreateConcentrateReview() {
 
             toast.success('Brouillon sauvegardé')
 
-            if (!id && savedReview?.id) {
-                navigate(`/edit/concentrate/${savedReview.id}`)
+            const newId = savedReview?.review?.id || savedReview?.id
+            if (!id && newId) {
+                navigate(`/edit/concentrate/${newId}`)
             }
         } catch (error) {
             toast.error('Erreur lors de la sauvegarde')
@@ -197,6 +198,7 @@ export default function CreateConcentrateReview() {
                 subtitle="Documentez votre rosin, BHO ou autre concentré"
                 loading={loading}
                 saving={saving}
+                wide={['extraction', 'curing'].includes(sections[currentSection]?.id)}
             >
                 <AnimatePresence mode="wait">
                     <motion.div

@@ -75,11 +75,20 @@ function validateConcentrateReviewData(data, options = {}) {
         }
     }
 
-    // Lien review fleur parente (optionnel)
+    // Lien review fleur parente (optionnel, déprécié — voir sourceLineage)
     if (data.parentFlowerReviewId && typeof data.parentFlowerReviewId === 'string') {
         cleaned.parentFlowerReviewId = data.parentFlowerReviewId
     } else {
         cleaned.parentFlowerReviewId = null
+    }
+
+    // Traçabilité multi-source (fleur et/ou hash utilisés comme matière première)
+    if (data.sourceLineage !== undefined) {
+        if (typeof data.sourceLineage === 'string') {
+            try { cleaned.sourceLineage = JSON.stringify(JSON.parse(data.sourceLineage)) } catch { cleaned.sourceLineage = null }
+        } else if (Array.isArray(data.sourceLineage)) {
+            cleaned.sourceLineage = JSON.stringify(data.sourceLineage)
+        }
     }
 
     // ===== SECTION 2: Pipeline Extraction =====

@@ -338,6 +338,7 @@ export default function CreateFlowerReview() {
                 isSaving={saving}
                 reviewId={id || null}
                 reviewHasPreview={hasPreview}
+                wide={['genetics', 'culture'].includes(currentSectionData.id)}
             >
                 {/* Section Content */}
                 <AnimatePresence mode="wait">

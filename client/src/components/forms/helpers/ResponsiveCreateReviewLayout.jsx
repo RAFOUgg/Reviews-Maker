@@ -39,6 +39,10 @@ export const ResponsiveCreateReviewLayout = ({
     reviewId = null,      // string|null (null = not yet persisted)
     reviewHasPreview = false, // bool (true = a render has been created)
     reviewVisibility = null,  // 'private'|'public'|null — current visibility of existing review
+    // When true, the content container expands to use far more of the viewport width.
+    // Reserved for data-dense sections (pipelines, genetics canvas) that benefit from
+    // extra horizontal room — simple field-based sections stay at a comfortable reading width.
+    wide = false,
 }) => {
     const layout = useResponsiveLayout();
     const [isDragging, setIsDragging] = useState(false);
@@ -49,6 +53,12 @@ export const ResponsiveCreateReviewLayout = ({
 
     const VISIBLE_ITEMS = 5;
     const FALLBACK_ITEM_WIDTH = 70;
+
+    // Desktop content width: comfortable reading width by default, much wider for
+    // data-dense sections (pipelines, genetics canvas) so they can use available screen space.
+    const containerWidthClass = layout.isMobile
+        ? 'w-full'
+        : (wide ? 'max-w-[1800px] mx-auto' : 'max-w-7xl mx-auto');
 
     const effectiveChangeSection = (index) => {
         if (typeof onSectionChange === 'function') {
@@ -241,7 +251,7 @@ export const ResponsiveCreateReviewLayout = ({
                     ? 'px-3 py-3 safe-area-inset-top'
                     : 'px-6 md:px-8 py-6'
                     }`}>
-                    <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
+                    <div className={containerWidthClass}>
                         {/* Title & Subtitle */}
                         {(title || subtitle) && (
                             <div className={layout.isMobile ? 'mb-3' : 'mb-4'}>
@@ -355,7 +365,7 @@ export const ResponsiveCreateReviewLayout = ({
                         if (sectionEmojis.length) scrollToIndex(currentSection);
                     }}
                 >
-                    <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
+                    <div className={containerWidthClass}>
                         {children}
                     </div>
                 </main>
@@ -364,7 +374,7 @@ export const ResponsiveCreateReviewLayout = ({
                 <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#07070f] via-[#07070f] to-transparent border-t border-white/10 backdrop-blur-xl z-50 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
                     }`}>
                     <div className={layout.isMobile ? 'px-3 py-2' : 'px-6 md:px-8 py-4'}>
-                        <div className={layout.isMobile ? 'w-full' : 'max-w-6xl mx-auto'}>
+                        <div className={containerWidthClass}>
                             <div className="flex items-center justify-between gap-2">
                                 {/* Bouton Précédent */}
                                 <button

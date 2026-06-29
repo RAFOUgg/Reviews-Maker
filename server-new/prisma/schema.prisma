@@ -794,9 +794,11 @@ model HashReview {
   cultivarsUtilises String? // JSON ou texte: cultivars utilisés
   photos          String?  // JSON: ["/images/hash-xxx.jpg"]
 
-  // Lien vers la review fleur parente (matière première)
+  // Lien vers la review fleur parente (matière première) — déprécié, voir sourceLineage
   parentFlowerReviewId String?
   parentFlowerReview   Review?  @relation("hashFromFlower", fields: [parentFlowerReviewId], references: [id], onDelete: SetNull)
+  // Traçabilité multi-source : JSON [{type:'flower', id, label, cultivars}, ...]
+  sourceLineage         String?
 
   // ===== PIPELINE SÉPARATION =====
   separationPipelineId String? // ID pipeline séparation (OLD)
@@ -905,9 +907,11 @@ model ConcentrateReview {
   cultivarsUtilises  String?  // JSON ou texte: cultivars utilisés
   photos             String?  // JSON: ["/images/concentrate-xxx.jpg"]
 
-  // Lien vers la review fleur parente (matière première)
+  // Lien vers la review fleur parente (matière première) — déprécié, voir sourceLineage
   parentFlowerReviewId String?
   parentFlowerReview   Review?  @relation("concentrateFromFlower", fields: [parentFlowerReviewId], references: [id], onDelete: SetNull)
+  // Traçabilité multi-source : JSON [{type:'flower'|'hash', id, label, cultivars}, ...]
+  sourceLineage         String?
 
   // ===== PIPELINE EXTRACTION =====
   extractionPipelineId String? // ID pipeline extraction (OLD)
@@ -1008,7 +1012,9 @@ model EdibleReview {
   typeComestible  String?  // Type de comestible
   fabricant       String?  // Fabricant
   typeGenetiques  String?  // Type de génétiques (OLD)
-  
+  // Traçabilité multi-source : JSON [{type:'flower'|'hash'|'concentrate', id, label, cultivars}, ...]
+  sourceLineage   String?
+
   // NEW: GitHub-style pipeline recette
   recipePipelineGithubId String? // ID PipelineGithub pour recette
   

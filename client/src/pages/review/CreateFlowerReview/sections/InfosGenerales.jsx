@@ -2,6 +2,7 @@ import React from 'react'
 import { Camera, X, Info, Check, ShieldCheck, Store } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider, LiquidChip, LiquidButton } from '@/components/ui/LiquidUI'
 import { useAccountFeatures } from '@/hooks/useAccountFeatures'
+import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
 
@@ -133,7 +134,14 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     {/* Farm */}
                     <div>
                         <LiquidInput
-                            label="Farm / Producteur"
+                            label={
+                                <span className="flex items-center justify-between">
+                                    Farm / Producteur
+                                    {!formData.isOurReview && (
+                                        <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
+                                    )}
+                                </span>
+                            }
                             value={formData.isOurReview ? '' : (formData.farm || '')}
                             onChange={(e) => handleChange('farm', e.target.value)}
                             placeholder={formData.isOurReview ? 'Rempli automatiquement (c\'est votre production)' : 'Nom du producteur'}

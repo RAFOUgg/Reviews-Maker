@@ -133,8 +133,9 @@ export default function CreateHashReview() {
 
             toast.success('Brouillon sauvegardé')
 
-            if (!id && savedReview?.id) {
-                navigate(`/edit/hash/${savedReview.id}`)
+            const newId = savedReview?.review?.id || savedReview?.id
+            if (!id && newId) {
+                navigate(`/edit/hash/${newId}`)
             }
         } catch (error) {
             toast.error('Erreur lors de la sauvegarde')
@@ -199,6 +200,7 @@ export default function CreateHashReview() {
                 subtitle="Documentez votre hash, kief ou ice-o-lator"
                 loading={loading}
                 saving={saving}
+                wide={['separation', 'curing'].includes(sections[currentSection]?.id)}
             >
                 <AnimatePresence mode="wait">
                     <motion.div

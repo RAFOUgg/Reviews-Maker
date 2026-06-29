@@ -23,11 +23,12 @@ import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
-import { LiquidModal, useEscapeClose } from '@/components/ui/LiquidUI';
+import { LiquidModal, LiquidTabs, LiquidToggle, useEscapeClose } from '@/components/ui/LiquidUI';
 import CellContextMenu from './CellContextMenu';
 import { CULTURE_PHASES, CURING_PHASES, SEPARATION_PHASES, EXTRACTION_PHASES, RECIPE_PHASES } from '../../../config/pipelinePhases';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
+import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
 
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
@@ -47,9 +48,109 @@ const SECTION_BADGE_CLASSES = {
 };
 const getSectionBadgeClass = (color) => SECTION_BADGE_CLASSES[color] || SECTION_BADGE_CLASSES.blue;
 
-// Grouped preset modal - COMPLETE with proper field types, edit mode, emoji
-function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sidebarContent, type }) {
+// Types de champs trop riches pour rester sur la ligne une fois sélectionnés (rendus en pleine largeur)
+const WIDE_FIELD_TYPES = ['dimensions', 'subscore-group', 'multiselect'];
+
+// Types calculés ou mesurés dynamiquement à l'usage : pas de valeur par défaut sensée à présettiser
+const NON_PRESETABLE_TYPES = ['computed', 'records-list'];
+
+// Conversions d'unités par unité de référence (celle déclarée dans la config du champ).
+// La valeur stockée dans le préréglage reste toujours dans l'unité de référence ; le sélecteur
+// ne fait que convertir l'affichage et la saisie.
+const UNIT_CONVERSIONS = {
+    '°C': [
+        { unit: '°C', toBase: v => v, fromBase: v => v },
+        { unit: '°F', toBase: v => (v - 32) / 1.8, fromBase: v => v * 1.8 + 32 },
+    ],
+    'g': [
+        { unit: 'g', toBase: v => v, fromBase: v => v },
+        { unit: 'kg', toBase: v => v * 1000, fromBase: v => v / 1000 },
+        { unit: 'oz', toBase: v => v * 28.3495, fromBase: v => v / 28.3495 },
+    ],
+    'PSI': [
+        { unit: 'PSI', toBase: v => v, fromBase: v => v },
+        { unit: 'bar', toBase: v => v * 14.5038, fromBase: v => v / 14.5038 },
+    ],
+    'L': [
+        { unit: 'L', toBase: v => v, fromBase: v => v },
+        { unit: 'mL', toBase: v => v / 1000, fromBase: v => v * 1000 },
+        { unit: 'gal', toBase: v => v * 3.78541, fromBase: v => v / 3.78541 },
+    ],
+    'mL': [
+        { unit: 'mL', toBase: v => v, fromBase: v => v },
+        { unit: 'L', toBase: v => v * 1000, fromBase: v => v / 1000 },
+    ],
+    'min': [
+        { unit: 'sec', toBase: v => v / 60, fromBase: v => v * 60 },
+        { unit: 'min', toBase: v => v, fromBase: v => v },
+        { unit: 'h', toBase: v => v * 60, fromBase: v => v / 60 },
+    ],
+    'sec': [
+        { unit: 'sec', toBase: v => v, fromBase: v => v },
+        { unit: 'min', toBase: v => v * 60, fromBase: v => v / 60 },
+    ],
+    'cm': [
+        { unit: 'cm', toBase: v => v, fromBase: v => v },
+        { unit: 'm', toBase: v => v * 100, fromBase: v => v / 100 },
+        { unit: 'in', toBase: v => v * 2.54, fromBase: v => v / 2.54 },
+    ],
+};
+
+const roundDisplay = (n) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(n * 100) / 100 : n);
+
+// Input numérique avec sélecteur d'unité optionnel : la valeur affichée/saisie est convertie
+// à la volée, la valeur stockée reste toujours dans l'unité de référence du champ.
+function UnitAwareNumberInput({ field, value, onChange, displayUnit, onDisplayUnitChange, className }) {
+    const alternates = UNIT_CONVERSIONS[field.unit];
+    const hasUnitChoice = Array.isArray(alternates) && alternates.length > 1;
+    const activeUnit = displayUnit || field.unit;
+    const unitDef = hasUnitChoice ? alternates.find(u => u.unit === activeUnit) : null;
+    const isBaseUnit = !unitDef || unitDef.unit === field.unit;
+
+    const displayValue = (value === '' || value === undefined || value === null)
+        ? ''
+        : roundDisplay(unitDef ? unitDef.fromBase(Number(value)) : Number(value));
+
+    return (
+        <div className="flex items-center gap-1.5">
+            <input
+                type="number"
+                value={displayValue}
+                onChange={(e) => {
+                    if (e.target.value === '') { onChange(''); return; }
+                    const raw = parseFloat(e.target.value);
+                    onChange(unitDef ? unitDef.toBase(raw) : raw);
+                }}
+                min={isBaseUnit ? field.min : undefined}
+                max={isBaseUnit ? field.max : undefined}
+                step={isBaseUnit ? (field.step || 1) : 'any'}
+                placeholder={field.defaultValue !== undefined ? String(field.defaultValue) : ''}
+                className={className}
+            />
+            {hasUnitChoice ? (
+                <select
+                    value={activeUnit}
+                    onChange={(e) => onDisplayUnitChange(e.target.value)}
+                    className="px-1.5 py-1.5 bg-white/5 border border-white/20 rounded text-xs text-white/80 flex-shrink-0"
+                >
+                    {alternates.map(u => (
+                        <option key={u.unit} value={u.unit} className="bg-[#0f0f1a]">{u.unit}</option>
+                    ))}
+                </select>
+            ) : (
+                field.unit && <span className="text-xs text-white/40 flex-shrink-0">{field.unit}</span>
+            )}
+        </div>
+    );
+}
+
+// Grouped preset modal - COMPLETE with proper field types, edit mode, emoji + bibliothèque de setups en onglet
+function GroupedPresetModal({
+    isOpen, onClose, onSave, groups, setGroups, sidebarContent, type,
+    timelineConfig, timelineData, cells = [], onLoadPreset, initialTopTab = 'groups'
+}) {
     const toast = useToast();
+    const [topTab, setTopTab] = useState(initialTopTab); // 'groups' | 'setups'
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
     const [editingGroup, setEditingGroup] = useState(null);
     const [groupName, setGroupName] = useState('');
@@ -57,9 +158,26 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     const [groupEmoji, setGroupEmoji] = useState('🌱');
     const [selectedFields, setSelectedFields] = useState([]);
     const [fieldValues, setFieldValues] = useState({});
+    const [fieldUnits, setFieldUnits] = useState({}); // unité d'affichage par champ (la valeur stockée reste en unité de référence)
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedSection, setExpandedSection] = useState(null);
     const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+    const [groupToDelete, setGroupToDelete] = useState(null);
+
+    // Bibliothèque de setups (onglet "Bibliothèque de setups") — masqué quand le contexte
+    // (ex: création rapide depuis l'éditeur de cellule) ne fournit pas onLoadPreset
+    const showSetupsTab = typeof onLoadPreset === 'function';
+    const [setupsSubTab, setSetupsSubTab] = useState('mes'); // 'mes' | 'templates' | 'nouveau'
+    const [setupName, setSetupName] = useState('');
+    const [setupDescription, setSetupDescription] = useState('');
+    const [includeData, setIncludeData] = useState(false);
+    const [groupAssignments, setGroupAssignments] = useState({});
+    const setupsStorageKey = `pipeline-setups-${type || 'unknown'}`;
+    const [savedSetups, setSavedSetups] = useState(() => {
+        try { return JSON.parse(localStorage.getItem(setupsStorageKey) || '[]'); }
+        catch { return []; }
+    });
+    const builtinSetups = PIPELINE_STARTER_SETUPS[type] || [];
 
     // Close on Escape (topmost modal only)
     useEscapeClose(isOpen, onClose);
@@ -67,9 +185,13 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     // Reset when opening
     useEffect(() => {
         if (isOpen) {
+            setTopTab(initialTopTab || 'groups');
             setMode('list');
             setEditingGroup(null);
             resetForm();
+            setSetupsSubTab('mes');
+            setSetupName(''); setSetupDescription(''); setIncludeData(false); setGroupAssignments({});
+            try { setSavedSetups(JSON.parse(localStorage.getItem(setupsStorageKey) || '[]')); } catch { setSavedSetups([]); }
         }
     }, [isOpen]);
 
@@ -79,6 +201,7 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         setGroupEmoji('🌱');
         setSelectedFields([]);
         setFieldValues({});
+        setFieldUnits({});
         setSearchTerm('');
         // Une seule section ouverte à la fois (comme l'onglet Données de la Bibliothèque)
         setExpandedSection((sidebarContent || [])[0]?.id || (sidebarContent || [])[0]?.label || null);
@@ -95,10 +218,12 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         setGroupDescription(group.description || '');
         setGroupEmoji(group.emoji || '🌱');
         const fields = group.fields || [];
-        setSelectedFields(fields.map(f => f.key));
+        // Les clés "__percentages" sont des valeurs compagnes (multiselect %), pas des champs réels
+        setSelectedFields(fields.filter(f => !String(f.key).endsWith('__percentages')).map(f => f.key));
         const vals = {};
         fields.forEach(f => { vals[f.key] = f.value; });
         setFieldValues(vals);
+        setFieldUnits({});
         setSearchTerm('');
         // Ouvre la section contenant le premier champ sélectionné, sinon la première section
         const firstFieldKey = fields[0]?.key;
@@ -109,28 +234,69 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         setMode('edit');
     };
 
+    // Sauvegarder le setup courant (config + groupes de préréglages) dans "Mes setups"
+    const handleSaveSetup = () => {
+        if (!setupName.trim()) return;
+        const cleanAssignments = Object.fromEntries(
+            Object.entries(groupAssignments).filter(([, ts]) => !!ts)
+        );
+        const setup = {
+            id: Date.now(),
+            name: setupName.trim(),
+            description: setupDescription.trim(),
+            createdAt: new Date().toISOString(),
+            config: timelineConfig || {},
+            groupedPresets: groups || [],
+            groupAssignments: cleanAssignments,
+            data: includeData ? (timelineData || []) : []
+        };
+        const next = [...savedSetups, setup];
+        localStorage.setItem(setupsStorageKey, JSON.stringify(next));
+        setSavedSetups(next);
+        setSetupName(''); setSetupDescription(''); setGroupAssignments({}); setIncludeData(false);
+        setSetupsSubTab('mes');
+        toast.success(`"${setup.name}" sauvegardé !`);
+    };
+
+    const handleLoadSetup = (setup) => {
+        onLoadPreset && onLoadPreset(setup);
+        onClose();
+    };
+
+    const handleDeleteSetup = (id) => {
+        const next = savedSetups.filter(s => s.id !== id);
+        localStorage.setItem(setupsStorageKey, JSON.stringify(next));
+        setSavedSetups(next);
+    };
+
     if (!isOpen) return null;
 
-    // Group fields by section with full item data
+    // Group fields by section with full item data (on exclut les champs calculés/dynamiques :
+    // ils n'ont pas de valeur par défaut sensée à présettiser)
     const sections = (sidebarContent || []).map(section => ({
         id: section.id || section.label,
         label: section.label,
         icon: section.icon,
         color: section.color || 'blue',
-        items: (section.items || []).map(item => ({
-            id: item.id || item.key || item.type,
-            key: item.id || item.key || item.type,
-            label: item.label,
-            icon: item.icon,
-            type: item.type || 'text',
-            options: item.options,
-            unit: item.unit,
-            min: item.min,
-            max: item.max,
-            step: item.step,
-            defaultValue: item.defaultValue
-        }))
-    }));
+        items: (section.items || [])
+            .filter(item => !NON_PRESETABLE_TYPES.includes(item.type))
+            .map(item => ({
+                id: item.id || item.key || item.type,
+                key: item.id || item.key || item.type,
+                label: item.label,
+                icon: item.icon,
+                type: item.type || 'text',
+                options: item.options,
+                unit: item.unit,
+                min: item.min,
+                max: item.max,
+                step: item.step,
+                defaultValue: item.defaultValue,
+                subScores: item.subScores,
+                suggestions: item.suggestions,
+                withPercentage: item.withPercentage
+            }))
+    })).filter(section => section.items.length > 0);
 
     // Filter by search
     const filteredSections = sections.map(section => ({
@@ -180,17 +346,18 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
             );
         }
 
-        // MULTISELECT
+        // MULTISELECT (pleine largeur, + % optionnel par option si withPercentage)
         if (field.type === 'multiselect' && Array.isArray(field.options)) {
             const selected = Array.isArray(value) ? value : [];
+            const percentages = fieldValues[`${field.id}__percentages`] || {};
             return (
-                <div className="flex flex-wrap gap-1 max-w-[200px]">
-                    {field.options.slice(0, 6).map((opt, idx) => {
+                <div className="flex flex-wrap gap-1.5 w-full">
+                    {field.options.map((opt, idx) => {
                         const val = typeof opt === 'string' ? opt : (opt.value ?? opt);
                         const lab = typeof opt === 'string' ? opt : (opt.label ?? opt.value ?? opt);
                         const isChecked = selected.includes(val);
                         return (
-                            <label key={idx} className={`text-xs px-1 py-0.5 rounded border cursor-pointer ${isChecked ? 'bg-purple-500/20 border-purple-400' : 'border-white/20'}`}>
+                            <label key={idx} className={`flex items-center gap-1 text-xs px-2 py-1 rounded-lg border cursor-pointer transition-colors ${isChecked ? 'bg-purple-500/20 border-purple-400 text-white' : 'border-white/15 text-white/60 hover:border-white/30'}`}>
                                 <input
                                     type="checkbox"
                                     checked={isChecked}
@@ -201,6 +368,19 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                     className="sr-only"
                                 />
                                 {lab}
+                                {field.withPercentage && isChecked && (
+                                    <input
+                                        type="number"
+                                        value={percentages[val] ?? ''}
+                                        onClick={(e) => e.stopPropagation()}
+                                        onChange={(e) => {
+                                            const pct = e.target.value === '' ? '' : parseFloat(e.target.value);
+                                            handleValueChange(`${field.id}__percentages`, { ...percentages, [val]: pct });
+                                        }}
+                                        placeholder="%"
+                                        className="w-12 px-1 py-0.5 bg-black/20 border border-white/20 rounded text-white text-xs"
+                                    />
+                                )}
                             </label>
                         );
                     })}
@@ -208,17 +388,15 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
             );
         }
 
-        // NUMBER / SLIDER / STEPPER
+        // NUMBER / SLIDER / STEPPER — avec sélecteur d'unité si le champ a des unités alternatives
         if (field.type === 'number' || field.type === 'slider' || field.type === 'stepper') {
             return (
-                <input
-                    type="number"
+                <UnitAwareNumberInput
+                    field={field}
                     value={value}
-                    onChange={(e) => handleValueChange(field.id, e.target.value === '' ? '' : parseFloat(e.target.value))}
-                    min={field.min}
-                    max={field.max}
-                    step={field.step || 1}
-                    placeholder={field.defaultValue !== undefined ? String(field.defaultValue) : ''}
+                    onChange={(v) => handleValueChange(field.id, v)}
+                    displayUnit={fieldUnits[field.id]}
+                    onDisplayUnitChange={(u) => setFieldUnits(prev => ({ ...prev, [field.id]: u }))}
                     className={`${baseClass} w-20`}
                 />
             );
@@ -248,6 +426,133 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
             );
         }
 
+        // TOGGLE (interrupteur on/off)
+        if (field.type === 'toggle') {
+            return (
+                <LiquidToggle
+                    checked={Boolean(value)}
+                    onChange={(checked) => handleValueChange(field.id, checked)}
+                    size="sm"
+                />
+            );
+        }
+
+        // FREQUENCY — valeur + période (ex: 2 fois par jour)
+        if (field.type === 'frequency') {
+            const freqValue = (value && typeof value === 'object') ? value : (field.defaultValue || { value: 1, period: 'day' });
+            return (
+                <div className="flex items-center gap-2">
+                    <input
+                        type="number"
+                        value={freqValue.value ?? 1}
+                        onChange={(e) => handleValueChange(field.id, { ...freqValue, value: parseFloat(e.target.value) || 1 })}
+                        min="0.1"
+                        step="0.1"
+                        className={`${baseClass} w-16`}
+                    />
+                    <span className="text-xs text-white/50 flex-shrink-0">fois par</span>
+                    <select
+                        value={freqValue.period || 'day'}
+                        onChange={(e) => handleValueChange(field.id, { ...freqValue, period: e.target.value })}
+                        className={baseClass}
+                    >
+                        <option value="hour" className="bg-[#0f0f1a]">heure</option>
+                        <option value="day" className="bg-[#0f0f1a]">jour</option>
+                        <option value="week" className="bg-[#0f0f1a]">semaine</option>
+                        <option value="month" className="bg-[#0f0f1a]">mois</option>
+                    </select>
+                </div>
+            );
+        }
+
+        // DIMENSIONS — L × l × H avec sélecteur d'unité commun aux 3 valeurs
+        if (field.type === 'dimensions') {
+            const dimValue = (value && typeof value === 'object') ? value : (field.defaultValue || { length: 0, width: 0, height: 0 });
+            const alternates = UNIT_CONVERSIONS[field.unit || 'cm'] || UNIT_CONVERSIONS.cm;
+            const activeUnit = fieldUnits[field.id] || field.unit || 'cm';
+            const unitDef = alternates.find(u => u.unit === activeUnit) || alternates[0];
+            const toDisplay = (n) => roundDisplay(unitDef.fromBase(Number(n) || 0));
+            const updateDim = (key, raw) => handleValueChange(field.id, { ...dimValue, [key]: unitDef.toBase(parseFloat(raw) || 0) });
+            return (
+                <div className="flex items-center gap-2 flex-wrap">
+                    {[['length', 'L'], ['width', 'l'], ['height', 'H']].map(([key, short]) => (
+                        <input
+                            key={key}
+                            type="number"
+                            value={toDisplay(dimValue[key])}
+                            onChange={(e) => updateDim(key, e.target.value)}
+                            placeholder={short}
+                            className={`${baseClass} w-16`}
+                        />
+                    ))}
+                    <select
+                        value={activeUnit}
+                        onChange={(e) => setFieldUnits(prev => ({ ...prev, [field.id]: e.target.value }))}
+                        className="px-1.5 py-1.5 bg-white/5 border border-white/20 rounded text-xs text-white/80"
+                    >
+                        {alternates.map(u => (
+                            <option key={u.unit} value={u.unit} className="bg-[#0f0f1a]">{u.unit}</option>
+                        ))}
+                    </select>
+                </div>
+            );
+        }
+
+        // SUBSCORE-GROUP — plusieurs mini-notes /max liées (ex: couleur+densité+trichomes)
+        if (field.type === 'subscore-group') {
+            const subScores = Array.isArray(field.subScores) ? field.subScores : [];
+            const groupValue = (value && typeof value === 'object') ? value : {};
+            return (
+                <div className="space-y-1.5 w-full">
+                    {subScores.map(sub => {
+                        const max = sub.max || 10;
+                        const subVal = groupValue[sub.key] ?? '';
+                        return (
+                            <div key={sub.key} className="flex items-center gap-2">
+                                <span className="text-xs text-white/50 w-20 flex-shrink-0 truncate">{sub.label}</span>
+                                <input
+                                    type="range"
+                                    value={subVal === '' ? 0 : subVal}
+                                    onChange={(e) => handleValueChange(field.id, { ...groupValue, [sub.key]: parseFloat(e.target.value) })}
+                                    min={0}
+                                    max={max}
+                                    step={sub.step || 0.5}
+                                    className="flex-1 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                                />
+                                <span className="w-12 text-right text-xs text-white/60 flex-shrink-0">{subVal === '' ? '—' : subVal}/{max}</span>
+                            </div>
+                        );
+                    })}
+                </div>
+            );
+        }
+
+        // AUTOCOMPLETE — texte libre + suggestions
+        if (field.type === 'autocomplete') {
+            const listId = `gp-suggestions-${field.id}`;
+            const suggestions = Array.isArray(field.suggestions) ? field.suggestions : [];
+            return (
+                <>
+                    <input
+                        type="text"
+                        list={suggestions.length ? listId : undefined}
+                        value={value}
+                        onChange={(e) => handleValueChange(field.id, e.target.value)}
+                        placeholder="Valeur"
+                        className={`${baseClass} w-32`}
+                    />
+                    {suggestions.length > 0 && (
+                        <datalist id={listId}>
+                            {suggestions.map((s, idx) => {
+                                const v = typeof s === 'string' ? s : (s.label ?? s.value ?? s);
+                                return <option key={idx} value={v} />;
+                            })}
+                        </datalist>
+                    )}
+                </>
+            );
+        }
+
         // TEXT (default)
         return (
             <input
@@ -269,12 +574,17 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
             toast.error('Sélectionne au moins un champ pour créer le groupe');
             return;
         }
+        // Inclut les éventuelles valeurs compagnes "__percentages" (multiselect avec %)
+        const extraKeys = selectedFields
+            .map(key => `${key}__percentages`)
+            .filter(k => fieldValues[k] !== undefined);
+
         const group = {
             id: editingGroup?.id || `group_${Date.now()}`,
             name: groupName.trim(),
             description: groupDescription.trim(),
             emoji: groupEmoji,
-            fields: selectedFields.map(key => ({
+            fields: [...selectedFields, ...extraKeys].map(key => ({
                 key,
                 value: fieldValues[key] ?? ''
             })),
@@ -307,13 +617,19 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
     };
 
     const handleDeleteGroup = (groupId) => {
-        if (!confirm('Supprimer ce groupe ?')) return;
+        setGroupToDelete(groupId);
+    };
+
+    const confirmDeleteGroup = () => {
         // Supprimer le groupe qui correspond à l'ID ou au nom
-        const newGroups = groups.filter(g => !(g.id === groupId || g.name === groupId));
+        const newGroups = groups.filter(g => !(g.id === groupToDelete || g.name === groupToDelete));
         setGroups(newGroups);
         const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
         localStorage.setItem(storageKey, JSON.stringify(newGroups));
+        setGroupToDelete(null);
     };
+
+    const groupPendingDelete = groups.find(g => (g.id || g.name) === groupToDelete);
 
     // Find field definition helper
     const findFieldDef = (key) => {
@@ -324,88 +640,142 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
         return null;
     };
 
+    // Carte d'un setup sauvegardé/template dans l'onglet "Bibliothèque de setups"
+    const SetupCard = ({ setup, builtin = false }) => (
+        <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-colors">
+            <span className="text-2xl flex-shrink-0">{setup.emoji || '⚙️'}</span>
+            <div className="flex-1 min-w-0">
+                <div className="font-semibold text-white text-sm">{setup.name}</div>
+                {setup.description && (
+                    <div className="text-xs text-white/50 mt-0.5 line-clamp-2">{setup.description}</div>
+                )}
+                {!builtin && (
+                    <div className="text-xs text-white/30 mt-1">
+                        {setup.groupedPresets?.length || 0} groupe(s)
+                        {Object.keys(setup.groupAssignments || {}).length > 0 && (
+                            <> · {Object.keys(setup.groupAssignments).length} assigné(s) à une case</>
+                        )}
+                        {' · '}{new Date(setup.createdAt).toLocaleDateString('fr-FR')}
+                    </div>
+                )}
+                {builtin && setup.groupedPresets?.[0] && (
+                    <div className="text-xs text-purple-300/60 mt-1">{setup.groupedPresets[0].description}</div>
+                )}
+            </div>
+            <div className="flex flex-col gap-1 flex-shrink-0">
+                <button
+                    onClick={() => handleLoadSetup(setup)}
+                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
+                >
+                    Appliquer
+                </button>
+                {!builtin && (
+                    <button
+                        onClick={() => handleDeleteSetup(setup.id)}
+                        className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded-lg transition-colors"
+                    >
+                        Suppr.
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+
     return createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
-            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] h-[95vh] sm:h-[88vh] border border-white/10 flex flex-col overflow-hidden">
+            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] max-h-[95vh] sm:max-h-[88vh] border border-white/10 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
-                        <span>👥</span> Groupes de préréglages
-                        {mode === 'create' && <span className="text-sm font-normal text-white/50">— Nouveau</span>}
-                        {mode === 'edit' && <span className="text-sm font-normal text-white/50">— Modifier "{editingGroup?.name}"</span>}
+                        <span>👥</span> Groupes & Préréglages
+                        {topTab === 'groups' && mode === 'create' && <span className="text-sm font-normal text-white/50">— Nouveau</span>}
+                        {topTab === 'groups' && mode === 'edit' && <span className="text-sm font-normal text-white/50">— Modifier "{editingGroup?.name}"</span>}
                     </h3>
                     <button onClick={onClose} className="p-2 hover:bg-white/5 rounded-lg transition-colors">
                         <span className="text-2xl leading-none">×</span>
                     </button>
                 </div>
 
-                {/* LIST MODE */}
-                {mode === 'list' && (
-                    <div className="flex-1 overflow-y-auto p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h4 className="text-sm font-semibold text-white/70">
+                {/* Onglet principal : mes groupes vs bibliothèque de setups complets (masqué pendant la création/édition d'un groupe) */}
+                {showSetupsTab && !(topTab === 'groups' && mode !== 'list') && (
+                    <div className="px-4 pt-3 flex-shrink-0">
+                        <LiquidTabs
+                            tabs={[
+                                { id: 'groups', label: `Mes groupes${groups.length ? ` (${groups.length})` : ''}` },
+                                { id: 'setups', label: `Bibliothèque de setups${savedSetups.length ? ` (${savedSetups.length})` : ''}` }
+                            ]}
+                            activeTab={topTab}
+                            onChange={setTopTab}
+                        />
+                    </div>
+                )}
+
+                {/* LIST MODE (groupes) */}
+                {topTab === 'groups' && mode === 'list' && (
+                    <div className="flex-1 overflow-y-auto p-4">
+                        <div className="flex items-center justify-between mb-3">
+                            <h4 className="text-xs font-semibold text-white/50">
                                 {groups.length} groupe(s) enregistré(s)
                             </h4>
                             <button
                                 onClick={startCreate}
-                                className="group relative px-5 py-2.5 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl font-semibold shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center gap-2 overflow-hidden"
+                                className="group relative px-4 py-2 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white rounded-xl text-sm font-semibold shadow-lg hover:shadow-purple-500/25 transition-all duration-300 flex items-center gap-1.5 overflow-hidden"
                             >
-                                <span className="relative z-10 flex items-center gap-2">
-                                    <span className="text-lg font-bold">+</span> Nouveau groupe
+                                <span className="relative z-10 flex items-center gap-1.5">
+                                    <span className="text-base font-bold leading-none">+</span> Nouveau groupe
                                 </span>
                                 <div className="absolute inset-0 bg-gradient-to-r from-purple-400 to-purple-600 opacity-0 group-hover:opacity-20 transition-opacity" />
                             </button>
                         </div>
 
                         {groups.length === 0 ? (
-                            <div className="text-center py-12 text-white/50">
+                            <div className="text-center py-10 text-white/40">
                                 <div className="text-4xl mb-3">📦</div>
-                                <p>Aucun groupe de préréglages</p>
-                                <p className="text-sm mt-1">Créez un groupe pour sauvegarder plusieurs champs ensemble</p>
+                                <p className="text-sm">Aucun groupe de préréglages</p>
+                                <p className="text-xs mt-1">Créez un groupe pour sauvegarder plusieurs champs ensemble</p>
                             </div>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
                                 {groups.map((group, idx) => (
-                                    <div key={group.id || idx} className="p-4 bg-white/5 rounded-xl border border-white/10">
+                                    <div key={group.id || idx} className="p-3 bg-white/5 rounded-xl border border-white/10 hover:border-purple-500/30 transition-colors">
                                         <div className="flex items-start gap-3">
-                                            <span className="text-3xl">{group.emoji || '🌱'}</span>
+                                            <span className="text-2xl flex-shrink-0">{group.emoji || '🌱'}</span>
                                             <div className="flex-1 min-w-0">
-                                                <div className="font-semibold text-white">{group.name}</div>
-                                                {group.description && (
-                                                    <div className="text-sm text-white/50 mt-0.5">{group.description}</div>
-                                                )}
-                                                <div className="text-xs text-white/50 mt-2">
-                                                    {group.fields?.length || 0} champ(s)
+                                                <div className="flex items-center justify-between gap-2">
+                                                    <div className="font-semibold text-white text-sm truncate">{group.name}</div>
+                                                    <span className="text-xs text-white/40 flex-shrink-0">{group.fields?.length || 0} champ(s)</span>
                                                 </div>
+                                                {group.description && (
+                                                    <div className="text-xs text-white/50 mt-0.5 truncate">{group.description}</div>
+                                                )}
                                                 {/* Preview des champs */}
-                                                <div className="flex flex-wrap gap-1 mt-2">
-                                                    {(group.fields || []).slice(0, 4).map((f, i) => {
+                                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                                    {(group.fields || []).filter(f => !String(f.key).endsWith('__percentages')).slice(0, 5).map((f, i) => {
                                                         const def = findFieldDef(f.key);
                                                         return (
                                                             <span key={i} className="text-xs px-2 py-0.5 bg-white/10 rounded">
-                                                                {def?.icon || '📌'} {def?.label || f.key}: {String(f.value).substring(0, 15) || '—'}
+                                                                {def?.icon || '📌'} {def?.label || f.key}
                                                             </span>
                                                         );
                                                     })}
-                                                    {(group.fields?.length || 0) > 4 && (
-                                                        <span className="text-xs px-2 py-0.5 text-white/50">+{group.fields.length - 4}</span>
-                                                    )}
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div className="flex gap-2 mt-3 pt-3 border-t border-white/10">
-                                            <button
-                                                onClick={() => startEdit(group)}
-                                                className="flex-1 px-3 py-1.5 text-sm bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors"
-                                            >
-                                                ✏️ Modifier
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteGroup(group.id || group.name)}
-                                                className="px-3 py-1.5 text-sm text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
-                                            >
-                                                🗑️
-                                            </button>
+                                            <div className="flex flex-col gap-1 flex-shrink-0">
+                                                <button
+                                                    onClick={() => startEdit(group)}
+                                                    className="px-2.5 py-1 text-xs bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 rounded-lg transition-colors"
+                                                    title="Modifier"
+                                                >
+                                                    ✏️
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDeleteGroup(group.id || group.name)}
+                                                    className="px-2.5 py-1 text-xs text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                                                    title="Supprimer"
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
                                 ))}
@@ -414,8 +784,8 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     </div>
                 )}
 
-                {/* CREATE / EDIT MODE */}
-                {(mode === 'create' || mode === 'edit') && (
+                {/* CREATE / EDIT MODE (groupes) */}
+                {topTab === 'groups' && (mode === 'create' || mode === 'edit') && (
                     <div className="flex-1 flex flex-col overflow-hidden">
                         {/* Form header */}
                         <div className="p-4 border-b border-white/10 flex-shrink-0">
@@ -500,24 +870,31 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                                                 <div className="p-2 space-y-1 border-t border-white/10">
                                                     {section.items.map(field => {
                                                         const isSelected = selectedFields.includes(field.id);
+                                                        const isWide = isSelected && WIDE_FIELD_TYPES.includes(field.type);
                                                         return (
                                                             <div
                                                                 key={field.id}
-                                                                className={`flex items-center gap-2 p-2 rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
+                                                                className={`rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
                                                             >
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isSelected}
-                                                                    onChange={() => handleToggleField(field.id)}
-                                                                    className="w-4 h-4 accent-purple-600 flex-shrink-0"
-                                                                />
-                                                                <span className="text-base flex-shrink-0">{field.icon}</span>
-                                                                <span className="text-sm flex-1 truncate">{field.label}</span>
+                                                                <div className="flex items-center gap-2 p-2">
+                                                                    <input
+                                                                        type="checkbox"
+                                                                        checked={isSelected}
+                                                                        onChange={() => handleToggleField(field.id)}
+                                                                        className="w-4 h-4 accent-purple-600 flex-shrink-0"
+                                                                    />
+                                                                    <span className="text-base flex-shrink-0">{field.icon}</span>
+                                                                    <span className="text-sm flex-1 truncate">{field.label}</span>
 
-                                                                {isSelected && (
-                                                                    <div className="flex items-center gap-1 flex-shrink-0">
+                                                                    {isSelected && !isWide && (
+                                                                        <div className="flex items-center gap-1 flex-shrink-0">
+                                                                            {renderFieldInput(field)}
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {isWide && (
+                                                                    <div className="pb-2.5 pl-9 pr-2">
                                                                         {renderFieldInput(field)}
-                                                                        {field.unit && <span className="text-xs text-gray-500">{field.unit}</span>}
                                                                     </div>
                                                                 )}
                                                             </div>
@@ -555,8 +932,114 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     </div>
                 )}
 
-                {/* Footer for list mode */}
-                {mode === 'list' && (
+                {/* BIBLIOTHÈQUE DE SETUPS (onglet) */}
+                {showSetupsTab && topTab === 'setups' && (
+                    <div className="flex-1 flex flex-col overflow-hidden">
+                        <div className="px-4 pt-3 flex-shrink-0">
+                            <LiquidTabs
+                                tabs={[
+                                    { id: 'mes', label: `Mes setups${savedSetups.length ? ` (${savedSetups.length})` : ''}` },
+                                    { id: 'templates', label: `Templates${builtinSetups.length ? ` (${builtinSetups.length})` : ''}` },
+                                    { id: 'nouveau', label: 'Sauvegarder' }
+                                ]}
+                                activeTab={setupsSubTab}
+                                onChange={setSetupsSubTab}
+                                variant="pills"
+                            />
+                        </div>
+
+                        <div className="flex-1 overflow-y-auto p-4">
+                            {setupsSubTab === 'mes' && (
+                                savedSetups.length === 0
+                                    ? <div className="text-center py-10 text-white/40">
+                                        <div className="text-4xl mb-3">📦</div>
+                                        <p className="text-sm">Aucun setup sauvegardé.<br />Créez-en un depuis l'onglet "Sauvegarder".</p>
+                                    </div>
+                                    : <div className="space-y-2">
+                                        {savedSetups.map(s => <SetupCard key={s.id} setup={s} />)}
+                                    </div>
+                            )}
+
+                            {setupsSubTab === 'templates' && (
+                                builtinSetups.length === 0
+                                    ? <div className="text-center py-10 text-white/40 text-sm">Aucun template pour ce type de pipeline.</div>
+                                    : <div className="space-y-2">
+                                        <p className="text-xs text-white/40 mb-1">
+                                            Ces templates appliquent une configuration + groupes de préréglages prédéfinis. Vous pouvez ensuite les ajuster.
+                                        </p>
+                                        {builtinSetups.map(s => <SetupCard key={s.id} setup={s} builtin />)}
+                                    </div>
+                            )}
+
+                            {setupsSubTab === 'nouveau' && (
+                                <div className="space-y-3">
+                                    <p className="text-xs text-white/50">
+                                        Sauvegarde la configuration actuelle + vos {groups?.length || 0} groupe(s) de préréglages.
+                                    </p>
+                                    <input
+                                        className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:border-purple-500/50 outline-none"
+                                        placeholder="Nom du setup (ex: Indoor DWC perso)"
+                                        value={setupName}
+                                        onChange={e => setSetupName(e.target.value)}
+                                    />
+                                    <input
+                                        className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:border-purple-500/50 outline-none"
+                                        placeholder="Description (optionnel)"
+                                        value={setupDescription}
+                                        onChange={e => setSetupDescription(e.target.value)}
+                                    />
+                                    <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
+                                        <input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} className="accent-purple-500" />
+                                        Inclure les données des cases
+                                    </label>
+
+                                    {groups && groups.length > 0 && (
+                                        <div className="space-y-2 p-3 bg-white/5 border border-white/10 rounded-xl">
+                                            <p className="text-xs font-medium text-white/70">
+                                                Appliquer automatiquement un groupe à une case
+                                            </p>
+                                            {groups.map(group => {
+                                                const groupId = group.id || group.name;
+                                                return (
+                                                    <div key={groupId} className="flex items-center gap-2">
+                                                        <span className="text-base flex-shrink-0">{group.emoji || '🌱'}</span>
+                                                        <span className="text-sm text-white/80 flex-1 truncate">{group.name}</span>
+                                                        <select
+                                                            value={groupAssignments[groupId] || ''}
+                                                            onChange={e => setGroupAssignments(prev => ({ ...prev, [groupId]: e.target.value }))}
+                                                            className="px-2 py-1 bg-[#0d0d1a] border border-white/20 rounded-lg text-xs text-white max-w-[160px]"
+                                                        >
+                                                            <option value="" className="bg-[#0d0d1a]">— Aucune case —</option>
+                                                            {cells.map(cell => (
+                                                                <option key={cell.timestamp} value={cell.timestamp} className="bg-[#0d0d1a]">
+                                                                    {cell.label}
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                );
+                                            })}
+                                            <p className="text-xs text-white/30">
+                                                Au chargement de ce setup, le(s) groupe(s) assigné(s) s'appliqueront directement sur leur case choisie.
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    <button
+                                        onClick={handleSaveSetup}
+                                        disabled={!setupName.trim()}
+                                        className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-white/10 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
+                                    >
+                                        Sauvegarder ce setup
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                )}
+
+                {/* Footer global : liste de groupes ou bibliothèque de setups (pas pendant la création/édition d'un groupe) */}
+                {((topTab === 'groups' && mode === 'list') || (showSetupsTab && topTab === 'setups')) && (
                     <div className="flex gap-3 p-4 border-t border-white/10 flex-shrink-0">
                         <button
                             onClick={onClose}
@@ -567,236 +1050,24 @@ function GroupedPresetModal({ isOpen, onClose, onSave, groups, setGroups, sideba
                     </div>
                 )}
             </div>
+
+            {/* Confirm delete group */}
+            <ConfirmModal
+                open={!!groupToDelete}
+                title="Supprimer ce groupe ?"
+                message={`Le groupe "${groupPendingDelete?.name || ''}" ${groupPendingDelete?.emoji || ''} sera définitivement supprimé. Cette action est irréversible.`}
+                confirmLabel="Supprimer"
+                cancelLabel="Annuler"
+                variant="danger"
+                onCancel={() => setGroupToDelete(null)}
+                onConfirm={confirmDeleteGroup}
+            />
         </div>,
         document.body
     );
 }
 
-// ── Bibliothèque de Setups Pipeline ──────────────────────────────────────────
-import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
-
-function SavePipelineModal({
-    isOpen, onClose,
-    timelineConfig, timelineData, groupedPresets,
-    cells = [],
-    onLoadPreset, pipelineType
-}) {
-    const [tab, setTab] = useState('mes'); // 'mes' | 'templates' | 'nouveau'
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [includeData, setIncludeData] = useState(false);
-    // Quelle case doit recevoir les données de quel groupe de préréglages, au chargement du setup
-    const [groupAssignments, setGroupAssignments] = useState({});
-
-    const storageKey = `pipeline-setups-${pipelineType || 'unknown'}`;
-    const [saved, setSaved] = useState(() => {
-        try { return JSON.parse(localStorage.getItem(storageKey) || '[]'); }
-        catch { return []; }
-    });
-
-    const builtins = PIPELINE_STARTER_SETUPS[pipelineType] || [];
-
-    if (!isOpen) return null;
-
-    const handleSave = () => {
-        if (!name.trim()) return;
-        // Ne garder que les assignations qui pointent vers une case choisie
-        const cleanAssignments = Object.fromEntries(
-            Object.entries(groupAssignments).filter(([, ts]) => !!ts)
-        );
-        const setup = {
-            id: Date.now(),
-            name: name.trim(),
-            description: description.trim(),
-            createdAt: new Date().toISOString(),
-            config: timelineConfig || {},
-            groupedPresets: groupedPresets || [],
-            groupAssignments: cleanAssignments,
-            data: includeData ? (timelineData || []) : []
-        };
-        const next = [...saved, setup];
-        localStorage.setItem(storageKey, JSON.stringify(next));
-        setSaved(next);
-        setName(''); setDescription(''); setGroupAssignments({});
-        setTab('mes');
-    };
-
-    const handleLoad = (setup) => {
-        onLoadPreset && onLoadPreset(setup);
-        onClose();
-    };
-
-    const handleDelete = (id) => {
-        const next = saved.filter(s => s.id !== id);
-        localStorage.setItem(storageKey, JSON.stringify(next));
-        setSaved(next);
-    };
-
-    const tabClass = (t) =>
-        `px-4 py-2 text-sm font-medium rounded-lg transition-colors ${tab === t
-            ? 'bg-purple-500/20 text-purple-300 border border-purple-500/40'
-            : 'text-white/50 hover:text-white/80 hover:bg-white/5'}`;
-
-    const SetupCard = ({ setup, builtin = false }) => (
-        <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-colors">
-            <span className="text-2xl flex-shrink-0">{setup.emoji || '⚙️'}</span>
-            <div className="flex-1 min-w-0">
-                <div className="font-semibold text-white text-sm">{setup.name}</div>
-                {setup.description && (
-                    <div className="text-xs text-white/50 mt-0.5 line-clamp-2">{setup.description}</div>
-                )}
-                {!builtin && (
-                    <div className="text-xs text-white/30 mt-1">
-                        {setup.groupedPresets?.length || 0} groupe(s)
-                        {Object.keys(setup.groupAssignments || {}).length > 0 && (
-                            <> · {Object.keys(setup.groupAssignments).length} assigné(s) à une case</>
-                        )}
-                        {' · '}{new Date(setup.createdAt).toLocaleDateString('fr-FR')}
-                    </div>
-                )}
-                {builtin && setup.groupedPresets?.[0] && (
-                    <div className="text-xs text-purple-300/60 mt-1">{setup.groupedPresets[0].description}</div>
-                )}
-            </div>
-            <div className="flex flex-col gap-1 flex-shrink-0">
-                <button
-                    onClick={() => handleLoad(setup)}
-                    className="px-3 py-1.5 bg-purple-600 hover:bg-purple-700 text-white text-xs font-medium rounded-lg transition-colors"
-                >
-                    Appliquer
-                </button>
-                {!builtin && (
-                    <button
-                        onClick={() => handleDelete(setup.id)}
-                        className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded-lg transition-colors"
-                    >
-                        Suppr.
-                    </button>
-                )}
-            </div>
-        </div>
-    );
-
-    return createPortal(
-        <div className="fixed inset-0 z-[10010] flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-            <div
-                className="bg-[#0d0d1a] rounded-2xl shadow-2xl w-full max-w-lg mx-4 border border-white/10 max-h-[80vh] flex flex-col"
-                onClick={e => e.stopPropagation()}
-            >
-                {/* Header */}
-                <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-white/10 flex-shrink-0">
-                    <h3 className="font-bold text-white text-base">📚 Bibliothèque de setups</h3>
-                    <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-white/10 text-white/50 hover:text-white transition-colors">✕</button>
-                </div>
-
-                {/* Tabs */}
-                <div className="flex gap-2 px-5 py-3 border-b border-white/5 flex-shrink-0">
-                    <button className={tabClass('mes')} onClick={() => setTab('mes')}>
-                        Mes setups {saved.length > 0 && <span className="ml-1 text-purple-400">({saved.length})</span>}
-                    </button>
-                    <button className={tabClass('templates')} onClick={() => setTab('templates')}>
-                        Templates {builtins.length > 0 && <span className="ml-1 text-green-400">({builtins.length})</span>}
-                    </button>
-                    <button className={tabClass('nouveau')} onClick={() => setTab('nouveau')}>Sauvegarder</button>
-                </div>
-
-                {/* Content */}
-                <div className="flex-1 overflow-y-auto px-5 py-4">
-                    {tab === 'mes' && (
-                        saved.length === 0
-                            ? <div className="text-center py-10 text-white/40">
-                                <div className="text-4xl mb-3">📦</div>
-                                <p className="text-sm">Aucun setup sauvegardé.<br />Créez-en un depuis l'onglet "Sauvegarder".</p>
-                            </div>
-                            : <div className="space-y-2">
-                                {saved.map(s => <SetupCard key={s.id} setup={s} />)}
-                            </div>
-                    )}
-
-                    {tab === 'templates' && (
-                        builtins.length === 0
-                            ? <div className="text-center py-10 text-white/40 text-sm">Aucun template pour ce type de pipeline.</div>
-                            : <div className="space-y-2">
-                                <p className="text-xs text-white/40 mb-3">
-                                    Ces templates appliquent une configuration + groupes de préréglages prédéfinis. Vous pouvez ensuite les ajuster.
-                                </p>
-                                {builtins.map(s => <SetupCard key={s.id} setup={s} builtin />)}
-                            </div>
-                    )}
-
-                    {tab === 'nouveau' && (
-                        <div className="space-y-3">
-                            <p className="text-xs text-white/50">
-                                Sauvegarde la configuration actuelle + vos {groupedPresets?.length || 0} groupe(s) de préréglages.
-                            </p>
-                            <input
-                                className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:border-purple-500/50 outline-none"
-                                placeholder="Nom du setup (ex: Indoor DWC perso)"
-                                value={name}
-                                onChange={e => setName(e.target.value)}
-                            />
-                            <input
-                                className="w-full px-3 py-2.5 bg-white/5 border border-white/20 rounded-xl text-white placeholder-white/30 text-sm focus:border-purple-500/50 outline-none"
-                                placeholder="Description (optionnel)"
-                                value={description}
-                                onChange={e => setDescription(e.target.value)}
-                            />
-                            <label className="flex items-center gap-2 text-sm text-white/70 cursor-pointer">
-                                <input type="checkbox" checked={includeData} onChange={e => setIncludeData(e.target.checked)} className="accent-purple-500" />
-                                Inclure les données des cases
-                            </label>
-
-                            {/* Assignation case → groupe : au chargement du setup, chaque groupe assigné
-                                se dépose automatiquement sur la case choisie, sans drag & drop manuel */}
-                            {groupedPresets && groupedPresets.length > 0 && (
-                                <div className="space-y-2 p-3 bg-white/5 border border-white/10 rounded-xl">
-                                    <p className="text-xs font-medium text-white/70">
-                                        Appliquer automatiquement un groupe à une case
-                                    </p>
-                                    {groupedPresets.map(group => {
-                                        const groupId = group.id || group.name;
-                                        return (
-                                            <div key={groupId} className="flex items-center gap-2">
-                                                <span className="text-base flex-shrink-0">{group.emoji || '🌱'}</span>
-                                                <span className="text-sm text-white/80 flex-1 truncate">{group.name}</span>
-                                                <select
-                                                    value={groupAssignments[groupId] || ''}
-                                                    onChange={e => setGroupAssignments(prev => ({ ...prev, [groupId]: e.target.value }))}
-                                                    className="px-2 py-1 bg-[#0d0d1a] border border-white/20 rounded-lg text-xs text-white max-w-[160px]"
-                                                >
-                                                    <option value="" className="bg-[#0d0d1a]">— Aucune case —</option>
-                                                    {cells.map(cell => (
-                                                        <option key={cell.timestamp} value={cell.timestamp} className="bg-[#0d0d1a]">
-                                                            {cell.label}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        );
-                                    })}
-                                    <p className="text-xs text-white/30">
-                                        Au chargement de ce setup, le(s) groupe(s) assigné(s) s'appliqueront directement sur leur case choisie.
-                                    </p>
-                                </div>
-                            )}
-
-                            <button
-                                onClick={handleSave}
-                                disabled={!name.trim()}
-                                className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:bg-white/10 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors"
-                            >
-                                Sauvegarder ce setup
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-        </div>,
-        document.body
-    );
-}
-
-import { ChevronDown, ChevronRight, Plus, Settings, Save, Upload, CheckSquare, Square, Check, Brain, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Settings, Save, CheckSquare, Square, Check, Brain, ExternalLink } from 'lucide-react';
 import PipelineDataModal from '../core/PipelineDataModal';
 import PipelineCellBadge from '../core/PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
@@ -897,7 +1168,7 @@ const PipelineDragDropView = ({
     const [droppedItem, setDroppedItem] = useState(null); // Item droppé en attente de saisie
     const [hoveredCell, setHoveredCell] = useState(null); // Cellule survolée pendant drag
     const [showPresets, setShowPresets] = useState(false);
-    const [showSavePipelineModal, setShowSavePipelineModal] = useState(false);
+    const [groupedModalInitialTab, setGroupedModalInitialTab] = useState('groups'); // onglet à l'ouverture: 'groups' | 'setups'
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
@@ -2258,19 +2529,18 @@ const PipelineDragDropView = ({
                             <div className="mb-3">
                                 <div className="font-semibold text-xs text-white/50 mb-1">Pré-configuration</div>
                                 <button
-                                    className="w-full mt-1 mb-2 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
-                                    onClick={() => setShowGroupedPresetModal(true)}
+                                    className="w-full mt-1 mb-1.5 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
+                                    onClick={() => { setGroupedModalInitialTab('groups'); setShowGroupedPresetModal(true); }}
                                 >
                                     <Plus className="w-4 h-4" />
-                                    <span>Groupe de préréglages</span>
+                                    <span>Groupes & Préréglages</span>
                                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
                                 </button>
                                 <button
-                                    className="w-full mb-2 flex items-center justify-center gap-2 px-4 py-2 bg-white/5 hover:bg-white/10 border border-white/10 text-white/80 rounded-xl font-medium transition-colors"
-                                    onClick={() => setShowSavePipelineModal(true)}
+                                    className="w-full mb-2 flex items-center justify-center gap-1.5 py-1 text-xs text-white/50 hover:text-white/80 transition-colors"
+                                    onClick={() => { setGroupedModalInitialTab('setups'); setShowGroupedPresetModal(true); }}
                                 >
-                                    <Upload className="w-4 h-4" />
-                                    <span>Bibliothèque de setups</span>
+                                    <span>📚 Bibliothèque de setups</span>
                                 </button>
                                 {groupedPresets.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
@@ -2789,7 +3059,7 @@ const PipelineDragDropView = ({
                             </p>
 
                             <div className="flex-1 overflow-hidden">
-                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min overflow-y-auto px-3 md:px-4 pb-3 md:pb-4 h-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(80px, 1fr))' }}>
+                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min overflow-y-auto px-3 md:px-4 pb-3 md:pb-4 h-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
                                     {/* Visual selection frame overlay */}
                                     {selectedCells.length > 1 && !isSelecting && (() => {
                                         // Compute aggregate bounding box of selected cells using DOM measurements
@@ -3023,7 +3293,7 @@ const PipelineDragDropView = ({
             </div> {/* Fin flex-row layout */}
 
             {/* MODALS ET TOOLTIPS (dans liquid wrapper mais hors flex-row) */}
-            {/* Modal grouped preset */}
+            {/* Modal groupes de préréglages + bibliothèque de setups (onglets) */}
             <GroupedPresetModal
                 isOpen={showGroupedPresetModal}
                 onClose={() => setShowGroupedPresetModal(false)}
@@ -3031,17 +3301,10 @@ const PipelineDragDropView = ({
                 setGroups={setGroupedPresets}
                 sidebarContent={sidebarContent}
                 type={type}
-            />
-
-            {/* Modal bibliothèque de setups pipeline */}
-            <SavePipelineModal
-                isOpen={showSavePipelineModal}
-                onClose={() => setShowSavePipelineModal(false)}
+                initialTopTab={groupedModalInitialTab}
                 timelineConfig={timelineConfig}
                 timelineData={timelineData}
-                groupedPresets={groupedPresets}
                 cells={cells}
-                pipelineType={type}
                 onLoadPreset={(p) => applyPipelinePreset(p)}
             />
 
@@ -3216,6 +3479,19 @@ const PipelineDragDropView = ({
                     hasCopiedData={copiedCellData !== null}
                 />
             )}
+
+            {/* Modal de confirmation générique (suppression de champs, suppression totale, etc.) */}
+            <ConfirmModal
+                open={confirmState.open}
+                title={confirmState.title}
+                message={confirmState.message}
+                onCancel={() => setConfirmState(prev => ({ ...prev, open: false }))}
+                onConfirm={() => setConfirmState(prev => {
+                    const cb = prev && prev.onConfirm;
+                    if (typeof cb === 'function') cb();
+                    return { ...prev, open: false };
+                })}
+            />
 
             {/* Fin du wrapper liquid */}
         </div>

@@ -103,6 +103,7 @@ export function useConcentrateForm(reviewId = null) {
                 laboratoire: cd.laboratoire || '',
                 cultivarsUtilises: cd.cultivarsUtilises || '',
                 parentFlowerReviewId: cd.parentFlowerReviewId || null,
+                sourceLineage: parseArr(cd.sourceLineage, []),
                 status: baseReview.status || 'draft',
                 analytics,
                 odeurs,

@@ -101,6 +101,7 @@ export function useHashForm(reviewId = null) {
                 laboratoire: hd.laboratoire || '',
                 cultivarsUtilises: hd.cultivarsUtilises || '',
                 parentFlowerReviewId: hd.parentFlowerReviewId || null,
+                sourceLineage: parseArr(hd.sourceLineage, []),
                 status: baseReview.status || 'draft',
                 analytics,
                 odeurs,

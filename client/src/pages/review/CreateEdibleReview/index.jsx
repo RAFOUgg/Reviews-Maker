@@ -31,7 +31,7 @@ export default function CreateEdibleReview() {
     const [currentSection, setCurrentSection] = useState(0)
 
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
-    const { photos, handlePhotoUpload, removePhoto } = usePhotoUpload()
+    const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
     const [showOrchard, setShowOrchard] = useState(false)
 
     // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
@@ -41,6 +41,15 @@ export default function CreateEdibleReview() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading])
+
+    // Charger les photos existantes quand on édite une review
+    useEffect(() => {
+        if (!id || !formData._photos?.length) return
+        setPhotos(prev => {
+            if (prev.length > 0) return prev
+            return formData._photos
+        })
+    }, [id, formData._photos])
 
     const sections = [
         { id: 'infos', icon: '📋', title: 'Informations générales', required: true },
@@ -68,7 +77,7 @@ export default function CreateEdibleReview() {
         const reviewFormData = new FormData()
 
         Object.keys(formData).forEach(key => {
-            if (key === 'photos' || formData[key] === undefined || formData[key] === null) return
+            if (key === 'photos' || key === '_photos' || formData[key] === undefined || formData[key] === null) return
             if (key === 'recipe') {
                 const recipe = formData.recipe || {}
                 if (recipe.ingredients) reviewFormData.append('ingredients', JSON.stringify(recipe.ingredients))
@@ -108,8 +117,9 @@ export default function CreateEdibleReview() {
 
             toast.success('Brouillon sauvegardé')
 
-            if (!id && savedReview?.id) {
-                navigate(`/edit/edible/${savedReview.id}`)
+            const newId = savedReview?.review?.id || savedReview?.id
+            if (!id && newId) {
+                navigate(`/edit/edible/${newId}`)
             }
         } catch (error) {
             toast.error('Erreur lors de la sauvegarde')
@@ -175,6 +185,7 @@ export default function CreateEdibleReview() {
                 subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
                 loading={loading}
                 saving={saving}
+                wide={sections[currentSection]?.id === 'recipe'}
             >
                 <AnimatePresence mode="wait">
                     <motion.div

@@ -1,7 +1,8 @@
 import React from 'react'
 import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
-import ParentFlowerSelector from '@/components/forms/helpers/ParentFlowerSelector'
+import SourceLineageSelector from '@/components/forms/helpers/SourceLineageSelector'
+import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
 
 const CONCENTRATE_TYPES = [
     'Rosin',
@@ -68,7 +69,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     {/* Hashmaker / Extracteur */}
                     <div>
                         <LiquidInput
-                            label="Hashmaker / Extracteur"
+                            label={
+                                <span className="flex items-center justify-between">
+                                    Hashmaker / Extracteur
+                                    <FillMyselfButton onFill={(name) => handleChange('hashmaker', name)} />
+                                </span>
+                            }
                             value={formData.hashmaker || ''}
                             onChange={(e) => handleChange('hashmaker', e.target.value)}
                             placeholder="Nom de l'extracteur"
@@ -93,14 +99,20 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             onChange={(e) => handleChange('cultivarsUtilises', e.target.value)}
                             placeholder="Cultivars utilisés (séparés par des virgules)"
                         />
-                        <p className="text-xs text-white/40 mt-1">(Séparés par des virgules si plusieurs)</p>
+                        <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
                     </div>
 
-                    {/* Lien fleur parente */}
+                    {/* Lien matière première (fleur et/ou hash) */}
                     <div>
-                        <ParentFlowerSelector
-                            value={formData.parentFlowerReviewId || null}
-                            onChange={(id) => handleChange('parentFlowerReviewId', id)}
+                        <SourceLineageSelector
+                            value={formData.sourceLineage || []}
+                            allowedTypes={['flower', 'hash']}
+                            onChange={(sources, aggregatedCultivars) => {
+                                handleChange('sourceLineage', sources)
+                                if (aggregatedCultivars.length > 0) {
+                                    handleChange('cultivarsUtilises', aggregatedCultivars.join(', '))
+                                }
+                            }}
                         />
                     </div>
 

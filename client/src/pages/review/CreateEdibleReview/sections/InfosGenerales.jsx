@@ -1,6 +1,8 @@
 import React from 'react'
 import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
+import SourceLineageSelector from '@/components/forms/helpers/SourceLineageSelector'
+import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
 
 const EDIBLE_TYPES = [
     'Brownie',
@@ -66,7 +68,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     {/* Fabricant */}
                     <div>
                         <LiquidInput
-                            label="Fabricant"
+                            label={
+                                <span className="flex items-center justify-between">
+                                    Fabricant
+                                    <FillMyselfButton onFill={(name) => handleChange('fabricant', name)} />
+                                </span>
+                            }
                             value={formData.fabricant || ''}
                             onChange={(e) => handleChange('fabricant', e.target.value)}
                             placeholder="Nom du fabricant"
@@ -81,7 +88,21 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             onChange={(e) => handleChange('typeGenetiques', e.target.value)}
                             placeholder="Génétiques ou cultivars utilisés"
                         />
-                        <p className="text-xs text-white/40 mt-1">(Optionnel)</p>
+                        <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                    </div>
+
+                    {/* Lien matière première (fleur, hash et/ou concentré) */}
+                    <div>
+                        <SourceLineageSelector
+                            value={formData.sourceLineage || []}
+                            allowedTypes={['flower', 'hash', 'concentrate']}
+                            onChange={(sources, aggregatedCultivars) => {
+                                handleChange('sourceLineage', sources)
+                                if (aggregatedCultivars.length > 0) {
+                                    handleChange('typeGenetiques', aggregatedCultivars.join(', '))
+                                }
+                            }}
+                        />
                     </div>
 
                     {/* Photos */}
