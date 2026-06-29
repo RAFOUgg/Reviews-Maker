@@ -111,6 +111,10 @@ function UnitAwareNumberInput({ field, value, onChange, displayUnit, onDisplayUn
         ? ''
         : roundDisplay(unitDef ? unitDef.fromBase(Number(value)) : Number(value));
 
+    const displayPlaceholder = field.defaultValue === undefined
+        ? ''
+        : String(roundDisplay(unitDef ? unitDef.fromBase(Number(field.defaultValue)) : Number(field.defaultValue)));
+
     return (
         <div className="flex items-center gap-1.5">
             <input
@@ -124,7 +128,7 @@ function UnitAwareNumberInput({ field, value, onChange, displayUnit, onDisplayUn
                 min={isBaseUnit ? field.min : undefined}
                 max={isBaseUnit ? field.max : undefined}
                 step={isBaseUnit ? (field.step || 1) : 'any'}
-                placeholder={field.defaultValue !== undefined ? String(field.defaultValue) : ''}
+                placeholder={displayPlaceholder}
                 className={className}
             />
             {hasUnitChoice ? (
@@ -877,14 +881,16 @@ function GroupedPresetModal({
                                                                 className={`rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
                                                             >
                                                                 <div className="flex items-center gap-2 p-2">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        checked={isSelected}
-                                                                        onChange={() => handleToggleField(field.id)}
-                                                                        className="w-4 h-4 accent-purple-600 flex-shrink-0"
-                                                                    />
-                                                                    <span className="text-base flex-shrink-0">{field.icon}</span>
-                                                                    <span className="text-sm flex-1 truncate">{field.label}</span>
+                                                                    <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={isSelected}
+                                                                            onChange={() => handleToggleField(field.id)}
+                                                                            className="w-4 h-4 accent-purple-600 flex-shrink-0"
+                                                                        />
+                                                                        <span className="text-base flex-shrink-0">{field.icon}</span>
+                                                                        <span className="text-sm flex-1 truncate">{field.label}</span>
+                                                                    </label>
 
                                                                     {isSelected && !isWide && (
                                                                         <div className="flex items-center gap-1 flex-shrink-0">
