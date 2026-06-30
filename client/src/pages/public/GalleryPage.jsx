@@ -129,7 +129,7 @@ export default function GalleryPage() {
   }, [reviews, searchQuery, selectedType, sortBy]);
 
   return (
-    <div className="min-h-screen relative">
+    <div className="relative">
       <div className="container mx-auto px-4 py-8 relative z-10">
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-black text-white mb-4 drop-shadow-lg">

@@ -51,12 +51,19 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
         onChange({ ...data, extractionTimelineData: updatedData });
     };
 
+    // Réinitialiser complètement la trame (config + données)
+    const handleClearTimeline = () => {
+        timelineDataRef.current = [];
+        onChange({ ...data, extractionTimelineConfig: {}, extractionTimelineData: [] });
+    };
+
     return (
         <ExtractionPipelineDragDrop
             timelineConfig={data.extractionTimelineConfig || {}}
             timelineData={data.extractionTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
+            onClearTimeline={handleClearTimeline}
             initialData={{
                 extractionMethod: data.extractionMethod,
                 solvent: data.solvent,

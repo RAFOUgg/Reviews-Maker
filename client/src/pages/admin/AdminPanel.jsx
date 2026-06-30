@@ -157,7 +157,7 @@ export default function AdminPanel() {
     if (authError) {
         console.log('❌ Rendering Access Denied - authError is true')
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+            <div className="min-h-full bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
                 <LiquidCard className="max-w-md w-full">
                     <div className="p-8 text-center space-y-4">
                         <div className="w-16 h-16 bg-red-500/20 rounded-full flex items-center justify-center mx-auto">
@@ -181,7 +181,7 @@ export default function AdminPanel() {
     if (loading) {
         console.log('⏳ Rendering Loading state')
         return (
-            <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
+            <div className="min-h-[50vh] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 flex items-center justify-center p-4">
                 <div className="text-center space-y-4">
                     <div className="w-12 h-12 rounded-full border-4 border-purple-500 border-t-transparent animate-spin mx-auto"></div>
                     <p className="text-gray-400">Loading admin panel...</p>
@@ -200,7 +200,7 @@ export default function AdminPanel() {
     })
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 py-12 px-4 sm:px-6 lg:px-8">
             <div className="max-w-7xl mx-auto space-y-8">
                 {/* Header */}
                 <div className="space-y-2">

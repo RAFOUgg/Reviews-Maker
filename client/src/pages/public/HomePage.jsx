@@ -36,7 +36,7 @@ export default function HomePage() {
     };
 
     return (
-        <div className="min-h-screen relative">
+        <div className="relative">
             <div className="relative max-w-7xl mx-auto px-4 py-8 space-y-10">
                 {/* Hero Section */}
                 <LiquidCard glow="purple" padding="lg" className="overflow-hidden">

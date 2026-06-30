@@ -2398,7 +2398,7 @@ const PipelineDragDropView = ({
                 return {
                     id: phaseId,
                     timestamp: phaseId,
-                    label: phase.name || `Phase ${i + 1}`,
+                    label: phase.label || phase.name || `Phase ${i + 1}`,
                     phase: phase,
                     phaseId: phaseId,
                     duration: phase.duration || 7,
@@ -2788,25 +2788,24 @@ const PipelineDragDropView = ({
                                 )}
 
                                 {/* Confirm reset modal */}
-                                {showResetConfirm && (
-                                    <ConfirmModal
-                                        title="Réinitialiser la trame?"
-                                        message={`Voulez-vous vraiment supprimer les ${timelineData.length} point(s) de données et réinitialiser la trame ? Cette action est irréversible.`}
-                                        onClose={() => setShowResetConfirm(false)}
-                                        onConfirm={() => {
-                                            setShowResetConfirm(false);
-                                            if (typeof onClearTimeline === 'function') {
-                                                onClearTimeline();
-                                            } else {
-                                                // Fallback: emit an onConfigChange sentinel and notify
-                                                onConfigChange('resetTimeline', true);
-                                                showToast('Trame réinitialisée (fallback)');
-                                            }
-                                        }}
-                                        confirmLabel="Réinitialiser"
-                                        cancelLabel="Annuler"
-                                    />
-                                )}
+                                <ConfirmModal
+                                    open={showResetConfirm}
+                                    title="Réinitialiser la trame?"
+                                    message={`Voulez-vous vraiment supprimer les ${timelineData.length} point(s) de données et réinitialiser la trame ? Cette action est irréversible.`}
+                                    onCancel={() => setShowResetConfirm(false)}
+                                    onConfirm={() => {
+                                        setShowResetConfirm(false);
+                                        if (typeof onClearTimeline === 'function') {
+                                            onClearTimeline();
+                                        } else {
+                                            // Fallback: emit an onConfigChange sentinel and notify
+                                            onConfigChange('resetTimeline', true);
+                                            showToast('Trame réinitialisée (fallback)');
+                                        }
+                                    }}
+                                    confirmLabel="Réinitialiser"
+                                    cancelLabel="Annuler"
+                                />
                             </div>
 
                             {/* SECONDES - Max 900s */}

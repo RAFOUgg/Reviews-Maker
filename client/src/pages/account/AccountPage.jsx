@@ -132,7 +132,7 @@ const AccountPage = () => {
   // ✅ PROFILE INCOMPLETE CHECK
   if (!isProfileComplete) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
+      <div className="min-h-full bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
         {/* Ambient glow */}
         <div className="fixed inset-0 pointer-events-none">
           <div className="absolute top-[-20%] left-[-15%] w-[60%] h-[60%] bg-amber-500/10 rounded-full blur-[120px]" />
@@ -190,7 +190,7 @@ const AccountPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white p-4 md:p-8 relative overflow-hidden">
+    <div className="bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white p-4 md:p-8 relative overflow-hidden">
       {/* Background ambient glow effects - Apple style */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
         <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/8 rounded-full blur-[120px] animate-pulse" style={{ animationDuration: '8s' }} />

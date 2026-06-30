@@ -90,7 +90,7 @@ export default function ReviewDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-[#07070f] flex items-center justify-center">
+            <div className="min-h-[50vh] bg-[#07070f] flex items-center justify-center">
                 <div className="flex items-center gap-3 text-white/60">
                     <Loader2 className="w-6 h-6 animate-spin text-purple-400" />
                     <span className="text-lg">Chargement...</span>
@@ -102,7 +102,7 @@ export default function ReviewDetailPage() {
     if (!review) return null
 
     return (
-        <div className="min-h-screen bg-[#07070f] py-8 px-4 sm:px-6 lg:px-8">
+        <div className="bg-[#07070f] py-8 px-4 sm:px-6 lg:px-8">
             <div className="max-w-6xl mx-auto">
                 {/* Header with Back & Edit Buttons */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">

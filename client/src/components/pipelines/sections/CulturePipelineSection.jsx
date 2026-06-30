@@ -56,12 +56,19 @@ const CulturePipelineSection = ({ data = {}, onChange }) => {
         onChange({ ...data, cultureTimelineData: updatedData });
     };
 
+    // Réinitialiser complètement la trame (config + données)
+    const handleClearTimeline = () => {
+        timelineDataRef.current = [];
+        onChange({ ...data, cultureTimelineConfig: {}, cultureTimelineData: [] });
+    };
+
     return (
         <CulturePipelineDragDrop
             timelineConfig={data.cultureTimelineConfig || { type: 'phase' }}
             timelineData={data.cultureTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
+            onClearTimeline={handleClearTimeline}
             initialData={{
                 mode: data.mode,
                 spaceType: data.spaceType,

@@ -51,12 +51,19 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
         onChange({ ...data, separationTimelineData: updatedData });
     };
 
+    // Réinitialiser complètement la trame (config + données)
+    const handleClearTimeline = () => {
+        timelineDataRef.current = [];
+        onChange({ ...data, separationTimelineConfig: {}, separationTimelineData: [] });
+    };
+
     return (
         <SeparationPipelineDragDrop
             timelineConfig={data.separationTimelineConfig || {}}
             timelineData={data.separationTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
+            onClearTimeline={handleClearTimeline}
             initialData={{
                 separationType: data.separationType,
                 batchSize: data.batchSize,

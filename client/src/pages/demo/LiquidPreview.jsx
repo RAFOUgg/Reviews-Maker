@@ -122,7 +122,7 @@ export default function LiquidPreview() {
     }
 
     return (
-        <div className="min-h-screen bg-[#050508] text-white relative overflow-x-hidden liquid-scrollbar">
+        <div className="bg-[#050508] text-white relative overflow-x-hidden liquid-scrollbar">
 
             {/* === ANIMATED BACKGROUND === */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">

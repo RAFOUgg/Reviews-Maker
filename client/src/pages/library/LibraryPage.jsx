@@ -127,17 +127,17 @@ export default function LibraryPage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-[#07070f] flex items-center justify-center">
+            <div className="min-h-[50vh] bg-[#07070f] flex items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
             </div>
         )
     }
 
     return (
-        <div className="min-h-screen bg-[#07070f]">
+        <div className="bg-[#07070f]">
             <div className="flex">
                 {/* ─── Sidebar – Desktop uniquement ─── */}
-                <aside className={`hidden md:flex ${sidebarCollapsed ? 'w-16' : 'w-64'} min-h-screen bg-white/[0.02] border-r border-white/10 transition-all duration-300 flex-col`}>
+                <aside className={`hidden md:flex ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white/[0.02] border-r border-white/10 transition-all duration-300 flex-col`}>
                     {/* Header Sidebar */}
                     <div className="p-4 border-b border-white/10">
                         <div className="flex items-center gap-3">
@@ -236,7 +236,7 @@ export default function LibraryPage() {
                 </aside>
 
                 {/* ─── Contenu principal ─── */}
-                <main className="flex-1 min-h-screen pb-20 md:pb-0">
+                <main className="flex-1 pb-20 md:pb-0">
                     {/* Header */}
                     <header className="sticky top-0 z-10 bg-[#07070f]/90 backdrop-blur-xl border-b border-white/10">
                         {/* Mobile : titre compact centré */}

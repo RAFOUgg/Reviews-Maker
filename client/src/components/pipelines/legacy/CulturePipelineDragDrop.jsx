@@ -17,6 +17,7 @@ const CulturePipelineDragDrop = ({
     timelineData = [],
     onConfigChange,
     onDataChange,
+    onClearTimeline,
     initialData = {}
 }) => {
     // Convertir CULTURE_SIDEBAR_CONTENT (objet) vers format array pour PipelineDragDropView
@@ -39,7 +40,7 @@ const CulturePipelineDragDrop = ({
             return {
                 type: 'phase',
                 ...timelineConfig,
-                phases: CULTURE_PHASES,
+                phases: CULTURE_PHASES.phases,
             };
         }
         return { ...timelineConfig, type: finalType };
@@ -53,6 +54,7 @@ const CulturePipelineDragDrop = ({
             timelineData={timelineData}
             onConfigChange={onConfigChange}
             onDataChange={onDataChange}
+            onClearTimeline={onClearTimeline}
         />
     )
 }

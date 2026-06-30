@@ -83,7 +83,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     {/* Cultivars utilisés */}
                     <div>
                         <LiquidInput
-                            label="Type de génétiques utilisées"
+                            label="Matière première(s) utilisée(s)"
                             value={formData.typeGenetiques || ''}
                             onChange={(e) => handleChange('typeGenetiques', e.target.value)}
                             placeholder="Génétiques ou cultivars utilisés"

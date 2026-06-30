@@ -20,6 +20,7 @@ const ExtractionPipelineDragDrop = ({
     timelineData = [],
     onConfigChange,
     onDataChange,
+    onClearTimeline,
     initialData = {}
 }) => {
     // Convertir EXTRACTION_SIDEBAR_CONTENT (objet) vers format array pour PipelineDragDropView
@@ -52,6 +53,7 @@ const ExtractionPipelineDragDrop = ({
             timelineData={timelineData}
             onConfigChange={onConfigChange}
             onDataChange={onDataChange}
+            onClearTimeline={onClearTimeline}
         />
     );
 };

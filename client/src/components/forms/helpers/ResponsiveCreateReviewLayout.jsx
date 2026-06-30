@@ -58,7 +58,7 @@ export const ResponsiveCreateReviewLayout = ({
     // data-dense sections (pipelines, genetics canvas) so they can use available screen space.
     const containerWidthClass = layout.isMobile
         ? 'w-full'
-        : (wide ? 'max-w-[1800px] mx-auto' : 'max-w-7xl mx-auto');
+        : (wide ? 'max-w-[1800px] mx-auto' : 'max-w-[1500px] mx-auto');
 
     const effectiveChangeSection = (index) => {
         if (typeof onSectionChange === 'function') {
@@ -239,7 +239,7 @@ export const ResponsiveCreateReviewLayout = ({
     };
 
     return (
-        <div className="min-h-screen bg-[#07070f] relative flex flex-col" style={{ overflowX: 'hidden' }}>
+        <div className="bg-[#07070f] relative flex flex-col" style={{ overflowX: 'hidden' }}>
             {/* Background decorative - hidden on mobile for performance */}
             {!layout.isMobile && (
                 <div className="fixed inset-0 bg-gradient-radial from-purple-500/5 via-transparent to-transparent pointer-events-none" />

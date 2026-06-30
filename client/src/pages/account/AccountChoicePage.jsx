@@ -122,7 +122,7 @@ export default function AccountChoicePage() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] relative flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
+        <div className="min-h-full bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] relative flex flex-col items-center justify-center px-4 py-8 overflow-y-auto">
             {/* Ambient glow effects */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden">
                 <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[120px]" />
