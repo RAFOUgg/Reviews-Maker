@@ -41,27 +41,28 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                 <LiquidDivider />
 
                 <div className="space-y-4 mt-6">
-                    {/* Nom commercial */}
-                    <div>
-                        <LiquidInput
-                            label="Nom commercial *"
-                            value={formData.nomCommercial || ''}
-                            onChange={(e) => handleChange('nomCommercial', e.target.value)}
-                            placeholder="Ex: Marque – Cultivar – Batch #"
-                            maxLength={100}
-                        />
-                        <p className="text-xs text-white/40 mt-1">(Seul champ texte libre obligatoire)</p>
-                    </div>
+                    {/* Nom commercial + Cultivar(s) côte à côte sur desktop pour réduire le scroll */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <LiquidInput
+                                label="Nom commercial *"
+                                value={formData.nomCommercial || ''}
+                                onChange={(e) => handleChange('nomCommercial', e.target.value)}
+                                placeholder="Ex: Marque – Cultivar – Batch #"
+                                maxLength={100}
+                            />
+                            <p className="text-xs text-white/40 mt-1">(Seul champ texte libre obligatoire)</p>
+                        </div>
 
-                    {/* Cultivar(s) - Champ texte libre */}
-                    <div>
-                        <LiquidInput
-                            label="Cultivar(s)"
-                            value={formData.cultivars || ''}
-                            onChange={(e) => handleChange('cultivars', e.target.value)}
-                            placeholder="Ex: OG Kush, Purple Haze, Wedding Cake..."
-                        />
-                        <p className="text-xs text-white/40 mt-1">(Séparés par des virgules si plusieurs)</p>
+                        <div>
+                            <LiquidInput
+                                label="Cultivar(s)"
+                                value={formData.cultivars || ''}
+                                onChange={(e) => handleChange('cultivars', e.target.value)}
+                                placeholder="Ex: OG Kush, Purple Haze, Wedding Cake..."
+                            />
+                            <p className="text-xs text-white/40 mt-1">(Séparés par des virgules si plusieurs)</p>
+                        </div>
                     </div>
 
                     {/* Profil génétique */}
@@ -131,32 +132,33 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         )}
                     </div>
 
-                    {/* Farm */}
-                    <div>
-                        <LiquidInput
-                            label={
-                                <span className="flex items-center justify-between">
-                                    Farm / Producteur
-                                    {!formData.isOurReview && (
-                                        <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
-                                    )}
-                                </span>
-                            }
-                            value={formData.isOurReview ? '' : (formData.farm || '')}
-                            onChange={(e) => handleChange('farm', e.target.value)}
-                            placeholder={formData.isOurReview ? 'Rempli automatiquement (c\'est votre production)' : 'Nom du producteur'}
-                            disabled={!!formData.isOurReview}
-                            className={formData.isOurReview ? 'opacity-40 cursor-not-allowed' : ''}
-                        />
-                        <p className="text-xs text-white/40 mt-1">
-                            {formData.isOurReview
-                                ? '🔒 Désactivé — vous avez déclaré cette review comme votre production'
-                                : '(Auto-complete depuis base de données)'}
-                        </p>
-                    </div>
+                    {/* Farm + toggle "notre production" côte à côte sur desktop (Producteur) */}
+                    <div className={isProducteur ? 'grid grid-cols-1 md:grid-cols-2 gap-4 items-start' : ''}>
+                        <div>
+                            <LiquidInput
+                                label={
+                                    <span className="flex items-center justify-between">
+                                        Farm / Producteur
+                                        {!formData.isOurReview && (
+                                            <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
+                                        )}
+                                    </span>
+                                }
+                                value={formData.isOurReview ? '' : (formData.farm || '')}
+                                onChange={(e) => handleChange('farm', e.target.value)}
+                                placeholder={formData.isOurReview ? 'Rempli automatiquement (c\'est votre production)' : 'Nom du producteur'}
+                                disabled={!!formData.isOurReview}
+                                className={formData.isOurReview ? 'opacity-40 cursor-not-allowed' : ''}
+                            />
+                            <p className="text-xs text-white/40 mt-1">
+                                {formData.isOurReview
+                                    ? '🔒 Désactivé — vous avez déclaré cette review comme votre production'
+                                    : '(Auto-complete depuis base de données)'}
+                            </p>
+                        </div>
 
-                    {/* C'est notre review — Producteur uniquement */}
-                    {isProducteur && (
+                        {/* C'est notre review — Producteur uniquement */}
+                        {isProducteur && (
                         <div>
                             <button
                                 type="button"
@@ -206,7 +208,8 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 </span>
                             </button>
                         </div>
-                    )}
+                        )}
+                    </div>
 
                     {/* Photos avec système de tags CDC conforme */}
                     <div>

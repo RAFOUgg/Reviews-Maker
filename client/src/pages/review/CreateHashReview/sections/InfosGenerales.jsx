@@ -21,8 +21,8 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                 <LiquidDivider />
 
                 <div className="space-y-4 mt-6">
-                    {/* Nom commercial */}
-                    <div>
+                    {/* Nom du produit + Hashmaker côte à côte sur desktop pour réduire le scroll */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <LiquidInput
                             label="Nom du produit *"
                             value={formData.nomCommercial || ''}
@@ -30,10 +30,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             placeholder="Nom du hash"
                             maxLength={100}
                         />
-                    </div>
 
-                    {/* Hashmaker */}
-                    <div>
                         <LiquidInput
                             label={
                                 <span className="flex items-center justify-between">
@@ -47,25 +44,24 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         />
                     </div>
 
-                    {/* Laboratoire */}
-                    <div>
+                    {/* Laboratoire + Matière première(s) côte à côte sur desktop */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <LiquidInput
                             label="Laboratoire de production"
                             value={formData.laboratoire || ''}
                             onChange={(e) => handleChange('laboratoire', e.target.value)}
                             placeholder="Nom du laboratoire"
                         />
-                    </div>
 
-                    {/* Cultivars utilisés */}
-                    <div>
-                        <LiquidInput
-                            label="Matière première(s) utilisée(s)"
-                            value={formData.cultivarsUtilises || formData.cultivars || ''}
-                            onChange={(e) => handleChange('cultivarsUtilises', e.target.value)}
-                            placeholder="Cultivars utilisés"
-                        />
-                        <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                        <div>
+                            <LiquidInput
+                                label="Matière première(s) utilisée(s)"
+                                value={formData.cultivarsUtilises || formData.cultivars || ''}
+                                onChange={(e) => handleChange('cultivarsUtilises', e.target.value)}
+                                placeholder="Cultivars utilisés"
+                            />
+                            <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                        </div>
                     </div>
 
                     {/* Lien matière première (fleur) */}

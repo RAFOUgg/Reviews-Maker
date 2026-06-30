@@ -39,8 +39,8 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                 <LiquidDivider />
 
                 <div className="space-y-4 mt-6">
-                    {/* Nom du produit */}
-                    <div>
+                    {/* Nom du produit + Type de comestible côte à côte sur desktop */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <LiquidInput
                             label="Nom du produit *"
                             value={formData.nomProduit || ''}
@@ -48,25 +48,24 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             placeholder="Nom du comestible"
                             maxLength={100}
                         />
+
+                        <div>
+                            <label className="block text-sm font-medium text-white/60 mb-1.5">Type de comestible</label>
+                            <select
+                                value={formData.typeComestible || ''}
+                                onChange={(e) => handleChange('typeComestible', e.target.value)}
+                                className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-green-500/50 focus:ring-1 focus:ring-green-500/30 outline-none transition-colors appearance-none"
+                            >
+                                <option value="" className="bg-[#0f0f1a]">Sélectionnez un type</option>
+                                {EDIBLE_TYPES.map(type => (
+                                    <option key={type} value={type} className="bg-[#0f0f1a]">{type}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
-                    {/* Type de comestible */}
-                    <div>
-                        <label className="block text-sm font-medium text-white/60 mb-1.5">Type de comestible</label>
-                        <select
-                            value={formData.typeComestible || ''}
-                            onChange={(e) => handleChange('typeComestible', e.target.value)}
-                            className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-green-500/50 focus:ring-1 focus:ring-green-500/30 outline-none transition-colors appearance-none"
-                        >
-                            <option value="" className="bg-[#0f0f1a]">Sélectionnez un type</option>
-                            {EDIBLE_TYPES.map(type => (
-                                <option key={type} value={type} className="bg-[#0f0f1a]">{type}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    {/* Fabricant */}
-                    <div>
+                    {/* Fabricant + Matière première(s) côte à côte sur desktop */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <LiquidInput
                             label={
                                 <span className="flex items-center justify-between">
@@ -78,17 +77,16 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             onChange={(e) => handleChange('fabricant', e.target.value)}
                             placeholder="Nom du fabricant"
                         />
-                    </div>
 
-                    {/* Cultivars utilisés */}
-                    <div>
-                        <LiquidInput
-                            label="Matière première(s) utilisée(s)"
-                            value={formData.typeGenetiques || ''}
-                            onChange={(e) => handleChange('typeGenetiques', e.target.value)}
-                            placeholder="Génétiques ou cultivars utilisés"
-                        />
-                        <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                        <div>
+                            <LiquidInput
+                                label="Matière première(s) utilisée(s)"
+                                value={formData.typeGenetiques || ''}
+                                onChange={(e) => handleChange('typeGenetiques', e.target.value)}
+                                placeholder="Génétiques ou cultivars utilisés"
+                            />
+                            <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                        </div>
                     </div>
 
                     {/* Lien matière première (fleur, hash et/ou concentré) */}
