@@ -154,7 +154,7 @@ export default function AromaWheelPicker({
 
             {/* Limite atteinte */}
             {!canAddMore && (
-                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg text-sm text-orange-700">
+                <div className="p-3 bg-orange-500/20 border border-orange-500/30 rounded-lg text-sm text-orange-300">
                     ⚠️ Limite atteinte : {max} arômes maximum. Retirez-en pour en ajouter d'autres.
                 </div>
             )}
@@ -256,21 +256,21 @@ export default function AromaWheelPicker({
                                 key={aroma.id}
                                 onClick={() => toggleAroma(aroma.id)}
                                 disabled={!canAddMore && !isSelected}
-                                className={`p-3 rounded-xl text-left transition-all ${isSelected ? 'bg-gradient-to-br text-white shadow-lg scale-105' : 'bg-white hover:bg-gray-50 border-2'} ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
+                                className={`p-3 rounded-xl text-left transition-all border-2 ${isSelected ? 'text-white shadow-lg scale-105 border-transparent' : 'bg-white/5 hover:bg-white/10 border-white/10 hover:border-white/20'} ${!canAddMore && !isSelected ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}`}
                                 style={{
-                                    borderColor: !isSelected ? category?.color : undefined
+                                    borderColor: !isSelected ? category?.color + '40' : undefined,
+                                    backgroundColor: isSelected ? category?.color + 'cc' : undefined,
                                 }}
                             >
                                 <div className="flex items-center gap-2 mb-1">
                                     <span className="text-xl">{aroma.emoji}</span>
-                                    {isSelected && <span className="text-xs">✓</span>}
+                                    {isSelected && <span className="text-xs text-white">✓</span>}
                                 </div>
-                                <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-700'}`}>
+                                <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-200'}`}>
                                     {aroma.label}
                                 </div>
                                 <div
-                                    className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-gray-500'}`}
-                                    style={{ color: !isSelected ? category?.color : undefined }}
+                                    className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}
                                 >
                                     {category?.label}
                                 </div>

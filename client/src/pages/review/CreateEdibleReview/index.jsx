@@ -138,6 +138,7 @@ export default function CreateEdibleReview() {
     }
 
     // Auto-save sur chaque modification (debounced 2.5s)
+    // Garde : ne pas créer de brouillon vide pour une nouvelle review sans nom
     const autoSaveTimerRef = useRef(null)
     const hasLoadedRef = useRef(false)
     useEffect(() => {
@@ -148,6 +149,7 @@ export default function CreateEdibleReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
+        if (!id && !formData.nomProduit?.trim()) return
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }

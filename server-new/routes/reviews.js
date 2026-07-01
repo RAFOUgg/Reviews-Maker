@@ -111,11 +111,10 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
                     farm: true
                 }
             },
-            // Hash/Concentrate/Edible stockent leurs photos sur leur propre sous-table —
-            // sans ça, formatReview() ne peut jamais remonter une image pour ces 3 types
-            hashData: { select: { photos: true } },
-            concentrateData: { select: { photos: true } },
-            edibleData: { select: { photos: true } }
+            // Hash/Concentrate/Edible stockent leurs photos et sourceLineage sur leur propre sous-table
+            hashData: { select: { photos: true, sourceLineage: true } },
+            concentrateData: { select: { photos: true, sourceLineage: true } },
+            edibleData: { select: { photos: true, sourceLineage: true } }
         },
         orderBy: { createdAt: 'desc' }
     })
@@ -130,7 +129,13 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
         // Surface flowerData fields for library card display
         // cultivars is on the base Review model; farm comes from flowerData if not on base
         cultivars: review.cultivars || null,
-        farm: review.flowerData?.farm || review.farm || null
+        farm: review.flowerData?.farm || review.farm || null,
+        // Remonter sourceLineage depuis la sous-table (hash/concentrate/edible)
+        sourceLineage: (() => {
+            const raw = review.hashData?.sourceLineage || review.concentrateData?.sourceLineage || review.edibleData?.sourceLineage
+            if (!raw) return null
+            try { return typeof raw === 'string' ? JSON.parse(raw) : raw } catch { return null }
+        })()
     }))
 
     // Map DB field names to API-friendly English keys

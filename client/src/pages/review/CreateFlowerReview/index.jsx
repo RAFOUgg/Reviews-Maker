@@ -188,6 +188,7 @@ export default function CreateFlowerReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
+        if (!id && !formData.nomCommercial?.trim()) return
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }

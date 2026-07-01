@@ -9,15 +9,17 @@
  * - Actions: Édition, Duplication, Suppression, Toggle visibilité
  */
 
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
+import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Grid3X3, List, Calendar, Eye, EyeOff, Edit, Trash2, Copy,
     ExternalLink, Clock, Search, Filter, SlidersHorizontal,
-    Flower2, Hash, FlaskConical, Cookie, Plus, MoreVertical, FileText
+    Flower2, Hash, FlaskConical, Cookie, Plus, MoreVertical, FileText,
+    Link2, ArrowRight
 } from 'lucide-react'
 
 // Types de produits avec icônes (IDs = valeurs exactes stockées en DB)
@@ -67,11 +69,55 @@ export default function ReviewsTab() {
     const [reviews, setReviews] = useState([])
     const [loading, setLoading] = useState(true)
     const [viewMode, setViewMode] = useState('grid')
+    const [confirmDelete, setConfirmDelete] = useState({ open: false, reviewId: null })
     const [typeFilter, setTypeFilter] = useState('all')
     const [visibilityFilter, setVisibilityFilter] = useState('all')
     const [searchQuery, setSearchQuery] = useState('')
     const [sortBy, setSortBy] = useState('createdAt')
     const [sortOrder, setSortOrder] = useState('desc')
+
+    // Construire les cartes de lignée (parent→enfant) à partir du sourceLineage
+    const { parentsOf, childrenOf, lineageChains, reviewMap } = useMemo(() => {
+        const parentsOf = {}
+        const childrenOf = {}
+        const reviewMap = {}
+        const reviewIds = new Set(reviews.map(r => r.id))
+
+        reviews.forEach(r => { reviewMap[r.id] = r })
+
+        reviews.forEach(review => {
+            const lineage = Array.isArray(review.sourceLineage) ? review.sourceLineage : []
+            if (!lineage.length) return
+            parentsOf[review.id] = lineage
+            lineage.forEach(src => {
+                if (reviewIds.has(src.id)) {
+                    if (!childrenOf[src.id]) childrenOf[src.id] = []
+                    if (!childrenOf[src.id].includes(review.id)) childrenOf[src.id].push(review.id)
+                }
+            })
+        })
+
+        // Trouver les racines (reviews sans parent dans la collection) qui ont des enfants
+        const visited = new Set()
+        const chains = []
+        reviews.forEach(r => {
+            const parents = parentsOf[r.id] || []
+            const hasParentInSet = parents.some(p => reviewIds.has(p.id))
+            if (!hasParentInSet && childrenOf[r.id]) {
+                const chain = []
+                const walk = (id) => {
+                    if (visited.has(id)) return
+                    visited.add(id)
+                    chain.push(id)
+                    ;(childrenOf[id] || []).forEach(walk)
+                }
+                walk(r.id)
+                if (chain.length > 1) chains.push(chain)
+            }
+        })
+
+        return { parentsOf, childrenOf, lineageChains: chains, reviewMap }
+    }, [reviews])
 
     // Charger les reviews
     const fetchReviews = useCallback(async () => {
@@ -161,7 +207,13 @@ export default function ReviewsTab() {
     }
 
     const deleteReview = async (reviewId) => {
-        if (!window.confirm('Êtes-vous sûr de vouloir supprimer cette review ?')) return
+        setConfirmDelete({ open: true, reviewId })
+    }
+
+    const confirmDeleteNow = async () => {
+        const reviewId = confirmDelete.reviewId
+        setConfirmDelete({ open: false, reviewId: null })
+        if (!reviewId) return
 
         try {
             const response = await fetch(`/api/reviews/${reviewId}`, {
@@ -233,7 +285,7 @@ export default function ReviewsTab() {
                                         </button>
                                     )}
                                 </div>
-                                <div className="flex items-center gap-3 text-sm text-white/50">
+                                <div className="flex items-center gap-3 text-sm text-white/50 flex-wrap">
                                     <span className={`flex items-center gap-1 text-${typeConfig?.color || 'purple'}-400`}>
                                         <TypeIcon className="w-3.5 h-3.5" />
                                         {review.type}
@@ -242,6 +294,19 @@ export default function ReviewsTab() {
                                         <Clock className="w-3.5 h-3.5" />
                                         {new Date(review.createdAt).toLocaleDateString('fr-FR')}
                                     </span>
+                                    {parentsOf[review.id]?.length > 0 && (
+                                        <span className="flex items-center gap-1 text-white/30">
+                                            <Link2 className="w-3 h-3" />
+                                            {parentsOf[review.id].map((src, i) => {
+                                                const srcReview = reviewMap[src.id]
+                                                return (
+                                                    <span key={i} className="text-xs">
+                                                        {i > 0 ? ' + ' : ''}{srcReview?.holderName || src.label}
+                                                    </span>
+                                                )
+                                            })}
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -377,6 +442,41 @@ export default function ReviewsTab() {
                             <span className="truncate mr-1">{review.cultivars || 'Non spécifié'}</span>
                             <span className="shrink-0">{new Date(review.createdAt).toLocaleDateString('fr-FR')}</span>
                         </div>
+
+                        {/* Lignée : sources dont est issue cette review */}
+                        {parentsOf[review.id]?.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-white/5">
+                                <Link2 className="w-2.5 h-2.5 text-white/25 flex-shrink-0" />
+                                <div className="flex items-center gap-0.5 overflow-hidden">
+                                    {parentsOf[review.id].map((src, i) => {
+                                        const srcReview = reviewMap[src.id]
+                                        const srcType = PRODUCT_TYPES.find(t => t.id === srcReview?.type)
+                                        const SrcIcon = srcType?.icon || Flower2
+                                        const name = srcReview?.holderName || src.label
+                                        return (
+                                            <span key={i} className="flex items-center gap-0.5">
+                                                {i > 0 && <span className="text-white/20 text-xs">+</span>}
+                                                <span className={`flex items-center gap-0.5 text-xs text-${srcType?.color || 'green'}-400/80`}>
+                                                    <SrcIcon className="w-2.5 h-2.5 flex-shrink-0" />
+                                                    <span className="truncate max-w-[55px]">{name}</span>
+                                                </span>
+                                            </span>
+                                        )
+                                    })}
+                                </div>
+                                {childrenOf[review.id]?.length > 0 && (
+                                    <ArrowRight className="w-2.5 h-2.5 text-white/20 ml-auto flex-shrink-0" />
+                                )}
+                            </div>
+                        )}
+                        {/* Marque si cette review est utilisée comme source dans d'autres (sans avoir elle-même des parents) */}
+                        {!parentsOf[review.id]?.length && childrenOf[review.id]?.length > 0 && (
+                            <div className="flex items-center gap-1 mt-1.5 pt-1.5 border-t border-white/5">
+                                <span className={`text-xs text-${typeConfig?.color || 'green'}-400/60`}>Base de la chaîne</span>
+                                <ArrowRight className="w-2.5 h-2.5 text-white/20" />
+                            </div>
+                        )}
+
                         {/* Actions visibles en permanence sur mobile (pas de hover tactile) */}
                         <div className="flex items-center justify-around gap-0.5 mt-2 pt-2 border-t border-white/10 md:hidden">
                             <button
@@ -528,6 +628,40 @@ export default function ReviewsTab() {
                 </div>
             </div>
 
+            {/* Bannière chaînes de production */}
+            {lineageChains.length > 0 && (
+                <div className="bg-white/3 border border-white/10 rounded-xl p-3 space-y-2">
+                    <div className="flex items-center gap-1.5 text-xs text-white/40 font-medium uppercase tracking-wide">
+                        <Link2 className="w-3 h-3" />
+                        Chaînes de production
+                    </div>
+                    {lineageChains.map((chain, chainIdx) => (
+                        <div key={chainIdx} className="flex items-center gap-1.5 flex-wrap">
+                            {chain.map((reviewId, i) => {
+                                const r = reviewMap[reviewId]
+                                if (!r) return null
+                                const tc = PRODUCT_TYPES.find(t => t.id === r.type)
+                                const Icon = tc?.icon || Flower2
+                                return (
+                                    <div key={reviewId} className="flex items-center gap-1.5">
+                                        <button
+                                            onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[r.type] || r.type?.toLowerCase()}/${r.id}`)}
+                                            className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-${tc?.color || 'purple'}-500/20 text-${tc?.color || 'purple'}-300 text-xs font-medium hover:bg-${tc?.color || 'purple'}-500/30 transition-colors border border-${tc?.color || 'purple'}-500/20`}
+                                        >
+                                            <Icon className="w-3 h-3" />
+                                            {r.holderName}
+                                        </button>
+                                        {i < chain.length - 1 && (
+                                            <ArrowRight className="w-3.5 h-3.5 text-white/25" />
+                                        )}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    ))}
+                </div>
+            )}
+
             {/* Contenu */}
             {filteredReviews.length === 0 ? (
                 <LiquidCard glow="purple" padding="lg">
@@ -591,6 +725,15 @@ export default function ReviewsTab() {
                     </div>
                 </div>
             )}
+
+            <ConfirmModal
+                open={confirmDelete.open}
+                title="Supprimer cette review"
+                message="Cette action est irréversible. La review et toutes ses données seront définitivement supprimées."
+                confirmLabel="Supprimer"
+                onCancel={() => setConfirmDelete({ open: false, reviewId: null })}
+                onConfirm={confirmDeleteNow}
+            />
         </div>
     )
 }
