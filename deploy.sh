@@ -345,53 +345,89 @@ else
     log_error "Nginx n'est pas actif"
 fi
 
-# PHASE 4: Backend Dependencies
+# PHASE 4: Backend — dépendances + migrations Prisma + regénération client
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${CYAN}  Étape 4/5 : Dépendances Backend${NC}"
+echo -e "${CYAN}  Étape 4/5 : Backend (deps + Prisma + migrations)${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
 cd server-new || exit 1
 
 step "Mise à jour des dépendances..."
-npm install --legacy-peer-deps 2>&1 | grep -E "added|up to date" | tail -1 || true
+npm install --legacy-peer-deps 2>&1 | grep -E "added|up to date|audited" | tail -2 || true
 
-step "Prisma generate..."
-npm run prisma:generate 2>&1 | tail -1
+# ── Sauvegarde préventive de la DB avant toute migration ──────────────────────
+DB_PATH="prisma/data/reviews-maker.db"
+if [ -f "$DB_PATH" ]; then
+    BACKUP_PATH="${DB_PATH}.bak.$(date +%Y%m%d-%H%M%S)"
+    cp "$DB_PATH" "$BACKUP_PATH"
+    log_success "DB sauvegardée → $BACKUP_PATH"
+else
+    log_warning "DB introuvable à $DB_PATH — vérifier le chemin Prisma"
+fi
 
-step "Prisma migrate (apply pending migrations)..."
-npm run prisma:deploy 2>&1 | tail -5
+# ── 1. Appliquer les migrations en attente (modifie la DB) ────────────────────
+step "Prisma migrate deploy (application des migrations SQL)..."
+MIGRATE_OUTPUT=$(npm run prisma:deploy 2>&1)
+echo "$MIGRATE_OUTPUT"
+if echo "$MIGRATE_OUTPUT" | grep -qiE "error|failed|ENOENT"; then
+    log_error "Prisma migrate deploy a échoué — voir la sortie ci-dessus"
+fi
+log_success "Migrations Prisma appliquées"
 
-log_success "Backend dépendances à jour"
+# ── 2. Régénérer le client Prisma (doit être après la migration) ──────────────
+step "Prisma generate (régénération du client JS)..."
+npm run prisma:generate 2>&1 | grep -v "^$" | tail -5
+log_success "Client Prisma régénéré"
+
 cd .. || exit 1
 
-# PHASE 5: PM2 Restart
+# PHASE 5: PM2 Restart (hard restart pour forcer le rechargement du client Prisma)
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${CYAN}  Étape 5/5 : Redémarrage (PM2)${NC}"
+echo -e "${CYAN}  Étape 5/5 : Redémarrage complet (PM2)${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 
-# Chercher PM2 (peut être dans nvm ou node_modules)
+# Chercher PM2 (peut être dans nvm ou accessible globalement)
 PM2_CMD=""
 if command -v pm2 &> /dev/null; then
     PM2_CMD="pm2"
 elif [ -f "$HOME/.nvm/versions/node/v24.11.1/bin/pm2" ]; then
     PM2_CMD="$HOME/.nvm/versions/node/v24.11.1/bin/pm2"
-elif [ -f "$(npm root -g)/pm2/bin/pm2.js" ]; then
-    PM2_CMD="node $(npm root -g)/pm2/bin/pm2.js"
+else
+    # Chercher dans toutes les versions nvm
+    PM2_BIN=$(find "$HOME/.nvm/versions" -name "pm2" -type f 2>/dev/null | head -1)
+    if [ -n "$PM2_BIN" ]; then
+        PM2_CMD="$PM2_BIN"
+    fi
 fi
 
 if [ -z "$PM2_CMD" ]; then
     log_error "PM2 introuvable. Installez-le : npm install -g pm2"
 fi
 
-step "Graceful reload du serveur..."
-$PM2_CMD gracefulReload reviews-maker || {
-    log_warning "Graceful reload échoué, restart normal..."
-    $PM2_CMD restart reviews-maker --wait-ready
+# Hard restart (stop + start) pour garantir que le nouveau client Prisma est chargé
+# gracefulReload peut réutiliser le module en cache mémoire, ce qui cause des 500 post-migration
+step "Arrêt + redémarrage du serveur (hard restart)..."
+$PM2_CMD stop reviews-maker 2>/dev/null || log_warning "reviews-maker n'était pas en cours"
+sleep 1
+$PM2_CMD start reviews-maker 2>/dev/null || {
+    log_warning "start échoué, tentative reload..."
+    $PM2_CMD reload reviews-maker
 }
+sleep 3
 
-sleep 2
+# Vérifier que le process est bien UP
+PM2_STATUS=$($PM2_CMD jlist 2>/dev/null | grep -o '"status":"[^"]*"' | head -1 | grep -o '"[^"]*"$' | tr -d '"' || echo "unknown")
+if echo "$PM2_STATUS" | grep -qi "online"; then
+    log_success "Serveur démarré (status: $PM2_STATUS)"
+elif [ "$PM2_STATUS" = "unknown" ]; then
+    log_warning "Impossible de vérifier le statut JSON — vérifier manuellement"
+else
+    log_warning "Statut inattendu: $PM2_STATUS"
+fi
+
+$PM2_CMD save --force 2>/dev/null || true
 log_success "PM2 redémarré"
 
 # Vérification santé
@@ -400,8 +436,8 @@ step "Statut du service..."
 $PM2_CMD list || true
 
 echo ""
-step "Derniers logs..."
-$PM2_CMD logs reviews-maker --lines 10 --nostream 2>/dev/null | tail -8 || true
+step "Derniers logs (10 lignes)..."
+$PM2_CMD logs reviews-maker --lines 10 --nostream 2>/dev/null | tail -10 || true
 
 echo ""
 header "✨ DÉPLOIEMENT VPS TERMINÉ"
