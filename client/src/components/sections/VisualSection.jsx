@@ -73,14 +73,14 @@ export default function VisualSection({ productType, data: directData, onChange,
     const totalPercentage = selectedColors.reduce((sum, c) => sum + (c.percentage || 0), 0);
 
     return (
-        <LiquidCard glow="purple" padding="lg" className="space-y-6">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <Eye className="w-5 h-5 text-white" />
+        <LiquidCard glow="purple" padding="sm" className="space-y-3">
+            <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <Eye className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-white">👁️ Visuel & Technique</h3>
-                    <p className="text-sm text-white/50">Caractéristiques visuelles et qualité</p>
+                    <h3 className="text-base font-bold text-white">👁️ Visuel & Technique</h3>
+                    <p className="text-xs text-white/50">Caractéristiques visuelles et qualité</p>
                 </div>
             </div>
 
@@ -101,7 +101,7 @@ export default function VisualSection({ productType, data: directData, onChange,
 
                 {/* Couleurs sélectionnées avec pourcentages */}
                 {selectedColors.length > 0 && (
-                    <div className="space-y-2 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <div className="space-y-2 p-3 bg-white/5 rounded-xl border border-white/10">
                         <p className="text-xs font-medium text-gray-400 mb-3">Couleurs sélectionnées :</p>
                         {selectedColors.map((color) => {
                             const colorData = allColors.find(c => c.id === color.id);
@@ -178,7 +178,7 @@ export default function VisualSection({ productType, data: directData, onChange,
             </div>
 
             {/* Note globale couleur / nuancier */}
-            <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                 <LiquidSlider
                     label="Couleur / Nuancier"
                     value={colorRating}
@@ -192,7 +192,7 @@ export default function VisualSection({ productType, data: directData, onChange,
 
             {/* Transparence (Hash/Concentrés uniquement) */}
             {isHashOrConcentrate && (
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Transparence"
                         value={transparency}
@@ -209,7 +209,7 @@ export default function VisualSection({ productType, data: directData, onChange,
             {/* Sliders de qualité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Densité */}
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Densité"
                         value={density}
@@ -223,7 +223,7 @@ export default function VisualSection({ productType, data: directData, onChange,
 
                 {/* Trichomes (Fleurs uniquement) */}
                 {productType === 'flower' && (
-                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Trichomes"
                             value={trichomes}
@@ -238,7 +238,7 @@ export default function VisualSection({ productType, data: directData, onChange,
                 )}
 
                 {/* Moisissures (inversé) */}
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Moisissures (10 = aucune)"
                         value={mold}
@@ -252,7 +252,7 @@ export default function VisualSection({ productType, data: directData, onChange,
                 </div>
 
                 {/* Graines (inversé) */}
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Graines (10 = aucune)"
                         value={seeds}

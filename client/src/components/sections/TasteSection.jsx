@@ -35,24 +35,24 @@ export default function TasteSection({ productType, data: directData, onChange, 
     }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes]);
 
     return (
-        <LiquidCard glow="amber" padding="lg" className="space-y-8">
+        <LiquidCard glow="amber" padding="sm" className="space-y-4">
 
             {/* En-tête */}
-            <div className="flex items-center gap-3 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
-                    <Coffee className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3 pb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/30">
+                    <Coffee className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-white">😋 Goûts</h3>
-                    <p className="text-sm text-white/50">Profil gustatif détaillé</p>
+                    <h3 className="text-base font-bold text-white">😋 Goûts</h3>
+                    <p className="text-xs text-white/50">Profil gustatif détaillé</p>
                 </div>
             </div>
 
             <LiquidDivider />
 
             {/* Intensité et Agressivité */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Intensité gustative"
                         value={intensity}
@@ -65,7 +65,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
                     <p className="text-xs text-white/40 mt-2">{intensity > 0 ? TASTE_INTENSITY_LEVELS[intensity - 1]?.label : 'Non évalué'}</p>
                 </div>
 
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Agressivité / Piquant"
                         value={aggressiveness}
@@ -82,7 +82,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
             {/* Filtre par famille - Supprimé : intégré dans les pickers */}
 
             {/* Dry Puff / Tirage à sec (max 7) */}
-            <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+            <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
                 <TasteWheelPicker
                     selectedTastes={dryPuffNotes}
                     onChange={setDryPuffNotes}
@@ -93,7 +93,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
             </div>
 
             {/* Inhalation (max 7) */}
-            <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+            <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20">
                 <TasteWheelPicker
                     selectedTastes={inhalationNotes}
                     onChange={setInhalationNotes}
@@ -104,7 +104,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
             </div>
 
             {/* Expiration / Arrière-goût (max 7) */}
-            <div className="p-4 bg-orange-500/10 rounded-xl border border-orange-500/20">
+            <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
                 <TasteWheelPicker
                     selectedTastes={exhalationNotes}
                     onChange={setExhalationNotes}

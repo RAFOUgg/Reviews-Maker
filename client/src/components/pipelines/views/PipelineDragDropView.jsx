@@ -2466,8 +2466,17 @@ const PipelineDragDropView = ({
                 {!isMobile && (
                     <div className="w-60 lg:w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
                         {/* Header Contenus */}
-                        <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-4 border-b border-white/10 z-10 flex-shrink-0">
-                            <h3 className="font-bold text-white text-lg">📦 Contenus</h3>
+                        <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-3 border-b border-white/10 z-10 flex-shrink-0">
+                            <div className="flex items-center justify-between gap-2">
+                                <h3 className="font-bold text-white text-sm">📦 Contenus</h3>
+                                <button
+                                    className="flex-shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-lg text-xs font-medium transition-all"
+                                    onClick={() => { setGroupedModalInitialTab('groups'); setShowGroupedPresetModal(true); }}
+                                >
+                                    <Plus className="w-3 h-3" />
+                                    <span>Groupes</span>
+                                </button>
+                            </div>
                             <p className="text-xs text-white/60 mt-1">
                                 {multiSelectedItems.length > 0
                                     ? `${multiSelectedItems.length} item${multiSelectedItems.length > 1 ? 's' : ''} sélectionné${multiSelectedItems.length > 1 ? 's' : ''} (Ctrl+clic ou appui long)`
@@ -2531,38 +2540,27 @@ const PipelineDragDropView = ({
                         </div>
 
                         <div className="p-3 space-y-2 overflow-y-auto flex-1">
-                            {/* Pré-configuration section (was MODE PIPELINE) */}
-                            <div className="mb-3">
-                                <div className="font-semibold text-xs text-white/50 mb-1">Pré-configuration</div>
-                                <button
-                                    className="w-full mt-1 mb-1.5 group relative flex items-center justify-center gap-2 px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white rounded-xl font-medium shadow-md hover:shadow-lg hover:shadow-purple-500/20 transition-all duration-300 overflow-hidden"
-                                    onClick={() => { setGroupedModalInitialTab('groups'); setShowGroupedPresetModal(true); }}
-                                >
-                                    <Plus className="w-4 h-4" />
-                                    <span>Groupes & Préréglages</span>
-                                    <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                                </button>
-                                {groupedPresets.length > 0 && (
-                                    <div className="flex flex-wrap gap-2">
-                                        {groupedPresets.map((group, idx) => (
-                                            <div
-                                                key={group.name + idx}
-                                                draggable="true"
-                                                onDragStart={e => {
-                                                    e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
-                                                    e.dataTransfer.effectAllowed = 'copy';
-                                                    setDraggedContent({ type: 'grouped', group });
-                                                }}
-                                                onDragEnd={() => setDraggedContent(null)}
-                                                className="px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 text-xs font-bold cursor-grab hover:bg-purple-500/20 transition-all"
-                                                title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
-                                            >
-                                                <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
+                            {/* Groupes créés - draggables */}
+                            {groupedPresets.length > 0 && (
+                                <div className="mb-3 flex flex-wrap gap-2">
+                                    {groupedPresets.map((group, idx) => (
+                                        <div
+                                            key={group.name + idx}
+                                            draggable="true"
+                                            onDragStart={e => {
+                                                e.dataTransfer.setData('application/grouped-preset', JSON.stringify(group));
+                                                e.dataTransfer.effectAllowed = 'copy';
+                                                setDraggedContent({ type: 'grouped', group });
+                                            }}
+                                            onDragEnd={() => setDraggedContent(null)}
+                                            className="px-3 py-2 rounded-lg bg-purple-500/10 border border-purple-500/30 text-xs font-bold cursor-grab hover:bg-purple-500/20 transition-all"
+                                            title={`${group.description || ''}\n${(group.fields || []).map(f => `${f.key}: ${f.value}`).join('\n')}`}
+                                        >
+                                            <span className="mr-1">{group.emoji || '🌱'}</span>{group.name}
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
                             {(sidebarContent || []).map((section) => (
                                 <div key={section.id} className="rounded-lg overflow-hidden border border-white/10">
                                     <button

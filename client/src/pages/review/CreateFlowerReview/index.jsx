@@ -74,10 +74,6 @@ export default function CreateFlowerReview() {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading])
-    // Curing section: optionnelle, activée seulement si l'utilisateur le souhaite
-    // Auto-activée en édition si des données curing existent déjà
-    const [curingEnabled, setCuringEnabled] = useState(false)
-
     // Load existing images into photos state when editing a review
     useEffect(() => {
         if (!id || !formData.images) return
@@ -99,17 +95,6 @@ export default function CreateFlowerReview() {
             })
         })
     }, [id, formData.images])
-
-    // Auto-enable curing when editing a review that already has curing data (loaded async)
-    useEffect(() => {
-        const hasCuringData = !!(
-            formData?.curing?.curingTimeline?.length ||
-            formData?.curingTimelineData?.length ||
-            formData?.curingType ||
-            formData?.curingTemperature
-        )
-        if (hasCuringData) setCuringEnabled(true)
-    }, [formData?.curing, formData?.curingTimelineData, formData?.curingType])
 
     // Tracker l'aperçu : depuis formData (mode édition) ou défini durant la session
     const hasPreview = !!(formData.orchardPreset)
@@ -418,47 +403,11 @@ export default function CreateFlowerReview() {
                             />
                         )}
                         {currentSectionData.id === 'curing' && (
-                            <div className="space-y-4">
-                                {/* Section optionnelle — peut être ignorée */}
-                                {!curingEnabled ? (
-                                    <div className="rounded-2xl border border-dashed border-white/20 bg-white/3 p-6 text-center space-y-3">
-                                        <div className="text-4xl">🔥</div>
-                                        <div>
-                                            <p className="text-white font-medium text-sm">Section optionnelle</p>
-                                            <p className="text-gray-400 text-xs mt-1 leading-relaxed">
-                                                Le curing & maturation est facultatif. Activez-le uniquement si vous
-                                                souhaitez documenter votre processus de conservation.
-                                            </p>
-                                        </div>
-                                        <button
-                                            onClick={() => setCuringEnabled(true)}
-                                            className="px-5 py-2 bg-orange-600/20 hover:bg-orange-600/30 border border-orange-500/40 text-orange-300 rounded-xl text-sm font-medium transition-all"
-                                        >
-                                            + Activer le curing
-                                        </button>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-4">
-                                        <div className="flex items-center justify-between">
-                                            <div className="flex items-center gap-2 text-orange-400 text-xs font-medium">
-                                                <span>🔥</span>
-                                                <span>Section optionnelle</span>
-                                            </div>
-                                            <button
-                                                onClick={() => setCuringEnabled(false)}
-                                                className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
-                                            >
-                                                Passer cette section
-                                            </button>
-                                        </div>
-                                        <CuringMaturationSection
-                                            data={formData.curing || {}}
-                                            onChange={(curingData) => handleChange('curing', curingData)}
-                                            productType="flower"
-                                        />
-                                    </div>
-                                )}
-                            </div>
+                            <CuringMaturationSection
+                                data={formData.curing || {}}
+                                onChange={(curingData) => handleChange('curing', curingData)}
+                                productType="flower"
+                            />
                         )}
                     </motion.div>
                 </AnimatePresence>

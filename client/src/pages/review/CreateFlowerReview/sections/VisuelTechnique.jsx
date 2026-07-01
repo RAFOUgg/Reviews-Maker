@@ -22,20 +22,20 @@ export default function VisuelTechnique({ formData = {}, handleChange = () => { 
     }
 
     return (
-        <LiquidCard glow="purple" padding="lg">
-            <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                    <Eye className="w-5 h-5 text-white" />
+        <LiquidCard glow="purple" padding="sm">
+            <div className="flex items-center gap-3 mb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                    <Eye className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-white">👁️ Visuel & Technique</h3>
-                    <p className="text-sm text-white/50">Caractéristiques visuelles et qualité</p>
+                    <h3 className="text-base font-bold text-white">👁️ Visuel & Technique</h3>
+                    <p className="text-xs text-white/50">Caractéristiques visuelles et qualité</p>
                 </div>
             </div>
 
             <LiquidDivider />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
                 {/* Left: Color selection */}
                 <div className="flex flex-col items-center">
                     <div className="p-4 bg-white/5 rounded-xl border border-white/10 w-full">

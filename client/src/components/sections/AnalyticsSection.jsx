@@ -115,23 +115,23 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     };
 
     return (
-        <LiquidCard glow="blue" padding="lg" className="space-y-8">
+        <LiquidCard glow="blue" padding="sm" className="space-y-4">
 
             {/* En-tête */}
-            <div className="flex items-center gap-3 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
-                    <Beaker className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3 pb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/30">
+                    <Beaker className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-white">🔬 Données Analytiques</h3>
-                    <p className="text-sm text-white/50">Analyses cannabinoïdes et certificat</p>
+                    <h3 className="text-base font-bold text-white">🔬 Données Analytiques</h3>
+                    <p className="text-xs text-white/50">Analyses cannabinoïdes et certificat</p>
                 </div>
             </div>
 
             <LiquidDivider />
 
             {/* Note importante */}
-            <div className="p-4 border border-blue-500/20 rounded-xl bg-blue-500/10">
+            <div className="p-3 border border-blue-500/20 rounded-xl bg-blue-500/10">
                 <div className="flex items-start gap-3">
                     <AlertCircle className="w-5 h-5 text-blue-400 flex-shrink-0 mt-0.5" />
                     <div className="text-sm text-white/80">
@@ -166,7 +166,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 onChange={(e) => handleNumberInput(e.target.value, setThc)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
                         </div>
@@ -184,7 +184,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 onChange={(e) => handleNumberInput(e.target.value, setCbd)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
                         </div>
@@ -202,7 +202,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 onChange={(e) => handleNumberInput(e.target.value, setCbg)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
                         </div>
@@ -220,7 +220,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 onChange={(e) => handleNumberInput(e.target.value, setCbc)}
                                 placeholder="0.0"
                                 disabled={!uploadedFile}
-                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
                         </div>
@@ -245,7 +245,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                         />
                         <label
                             htmlFor="certificate-upload"
-                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/20 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all group"
+                            className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-white/20 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 hover:border-blue-500/50 transition-all group"
                         >
                             <Upload className="w-12 h-12 text-white/40 group-hover:text-blue-400 transition-colors mb-3" />
                             <p className="text-sm font-medium text-white/80 mb-1">
@@ -321,7 +321,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                         />
                         <label
                             htmlFor="terpene-upload"
-                            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-white/20 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 hover:border-purple-500/50 transition-all group"
+                            className="flex flex-col items-center justify-center p-4 border-2 border-dashed border-white/20 rounded-xl cursor-pointer bg-white/5 hover:bg-white/10 hover:border-purple-500/50 transition-all group"
                         >
                             <FlaskConical className="w-12 h-12 text-white/40 group-hover:text-purple-400 transition-colors mb-3" />
                             <p className="text-sm font-medium text-white/80 mb-1">

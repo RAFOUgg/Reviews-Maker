@@ -248,21 +248,21 @@ export const ResponsiveCreateReviewLayout = ({
             <div className="relative z-10 flex flex-col flex-1 min-h-0 overflow-hidden">
                 {/* Header - Responsive Padding & Safe Area - z-30 to stay ABOVE main content (z-10) but BELOW modals (z-[8888]) */}
                 <div className={`sticky top-[4.5rem] z-30 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
-                    ? 'px-3 py-3 safe-area-inset-top'
-                    : 'px-6 md:px-8 py-4'
+                    ? 'px-3 py-2 safe-area-inset-top'
+                    : 'px-6 md:px-8 py-2'
                     }`}>
                     <div className={containerWidthClass}>
                         {/* Title & Subtitle */}
                         {(title || subtitle) && (
-                            <div className={layout.isMobile ? 'mb-3' : 'mb-4'}>
+                            <div className={layout.isMobile ? 'mb-2' : 'mb-2'}>
                                 {title && (
-                                    <h1 className={`font-bold text-white ${layout.isMobile ? 'text-lg' : 'text-3xl'
+                                    <h1 className={`font-bold text-white ${layout.isMobile ? 'text-base' : 'text-xl'
                                         }`}>
                                         {title}
                                     </h1>
                                 )}
                                 {subtitle && (
-                                    <p className={`text-white/50 mt-0.5 ${layout.isMobile ? 'text-xs' : 'text-sm'
+                                    <p className={`text-white/50 mt-0.5 ${layout.isMobile ? 'text-xs' : 'text-xs'
                                         }`}>
                                         {subtitle}
                                     </p>
@@ -281,7 +281,7 @@ export const ResponsiveCreateReviewLayout = ({
                                             <div
                                                 onPointerDown={handlePointerDown}
                                                 style={{ touchAction: 'pan-y' }}
-                                                className={`relative flex items-center justify-center gap-1 py-4 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+                                                className={`relative flex items-center justify-center gap-1 py-1 px-0 transition-all overflow-hidden ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
                                             >
                                                 {/* Build a repeated array to simulate infinite looping */}
                                                 {/* repeatedEmojis removed: using single-pass scroll-snap for improved UX */}
@@ -295,7 +295,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                 {/* New Apple-like scroll-snap carousel (single pass, accessible) */}
                                                 <div
                                                     ref={carouselRef}
-                                                    className="flex items-center gap-3 overflow-x-auto no-scrollbar py-4 px-4"
+                                                    className="flex items-center gap-3 overflow-x-auto no-scrollbar py-1 px-4"
                                                     style={{
                                                         scrollSnapType: 'x mandatory',
                                                         WebkitOverflowScrolling: 'touch'
@@ -309,7 +309,7 @@ export const ResponsiveCreateReviewLayout = ({
                                                                 role="tab"
                                                                 aria-selected={isActive}
                                                                 onClick={(e) => { e.preventDefault(); scrollToIndex(index); effectiveChangeSection(index); }}
-                                                                className={`flex-shrink-0 scroll-item rounded-xl px-4 py-3 transition-all duration-200 ease-out text-2xl font-medium ${isActive ? 'scale-110 backdrop-blur-md bg-white/6 border border-white/10 shadow-[0_6px_24px_rgba(0,0,0,0.4)]' : 'bg-white/5 hover:bg-white/10'}`}
+                                                                className={`flex-shrink-0 scroll-item rounded-xl px-3 py-1 transition-all duration-200 ease-out text-xl font-medium ${isActive ? 'scale-110 backdrop-blur-md bg-white/6 border border-white/10 shadow-[0_6px_24px_rgba(0,0,0,0.4)]' : 'bg-white/5 hover:bg-white/10'}`}
                                                                 style={{
                                                                     scrollSnapAlign: 'center',
                                                                     minWidth: 64,
@@ -355,8 +355,8 @@ export const ResponsiveCreateReviewLayout = ({
                 {/* Main Content — overflow-y-auto interne, scrollbar cachée visuellement mais fonctionnelle */}
                 <main
                     className={`flex-1 overflow-y-auto min-h-0 no-scrollbar ${layout.isMobile
-                        ? 'px-3 py-4 pb-20'
-                        : 'px-6 md:px-8 py-4 pb-24'
+                        ? 'px-3 py-2 pb-16'
+                        : 'px-6 md:px-8 py-2 pb-16'
                         }`}
                     onClick={(e) => {
                         const tag = (e.target && e.target.tagName && e.target.tagName.toLowerCase()) || '';
@@ -373,7 +373,7 @@ export const ResponsiveCreateReviewLayout = ({
                 {/* Navigation Footer - Fixed at bottom, always visible */}
                 <div className={`fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#07070f] via-[#07070f] to-transparent border-t border-white/10 backdrop-blur-xl z-50 ${layout.isMobile ? 'safe-area-inset-bottom' : ''
                     }`}>
-                    <div className={layout.isMobile ? 'px-3 py-2' : 'px-6 md:px-8 py-4'}>
+                    <div className={layout.isMobile ? 'px-3 py-1.5' : 'px-6 md:px-8 py-2'}>
                         <div className={containerWidthClass}>
                             <div className="flex items-center justify-between gap-2">
                                 {/* Bouton Précédent */}

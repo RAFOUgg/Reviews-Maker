@@ -26,21 +26,21 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
     }
 
     return (
-        <div className="space-y-6">
-            <LiquidCard glow="purple" padding="lg">
-                <div className="flex items-center gap-3 mb-6">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
-                        <Info className="w-5 h-5 text-white" />
+        <div className="space-y-3">
+            <LiquidCard glow="purple" padding="sm">
+                <div className="flex items-center gap-3 mb-2">
+                    <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-lg shadow-purple-500/30">
+                        <Info className="w-4 h-4 text-white" />
                     </div>
                     <div>
-                        <h3 className="text-xl font-bold text-white">📋 Informations générales</h3>
-                        <p className="text-sm text-white/50">Identité et photos du produit</p>
+                        <h3 className="text-base font-bold text-white">📋 Informations générales</h3>
+                        <p className="text-xs text-white/50">Identité et photos du produit</p>
                     </div>
                 </div>
 
                 <LiquidDivider />
 
-                <div className="space-y-4 mt-6">
+                <div className="space-y-3 mt-3">
                     {/* Nom commercial + Cultivar(s) côte à côte sur desktop pour réduire le scroll */}
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

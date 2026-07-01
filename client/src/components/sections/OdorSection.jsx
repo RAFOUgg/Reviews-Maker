@@ -51,16 +51,16 @@ export default function OdorSection({ productType, data: directData, onChange, f
     }, [dataStr]); // eslint-disable-line react-hooks/exhaustive-deps
 
     return (
-        <LiquidCard glow="green" padding="lg" className="space-y-8">
+        <LiquidCard glow="green" padding="sm" className="space-y-4">
 
             {/* En-tête */}
-            <div className="flex items-center gap-3 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/30">
-                    <Flower2 className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3 pb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-green-600 flex items-center justify-center shadow-lg shadow-green-500/30">
+                    <Flower2 className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-white">👃 Odeurs</h3>
-                    <p className="text-sm text-white/50">Profil aromatique complet (Méthode CATA)</p>
+                    <h3 className="text-base font-bold text-white">👃 Odeurs</h3>
+                    <p className="text-xs text-white/50">Profil aromatique complet (Méthode CATA)</p>
                 </div>
             </div>
 
@@ -104,8 +104,8 @@ export default function OdorSection({ productType, data: directData, onChange, f
             </div>
 
             {/* Sliders Intensité et Complexité */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-3 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
                     <LiquidSlider
                         label="💪 Intensité globale"
                         value={intensity}
@@ -117,7 +117,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
                     />
                 </div>
 
-                <div className="p-4 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-cyan-500/20">
+                <div className="p-3 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-cyan-500/20">
                     <LiquidSlider
                         label="🌈 Complexité aromatique"
                         value={complexity}

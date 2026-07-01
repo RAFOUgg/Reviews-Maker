@@ -126,24 +126,24 @@ export default function TextureSection({ productType, data: directData, onChange
     }, [hardness, density, malleability, elasticity, stickiness, melting, residue, friability, viscosity, productType]);
 
     return (
-        <LiquidCard glow="purple" padding="lg" className="space-y-8">
+        <LiquidCard glow="purple" padding="sm" className="space-y-4">
 
             {/* En-tête */}
-            <div className="flex items-center gap-3 pb-4">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
-                    <Hand className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-3 pb-2">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-pink-500 to-purple-600 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                    <Hand className="w-4 h-4 text-white" />
                 </div>
                 <div>
-                    <h3 className="text-xl font-bold text-white">🤚 Texture</h3>
-                    <p className="text-sm text-white/50">Propriétés tactiles et physiques</p>
+                    <h3 className="text-base font-bold text-white">🤚 Texture</h3>
+                    <p className="text-xs text-white/50">Propriétés tactiles et physiques</p>
                 </div>
             </div>
 
             <LiquidDivider />
 
             {/* Champs communs (tous types) */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Dureté"
                         value={hardness}
@@ -156,7 +156,7 @@ export default function TextureSection({ productType, data: directData, onChange
                     <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.hardness[hardness] || 'Non évalué'}</p>
                 </div>
 
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Densité tactile"
                         value={density}
@@ -169,7 +169,7 @@ export default function TextureSection({ productType, data: directData, onChange
                     <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.density[density] || 'Non évalué'}</p>
                 </div>
 
-                <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Collant"
                         value={stickiness}
@@ -184,7 +184,7 @@ export default function TextureSection({ productType, data: directData, onChange
 
                 {/* Élasticité (Fleurs uniquement) */}
                 {(productType === 'Fleurs' || productType === 'flower') && (
-                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Élasticité"
                             value={elasticity}
@@ -200,7 +200,7 @@ export default function TextureSection({ productType, data: directData, onChange
 
                 {/* Malléabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
-                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Malléabilité"
                             value={malleability}
@@ -216,7 +216,7 @@ export default function TextureSection({ productType, data: directData, onChange
 
                 {/* Friabilité (Hash uniquement) */}
                 {productType === 'Hash' && (
-                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Friabilité"
                             value={friability}
@@ -232,7 +232,7 @@ export default function TextureSection({ productType, data: directData, onChange
 
                 {/* Viscosité (Concentrés uniquement) */}
                 {productType === 'Concentré' && (
-                    <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                         <LiquidSlider
                             label="Viscosité"
                             value={viscosity}
@@ -249,14 +249,14 @@ export default function TextureSection({ productType, data: directData, onChange
 
             {/* Melting & Résidus (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
-                <div className="space-y-6">
+                <div className="space-y-3">
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
                         <Sparkles className="w-4 h-4 text-pink-400" />
                         Propriétés de fonte
                     </h4>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                             <LiquidSlider
                                 label="Melting (10 = Full Melt)"
                                 value={melting}
@@ -269,7 +269,7 @@ export default function TextureSection({ productType, data: directData, onChange
                             <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.melting[melting]}</p>
                         </div>
 
-                        <div className="p-4 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                        <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                             <LiquidSlider
                                 label="Résidus (10 = aucun)"
                                 value={residue}

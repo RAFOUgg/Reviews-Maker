@@ -58,7 +58,7 @@ const LiquidSlider = ({
     return (
         <div className={`w-full liquid-slider ${className}`}>
             {label && (
-                <div className="flex justify-between items-center mb-3">
+                <div className="flex justify-between items-center mb-1.5">
                     <label className="text-sm font-medium text-[var(--text-primary)]">
                         {label}
                     </label>
@@ -137,7 +137,7 @@ const LiquidSlider = ({
             </div>
 
             {/* Scale indicators */}
-            <div className="flex justify-between mt-2 text-xs text-[var(--text-tertiary)]">
+            <div className="flex justify-between mt-1 text-xs text-[var(--text-tertiary)]">
                 <span>{min}</span>
                 <span>{Math.floor((max - min) / 2)}</span>
                 <span>{max}</span>
