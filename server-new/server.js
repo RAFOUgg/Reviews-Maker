@@ -41,6 +41,7 @@ import adminRoutes from './routes/admin.js'
 import debugRoutes from './routes/debug.js'
 import permissionsRoutes from './routes/permissions.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
+import { notFoundHandler, errorHandler } from './utils/errorHandler.js'
 
 // Import config
 import './config/passport.js'
@@ -133,6 +134,10 @@ app.use('/api/permissions', permissionsRoutes)
 app.get('/api/health', (req, res) => {
     res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
+
+// 404 pour les routes API non trouvées + gestion centralisée des erreurs (doivent être en dernier)
+app.use('/api', notFoundHandler)
+app.use(errorHandler)
 
 // Graceful shutdown
 process.on('SIGINT', async () => {

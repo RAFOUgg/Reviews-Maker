@@ -49,7 +49,7 @@ const upload = multer({
 /**
  * Validation des données HashReview
  */
-function validateHashReviewData(data, options = {}) {
+async function validateHashReviewData(data, options = {}) {
     const { isDraft = false } = options
     const errors = []
     const cleaned = {}
@@ -84,8 +84,13 @@ function validateHashReviewData(data, options = {}) {
     }
 
     // Lien review fleur parente via relation Prisma (scalaire FK non supporté en update direct)
+    // On vérifie l'existence avant le connect : sinon Prisma throw P2025 (500) si la review
+    // fleur référencée a été supprimée ou si l'id est obsolète/invalide.
     if (data.parentFlowerReviewId && typeof data.parentFlowerReviewId === 'string') {
-        cleaned.parentFlowerReview = { connect: { id: data.parentFlowerReviewId } }
+        const flowerExists = await prisma.review.findUnique({ where: { id: data.parentFlowerReviewId }, select: { id: true } })
+        if (flowerExists) {
+            cleaned.parentFlowerReview = { connect: { id: data.parentFlowerReviewId } }
+        }
     }
 
     // Traçabilité multi-source (fleur(s) utilisée(s) comme matière première)
@@ -490,7 +495,7 @@ router.post('/', requireAuth, upload.fields([
 
     // Validation
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
-    const validation = validateHashReviewData(bodyData, { isDraft })
+    const validation = await validateHashReviewData(bodyData, { isDraft })
     if (!validation.valid) {
         return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
@@ -615,7 +620,7 @@ router.put('/:id', requireAuth, upload.fields([
 
     // Validation
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
-    const validation = validateHashReviewData(bodyData, { isDraft })
+    const validation = await validateHashReviewData(bodyData, { isDraft })
     if (!validation.valid) {
         return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
