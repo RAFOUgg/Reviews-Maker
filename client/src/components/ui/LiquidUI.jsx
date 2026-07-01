@@ -37,6 +37,8 @@ export function LiquidCard({
     const velocityRef = useRef({ x: 0, y: 0 })
     const animationFrame = useRef(null)
     const isHoveredRef = useRef(false)
+    // Stable ref to the animate function so handleMouseEnter can restart the loop
+    const animateFrameRef = useRef(null)
 
     const glowClass = glow !== 'none' ? `glow-${glow}` : ''
     const paddingClasses = {
@@ -51,65 +53,69 @@ export function LiquidCard({
         if (!liquidEffect) return
 
         const animateFrame = () => {
+            // Check stop condition FIRST (using velocity updated by the PREVIOUS frame).
+            // handleMouseLeave resets velocityRef to {0,0} immediately, so after one
+            // extra frame the loop stops cleanly instead of running forever.
+            if (!isHoveredRef.current &&
+                Math.abs(velocityRef.current.x) < 0.01 &&
+                Math.abs(velocityRef.current.y) < 0.01) {
+                animationFrame.current = null
+                return  // Don't reschedule — loop ends until mouseEnter restarts it
+            }
+
             const targetX = mousePositionRef.current.x
             const targetY = mousePositionRef.current.y
 
             setSmoothPosition(prev => {
                 const dx = targetX - prev.x
                 const dy = targetY - prev.y
-                const spring = 0.18 // Spring tension (higher = faster response)
-                const damping = 0.82 // Damping (higher = more smooth)
+                const spring = 0.18
+                const damping = 0.82
 
-                let newVx = (velocityRef.current.x + dx * spring) * damping
-                let newVy = (velocityRef.current.y + dy * spring) * damping
-
-                // Stop animation when nearly stationary and not hovered
-                if (!isHoveredRef.current && Math.abs(newVx) < 0.01 && Math.abs(newVy) < 0.01) {
-                    newVx = 0
-                    newVy = 0
-                }
+                const newVx = (velocityRef.current.x + dx * spring) * damping
+                const newVy = (velocityRef.current.y + dy * spring) * damping
 
                 velocityRef.current = { x: newVx, y: newVy }
 
-                // Calculate shimmer intensity based on velocity
                 const speed = Math.sqrt(newVx * newVx + newVy * newVy)
                 setShimmerIntensity(Math.min(speed * 2.5, 1))
 
-                return {
-                    x: prev.x + newVx,
-                    y: prev.y + newVy
-                }
+                return { x: prev.x + newVx, y: prev.y + newVy }
             })
 
             animationFrame.current = requestAnimationFrame(animateFrame)
         }
 
+        animateFrameRef.current = animateFrame
         animationFrame.current = requestAnimationFrame(animateFrame)
         return () => {
-            if (animationFrame.current) {
-                cancelAnimationFrame(animationFrame.current)
-            }
+            if (animationFrame.current) cancelAnimationFrame(animationFrame.current)
+            animationFrame.current = null
         }
     }, [liquidEffect])
 
     const handleMouseMove = (e) => {
         if (!cardRef.current || !liquidEffect) return
         const rect = cardRef.current.getBoundingClientRect()
-        const x = ((e.clientX - rect.left) / rect.width) * 100
-        const y = ((e.clientY - rect.top) / rect.height) * 100
-        mousePositionRef.current = { x, y }
+        mousePositionRef.current = {
+            x: ((e.clientX - rect.left) / rect.width) * 100,
+            y: ((e.clientY - rect.top) / rect.height) * 100
+        }
     }
 
     const handleMouseEnter = (e) => {
         if (!cardRef.current) return
         setIsHovered(true)
         isHoveredRef.current = true
-        // Initialize position at cursor on enter for immediate response
         const rect = cardRef.current.getBoundingClientRect()
         const x = ((e.clientX - rect.left) / rect.width) * 100
         const y = ((e.clientY - rect.top) / rect.height) * 100
         mousePositionRef.current = { x, y }
         setSmoothPosition({ x, y })
+        // Restart the animation loop if it stopped (animationFrame.current = null after idle)
+        if (liquidEffect && !animationFrame.current && animateFrameRef.current) {
+            animationFrame.current = requestAnimationFrame(animateFrameRef.current)
+        }
     }
 
     const handleMouseLeave = () => {
@@ -117,6 +123,7 @@ export function LiquidCard({
         isHoveredRef.current = false
         setShimmerIntensity(0)
         velocityRef.current = { x: 0, y: 0 }
+        // Loop will detect the stop condition on the next frame and terminate itself
     }
 
     return (
