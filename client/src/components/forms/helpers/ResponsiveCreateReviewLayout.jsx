@@ -239,13 +239,13 @@ export const ResponsiveCreateReviewLayout = ({
     };
 
     return (
-        <div className="bg-[#07070f] relative flex flex-col" style={{ overflowX: 'hidden' }}>
+        <div className="h-full bg-[#07070f] relative flex flex-col overflow-hidden" style={{ overflowX: 'hidden' }}>
             {/* Background decorative - hidden on mobile for performance */}
             {!layout.isMobile && (
                 <div className="fixed inset-0 bg-gradient-radial from-purple-500/5 via-transparent to-transparent pointer-events-none" />
             )}
 
-            <div className="relative z-10 flex flex-col flex-1">
+            <div className="relative z-10 flex flex-col flex-1 min-h-0 overflow-hidden">
                 {/* Header - Responsive Padding & Safe Area - z-30 to stay ABOVE main content (z-10) but BELOW modals (z-[8888]) */}
                 <div className={`sticky top-[4.5rem] z-30 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
                     ? 'px-3 py-3 safe-area-inset-top'
@@ -352,11 +352,11 @@ export const ResponsiveCreateReviewLayout = ({
                     </div>
                 </div>
 
-                {/* Main Content - NO relative/z-index to avoid creating a stacking context that overlaps the sticky header */}
+                {/* Main Content — overflow-y-auto interne, scrollbar cachée visuellement mais fonctionnelle */}
                 <main
-                    className={`flex-1 ${layout.isMobile
+                    className={`flex-1 overflow-y-auto min-h-0 no-scrollbar ${layout.isMobile
                         ? 'px-3 py-4 pb-20'
-                        : 'px-6 md:px-8 py-8 pb-24'
+                        : 'px-6 md:px-8 py-4 pb-24'
                         }`}
                     onClick={(e) => {
                         const tag = (e.target && e.target.tagName && e.target.tagName.toLowerCase()) || '';

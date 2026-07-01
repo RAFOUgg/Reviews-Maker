@@ -31,7 +31,7 @@ export default function Layout() {
     const visibleNavItems = navItems.filter(item => item.show);
 
     return (
-        <div className="min-h-screen flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white">
+        <div className={`flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white ${/^\/(create|edit)\//.test(location.pathname) ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
             {/* Navigation - Glassmorphism navbar - positioned below RDR banner */}
             <nav className="fixed top-[40px] left-0 right-0 z-[100] bg-white/5 backdrop-blur-xl border-b border-white/10">
                 <div className="container mx-auto px-4 py-3">
@@ -190,12 +190,13 @@ export default function Layout() {
             </AnimatePresence>
 
             {/* Main Content - with top padding for RDR banner (40px) + navbar */}
-            <main className="flex-1 w-full pt-28 px-4 py-8">
+            {/* Form routes (create/edit) get overflow-hidden so their internal layout controls scroll */}
+            <main className={`flex-1 w-full pt-28 ${/^\/(create|edit)\//.test(location.pathname) ? 'overflow-hidden flex flex-col' : 'px-4 py-8'}`}>
                 <Outlet />
             </main>
 
-            {/* Footer - Glassmorphism style */}
-            <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
+            {/* Footer global masqué sur les routes de formulaire (create/edit) qui ont leur propre footer fixe */}
+            {!/^\/(create|edit)\//.test(location.pathname) && <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
                 {/* Subtle glow line */}
                 <div
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px"
@@ -233,7 +234,7 @@ export default function Layout() {
                         </div>
                     </div>
                 </div>
-            </footer>
+            </footer>}
         </div>
     );
 }
