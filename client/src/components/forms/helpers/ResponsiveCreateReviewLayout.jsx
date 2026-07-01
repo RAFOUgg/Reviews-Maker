@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
-import SaveReviewModal from '../../shared/SaveReviewModal';
 
 /**
  * ResponsiveCreateReviewLayout - Layout responsive pour pages de création
@@ -32,13 +31,6 @@ export const ResponsiveCreateReviewLayout = ({
     sectionEmojis = [], // Array d'émojis pour chaque section
     // Optional callback to open a global preview/orchard panel from the footer
     onOpenPreview,
-    // Save / Publish callbacks
-    onSave,               // async () => void  — save as draft
-    onSubmit,             // async () => void  — publish (public)
-    isSaving = false,     // bool
-    reviewId = null,      // string|null (null = not yet persisted)
-    reviewHasPreview = false, // bool (true = a render has been created)
-    reviewVisibility = null,  // 'private'|'public'|null — current visibility of existing review
     // When true, the content container expands to use far more of the viewport width.
     // Reserved for data-dense sections (pipelines, genetics canvas) that benefit from
     // extra horizontal room — simple field-based sections stay at a comfortable reading width.
@@ -49,7 +41,6 @@ export const ResponsiveCreateReviewLayout = ({
     const [shouldUseCarousel, setShouldUseCarousel] = useState(false);
     const carouselRef = useRef(null);
     const containerRef = useRef(null);
-    const [showSaveModal, setShowSaveModal] = useState(false);
 
     const VISIBLE_ITEMS = 5;
     const FALLBACK_ITEM_WIDTH = 70;
@@ -396,34 +387,6 @@ export const ResponsiveCreateReviewLayout = ({
                                     </div>
                                 </div>
 
-                                {/* === BOUTON SAUVEGARDER === */}
-                                {onSave && (
-                                    <div className="flex-shrink-0">
-                                        <button
-                                            onClick={() => setShowSaveModal(true)}
-                                            disabled={isSaving}
-                                            className={`rounded-xl font-semibold transition-all flex items-center gap-1.5 ${layout.isMobile ? 'px-3 py-2 text-xs' : 'px-4 py-2 text-sm'
-                                                } ${isSaving
-                                                    ? 'bg-emerald-700/40 text-emerald-400/60 cursor-not-allowed'
-                                                    : 'bg-emerald-600/20 hover:bg-emerald-600/30 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 active:scale-95'
-                                                }`}
-                                            title="Sauvegarder la review"
-                                        >
-                                            {isSaving ? (
-                                                <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                    <circle cx="12" cy="12" r="10" strokeWidth="2" className="opacity-20" />
-                                                    <path strokeLinecap="round" d="M12 2a10 10 0 0 1 10 10" strokeWidth="2" />
-                                                </svg>
-                                            ) : (
-                                                <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
-                                                </svg>
-                                            )}
-                                            {!layout.isMobile && <span>{isSaving ? 'Enregistrement…' : 'Sauvegarder'}</span>}
-                                        </button>
-                                    </div>
-                                )}
-
                                 {/* Preview button */}
                                 {onOpenPreview && (
                                     <div className="flex-shrink-0">
@@ -458,19 +421,6 @@ export const ResponsiveCreateReviewLayout = ({
                     </div>
                 </div>
 
-                {/* Save Review Modal */}
-                {showSaveModal && onSave && (
-                    <SaveReviewModal
-                        onClose={() => setShowSaveModal(false)}
-                        onSaveDraft={onSave}
-                        onPublish={onSubmit || onSave}
-                        onOpenPreview={onOpenPreview || (() => { })}
-                        isSaving={isSaving}
-                        reviewId={reviewId}
-                        hasPreview={reviewHasPreview}
-                        currentVisibility={reviewVisibility}
-                    />
-                )}
             </div >
         </div >
     );

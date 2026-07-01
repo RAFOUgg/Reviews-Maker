@@ -234,6 +234,16 @@ export function flattenHashFormData(data) {
     if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
     if (data.graines !== undefined) flat.grainesScore = data.graines
 
+    // Traçabilité multi-source
+    if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
+    if (data.parentFlowerReviewId !== undefined) flat.parentFlowerReviewId = data.parentFlowerReviewId
+
+    // Aperçu / Orchard preset
+    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
+    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
+    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
+    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+
     return flat
 }
 
@@ -277,6 +287,16 @@ export function flattenConcentrateFormData(data) {
     if (data.pistils !== undefined) flat.pistilsScore = data.pistils
     if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
 
+    // Traçabilité multi-source
+    if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
+    if (data.parentFlowerReviewId !== undefined) flat.parentFlowerReviewId = data.parentFlowerReviewId
+    if (data.parentHashReviewId !== undefined) flat.parentHashReviewId = data.parentHashReviewId
+    // Aperçu / Orchard preset
+    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
+    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
+    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
+    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+
     return flat
 }
 
@@ -291,6 +311,7 @@ export function flattenEdibleFormData(data) {
     if (data.typeComestible) flat.typeComestible = data.typeComestible
     if (data.fabricant) flat.fabricant = data.fabricant
     if (data.genetiquesType) flat.genetiquesType = data.genetiquesType
+    if (data.typeGenetiques) flat.typeGenetiques = data.typeGenetiques
 
     // Section 2 - Pipeline Recette
     if (data.recette) {
@@ -309,6 +330,14 @@ export function flattenEdibleFormData(data) {
     if (data.effets) {
         if (data.effets.dureeEffetsCategorie) flat.dureeEffets = data.effets.dureeEffetsCategorie
     }
+
+    // Traçabilité multi-source
+    if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
+    // Aperçu / Orchard preset
+    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
+    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
+    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
+    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
 
     return flat
 }

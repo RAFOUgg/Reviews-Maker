@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef, lazy, Suspense } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
-import { ChevronLeft, ChevronRight, Save, Eye, Lock } from 'lucide-react'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
@@ -48,10 +47,8 @@ export default function CreateFlowerReview() {
 
     const {
         formData,
-        setFormData,
         handleChange,
         loading,
-        setLoading,
         saving,
         setSaving
     } = useFlowerForm(id)
@@ -95,14 +92,6 @@ export default function CreateFlowerReview() {
             })
         })
     }, [id, formData.images])
-
-    // Tracker l'aperçu : depuis formData (mode édition) ou défini durant la session
-    const hasPreview = !!(formData.orchardPreset)
-
-    // Visibilité courante de la review (pour le bouton de sauvegarde intelligent)
-    const currentVisibility = id
-        ? (formData.status === 'published' ? 'public' : 'private')
-        : null
 
     // Synchroniser les photos avec formData
     useEffect(() => {
@@ -156,25 +145,16 @@ export default function CreateFlowerReview() {
         } catch (e) { }
     }, [currentSection, formData])
 
-    const handleSave = async () => {
+    const handleSave = async ({ silent = false } = {}) => {
         let savedReview
         try {
             setSaving(true)
-
-            // Aplatir les données du formulaire avec l'utilitaire
             const flatData = flattenFlowerFormData(formData)
-
-            // Dériver existingImages depuis l'état photos courant (pas depuis formData.images)
-            // → si l'utilisateur a supprimé une photo existante, elle ne sera plus dans photos
             const existingImages = photos
                 .filter(p => p.existing)
                 .map(p => p.name || p.url || p.preview)
                 .filter(Boolean)
-
-            // Créer le FormData avec les données aplaties et les images existantes
             const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
-
-            console.log('📤 Sending flattened data:', flatData)
 
             if (id) {
                 savedReview = await flowerReviewsService.update(id, reviewFormData)
@@ -182,7 +162,7 @@ export default function CreateFlowerReview() {
                 savedReview = await flowerReviewsService.create(reviewFormData)
             }
 
-            toast.success('Brouillon sauvegardé ✅')
+            if (!silent) toast.success('Brouillon sauvegardé ✅')
 
             if (!id && savedReview?.id) {
                 navigate(`/edit/flower/${savedReview.id}`)
@@ -191,12 +171,27 @@ export default function CreateFlowerReview() {
             const msg = error?.message || 'Erreur inconnue'
             toast.error('Erreur lors de la sauvegarde : ' + msg)
             console.error('Save error:', error)
-            throw error   // re-throw pour que SaveReviewModal puisse afficher l'erreur inline
         } finally {
             setSaving(false)
         }
         return savedReview
     }
+
+    // Auto-save sur chaque modification (debounced 2.5s)
+    const autoSaveTimerRef = useRef(null)
+    const hasLoadedRef = useRef(false)
+    useEffect(() => {
+        if (!loading) {
+            const t = setTimeout(() => { hasLoadedRef.current = true }, 500)
+            return () => clearTimeout(t)
+        }
+    }, [loading])
+    useEffect(() => {
+        if (!hasLoadedRef.current) return
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+        autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
+        return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
+    }, [formData])
 
     // Publier avec les données orchardData passées directement (évite la race-condition setState)
     const handleSubmitWithOrchardData = async (orchardData = {}) => {
@@ -227,50 +222,6 @@ export default function CreateFlowerReview() {
                 await flowerReviewsService.create(reviewFormData)
             }
             toast.success('Review publiée ✅')
-            navigate('/library')
-        } catch (error) {
-            toast.error('Erreur lors de la publication : ' + (error?.message || 'Erreur inconnue'))
-            console.error(error)
-            throw error
-        } finally {
-            setSaving(false)
-        }
-    }
-
-    const handleSubmit = async () => {
-        // Validation des champs requis
-        // En mode édition, les images existantes comptent aussi (pas besoin de nouvelles photos)
-        const existingImagesForValidation = photos
-            .filter(p => p.existing)
-            .map(p => p.name || p.url || p.preview)
-            .filter(Boolean)
-        const hasImages = photos.length > 0
-
-        if (!formData.nomCommercial || !hasImages) {
-            toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
-            setCurrentSection(0)
-            return
-        }
-
-        // Un aperçu est requis pour publier dans la galerie publique
-        if (!formData.orchardPreset) {
-            toast.error('Un aperçu est requis pour publier publiquement. Cliquez sur "Aperçu" pour en définir un.')
-            return
-        }
-
-        try {
-            setSaving(true)
-            const flatData = flattenFlowerFormData(formData)
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImagesForValidation)
-
-            if (id) {
-                await flowerReviewsService.update(id, reviewFormData)
-                toast.success('Review publiée ✅')
-            } else {
-                await flowerReviewsService.create(reviewFormData)
-                toast.success('Review publiée ✅')
-            }
-
             navigate('/library')
         } catch (error) {
             toast.error('Erreur lors de la publication : ' + (error?.message || 'Erreur inconnue'))
@@ -317,12 +268,6 @@ export default function CreateFlowerReview() {
                 sectionEmojis={sectionEmojis}
                 showProgress={true}
                 onOpenPreview={() => setShowOrchard(true)}
-                onSave={handleSave}
-                onSubmit={handleSubmit}
-                reviewVisibility={currentVisibility}
-                isSaving={saving}
-                reviewId={id || null}
-                reviewHasPreview={hasPreview}
                 wide={['genetics', 'culture'].includes(currentSectionData.id)}
             >
                 {/* Section Content */}

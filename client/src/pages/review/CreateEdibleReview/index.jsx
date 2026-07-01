@@ -4,9 +4,10 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { edibleReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+import { flattenEdibleFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -70,52 +71,24 @@ export default function CreateEdibleReview() {
         }
     }
 
-    // RecipePipelineSection garde ingredients/steps imbriqués sous formData.recipe, mais le
-    // backend (edible-reviews.js) lit des champs à plat: `ingredients` et `etapesPreparation`
-    // (pas `recipe.steps`) — sans ce dépaquetage, la recette est silencieusement perdue.
-    const buildReviewFormData = () => {
-        const reviewFormData = new FormData()
-
-        Object.keys(formData).forEach(key => {
-            if (key === 'photos' || key === '_photos' || formData[key] === undefined || formData[key] === null) return
-            if (key === 'recipe') {
-                const recipe = formData.recipe || {}
-                if (recipe.ingredients) reviewFormData.append('ingredients', JSON.stringify(recipe.ingredients))
-                if (recipe.steps) reviewFormData.append('etapesPreparation', JSON.stringify(recipe.steps))
-                return
-            }
-            reviewFormData.append(key, typeof formData[key] === 'object'
-                ? JSON.stringify(formData[key])
-                : formData[key]
-            )
-        })
-
-        if (photos && photos.length > 0) {
-            photos.forEach((photo) => {
-                if (photo.file) {
-                    reviewFormData.append('photos', photo.file)
-                }
-            })
-        }
-
-        return reviewFormData
-    }
-
-    const handleSave = async () => {
+    const handleSave = async ({ silent = false } = {}) => {
+        let savedReview
         try {
             setSaving(true)
-            const reviewFormData = buildReviewFormData()
+            const flatData = flattenEdibleFormData(formData)
+            const existingImages = photos
+                .filter(p => p.existing)
+                .map(p => p.name || p.url || p.preview)
+                .filter(Boolean)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
 
-            reviewFormData.append('status', 'draft')
-
-            let savedReview
             if (id) {
                 savedReview = await edibleReviewsService.update(id, reviewFormData)
             } else {
                 savedReview = await edibleReviewsService.create(reviewFormData)
             }
 
-            toast.success('Brouillon sauvegardé')
+            if (!silent) toast.success('Brouillon sauvegardé')
 
             const newId = savedReview?.review?.id || savedReview?.id
             if (!id && newId) {
@@ -127,36 +100,58 @@ export default function CreateEdibleReview() {
         } finally {
             setSaving(false)
         }
+        return savedReview
     }
 
-    const handleSubmit = async () => {
+    const handleSubmitWithOrchardData = async (orchardData = {}) => {
         if (!formData.nomProduit || !photos || photos.length === 0) {
             toast.error('Veuillez remplir les champs obligatoires : Nom du produit et au moins 1 photo')
             return
         }
-
         try {
             setSaving(true)
-            const reviewFormData = buildReviewFormData()
-
-            reviewFormData.append('status', 'published')
+            const existingImages = photos
+                .filter(p => p.existing)
+                .map(p => p.name || p.url || p.preview)
+                .filter(Boolean)
+            const mergedData = {
+                ...formData,
+                ...(orchardData.orchardPreset && { orchardPreset: orchardData.orchardPreset }),
+                ...(orchardData.orchardConfig && { orchardConfig: JSON.stringify(orchardData.orchardConfig) }),
+            }
+            const flatData = flattenEdibleFormData(mergedData)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImages)
 
             if (id) {
                 await edibleReviewsService.update(id, reviewFormData)
-                toast.success('Review mise à jour et publiée')
             } else {
                 await edibleReviewsService.create(reviewFormData)
-                toast.success('Review publiée avec succès')
             }
-
+            toast.success('Review publiée ✅')
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de la publication')
+            toast.error('Erreur lors de la publication : ' + (error?.message || 'Erreur inconnue'))
             console.error(error)
         } finally {
             setSaving(false)
         }
     }
+
+    // Auto-save sur chaque modification (debounced 2.5s)
+    const autoSaveTimerRef = useRef(null)
+    const hasLoadedRef = useRef(false)
+    useEffect(() => {
+        if (!loading) {
+            const t = setTimeout(() => { hasLoadedRef.current = true }, 500)
+            return () => clearTimeout(t)
+        }
+    }, [loading])
+    useEffect(() => {
+        if (!hasLoadedRef.current) return
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+        autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
+        return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
+    }, [formData])
 
     if (!isAuthenticated && !loading) {
         toast.error('Vous devez être connecté')
@@ -179,8 +174,6 @@ export default function CreateEdibleReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
-                onSave={handleSave}
-                onSubmit={handleSubmit}
                 title="Créer une review Comestible"
                 subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
                 loading={loading}
@@ -252,6 +245,7 @@ export default function CreateEdibleReview() {
                                     handleChange('orchardConfig', orchardData.orchardConfig)
                                 }
                             }}
+                            onPublish={handleSubmitWithOrchardData}
                         />
                     </Suspense>
                 )}

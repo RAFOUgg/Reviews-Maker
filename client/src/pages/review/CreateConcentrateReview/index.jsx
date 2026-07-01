@@ -4,9 +4,10 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { concentrateReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
-import { useState, useEffect, lazy, Suspense } from 'react'
+import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+import { flattenConcentrateFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -79,58 +80,24 @@ export default function CreateConcentrateReview() {
         }
     }
 
-    const buildFormData = (status) => {
-        const reviewFormData = new FormData()
-
-        // Extract File objects from analytics before stringify
-        const analyticsRaw = formData.analytics ? { ...formData.analytics } : null
-        let certificateFile = null
-        let terpeneFile = null
-        if (analyticsRaw) {
-            if (analyticsRaw.certificateFile instanceof File) {
-                certificateFile = analyticsRaw.certificateFile
-                delete analyticsRaw.certificateFile
-            }
-            if (analyticsRaw.terpeneFile instanceof File) {
-                terpeneFile = analyticsRaw.terpeneFile
-                delete analyticsRaw.terpeneFile
-            }
-        }
-
-        Object.keys(formData).forEach(key => {
-            if (key === 'photos' || key === '_photos') return
-            const val = formData[key]
-            if (val === undefined || val === null) return
-            if (key === 'analytics') {
-                if (analyticsRaw) reviewFormData.append(key, JSON.stringify(analyticsRaw))
-            } else {
-                reviewFormData.append(key, typeof val === 'object' ? JSON.stringify(val) : val)
-            }
-        })
-
-        if (photos?.length > 0) {
-            photos.forEach(photo => { if (photo.file) reviewFormData.append('photos', photo.file) })
-        }
-        if (certificateFile) reviewFormData.append('certificateFile', certificateFile)
-        if (terpeneFile) reviewFormData.append('terpeneFile', terpeneFile)
-
-        reviewFormData.append('status', status)
-        return reviewFormData
-    }
-
-    const handleSave = async () => {
+    const handleSave = async ({ silent = false } = {}) => {
+        let savedReview
         try {
             setSaving(true)
-            const reviewFormData = buildFormData('draft')
+            const flatData = flattenConcentrateFormData(formData)
+            const existingImages = photos
+                .filter(p => p.existing)
+                .map(p => p.name || p.url || p.preview)
+                .filter(Boolean)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
 
-            let savedReview
             if (id) {
                 savedReview = await concentrateReviewsService.update(id, reviewFormData)
             } else {
                 savedReview = await concentrateReviewsService.create(reviewFormData)
             }
 
-            toast.success('Brouillon sauvegardé')
+            if (!silent) toast.success('Brouillon sauvegardé')
 
             const newId = savedReview?.review?.id || savedReview?.id
             if (!id && newId) {
@@ -142,34 +109,58 @@ export default function CreateConcentrateReview() {
         } finally {
             setSaving(false)
         }
+        return savedReview
     }
 
-    const handleSubmit = async () => {
+    const handleSubmitWithOrchardData = async (orchardData = {}) => {
         if (!formData.nomCommercial || !photos || photos.length === 0) {
             toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
             return
         }
-
         try {
             setSaving(true)
-            const reviewFormData = buildFormData('published')
+            const existingImages = photos
+                .filter(p => p.existing)
+                .map(p => p.name || p.url || p.preview)
+                .filter(Boolean)
+            const mergedData = {
+                ...formData,
+                ...(orchardData.orchardPreset && { orchardPreset: orchardData.orchardPreset }),
+                ...(orchardData.orchardConfig && { orchardConfig: JSON.stringify(orchardData.orchardConfig) }),
+            }
+            const flatData = flattenConcentrateFormData(mergedData)
+            const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImages)
 
             if (id) {
                 await concentrateReviewsService.update(id, reviewFormData)
-                toast.success('Review mise à jour et publiée')
             } else {
                 await concentrateReviewsService.create(reviewFormData)
-                toast.success('Review publiée avec succès')
             }
-
+            toast.success('Review publiée ✅')
             navigate('/library')
         } catch (error) {
-            toast.error('Erreur lors de la publication')
+            toast.error('Erreur lors de la publication : ' + (error?.message || 'Erreur inconnue'))
             console.error(error)
         } finally {
             setSaving(false)
         }
     }
+
+    // Auto-save sur chaque modification (debounced 2.5s)
+    const autoSaveTimerRef = useRef(null)
+    const hasLoadedRef = useRef(false)
+    useEffect(() => {
+        if (!loading) {
+            const t = setTimeout(() => { hasLoadedRef.current = true }, 500)
+            return () => clearTimeout(t)
+        }
+    }, [loading])
+    useEffect(() => {
+        if (!hasLoadedRef.current) return
+        if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
+        autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
+        return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
+    }, [formData])
 
     if (!isAuthenticated && !loading) {
         toast.error('Vous devez être connecté')
@@ -192,8 +183,6 @@ export default function CreateConcentrateReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
-                onSave={handleSave}
-                onSubmit={handleSubmit}
                 title="Créer une review Concentré"
                 subtitle="Documentez votre rosin, BHO ou autre concentré"
                 loading={loading}
@@ -300,6 +289,7 @@ export default function CreateConcentrateReview() {
                                     handleChange('orchardConfig', orchardData.orchardConfig)
                                 }
                             }}
+                            onPublish={handleSubmitWithOrchardData}
                         />
                     </Suspense>
                 )}
