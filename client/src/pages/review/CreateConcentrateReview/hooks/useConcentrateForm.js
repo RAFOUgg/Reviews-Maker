@@ -94,6 +94,9 @@ export function useConcentrateForm(reviewId = null) {
                 name: typeof p === 'string' ? p : ''
             }))
 
+            // Lifter les champs d'aperçu depuis extraData
+            const extraData = parseObj(baseReview.extraData, {})
+
             setFormData({
                 ...baseReview,
                 type: 'concentrate',
@@ -105,6 +108,10 @@ export function useConcentrateForm(reviewId = null) {
                 parentFlowerReviewId: cd.parentFlowerReviewId || null,
                 sourceLineage: parseArr(cd.sourceLineage, []),
                 status: baseReview.status || 'draft',
+                orchardPreset: extraData.orchardPreset || null,
+                orchardConfig: extraData.orchardConfig || null,
+                orchardCustomLayout: extraData.orchardCustomLayout || null,
+                orchardLayoutMode: extraData.orchardLayoutMode || null,
                 analytics,
                 odeurs,
                 texture,

@@ -226,19 +226,35 @@ export function flattenHashFormData(data) {
     if (data.rendementEstime !== undefined) flat.rendementEstime = data.rendementEstime
     if (data.tempsTotalSeparation !== undefined) flat.tempsTotalSeparation = data.tempsTotalSeparation
 
-    // Section 4 - Visuel & Technique (spécifique Hash)
+    // Section 2 - Pipeline Séparation (stocké sous separationPipeline par le hook/adapter)
+    if (data.separationPipeline) {
+        if (!flat.separationTimelineConfig && data.separationPipeline.separationTimelineConfig !== undefined)
+            flat.separationTimelineConfig = data.separationPipeline.separationTimelineConfig
+        if (!flat.separationTimelineData && data.separationPipeline.separationTimelineData !== undefined)
+            flat.separationTimelineData = data.separationPipeline.separationTimelineData
+        if (!flat.methodeSeparation && data.separationPipeline.methodeSeparation)
+            flat.methodeSeparation = data.separationPipeline.methodeSeparation
+    }
+
+    // Section 4 - Visuel & Technique (top-level OU sous data.visuel selon la section)
+    // Top-level wins ; data.visuel sert de fallback (hook de chargement)
     if (data.couleurTransparence !== undefined) flat.couleurTransparence = data.couleurTransparence
     if (data.pureteVisuelle !== undefined) flat.pureteVisuelle = data.pureteVisuelle
     if (data.densiteVisuelle !== undefined) flat.densiteVisuelle = data.densiteVisuelle
     if (data.pistils !== undefined) flat.pistilsScore = data.pistils
     if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
     if (data.graines !== undefined) flat.grainesScore = data.graines
+    if (data.visuel) {
+        if (flat.couleurTransparence === undefined && data.visuel.couleurTransparence !== undefined) flat.couleurTransparence = data.visuel.couleurTransparence
+        if (flat.pureteVisuelle === undefined && data.visuel.pureteVisuelle !== undefined) flat.pureteVisuelle = data.visuel.pureteVisuelle
+        if (flat.densiteVisuelle === undefined && data.visuel.densiteVisuelle !== undefined) flat.densiteVisuelle = data.visuel.densiteVisuelle
+    }
 
     // Traçabilité multi-source
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
     if (data.parentFlowerReviewId !== undefined) flat.parentFlowerReviewId = data.parentFlowerReviewId
 
-    // Aperçu / Orchard preset
+    // Aperçu / Orchard preset (peut être dans extraData parsé ou direct)
     if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
     if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
     if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
@@ -278,7 +294,17 @@ export function flattenConcentrateFormData(data) {
         if (data.purification.timelineData) flat.purificationTimelineData = data.purification.timelineData
     }
 
-    // Section 4 - Visuel & Technique (spécifique Concentré)
+    // Section 2 - Pipeline Extraction (stocké sous extractionPipeline par le hook/adapter)
+    if (data.extractionPipeline) {
+        if (!flat.extractionTimelineConfig && data.extractionPipeline.extractionTimelineConfig !== undefined)
+            flat.extractionTimelineConfig = data.extractionPipeline.extractionTimelineConfig
+        if (!flat.extractionTimelineData && data.extractionPipeline.extractionTimelineData !== undefined)
+            flat.extractionTimelineData = data.extractionPipeline.extractionTimelineData
+        if (!flat.methodeExtraction && data.extractionPipeline.methodeExtraction)
+            flat.methodeExtraction = data.extractionPipeline.methodeExtraction
+    }
+
+    // Section 4 - Visuel & Technique (top-level OU sous data.visuel selon la section)
     if (data.couleurTransparence !== undefined) flat.couleurTransparence = data.couleurTransparence
     if (data.viscositeVisuelle !== undefined) flat.viscositeVisuelle = data.viscositeVisuelle
     if (data.pureteVisuelle !== undefined) flat.pureteVisuelle = data.pureteVisuelle
@@ -286,6 +312,13 @@ export function flattenConcentrateFormData(data) {
     if (data.residuScore !== undefined) flat.residuScore = data.residuScore
     if (data.pistils !== undefined) flat.pistilsScore = data.pistils
     if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
+    if (data.visuel) {
+        if (flat.couleurTransparence === undefined && data.visuel.couleurTransparence !== undefined) flat.couleurTransparence = data.visuel.couleurTransparence
+        if (flat.viscositeVisuelle === undefined && data.visuel.viscosite !== undefined) flat.viscositeVisuelle = data.visuel.viscosite
+        if (flat.pureteVisuelle === undefined && data.visuel.pureteVisuelle !== undefined) flat.pureteVisuelle = data.visuel.pureteVisuelle
+        if (flat.meltingScore === undefined && data.visuel.melting !== undefined) flat.meltingScore = data.visuel.melting
+        if (flat.residuScore === undefined && data.visuel.residus !== undefined) flat.residuScore = data.visuel.residus
+    }
 
     // Traçabilité multi-source
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage

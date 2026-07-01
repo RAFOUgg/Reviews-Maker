@@ -28,7 +28,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    limits: {
+        fileSize: 10 * 1024 * 1024,    // 10 MB par fichier
+        fieldSize: 50 * 1024 * 1024,   // 50 MB par champ texte (orchardConfig JSON)
+        fields: 500,
+        files: 10
+    },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp|pdf/
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
@@ -322,7 +327,7 @@ function validateConcentrateReviewData(data, options = {}) {
  * Créer une nouvelle ConcentrateReview
  */
 router.post('/', requireAuth, upload.fields([
-    { name: 'photos', maxCount: 4 },
+    { name: 'images', maxCount: 4 },
     { name: 'certificateFile', maxCount: 1 },
     { name: 'terpeneFile', maxCount: 1 }
 ]), asyncHandler(async (req, res) => {
@@ -372,7 +377,7 @@ router.post('/', requireAuth, upload.fields([
         }
     })
 
-    const photos = req.files?.photos?.map(f => `/images/${f.filename}`) || []
+    const photos = req.files?.images?.map(f => `/images/${f.filename}`) || []
     const certificateFileUrl = req.files?.certificateFile?.[0]
         ? `/images/${req.files.certificateFile[0].filename}`
         : null
@@ -430,7 +435,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
  * PUT /api/concentrate-reviews/:id
  */
 router.put('/:id', requireAuth, upload.fields([
-    { name: 'photos', maxCount: 4 },
+    { name: 'images', maxCount: 4 },
     { name: 'certificateFile', maxCount: 1 },
     { name: 'terpeneFile', maxCount: 1 }
 ]), asyncHandler(async (req, res) => {
@@ -494,11 +499,17 @@ router.put('/:id', requireAuth, upload.fields([
         }
     })
 
-    let photos = []
-    const newPhotos = req.files?.photos
-    if (newPhotos && newPhotos.length > 0) {
-        photos = newPhotos.map(f => `/images/${f.filename}`)
-    } else {
+    let existingImagesToKeep = []
+    if (bodyData.existingImages) {
+        try {
+            existingImagesToKeep = typeof bodyData.existingImages === 'string'
+                ? JSON.parse(bodyData.existingImages) : bodyData.existingImages
+        } catch {}
+    }
+    const newPhotoFiles = req.files?.images || []
+    const newPhotoPaths = newPhotoFiles.map(f => `/images/${f.filename}`)
+    let photos = [...existingImagesToKeep, ...newPhotoPaths]
+    if (photos.length === 0) {
         const existing = await prisma.concentrateReview.findUnique({ where: { reviewId } })
         if (existing?.photos) {
             try { photos = JSON.parse(existing.photos) } catch {}

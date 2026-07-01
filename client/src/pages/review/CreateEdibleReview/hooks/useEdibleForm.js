@@ -26,6 +26,30 @@ export function useEdibleForm(reviewId = null) {
                 if (Array.isArray(v)) return v
                 try { return JSON.parse(v) } catch { return def }
             }
+            const parseObj = (v, def = {}) => {
+                if (!v) return def
+                if (typeof v === 'object' && !Array.isArray(v)) return v
+                try { return JSON.parse(v) } catch { return def }
+            }
+
+            const extraData = parseObj(baseReview.extraData, {})
+
+            const gouts = {
+                intensity: ed.intensite ?? 0,
+                aggressiveness: ed.agressivitePiquant ?? 0,
+                dryPuffNotes: parseArr(ed.dryPuff, []),
+                inhalationNotes: parseArr(ed.inhalation, []),
+                exhalationNotes: parseArr(ed.expiration, []),
+                saveursDominantes: parseArr(ed.saveursDominantes, []),
+            }
+
+            const effets = {
+                onset: ed.monteeRapidite ?? 0,
+                intensity: ed.intensiteEffets ?? 0,
+                effects: parseArr(ed.effetsChoisis, []),
+                methodeConsommation: ed.methodeConsommation ?? '',
+                dureeEffetsCategorie: ed.dureeEffets ?? '',
+            }
 
             setFormData({
                 ...baseReview,
@@ -37,6 +61,12 @@ export function useEdibleForm(reviewId = null) {
                 typeGenetiques: ed.typeGenetiques || '',
                 sourceLineage: parseArr(ed.sourceLineage, []),
                 status: baseReview.status || 'draft',
+                orchardPreset: extraData.orchardPreset || null,
+                orchardConfig: extraData.orchardConfig || null,
+                orchardCustomLayout: extraData.orchardCustomLayout || null,
+                orchardLayoutMode: extraData.orchardLayoutMode || null,
+                gouts,
+                effets,
                 _photos: parseArr(ed.photos, []).map(p => ({
                     url: typeof p === 'string' ? (p.startsWith('/') ? p : `/images/${p}`) : (p.url || p.preview || ''),
                     preview: typeof p === 'string' ? (p.startsWith('/') ? p : `/images/${p}`) : (p.url || p.preview || ''),

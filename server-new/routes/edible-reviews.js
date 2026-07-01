@@ -28,7 +28,12 @@ const storage = multer.diskStorage({
 
 const upload = multer({
     storage,
-    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    limits: {
+        fileSize: 10 * 1024 * 1024,
+        fieldSize: 50 * 1024 * 1024,
+        fields: 500,
+        files: 10
+    },
     fileFilter: (req, file, cb) => {
         const allowedTypes = /jpeg|jpg|png|gif|webp/
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
@@ -201,7 +206,7 @@ function validateEdibleReviewData(data, options = {}) {
  * POST /api/edible-reviews
  * Créer une nouvelle EdibleReview
  */
-router.post('/', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, upload.array('images', 4), asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -287,7 +292,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
  * PUT /api/edible-reviews/:id
  */
-router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, upload.array('images', 4), asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 
@@ -338,17 +343,19 @@ router.put('/:id', requireAuth, upload.array('photos', 4), asyncHandler(async (r
         }
     })
 
-    let photos = []
-    if (req.files && req.files.length > 0) {
-        photos = req.files.map(f => `/images/${f.filename}`)
-    } else {
+    let existingImagesToKeep = []
+    if (bodyData.existingImages) {
+        try {
+            existingImagesToKeep = typeof bodyData.existingImages === 'string'
+                ? JSON.parse(bodyData.existingImages) : bodyData.existingImages
+        } catch {}
+    }
+    const newPhotoPaths = (req.files || []).map(f => `/images/${f.filename}`)
+    let photos = [...existingImagesToKeep, ...newPhotoPaths]
+    if (photos.length === 0) {
         const existing = await prisma.edibleReview.findUnique({ where: { reviewId } })
-        if (existing && existing.photos) {
-            try {
-                photos = JSON.parse(existing.photos)
-            } catch (e) {
-                photos = []
-            }
+        if (existing?.photos) {
+            try { photos = JSON.parse(existing.photos) } catch {}
         }
     }
 
