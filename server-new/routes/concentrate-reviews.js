@@ -155,22 +155,19 @@ async function validateConcentrateReviewData(data, options = {}) {
         }
     })
     if (data.terpeneProfile) {
-        if (typeof data.terpeneProfile === 'string') {
-            try {
-                cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
-            } catch {
-                cleaned.terpeneProfile = data.terpeneProfile
-            }
-        } else {
-            cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
-        }
+        // Schema column is String? — must always store a JSON string, sinon Prisma throw
+        // (invalid value for String column) dès qu'un terpeneProfile structuré est envoyé.
+        cleaned.terpeneProfile = typeof data.terpeneProfile === 'string'
+            ? data.terpeneProfile
+            : JSON.stringify(data.terpeneProfile)
     }
     if (data.labReportUrl && typeof data.labReportUrl === 'string') {
         cleaned.labReportUrl = data.labReportUrl.trim()
     }
     if (data.otherCannabinoids) {
+        // Schema column is String? — must always store a JSON string (même bug que terpeneProfile)
         if (typeof data.otherCannabinoids === 'string') {
-            try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
+            cleaned.otherCannabinoids = data.otherCannabinoids
         } else {
             cleaned.otherCannabinoids = JSON.stringify(data.otherCannabinoids)
         }

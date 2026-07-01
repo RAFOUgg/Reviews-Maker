@@ -112,36 +112,10 @@ function validateEdibleReviewData(data, options = {}) {
     }
 
     // ===== SECTION 3: Analytics =====
-    const cannabinoids = ['thcPercent', 'cbdPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
-    cannabinoids.forEach(field => {
-        if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
-            const val = parseFloat(data[field])
-            if (!isNaN(val) && val >= 0 && val <= 100) {
-                cleaned[field] = val
-            }
-        }
-    })
-    if (data.terpeneProfile) {
-        if (typeof data.terpeneProfile === 'string') {
-            try {
-                cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
-            } catch {
-                cleaned.terpeneProfile = data.terpeneProfile
-            }
-        } else {
-            cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
-        }
-    }
-    if (data.labReportUrl && typeof data.labReportUrl === 'string') {
-        cleaned.labReportUrl = data.labReportUrl.trim()
-    }
-    if (data.otherCannabinoids) {
-        if (typeof data.otherCannabinoids === 'string') {
-            try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
-        } else {
-            cleaned.otherCannabinoids = JSON.stringify(data.otherCannabinoids)
-        }
-    }
+    // Le modèle Prisma EdibleReview n'a AUCUNE colonne cannabinoïdes/terpènes/labReport
+    // (contrairement à Flower/Hash/Concentrate) : un prisma.edibleReview.create/update
+    // avec l'une de ces clés throw "Unknown argument" (500). Ne rien écrire ici tant que
+    // le schéma n'a pas ces colonnes.
 
     // ===== SECTION 4: Goûts =====
     // Frontend sends intensiteGoutScore, agressiviteScore; schema: intensite, agressivitePiquant

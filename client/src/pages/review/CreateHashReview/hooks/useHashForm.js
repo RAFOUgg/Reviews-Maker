@@ -77,7 +77,16 @@ export function useHashForm(reviewId = null) {
                 separationTimelineData: parseArr(hd.separationTimelineData, []),
             }
 
-            const curing = parseObj(hd.curingPipeline, {})
+            // hd.curingPipeline n'existe pas en DB (les colonnes réelles sont curingTimelineConfig/
+            // curingTimelineData/curingType/curingTemperature/curingHumidity) — sans ce mapping,
+            // CuringMaturationSection recevait toujours {} au chargement et perdait la trame sauvegardée.
+            const curing = {
+                curingTimelineConfig: parseObj(hd.curingTimelineConfig, {}),
+                curingTimeline: parseArr(hd.curingTimelineData, []),
+                curingType: hd.curingType || 'cold',
+                temperature: hd.curingTemperature ?? 5,
+                humidity: hd.curingHumidity ?? 60,
+            }
 
             const visuel = {
                 couleurTransparence: hd.couleurTransparence ?? 0,

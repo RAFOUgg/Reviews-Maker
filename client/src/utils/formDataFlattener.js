@@ -349,11 +349,17 @@ export function flattenEdibleFormData(data) {
     if (data.typeGenetiques) flat.typeGenetiques = data.typeGenetiques
 
     // Section 2 - Pipeline Recette
+    // RecipePipelineSection écrit dans formData.recipe (clés: ingredients, steps) via
+    // index.jsx `onChange={(data) => handleChange('recipe', data)}` — pas 'recette'/'etapes'.
+    // Mismatch de noms = ingredients/étapes jamais envoyés au backend, review sauvée vide.
+    if (data.recipe) {
+        if (data.recipe.ingredients) flat.ingredients = data.recipe.ingredients
+        if (data.recipe.steps) flat.etapesPreparation = data.recipe.steps
+    }
+    // Compatibilité ancienne structure (si un appelant utilise encore 'recette'/'etapes')
     if (data.recette) {
-        if (data.recette.ingredients) flat.ingredients = data.recette.ingredients
-        if (data.recette.etapes) flat.etapesPreparation = data.recette.etapes
-        if (data.recette.timelineConfig) flat.recetteTimelineConfig = data.recette.timelineConfig
-        if (data.recette.timelineData) flat.recetteTimelineData = data.recette.timelineData
+        if (!flat.ingredients && data.recette.ingredients) flat.ingredients = data.recette.ingredients
+        if (!flat.etapesPreparation && data.recette.etapes) flat.etapesPreparation = data.recette.etapes
     }
 
     // Section 3 - Goûts (spécifique comestible)

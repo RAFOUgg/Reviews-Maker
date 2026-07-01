@@ -211,12 +211,10 @@ async function validateHashReviewData(data, options = {}) {
         }
     })
     if (data.terpeneProfile) {
+        // Schema column is String? — must always store a JSON string, sinon Prisma throw
+        // (invalid value for String column) dès qu'un terpeneProfile structuré est envoyé.
         if (typeof data.terpeneProfile === 'string') {
-            try {
-                cleaned.terpeneProfile = JSON.parse(data.terpeneProfile)
-            } catch {
-                cleaned.terpeneProfile = data.terpeneProfile
-            }
+            try { JSON.parse(data.terpeneProfile); cleaned.terpeneProfile = data.terpeneProfile } catch { cleaned.terpeneProfile = data.terpeneProfile }
         } else {
             cleaned.terpeneProfile = JSON.stringify(data.terpeneProfile)
         }
@@ -225,8 +223,9 @@ async function validateHashReviewData(data, options = {}) {
         cleaned.labReportUrl = data.labReportUrl.trim()
     }
     if (data.otherCannabinoids) {
+        // Schema column is String? — même bug que terpeneProfile ci-dessus
         if (typeof data.otherCannabinoids === 'string') {
-            try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
+            try { JSON.parse(data.otherCannabinoids); cleaned.otherCannabinoids = data.otherCannabinoids } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
         } else {
             cleaned.otherCannabinoids = JSON.stringify(data.otherCannabinoids)
         }
@@ -308,12 +307,14 @@ async function validateHashReviewData(data, options = {}) {
     // ===== SECTION 7: Texture =====
     // Frontend sends dureteScore, densiteTactileScore, friabiliteScore, meltingScore, residuScore, etc.
     // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
+    // NB: pas de mapping 'collantScore' ici — contrairement à FlowerReview, le schema
+    // HashReview n'a pas de colonne dédiée pour le collant/stickiness. L'envoyer causait
+    // un crash Prisma "Unknown argument" (copié depuis flower-reviews.js par erreur).
     const textureMap = {
         durete: ['dureteScore', 'durete'],
         densiteTactile: ['densiteTactileScore', 'densiteTactile'],
         friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
-        meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus'],
-        collantScore: ['collantScore']
+        meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus']
     }
 
     Object.entries(textureMap).forEach(([schemaField, candidates]) => {

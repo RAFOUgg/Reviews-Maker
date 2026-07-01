@@ -166,9 +166,10 @@ function validateFlowerReviewData(data, options = {}) {
     if (data.phenotypeCode && typeof data.phenotypeCode === 'string') {
         cleaned.phenotypeCode = data.phenotypeCode.trim()
     }
+    // geneticTreeId is validated for existence in the route handler (async, needs prisma) —
+    // stash the raw trimmed value here and resolve it below to avoid a P2003 FK crash on stale/deleted tree ids.
     if (data.geneticTreeId !== undefined) {
-        // Allow explicit null/empty to clear the relation
-        cleaned.geneticTreeId = (data.geneticTreeId && typeof data.geneticTreeId === 'string')
+        cleaned._rawGeneticTreeId = (data.geneticTreeId && typeof data.geneticTreeId === 'string')
             ? data.geneticTreeId.trim() || null
             : null
     }
@@ -611,6 +612,19 @@ router.post('/',
             throw Errors.VALIDATION_ERROR(validation.errors)
         }
 
+        // Résoudre geneticTreeId : vérifier existence + ownership avant d'assigner le FK scalaire,
+        // sinon Prisma throw P2003 (contrainte FK) non catché si le tree est supprimé/périmé/d'un autre user.
+        const rawTreeId = validation.cleaned._rawGeneticTreeId
+        delete validation.cleaned._rawGeneticTreeId
+        if (rawTreeId !== undefined) {
+            if (rawTreeId === null) {
+                validation.cleaned.geneticTreeId = null
+            } else {
+                const treeExists = await prisma.geneticTree.findFirst({ where: { id: rawTreeId, userId: req.user.id }, select: { id: true } })
+                validation.cleaned.geneticTreeId = treeExists ? rawTreeId : null
+            }
+        }
+
         // Traiter les images uploadées
         const imageFiles = req.files?.images || []
         const imageFilenames = imageFiles.map(file => file.filename)
@@ -867,6 +881,19 @@ router.put('/:id',
 
         if (!validation.valid) {
             throw Errors.VALIDATION_ERROR(validation.errors)
+        }
+
+        // Résoudre geneticTreeId : vérifier existence + ownership avant d'assigner le FK scalaire,
+        // sinon Prisma throw P2003 (contrainte FK) non catché à chaque autosave si le tree est supprimé/périmé.
+        const rawTreeId = validation.cleaned._rawGeneticTreeId
+        delete validation.cleaned._rawGeneticTreeId
+        if (rawTreeId !== undefined) {
+            if (rawTreeId === null) {
+                validation.cleaned.geneticTreeId = null
+            } else {
+                const treeExists = await prisma.geneticTree.findFirst({ where: { id: rawTreeId, userId: req.user.id }, select: { id: true } })
+                validation.cleaned.geneticTreeId = treeExists ? rawTreeId : null
+            }
         }
 
         // SPRINT 1: Check section-level permissions

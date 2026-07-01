@@ -51,6 +51,13 @@ export function useEdibleForm(reviewId = null) {
                 dureeEffetsCategorie: ed.dureeEffets ?? '',
             }
 
+            // recipe.ingredients/steps : jamais remis dans formData avant ce fix, donc
+            // RecipePipelineSection s'affichait toujours vide au rechargement d'une review existante
+            const recipe = {
+                ingredients: parseArr(ed.ingredients, []),
+                steps: parseArr(ed.etapesPreparation, []),
+            }
+
             setFormData({
                 ...baseReview,
                 type: 'edible',
@@ -67,6 +74,7 @@ export function useEdibleForm(reviewId = null) {
                 orchardLayoutMode: extraData.orchardLayoutMode || null,
                 gouts,
                 effets,
+                recipe,
                 _photos: parseArr(ed.photos, []).map(p => ({
                     url: typeof p === 'string' ? (p.startsWith('/') ? p : `/images/${p}`) : (p.url || p.preview || ''),
                     preview: typeof p === 'string' ? (p.startsWith('/') ? p : `/images/${p}`) : (p.url || p.preview || ''),

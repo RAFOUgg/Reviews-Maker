@@ -77,7 +77,18 @@ export function useConcentrateForm(reviewId = null) {
                 extractionTimelineData: parseArr(cd.extractionTimelineData, []),
             }
 
-            const curing = parseObj(cd.curingPipeline, {})
+            // Schema stocke des colonnes plates (curingTimelineConfig/Data, curingType, ...) — pas de
+            // colonne curingPipeline. Sans ce mapping, CuringMaturationSection recevait toujours {} au
+            // chargement et les données de curing sauvegardées en DB n'étaient jamais réaffichées.
+            const curing = {
+                curingTimelineConfig: parseObj(cd.curingTimelineConfig, {}),
+                curingTimeline: parseArr(cd.curingTimelineData, []),
+                curingType: cd.curingType ?? '',
+                temperature: cd.curingTemperature ?? undefined,
+                humidity: cd.curingHumidity ?? undefined,
+                curingDuration: cd.curingDuration ?? undefined,
+                curingInterval: cd.curingInterval ?? '',
+            }
 
             const visuel = {
                 couleurTransparence: cd.couleurTransparence ?? 0,
@@ -85,6 +96,9 @@ export function useConcentrateForm(reviewId = null) {
                 pureteVisuelle: cd.pureteVisuelle ?? 0,
                 melting: cd.melting ?? 0,
                 residus: cd.residus ?? 0,
+                // Manquait : VisualSection lit data.couleurNuancier directement, sinon la palette
+                // sélectionnée redevient vide à chaque réouverture de la review malgré la sauvegarde DB
+                couleurNuancier: parseArr(cd.couleurNuancier, []),
             }
 
             const photos = parseArr(cd.photos, []).map(p => ({
