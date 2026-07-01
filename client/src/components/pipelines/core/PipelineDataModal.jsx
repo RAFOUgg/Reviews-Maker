@@ -43,13 +43,19 @@ function PipelineDataModal({
     selectedCells = [],  // Array of selected cell timestamps for apply-to-selection
     // New: show a button to set the timeline start-month from within the data modal
     showSetStartMonthButton = false,
-    onOpenStartMonth = null
+    onOpenStartMonth = null,
+    onGroupsChange = null
 }) {
     const [formData, setFormData] = useState({});
     const [newPresetName, setNewPresetName] = useState('');
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
     const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
     const [createGroupedPrefill, setCreateGroupedPrefill] = useState(null);
+    const [localGroupedPresets, setLocalGroupedPresets] = useState(groupedPresets);
+
+    useEffect(() => {
+        setLocalGroupedPresets(groupedPresets);
+    }, [groupedPresets]);
 
     // Close on Escape (only when no child modal is open — GroupedPresetModal handles its own)
     useEscapeClose(isOpen && !showCreateGroupedModal && !confirmState.open, onClose);
@@ -782,7 +788,7 @@ function PipelineDataModal({
                         exit={{ scale: 0.9, opacity: 0, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         onClick={(e) => e.stopPropagation()}
-                        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50 flex flex-col"
+                        className="bg-white/95 dark:bg-gray-900/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-hidden border border-gray-200/50 dark:border-gray-700/50 flex flex-col"
                     >
                         {/* Header */}
                         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
@@ -905,7 +911,7 @@ function PipelineDataModal({
                                         </button>
                                     </div>
 
-                                    {(!groupedPresets || groupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
+                                    {(!localGroupedPresets || localGroupedPresets.length === 0) && (!presets.grouped || presets.grouped.length === 0) ? (
                                         <div className="text-center py-6 text-gray-500 dark:text-gray-400 border-2 border-dashed border-gray-200 dark:border-gray-700 rounded-lg p-4">
                                             <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
                                             <p className="text-xs mt-1">Créez un groupe pour réutiliser rapidement des configurations</p>
@@ -947,8 +953,8 @@ function PipelineDataModal({
                                             )}
 
                                             {/* Groupes locaux (groupedPresets prop) */}
-                                            {groupedPresets && groupedPresets.length > 0 && (
-                                                groupedPresets.map((group) => {
+                                            {localGroupedPresets && localGroupedPresets.length > 0 && (
+                                                localGroupedPresets.map((group) => {
                                                     const preview = (group.fields || []).slice(0, 3).map(f => f.key).join(', ');
                                                     return (
                                                         <div key={group.name} className="p-3 rounded-lg border border-blue-200 dark:border-blue-800 bg-blue-50/40 dark:bg-blue-900/20 hover:shadow-md transition-all">
@@ -1023,16 +1029,13 @@ function PipelineDataModal({
                 isOpen={showCreateGroupedModal}
                 onClose={() => { setShowCreateGroupedModal(false); setCreateGroupedPrefill(null); }}
                 onSave={(newGroups) => {
-                    // Update the groupedPresets prop would require parent update
-                    // For now, just close and refresh if needed
-                    loadPresets && typeof loadPresets === 'function' && loadPresets();
                     setShowCreateGroupedModal(false);
                     setCreateGroupedPrefill(null);
                 }}
-                groups={groupedPresets}
+                groups={localGroupedPresets}
                 setGroups={(newGroups) => {
-                    // Would need callback to parent to update groupedPresets
-                    // For now stored in localStorage via the modal itself
+                    setLocalGroupedPresets(newGroups);
+                    if (typeof onGroupsChange === 'function') onGroupsChange(newGroups);
                 }}
                 sidebarContent={sidebarSections}
                 type={pipelineType}

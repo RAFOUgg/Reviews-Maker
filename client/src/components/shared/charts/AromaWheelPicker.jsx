@@ -188,11 +188,11 @@ export default function AromaWheelPicker({
                                                 <span className="text-xl">{aroma.emoji}</span>
                                                 {isSelected && <span className="text-xs">✓</span>}
                                             </div>
-                                            <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-700'}`}>
+                                            <div className={`text-sm font-medium ${isSelected ? 'text-white' : 'text-gray-200'}`}>
                                                 {aroma.label}
                                             </div>
                                             {aroma.subcategory && (
-                                                <div className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-gray-500'}`}>
+                                                <div className={`text-xs mt-1 ${isSelected ? 'text-white/80' : 'text-gray-400'}`}>
                                                     {aroma.subcategory}
                                                 </div>
                                             )}
@@ -230,10 +230,10 @@ export default function AromaWheelPicker({
                                                 </span>
                                             )}
                                         </div>
-                                        <h4 className="font-semibold text-gray-800 text-sm mb-1">
+                                        <h4 className="font-semibold text-gray-100 text-sm mb-1">
                                             {category.label}
                                         </h4>
-                                        <p className="text-xs text-gray-500">
+                                        <p className="text-xs text-gray-400">
                                             {aromasInCategory.length} arômes
                                         </p>
                                     </button>

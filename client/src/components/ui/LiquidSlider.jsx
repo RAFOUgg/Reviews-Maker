@@ -87,7 +87,7 @@ const LiquidSlider = ({
                 {/* Track (glass) */}
                 <div className="liquid-slider-track liquid-glass h-3 rounded-full overflow-hidden">
                     <motion.div
-                        className={`liquid-slider-fill h-full bg-gradient-to-r ${colorClasses[color]} rounded-full`}
+                        className={`liquid-slider-fill bg-gradient-to-r ${colorClasses[color]} rounded-full`}
                         initial={{ width: '0%' }}
                         animate={{ width: fillWidth }}
                         transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}

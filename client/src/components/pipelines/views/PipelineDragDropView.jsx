@@ -2464,7 +2464,7 @@ const PipelineDragDropView = ({
             <div className="flex-1 overflow-hidden flex flex-row gap-4 min-h-0">
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
                 {!isMobile && (
-                    <div className="w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
+                    <div className="w-60 lg:w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
                         {/* Header Contenus */}
                         <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-4 border-b border-white/10 z-10 flex-shrink-0">
                             <h3 className="font-bold text-white text-lg">📦 Contenus</h3>
@@ -2541,12 +2541,6 @@ const PipelineDragDropView = ({
                                     <Plus className="w-4 h-4" />
                                     <span>Groupes & Préréglages</span>
                                     <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700" />
-                                </button>
-                                <button
-                                    className="w-full mb-2 flex items-center justify-center gap-1.5 py-1 text-xs text-white/50 hover:text-white/80 transition-colors"
-                                    onClick={() => { setGroupedModalInitialTab('setups'); setShowGroupedPresetModal(true); }}
-                                >
-                                    <span>📚 Bibliothèque de setups</span>
                                 </button>
                                 {groupedPresets.length > 0 && (
                                     <div className="flex flex-wrap gap-2">
@@ -3329,6 +3323,7 @@ const PipelineDragDropView = ({
                 pipelineType={type}
                 onFieldDelete={handleFieldDelete}
                 groupedPresets={groupedPresets}
+                onGroupsChange={setGroupedPresets}
                 selectedCells={selectedCells}
                 // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
                 showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
