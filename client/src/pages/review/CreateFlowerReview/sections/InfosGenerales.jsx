@@ -75,61 +75,6 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             onChange={(e) => handleChange('genetics', { ...(formData.genetics || {}), breeder: e.target.value })}
                             placeholder="Ex: Exotic Genetix, Seed Junky, Compound..."
                         />
-
-                        <div>
-                            <label className="block text-xs font-medium text-white/60 mb-2">Type génétique</label>
-                            <div className="grid grid-cols-4 gap-2">
-                                {[
-                                    { value: 'indica', label: 'Indica', activeClass: 'bg-purple-500/30 border-purple-500/60 text-purple-300' },
-                                    { value: 'hybride', label: 'Hybride', activeClass: 'bg-violet-500/30 border-violet-500/60 text-violet-300' },
-                                    { value: 'sativa', label: 'Sativa', activeClass: 'bg-green-500/30 border-green-500/60 text-green-300' },
-                                    { value: 'auto', label: 'Auto', activeClass: 'bg-amber-500/30 border-amber-500/60 text-amber-300' }
-                                ].map(({ value, label, activeClass }) => (
-                                    <button
-                                        key={value}
-                                        type="button"
-                                        onClick={() => handleChange('genetics', { ...(formData.genetics || {}), geneticType: value })}
-                                        className={`py-2 px-3 rounded-xl text-xs font-semibold transition-all border ${
-                                            formData.genetics?.geneticType === value
-                                                ? activeClass
-                                                : 'bg-white/5 border-white/15 text-white/50 hover:border-white/30'
-                                        }`}
-                                    >
-                                        {label}
-                                    </button>
-                                ))}
-                            </div>
-                        </div>
-
-                        {formData.genetics?.geneticType === 'hybride' && (
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-xs text-white/60">
-                                    <span>Indica <span className="font-bold text-purple-400">{formData.genetics?.indicaPercent ?? 50}%</span></span>
-                                    <span>Sativa <span className="font-bold text-green-400">{formData.genetics?.sativaPercent ?? 50}%</span></span>
-                                </div>
-                                <input
-                                    type="range"
-                                    min={0}
-                                    max={100}
-                                    step={5}
-                                    value={formData.genetics?.indicaPercent ?? 50}
-                                    onChange={(e) => {
-                                        const val = parseInt(e.target.value)
-                                        handleChange('genetics', {
-                                            ...(formData.genetics || {}),
-                                            indicaPercent: val,
-                                            sativaPercent: 100 - val
-                                        })
-                                    }}
-                                    className="w-full accent-violet-500 cursor-pointer"
-                                />
-                                <div className="flex justify-between text-xs text-white/30">
-                                    <span>100% Indica</span>
-                                    <span>50/50</span>
-                                    <span>100% Sativa</span>
-                                </div>
-                            </div>
-                        )}
                     </div>
 
                     {/* Farm + toggle "notre production" côte à côte sur desktop (Producteur) */}
