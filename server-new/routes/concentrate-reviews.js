@@ -80,11 +80,9 @@ function validateConcentrateReviewData(data, options = {}) {
         }
     }
 
-    // Lien review fleur parente (optionnel, déprécié — voir sourceLineage)
+    // Lien review fleur parente via relation Prisma (scalaire FK non supporté en update direct)
     if (data.parentFlowerReviewId && typeof data.parentFlowerReviewId === 'string') {
-        cleaned.parentFlowerReviewId = data.parentFlowerReviewId
-    } else {
-        cleaned.parentFlowerReviewId = null
+        cleaned.parentFlowerReview = { connect: { id: data.parentFlowerReviewId } }
     }
 
     // Traçabilité multi-source (fleur et/ou hash utilisés comme matière première)
