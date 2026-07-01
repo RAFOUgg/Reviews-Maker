@@ -1,29 +1,63 @@
-import React, { useRef } from 'react';
-import SeparationPipelineDragDrop from '../legacy/SeparationPipelineDragDrop';
+import React, { useRef, useMemo } from 'react';
+import PipelineDragDropView from '../views/PipelineDragDropView';
+import { SEPARATION_SIDEBAR_CONTENT } from '../../../config/separationSidebarContent';
+import { SEPARATION_PHASES } from '../../../config/pipelinePhases';
 
 const SeparationPipelineSection = ({ data = {}, onChange }) => {
-    // Reference to timeline data for external access
     const timelineDataRef = useRef(data.separationTimelineData || []);
 
-    // Update ref when data changes
     React.useEffect(() => {
         timelineDataRef.current = data.separationTimelineData || [];
     }, [data.separationTimelineData]);
 
-    // Config change handler
+    const timelineConfig = useMemo(() => ({
+        type: data.separationTimelineConfig?.type || 'phases',
+        mode: data.separationTimelineConfig?.mode || 'phases',
+        startDate: data.separationTimelineConfig?.startDate || '',
+        endDate: data.separationTimelineConfig?.endDate || '',
+        duration: data.separationTimelineConfig?.duration || null,
+        totalSeconds: data.separationTimelineConfig?.totalSeconds || null,
+        totalHours: data.separationTimelineConfig?.totalHours || null,
+        totalDays: data.separationTimelineConfig?.totalDays || null,
+        totalWeeks: data.separationTimelineConfig?.totalWeeks || null,
+        totalMonths: data.separationTimelineConfig?.totalMonths || null,
+        totalYears: data.separationTimelineConfig?.totalYears || null,
+        startMonth: data.separationTimelineConfig?.startMonth || 1,
+        phases: (data.separationTimelineConfig?.phases?.length)
+            ? data.separationTimelineConfig.phases
+            : SEPARATION_PHASES.phases,
+    }), [data]);
+
+    const sidebarArray = useMemo(() => {
+        return Object.entries(SEPARATION_SIDEBAR_CONTENT).map(([key, section]) => ({
+            id: key,
+            label: section.label || key,
+            icon: section.icon || '📦',
+            color: section.color || 'gray',
+            collapsed: section.collapsed ?? true,
+            items: (section.items || []).map(item => ({
+                id: item.id,
+                key: item.id,
+                label: item.label,
+                type: item.type,
+                icon: item.icon,
+                unit: item.unit,
+                options: item.options,
+                min: item.min,
+                max: item.max,
+                step: item.step,
+                defaultValue: item.defaultValue,
+                tooltip: item.tooltip,
+                zones: item.zones
+            }))
+        })).filter(section => section.items.length > 0);
+    }, []);
+
     const handleConfigChange = (key, value) => {
-        const updatedConfig = {
-            ...(data.separationTimelineConfig || {}),
-            [key]: value
-        };
+        const updatedConfig = { ...(data.separationTimelineConfig || {}), [key]: value };
         onChange({ ...data, separationTimelineConfig: updatedConfig });
     };
 
-    // Data change handler
-    // NB: lit/écrit via timelineDataRef (pas la prop `data`) car onDataChange peut être
-    // appelé plusieurs fois de façon synchrone (ex: drop d'un groupe de préréglages multi-champs)
-    // avant que React ne re-render et ne rafraîchisse `data` — sinon chaque appel repart de la
-    // même valeur obsolète et seul le dernier champ appliqué est conservé.
     const handleDataChange = (timestamp, field, value) => {
         const currentData = timelineDataRef.current;
         const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
@@ -51,30 +85,22 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
         onChange({ ...data, separationTimelineData: updatedData });
     };
 
-    // Réinitialiser complètement la trame (config + données)
     const handleClearTimeline = () => {
         timelineDataRef.current = [];
         onChange({ ...data, separationTimelineConfig: {}, separationTimelineData: [] });
     };
 
     return (
-        <SeparationPipelineDragDrop
-            timelineConfig={data.separationTimelineConfig || {}}
+        <PipelineDragDropView
+            type="separation"
+            sidebarContent={sidebarArray}
+            timelineConfig={timelineConfig}
             timelineData={data.separationTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
             onClearTimeline={handleClearTimeline}
-            initialData={{
-                separationType: data.separationType,
-                batchSize: data.batchSize,
-                numberOfPasses: data.numberOfPasses
-            }}
         />
     );
 };
 
 export default SeparationPipelineSection;
-
-
-
-

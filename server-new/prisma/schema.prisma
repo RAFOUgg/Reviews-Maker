@@ -838,32 +838,33 @@ model HashReview {
   terpeneFileUrl    String?  // URL/chemin certificat terpènes
 
   // ===== VISUEL & TECHNIQUE =====
-  couleurTransparence Float?   // Couleur/transparence /10 (nuancier noir->blanc)
+  couleurTransparence Float?   // Couleur/transparence /10
   pureteVisuelle      Float?   // Pureté visuelle /10
   densiteVisuelle     Float?   // Densité visuelle /10
+  couleurNuancier     String?  // JSON: couleurs sélectionnées sur la palette
   pistils             Float?   // Pistils /10
   moisissure          Float?   // Moisissure (10=aucune) /10
   graines             Float?   // Graines (10=aucune) /10
-  
+
   // ===== ODEURS =====
   fideliteCultivars      Float?  // Fidélité cultivars /10
   intensiteAromatique    Float?  // Intensité aromatique /10
   notesDominantes        String? // JSON: max 7
   notesSecondaires       String? // JSON: max 7
-  
+
   // ===== TEXTURE =====
   durete                 Float?  // Dureté /10
   densiteTactile         Float?  // Densité tactile /10
   friabiliteViscositeMelting Float? // Friabilité/Viscosité /10
   meltingResidus         Float?  // Melting/Résidus /10
-  
+
   // ===== GOÛTS =====
   intensite          Float?  // Intensité /10
   agressivitePiquant Float?  // Agressivité/piquant /10
   dryPuff            String? // JSON: max 7
   inhalation         String? // JSON: max 7
   expiration         String? // JSON: max 7
-  
+
   // ===== EFFETS =====
   monteeRapidite     Float?  // Montée /10
   intensiteEffets    Float?  // Intensité /10
@@ -872,21 +873,22 @@ model HashReview {
   methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
   dosageUtilise       String? // Dosage estimé
   dureeEffets         String? // Durée effets
-  
+
   // ===== CURING =====
-  curingPipelineId   String? // ID pipeline curing (OLD)
-  
-  // NEW: GitHub-style pipeline curing
-  curingPipelineGithubId String? // ID PipelineGithub pour curing
-  
-  curingDuration     Int?    // Durée curing
-  curingType         String? // "froid", "chaud"
-  curingInterval     String? // Intervalle
-  
+  curingPipelineId        String? // ID pipeline curing (OLD)
+  curingPipelineGithubId  String? // ID PipelineGithub pour curing
+  curingDuration          Int?    // Durée curing
+  curingType              String? // "froid", "chaud"
+  curingInterval          String? // Intervalle
+  curingTimelineConfig    String? // JSON: config timeline curing
+  curingTimelineData      String? // JSON: données timeline curing
+  curingTemperature       Float?  // Température curing (°C)
+  curingHumidity          Float?  // Humidité curing (%)
+
   // Timestamps
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([reviewId])
   @@index([nomCommercial])
   @@map("hash_reviews")
@@ -949,28 +951,29 @@ model ConcentrateReview {
   pureteVisuelle      Float?   // Pureté visuelle /10
   melting             Float?   // Melting (10=FullMelt) /10
   residus             Float?   // Résidus (10=aucune) /10
+  couleurNuancier     String?  // JSON: couleurs sélectionnées sur la palette
   pistils             Float?   // Pistils (10=aucune) /10
   moisissure          Float?   // Moisissure (10=aucune) /10
-  
+
   // ===== ODEURS =====
   fideliteCultivars      Float?  // Fidélité cultivars /10
   intensiteAromatique    Float?  // Intensité aromatique /10
   notesDominantes        String? // JSON: max 7
   notesSecondaires       String? // JSON: max 7
-  
+
   // ===== TEXTURE =====
   durete                 Float?  // Dureté /10
   densiteTactile         Float?  // Densité tactile /10
   friabiliteViscositeMelting Float? // Friabilité/Viscosité/Melting /10
   meltingResidus         Float?  // Melting/Résidus /10
-  
+
   // ===== GOÛTS =====
   intensite          Float?  // Intensité /10
   agressivitePiquant Float?  // Agressivité/piquant /10
   dryPuff            String? // JSON: max 7
   inhalation         String? // JSON: max 7
   expiration         String? // JSON: max 7
-  
+
   // ===== EFFETS =====
   monteeRapidite     Float?  // Montée /10
   intensiteEffets    Float?  // Intensité /10
@@ -979,21 +982,22 @@ model ConcentrateReview {
   methodeConsommation String? // "Combustion", "Vapeur", "Infusion"
   dosageUtilise       String? // Dosage estimé
   dureeEffets         String? // Durée effets
-  
+
   // ===== CURING =====
-  curingPipelineId   String? // ID pipeline curing (OLD)
-  
-  // NEW: GitHub-style pipeline curing (concentrate)
+  curingPipelineId                  String? // ID pipeline curing (OLD)
   curingPipelineGithubIdConcentrate String? // ID PipelineGithub pour curing concentré
-  
-  curingDuration     Int?    // Durée curing
-  curingType         String? // "froid", "chaud"
-  curingInterval     String? // Intervalle
-  
+  curingDuration                    Int?    // Durée curing
+  curingType                        String? // "froid", "chaud"
+  curingInterval                    String? // Intervalle
+  curingTimelineConfig              String? // JSON: config timeline curing
+  curingTimelineData                String? // JSON: données timeline curing
+  curingTemperature                 Float?  // Température curing (°C)
+  curingHumidity                    Float?  // Humidité curing (%)
+
   // Timestamps
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
+
   @@index([reviewId])
   @@index([nomCommercial])
   @@map("concentrate_reviews")

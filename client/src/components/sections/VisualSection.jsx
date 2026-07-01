@@ -8,6 +8,30 @@ import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
 import { Eye } from 'lucide-react';
 
+const HASH_PALETTE = [
+    { id: 'blonde', name: 'Blonde', hex: '#F5DEB3' },
+    { id: 'blond-ambre', name: 'Blond ambré', hex: '#D4A853' },
+    { id: 'or', name: 'Dorée', hex: '#C89020' },
+    { id: 'brun-clair', name: 'Brun clair', hex: '#A0522D' },
+    { id: 'brun', name: 'Brun', hex: '#7B3B20' },
+    { id: 'brun-fonce', name: 'Brun foncé', hex: '#4A2010' },
+    { id: 'noir', name: 'Noire', hex: '#1A1A1A' },
+    { id: 'vert-olive', name: 'Verte', hex: '#6B7A2A' },
+    { id: 'gris', name: 'Grisâtre', hex: '#8A8A8A' },
+];
+
+const CONCENTRATE_PALETTE = [
+    { id: 'transparent', name: 'Transparent', hex: '#D8E8FF', border: true },
+    { id: 'jaune-pale', name: 'Jaune pâle', hex: '#FFFACD' },
+    { id: 'or-pale', name: 'Or pâle', hex: '#FFE066' },
+    { id: 'or', name: 'Or', hex: '#FFD700' },
+    { id: 'ambre', name: 'Ambre', hex: '#FFBF00' },
+    { id: 'ambre-fonce', name: 'Ambre foncé', hex: '#C07000' },
+    { id: 'brun', name: 'Brun', hex: '#8B4513' },
+    { id: 'creme', name: 'Crème/Wax', hex: '#FFF0B0' },
+    { id: 'vert', name: 'Verte (live)', hex: '#7AAF50' },
+];
+
 /**
  * Section Visuel & Technique
  * Adaptée selon productType :
@@ -44,11 +68,21 @@ export default function VisualSection({ productType = 'flower', data: directData
 
     const activeFields = isHash ? HASH_FIELDS : isConcentrate ? CONCENTRATE_FIELDS : [];
 
+    const palette = isHash ? HASH_PALETTE : isConcentrate ? CONCENTRATE_PALETTE : [];
+
+    const parseCouleurNuancier = (raw) => {
+        if (!raw) return [];
+        if (Array.isArray(raw)) return raw;
+        try { return JSON.parse(raw); } catch { return []; }
+    };
+
     const [sliders, setSliders] = useState(() => {
         const init = {};
         activeFields.forEach(f => { init[f.key] = data[f.key] ?? 0; });
         return init;
     });
+
+    const [productColors, setProductColors] = useState(() => parseCouleurNuancier(data.couleurNuancier));
 
     // Sync depuis props quand data change (rechargement)
     useEffect(() => {
@@ -56,14 +90,23 @@ export default function VisualSection({ productType = 'flower', data: directData
             const next = {};
             activeFields.forEach(f => { next[f.key] = data[f.key] ?? 0; });
             setSliders(next);
+            setProductColors(parseCouleurNuancier(data.couleurNuancier));
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [data.couleurTransparence, data.pureteVisuelle, data.densiteVisuelle, data.viscosite, data.melting, data.residus]);
+    }, [data.couleurTransparence, data.pureteVisuelle, data.densiteVisuelle, data.viscosite, data.melting, data.residus, data.couleurNuancier]);
 
     const handleSliderChange = (key, val) => {
         const next = { ...sliders, [key]: val };
         setSliders(next);
-        safeUpdate(next);
+        safeUpdate({ ...next, couleurNuancier: productColors });
+    };
+
+    const handleProductColorToggle = (colorId) => {
+        const next = productColors.includes(colorId)
+            ? productColors.filter(c => c !== colorId)
+            : [...productColors, colorId];
+        setProductColors(next);
+        safeUpdate({ ...sliders, couleurNuancier: next });
     };
 
     // ── FLOWER : palette couleurs + sliders spécifiques ──────────────────────
@@ -108,25 +151,61 @@ export default function VisualSection({ productType = 'flower', data: directData
 
             <LiquidDivider />
 
-            {/* ── Hash / Concentrate : sliders compacts ── */}
+            {/* ── Hash / Concentrate : palette + sliders compacts ── */}
             {!isFlower && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {activeFields.map(field => (
-                        <div key={field.key} className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
-                            <LiquidSlider
-                                label={field.label}
-                                value={sliders[field.key] ?? 0}
-                                min={0}
-                                max={10}
-                                step={1}
-                                color={field.color}
-                                onChange={(val) => handleSliderChange(field.key, val)}
-                            />
-                            {field.hint && (
-                                <p className="text-xs text-white/35 mt-1">{field.hint}</p>
-                            )}
+                <div className="space-y-3">
+                    {/* Palette colorimétrique */}
+                    <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <p className="text-xs font-semibold text-white/70 mb-2">🎨 Couleur du produit</p>
+                        <div className="grid grid-cols-9 gap-1.5">
+                            {palette.map(color => {
+                                const isSelected = productColors.includes(color.id);
+                                return (
+                                    <button
+                                        key={color.id}
+                                        type="button"
+                                        onClick={() => handleProductColorToggle(color.id)}
+                                        className={`relative h-8 rounded-lg border-2 transition-all hover:scale-110 ${isSelected ? 'border-violet-400 ring-2 ring-violet-500/50' : 'border-white/20'}`}
+                                        style={{ backgroundColor: color.hex }}
+                                        title={color.name}
+                                    >
+                                        {isSelected && (
+                                            <div className="absolute inset-0 flex items-center justify-center">
+                                                <svg className="w-3.5 h-3.5 text-white drop-shadow-lg" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                                </svg>
+                                            </div>
+                                        )}
+                                    </button>
+                                );
+                            })}
                         </div>
-                    ))}
+                        {productColors.length > 0 && (
+                            <p className="text-xs text-white/40 mt-1.5">
+                                {productColors.map(id => palette.find(c => c.id === id)?.name).filter(Boolean).join(', ')}
+                            </p>
+                        )}
+                    </div>
+
+                    {/* Sliders techniques */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {activeFields.map(field => (
+                            <div key={field.key} className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                                <LiquidSlider
+                                    label={field.label}
+                                    value={sliders[field.key] ?? 0}
+                                    min={0}
+                                    max={10}
+                                    step={1}
+                                    color={field.color}
+                                    onChange={(val) => handleSliderChange(field.key, val)}
+                                />
+                                {field.hint && (
+                                    <p className="text-xs text-white/35 mt-1">{field.hint}</p>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
 

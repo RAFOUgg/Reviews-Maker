@@ -1,29 +1,63 @@
-import React, { useRef } from 'react';
-import ExtractionPipelineDragDrop from '../legacy/ExtractionPipelineDragDrop';
+import React, { useRef, useMemo } from 'react';
+import PipelineDragDropView from '../views/PipelineDragDropView';
+import { EXTRACTION_SIDEBAR_CONTENT } from '../../../config/extractionSidebarContent';
+import { EXTRACTION_PHASES } from '../../../config/pipelinePhases';
 
 const ExtractionPipelineSection = ({ data = {}, onChange }) => {
-    // Reference to timeline data for external access
     const timelineDataRef = useRef(data.extractionTimelineData || []);
 
-    // Update ref when data changes
     React.useEffect(() => {
         timelineDataRef.current = data.extractionTimelineData || [];
     }, [data.extractionTimelineData]);
 
-    // Config change handler
+    const timelineConfig = useMemo(() => ({
+        type: data.extractionTimelineConfig?.type || 'phases',
+        mode: data.extractionTimelineConfig?.mode || 'phases',
+        startDate: data.extractionTimelineConfig?.startDate || '',
+        endDate: data.extractionTimelineConfig?.endDate || '',
+        duration: data.extractionTimelineConfig?.duration || null,
+        totalSeconds: data.extractionTimelineConfig?.totalSeconds || null,
+        totalHours: data.extractionTimelineConfig?.totalHours || null,
+        totalDays: data.extractionTimelineConfig?.totalDays || null,
+        totalWeeks: data.extractionTimelineConfig?.totalWeeks || null,
+        totalMonths: data.extractionTimelineConfig?.totalMonths || null,
+        totalYears: data.extractionTimelineConfig?.totalYears || null,
+        startMonth: data.extractionTimelineConfig?.startMonth || 1,
+        phases: (data.extractionTimelineConfig?.phases?.length)
+            ? data.extractionTimelineConfig.phases
+            : EXTRACTION_PHASES.phases,
+    }), [data]);
+
+    const sidebarArray = useMemo(() => {
+        return Object.entries(EXTRACTION_SIDEBAR_CONTENT).map(([key, section]) => ({
+            id: key,
+            label: section.label || key,
+            icon: section.icon || '📦',
+            color: section.color || 'gray',
+            collapsed: section.collapsed ?? true,
+            items: (section.items || []).map(item => ({
+                id: item.id,
+                key: item.id,
+                label: item.label,
+                type: item.type,
+                icon: item.icon,
+                unit: item.unit,
+                options: item.options,
+                min: item.min,
+                max: item.max,
+                step: item.step,
+                defaultValue: item.defaultValue,
+                tooltip: item.tooltip,
+                zones: item.zones
+            }))
+        })).filter(section => section.items.length > 0);
+    }, []);
+
     const handleConfigChange = (key, value) => {
-        const updatedConfig = {
-            ...(data.extractionTimelineConfig || {}),
-            [key]: value
-        };
+        const updatedConfig = { ...(data.extractionTimelineConfig || {}), [key]: value };
         onChange({ ...data, extractionTimelineConfig: updatedConfig });
     };
 
-    // Data change handler
-    // NB: lit/écrit via timelineDataRef (pas la prop `data`) car onDataChange peut être
-    // appelé plusieurs fois de façon synchrone (ex: drop d'un groupe de préréglages multi-champs)
-    // avant que React ne re-render et ne rafraîchisse `data` — sinon chaque appel repart de la
-    // même valeur obsolète et seul le dernier champ appliqué est conservé.
     const handleDataChange = (timestamp, field, value) => {
         const currentData = timelineDataRef.current;
         const existingIndex = currentData.findIndex(cell => cell.timestamp === timestamp);
@@ -51,28 +85,22 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
         onChange({ ...data, extractionTimelineData: updatedData });
     };
 
-    // Réinitialiser complètement la trame (config + données)
     const handleClearTimeline = () => {
         timelineDataRef.current = [];
         onChange({ ...data, extractionTimelineConfig: {}, extractionTimelineData: [] });
     };
 
     return (
-        <ExtractionPipelineDragDrop
-            timelineConfig={data.extractionTimelineConfig || {}}
+        <PipelineDragDropView
+            type="extraction"
+            sidebarContent={sidebarArray}
+            timelineConfig={timelineConfig}
             timelineData={data.extractionTimelineData || []}
             onConfigChange={handleConfigChange}
             onDataChange={handleDataChange}
             onClearTimeline={handleClearTimeline}
-            initialData={{
-                extractionMethod: data.extractionMethod,
-                solvent: data.solvent,
-                purificationMethods: data.purificationMethods
-            }}
         />
     );
 };
 
 export default ExtractionPipelineSection;
-
-

@@ -11,6 +11,22 @@
 export function flattenCommonFormData(data) {
     const flat = {}
 
+    // Section Analytics (commune à Fleur, Hash, Concentré)
+    if (data.analytics) {
+        if (data.analytics.thcPercent !== undefined) flat.thcPercent = data.analytics.thcPercent
+        if (data.analytics.cbdPercent !== undefined) flat.cbdPercent = data.analytics.cbdPercent
+        if (data.analytics.cbgPercent !== undefined) flat.cbgPercent = data.analytics.cbgPercent
+        if (data.analytics.cbcPercent !== undefined) flat.cbcPercent = data.analytics.cbcPercent
+        // Legacy fallback
+        if (flat.thcPercent === undefined && data.analytics.thc !== undefined) flat.thcPercent = data.analytics.thc
+        if (flat.cbdPercent === undefined && data.analytics.cbd !== undefined) flat.cbdPercent = data.analytics.cbd
+        if (flat.cbgPercent === undefined && data.analytics.cbg !== undefined) flat.cbgPercent = data.analytics.cbg
+        if (flat.cbcPercent === undefined && data.analytics.cbc !== undefined) flat.cbcPercent = data.analytics.cbc
+        if (data.analytics.terpeneProfile) flat.terpeneProfile = data.analytics.terpeneProfile
+        if (data.analytics.certificateFile) flat.certificateFile = data.analytics.certificateFile
+        if (data.analytics.terpeneFile) flat.terpeneFile = data.analytics.terpeneFile
+    }
+
     // Section Odeurs
     if (data.odeurs) {
         if (data.odeurs.dominantNotes) flat.notesOdeursDominantes = data.odeurs.dominantNotes
@@ -146,24 +162,6 @@ export function flattenFlowerFormData(data) {
         if (data.recolte.poidsNet !== undefined) flat.poidsNet = data.recolte.poidsNet
     }
 
-    // Section 4 - Analytics
-    if (data.analytics) {
-        // Primary keys (thcPercent etc. from AnalyticsSection)
-        if (data.analytics.thcPercent !== undefined) flat.thcPercent = data.analytics.thcPercent
-        if (data.analytics.cbdPercent !== undefined) flat.cbdPercent = data.analytics.cbdPercent
-        if (data.analytics.cbgPercent !== undefined) flat.cbgPercent = data.analytics.cbgPercent
-        if (data.analytics.cbcPercent !== undefined) flat.cbcPercent = data.analytics.cbcPercent
-        // Legacy fallback (old key names)
-        if (flat.thcPercent === undefined && data.analytics.thc !== undefined) flat.thcPercent = data.analytics.thc
-        if (flat.cbdPercent === undefined && data.analytics.cbd !== undefined) flat.cbdPercent = data.analytics.cbd
-        if (flat.cbgPercent === undefined && data.analytics.cbg !== undefined) flat.cbgPercent = data.analytics.cbg
-        if (flat.cbcPercent === undefined && data.analytics.cbc !== undefined) flat.cbcPercent = data.analytics.cbc
-        if (data.analytics.terpeneProfile) flat.terpeneProfile = data.analytics.terpeneProfile
-        // Fichiers analytiques (certificats cannabinoïdes et terpènes)
-        if (data.analytics.certificateFile) flat.certificateFile = data.analytics.certificateFile
-        if (data.analytics.terpeneFile) flat.terpeneFile = data.analytics.terpeneFile
-    }
-
     // Section 5 - Visuel & Technique
     // Priority 1: flat keys from VisuelTechnique.jsx (most recent user input — always win)
     if (data.selectedColors) flat.couleurNuancier = data.selectedColors
@@ -248,7 +246,9 @@ export function flattenHashFormData(data) {
         if (flat.couleurTransparence === undefined && data.visuel.couleurTransparence !== undefined) flat.couleurTransparence = data.visuel.couleurTransparence
         if (flat.pureteVisuelle === undefined && data.visuel.pureteVisuelle !== undefined) flat.pureteVisuelle = data.visuel.pureteVisuelle
         if (flat.densiteVisuelle === undefined && data.visuel.densiteVisuelle !== undefined) flat.densiteVisuelle = data.visuel.densiteVisuelle
+        if (data.visuel.couleurNuancier !== undefined) flat.couleurNuancier = data.visuel.couleurNuancier
     }
+    if (data.couleurNuancier !== undefined) flat.couleurNuancier = data.couleurNuancier
 
     // Traçabilité multi-source
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
@@ -318,7 +318,9 @@ export function flattenConcentrateFormData(data) {
         if (flat.pureteVisuelle === undefined && data.visuel.pureteVisuelle !== undefined) flat.pureteVisuelle = data.visuel.pureteVisuelle
         if (flat.meltingScore === undefined && data.visuel.melting !== undefined) flat.meltingScore = data.visuel.melting
         if (flat.residuScore === undefined && data.visuel.residus !== undefined) flat.residuScore = data.visuel.residus
+        if (data.visuel.couleurNuancier !== undefined) flat.couleurNuancier = data.visuel.couleurNuancier
     }
+    if (data.couleurNuancier !== undefined) flat.couleurNuancier = data.couleurNuancier
 
     // Traçabilité multi-source
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage

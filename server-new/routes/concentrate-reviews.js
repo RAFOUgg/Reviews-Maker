@@ -319,6 +319,32 @@ function validateConcentrateReviewData(data, options = {}) {
         cleaned.curingInterval = data.curingInterval
     }
 
+    if (data.curingTimelineConfig !== undefined) {
+        cleaned.curingTimelineConfig = typeof data.curingTimelineConfig === 'string'
+            ? data.curingTimelineConfig : JSON.stringify(data.curingTimelineConfig)
+    }
+
+    if (data.curingTimelineData !== undefined) {
+        cleaned.curingTimelineData = typeof data.curingTimelineData === 'string'
+            ? data.curingTimelineData : JSON.stringify(data.curingTimelineData)
+    }
+
+    if (data.curingTemperature !== undefined && data.curingTemperature !== null && data.curingTemperature !== '') {
+        const temp = parseFloat(data.curingTemperature)
+        if (!isNaN(temp)) cleaned.curingTemperature = temp
+    }
+
+    if (data.curingHumidity !== undefined && data.curingHumidity !== null && data.curingHumidity !== '') {
+        const hum = parseFloat(data.curingHumidity)
+        if (!isNaN(hum)) cleaned.curingHumidity = hum
+    }
+
+    // ===== VISUEL: Couleur nuancier (palette) =====
+    if (data.couleurNuancier !== undefined) {
+        cleaned.couleurNuancier = typeof data.couleurNuancier === 'string'
+            ? data.couleurNuancier : JSON.stringify(data.couleurNuancier)
+    }
+
     return { valid: errors.length === 0, errors, cleaned }
 }
 
