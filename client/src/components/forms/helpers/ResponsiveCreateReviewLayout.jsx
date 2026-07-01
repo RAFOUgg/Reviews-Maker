@@ -343,11 +343,11 @@ export const ResponsiveCreateReviewLayout = ({
                     </div>
                 </div>
 
-                {/* Main Content — overflow-y-auto interne, scrollbar cachée visuellement mais fonctionnelle */}
+                {/* Main Content — pour les pipelines (wide), overflow-hidden + h-full pour éviter le scroll page */}
                 <main
-                    className={`flex-1 overflow-y-auto min-h-0 no-scrollbar ${layout.isMobile
-                        ? 'px-3 py-2 pb-16'
-                        : 'px-6 md:px-8 py-2 pb-16'
+                    className={`flex-1 min-h-0 no-scrollbar ${wide ? 'overflow-hidden' : 'overflow-y-auto'} ${layout.isMobile
+                        ? `px-3 ${wide ? 'py-0' : 'py-2 pb-16'}`
+                        : `px-6 md:px-8 ${wide ? 'py-0' : 'py-2 pb-16'}`
                         }`}
                     onClick={(e) => {
                         const tag = (e.target && e.target.tagName && e.target.tagName.toLowerCase()) || '';
@@ -356,7 +356,7 @@ export const ResponsiveCreateReviewLayout = ({
                         if (sectionEmojis.length) scrollToIndex(currentSection);
                     }}
                 >
-                    <div className={containerWidthClass}>
+                    <div className={`${containerWidthClass} ${wide ? 'h-full' : ''}`}>
                         {children}
                     </div>
                 </main>

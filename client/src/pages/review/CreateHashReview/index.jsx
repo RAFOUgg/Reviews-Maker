@@ -200,17 +200,19 @@ export default function CreateHashReview() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.2 }}
-                        className="space-y-6"
+                        className={['separation', 'curing'].includes(sections[currentSection]?.id) ? 'h-full' : 'space-y-6'}
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-3xl">{sections[currentSection].icon}</span>
-                            <div>
-                                <h2 className="text-xl font-semibold text-white">
-                                    {sections[currentSection].title}
-                                    {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                </h2>
+                        {!['separation', 'curing'].includes(sections[currentSection]?.id) && (
+                            <div className="flex items-center gap-3 mb-6">
+                                <span className="text-3xl">{sections[currentSection].icon}</span>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">
+                                        {sections[currentSection].title}
+                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
+                                    </h2>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {currentSection === 0 && (
                             <InfosGenerales

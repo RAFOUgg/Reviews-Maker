@@ -279,17 +279,19 @@ export default function CreateFlowerReview() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className="space-y-6"
+                        className={['genetics', 'culture'].includes(currentSectionData?.id) ? 'h-full' : 'space-y-6'}
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-3xl">{currentSectionData.icon}</span>
-                            <div>
-                                <h2 className="text-xl font-semibold text-white">
-                                    {currentSectionData.title}
-                                    {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
-                                </h2>
+                        {!['genetics', 'culture'].includes(currentSectionData?.id) && (
+                            <div className="flex items-center gap-3 mb-6">
+                                <span className="text-3xl">{currentSectionData.icon}</span>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">
+                                        {currentSectionData.title}
+                                        {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
+                                    </h2>
+                                </div>
                             </div>
-                        </div>
+                        )}
 
                         {/* Render current section by ID */}
                         {currentSectionData.id === 'infos' && (
