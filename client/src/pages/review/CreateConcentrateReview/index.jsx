@@ -286,6 +286,7 @@ export default function CreateConcentrateReview() {
                         )}
                         {currentSection === 4 && (
                             <OdorSection
+                                productType="Concentré"
                                 data={formData.odeurs || {}}
                                 onChange={(odeursData) => handleChange('odeurs', odeursData)}
                             />

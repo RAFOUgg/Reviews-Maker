@@ -261,12 +261,14 @@ export default function CreateEdibleReview() {
                         )}
                         {currentSection === 2 && (
                             <TasteSection
+                                productType="Edible"
                                 data={formData.gouts || {}}
                                 onChange={(goutsData) => handleChange('gouts', goutsData)}
                             />
                         )}
                         {currentSection === 3 && (
                             <EffectsSection
+                                productType="Edible"
                                 data={formData.effets || {}}
                                 onChange={(data) => handleChange('effets', data)}
                             />

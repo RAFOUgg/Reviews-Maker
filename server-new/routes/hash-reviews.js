@@ -257,9 +257,14 @@ async function validateHashReviewData(data, options = {}) {
     })
 
     // ===== SECTION 6: Odeurs =====
-    // Fidélité aux cultivars /10 — frontend sends fideliteCultivars
-    if (data.fideliteCultivars !== undefined && data.fideliteCultivars !== null && data.fideliteCultivars !== '') {
-        const val = parseFloat(data.fideliteCultivars)
+    // Fidélité aux cultivars /10 — OdorSection's "Fidélité aux cultivars" slider (Hash/Concentré
+    // branch) emits generic `fidelity`, which flattenCommonFormData maps to `fideliteAromeScore`
+    // (a key that only exists as a FlowerReview column). Sans cet alias, la valeur du slider était
+    // toujours silencieusement ignorée pour Hash malgré la présence de la colonne dédiée.
+    // (même correctif que concentrate-reviews.js)
+    const fideliteCultivarsRaw = data.fideliteCultivars ?? data.fideliteAromeScore
+    if (fideliteCultivarsRaw !== undefined && fideliteCultivarsRaw !== null && fideliteCultivarsRaw !== '') {
+        const val = parseFloat(fideliteCultivarsRaw)
         if (!isNaN(val) && val >= 0 && val <= 10) {
             cleaned.fideliteCultivars = val
         }
@@ -271,6 +276,15 @@ async function validateHashReviewData(data, options = {}) {
         const val = parseFloat(intensiteArome)
         if (!isNaN(val) && val >= 0 && val <= 10) {
             cleaned.intensiteAromatique = val
+        }
+    }
+
+    // Complexité aromatique /10 — OdorSection emits generic `complexity`, flattenCommonFormData
+    // maps it to `complexiteAromeScore`. Colonne ajoutée (n'existait qu'sur FlowerReview avant).
+    if (data.complexiteAromeScore !== undefined && data.complexiteAromeScore !== null && data.complexiteAromeScore !== '') {
+        const val = parseFloat(data.complexiteAromeScore)
+        if (!isNaN(val) && val >= 0 && val <= 10) {
+            cleaned.complexiteAromeScore = val
         }
     }
 
@@ -306,13 +320,19 @@ async function validateHashReviewData(data, options = {}) {
 
     // ===== SECTION 7: Texture =====
     // Frontend sends dureteScore, densiteTactileScore, friabiliteScore, meltingScore, residuScore, etc.
-    // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus,
-    // malleabiliteScore, collantScore (mêmes noms de colonnes que FlowerReview)
+    // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, textureMeltingScore,
+    // textureResiduScore, malleabiliteScore, collantScore (mêmes noms de colonnes que FlowerReview)
+    // meltingResidus (legacy) ne peut stocker qu'UNE valeur pour deux sliders distincts (Melting ET
+    // Résidus) — le premier candidat trouvé écrasait systématiquement l'autre. On écrit maintenant
+    // aussi vers 2 colonnes dédiées ; meltingResidus reste alimenté (avec meltingScore en priorité)
+    // pour compat avec l'ancien affichage/export qui pourrait encore la lire.
     const textureMap = {
         durete: ['dureteScore', 'durete'],
         densiteTactile: ['densiteTactileScore', 'densiteTactile'],
         friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
         meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus'],
+        textureMeltingScore: ['meltingScore'],
+        textureResiduScore: ['residuScore'],
         malleabiliteScore: ['malleabiliteScore'],
         collantScore: ['collantScore']
     }
@@ -408,8 +428,44 @@ async function validateHashReviewData(data, options = {}) {
         cleaned.dosageUtilise = data.dosageUtilise
     }
 
+    // flattenCommonFormData renomme déjà dosageUnite/debutEffets/usagesPreferes (noms émis par
+    // EffectsSectionImpl.jsx) vers dosageUnit/effectOnset/preferredUse (noms colonnes FlowerReview,
+    // maintenant partagés) avant l'envoi — donc on lit ici les noms aplatis, pas les noms composant.
+    if (data.dosageUnit && typeof data.dosageUnit === 'string') {
+        cleaned.dosageUnit = data.dosageUnit
+    }
+
     if (data.dureeEffets && typeof data.dureeEffets === 'string') {
         cleaned.dureeEffets = data.dureeEffets
+    }
+
+    // Durée précise des effets — même pattern que flower-reviews.js : reçoit un nombre de minutes
+    // (dureeEffetsHeures*60 + dureeEffetsMinutes, calculé côté flattener commun) et le convertit
+    // en HH:MM pour stockage, colonne inexistante avant cette migration donc toujours perdu jusqu'ici.
+    if (data.effectDurationMinutes !== undefined && data.effectDurationMinutes !== null) {
+        const val = parseInt(data.effectDurationMinutes)
+        if (!isNaN(val) && val >= 0) {
+            const hours = Math.floor(val / 60)
+            const mins = val % 60
+            cleaned.effectDuration = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+        }
+    }
+
+    if (data.effectOnset && typeof data.effectOnset === 'string') {
+        cleaned.effectOnset = data.effectOnset
+    }
+
+    if (data.preferredUse) {
+        if (typeof data.preferredUse === 'string') {
+            try {
+                const arr = JSON.parse(data.preferredUse)
+                if (Array.isArray(arr)) cleaned.preferredUse = JSON.stringify(arr.slice(0, 10))
+            } catch {
+                cleaned.preferredUse = data.preferredUse
+            }
+        } else if (Array.isArray(data.preferredUse)) {
+            cleaned.preferredUse = JSON.stringify(data.preferredUse.slice(0, 10))
+        }
     }
 
     // ===== SECTION 10: Pipeline Curing =====
@@ -424,8 +480,13 @@ async function validateHashReviewData(data, options = {}) {
         }
     }
 
-    if (data.curingType && ['froid', 'chaud'].includes(data.curingType)) {
-        cleaned.curingType = data.curingType
+    // Whitelist ['froid', 'chaud'] retirée : le select réel du pipeline Curing
+    // (config/curingSidebarContent.js, item 'curingType') envoie 'cold'/'warm'/'room'/'controlled'
+    // (anglais, 4 options) — aucune valeur ne matchait jamais la whitelist française, donc le type
+    // de maturation choisi par l'utilisateur était silencieusement rejeté à 100% des sauvegardes.
+    // flower-reviews.js (référence) n'a pas de whitelist sur ce champ, même correctif appliqué ici.
+    if (data.curingType && typeof data.curingType === 'string') {
+        cleaned.curingType = data.curingType.trim()
     }
 
     if (data.curingInterval && typeof data.curingInterval === 'string') {

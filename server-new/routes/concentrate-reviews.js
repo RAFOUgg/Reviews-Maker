@@ -186,12 +186,13 @@ async function validateConcentrateReviewData(data, options = {}) {
     })
 
     // Aliased visual fields: schema ← [frontend candidates]
-    // melting lit visualMeltingScore (clé dédiée à VisualSection) — meltingScore est réservé
-    // au score de "fonte" de TextureSection (concept distinct) pour éviter toute collision.
+    // melting/residus lisent visualMeltingScore/visualResiduScore (clés dédiées à VisualSection) —
+    // meltingScore/residuScore sont réservés aux scores de "fonte"/"résidu" de TextureSection
+    // (concepts distincts) pour éviter toute collision (même pattern pour les deux paires).
     const visualAliasMap = {
         viscosite: ['viscositeVisuelle', 'viscosite'],
         melting: ['visualMeltingScore', 'melting'],
-        residus: ['residuScore', 'residus'],
+        residus: ['visualResiduScore', 'residus'],
         pistils: ['pistilsScore', 'pistils'],
         moisissure: ['moisissureScore', 'moisissure']
     }
@@ -203,14 +204,26 @@ async function validateConcentrateReviewData(data, options = {}) {
     })
 
     // ===== SECTION 6: Odeurs =====
-    if (data.fideliteCultivars !== undefined && data.fideliteCultivars !== null && data.fideliteCultivars !== '') {
-        const val = parseFloat(data.fideliteCultivars); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.fideliteCultivars = val
+    // fideliteCultivars — OdorSection's "Fidélité aux cultivars" slider (Hash/Concentré branch)
+    // emits generic `fidelity`, which flattenCommonFormData maps to `fideliteAromeScore` (a key
+    // that only exists as a FlowerReview column). Sans cet alias, la valeur du slider était
+    // toujours silencieusement ignorée pour Concentré malgré la présence de la colonne dédiée.
+    const fideliteCultivarsRaw = data.fideliteCultivars ?? data.fideliteAromeScore
+    if (fideliteCultivarsRaw !== undefined && fideliteCultivarsRaw !== null && fideliteCultivarsRaw !== '') {
+        const val = parseFloat(fideliteCultivarsRaw); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.fideliteCultivars = val
     }
 
     // intensiteAromatique — frontend sends intensiteAromeScore or intensiteAromatique
     const intensiteArome = data.intensiteAromeScore ?? data.intensiteAromatique
     if (intensiteArome !== undefined && intensiteArome !== null && intensiteArome !== '') {
         const val = parseFloat(intensiteArome); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.intensiteAromatique = val
+    }
+
+    // Complexité aromatique — OdorSection emits generic `complexity`, flattenCommonFormData maps it
+    // to `complexiteAromeScore`. Colonne ajoutée (n'existait qu'sur FlowerReview avant) : c'est le
+    // bug explicitement rapporté par l'utilisateur ("intensité et complexité non save").
+    if (data.complexiteAromeScore !== undefined && data.complexiteAromeScore !== null && data.complexiteAromeScore !== '') {
+        const val = parseFloat(data.complexiteAromeScore); if (!isNaN(val) && val >= 0 && val <= 10) cleaned.complexiteAromeScore = val
     }
 
     // Notes dominantes — frontend sends notesOdeursDominantes or notesDominantes
@@ -234,11 +247,17 @@ async function validateConcentrateReviewData(data, options = {}) {
     // meltingResidus manquait les alias meltingScore/residuScore envoyés par TextureSection
     // (seul le nom de colonne brut était accepté) — la fonte/résidus de Texture (distincts du
     // Melting de VisualSection, voir visualMeltingScore) n'étaient donc jamais sauvés.
+    // textureMeltingScore/textureResiduScore : colonnes dédiées ajoutées car meltingResidus (legacy)
+    // ne peut stocker qu'UNE valeur pour deux sliders distincts — le résidu de Texture était donc
+    // systématiquement écrasé par le melting (candidat trouvé en premier). meltingResidus reste
+    // alimenté (meltingScore prioritaire) pour compat avec l'ancien affichage/export.
     const textureAliasMap = {
         durete: ['dureteScore', 'durete'],
         densiteTactile: ['densiteTactileScore', 'densiteTactile'],
         friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
         meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus'],
+        textureMeltingScore: ['meltingScore'],
+        textureResiduScore: ['residuScore'],
         collantScore: ['collantScore']
     }
     Object.entries(textureAliasMap).forEach(([schemaField, candidates]) => {
@@ -305,8 +324,40 @@ async function validateConcentrateReviewData(data, options = {}) {
         cleaned.dosageUtilise = data.dosageUtilise
     }
 
+    if (data.dosageUnit && typeof data.dosageUnit === 'string') {
+        cleaned.dosageUnit = data.dosageUnit
+    }
+
     if (data.dureeEffets && typeof data.dureeEffets === 'string') {
         cleaned.dureeEffets = data.dureeEffets
+    }
+
+    // Durée précise des effets — flattener commun envoie un nombre de minutes, converti en HH:MM
+    // pour stockage (même pattern que flower-reviews.js). Colonne inexistante avant migration.
+    if (data.effectDurationMinutes !== undefined && data.effectDurationMinutes !== null) {
+        const val = parseInt(data.effectDurationMinutes)
+        if (!isNaN(val) && val >= 0) {
+            const hours = Math.floor(val / 60)
+            const mins = val % 60
+            cleaned.effectDuration = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+        }
+    }
+
+    if (data.effectOnset && typeof data.effectOnset === 'string') {
+        cleaned.effectOnset = data.effectOnset
+    }
+
+    if (data.preferredUse) {
+        if (typeof data.preferredUse === 'string') {
+            try {
+                const arr = JSON.parse(data.preferredUse)
+                if (Array.isArray(arr)) cleaned.preferredUse = JSON.stringify(arr.slice(0, 10))
+            } catch {
+                cleaned.preferredUse = data.preferredUse
+            }
+        } else if (Array.isArray(data.preferredUse)) {
+            cleaned.preferredUse = JSON.stringify(data.preferredUse.slice(0, 10))
+        }
     }
 
     // ===== SECTION 10: Pipeline Curing =====
@@ -321,8 +372,10 @@ async function validateConcentrateReviewData(data, options = {}) {
         }
     }
 
-    if (data.curingType && ['froid', 'chaud'].includes(data.curingType)) {
-        cleaned.curingType = data.curingType
+    // Whitelist ['froid', 'chaud'] retirée : le select réel du pipeline Curing envoie
+    // 'cold'/'warm'/'room'/'controlled' (anglais) — même bug que hash-reviews.js, corrigé ici aussi.
+    if (data.curingType && typeof data.curingType === 'string') {
+        cleaned.curingType = data.curingType.trim()
     }
 
     if (data.curingInterval && typeof data.curingInterval === 'string') {

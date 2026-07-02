@@ -16,23 +16,37 @@ export default function TasteSection({ productType, data: directData, onChange, 
         if (typeof handleChange === 'function') return handleChange('gouts', payload)
     }
 
+    // Comestible : pas de combustion/inhalation, donc pas de sens pour dry puff / inhalation /
+    // expiration. On propose à la place une sélection de saveurs dominantes perçues en bouche
+    // (réutilise TasteWheelPicker, même pattern CATA que Hash/Concentré/Fleur, max 7).
+    const isEdible = productType === 'Edible';
+
     // Default to 0 so sliders start at 0 when no data is present
     const [intensity, setIntensity] = useState(data?.intensity ?? 0);
     const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness ?? 0);
     const [dryPuffNotes, setDryPuffNotes] = useState(data?.dryPuffNotes || []);
     const [inhalationNotes, setInhalationNotes] = useState(data?.inhalationNotes || []);
     const [exhalationNotes, setExhalationNotes] = useState(data?.exhalationNotes || []);
+    const [saveursDominantes, setSaveursDominantes] = useState(data?.saveursDominantes || []);
 
     // Synchroniser avec parent
     useEffect(() => {
-        safeUpdate({
-            intensity,
-            aggressiveness,
-            dryPuffNotes,
-            inhalationNotes,
-            exhalationNotes
-        })
-    }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes]);
+        if (isEdible) {
+            safeUpdate({
+                intensity,
+                aggressiveness,
+                saveursDominantes
+            })
+        } else {
+            safeUpdate({
+                intensity,
+                aggressiveness,
+                dryPuffNotes,
+                inhalationNotes,
+                exhalationNotes
+            })
+        }
+    }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes, saveursDominantes, isEdible]);
 
     return (
         <LiquidCard glow="amber" padding="sm" className="space-y-4">
@@ -81,40 +95,53 @@ export default function TasteSection({ productType, data: directData, onChange, 
 
             {/* Filtre par famille - Supprimé : intégré dans les pickers */}
 
-            {/* Dry Puff / Tirage à sec (max 7) */}
-            <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
-                <TasteWheelPicker
-                    selectedTastes={dryPuffNotes}
-                    onChange={setDryPuffNotes}
-                    max={7}
-                    title="🌬️ Dry puff / Tirage à sec"
-                    helper="Notes perçues avant la combustion"
-                />
-            </div>
+            {isEdible ? (
+                /* Comestible : saveurs dominantes perçues en bouche (pas de combustion/inhalation) */
+                <div className="p-3 bg-amber-500/10 rounded-xl border border-amber-500/20">
+                    <TasteWheelPicker
+                        selectedTastes={saveursDominantes}
+                        onChange={setSaveursDominantes}
+                        max={7}
+                        title="😋 Saveurs dominantes"
+                        helper="Notes gustatives perçues en dégustant le comestible"
+                    />
+                </div>
+            ) : (
+                <>
+                    {/* Dry Puff / Tirage à sec (max 7) */}
+                    <div className="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                        <TasteWheelPicker
+                            selectedTastes={dryPuffNotes}
+                            onChange={setDryPuffNotes}
+                            max={7}
+                            title="🌬️ Dry puff / Tirage à sec"
+                            helper="Notes perçues avant la combustion"
+                        />
+                    </div>
 
-            {/* Inhalation (max 7) */}
-            <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20">
-                <TasteWheelPicker
-                    selectedTastes={inhalationNotes}
-                    onChange={setInhalationNotes}
-                    max={7}
-                    title="⬇️ Inhalation"
-                    helper="Notes perçues à l'inhalation"
-                />
-            </div>
+                    {/* Inhalation (max 7) */}
+                    <div className="p-3 bg-green-500/10 rounded-xl border border-green-500/20">
+                        <TasteWheelPicker
+                            selectedTastes={inhalationNotes}
+                            onChange={setInhalationNotes}
+                            max={7}
+                            title="⬇️ Inhalation"
+                            helper="Notes perçues à l'inhalation"
+                        />
+                    </div>
 
-            {/* Expiration / Arrière-goût (max 7) */}
-            <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
-                <TasteWheelPicker
-                    selectedTastes={exhalationNotes}
-                    onChange={setExhalationNotes}
-                    max={7}
-                    title="⬆️ Expiration / Arrière-goût"
-                    helper="Notes perçues à l'expiration et en rétro-olfaction"
-                />
-            </div>
-
-
+                    {/* Expiration / Arrière-goût (max 7) */}
+                    <div className="p-3 bg-orange-500/10 rounded-xl border border-orange-500/20">
+                        <TasteWheelPicker
+                            selectedTastes={exhalationNotes}
+                            onChange={setExhalationNotes}
+                            max={7}
+                            title="⬆️ Expiration / Arrière-goût"
+                            helper="Notes perçues à l'expiration et en rétro-olfaction"
+                        />
+                    </div>
+                </>
+            )}
 
         </LiquidCard>
     );

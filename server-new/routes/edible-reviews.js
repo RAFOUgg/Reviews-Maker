@@ -173,6 +173,44 @@ function validateEdibleReviewData(data, options = {}) {
         cleaned.dureeEffets = data.dureeEffets
     }
 
+    // Expérience d'utilisation — colonnes ajoutées (mêmes noms que FlowerReview, flattenCommonFormData
+    // produit déjà ces clés aplaties telles quelles, pas besoin d'alias comme pour Hash/Concentré qui
+    // ont leurs propres noms de colonnes legacy). Sans ces colonnes, méthode de consommation, dosage,
+    // durée précise, début des effets et usages préférés étaient silencieusement perdus pour Comestible.
+    if (data.consumptionMethod && typeof data.consumptionMethod === 'string') {
+        cleaned.consumptionMethod = data.consumptionMethod.trim()
+    }
+    if (data.dosage !== undefined && data.dosage !== null && data.dosage !== '') {
+        const val = parseFloat(data.dosage)
+        if (!isNaN(val) && val >= 0) cleaned.dosage = val
+    }
+    if (data.dosageUnit && typeof data.dosageUnit === 'string') {
+        cleaned.dosageUnit = data.dosageUnit.trim()
+    }
+    if (data.effectDurationMinutes !== undefined && data.effectDurationMinutes !== null) {
+        const val = parseInt(data.effectDurationMinutes)
+        if (!isNaN(val) && val >= 0) {
+            const hours = Math.floor(val / 60)
+            const mins = val % 60
+            cleaned.effectDuration = `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}`
+        }
+    }
+    if (data.effectOnset && typeof data.effectOnset === 'string') {
+        cleaned.effectOnset = data.effectOnset.trim()
+    }
+    if (data.preferredUse) {
+        if (typeof data.preferredUse === 'string') {
+            try {
+                const arr = JSON.parse(data.preferredUse)
+                if (Array.isArray(arr)) cleaned.preferredUse = JSON.stringify(arr.slice(0, 10))
+            } catch {
+                cleaned.preferredUse = data.preferredUse
+            }
+        } else if (Array.isArray(data.preferredUse)) {
+            cleaned.preferredUse = JSON.stringify(data.preferredUse.slice(0, 10))
+        }
+    }
+
     return { valid: errors.length === 0, errors, cleaned }
 }
 

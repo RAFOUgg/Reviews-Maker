@@ -43,12 +43,23 @@ export function useEdibleForm(reviewId = null) {
                 saveursDominantes: parseArr(ed.saveursDominantes, []),
             }
 
+            // consumptionMethod/dosage/dosageUnit/effectDuration/effectOnset/preferredUse : colonnes
+            // ajoutées (mêmes noms que FlowerReview) — avant ce fix, la section "Expérience
+            // d'utilisation" était entièrement perdue à la sauvegarde pour Comestible (pas de colonne
+            // du tout), donc jamais relue non plus.
+            const [effectHeures, effectMinutes] = (ed.effectDuration || '').split(':')
             const effets = {
                 onset: ed.monteeRapidite ?? 0,
                 intensity: ed.intensiteEffets ?? 0,
                 effects: parseArr(ed.effetsChoisis, []),
-                methodeConsommation: ed.methodeConsommation ?? '',
+                methodeConsommation: ed.consumptionMethod ?? '',
+                dosageUtilise: ed.dosage ?? '',
+                dosageUnite: ed.dosageUnit ?? 'g',
                 dureeEffetsCategorie: ed.dureeEffets ?? '',
+                dureeEffetsHeures: effectHeures ? String(parseInt(effectHeures, 10)) : '',
+                dureeEffetsMinutes: effectMinutes ? String(parseInt(effectMinutes, 10)) : '',
+                debutEffets: ed.effectOnset ?? '',
+                usagesPreferes: parseArr(ed.preferredUse, []),
             }
 
             // recipe.ingredients/steps : jamais remis dans formData avant ce fix, donc

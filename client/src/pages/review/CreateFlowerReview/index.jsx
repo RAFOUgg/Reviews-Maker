@@ -375,7 +375,7 @@ export default function CreateFlowerReview() {
                         )}
                         {currentSectionData.id === 'texture' && (
                             <TextureSection
-                                productType="Fleur"
+                                productType="flower"
                                 data={formData.texture || {}}
                                 onChange={(textureData) => handleChange('texture', textureData)}
                             />

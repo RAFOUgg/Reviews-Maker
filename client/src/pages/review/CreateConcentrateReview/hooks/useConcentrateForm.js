@@ -48,13 +48,28 @@ export function useConcentrateForm(reviewId = null) {
                 secondaryNotes: parseArr(cd.notesSecondaires, []),
                 fideliteCultivars: cd.fideliteCultivars ?? 0,
                 intensiteAromatique: cd.intensiteAromatique ?? 0,
+                // OdorSection lit exclusivement data.intensity/data.fidelity (clés génériques, pas
+                // les alias Hash/Concentré ci-dessus) — sans ce mirroring, les sliders "Intensité
+                // globale" et "Fidélité aux cultivars" retombaient à 0 à chaque réouverture malgré
+                // des valeurs bien présentes en DB (fideliteCultivars/intensiteAromatique).
+                intensity: cd.intensiteAromatique ?? 0,
+                fidelity: cd.fideliteCultivars ?? 0,
+                complexity: cd.complexiteAromeScore ?? 0,
             }
 
             const texture = {
                 hardness: cd.durete ?? 0,
                 density: cd.densiteTactile ?? 0,
-                friability: cd.friabiliteViscositeMelting ?? 0,
-                melting: cd.meltingResidus ?? 0,
+                // TextureSection ne rend un slider "Friabilité" QUE pour productType === 'Hash' et un
+                // slider "Viscosité" QUE pour productType === 'Concentré' — pour Concentré la colonne
+                // combinée friabiliteViscositeMelting doit donc recharger dans `viscosity`, pas
+                // `friability` (clé jamais lue par le composant dans cette branche : le slider
+                // Viscosité retombait toujours à 0 après un reload malgré la valeur bien sauvegardée).
+                viscosity: cd.friabiliteViscositeMelting ?? 0,
+                // textureMeltingScore/textureResiduScore : colonnes dédiées (post-migration).
+                // meltingResidus (legacy) reste en fallback pour les reviews sauvées avant ce fix.
+                melting: cd.textureMeltingScore ?? cd.meltingResidus ?? 0,
+                residue: cd.textureResiduScore ?? 10,
                 stickiness: cd.collantScore ?? 0,
             }
 
@@ -66,11 +81,22 @@ export function useConcentrateForm(reviewId = null) {
                 exhalationNotes: parseArr(cd.expiration, []),
             }
 
+            const [effectHeures, effectMinutes] = (cd.effectDuration || '').split(':')
             const effets = {
                 onset: cd.monteeRapidite ?? 0,
                 intensity: cd.intensiteEffets ?? 0,
                 effects: parseArr(cd.effetsChoisis, []),
                 methodeConsommation: cd.methodeConsommation ?? '',
+                // dosageUtilise/dureeEffets existent en DB (colonnes String simples, même schéma
+                // que HashReview) mais manquaient ici : EffectsSection retombait à '' / 'moyenne'
+                // par défaut à chaque réouverture malgré une valeur bien sauvegardée.
+                dosageUtilise: cd.dosageUtilise ?? '',
+                dosageUnite: cd.dosageUnit ?? 'g',
+                dureeEffetsCategorie: cd.dureeEffets ?? 'moyenne',
+                dureeEffetsHeures: effectHeures ? String(parseInt(effectHeures, 10)) : '',
+                dureeEffetsMinutes: effectMinutes ? String(parseInt(effectMinutes, 10)) : '',
+                debutEffets: cd.effectOnset ?? '',
+                usagesPreferes: parseArr(cd.preferredUse, []),
             }
 
             const extractionPipeline = {

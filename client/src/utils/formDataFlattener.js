@@ -94,7 +94,13 @@ export function flattenCommonFormData(data) {
         if (!flat.curingTimelineData && data.curing.curingTimeline) flat.curingTimelineData = data.curing.curingTimeline
         if (data.curing.curingType) flat.curingType = data.curing.curingType
         if (data.curing.temperature !== undefined) flat.curingTemperature = data.curing.temperature
-        if (data.curing.humidity !== undefined) flat.curingHumidity = data.curing.humidity
+        // Le slider "Humidité ambiante" du pipeline Curing (config/curingSidebarContent.js, section
+        // ENVIRONMENT) a pour id réel 'ambientHumidity', pas 'humidity' — CuringMaturationSection
+        // propage donc data.curing.ambientHumidity, jamais data.curing.humidity (qui ne bouge jamais
+        // de son défaut). Sans ce fallback, curingHumidity n'était JAMAIS rempli quel que soit le
+        // type de produit (Fleur/Hash/Concentré/Comestible partagent ce composant).
+        const humidityRaw = data.curing.ambientHumidity ?? data.curing.humidity
+        if (humidityRaw !== undefined) flat.curingHumidity = humidityRaw
     }
 
     return flat
@@ -254,6 +260,21 @@ export function flattenHashFormData(data) {
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
     if (data.parentFlowerReviewId !== undefined) flat.parentFlowerReviewId = data.parentFlowerReviewId
 
+    // Section Effets & Expérience — HashReview n'a que methodeConsommation/dosageUtilise/dureeEffets
+    // (String simples), pas les colonnes riches de FlowerReview (dosage+dosageUnit numériques,
+    // effectDuration, effectOnset, effectLength, effectProfiles, sideEffects, preferredUse).
+    // flattenCommonFormData() mappe data.effets.methodeConsommation -> flat.consumptionMethod,
+    // data.effets.dosageUtilise -> flat.dosage et data.effets.dureeEffetsCategorie -> flat.effectLength
+    // (noms de colonnes FlowerReview) : le backend Hash ignore silencieusement ces 3 clés (aucun
+    // mapping ni colonne correspondante) — on réécrit ici avec les noms que validateHashReviewData()
+    // reconnaît réellement. Sans ce correctif, "Méthode de consommation" n'était JAMAIS sauvegardée
+    // pour Hash malgré la colonne DB existante et le mapping backend prêt à la recevoir.
+    if (data.effets) {
+        if (data.effets.methodeConsommation) flat.methodeConsommation = data.effets.methodeConsommation
+        if (data.effets.dosageUtilise) flat.dosageUtilise = data.effets.dosageUtilise
+        if (data.effets.dureeEffetsCategorie) flat.dureeEffets = data.effets.dureeEffetsCategorie
+    }
+
     // Aperçu / Orchard preset (peut être dans extraData parsé ou direct)
     if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
     if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
@@ -306,16 +327,17 @@ export function flattenConcentrateFormData(data) {
     }
 
     // Section 4 - Visuel & Technique (top-level OU sous data.visuel selon la section)
-    // NB: meltingScore est déjà potentiellement rempli par flattenCommonFormData() depuis
-    // data.texture.melting (score de "fonte" — concept texture, distinct du "Melting" visuel
-    // de VisualSection). Utiliser la même clé pour les deux faisait que la valeur du Visuel
-    // était systématiquement masquée par celle de Texture (guard `flat.meltingScore === undefined`
-    // toujours faux). On isole donc le Visuel sous une clé dédiée, mappée séparément côté backend.
+    // NB: meltingScore/residuScore sont déjà potentiellement remplis par flattenCommonFormData()
+    // depuis data.texture.melting/residue (concepts texture, distincts du "Melting"/"Résidus"
+    // visuels de VisualSection). Utiliser les mêmes clés pour les deux faisait que la valeur du
+    // Visuel était systématiquement masquée par celle de Texture (guard `flat.xScore === undefined`
+    // toujours faux dès que Texture avait déjà écrit). On isole donc le Visuel sous des clés
+    // dédiées (visualMeltingScore/visualResiduScore), mappées séparément côté backend.
     if (data.couleurTransparence !== undefined) flat.couleurTransparence = data.couleurTransparence
     if (data.viscositeVisuelle !== undefined) flat.viscositeVisuelle = data.viscositeVisuelle
     if (data.pureteVisuelle !== undefined) flat.pureteVisuelle = data.pureteVisuelle
     if (data.visualMeltingScore !== undefined) flat.visualMeltingScore = data.visualMeltingScore
-    if (data.residuScore !== undefined) flat.residuScore = data.residuScore
+    if (data.visualResiduScore !== undefined) flat.visualResiduScore = data.visualResiduScore
     if (data.pistils !== undefined) flat.pistilsScore = data.pistils
     if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
     if (data.visuel) {
@@ -323,7 +345,7 @@ export function flattenConcentrateFormData(data) {
         if (flat.viscositeVisuelle === undefined && data.visuel.viscosite !== undefined) flat.viscositeVisuelle = data.visuel.viscosite
         if (flat.pureteVisuelle === undefined && data.visuel.pureteVisuelle !== undefined) flat.pureteVisuelle = data.visuel.pureteVisuelle
         if (flat.visualMeltingScore === undefined && data.visuel.melting !== undefined) flat.visualMeltingScore = data.visuel.melting
-        if (flat.residuScore === undefined && data.visuel.residus !== undefined) flat.residuScore = data.visuel.residus
+        if (flat.visualResiduScore === undefined && data.visuel.residus !== undefined) flat.visualResiduScore = data.visuel.residus
         if (data.visuel.couleurNuancier !== undefined) flat.couleurNuancier = data.visuel.couleurNuancier
     }
     if (data.couleurNuancier !== undefined) flat.couleurNuancier = data.couleurNuancier
@@ -332,6 +354,24 @@ export function flattenConcentrateFormData(data) {
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
     if (data.parentFlowerReviewId !== undefined) flat.parentFlowerReviewId = data.parentFlowerReviewId
     if (data.parentHashReviewId !== undefined) flat.parentHashReviewId = data.parentHashReviewId
+
+    // Section Effets & Expérience — ConcentrateReview n'a que methodeConsommation/dosageUtilise/
+    // dureeEffets (String simples), pas les colonnes riches de FlowerReview (dosage+dosageUnit
+    // numériques, effectDuration, effectOnset, effectLength, effectProfiles, sideEffects,
+    // preferredUse). flattenCommonFormData() mappe data.effets.methodeConsommation ->
+    // flat.consumptionMethod, data.effets.dosageUtilise -> flat.dosage et
+    // data.effets.dureeEffetsCategorie -> flat.effectLength (noms de colonnes FlowerReview) :
+    // validateConcentrateReviewData() ignore silencieusement ces 3 clés (aucun mapping ni colonne
+    // correspondante) — on réécrit ici avec les noms qu'elle reconnaît réellement (même correctif
+    // que flattenHashFormData, ConcentrateReview partage le même schéma simplifié que HashReview
+    // pour cette section). Sans ce correctif, "Méthode de consommation"/"Dosage"/"Durée des effets"
+    // n'étaient JAMAIS sauvegardés pour Concentré malgré les colonnes DB existantes.
+    if (data.effets) {
+        if (data.effets.methodeConsommation) flat.methodeConsommation = data.effets.methodeConsommation
+        if (data.effets.dosageUtilise) flat.dosageUtilise = data.effets.dosageUtilise
+        if (data.effets.dureeEffetsCategorie) flat.dureeEffets = data.effets.dureeEffetsCategorie
+    }
+
     // Aperçu / Orchard preset
     if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
     if (data.orchardConfig) flat.orchardConfig = data.orchardConfig

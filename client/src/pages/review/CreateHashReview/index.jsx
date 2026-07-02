@@ -292,6 +292,7 @@ export default function CreateHashReview() {
                         )}
                         {currentSection === 4 && (
                             <OdorSection
+                                productType="Hash"
                                 data={formData.odeurs || {}}
                                 onChange={(odeursData) => handleChange('odeurs', odeursData)}
                             />
