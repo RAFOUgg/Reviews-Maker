@@ -140,7 +140,7 @@ const PipelineCellModal = ({
                             <LiquidSelect
                                 label="🌀 Type de ventilation"
                                 value={data.type || ''}
-                                onChange={(e) => handleUpdateContent(contentIndex, 'type', e.target.value)}
+                                onChange={(v) => handleUpdateContent(contentIndex, 'type', v)}
                                 options={[
                                     { value: '', label: 'Sélectionner...' },
                                     ...(CULTURE_VALUES.typeVentilation || ['Extracteur', 'Brasseur', 'Mixte']).map(opt => ({ value: opt, label: opt }))
@@ -165,7 +165,7 @@ const PipelineCellModal = ({
                         <LiquidSelect
                             label="💡 Type de lampe"
                             value={data.value || ''}
-                            onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
+                            onChange={(v) => handleUpdateContent(contentIndex, 'value', v)}
                             options={[
                                 { value: '', label: 'Sélectionner...' },
                                 ...['LED', 'HPS', 'CFL', 'CMH', 'Naturel', 'Mixte'].map(opt => ({ value: opt, label: opt }))
@@ -208,7 +208,7 @@ const PipelineCellModal = ({
                         <LiquidSelect
                             label="💧 Système d'irrigation"
                             value={data.value || ''}
-                            onChange={(e) => handleUpdateContent(contentIndex, 'value', e.target.value)}
+                            onChange={(v) => handleUpdateContent(contentIndex, 'value', v)}
                             options={[
                                 { value: '', label: 'Sélectionner...' },
                                 ...['Manuel', 'Goutte à goutte', 'Inondation', 'Aspersion', 'Automatique'].map(opt => ({ value: opt, label: opt }))

@@ -20,6 +20,7 @@ import {
     X, Check, ChevronRight, Tag, Calendar, User, ExternalLink, RefreshCw
 } from 'lucide-react'
 import useGeneticsStore from '../../../store/useGeneticsStore'
+import { getImageUrl } from '../../../utils/imageUtils'
 
 // Types de cultivars
 const CULTIVAR_TYPES = [
@@ -79,6 +80,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         labReportUrl: '',
         floweringMinWeeks: '', floweringMaxWeeks: '',
         yieldValue: '', yieldUnit: 'g_m2',
+        image: '',
         description: '',
         tags: []
     })
@@ -156,6 +158,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             labReportUrl: '',
             floweringMinWeeks: '', floweringMaxWeeks: '',
             yieldValue: '', yieldUnit: 'g_m2',
+            image: '',
             description: '',
             tags: []
         })
@@ -177,6 +180,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             labReportUrl: cultivar.labReportUrl || '',
             floweringMinWeeks: cultivar.floweringMinWeeks ?? '', floweringMaxWeeks: cultivar.floweringMaxWeeks ?? '',
             yieldValue: cultivar.yieldValue ?? '', yieldUnit: cultivar.yieldUnit || 'g_m2',
+            image: cultivar.image || '',
             description: cultivar.description || '',
             tags: cultivar.tags || []
         })
@@ -297,8 +301,16 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             >
                 <LiquidCard glow="none" padding="md" className="hover:border-green-500/30 transition-all group">
                     <div className="flex items-start gap-3 mb-3">
-                        <div className={`w-12 h-12 rounded-xl bg-${typeConfig?.color || 'green'}-500/20 flex items-center justify-center flex-shrink-0`}>
-                            <Flower2 className={`w-6 h-6 text-${typeConfig?.color || 'green'}-400`} />
+                        <div className={`w-12 h-12 rounded-xl bg-${typeConfig?.color || 'green'}-500/20 flex items-center justify-center flex-shrink-0 overflow-hidden`}>
+                            {cultivar.image ? (
+                                <img
+                                    src={getImageUrl(cultivar.image)}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                />
+                            ) : null}
+                            <Flower2 className={`w-6 h-6 text-${typeConfig?.color || 'green'}-400`} style={cultivar.image ? { display: 'none' } : undefined} />
                         </div>
                         <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-white truncate">{cultivar.name}</h3>
@@ -697,6 +709,18 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                                 placeholder="ex: Grape Ape x Grapefruit"
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
                                             />
+                                        </div>
+
+                                        <div className="md:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm text-white/60 mb-2">Photo (URL)</label>
+                                            <input
+                                                type="text"
+                                                value={formData.image}
+                                                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                                                placeholder="https://..."
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                            <p className="text-xs text-white/40 mt-1">Reprise automatiquement sur le nœud lors du glisser-déposer dans un arbre PhenoHunt.</p>
                                         </div>
 
                                         <div className="md:col-span-2 lg:col-span-3">

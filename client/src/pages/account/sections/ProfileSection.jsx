@@ -218,7 +218,7 @@ export default function ProfileSection() {
             </label>
             <LiquidSelect
               value={profileData.country}
-              onChange={(e) => updateField('country', e.target.value)}
+              onChange={(v) => updateField('country', v)}
               disabled={!isEditing}
               options={[
                 { value: '', label: 'Sélectionnez un pays' },

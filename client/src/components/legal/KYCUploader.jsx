@@ -217,7 +217,7 @@ export default function KYCUploader({ userId, accountType }) {
                     <LiquidSelect
                         label="Type de document"
                         value={selectedType}
-                        onChange={(e) => setSelectedType(e.target.value)}
+                        onChange={(v) => setSelectedType(v)}
                         options={documentTypes
                             .filter(type => !type.producerOnly || accountType === 'producer')
                             .map(type => ({ value: type.value, label: type.label }))

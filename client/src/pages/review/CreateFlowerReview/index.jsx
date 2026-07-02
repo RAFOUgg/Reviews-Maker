@@ -150,7 +150,7 @@ export default function CreateFlowerReview() {
     // pour ne renvoyer au backend que les champs qui ont réellement changé (autosave rapide).
     const lastSavedFlatRef = useRef(null)
 
-    const handleSave = async ({ silent = false } = {}) => {
+    const handleSave = async ({ silent = false, skipNavigate = false } = {}) => {
         let savedReview
         try {
             setSaving(true)
@@ -188,7 +188,10 @@ export default function CreateFlowerReview() {
             setIsDirty(false)
             if (!silent) toast.success('Brouillon sauvegardé ✅')
 
-            if (!id && savedReview?.id) {
+            // skipNavigate : le filet de sécurité au démontage (ligne ~228) appelle handleSave après
+            // que le composant a déjà été retiré de l'arbre (ex: clic sur un bouton de nav globale) —
+            // naviguer à ce moment-là écraserait la destination que l'utilisateur vient de choisir.
+            if (!id && savedReview?.id && !skipNavigate) {
                 navigate(`/edit/flower/${savedReview.id}`)
             }
         } catch (error) {
@@ -228,7 +231,7 @@ export default function CreateFlowerReview() {
     useEffect(() => () => {
         if (autoSaveTimerRef.current) {
             clearTimeout(autoSaveTimerRef.current)
-            handleSaveRef.current({ silent: true })
+            handleSaveRef.current({ silent: true, skipNavigate: true })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])

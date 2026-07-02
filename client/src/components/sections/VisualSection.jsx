@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CANNABIS_COLORS, getAllColorShades } from '../../data/visualOptions';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
@@ -212,9 +212,17 @@ export default function VisualSection({ productType = 'flower', data: directData
     const [trichomes, setTrichomes] = useState(data?.trichomes || 5);
     const [mold, setMold] = useState(data?.mold || 10);
     const [seeds, setSeeds] = useState(data?.seeds || 10);
+    // Évite d'émettre les valeurs par défaut (5/5/5/10/10) au simple montage de la section
+    // sans interaction réelle de l'utilisateur (cf. AnalyticsSection.jsx)
+    const isFirstRunRef = useRef(true);
 
     useEffect(() => {
         if (!isFlower) return;
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            const hasIncoming = !!(data && Object.keys(data).length > 0);
+            if (!hasIncoming) return;
+        }
         safeUpdate({ colors: selectedColors, colorRating, density, trichomes, mold, seeds });
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedColors, colorRating, density, trichomes, mold, seeds]);

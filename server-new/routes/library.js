@@ -702,6 +702,7 @@ function buildStructuredData(body, { partial } = { partial: false }) {
     if (has('yieldUnit')) data.yieldUnit = toEnumOrNull(body.yieldUnit, YIELD_UNITS);
     if (has('indicaRatio')) data.indicaRatio = body.indicaRatio === '' || body.indicaRatio === null ? null : clampPct(body.indicaRatio);
     if (has('tags')) data.tags = Array.isArray(body.tags) && body.tags.length ? JSON.stringify(body.tags) : null;
+    if (has('image')) data.image = body.image ? String(body.image).trim() : null;
 
     return data;
 }

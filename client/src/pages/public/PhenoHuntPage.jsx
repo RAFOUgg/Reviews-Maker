@@ -4,6 +4,7 @@ import { ReactFlowProvider } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import UnifiedGeneticsCanvas from '../../components/genetics/UnifiedGeneticsCanvas';
 import { Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight, GitBranch, Menu, X } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUtils';
 import './PhenoHuntPage.css';
 
 /**
@@ -262,7 +263,15 @@ export default function PhenoHuntPage() {
                                                                 }}
                                                                 className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-300 hover:bg-slate-700/40 cursor-grab active:cursor-grabbing transition-colors"
                                                             >
-                                                                <Leaf className="w-3 h-3 text-emerald-400/60 flex-shrink-0" />
+                                                                {c.image ? (
+                                                                    <img
+                                                                        src={getImageUrl(c.image)}
+                                                                        alt=""
+                                                                        className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                                                                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                                                    />
+                                                                ) : null}
+                                                                <Leaf className="w-3 h-3 text-emerald-400/60 flex-shrink-0" style={c.image ? { display: 'none' } : undefined} />
                                                                 <span className="truncate">{c.name}</span>
                                                             </div>
                                                         ))}

@@ -140,7 +140,7 @@ const ChainEdgeFormModal = ({ onClose }) => {
                 <LiquidSelect
                     label="Produit source *"
                     value={formData.sourceNodeId || ''}
-                    onChange={(e) => handleChange('sourceNodeId', e.target.value)}
+                    onChange={(v) => handleChange('sourceNodeId', v)}
                     disabled={isEdit}
                     options={[
                         { value: '', label: 'Sélectionner un produit source...' },
@@ -151,7 +151,7 @@ const ChainEdgeFormModal = ({ onClose }) => {
                 <LiquidSelect
                     label="Produit destination *"
                     value={formData.targetNodeId || ''}
-                    onChange={(e) => handleChange('targetNodeId', e.target.value)}
+                    onChange={(v) => handleChange('targetNodeId', v)}
                     disabled={isEdit}
                     options={[
                         { value: '', label: 'Sélectionner un produit destination...' },

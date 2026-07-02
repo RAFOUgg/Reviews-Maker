@@ -29,8 +29,16 @@ export default function TasteSection({ productType, data: directData, onChange, 
     const [exhalationNotes, setExhalationNotes] = useState(data?.exhalationNotes || []);
     const [saveursDominantes, setSaveursDominantes] = useState(data?.saveursDominantes || []);
 
-    // Synchroniser avec parent
+    // Synchroniser avec parent. isFirstRunRef évite d'émettre un payload "tout vide" au simple
+    // montage de la section (cf. AnalyticsSection.jsx).
+    const isFirstRunRef = React.useRef(true);
     useEffect(() => {
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            const hasIncoming = !!(data && Object.keys(data).length > 0);
+            const hasManual = intensity || aggressiveness || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || saveursDominantes.length > 0;
+            if (!hasIncoming && !hasManual) return;
+        }
         if (isEdible) {
             safeUpdate({
                 intensity,

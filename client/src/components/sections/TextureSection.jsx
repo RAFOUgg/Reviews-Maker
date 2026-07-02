@@ -95,8 +95,16 @@ export default function TextureSection({ productType, data: directData, onChange
         ? Math.round((Number(melting || 0) + Number(residue || 0)) / 2)
         : null;
 
-    // Synchroniser avec parent
+    // Synchroniser avec parent. isFirstRunRef évite d'émettre les valeurs par défaut au simple
+    // montage de la section sans interaction réelle (cf. AnalyticsSection.jsx).
+    const isFirstRunRef = React.useRef(true);
     useEffect(() => {
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            const hasIncoming = !!(textureData && Object.keys(textureData).length > 0);
+            const hasManual = hardness || density || malleability || elasticity || stickiness || melting || (residue && residue !== 10) || friability || viscosity;
+            if (!hasIncoming && !hasManual) return;
+        }
         const newTextureData = {
             hardness,
             density,

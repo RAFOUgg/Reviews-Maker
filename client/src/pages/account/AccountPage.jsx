@@ -334,7 +334,7 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
           </div>
           <LiquidSelect
             value={preferences.defaultVisibility}
-            onChange={(e) => handlePreferenceChange('defaultVisibility', e.target.value)}
+            onChange={(v) => handlePreferenceChange('defaultVisibility', v)}
             options={visibilityOptions}
           />
         </LiquidCard>

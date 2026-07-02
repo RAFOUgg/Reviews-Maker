@@ -86,7 +86,7 @@ export default function CreateHashReview() {
     // pour ne renvoyer au backend que les champs qui ont réellement changé (autosave rapide).
     const lastSavedFlatRef = useRef(null)
 
-    const handleSave = async ({ silent = false } = {}) => {
+    const handleSave = async ({ silent = false, skipNavigate = false } = {}) => {
         let savedReview
         try {
             setSaving(true)
@@ -129,7 +129,7 @@ export default function CreateHashReview() {
             if (!silent) toast.success('Brouillon sauvegardé')
 
             const newId = savedReview?.review?.id || savedReview?.id
-            if (!id && newId) {
+            if (!id && newId && !skipNavigate) {
                 navigate(`/edit/hash/${newId}`)
             }
         } catch (error) {
@@ -205,7 +205,7 @@ export default function CreateHashReview() {
     useEffect(() => () => {
         if (autoSaveTimerRef.current) {
             clearTimeout(autoSaveTimerRef.current)
-            handleSaveRef.current({ silent: true })
+            handleSaveRef.current({ silent: true, skipNavigate: true })
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])

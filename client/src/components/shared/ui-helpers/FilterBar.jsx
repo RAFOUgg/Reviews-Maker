@@ -227,7 +227,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                     </label>
                     <LiquidSelect
                         value={filters.type}
-                        onChange={(e) => handleFilterChange('type', e.target.value)}
+                        onChange={(v) => handleFilterChange('type', v)}
                         options={[
                             { value: 'all', label: 'Tous les types' },
                             ...productTypes.map(t => ({ value: t, label: t }))
@@ -242,7 +242,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                     </label>
                     <LiquidSelect
                         value={filters.sortBy}
-                        onChange={(e) => handleFilterChange('sortBy', e.target.value)}
+                        onChange={(v) => handleFilterChange('sortBy', v)}
                         options={[
                             { value: 'date-desc', label: 'Plus récent' },
                             { value: 'date-asc', label: 'Plus ancien' },
@@ -326,7 +326,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                     </label>
                                     <LiquidSelect
                                         value={filters.dureeEffet}
-                                        onChange={(e) => handleFilterChange('dureeEffet', e.target.value)}
+                                        onChange={(v) => handleFilterChange('dureeEffet', v)}
                                         options={[
                                             { value: 'all', label: 'Toutes durées' },
                                             ...dureeOptions.map(d => ({ value: d, label: d }))
@@ -348,7 +348,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                             </label>
                                             <LiquidSelect
                                                 value={filters.typeCulture}
-                                                onChange={(e) => handleFilterChange('typeCulture', e.target.value)}
+                                                onChange={(v) => handleFilterChange('typeCulture', v)}
                                                 options={[
                                                     { value: 'all', label: 'Tous types' },
                                                     ...advancedOptions.typeCulture.map(t => ({ value: t, label: t }))
@@ -362,7 +362,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                             </label>
                                             <LiquidSelect
                                                 value={filters.substrat}
-                                                onChange={(e) => handleFilterChange('substrat', e.target.value)}
+                                                onChange={(v) => handleFilterChange('substrat', v)}
                                                 options={[
                                                     { value: 'all', label: 'Tous substrats' },
                                                     ...advancedOptions.substrat.map(s => ({ value: s, label: s }))
@@ -376,7 +376,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                             </label>
                                             <LiquidSelect
                                                 value={filters.landrace}
-                                                onChange={(e) => handleFilterChange('landrace', e.target.value)}
+                                                onChange={(v) => handleFilterChange('landrace', v)}
                                                 options={[
                                                     { value: 'all', label: 'Toutes lignées' },
                                                     ...advancedOptions.landrace.map(l => ({ value: l, label: l }))
@@ -400,7 +400,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                             </label>
                                             <LiquidSelect
                                                 value={filters.extraction}
-                                                onChange={(e) => handleFilterChange('extraction', e.target.value)}
+                                                onChange={(v) => handleFilterChange('extraction', v)}
                                                 options={[
                                                     { value: 'all', label: 'Toutes méthodes' },
                                                     ...advancedOptions.extraction.map(e => ({ value: e, label: e }))
@@ -415,7 +415,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                                 </label>
                                                 <LiquidSelect
                                                     value={filters.texture}
-                                                    onChange={(e) => handleFilterChange('texture', e.target.value)}
+                                                    onChange={(v) => handleFilterChange('texture', v)}
                                                     options={[
                                                         { value: 'all', label: 'Toutes textures' },
                                                         ...advancedOptions.texture.map(t => ({ value: t, label: t }))
@@ -440,7 +440,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                                             </label>
                                             <LiquidSelect
                                                 value={filters.ingredient}
-                                                onChange={(e) => handleFilterChange('ingredient', e.target.value)}
+                                                onChange={(v) => handleFilterChange('ingredient', v)}
                                                 options={[
                                                     { value: 'all', label: 'Tous ingrédients' },
                                                     ...advancedOptions.ingredient.map(i => ({ value: i, label: i }))

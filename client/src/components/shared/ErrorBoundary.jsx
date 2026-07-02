@@ -23,6 +23,16 @@ export default class ErrorBoundary extends Component {
     componentDidCatch(error, errorInfo) {
         console.error('ErrorBoundary caught an error:', error, errorInfo);
         this.setState({ error, errorInfo });
+
+        // Un nouveau déploiement remplace les fichiers de chunks (hash différent) pendant qu'un onglet
+        // reste ouvert avec l'ancien index.html en mémoire — le lazy-import suivant 404 et lève cette
+        // erreur précise. Ce n'est pas un bug applicatif : un simple rechargement récupère le nouveau
+        // build. Un flag sessionStorage évite une boucle infinie si le rechargement échoue à nouveau.
+        const isChunkLoadError = /Failed to fetch dynamically imported module|Importing a module script failed|error loading dynamically imported module/i.test(error?.message || '');
+        if (isChunkLoadError && !sessionStorage.getItem('chunk-reload-attempted')) {
+            sessionStorage.setItem('chunk-reload-attempted', '1');
+            window.location.reload();
+        }
     }
 
     handleReset = () => {

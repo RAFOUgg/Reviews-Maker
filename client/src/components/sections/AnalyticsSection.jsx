@@ -52,8 +52,18 @@ export default function AnalyticsSection({ productType, data: directData, onChan
         if (!data.terpeneFile) setExistingTerpUrl(data.terpeneFileUrl || null);
     }, [data]);
 
-    // Synchroniser avec parent — emit thcPercent keys to match flattener
+    // Synchroniser avec parent — emit thcPercent keys to match flattener.
+    // isFirstRunRef évite d'émettre un objet "tout à null" au simple montage de la section
+    // (ex: l'utilisateur clique sur cet onglet sans rien remplir) — sinon formData change de
+    // référence et déclenche l'autosave d'un brouillon vide (cf. EffectsSectionImpl.jsx).
+    const isFirstRunRef = React.useRef(true);
     useEffect(() => {
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            const hasIncoming = !!(data && Object.keys(data).length > 0);
+            const hasManual = !!(thc || cbd || cbg || cbc || uploadedFile || terpeneFile);
+            if (!hasIncoming && !hasManual) return;
+        }
         safeUpdate({
             thcPercent: thc ? parseFloat(thc) : null,
             cbdPercent: cbd ? parseFloat(cbd) : null,

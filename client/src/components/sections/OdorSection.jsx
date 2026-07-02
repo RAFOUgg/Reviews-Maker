@@ -26,9 +26,17 @@ export default function OdorSection({ productType, data: directData, onChange, f
     // Refs anti-boucle : comparaison par valeur (JSON) pour éviter les faux positifs sur les refs de tableaux
     const lastSentStrRef = useRef(null);
     const lastLoadedStrRef = useRef(null);
+    // Évite d'émettre un payload "tout vide" au simple montage de la section (cf. AnalyticsSection.jsx)
+    const isFirstRunRef = useRef(true);
 
     // Remonter les changements locaux vers le parent
     useEffect(() => {
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            const hasIncoming = !!(data && Object.keys(data).length > 0);
+            const hasManual = dominantNotes.length > 0 || secondaryNotes.length > 0 || intensity || complexity || fidelity;
+            if (!hasIncoming && !hasManual) return;
+        }
         const payload = { dominantNotes, secondaryNotes, intensity, complexity, fidelity };
         const str = JSON.stringify(payload);
         lastSentStrRef.current = str;

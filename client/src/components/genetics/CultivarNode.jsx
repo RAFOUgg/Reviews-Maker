@@ -8,6 +8,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { Leaf } from 'lucide-react';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const SEX_CONFIG = {
     female: { shapeClass: 'shape-circle', icon: '♀', label: 'Femelle' },
@@ -35,7 +36,7 @@ const CultivarNode = ({ data, selected }) => {
             <div className="node-photo">
                 {data.image ? (
                     <img
-                        src={data.image}
+                        src={getImageUrl(data.image)}
                         alt={data.label}
                         onError={(e) => { e.target.style.display = 'none'; }}
                     />

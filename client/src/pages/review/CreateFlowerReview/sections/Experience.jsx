@@ -23,7 +23,7 @@ export default function Experience({ formData, handleChange }) {
                     <LiquidSelect
                         label="Méthode de consommation"
                         value={formData.methodeConsommation || ''}
-                        onChange={(e) => handleChange('methodeConsommation', e.target.value)}
+                        onChange={(v) => handleChange('methodeConsommation', v)}
                         options={[
                             { value: '', label: 'Sélectionner...' },
                             { value: 'combustion', label: 'Combustion' },
@@ -58,7 +58,7 @@ export default function Experience({ formData, handleChange }) {
                     <LiquidSelect
                         label="Début des effets"
                         value={formData.debutEffets || ''}
-                        onChange={(e) => handleChange('debutEffets', e.target.value)}
+                        onChange={(v) => handleChange('debutEffets', v)}
                         options={[
                             { value: '', label: 'Sélectionner...' },
                             { value: 'immediat', label: 'Immédiat (0-5 min)' },
@@ -74,7 +74,7 @@ export default function Experience({ formData, handleChange }) {
                     <LiquidSelect
                         label="Usage préféré"
                         value={formData.usagePreface || ''}
-                        onChange={(e) => handleChange('usagePreface', e.target.value)}
+                        onChange={(v) => handleChange('usagePreface', v)}
                         options={[
                             { value: '', label: 'Sélectionner...' },
                             { value: 'soir', label: 'Soir' },

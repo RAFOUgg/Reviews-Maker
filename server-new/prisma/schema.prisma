@@ -559,6 +559,9 @@ model Cultivar {
   // Étiquettes libres
   tags String? // JSON: string[]
 
+  // Photo (URL) — reprise sur le GenNode au moment du glisser-déposer sur l'arbre
+  image String?
+
   // Notes personnelles
   notes String? // Notes privées de l'utilisateur (texte libre uniquement — ne plus y stocker de JSON structuré)
 
