@@ -111,7 +111,7 @@ const EdgeFormModal = ({ onClose }) => {
                 <LiquidSelect
                     label="Cultivar parent *"
                     value={formData.parentNodeId || ''}
-                    onChange={(e) => handleChange('parentNodeId', e.target.value)}
+                    onChange={(v) => handleChange('parentNodeId', v)}
                     disabled={isEdit}
                     options={[
                         { value: '', label: 'Sélectionner un parent...' },
@@ -132,7 +132,7 @@ const EdgeFormModal = ({ onClose }) => {
                 <LiquidSelect
                     label="Type de relation *"
                     value={formData.relationshipType || 'parent'}
-                    onChange={(e) => handleChange('relationshipType', e.target.value)}
+                    onChange={(v) => handleChange('relationshipType', v)}
                     options={relationshipTypes}
                 />
 
@@ -140,7 +140,7 @@ const EdgeFormModal = ({ onClose }) => {
                 <LiquidSelect
                     label="Cultivar enfant *"
                     value={formData.childNodeId || ''}
-                    onChange={(e) => handleChange('childNodeId', e.target.value)}
+                    onChange={(v) => handleChange('childNodeId', v)}
                     disabled={isEdit}
                     options={[
                         { value: '', label: 'Sélectionner un enfant...' },
@@ -163,9 +163,12 @@ const EdgeFormModal = ({ onClose }) => {
                 <LiquidSelect
                     label="Méthode d'insémination"
                     value={formData.pollinationMethod || ''}
-                    onChange={(e) => handleChange('pollinationMethod', e.target.value)}
+                    onChange={(v) => handleChange('pollinationMethod', v)}
                     options={POLLINATION_METHODS}
                 />
+                <p className="text-white/40 text-xs -mt-2">
+                    Technique physique de pollinisation — pour un rétrocroisement (BX), voir le champ Génération sur le nœud enfant.
+                </p>
 
                 {/* Relationship Preview */}
                 {parentNode && childNode && (

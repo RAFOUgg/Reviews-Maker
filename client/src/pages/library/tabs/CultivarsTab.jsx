@@ -30,6 +30,27 @@ const CULTIVAR_TYPES = [
     { id: 'cbd', label: 'CBD', color: 'blue' },
 ]
 
+const CANNABINOID_SOURCE_LABELS = {
+    breeder_claim: 'Annoncé breeder',
+    lab_tested: 'Analyse labo (COA)'
+}
+
+const YIELD_UNIT_LABELS = { g_m2: 'g/m²', g_plant: 'g/plant' }
+
+function formatPctRange(min, max) {
+    if (min === null || min === undefined) {
+        if (max === null || max === undefined) return null
+        return `<${max}%`
+    }
+    if (max === null || max === undefined) return `>${min}%`
+    return min === max ? `${min}%` : `${min}-${max}%`
+}
+
+function formatWeeksRange(min, max) {
+    if (min === null || min === undefined || max === null || max === undefined) return null
+    return min === max ? `${min} sem` : `${min}-${max} sem`
+}
+
 export default function CultivarsTab({ userTier = 'producer' }) {
     const toast = useToast()
     const navigate = useNavigate()
@@ -51,13 +72,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         breeder: '',
         type: 'hybrid',
         genetics: '', // Lignée parentale
-        parentMale: null,
-        parentFemale: null,
         phenotype: '',
-        thcRange: '',
-        cbdRange: '',
-        floweringTime: '',
-        yield: '',
+        indicaRatio: '',
+        thcMin: '', thcMax: '', thcSource: 'breeder_claim',
+        cbdMin: '', cbdMax: '', cbdSource: 'breeder_claim',
+        labReportUrl: '',
+        floweringMinWeeks: '', floweringMaxWeeks: '',
+        yieldValue: '', yieldUnit: 'g_m2',
         description: '',
         tags: []
     })
@@ -128,13 +149,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             breeder: '',
             type: 'hybrid',
             genetics: '',
-            parentMale: null,
-            parentFemale: null,
             phenotype: '',
-            thcRange: '',
-            cbdRange: '',
-            floweringTime: '',
-            yield: '',
+            indicaRatio: '',
+            thcMin: '', thcMax: '', thcSource: 'breeder_claim',
+            cbdMin: '', cbdMax: '', cbdSource: 'breeder_claim',
+            labReportUrl: '',
+            floweringMinWeeks: '', floweringMaxWeeks: '',
+            yieldValue: '', yieldUnit: 'g_m2',
             description: '',
             tags: []
         })
@@ -149,13 +170,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             breeder: cultivar.breeder || '',
             type: cultivar.type || 'hybrid',
             genetics: cultivar.genetics || '',
-            parentMale: cultivar.parentMale,
-            parentFemale: cultivar.parentFemale,
             phenotype: cultivar.phenotype || '',
-            thcRange: cultivar.thcRange || '',
-            cbdRange: cultivar.cbdRange || '',
-            floweringTime: cultivar.floweringTime || '',
-            yield: cultivar.yield || '',
+            indicaRatio: cultivar.indicaRatio ?? '',
+            thcMin: cultivar.thcMin ?? '', thcMax: cultivar.thcMax ?? '', thcSource: cultivar.thcSource || 'breeder_claim',
+            cbdMin: cultivar.cbdMin ?? '', cbdMax: cultivar.cbdMax ?? '', cbdSource: cultivar.cbdSource || 'breeder_claim',
+            labReportUrl: cultivar.labReportUrl || '',
+            floweringMinWeeks: cultivar.floweringMinWeeks ?? '', floweringMaxWeeks: cultivar.floweringMaxWeeks ?? '',
+            yieldValue: cultivar.yieldValue ?? '', yieldUnit: cultivar.yieldUnit || 'g_m2',
             description: cultivar.description || '',
             tags: cultivar.tags || []
         })
@@ -298,14 +319,25 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
                     {/* Stats rapides */}
                     <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                        {cultivar.thcRange && (
-                            <div className="px-2 py-1 bg-white/5 rounded text-white/60">
-                                THC: {cultivar.thcRange}
+                        {formatPctRange(cultivar.thcMin, cultivar.thcMax) && (
+                            <div className="px-2 py-1 bg-white/5 rounded text-white/60" title={CANNABINOID_SOURCE_LABELS[cultivar.thcSource] || ''}>
+                                THC: {formatPctRange(cultivar.thcMin, cultivar.thcMax)}
+                                {cultivar.thcSource === 'lab_tested' ? ' 🧪' : ''}
                             </div>
                         )}
-                        {cultivar.floweringTime && (
+                        {formatWeeksRange(cultivar.floweringMinWeeks, cultivar.floweringMaxWeeks) && (
                             <div className="px-2 py-1 bg-white/5 rounded text-white/60">
-                                🌸 {cultivar.floweringTime}
+                                🌸 {formatWeeksRange(cultivar.floweringMinWeeks, cultivar.floweringMaxWeeks)}
+                            </div>
+                        )}
+                        {cultivar.yieldValue !== null && cultivar.yieldValue !== undefined && (
+                            <div className="px-2 py-1 bg-white/5 rounded text-white/60">
+                                🌾 {cultivar.yieldValue} {YIELD_UNIT_LABELS[cultivar.yieldUnit] || ''}
+                            </div>
+                        )}
+                        {cultivar.indicaRatio !== null && cultivar.indicaRatio !== undefined && (
+                            <div className="px-2 py-1 bg-white/5 rounded text-white/60">
+                                ⚖️ {cultivar.indicaRatio}% Indica
                             </div>
                         )}
                     </div>
@@ -667,35 +699,143 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                             />
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">THC (%)</label>
+                                        <div className="md:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm text-white/60 mb-2">Ratio Indica/Sativa (%)</label>
                                             <input
-                                                type="text"
-                                                value={formData.thcRange}
-                                                onChange={(e) => setFormData({ ...formData, thcRange: e.target.value })}
-                                                placeholder="ex: 18-24%"
+                                                type="number" min="0" max="100"
+                                                value={formData.indicaRatio}
+                                                onChange={(e) => setFormData({ ...formData, indicaRatio: e.target.value })}
+                                                placeholder="ex: 70 (0 = Sativa pur, 100 = Indica pur)"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                            <p className="text-xs text-white/40 mt-1">
+                                                Classification Indica/Sativa empirique/commerciale, pas une taxonomie scientifiquement validée — le chémotype (profil cannabinoïdes/terpènes) est l'indicateur rigoureux moderne.
+                                            </p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">THC min (%)</label>
+                                            <input
+                                                type="number" min="0" max="100" step="0.1"
+                                                value={formData.thcMin}
+                                                onChange={(e) => setFormData({ ...formData, thcMin: e.target.value })}
+                                                placeholder="ex: 18"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">THC max (%)</label>
+                                            <input
+                                                type="number" min="0" max="100" step="0.1"
+                                                value={formData.thcMax}
+                                                onChange={(e) => setFormData({ ...formData, thcMax: e.target.value })}
+                                                placeholder="ex: 24"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Source THC</label>
+                                            <select
+                                                value={formData.thcSource}
+                                                onChange={(e) => setFormData({ ...formData, thcSource: e.target.value })}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                            >
+                                                <option value="breeder_claim" className="bg-[#1a1a2e]">Annoncé breeder</option>
+                                                <option value="lab_tested" className="bg-[#1a1a2e]">Analyse labo (COA)</option>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">CBD min (%)</label>
+                                            <input
+                                                type="number" min="0" max="100" step="0.1"
+                                                value={formData.cbdMin}
+                                                onChange={(e) => setFormData({ ...formData, cbdMin: e.target.value })}
+                                                placeholder="ex: 0"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">CBD max (%)</label>
+                                            <input
+                                                type="number" min="0" max="100" step="0.1"
+                                                value={formData.cbdMax}
+                                                onChange={(e) => setFormData({ ...formData, cbdMax: e.target.value })}
+                                                placeholder="ex: 1"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Source CBD</label>
+                                            <select
+                                                value={formData.cbdSource}
+                                                onChange={(e) => setFormData({ ...formData, cbdSource: e.target.value })}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                            >
+                                                <option value="breeder_claim" className="bg-[#1a1a2e]">Annoncé breeder</option>
+                                                <option value="lab_tested" className="bg-[#1a1a2e]">Analyse labo (COA)</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="md:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm text-white/60 mb-2">Lien du certificat d'analyse (COA)</label>
+                                            <input
+                                                type="url"
+                                                value={formData.labReportUrl}
+                                                onChange={(e) => setFormData({ ...formData, labReportUrl: e.target.value })}
+                                                placeholder="https://..."
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
                                             />
                                         </div>
 
                                         <div>
-                                            <label className="block text-sm text-white/60 mb-2">CBD (%)</label>
+                                            <label className="block text-sm text-white/60 mb-2">Floraison min (semaines)</label>
                                             <input
-                                                type="text"
-                                                value={formData.cbdRange}
-                                                onChange={(e) => setFormData({ ...formData, cbdRange: e.target.value })}
-                                                placeholder="ex: <1%"
+                                                type="number" min="0"
+                                                value={formData.floweringMinWeeks}
+                                                onChange={(e) => setFormData({ ...formData, floweringMinWeeks: e.target.value })}
+                                                placeholder="ex: 8"
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
                                             />
                                         </div>
-
                                         <div>
-                                            <label className="block text-sm text-white/60 mb-2">Temps de floraison</label>
+                                            <label className="block text-sm text-white/60 mb-2">Floraison max (semaines)</label>
+                                            <input
+                                                type="number" min="0"
+                                                value={formData.floweringMaxWeeks}
+                                                onChange={(e) => setFormData({ ...formData, floweringMaxWeeks: e.target.value })}
+                                                placeholder="ex: 9"
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Rendement</label>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="number" min="0" step="0.1"
+                                                    value={formData.yieldValue}
+                                                    onChange={(e) => setFormData({ ...formData, yieldValue: e.target.value })}
+                                                    placeholder="ex: 450"
+                                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                />
+                                                <select
+                                                    value={formData.yieldUnit}
+                                                    onChange={(e) => setFormData({ ...formData, yieldUnit: e.target.value })}
+                                                    className="px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                                >
+                                                    <option value="g_m2" className="bg-[#1a1a2e]">g/m²</option>
+                                                    <option value="g_plant" className="bg-[#1a1a2e]">g/plant</option>
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div className="md:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm text-white/60 mb-2">Étiquettes (séparées par des virgules)</label>
                                             <input
                                                 type="text"
-                                                value={formData.floweringTime}
-                                                onChange={(e) => setFormData({ ...formData, floweringTime: e.target.value })}
-                                                placeholder="ex: 8-9 semaines"
+                                                value={formData.tags.join(', ')}
+                                                onChange={(e) => setFormData({ ...formData, tags: e.target.value.split(',').map(t => t.trim()).filter(Boolean) })}
+                                                placeholder="ex: fruité, résistant, indoor"
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
                                             />
                                         </div>

@@ -70,10 +70,12 @@ const validateNodeCreation = (req, res, next) => {
     next();
 };
 
+// "backcross" est volontairement absent : c'est une stratégie de génération (déjà capturée par
+// GenNode.genetics.generation = BX1/BX2/BX3), pas une technique physique de pollinisation.
 const VALID_POLLINATION_METHODS = [
     "open", "controlled-manual", "isolation-selected-male", "pollination-bag",
     "brush", "pollen-collection-storage", "male-flower-harvest",
-    "selfing-inversion", "backcross", "chemical-feminization"
+    "selfing-inversion", "chemical-feminization"
 ];
 
 const validateEdgeCreation = (req, res, next) => {

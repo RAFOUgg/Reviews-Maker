@@ -653,6 +653,69 @@ router.delete('/data/:id', requireAuth, asyncHandler(async (req, res) => {
 // CULTIVARS (Producteur)
 // ===========================
 
+const CANNABINOID_SOURCES = ['breeder_claim', 'lab_tested'];
+const YIELD_UNITS = ['g_m2', 'g_plant'];
+
+// Ramène une valeur dans [0, 100] ou null — jamais de valeur hors bornes physiques pour un %.
+function clampPct(v) {
+    if (v === undefined || v === null || v === '') return null;
+    const n = Number(v);
+    if (!Number.isFinite(n)) return null;
+    return Math.min(100, Math.max(0, n));
+}
+
+function toPositiveInt(v) {
+    if (v === undefined || v === null || v === '') return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0) return null;
+    return Math.round(n);
+}
+
+function toPositiveFloat(v) {
+    if (v === undefined || v === null || v === '') return null;
+    const n = Number(v);
+    if (!Number.isFinite(n) || n < 0) return null;
+    return n;
+}
+
+function toEnumOrNull(v, allowed) {
+    return allowed.includes(v) ? v : null;
+}
+
+// Construit les champs Cultivar "structurés" communs à la création/mise à jour à partir du body.
+// `partial=true` (PUT) : n'inclut que les clés explicitement présentes dans le body, pour que
+// chaque colonne soit mise à jour indépendamment (aucun champ absent du payload n'en écrase un autre).
+function buildStructuredData(body, { partial } = { partial: false }) {
+    const data = {};
+    const has = (k) => !partial || body[k] !== undefined;
+
+    if (has('thcMin')) data.thcMin = clampPct(body.thcMin);
+    if (has('thcMax')) data.thcMax = clampPct(body.thcMax);
+    if (has('thcSource')) data.thcSource = toEnumOrNull(body.thcSource, CANNABINOID_SOURCES);
+    if (has('cbdMin')) data.cbdMin = clampPct(body.cbdMin);
+    if (has('cbdMax')) data.cbdMax = clampPct(body.cbdMax);
+    if (has('cbdSource')) data.cbdSource = toEnumOrNull(body.cbdSource, CANNABINOID_SOURCES);
+    if (has('labReportUrl')) data.labReportUrl = body.labReportUrl ? String(body.labReportUrl).trim() : null;
+    if (has('floweringMinWeeks')) data.floweringMinWeeks = toPositiveInt(body.floweringMinWeeks);
+    if (has('floweringMaxWeeks')) data.floweringMaxWeeks = toPositiveInt(body.floweringMaxWeeks);
+    if (has('yieldValue')) data.yieldValue = toPositiveFloat(body.yieldValue);
+    if (has('yieldUnit')) data.yieldUnit = toEnumOrNull(body.yieldUnit, YIELD_UNITS);
+    if (has('indicaRatio')) data.indicaRatio = body.indicaRatio === '' || body.indicaRatio === null ? null : clampPct(body.indicaRatio);
+    if (has('tags')) data.tags = Array.isArray(body.tags) && body.tags.length ? JSON.stringify(body.tags) : null;
+
+    return data;
+}
+
+// Remappe un enregistrement Cultivar (colonnes réelles) vers la forme attendue par le frontend.
+function toApiShape(cultivar) {
+    return {
+        ...cultivar,
+        genetics: cultivar.parentage,
+        description: cultivar.notes || null,
+        tags: cultivar.tags ? JSON.parse(cultivar.tags) : [],
+    };
+}
+
 /**
  * GET /api/library/cultivars
  * Liste les cultivars de l'utilisateur
@@ -677,22 +740,7 @@ router.get('/cultivars', requireAuth, asyncHandler(async (req, res) => {
         orderBy: { createdAt: 'desc' },
     });
 
-    // Mapper les champs du modèle vers les champs attendus par le frontend
-    const cultivars = rawCultivars.map(c => {
-        const notesData = c.notes ? JSON.parse(c.notes) : {};
-        return {
-            ...c,
-            genetics: c.parentage,
-            description: notesData.description || null,
-            thcRange: notesData.thcRange || null,
-            cbdRange: notesData.cbdRange || null,
-            floweringTime: notesData.floweringTime || null,
-            yield: notesData.yield || null,
-            tags: notesData.tags || []
-        };
-    });
-
-    res.json({ cultivars });
+    res.json({ cultivars: rawCultivars.map(toApiShape) });
 }));
 
 /**
@@ -700,7 +748,7 @@ router.get('/cultivars', requireAuth, asyncHandler(async (req, res) => {
  * Crée un nouveau cultivar
  */
 router.post('/cultivars', requireAuth, asyncHandler(async (req, res) => {
-    const { name, breeder, type, genetics, phenotype, thcRange, cbdRange, floweringTime, yield: yieldValue, description, tags } = req.body;
+    const { name, breeder, type, genetics, phenotype, description } = req.body;
 
     if (!name) {
         return res.status(400).json({
@@ -708,17 +756,6 @@ router.post('/cultivars', requireAuth, asyncHandler(async (req, res) => {
             message: 'Le nom est requis',
         });
     }
-
-    // Mapper les champs frontend vers les champs du modèle Prisma existant
-    // genetics -> parentage, description -> notes
-    // Les champs thcRange, cbdRange, floweringTime, yield, tags n'existent pas encore dans le modèle
-    // Ils seront stockés dans notes comme JSON temporairement
-    const extraData = {};
-    if (thcRange) extraData.thcRange = thcRange;
-    if (cbdRange) extraData.cbdRange = cbdRange;
-    if (floweringTime) extraData.floweringTime = floweringTime;
-    if (yieldValue) extraData.yield = yieldValue;
-    if (tags) extraData.tags = tags;
 
     const cultivar = await prisma.cultivar.create({
         data: {
@@ -728,21 +765,12 @@ router.post('/cultivars', requireAuth, asyncHandler(async (req, res) => {
             type: type || 'Hybride',
             parentage: genetics || null, // genetics -> parentage
             phenotype: phenotype || null,
-            notes: description ? JSON.stringify({ description, ...extraData }) : (Object.keys(extraData).length ? JSON.stringify(extraData) : null),
+            notes: description || null, // texte libre uniquement, plus de JSON stocké ici
+            ...buildStructuredData(req.body),
         },
     });
 
-    // Retourner avec les noms de champs attendus par le frontend
-    res.status(201).json({
-        ...cultivar,
-        genetics: cultivar.parentage,
-        description: description || null,
-        thcRange,
-        cbdRange,
-        floweringTime,
-        yield: yieldValue,
-        tags
-    });
+    res.status(201).json(toApiShape(cultivar));
 }));
 
 /**
@@ -764,16 +792,7 @@ router.put('/cultivars/:id', requireAuth, asyncHandler(async (req, res) => {
         });
     }
 
-    const { name, breeder, type, genetics, phenotype, thcRange, cbdRange, floweringTime, yield: yieldValue, description, tags } = req.body;
-
-    // Mapper les champs et stocker les extras dans notes
-    const extraData = {};
-    if (thcRange !== undefined) extraData.thcRange = thcRange;
-    if (cbdRange !== undefined) extraData.cbdRange = cbdRange;
-    if (floweringTime !== undefined) extraData.floweringTime = floweringTime;
-    if (yieldValue !== undefined) extraData.yield = yieldValue;
-    if (tags !== undefined) extraData.tags = tags;
-    if (description !== undefined) extraData.description = description;
+    const { name, breeder, type, genetics, phenotype, description } = req.body;
 
     const cultivar = await prisma.cultivar.update({
         where: { id: req.params.id },
@@ -783,23 +802,13 @@ router.put('/cultivars/:id', requireAuth, asyncHandler(async (req, res) => {
             ...(type && { type }),
             ...(genetics !== undefined && { parentage: genetics }),
             ...(phenotype !== undefined && { phenotype }),
-            ...(Object.keys(extraData).length && { notes: JSON.stringify(extraData) }),
+            ...(description !== undefined && { notes: description || null }),
+            ...buildStructuredData(req.body, { partial: true }),
             updatedAt: new Date(),
         },
     });
 
-    // Retourner avec les noms de champs attendus par le frontend
-    const notesData = cultivar.notes ? JSON.parse(cultivar.notes) : {};
-    res.json({
-        ...cultivar,
-        genetics: cultivar.parentage,
-        description: notesData.description || null,
-        thcRange: notesData.thcRange || null,
-        cbdRange: notesData.cbdRange || null,
-        floweringTime: notesData.floweringTime || null,
-        yield: notesData.yield || null,
-        tags: notesData.tags || []
-    });
+    res.json(toApiShape(cultivar));
 }));
 
 /**

@@ -534,15 +534,33 @@ model Cultivar {
   // Informations cultivar
   name        String // Nom du cultivar (ex: "Gorilla Glue #4")
   breeder     String? // Breeder de la graine
-  type        String? // "Indica", "Sativa", "Hybride"
-  indicaRatio Int? // 0-100 (0 = Sativa pur, 100 = Indica pur)
+  type        String? // "Indica", "Sativa", "Hybride" — classification déclarative/commerciale
+  indicaRatio Int? // 0-100 (0 = Sativa pur, 100 = Indica pur) — quantifié, distinct de `type`
 
   // Génétique
   parentage String? // JSON: ["Parent1", "Parent2"] ou texte libre
   phenotype String? // Code phénotype (ex: "Pheno #3", "Clone A")
 
+  // Cannabinoïdes — bornés 0-100, avec provenance (annoncé vs mesuré en labo)
+  thcMin     Float?
+  thcMax     Float?
+  thcSource  String? // "breeder_claim" | "lab_tested"
+  cbdMin     Float?
+  cbdMax     Float?
+  cbdSource  String? // "breeder_claim" | "lab_tested"
+  labReportUrl String? // Lien vers le certificat d'analyse (COA), même convention que FlowerReview.labReportUrl
+
+  // Culture
+  floweringMinWeeks Int?
+  floweringMaxWeeks Int?
+  yieldValue Float? // Valeur numérique du rendement
+  yieldUnit  String? // "g_m2" | "g_plant" — jamais converti automatiquement entre les deux
+
+  // Étiquettes libres
+  tags String? // JSON: string[]
+
   // Notes personnelles
-  notes String? // Notes privées de l'utilisateur
+  notes String? // Notes privées de l'utilisateur (texte libre uniquement — ne plus y stocker de JSON structuré)
 
   // Relations
   genNodes GenNode[] // Nœuds dans les arbres généalogiques

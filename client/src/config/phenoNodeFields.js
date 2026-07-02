@@ -15,7 +15,13 @@
  *
  * Clés historiques à ne jamais renommer (lues ailleurs : CultivarNode.jsx, Genetiques.jsx) :
  * sex, type, breeder, ratio, notes, phenotypeCode, relations.
+ *
+ * Champs `type: 'number-unit'` stockent { value: number, unit: string } (jamais de string brute) —
+ * voir NodeFormModal.jsx renderField(). Unités de rendement partagées avec la Bibliothèque Cultivars
+ * via client/src/config/unitOptions.js (g/m² et g/plant ne sont jamais convertis l'un vers l'autre).
  */
+
+import { YIELD_UNITS } from './unitOptions'
 
 export const PHENO_NODE_SECTIONS = [
     {
@@ -23,7 +29,7 @@ export const PHENO_NODE_SECTIONS = [
         label: 'Identité & génération',
         icon: '🏷️',
         fields: [
-            { id: 'generation', label: 'Génération', type: 'select', options: [
+            { id: 'generation', label: 'Génération', type: 'select', hint: 'Position dans le programme de sélection (comptage de générations).', options: [
                 { value: '', label: 'Non précisé' },
                 { value: 'P', label: 'P (Parentale)' },
                 { value: 'F1', label: 'F1' },
@@ -53,16 +59,10 @@ export const PHENO_NODE_SECTIONS = [
         label: 'Type génétique',
         icon: '🧬',
         fields: [
-            { id: 'geneticType', label: 'Classification', type: 'select', options: [
+            { id: 'geneticType', label: 'Classification', type: 'select', hint: 'Classification génétique globale — pour la génération exacte du cross (F1, BX1...), voir le champ Génération ci-dessus.', options: [
                 { value: '', label: 'Non précisé' },
                 { value: 'landrace', label: 'Landrace / variété locale' },
                 { value: 'ibl', label: 'IBL (lignée consanguine stable)' },
-                { value: 'f1', label: 'F1 (croisement de 2 lignées stables)' },
-                { value: 'f2', label: 'F2' },
-                { value: 'f3', label: 'F3' },
-                { value: 'f4', label: 'F4+' },
-                { value: 'bx', label: 'BX (rétrocroisement)' },
-                { value: 's1', label: 'S1 (selfing/autofécondation)' },
                 { value: 'polyhybrid', label: 'Polyhybride' },
                 { value: 'auto', label: 'Automatique (ruderalis)' }
             ]},
@@ -81,6 +81,7 @@ export const PHENO_NODE_SECTIONS = [
         id: 'selection',
         label: 'Infos de sélection',
         icon: '🎯',
+        sectionHint: 'Évaluation qualitative auto-rapportée, non issue d\'une mesure normalisée.',
         fields: [
             { id: 'selectionCriteria', label: 'Critères de sélection', type: 'textarea', placeholder: 'Critères utilisés pour cette génération...' },
             { id: 'phenotypesKept', label: 'Phénotypes retenus', type: 'text' },
@@ -102,15 +103,16 @@ export const PHENO_NODE_SECTIONS = [
         id: 'technical',
         label: 'Caractères techniques (croissance de la plante)',
         icon: '🌱',
+        sectionHint: 'Évaluation qualitative auto-rapportée, non issue d\'une mesure normalisée.',
         fields: [
             { id: 'growthStructure', label: 'Structure de croissance', type: 'text' },
             { id: 'vigor', label: 'Vigueur', type: 'select', options: [
                 { value: '', label: 'Non évalué' }, { value: 'low', label: 'Faible' }, { value: 'medium', label: 'Moyenne' }, { value: 'high', label: 'Élevée' }
             ]},
-            { id: 'germinationSpeed', label: 'Vitesse de germination', type: 'text', placeholder: 'ex: 48h' },
-            { id: 'vegTime', label: 'Temps de croissance végétative', type: 'text', placeholder: 'ex: 6 semaines' },
-            { id: 'floweringTime', label: 'Temps de floraison', type: 'text', placeholder: 'ex: 8 semaines' },
-            { id: 'yieldEstimate', label: 'Rendement', type: 'text', placeholder: 'ex: 450g/m²' },
+            { id: 'germinationSpeed', label: 'Vitesse de germination', type: 'number-unit', units: [{ value: 'h', label: 'heures' }, { value: 'j', label: 'jours' }], defaultUnit: 'h' },
+            { id: 'vegTime', label: 'Temps de croissance végétative', type: 'number-unit', units: [{ value: 'j', label: 'jours' }, { value: 'sem', label: 'semaines' }], defaultUnit: 'sem' },
+            { id: 'floweringTime', label: 'Temps de floraison', type: 'number-unit', units: [{ value: 'j', label: 'jours' }, { value: 'sem', label: 'semaines' }], defaultUnit: 'sem' },
+            { id: 'yieldEstimate', label: 'Rendement', type: 'number-unit', units: [...YIELD_UNITS, { value: 'oz_plant', label: 'oz/plant' }], defaultUnit: 'g_m2', hint: 'g/m² et g/plant ne sont pas convertibles l\'un vers l\'autre sans connaître la densité de plantation.' },
             { id: 'floralDensity', label: 'Densité florale', type: 'select', options: [
                 { value: '', label: 'Non évalué' }, { value: 'low', label: 'Faible' }, { value: 'medium', label: 'Moyenne' }, { value: 'high', label: 'Élevée' }
             ]},
@@ -156,9 +158,9 @@ export const PHENO_NODE_SECTIONS = [
                 { value: 'probable', label: 'Probable' },
                 { value: 'claimed', label: 'Revendiqué (non vérifié)' }
             ]},
-            { id: 'geneticStabilityIndex', label: 'Indice de stabilité génétique', type: 'text' },
-            { id: 'reproducibilityScore', label: 'Score de reproductibilité du phénotype', type: 'text' },
-            { id: 'inbreedingLevel', label: 'Niveau de consanguinité', type: 'text' },
+            { id: 'geneticStabilityIndex', label: 'Indice de stabilité génétique', type: 'text', hint: 'Aucune échelle standardisée officielle — précisez votre méthode si renseigné (ex: % de plants conformes au phénotype cible sur N générations).' },
+            { id: 'reproducibilityScore', label: 'Score de reproductibilité du phénotype', type: 'text', hint: 'Score empirique propre à votre suivi — non comparable entre éleveurs sans méthode commune.' },
+            { id: 'inbreedingLevel', label: 'Niveau de consanguinité', type: 'text', hint: 'Idéalement exprimé en coefficient de consanguinité F (0–1) ou en nombre de générations de selfing/backcross si connu.' },
             { id: 'keeperHistory', label: 'Historique des phénotypes "keepers"', type: 'textarea' },
             { id: 'multiRunObservations', label: 'Observations sur plusieurs runs', type: 'textarea' },
             { id: 'version', label: 'Version de la lignée', type: 'text', placeholder: 'ex: v1.2' }
@@ -166,7 +168,12 @@ export const PHENO_NODE_SECTIONS = [
     }
 ]
 
-/** Méthodes d'insémination/pollinisation — propriété de la RELATION (arête) parent→enfant */
+/**
+ * Méthodes d'insémination/pollinisation — propriété de la RELATION (arête) parent→enfant.
+ * Le rétrocroisement (BX) est volontairement ABSENT ici : c'est une stratégie de génération
+ * (déjà capturée par `generation` = BX1/BX2/BX3 sur le nœud enfant), pas une technique physique
+ * de pollinisation — l'inclure ici créait un doublon de catégorie avec le champ `generation`.
+ */
 export const POLLINATION_METHODS = [
     { value: '', label: 'Non précisé' },
     { value: 'open', label: 'Pollinisation ouverte' },
@@ -176,7 +183,6 @@ export const POLLINATION_METHODS = [
     { value: 'brush', label: 'Pinceau' },
     { value: 'pollen-collection-storage', label: 'Collecte et conservation du pollen' },
     { value: 'male-flower-harvest', label: 'Récolte sur fleurs mâles' },
-    { value: 'selfing-inversion', label: 'Selfing / inversion sexuelle (S1, féminisées)' },
-    { value: 'backcross', label: 'Rétrocroisement (BX)' },
-    { value: 'chemical-feminization', label: 'Féminisation chimique' }
+    { value: 'selfing-inversion', label: 'Selfing / inversion sexuelle (obtention de S1/féminisées)' },
+    { value: 'chemical-feminization', label: 'Féminisation chimique (traitement de la mère, ex: STS — produit du pollen féminisé)' }
 ]

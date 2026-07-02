@@ -75,13 +75,40 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 
         if (field.type === 'select') {
             return (
-                <LiquidSelect
-                    key={field.id}
-                    label={field.label}
-                    value={value || ''}
-                    onChange={(e) => handleGeneticsChange(field.id, e.target.value)}
-                    options={field.options}
-                />
+                <div key={field.id} className="space-y-1">
+                    <LiquidSelect
+                        label={field.label}
+                        value={value || ''}
+                        onChange={(v) => handleGeneticsChange(field.id, v)}
+                        options={field.options}
+                    />
+                    {field.hint && <p className="text-white/40 text-xs ml-1">{field.hint}</p>}
+                </div>
+            );
+        }
+
+        if (field.type === 'number-unit') {
+            // Stocke { value, unit } — jamais de string brute mélangeant chiffre et unité.
+            const compound = (value && typeof value === 'object') ? value : { value: '', unit: field.defaultUnit };
+            return (
+                <div key={field.id} className="space-y-1">
+                    <div className="flex items-end gap-2">
+                        <LiquidInput
+                            type="number"
+                            label={field.label}
+                            value={compound.value ?? ''}
+                            onChange={(e) => handleGeneticsChange(field.id, { ...compound, value: e.target.value })}
+                            wrapperClassName="flex-1"
+                        />
+                        <LiquidSelect
+                            value={compound.unit || field.defaultUnit}
+                            onChange={(unit) => handleGeneticsChange(field.id, { ...compound, unit })}
+                            options={field.units}
+                            wrapperClassName="w-32"
+                        />
+                    </div>
+                    {field.hint && <p className="text-white/40 text-xs ml-1">{field.hint}</p>}
+                </div>
             );
         }
 
@@ -203,7 +230,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     <LiquidSelect
                         label="Sexe"
                         value={formData.genetics?.sex || 'unknown'}
-                        onChange={(e) => handleGeneticsChange('sex', e.target.value)}
+                        onChange={(v) => handleGeneticsChange('sex', v)}
                         options={[
                             { value: 'unknown', label: '❓ Inconnu / non sexé' },
                             { value: 'female', label: '♀ Femelle' },
@@ -214,7 +241,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     <LiquidSelect
                         label="Type"
                         value={formData.genetics?.type || ''}
-                        onChange={(e) => handleGeneticsChange('type', e.target.value)}
+                        onChange={(v) => handleGeneticsChange('type', v)}
                         options={[
                             { value: '', label: 'Sélectionner...' },
                             { value: 'Indica', label: 'Indica' },
@@ -236,6 +263,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                         value={formData.genetics?.ratio || ''}
                         onChange={(e) => handleGeneticsChange('ratio', e.target.value)}
                         placeholder="ex: 70/30"
+                        hint="Classification empirique/commerciale, pas une taxonomie botanique validée — le chémotype (profil terpénique/cannabinoïde) est aujourd'hui considéré plus fiable scientifiquement."
                     />
 
                     <LiquidTextarea
@@ -269,6 +297,9 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                             </button>
                             {isOpen && (
                                 <div className="p-4 pt-0 space-y-4">
+                                    {section.sectionHint && (
+                                        <p className="text-white/40 text-xs -mt-2">{section.sectionHint}</p>
+                                    )}
                                     {section.fields.map(renderField)}
                                 </div>
                             )}
