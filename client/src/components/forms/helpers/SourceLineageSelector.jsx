@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, X, ChevronDown, Plus } from 'lucide-react'
+import { Search, X, ChevronDown, Plus, Flower2 } from 'lucide-react'
 import { TYPE_META } from '../../../utils/reviewTypeMeta'
 
 /**
