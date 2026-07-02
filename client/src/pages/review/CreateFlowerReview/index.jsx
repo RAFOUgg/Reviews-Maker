@@ -7,7 +7,7 @@ const OrchardPanel = lazy(() => import('../../../components/shared/orchard/Orcha
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
-import { flattenFlowerFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
+import { flattenFlowerFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -145,21 +145,43 @@ export default function CreateFlowerReview() {
         } catch (e) { }
     }, [currentSection, formData])
 
+    // Snapshot des données aplaties de la dernière sauvegarde réussie — sert de base
+    // pour ne renvoyer au backend que les champs qui ont réellement changé (autosave rapide).
+    const lastSavedFlatRef = useRef(null)
+
     const handleSave = async ({ silent = false } = {}) => {
         let savedReview
         try {
             setSaving(true)
             const flatData = flattenFlowerFormData(formData)
+            const dataToSend = id ? diffFlatData(flatData, lastSavedFlatRef.current) : flatData
             const existingImages = photos
                 .filter(p => p.existing)
                 .map(p => p.name || p.url || p.preview)
                 .filter(Boolean)
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
+            const reviewFormData = createFormDataFromFlat(dataToSend, photos, 'draft', existingImages)
 
             if (id) {
                 savedReview = await flowerReviewsService.update(id, reviewFormData)
             } else {
                 savedReview = await flowerReviewsService.create(reviewFormData)
+            }
+
+            lastSavedFlatRef.current = Object.fromEntries(
+                Object.entries(flatData).filter(([, v]) => !(v instanceof File))
+            )
+
+            // Resynchroniser les photos avec la réponse serveur : les nouveaux fichiers
+            // uploadés deviennent "existing" et ne sont plus jamais ré-uploadés aux
+            // autosaves suivants (sinon chaque autosave dupliquait les photos en DB).
+            if (Array.isArray(savedReview?.images)) {
+                setPhotos(prev => {
+                    prev.forEach(p => { if (!p.existing && p.preview) URL.revokeObjectURL(p.preview) })
+                    return savedReview.images.map(p => {
+                        const url = typeof p === 'string' ? (p.startsWith('/') ? p : `/images/${p}`) : (p.url || p.preview || '')
+                        return { url, preview: url, existing: true, name: typeof p === 'string' ? p : (p.name || '') }
+                    })
+                })
             }
 
             if (!silent) toast.success('Brouillon sauvegardé ✅')
@@ -178,6 +200,9 @@ export default function CreateFlowerReview() {
     }
 
     // Auto-save sur chaque modification (debounced 2.5s)
+    // hasLoadedRef évite de déclencher un save juste après le peuplement initial de formData ;
+    // au-delà, plus besoin de gate sur nomCommercial (qui bloquait silencieusement l'autosave
+    // si on éditait une autre section avant d'avoir rempli le nom).
     const autoSaveTimerRef = useRef(null)
     const hasLoadedRef = useRef(false)
     useEffect(() => {
@@ -188,11 +213,22 @@ export default function CreateFlowerReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
-        if (!id && !formData.nomCommercial?.trim()) return
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
     }, [formData])
+
+    // Filet de sécurité : si l'utilisateur quitte la page moins de 2.5s après sa dernière
+    // modification, on force un save immédiat au démontage plutôt que de la perdre.
+    const handleSaveRef = useRef(handleSave)
+    useEffect(() => { handleSaveRef.current = handleSave })
+    useEffect(() => () => {
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current)
+            handleSaveRef.current({ silent: true })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     // Publier avec les données orchardData passées directement (évite la race-condition setState)
     const handleSubmitWithOrchardData = async (orchardData = {}) => {

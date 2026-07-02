@@ -2465,8 +2465,13 @@ const PipelineDragDropView = ({
                 {/* PANNEAU LATÉRAL GAUCHE - MASQUÉ SUR MOBILE */}
                 {!isMobile && (
                     <div className="w-60 lg:w-80 flex-shrink-0 h-full flex flex-col bg-white/5 rounded-xl border border-white/10 overflow-hidden overflow-x-hidden min-h-0" data-testid="pipeline-sidebar" tabIndex={0}>
-                        {/* Header Contenus */}
-                        <div className="sticky top-0 bg-[#0a0a12]/95 backdrop-blur-sm p-3 border-b border-white/10 z-10 flex-shrink-0">
+                        {/* Header Contenus — pas de `sticky` : le panneau (tabIndex=0, overflow-hidden)
+                            peut recevoir un scrollTop programmatique (focus d'un enfant, scrollIntoView),
+                            et `sticky` dans un conteneur overflow-hidden (pas overflow-auto/scroll) peut
+                            se faire clipper hors-champ au lieu de re-coller en haut selon le navigateur.
+                            Comme c'est déjà le premier enfant d'une flex-col, il reste toujours visible
+                            sans sticky — seule la liste en dessous (déjà overflow-y-auto) doit scroller. */}
+                        <div className="bg-[#0a0a12]/95 backdrop-blur-sm p-3 border-b border-white/10 z-10 flex-shrink-0">
                             <div className="flex items-center justify-between gap-2">
                                 <h3 className="font-bold text-white text-sm">📦 Contenus</h3>
                                 <button

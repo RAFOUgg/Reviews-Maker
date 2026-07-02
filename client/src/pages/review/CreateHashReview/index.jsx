@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-import { flattenHashFormData, createFormDataFromFlat } from '../../../utils/formDataFlattener'
+import { flattenHashFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -81,21 +81,47 @@ export default function CreateHashReview() {
         }
     }
 
+    // Snapshot des données aplaties de la dernière sauvegarde réussie — sert de base
+    // pour ne renvoyer au backend que les champs qui ont réellement changé (autosave rapide).
+    const lastSavedFlatRef = useRef(null)
+
     const handleSave = async ({ silent = false } = {}) => {
         let savedReview
         try {
             setSaving(true)
             const flatData = flattenHashFormData(formData)
+            const dataToSend = id ? diffFlatData(flatData, lastSavedFlatRef.current) : flatData
             const existingImages = photos
                 .filter(p => p.existing)
                 .map(p => p.name || p.url || p.preview)
                 .filter(Boolean)
-            const reviewFormData = createFormDataFromFlat(flatData, photos, 'draft', existingImages)
+            const reviewFormData = createFormDataFromFlat(dataToSend, photos, 'draft', existingImages)
 
             if (id) {
                 savedReview = await hashReviewsService.update(id, reviewFormData)
             } else {
                 savedReview = await hashReviewsService.create(reviewFormData)
+            }
+
+            // Snapshot complet (pas le diff) pour comparer au prochain autosave
+            lastSavedFlatRef.current = Object.fromEntries(
+                Object.entries(flatData).filter(([, v]) => !(v instanceof File))
+            )
+
+            // Resynchroniser les photos avec la réponse serveur : les nouveaux fichiers
+            // uploadés deviennent "existing" (URL serveur) et ne sont plus jamais ré-uploadés
+            // aux autosaves suivants (sinon chaque autosave dupliquait les photos en DB).
+            const rawPhotos = savedReview?.hashReview?.photos
+            if (rawPhotos) {
+                let parsedPhotos = []
+                try { parsedPhotos = typeof rawPhotos === 'string' ? JSON.parse(rawPhotos) : rawPhotos } catch { parsedPhotos = [] }
+                setPhotos(prev => {
+                    prev.forEach(p => { if (!p.existing && p.preview) URL.revokeObjectURL(p.preview) })
+                    return parsedPhotos.map(p => {
+                        const url = typeof p === 'string' ? (p.startsWith('/') ? p : `/images/${p}`) : (p.url || p.preview || '')
+                        return { url, preview: url, existing: true, name: typeof p === 'string' ? p : (p.name || '') }
+                    })
+                })
             }
 
             if (!silent) toast.success('Brouillon sauvegardé')
@@ -148,7 +174,11 @@ export default function CreateHashReview() {
     }
 
     // Auto-save sur chaque modification (debounced 2.5s)
-    // Garde : ne pas créer de brouillon vide pour une nouvelle review sans nom
+    // hasLoadedRef évite de déclencher un save juste après le peuplement initial de formData
+    // (au montage ou juste après le chargement d'une review existante) — au-delà, tout
+    // changement de formData vient forcément d'une vraie édition utilisateur, donc plus besoin
+    // de gate sur nomCommercial (qui bloquait silencieusement l'autosave si on éditait le
+    // pipeline avant d'avoir rempli le nom).
     const autoSaveTimerRef = useRef(null)
     const hasLoadedRef = useRef(false)
     useEffect(() => {
@@ -159,11 +189,23 @@ export default function CreateHashReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
-        if (!id && !formData.nomCommercial?.trim()) return
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
     }, [formData])
+
+    // Filet de sécurité : si l'utilisateur quitte la page moins de 2.5s après sa dernière
+    // modification, le debounce ci-dessus n'a pas encore eu le temps de sauvegarder — on
+    // force un save immédiat au démontage plutôt que de perdre silencieusement la modification.
+    const handleSaveRef = useRef(handleSave)
+    useEffect(() => { handleSaveRef.current = handleSave })
+    useEffect(() => () => {
+        if (autoSaveTimerRef.current) {
+            clearTimeout(autoSaveTimerRef.current)
+            handleSaveRef.current({ silent: true })
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
 
     // Vérifier auth
     if (!isAuthenticated && !loading) {

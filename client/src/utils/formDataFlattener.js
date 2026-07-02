@@ -384,6 +384,34 @@ export function flattenEdibleFormData(data) {
 }
 
 /**
+ * Compare des données aplaties à la dernière version sauvegardée et ne retourne que
+ * les clés qui ont changé (comparaison par valeur, pas par référence). Utilisé pour
+ * les autosaves : évite de renvoyer l'intégralité du formulaire à chaque frappe alors
+ * que Prisma `update` n'a besoin que des colonnes qui ont réellement changé.
+ * Les File (certificateFile/terpeneFile) sont toujours inclus tels quels : JSON.stringify
+ * d'un File donne toujours "{}", donc les comparer par valeur les ferait passer pour
+ * inchangés et on perdrait silencieusement un nouvel upload.
+ * @param {Object} flatData - Données aplaties actuelles
+ * @param {Object|null} previousFlatData - Snapshot de la dernière sauvegarde réussie (null = premier save)
+ */
+export function diffFlatData(flatData, previousFlatData) {
+    if (!previousFlatData) return { ...flatData }
+
+    const diff = {}
+    Object.keys(flatData).forEach(key => {
+        const newVal = flatData[key]
+        if (newVal instanceof File) {
+            diff[key] = newVal
+            return
+        }
+        if (JSON.stringify(newVal) !== JSON.stringify(previousFlatData[key])) {
+            diff[key] = newVal
+        }
+    })
+    return diff
+}
+
+/**
  * Crée un FormData à partir des données aplaties
  * @param {Object} flatData - Données aplaties
  * @param {Array} photos - Photos à uploader (nouveaux fichiers)
