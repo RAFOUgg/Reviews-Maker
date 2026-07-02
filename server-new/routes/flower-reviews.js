@@ -88,17 +88,21 @@ const handleMulterError = (err, req, res, next) => {
  * @returns {Object} { valid: boolean, errors: string[], cleaned: Object }
  */
 function validateFlowerReviewData(data, options = {}) {
-    const { isDraft = false } = options
+    const { isDraft = false, isUpdate = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
     // nomCommercial* (obligatoire sauf brouillon)
+    // isUpdate : les autosaves envoient désormais un diff (seuls les champs modifiés depuis le
+    // dernier save) — l'absence de nomCommercial dans une requête PUT signifie très souvent
+    // "inchangé", pas "vide". Sans ce garde, chaque autosave où le nom n'était pas retouché
+    // écrasait silencieusement le vrai nom par le placeholder 'Brouillon'.
     if (!isDraft && (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0)) {
         errors.push('nomCommercial is required')
     } else if (data.nomCommercial && typeof data.nomCommercial === 'string' && data.nomCommercial.trim().length > 0) {
         cleaned.nomCommercial = data.nomCommercial.trim()
-    } else if (isDraft) {
+    } else if (isDraft && !isUpdate) {
         cleaned.nomCommercial = 'Brouillon'
     }
 
@@ -877,7 +881,7 @@ router.put('/:id',
 
         // Valider les données FlowerReview
         const isDraftUpdate = req.body.status === 'draft'
-        const validation = validateFlowerReviewData(req.body, { isDraft: isDraftUpdate })
+        const validation = validateFlowerReviewData(req.body, { isDraft: isDraftUpdate, isUpdate: true })
 
         if (!validation.valid) {
             throw Errors.VALIDATION_ERROR(validation.errors)

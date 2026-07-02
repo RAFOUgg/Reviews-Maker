@@ -50,17 +50,23 @@ const upload = multer({
  * Validation des données HashReview
  */
 async function validateHashReviewData(data, options = {}) {
-    const { isDraft = false } = options
+    const { isDraft = false, isUpdate = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
     // nomCommercial* (obligatoire sauf brouillon)
+    // isUpdate : les autosaves envoient désormais un diff (seuls les champs modifiés depuis le
+    // dernier save), donc l'absence de nomCommercial dans une requête PUT signifie très souvent
+    // "inchangé depuis le dernier save", PAS "vide". Sans ce garde, chaque autosave où le nom
+    // n'a pas été retouché écrasait silencieusement le vrai nom par le placeholder 'Brouillon'.
+    // Sur update, on laisse simplement la colonne intacte (Prisma ne touche pas un champ absent
+    // de `cleaned`) au lieu d'y injecter un défaut.
     if (!isDraft && (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0)) {
         errors.push('nomCommercial is required')
     } else if (data.nomCommercial && typeof data.nomCommercial === 'string' && data.nomCommercial.trim().length > 0) {
         cleaned.nomCommercial = data.nomCommercial.trim()
-    } else if (isDraft) {
+    } else if (isDraft && !isUpdate) {
         cleaned.nomCommercial = 'Brouillon'
     }
 
@@ -682,7 +688,7 @@ router.put('/:id', requireAuth, upload.fields([
 
     // Validation
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
-    const validation = await validateHashReviewData(bodyData, { isDraft })
+    const validation = await validateHashReviewData(bodyData, { isDraft, isUpdate: true })
     if (!validation.valid) {
         return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }

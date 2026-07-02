@@ -51,16 +51,20 @@ const upload = multer({
  * Validation des données EdibleReview
  */
 function validateEdibleReviewData(data, options = {}) {
-    const { isDraft = false } = options
+    const { isDraft = false, isUpdate = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
+    // isUpdate : les autosaves envoient désormais un diff (seuls les champs modifiés depuis le
+    // dernier save) — l'absence de nomProduit dans une requête PUT signifie très souvent
+    // "inchangé", pas "vide". Sans ce garde, chaque autosave où le nom n'était pas retouché
+    // écrasait silencieusement le vrai nom par le placeholder 'Brouillon'.
     if (!isDraft && (!data.nomProduit || typeof data.nomProduit !== 'string' || data.nomProduit.trim().length === 0)) {
         errors.push('nomProduit is required')
     } else if (data.nomProduit && typeof data.nomProduit === 'string') {
         cleaned.nomProduit = data.nomProduit.trim()
-    } else if (isDraft) {
+    } else if (isDraft && !isUpdate) {
         cleaned.nomProduit = 'Brouillon'
     }
 
@@ -328,7 +332,7 @@ router.put('/:id', requireAuth, upload.array('images', 4), asyncHandler(async (r
     }
 
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
-    const validation = validateEdibleReviewData(bodyData, { isDraft })
+    const validation = validateEdibleReviewData(bodyData, { isDraft, isUpdate: true })
     if (!validation.valid) {
         return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }

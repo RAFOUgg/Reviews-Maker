@@ -51,16 +51,20 @@ const upload = multer({
  * Validation des données ConcentrateReview
  */
 async function validateConcentrateReviewData(data, options = {}) {
-    const { isDraft = false } = options
+    const { isDraft = false, isUpdate = false } = options
     const errors = []
     const cleaned = {}
 
     // ===== SECTION 1: Infos Générales =====
+    // isUpdate : les autosaves envoient désormais un diff (seuls les champs modifiés depuis le
+    // dernier save) — l'absence de nomCommercial dans une requête PUT signifie très souvent
+    // "inchangé", pas "vide". Sans ce garde, chaque autosave où le nom n'était pas retouché
+    // écrasait silencieusement le vrai nom par le placeholder 'Brouillon'.
     if (!isDraft && (!data.nomCommercial || typeof data.nomCommercial !== 'string' || data.nomCommercial.trim().length === 0)) {
         errors.push('nomCommercial is required')
     } else if (data.nomCommercial && typeof data.nomCommercial === 'string') {
         cleaned.nomCommercial = data.nomCommercial.trim()
-    } else if (isDraft) {
+    } else if (isDraft && !isUpdate) {
         cleaned.nomCommercial = 'Brouillon'
     }
 
@@ -561,7 +565,7 @@ router.put('/:id', requireAuth, upload.fields([
     }
 
     const isDraft = bodyData.status === 'draft' || bodyData.isDraft === true || bodyData.isDraft === 'true'
-    const validation = await validateConcentrateReviewData(bodyData, { isDraft })
+    const validation = await validateConcentrateReviewData(bodyData, { isDraft, isUpdate: true })
     if (!validation.valid) {
         return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
