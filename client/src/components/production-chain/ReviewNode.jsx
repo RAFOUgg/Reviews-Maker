@@ -10,6 +10,7 @@
 import React from 'react';
 import { Handle, Position } from 'reactflow';
 import { TYPE_META } from '../../utils/reviewTypeMeta';
+import { getImageUrl } from '../../utils/imageUtils';
 
 const ReviewNode = ({ data, selected }) => {
     const meta = TYPE_META[data.reviewType] || TYPE_META.flower;
@@ -27,7 +28,7 @@ const ReviewNode = ({ data, selected }) => {
             <div className="node-photo">
                 {data.image ? (
                     <img
-                        src={data.image}
+                        src={getImageUrl(data.image)}
                         alt={data.label}
                         onError={(e) => { e.target.style.display = 'none'; }}
                     />

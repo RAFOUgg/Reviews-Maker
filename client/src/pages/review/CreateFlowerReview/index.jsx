@@ -311,7 +311,6 @@ export default function CreateFlowerReview() {
                 onSave={() => handleSave({ silent: false })}
                 isDirty={isDirty}
                 saving={saving}
-                wide={currentSectionData.id === 'genetics'}
             >
                 {/* Section Content */}
                 <AnimatePresence mode="wait">
@@ -321,19 +320,17 @@ export default function CreateFlowerReview() {
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -20 }}
                         transition={{ duration: 0.3 }}
-                        className={currentSectionData?.id === 'genetics' ? 'h-full' : 'space-y-6'}
+                        className="space-y-6"
                     >
-                        {currentSectionData?.id !== 'genetics' && (
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="text-3xl">{currentSectionData.icon}</span>
-                                <div>
-                                    <h2 className="text-xl font-semibold text-white">
-                                        {currentSectionData.title}
-                                        {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
-                                    </h2>
-                                </div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="text-3xl">{currentSectionData.icon}</span>
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">
+                                    {currentSectionData.title}
+                                    {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
+                                </h2>
                             </div>
-                        )}
+                        </div>
 
                         {/* Render current section by ID */}
                         {currentSectionData.id === 'infos' && (

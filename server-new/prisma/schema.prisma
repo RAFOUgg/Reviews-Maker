@@ -1493,6 +1493,9 @@ model GenEdge {
 
   // Métadonnées de relation
   relationshipType String  @default("parent") // "parent", "pollen_donor", "sibling", "clone", "mutation"
+  pollinationMethod String? // "open", "controlled-manual", "isolation-selected-male", "pollination-bag",
+                             // "brush", "pollen-collection-storage", "male-flower-harvest",
+                             // "selfing-inversion", "backcross", "chemical-feminization"
   notes            String? // Notes supplémentaires
 
   // Metadata
@@ -1539,6 +1542,7 @@ model ChainNode {
   reviewType String // "flower" | "hash" | "concentrate" | "edible" — clé normalisée interne
   reviewId   String // = Review.id
   label      String // copie du nom au moment de l'ajout (fallback si review supprimée)
+  image      String? // copie de la première photo au moment de l'ajout (même raison que label)
 
   position String // JSON: {x: number, y: number}
   color    String @default("#10b981")

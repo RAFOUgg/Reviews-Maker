@@ -4,15 +4,18 @@
  * Modelé sur EdgeFormModal.jsx (genetics), avec technique/date/notes au lieu de relationshipType.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidInput, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
-import { Save, X, ArrowDown } from 'lucide-react';
+import { getPipelineSummaryForEdge } from '../../utils/chainPipelineSummary';
+import { Save, X, ArrowDown, Sparkles } from 'lucide-react';
 
 const ChainEdgeFormModal = ({ onClose }) => {
     const store = useProductionChainStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [pipelineSummary, setPipelineSummary] = useState(null);
+    const [loadingSummary, setLoadingSummary] = useState(false);
 
     const formData = store.edgeFormData || {};
     const isEdit = formData.id !== undefined;
@@ -20,6 +23,42 @@ const ChainEdgeFormModal = ({ onClose }) => {
     const handleChange = (field, value) => {
         store.updateEdgeFormData({ [field]: value });
     };
+
+    // Résumé du pipeline déjà capturé sur la fiche destination (curing/séparation/extraction/
+    // recette selon son type) — les liaisons "reçoivent" les données des fiches techniques
+    // plutôt que de les dupliquer manuellement. Pré-remplit `technique` si vide, création uniquement.
+    useEffect(() => {
+        const targetNode = store.nodes.find(n => n.id === formData.targetNodeId);
+        if (!targetNode) {
+            setPipelineSummary(null);
+            return;
+        }
+
+        let cancelled = false;
+        setLoadingSummary(true);
+        fetch(`/api/reviews/${targetNode.reviewId}`, { credentials: 'include' })
+            .then(r => r.ok ? r.json() : null)
+            .then(review => {
+                if (cancelled || !review) return;
+                const flat = {
+                    ...review,
+                    ...(review.flowerData || {}),
+                    ...(review.hashData || {}),
+                    ...(review.concentrateData || {}),
+                    ...(review.edibleData || {})
+                };
+                const summary = getPipelineSummaryForEdge(targetNode.reviewType, flat);
+                setPipelineSummary(summary);
+                if (!isEdit && summary?.technique && !store.edgeFormData?.technique) {
+                    store.updateEdgeFormData({ technique: summary.technique });
+                }
+            })
+            .catch(() => {})
+            .finally(() => { if (!cancelled) setLoadingSummary(false); });
+
+        return () => { cancelled = true };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [formData.targetNodeId]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -129,6 +168,24 @@ const ChainEdgeFormModal = ({ onClose }) => {
                             <span className="text-sm text-white">{sourceNode.label}</span>
                             <ArrowDown className="w-4 h-4 text-amber-400" />
                             <span className="text-sm text-white">{targetNode.label}</span>
+                        </div>
+                    </LiquidCard>
+                )}
+
+                {loadingSummary && (
+                    <p className="text-xs text-white/40">Recherche des données de pipeline sur la fiche destination...</p>
+                )}
+
+                {pipelineSummary && (
+                    <LiquidCard className="p-4" style={{ background: 'rgba(16, 185, 129, 0.08)', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+                        <p className="text-xs text-emerald-400 mb-2 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            Données trouvées sur la fiche destination — {pipelineSummary.label}
+                        </p>
+                        <div className="text-sm text-white space-y-1">
+                            {pipelineSummary.technique && <p>Méthode : <span className="text-white/70">{pipelineSummary.technique}</span></p>}
+                            {pipelineSummary.stepCount > 0 && <p>Étapes enregistrées : <span className="text-white/70">{pipelineSummary.stepCount}</span></p>}
+                            {pipelineSummary.detail && <p className="text-white/70">{pipelineSummary.detail}</p>}
                         </div>
                     </LiquidCard>
                 )}

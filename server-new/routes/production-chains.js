@@ -98,6 +98,7 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                         reviewType: true,
                         reviewId: true,
                         label: true,
+                        image: true,
                         position: true,
                         color: true,
                         createdAt: true,
@@ -208,7 +209,12 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
         // geneticTreeId dans flower-reviews.js
         const review = await prisma.review.findUnique({
             where: { id: reviewId },
-            select: { id: true, authorId: true, type: true, holderName: true }
+            select: {
+                id: true, authorId: true, type: true, holderName: true, images: true,
+                hashData: { select: { photos: true } },
+                concentrateData: { select: { photos: true } },
+                edibleData: { select: { photos: true } }
+            }
         })
 
         if (!review || review.type !== REVIEW_TYPE_TO_DB[reviewType]) {
@@ -219,6 +225,15 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
             return res.status(403).json({ error: "You can only add your own reviews to a chain" })
         }
 
+        // Fleur stocke ses photos sur Review.images, Hash/Concentré/Comestible sur leur
+        // propre sous-table (même fallback que reviewFormatter.js côté galerie)
+        let image = null
+        try {
+            const rawPhotos = review.images || review.hashData?.photos || review.concentrateData?.photos || review.edibleData?.photos
+            const parsed = rawPhotos ? JSON.parse(rawPhotos) : []
+            image = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null
+        } catch { /* pas de photo exploitable */ }
+
         try {
             const node = await prisma.chainNode.create({
                 data: {
@@ -226,6 +241,7 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
                     reviewType,
                     reviewId,
                     label: review.holderName || 'Sans nom',
+                    image,
                     position: JSON.stringify(position),
                     color: color || "#10b981"
                 }

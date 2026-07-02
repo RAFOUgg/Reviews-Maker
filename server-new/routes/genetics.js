@@ -128,6 +128,7 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         parentNodeId: true,
                         childNodeId: true,
                         relationshipType: true,
+                        pollinationMethod: true,
                         notes: true
                     }
                 },
@@ -430,6 +431,7 @@ router.get("/trees/:id/edges", optionalAuth, async (req, res) => {
                 parentNodeId: true,
                 childNodeId: true,
                 relationshipType: true,
+                pollinationMethod: true,
                 notes: true,
                 createdAt: true,
                 updatedAt: true
@@ -465,6 +467,7 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
             parentNodeId,
             childNodeId,
             relationshipType = "parent",
+            pollinationMethod = null,
             notes = null
         } = req.body;
 
@@ -499,6 +502,7 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
                     parentNodeId,
                     childNodeId,
                     relationshipType: relationshipType || "parent",
+                    pollinationMethod: pollinationMethod || null,
                     notes: notes?.trim() || null
                 }
             });
@@ -535,13 +539,14 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
             return res.status(403).json({ error: "Forbidden" });
         }
 
-        const { relationshipType, notes } = req.body;
+        const { relationshipType, pollinationMethod, notes } = req.body;
 
         try {
             const updated = await prisma.genEdge.update({
                 where: { id: req.params.edgeId },
                 data: {
                     ...(relationshipType && { relationshipType }),
+                    ...(pollinationMethod !== undefined && { pollinationMethod: pollinationMethod || null }),
                     ...(notes !== undefined && { notes: notes?.trim() || null })
                 }
             });

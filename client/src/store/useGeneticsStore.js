@@ -461,6 +461,7 @@ const useGeneticsStore = create(
                             parentNodeId: edge.parentNodeId || '',
                             childNodeId: edge.childNodeId || '',
                             relationshipType: edge.relationshipType || 'parent',
+                            pollinationMethod: edge.pollinationMethod || '',
                             notes: edge.notes || ''
                         }
                     });
@@ -473,6 +474,7 @@ const useGeneticsStore = create(
                         parentNodeId: parentNodeIdOrEdge || '',
                         childNodeId: childNodeId || '',
                         relationshipType: 'parent',
+                        pollinationMethod: '',
                         notes: ''
                     }
                 });

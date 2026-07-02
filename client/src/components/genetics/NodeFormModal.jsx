@@ -1,18 +1,22 @@
 /**
  * NodeFormModal Component
- * Modale pour créer/éditer un nœud (cultivar)
+ * Modale pour créer/éditer un nœud (cultivar) — génétiques de base (nom, couleur, photo,
+ * sexe/type/breeder/ratio) + sections de breeding avancées pilotées par phenoNodeFields.js
+ * (identité/génération, type génétique, sélection, caractères techniques, traçabilité, statut).
  * Liquid Glass UI Design System
  */
 
 import React, { useState } from 'react';
-import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
+import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard, LiquidToggle } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
-import { Save, X } from 'lucide-react';
+import { PHENO_NODE_SECTIONS } from '../../config/phenoNodeFields';
+import { Save, X, ChevronDown } from 'lucide-react';
 
 const NodeFormModal = ({ isEdit, onClose }) => {
     const store = useGeneticsStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [openSections, setOpenSections] = useState(new Set());
 
     const formData = store.nodeFormData || {};
 
@@ -29,6 +33,14 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 
     const handleColorChange = (color) => {
         store.updateNodeFormData({ color });
+    };
+
+    const toggleSection = (sectionId) => {
+        setOpenSections(prev => {
+            const next = new Set(prev);
+            next.has(sectionId) ? next.delete(sectionId) : next.add(sectionId);
+            return next;
+        });
     };
 
     const handleSubmit = async (e) => {
@@ -58,6 +70,59 @@ const NodeFormModal = ({ isEdit, onClose }) => {
         }
     };
 
+    const renderField = (field) => {
+        const value = formData.genetics?.[field.id];
+
+        if (field.type === 'select') {
+            return (
+                <LiquidSelect
+                    key={field.id}
+                    label={field.label}
+                    value={value || ''}
+                    onChange={(e) => handleGeneticsChange(field.id, e.target.value)}
+                    options={field.options}
+                />
+            );
+        }
+
+        if (field.type === 'textarea') {
+            return (
+                <LiquidTextarea
+                    key={field.id}
+                    label={field.label}
+                    value={value || ''}
+                    onChange={(e) => handleGeneticsChange(field.id, e.target.value)}
+                    placeholder={field.placeholder}
+                    rows={2}
+                />
+            );
+        }
+
+        if (field.type === 'checkbox') {
+            return (
+                <LiquidToggle
+                    key={field.id}
+                    label={field.label}
+                    checked={!!value}
+                    onChange={(checked) => handleGeneticsChange(field.id, checked)}
+                    size="sm"
+                />
+            );
+        }
+
+        return (
+            <LiquidInput
+                key={field.id}
+                type={field.type === 'date' ? 'date' : 'text'}
+                label={field.label}
+                value={value || ''}
+                onChange={(e) => handleGeneticsChange(field.id, e.target.value)}
+                placeholder={field.placeholder}
+                hint={field.hint}
+            />
+        );
+    };
+
     return (
         <LiquidModal
             isOpen={true}
@@ -68,7 +133,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     <span>{isEdit ? 'Éditer cultivar' : 'Ajouter cultivar'}</span>
                 </div>
             }
-            size="md"
+            size="lg"
             glowColor="green"
             footer={
                 <div className="flex gap-3">
@@ -87,7 +152,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                 </div>
             }
         >
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-4 max-h-[65vh] overflow-y-auto pr-1">
                 {error && (
                     <LiquidCard className="p-3" style={{ background: 'rgba(239, 68, 68, 0.1)', borderColor: 'rgba(239, 68, 68, 0.3)' }}>
                         <p className="text-red-400 text-sm">{error}</p>
@@ -131,9 +196,9 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     helperText="Affichée sur le nœud de l'arbre"
                 />
 
-                {/* Genetics Section */}
+                {/* Genetics Section — champs historiques, clés à ne pas renommer */}
                 <LiquidCard className="p-4 space-y-4">
-                    <h4 className="text-sm font-semibold text-white">Informations génétiques (optionnel)</h4>
+                    <h4 className="text-sm font-semibold text-white">Informations génétiques de base</h4>
 
                     <LiquidSelect
                         label="Sexe"
@@ -183,6 +248,34 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     />
                 </LiquidCard>
 
+                {/* Sections de breeding avancées — repliables, pilotées par phenoNodeFields.js.
+                    Volontairement absentes ici : odeur/goût/terpènes/cannabinoïdes/résine/trichomes/
+                    couleur (déjà sur la fiche technique liée) et sexe des parents/lien parent-enfant
+                    (déjà représentés par le graphe lui-même). */}
+                {PHENO_NODE_SECTIONS.map(section => {
+                    const isOpen = openSections.has(section.id);
+                    return (
+                        <LiquidCard key={section.id} className="p-0 overflow-hidden">
+                            <button
+                                type="button"
+                                onClick={() => toggleSection(section.id)}
+                                className="w-full flex items-center justify-between p-4 text-left"
+                            >
+                                <span className="text-sm font-semibold text-white flex items-center gap-2">
+                                    <span>{section.icon}</span>
+                                    {section.label}
+                                </span>
+                                <ChevronDown className={`w-4 h-4 text-white/40 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                            </button>
+                            {isOpen && (
+                                <div className="p-4 pt-0 space-y-4">
+                                    {section.fields.map(renderField)}
+                                </div>
+                            )}
+                        </LiquidCard>
+                    );
+                })}
+
                 {/* Notes */}
                 <LiquidTextarea
                     label="Notes personnelles"
@@ -199,8 +292,3 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 };
 
 export default NodeFormModal;
-
-
-
-
-

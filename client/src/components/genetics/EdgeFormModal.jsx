@@ -7,6 +7,7 @@
 import React, { useState } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
+import { POLLINATION_METHODS } from '../../config/phenoNodeFields';
 import { Save, X, ArrowDown } from 'lucide-react';
 
 const EdgeFormModal = ({ onClose }) => {
@@ -38,6 +39,7 @@ const EdgeFormModal = ({ onClose }) => {
             if (isEdit) {
                 await store.updateEdge(formData.id, {
                     relationshipType: formData.relationshipType || 'parent',
+                    pollinationMethod: formData.pollinationMethod || null,
                     notes: formData.notes || null
                 });
             } else {
@@ -45,6 +47,7 @@ const EdgeFormModal = ({ onClose }) => {
                     parentNodeId: formData.parentNodeId,
                     childNodeId: formData.childNodeId,
                     relationshipType: formData.relationshipType || 'parent',
+                    pollinationMethod: formData.pollinationMethod || null,
                     notes: formData.notes || null
                 });
             }
@@ -155,6 +158,14 @@ const EdgeFormModal = ({ onClose }) => {
                         <span className="text-sm text-white">{childNode.cultivarName}</span>
                     </div>
                 )}
+
+                {/* Méthode d'insémination/pollinisation */}
+                <LiquidSelect
+                    label="Méthode d'insémination"
+                    value={formData.pollinationMethod || ''}
+                    onChange={(e) => handleChange('pollinationMethod', e.target.value)}
+                    options={POLLINATION_METHODS}
+                />
 
                 {/* Relationship Preview */}
                 {parentNode && childNode && (

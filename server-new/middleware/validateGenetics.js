@@ -70,8 +70,14 @@ const validateNodeCreation = (req, res, next) => {
     next();
 };
 
+const VALID_POLLINATION_METHODS = [
+    "open", "controlled-manual", "isolation-selected-male", "pollination-bag",
+    "brush", "pollen-collection-storage", "male-flower-harvest",
+    "selfing-inversion", "backcross", "chemical-feminization"
+];
+
 const validateEdgeCreation = (req, res, next) => {
-    const { parentNodeId, childNodeId, relationshipType, notes } = req.body;
+    const { parentNodeId, childNodeId, relationshipType, pollinationMethod, notes } = req.body;
 
     // Validation des IDs
     if (!parentNodeId || typeof parentNodeId !== "string" || parentNodeId.trim().length === 0) {
@@ -92,6 +98,11 @@ const validateEdgeCreation = (req, res, next) => {
         return res.status(400).json({ error: `Invalid relationship type. Must be one of: ${validTypes.join(", ")}` });
     }
 
+    // Validation pollinationMethod (optionnel)
+    if (pollinationMethod && !VALID_POLLINATION_METHODS.includes(pollinationMethod)) {
+        return res.status(400).json({ error: `Invalid pollination method. Must be one of: ${VALID_POLLINATION_METHODS.join(", ")}` });
+    }
+
     // Validation notes (optionnel)
     if (notes && (typeof notes !== "string" || notes.length > 500)) {
         return res.status(400).json({ error: "Notes must be less than 500 characters" });
@@ -101,7 +112,7 @@ const validateEdgeCreation = (req, res, next) => {
 };
 
 const validateEdgeUpdate = (req, res, next) => {
-    const { relationshipType, notes } = req.body;
+    const { relationshipType, pollinationMethod, notes } = req.body;
 
     // Validation relationshipType (optionnel)
     if (relationshipType !== undefined) {
@@ -109,6 +120,11 @@ const validateEdgeUpdate = (req, res, next) => {
         if (!validTypes.includes(relationshipType)) {
             return res.status(400).json({ error: `Invalid relationship type. Must be one of: ${validTypes.join(", ")}` });
         }
+    }
+
+    // Validation pollinationMethod (optionnel)
+    if (pollinationMethod && !VALID_POLLINATION_METHODS.includes(pollinationMethod)) {
+        return res.status(400).json({ error: `Invalid pollination method. Must be one of: ${VALID_POLLINATION_METHODS.join(", ")}` });
     }
 
     // Validation notes (optionnel)

@@ -63,6 +63,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             id: node.id,
             data: {
                 label: node.label,
+                image: node.image,
                 reviewType: node.reviewType,
                 reviewId: node.reviewId,
                 color: node.color || '#10b981',
