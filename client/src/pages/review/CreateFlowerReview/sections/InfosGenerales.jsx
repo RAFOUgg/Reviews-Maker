@@ -1,14 +1,11 @@
 import React from 'react'
-import { Camera, X, Info, Check, ShieldCheck, Store } from 'lucide-react'
-import { LiquidCard, LiquidInput, LiquidDivider, LiquidChip, LiquidButton } from '@/components/ui/LiquidUI'
-import { useAccountFeatures } from '@/hooks/useAccountFeatures'
+import { Camera, X, Info } from 'lucide-react'
+import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
 
 export default function InfosGenerales({ formData, handleChange, photos, handlePhotoUpload, removePhoto }) {
-
-    const { isProducteur } = useAccountFeatures()
 
     // Toggle tag sur une photo
     const togglePhotoTag = (photoIndex, tag) => {
@@ -65,95 +62,22 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         </div>
                     </div>
 
-                    {/* Profil génétique */}
-                    <div className="p-4 bg-white/5 rounded-xl border border-white/10 space-y-4">
-                        <p className="text-sm font-semibold text-white/80">🧬 Profil génétique</p>
-
+                    {/* Farm / Producteur — "Moi-même" pré-remplit avec votre nom si c'est votre
+                        propre production (remplace l'ancien toggle "C'est notre production",
+                        redondant avec ce bouton et source de confusion) */}
+                    <div>
                         <LiquidInput
-                            label="Breeder / Créateur"
-                            value={formData.genetics?.breeder || ''}
-                            onChange={(e) => handleChange('genetics', { ...(formData.genetics || {}), breeder: e.target.value })}
-                            placeholder="Ex: Exotic Genetix, Seed Junky, Compound..."
-                        />
-                    </div>
-
-                    {/* Farm + toggle "notre production" côte à côte sur desktop (Producteur) */}
-                    <div className={isProducteur ? 'grid grid-cols-1 md:grid-cols-2 gap-4 items-start' : ''}>
-                        <div>
-                            <LiquidInput
-                                label={
-                                    <span className="flex items-center justify-between">
-                                        Farm / Producteur
-                                        {!formData.isOurReview && (
-                                            <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
-                                        )}
-                                    </span>
-                                }
-                                value={formData.isOurReview ? '' : (formData.farm || '')}
-                                onChange={(e) => handleChange('farm', e.target.value)}
-                                placeholder={formData.isOurReview ? 'Rempli automatiquement (c\'est votre production)' : 'Nom du producteur'}
-                                disabled={!!formData.isOurReview}
-                                className={formData.isOurReview ? 'opacity-40 cursor-not-allowed' : ''}
-                            />
-                            <p className="text-xs text-white/40 mt-1">
-                                {formData.isOurReview
-                                    ? '🔒 Désactivé — vous avez déclaré cette review comme votre production'
-                                    : '(Auto-complete depuis base de données)'}
-                            </p>
-                        </div>
-
-                        {/* C'est notre review — Producteur uniquement */}
-                        {isProducteur && (
-                        <div>
-                            <button
-                                type="button"
-                                onClick={() => handleChange('isOurReview', !formData.isOurReview)}
-                                className={`w-full relative overflow-hidden rounded-xl border transition-all duration-300 flex items-center gap-4 px-5 py-4 group ${formData.isOurReview
-                                        ? 'bg-gradient-to-r from-emerald-600/30 to-teal-600/30 border-emerald-500/60 shadow-lg shadow-emerald-500/20'
-                                        : 'bg-white/4 border-white/15 hover:border-violet-500/40 hover:bg-violet-500/8'
-                                    }`}
-                            >
-                                {/* Indicateur gauche */}
-                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all duration-300 ${formData.isOurReview
-                                        ? 'bg-emerald-500/30 text-emerald-400 shadow-md shadow-emerald-500/20'
-                                        : 'bg-white/8 text-white/40 group-hover:bg-violet-500/20 group-hover:text-violet-400'
-                                    }`}>
-                                    {formData.isOurReview
-                                        ? <ShieldCheck className="w-5 h-5" />
-                                        : <Store className="w-5 h-5" />
-                                    }
-                                </div>
-
-                                {/* Texte */}
-                                <div className="flex-1 text-left">
-                                    <div className={`font-semibold text-sm transition-colors ${formData.isOurReview ? 'text-emerald-300' : 'text-white/70 group-hover:text-white/90'
-                                        }`}>
-                                        {formData.isOurReview ? 'Notre production ✓' : 'C\'est notre production'}
-                                    </div>
-                                    <div className={`text-xs mt-0.5 transition-colors ${formData.isOurReview ? 'text-emerald-400/70' : 'text-white/35'
-                                        }`}>
-                                        {formData.isOurReview
-                                            ? 'Vous êtes le producteur de ce cultivar'
-                                            : 'Déclarez cette review comme votre propre production'}
-                                    </div>
-                                </div>
-
-                                {/* Toggle pill */}
-                                <div className={`relative w-12 h-6 rounded-full transition-all duration-300 flex-shrink-0 ${formData.isOurReview ? 'bg-emerald-500' : 'bg-white/15'
-                                    }`}>
-                                    <div className={`absolute top-0.5 w-5 h-5 rounded-full shadow-md transition-all duration-300 ${formData.isOurReview
-                                            ? 'translate-x-6 bg-white'
-                                            : 'translate-x-0.5 bg-white/50'
-                                        }`} />
-                                </div>
-
-                                {/* Badge Producteur */}
-                                <span className="absolute top-2 right-2 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-violet-500/20 text-violet-400 border border-violet-500/30">
-                                    PRO
+                            label={
+                                <span className="flex items-center justify-between">
+                                    Farm / Producteur
+                                    <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
                                 </span>
-                            </button>
-                        </div>
-                        )}
+                            }
+                            value={formData.farm || ''}
+                            onChange={(e) => handleChange('farm', e.target.value)}
+                            placeholder="Nom du producteur"
+                        />
+                        <p className="text-xs text-white/40 mt-1">(Auto-complete depuis base de données)</p>
                     </div>
 
                     {/* Photos avec système de tags CDC conforme */}

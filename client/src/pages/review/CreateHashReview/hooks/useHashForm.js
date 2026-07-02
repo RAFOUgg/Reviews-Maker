@@ -55,6 +55,8 @@ export function useHashForm(reviewId = null) {
                 density: hd.densiteTactile ?? 0,
                 friability: hd.friabiliteViscositeMelting ?? 0,
                 melting: hd.meltingResidus ?? 0,
+                malleability: hd.malleabiliteScore ?? 0,
+                stickiness: hd.collantScore ?? 0,
             }
 
             const gouts = {

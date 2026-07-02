@@ -62,6 +62,7 @@ export default function CreateFlowerReview() {
 
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const [isDirty, setIsDirty] = useState(false)
     const scrollContainerRef = useRef(null)
 
     // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
@@ -184,6 +185,7 @@ export default function CreateFlowerReview() {
                 })
             }
 
+            setIsDirty(false)
             if (!silent) toast.success('Brouillon sauvegardé ✅')
 
             if (!id && savedReview?.id) {
@@ -213,6 +215,7 @@ export default function CreateFlowerReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
+        setIsDirty(true)
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
@@ -305,6 +308,9 @@ export default function CreateFlowerReview() {
                 sectionEmojis={sectionEmojis}
                 showProgress={true}
                 onOpenPreview={() => setShowOrchard(true)}
+                onSave={() => handleSave({ silent: false })}
+                isDirty={isDirty}
+                saving={saving}
                 wide={['genetics', 'culture'].includes(currentSectionData.id)}
             >
                 {/* Section Content */}

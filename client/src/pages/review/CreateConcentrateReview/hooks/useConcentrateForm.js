@@ -55,6 +55,7 @@ export function useConcentrateForm(reviewId = null) {
                 density: cd.densiteTactile ?? 0,
                 friability: cd.friabiliteViscositeMelting ?? 0,
                 melting: cd.meltingResidus ?? 0,
+                stickiness: cd.collantScore ?? 0,
             }
 
             const gouts = {
@@ -116,6 +117,7 @@ export function useConcentrateForm(reviewId = null) {
                 type: 'concentrate',
                 id: baseReview.id,
                 nomCommercial: cd.nomCommercial || baseReview.holderName || '',
+                concentrateType: cd.concentrateType || '',
                 hashmaker: cd.hashmaker || '',
                 laboratoire: cd.laboratoire || '',
                 cultivarsUtilises: cd.cultivarsUtilises || '',

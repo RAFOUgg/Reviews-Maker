@@ -53,8 +53,8 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         <div>
                             <label className="block text-sm font-medium text-white/60 mb-1.5">Type de concentré</label>
                             <select
-                                value={formData.type || ''}
-                                onChange={(e) => handleChange('type', e.target.value)}
+                                value={formData.concentrateType || ''}
+                                onChange={(e) => handleChange('concentrateType', e.target.value)}
                                 className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/30 outline-none transition-colors appearance-none"
                             >
                                 <option value="" className="bg-[#0f0f1a]">Sélectionnez un type</option>

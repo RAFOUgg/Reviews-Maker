@@ -306,15 +306,15 @@ async function validateHashReviewData(data, options = {}) {
 
     // ===== SECTION 7: Texture =====
     // Frontend sends dureteScore, densiteTactileScore, friabiliteScore, meltingScore, residuScore, etc.
-    // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
-    // NB: pas de mapping 'collantScore' ici — contrairement à FlowerReview, le schema
-    // HashReview n'a pas de colonne dédiée pour le collant/stickiness. L'envoyer causait
-    // un crash Prisma "Unknown argument" (copié depuis flower-reviews.js par erreur).
+    // Schema fields: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus,
+    // malleabiliteScore, collantScore (mêmes noms de colonnes que FlowerReview)
     const textureMap = {
         durete: ['dureteScore', 'durete'],
         densiteTactile: ['densiteTactileScore', 'densiteTactile'],
         friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
-        meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus']
+        meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus'],
+        malleabiliteScore: ['malleabiliteScore'],
+        collantScore: ['collantScore']
     }
 
     Object.entries(textureMap).forEach(([schemaField, candidates]) => {

@@ -35,6 +35,7 @@ export default function CreateHashReview() {
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const [isDirty, setIsDirty] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useHashForm(id)
     const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -124,6 +125,7 @@ export default function CreateHashReview() {
                 })
             }
 
+            setIsDirty(false)
             if (!silent) toast.success('Brouillon sauvegardé')
 
             const newId = savedReview?.review?.id || savedReview?.id
@@ -189,6 +191,7 @@ export default function CreateHashReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
+        setIsDirty(true)
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
@@ -229,6 +232,8 @@ export default function CreateHashReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
+                onSave={() => handleSave({ silent: false })}
+                isDirty={isDirty}
                 title="Créer une review Hash"
                 subtitle="Documentez votre hash, kief ou ice-o-lator"
                 loading={loading}

@@ -30,6 +30,7 @@ export default function CreateEdibleReview() {
     const [searchParams] = useSearchParams()
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
+    const [isDirty, setIsDirty] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useEdibleForm(id)
     const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -113,6 +114,7 @@ export default function CreateEdibleReview() {
                 })
             }
 
+            setIsDirty(false)
             if (!silent) toast.success('Brouillon sauvegardé')
 
             const newId = savedReview?.review?.id || savedReview?.id
@@ -176,6 +178,7 @@ export default function CreateEdibleReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
+        setIsDirty(true)
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
@@ -214,11 +217,13 @@ export default function CreateEdibleReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
+                onSave={() => handleSave({ silent: false })}
+                isDirty={isDirty}
                 title="Créer une review Comestible"
                 subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
                 loading={loading}
                 saving={saving}
-                wide={sections[currentSection]?.id === 'recipe'}
+                wide={false}
             >
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -227,19 +232,17 @@ export default function CreateEdibleReview() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.2 }}
-                        className={sections[currentSection]?.id === 'recipe' ? 'h-full' : 'space-y-6'}
+                        className="space-y-6"
                     >
-                        {sections[currentSection]?.id !== 'recipe' && (
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="text-3xl">{sections[currentSection].icon}</span>
-                                <div>
-                                    <h2 className="text-xl font-semibold text-white">
-                                        {sections[currentSection].title}
-                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                    </h2>
-                                </div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="text-3xl">{sections[currentSection].icon}</span>
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">
+                                    {sections[currentSection].title}
+                                    {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
+                                </h2>
                             </div>
-                        )}
+                        </div>
 
                         {currentSection === 0 && (
                             <InfosGenerales

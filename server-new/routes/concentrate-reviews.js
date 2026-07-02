@@ -64,6 +64,10 @@ async function validateConcentrateReviewData(data, options = {}) {
         cleaned.nomCommercial = 'Brouillon'
     }
 
+    if (data.concentrateType && typeof data.concentrateType === 'string') {
+        cleaned.concentrateType = data.concentrateType.trim()
+    }
+
     if (data.hashmaker && typeof data.hashmaker === 'string') {
         cleaned.hashmaker = data.hashmaker.trim()
     }
@@ -182,9 +186,11 @@ async function validateConcentrateReviewData(data, options = {}) {
     })
 
     // Aliased visual fields: schema ← [frontend candidates]
+    // melting lit visualMeltingScore (clé dédiée à VisualSection) — meltingScore est réservé
+    // au score de "fonte" de TextureSection (concept distinct) pour éviter toute collision.
     const visualAliasMap = {
         viscosite: ['viscositeVisuelle', 'viscosite'],
-        melting: ['meltingScore', 'melting'],
+        melting: ['visualMeltingScore', 'melting'],
         residus: ['residuScore', 'residus'],
         pistils: ['pistilsScore', 'pistils'],
         moisissure: ['moisissureScore', 'moisissure']
@@ -224,12 +230,16 @@ async function validateConcentrateReviewData(data, options = {}) {
     }
 
     // ===== SECTION 7: Texture =====
-    // Frontend sends dureteScore, densiteTactileScore, friabiliteScore; schema: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus
+    // Frontend sends dureteScore, densiteTactileScore, friabiliteScore; schema: durete, densiteTactile, friabiliteViscositeMelting, meltingResidus, collantScore
+    // meltingResidus manquait les alias meltingScore/residuScore envoyés par TextureSection
+    // (seul le nom de colonne brut était accepté) — la fonte/résidus de Texture (distincts du
+    // Melting de VisualSection, voir visualMeltingScore) n'étaient donc jamais sauvés.
     const textureAliasMap = {
         durete: ['dureteScore', 'durete'],
         densiteTactile: ['densiteTactileScore', 'densiteTactile'],
         friabiliteViscositeMelting: ['friabiliteScore', 'viscositeScore', 'friabiliteViscositeMelting'],
-        meltingResidus: ['meltingResidus']
+        meltingResidus: ['meltingScore', 'residuScore', 'meltingResidus'],
+        collantScore: ['collantScore']
     }
     Object.entries(textureAliasMap).forEach(([schemaField, candidates]) => {
         const rawVal = candidates.map(k => data[k]).find(v => v !== undefined && v !== null && v !== '')

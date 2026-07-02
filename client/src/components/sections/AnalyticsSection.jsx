@@ -23,22 +23,33 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     const [cbc, setCbc] = useState(String(data?.cbcPercent ?? data?.cbc ?? ''));
     const [uploadedFile, setUploadedFile] = useState(data?.certificateFile || null);
     const [terpeneFile, setTerpeneFile] = useState(data?.terpeneFile || null);
+    // Certificat déjà enregistré côté serveur (URL string) — après un reload, `data.certificateFile`
+    // est toujours null (on n'a jamais un objet File du serveur), seul `data.labReportUrl` existe.
+    // Sans ceci, le certificat "disparaissait" à chaque réouverture de la review alors qu'il était
+    // bien sauvegardé en DB, et les champs % THC/CBD/etc redevenaient disabled (gate sur uploadedFile).
+    const [existingCertUrl, setExistingCertUrl] = useState(data?.certificateFile ? null : (data?.labReportUrl || null));
+    const [existingTerpUrl, setExistingTerpUrl] = useState(data?.terpeneFile ? null : (data?.terpeneFileUrl || null));
     const [uploadError, setUploadError] = useState('');
     const [showPreview, setShowPreview] = useState(false);
     const [previewType, setPreviewType] = useState(null); // 'cannabinoid' or 'terpene'
+
+    const hasCertificate = !!uploadedFile || !!existingCertUrl;
 
     // Re-sync from props when data is loaded from API (edit mode)
     const prevDataRef = React.useRef(null);
     useEffect(() => {
         // Only re-sync when the incoming data object is genuinely new (not a round-trip of our own update)
         if (!data || data === prevDataRef.current) return;
-        const hasValues = data.thcPercent != null || data.cbdPercent != null || data.thc != null;
+        const hasValues = data.thcPercent != null || data.cbdPercent != null || data.thc != null
+            || data.labReportUrl || data.terpeneFileUrl;
         if (!hasValues) return;
         prevDataRef.current = data;
         setThc(String(data.thcPercent ?? data.thc ?? ''));
         setCbd(String(data.cbdPercent ?? data.cbd ?? ''));
         setCbg(String(data.cbgPercent ?? data.cbg ?? ''));
         setCbc(String(data.cbcPercent ?? data.cbc ?? ''));
+        if (!data.certificateFile) setExistingCertUrl(data.labReportUrl || null);
+        if (!data.terpeneFile) setExistingTerpUrl(data.terpeneFileUrl || null);
     }, [data]);
 
     // Synchroniser avec parent — emit thcPercent keys to match flattener
@@ -49,9 +60,14 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             cbgPercent: cbg ? parseFloat(cbg) : null,
             cbcPercent: cbc ? parseFloat(cbc) : null,
             certificateFile: uploadedFile,
-            terpeneFile: terpeneFile
+            terpeneFile: terpeneFile,
+            // Repropager les URLs existantes tant qu'aucun nouveau fichier n'est choisi, sinon le
+            // backend (qui ne touche labReportUrl que si un nouveau fichier arrive) reste cohérent
+            // mais le formulaire local perdrait la référence au prochain re-render du parent.
+            labReportUrl: existingCertUrl,
+            terpeneFileUrl: existingTerpUrl
         });
-    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile]);
+    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile, existingCertUrl, existingTerpUrl]);
 
     const handleFileUpload = (e, type = 'cannabinoid') => {
         const file = e.target.files?.[0];
@@ -82,8 +98,10 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     const removeFile = (type = 'cannabinoid') => {
         if (type === 'terpene') {
             setTerpeneFile(null);
+            setExistingTerpUrl(null);
         } else {
             setUploadedFile(null);
+            setExistingCertUrl(null);
         }
         setUploadError('');
     };
@@ -145,7 +163,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             <div className="space-y-4">
                 <div className="flex items-center justify-between">
                     <h4 className="text-sm font-bold text-white/80">Taux de cannabinoïdes (%)</h4>
-                    {!uploadedFile && (
+                    {!hasCertificate && (
                         <span className="text-xs px-2 py-1 bg-orange-500/20 text-orange-400 rounded-full flex items-center gap-1">
                             <AlertCircle className="w-3 h-3" />
                             Certificat requis
@@ -165,7 +183,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 value={thc}
                                 onChange={(e) => handleNumberInput(e.target.value, setThc)}
                                 placeholder="0.0"
-                                disabled={!uploadedFile}
+                                disabled={!hasCertificate}
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
@@ -183,7 +201,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 value={cbd}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbd)}
                                 placeholder="0.0"
-                                disabled={!uploadedFile}
+                                disabled={!hasCertificate}
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
@@ -201,7 +219,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 value={cbg}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbg)}
                                 placeholder="0.0"
-                                disabled={!uploadedFile}
+                                disabled={!hasCertificate}
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-orange-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
@@ -219,7 +237,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                                 value={cbc}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbc)}
                                 placeholder="0.0"
-                                disabled={!uploadedFile}
+                                disabled={!hasCertificate}
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                             />
                             <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
@@ -234,7 +252,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             <div className="space-y-4">
                 <h4 className="text-sm font-bold text-white/80">Certificat d'analyse cannabinoïdes</h4>
 
-                {!uploadedFile ? (
+                {!hasCertificate ? (
                     <div className="relative">
                         <input
                             type="file"
@@ -256,7 +274,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                             </p>
                         </label>
                     </div>
-                ) : (
+                ) : uploadedFile ? (
                     <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -289,6 +307,46 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                             </div>
                         </div>
                     </div>
+                ) : (
+                    <div className="p-4 bg-green-500/10 border border-green-500/20 rounded-xl">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="text-3xl">📄</div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white flex items-center gap-2">
+                                        Certificat enregistré
+                                        <CheckCircle className="w-4 h-4 text-green-400" />
+                                    </p>
+                                    <a href={existingCertUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 underline">
+                                        Voir le fichier
+                                    </a>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={(e) => handleFileUpload(e, 'cannabinoid')}
+                                    className="hidden"
+                                    id="certificate-upload-replace"
+                                />
+                                <label
+                                    htmlFor="certificate-upload-replace"
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                                    title="Remplacer"
+                                >
+                                    <Upload className="w-5 h-5 text-white/60" />
+                                </label>
+                                <button
+                                    onClick={() => removeFile('cannabinoid')}
+                                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                                    title="Supprimer"
+                                >
+                                    <X className="w-5 h-5 text-red-400" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
             </div>
 
@@ -310,7 +368,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                     </p>
                 </div>
 
-                {!terpeneFile ? (
+                {!terpeneFile && !existingTerpUrl ? (
                     <div className="relative">
                         <input
                             type="file"
@@ -332,7 +390,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                             </p>
                         </label>
                     </div>
-                ) : (
+                ) : terpeneFile ? (
                     <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
@@ -365,6 +423,46 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                             </div>
                         </div>
                     </div>
+                ) : (
+                    <div className="p-4 bg-purple-500/10 border border-purple-500/20 rounded-xl">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-3">
+                                <div className="text-3xl">📄</div>
+                                <div>
+                                    <p className="text-sm font-semibold text-white flex items-center gap-2">
+                                        Profil terpénique enregistré
+                                        <CheckCircle className="w-4 h-4 text-purple-400" />
+                                    </p>
+                                    <a href={existingTerpUrl} target="_blank" rel="noreferrer" className="text-xs text-blue-400 underline">
+                                        Voir le fichier
+                                    </a>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    onChange={(e) => handleFileUpload(e, 'terpene')}
+                                    className="hidden"
+                                    id="terpene-upload-replace"
+                                />
+                                <label
+                                    htmlFor="terpene-upload-replace"
+                                    className="p-2 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
+                                    title="Remplacer"
+                                >
+                                    <Upload className="w-5 h-5 text-white/60" />
+                                </label>
+                                <button
+                                    onClick={() => removeFile('terpene')}
+                                    className="p-2 hover:bg-red-500/20 rounded-lg transition-colors"
+                                    title="Supprimer"
+                                >
+                                    <X className="w-5 h-5 text-red-400" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 )}
 
                 {uploadError && (
@@ -378,7 +476,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             </div>
 
             {/* Résumé */}
-            {(thc || cbd || cbg || cbc || uploadedFile || terpeneFile) && (
+            {(thc || cbd || cbg || cbc || uploadedFile || terpeneFile || existingCertUrl || existingTerpUrl) && (
                 <div className="p-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl border border-blue-500/20 space-y-2">
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
                         <Beaker className="w-4 h-4 text-blue-400" />
@@ -389,14 +487,14 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                         {cbd && <p><span className="font-semibold text-green-400">CBD :</span> {cbd}%</p>}
                         {cbg && <p><span className="font-semibold text-orange-400">CBG :</span> {cbg}%</p>}
                         {cbc && <p><span className="font-semibold text-cyan-400">CBC :</span> {cbc}%</p>}
-                        {uploadedFile && (
+                        {(uploadedFile || existingCertUrl) && (
                             <p className="pt-2 border-t border-white/10">
-                                <span className="font-semibold text-white/80">Certificat cannabinoïdes :</span> {uploadedFile.name}
+                                <span className="font-semibold text-white/80">Certificat cannabinoïdes :</span> {uploadedFile ? uploadedFile.name : 'enregistré'}
                             </p>
                         )}
-                        {terpeneFile && (
-                            <p className={uploadedFile ? '' : 'pt-2 border-t border-white/10'}>
-                                <span className="font-semibold text-purple-400">Profil terpénique :</span> {terpeneFile.name}
+                        {(terpeneFile || existingTerpUrl) && (
+                            <p className={(uploadedFile || existingCertUrl) ? '' : 'pt-2 border-t border-white/10'}>
+                                <span className="font-semibold text-purple-400">Profil terpénique :</span> {terpeneFile ? terpeneFile.name : 'enregistré'}
                             </p>
                         )}
                     </div>

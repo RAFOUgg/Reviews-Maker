@@ -31,6 +31,12 @@ export const ResponsiveCreateReviewLayout = ({
     sectionEmojis = [], // Array d'émojis pour chaque section
     // Optional callback to open a global preview/orchard panel from the footer
     onOpenPreview,
+    // Optional manual save handler — renders a "Sauvegarder" button left of Aperçu.
+    // Disabled (greyed out) when isDirty is false, so the user can see at a glance
+    // whether the autosave has already caught up with their latest edit.
+    onSave,
+    isDirty = false,
+    saving = false,
     // When true, the content container expands to use far more of the viewport width.
     // Reserved for data-dense sections (pipelines, genetics canvas) that benefit from
     // extra horizontal room — simple field-based sections stay at a comfortable reading width.
@@ -386,6 +392,26 @@ export const ResponsiveCreateReviewLayout = ({
                                         {currentSection + 1}/{totalSections}
                                     </div>
                                 </div>
+
+                                {/* Save button — greyed out when there is nothing new to persist */}
+                                {onSave && (
+                                    <div className="flex-shrink-0">
+                                        <button
+                                            onClick={onSave}
+                                            disabled={!isDirty || saving}
+                                            title={saving ? 'Sauvegarde en cours…' : isDirty ? 'Sauvegarder maintenant' : 'Déjà sauvegardé'}
+                                            className={`rounded-xl transition-all font-medium flex items-center gap-1.5 ${layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'} ${isDirty && !saving
+                                                ? 'bg-purple-600 hover:bg-purple-700 text-white active:scale-95'
+                                                : 'bg-white/5 text-white/30 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                            </svg>
+                                            {!layout.isMobile && <span>{saving ? 'Sauvegarde…' : 'Sauvegarder'}</span>}
+                                        </button>
+                                    </div>
+                                )}
 
                                 {/* Preview button */}
                                 {onOpenPreview && (

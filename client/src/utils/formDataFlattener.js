@@ -271,6 +271,7 @@ export function flattenConcentrateFormData(data) {
 
     // Section 1 - Infos Générales
     if (data.nomCommercial) flat.nomCommercial = data.nomCommercial
+    if (data.concentrateType) flat.concentrateType = data.concentrateType
     if (data.hashmaker) flat.hashmaker = data.hashmaker
     if (data.laboratoire) flat.laboratoire = data.laboratoire
     if (data.cultivarsUtilises) flat.cultivarsUtilises = data.cultivarsUtilises
@@ -305,10 +306,15 @@ export function flattenConcentrateFormData(data) {
     }
 
     // Section 4 - Visuel & Technique (top-level OU sous data.visuel selon la section)
+    // NB: meltingScore est déjà potentiellement rempli par flattenCommonFormData() depuis
+    // data.texture.melting (score de "fonte" — concept texture, distinct du "Melting" visuel
+    // de VisualSection). Utiliser la même clé pour les deux faisait que la valeur du Visuel
+    // était systématiquement masquée par celle de Texture (guard `flat.meltingScore === undefined`
+    // toujours faux). On isole donc le Visuel sous une clé dédiée, mappée séparément côté backend.
     if (data.couleurTransparence !== undefined) flat.couleurTransparence = data.couleurTransparence
     if (data.viscositeVisuelle !== undefined) flat.viscositeVisuelle = data.viscositeVisuelle
     if (data.pureteVisuelle !== undefined) flat.pureteVisuelle = data.pureteVisuelle
-    if (data.meltingScore !== undefined) flat.meltingScore = data.meltingScore
+    if (data.visualMeltingScore !== undefined) flat.visualMeltingScore = data.visualMeltingScore
     if (data.residuScore !== undefined) flat.residuScore = data.residuScore
     if (data.pistils !== undefined) flat.pistilsScore = data.pistils
     if (data.moisissure !== undefined) flat.moisissureScore = data.moisissure
@@ -316,7 +322,7 @@ export function flattenConcentrateFormData(data) {
         if (flat.couleurTransparence === undefined && data.visuel.couleurTransparence !== undefined) flat.couleurTransparence = data.visuel.couleurTransparence
         if (flat.viscositeVisuelle === undefined && data.visuel.viscosite !== undefined) flat.viscositeVisuelle = data.visuel.viscosite
         if (flat.pureteVisuelle === undefined && data.visuel.pureteVisuelle !== undefined) flat.pureteVisuelle = data.visuel.pureteVisuelle
-        if (flat.meltingScore === undefined && data.visuel.melting !== undefined) flat.meltingScore = data.visuel.melting
+        if (flat.visualMeltingScore === undefined && data.visuel.melting !== undefined) flat.visualMeltingScore = data.visuel.melting
         if (flat.residuScore === undefined && data.visuel.residus !== undefined) flat.residuScore = data.visuel.residus
         if (data.visuel.couleurNuancier !== undefined) flat.couleurNuancier = data.visuel.couleurNuancier
     }

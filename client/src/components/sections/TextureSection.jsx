@@ -108,7 +108,7 @@ export default function TextureSection({ productType, data: directData, onChange
             newTextureData.elasticity = elasticity;
         }
 
-        if (productType === 'hash' || productType === 'concentrate') {
+        if (productType === 'Hash' || productType === 'Concentré') {
             newTextureData.melting = melting;
             newTextureData.residue = residue;
         }

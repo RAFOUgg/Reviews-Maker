@@ -35,6 +35,7 @@ export default function CreateConcentrateReview() {
     const { isAuthenticated } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
+    const [isDirty, setIsDirty] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useConcentrateForm(id)
     const { photos, setPhotos, handlePhotoUpload, removePhoto } = usePhotoUpload()
@@ -122,6 +123,7 @@ export default function CreateConcentrateReview() {
                 })
             }
 
+            setIsDirty(false)
             if (!silent) toast.success('Brouillon sauvegardé')
 
             const newId = savedReview?.review?.id || savedReview?.id
@@ -185,6 +187,7 @@ export default function CreateConcentrateReview() {
     }, [loading])
     useEffect(() => {
         if (!hasLoadedRef.current) return
+        setIsDirty(true)
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
@@ -223,6 +226,8 @@ export default function CreateConcentrateReview() {
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
+                onSave={() => handleSave({ silent: false })}
+                isDirty={isDirty}
                 title="Créer une review Concentré"
                 subtitle="Documentez votre rosin, BHO ou autre concentré"
                 loading={loading}
@@ -287,7 +292,7 @@ export default function CreateConcentrateReview() {
                         )}
                         {currentSection === 5 && (
                             <TextureSection
-                                productType="Concentrate"
+                                productType="Concentré"
                                 data={formData.texture || {}}
                                 onChange={(textureData) => handleChange('texture', textureData)}
                             />
