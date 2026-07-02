@@ -244,6 +244,17 @@ export function canAccessFeature(user, feature, options = {}) {
                 upgradeRequired: 'producer'
             };
 
+        // Chaîne de production (graphe liant plusieurs fiches techniques)
+        case 'production_chain':
+            if (accountType === ACCOUNT_TYPES.PRODUCER || accountType === ACCOUNT_TYPES.MERCHANT) {
+                return { allowed: true, accountType };
+            }
+            return {
+                allowed: false,
+                reason: 'Chaîne de production réservée aux Producteurs',
+                upgradeRequired: 'producer'
+            };
+
         // Bibliothèque templates
         case 'library_templates':
             const templateLimits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];

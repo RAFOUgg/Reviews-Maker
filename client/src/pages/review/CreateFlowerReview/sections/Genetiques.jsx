@@ -112,16 +112,17 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }, [user?.id])
 
-    // Charger l'arbre lié à la review (mode édition) ou le premier disponible
+    // Charger l'arbre déjà lié à CETTE review (mode édition) — ne jamais auto-sélectionner
+    // un autre arbre de l'utilisateur : sans geneticTreeId explicite sur la review, on laisse
+    // le modal de choix initial proposer d'en créer un ou d'en importer un explicitement
     useEffect(() => {
         if (trees.length > 0 && !selectedTreeId && !canvasLoading) {
-            const linkedTreeId = formData.genetics?.treeId || formData.geneticTreeId
-            const targetId = linkedTreeId && trees.find(t => t.id === linkedTreeId)
-                ? linkedTreeId
-                : trees[0].id
-            loadTree(targetId)
+            const linkedTreeId = formData.geneticTreeId
+            if (linkedTreeId && trees.find(t => t.id === linkedTreeId)) {
+                loadTree(linkedTreeId)
+            }
         }
-    }, [trees, selectedTreeId])
+    }, [trees, selectedTreeId, formData.geneticTreeId])
 
     // Synchroniser geneticTreeId dans formData quand l'arbre sélectionné change
     useEffect(() => {
@@ -130,23 +131,22 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }, [selectedTreeId])
 
-    // Si pas d'arbres et pas de chargement, proposer d'en créer un — seulement une fois le
-    // premier fetch réellement terminé, sinon ça s'affiche à tort pendant l'instant où
-    // trees=[] et treeLoading=false avant même que fetchTrees() ait démarré
+    // Si cette review n'a encore aucun arbre lié, proposer explicitement à l'utilisateur d'en
+    // créer un ou d'en importer un existant — y compris quand il a déjà des arbres pour
+    // d'autres reviews (sinon on retombe sur la sélection arbitraire de trees[0])
     useEffect(() => {
-        if (hasCheckedTrees && !treeLoading && trees.length === 0) {
+        if (hasCheckedTrees && !treeLoading && !formData.geneticTreeId && !selectedTreeId) {
             setShowInitialModal(true)
         }
-    }, [hasCheckedTrees, treeLoading, trees.length])
+    }, [hasCheckedTrees, treeLoading, formData.geneticTreeId, selectedTreeId])
 
-    // Filet de sécurité : si la modale était affichée mais qu'un arbre a fini par être trouvé
-    // (lié à la review ou autre), on la referme automatiquement au lieu de laisser l'utilisateur
-    // avec une modale "créer un arbre" devant un arbre déjà chargé
+    // Filet de sécurité : si la modale était affichée mais qu'un arbre a fini par être
+    // sélectionné pour cette review, on la referme automatiquement
     useEffect(() => {
-        if (showInitialModal && trees.length > 0) {
+        if (showInitialModal && selectedTreeId) {
             setShowInitialModal(false)
         }
-    }, [showInitialModal, trees.length])
+    }, [showInitialModal, selectedTreeId])
 
     // Charger les reviews fleurs de l'utilisateur pour la sidebar
     const fetchUserFlowerReviews = async () => {
@@ -824,7 +824,13 @@ export default function Genetiques({ formData, handleChange }) {
         <ConfirmModal
             open={confirmDeleteTree.open}
             title="Supprimer cet arbre"
-            message="Supprimer cet arbre généalogique ? Cette action est irréversible."
+            message={(() => {
+                const tree = trees.find(t => t.id === confirmDeleteTree.treeId)
+                const count = tree?._count?.flowerReviews || 0
+                return count > 0
+                    ? `Cet arbre est lié à ${count} review${count > 1 ? 's' : ''}. La suppression déliera ces reviews (elles resteront intactes mais perdront leur généalogie). Continuer ?`
+                    : 'Supprimer cet arbre généalogique ? Cette action est irréversible.'
+            })()}
             confirmLabel="Supprimer"
             onCancel={() => setConfirmDeleteTree({ open: false, treeId: null })}
             onConfirm={confirmDeleteTreeNow}

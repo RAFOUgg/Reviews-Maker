@@ -1,14 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Flower2, Droplet, FlaskConical, Search, X, ChevronDown, Plus } from 'lucide-react'
-
-// review.type stocké en base : 'Fleurs' (seul type capitalisé en français, historique)
-// vs 'hash'/'concentrate'/'edible' (anglais minuscule) — pas de convention uniforme, vérifié
-// directement contre les routes POST de chaque type plutôt que supposé
-const TYPE_META = {
-    flower: { label: 'Fleur', icon: Flower2, color: 'text-green-400', apiType: 'Fleurs' },
-    hash: { label: 'Hash', icon: Droplet, color: 'text-amber-400', apiType: 'hash' },
-    concentrate: { label: 'Concentré', icon: FlaskConical, color: 'text-cyan-400', apiType: 'concentrate' },
-}
+import { Search, X, ChevronDown, Plus } from 'lucide-react'
+import { TYPE_META } from '../../../utils/reviewTypeMeta'
 
 /**
  * SourceLineageSelector

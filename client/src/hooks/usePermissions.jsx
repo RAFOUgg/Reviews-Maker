@@ -195,13 +195,6 @@ export function CreateFlowerReviewForm() {
                 <GeneralInfoSection />
             </SectionGuard>
 
-            {/* Section 2: Genetics (producer only) */}
-            {permissions.sections.genetic && (
-                <SectionGuard section="genetic" label="Genetics">
-                    <GeneticsSection />
-                </SectionGuard>
-            )}
-
             {/* Section 3: Visual (always visible) */}
             <SectionGuard section="visual" label="Visual & Appearance">
                 <VisualSection />

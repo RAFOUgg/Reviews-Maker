@@ -5,6 +5,7 @@
  */
 
 import React from 'react';
+import { toSvg } from 'html-to-image';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
 const TreeToolbar = ({ treeId }) => {
@@ -53,8 +54,22 @@ const TreeToolbar = ({ treeId }) => {
         }
     };
 
-    const handleExportSVG = () => {
-        alert('Export SVG - fonction à développer');
+    const handleExportSVG = async () => {
+        try {
+            const viewport = document.querySelector('.react-flow__viewport');
+            if (!viewport) {
+                throw new Error('Canvas introuvable');
+            }
+
+            const dataUrl = await toSvg(viewport, { backgroundColor: '#0a0a14' });
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `genetic-tree-${treeId}.svg`;
+            a.click();
+        } catch (error) {
+            console.error('Export SVG error:', error);
+            alert('Erreur lors de l\'export SVG: ' + error.message);
+        }
     };
 
     return (

@@ -30,6 +30,7 @@ const CreateConcentrateReview = lazy(() => import('./pages/review/CreateConcentr
 const CreateEdibleReview = lazy(() => import('./pages/review/CreateEdibleReview'))
 const EditReviewPage = lazy(() => import('./pages/review/EditReviewPage'))
 const LibraryPage = lazy(() => import('./pages/library/LibraryPage'))
+const ProductionChainEditorPage = lazy(() => import('./pages/library/ProductionChainEditorPage'))
 const GalleryPage = lazy(() => import('./pages/public/GalleryPage'))
 const AccountPage = lazy(() => import('./pages/account/AccountPage'))
 
@@ -160,6 +161,7 @@ function App() {
                                     <Route path="/edit/edible/:id" element={<CreateEdibleReview />} />
 
                                     <Route path="/library" element={<LibraryPage />} />
+                                    <Route path="/library/production-chains/:chainId" element={<ProductionChainEditorPage />} />
                                     <Route path="/gallery" element={<GalleryPage />} />
                                     <Route path="/account" element={<AccountPage />} />
                                     <Route path="/manage-subscription" element={<Navigate to="/account?tab=subscription" replace />} />

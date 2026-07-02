@@ -1,21 +1,20 @@
 /**
- * EdgeContextMenu Component
- * 
- * Menu contextuel (clic droit) pour les opérations sur les arêtes
+ * ChainEdgeContextMenu Component
+ *
+ * Menu contextuel (clic droit) pour les liaisons de transformation d'une chaîne de production.
  */
 
 import React, { useEffect, useRef } from 'react';
-import useGeneticsStore from '../../store/useGeneticsStore';
+import useProductionChainStore from '../../store/useProductionChainStore';
 
-const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) => {
-    const store = useGeneticsStore();
+const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) => {
+    const store = useProductionChainStore();
     const menuRef = useRef(null);
 
     const edge = store.edges.find(e => e.id === edgeId);
-    const parentNode = edge ? store.nodes.find(n => n.id === edge.parentNodeId) : null;
-    const childNode = edge ? store.nodes.find(n => n.id === edge.childNodeId) : null;
+    const sourceNode = edge ? store.nodes.find(n => n.id === edge.sourceNodeId) : null;
+    const targetNode = edge ? store.nodes.find(n => n.id === edge.targetNodeId) : null;
 
-    // Fermer le menu quand on clique ailleurs
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (menuRef.current && !menuRef.current.contains(e.target)) {
@@ -37,45 +36,25 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
-    const relationshipLabel = {
-        'parent': '👨‍👩‍👧 Parent',
-        'pollen_donor': '🌼 Donateur de pollen',
-        'sibling': '👯 Frère/Sœur',
-        'clone': '🔄 Clone',
-        'mutation': '⚡ Mutation'
-    };
-
     return (
-        <div
-            ref={menuRef}
-            className="context-menu"
-            style={{
-                left: `${x}px`,
-                top: `${y}px`
-            }}
-        >
+        <div ref={menuRef} className="context-menu" style={{ left: `${x}px`, top: `${y}px` }}>
             {!readOnly && (
                 <>
                     <button className="context-menu-item" onClick={handleEdit}>
-                        ✏️ Éditer relation
+                        ✏️ Éditer la transformation
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>
             )}
 
-            {parentNode && childNode && (
+            {sourceNode && targetNode && (
                 <>
-                    <div style={{
-                        padding: '8px 12px',
-                        fontSize: '12px',
-                        color: '#666',
-                        cursor: 'default'
-                    }}>
-                        {parentNode.cultivarName}
+                    <div style={{ padding: '8px 12px', fontSize: '12px', color: '#666', cursor: 'default' }}>
+                        {sourceNode.label}
                         <br />
-                        → ({relationshipLabel[edge?.relationshipType] || 'Relation'})
+                        → ({edge?.technique || 'Transformation'})
                         <br />
-                        → {childNode.cultivarName}
+                        → {targetNode.label}
                     </div>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>
@@ -96,8 +75,4 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) =
     );
 };
 
-export default EdgeContextMenu;
-
-
-
-
+export default ChainEdgeContextMenu;

@@ -96,6 +96,7 @@ model User {
   reportsReceived   Report[]              @relation("ReportedUser")
   cultivars         Cultivar[]
   geneticTrees      GeneticTree[]         @relation("userGeneticTrees")
+  productionChains  ProductionChain[]     @relation("userProductionChains")
   cultureSetups     CultureSetup[]
   savedTemplates    SavedTemplate[]
   watermarks        Watermark[]
@@ -1503,6 +1504,82 @@ model GenEdge {
   @@index([parentNodeId])
   @@index([childNodeId])
   @@map("gen_edges")
+}
+
+// Modèle ProductionChain (chaîne de production — graphe liant plusieurs fiches
+// techniques de types différents avec les données de transformation sur les liaisons)
+model ProductionChain {
+  id          String  @id @default(uuid())
+  userId      String
+  user        User    @relation("userProductionChains", fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  isPublic    Boolean @default(false)
+  shareCode   String? @unique
+
+  nodes ChainNode[]
+  edges ChainEdge[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([isPublic])
+  @@map("production_chains")
+}
+
+// Modèle ChainNode (nœud référençant une review existante d'un des 4 types —
+// référence applicative reviewType+reviewId, pas de FK Prisma possible car
+// les reviews vivent dans 4 tables spécifiques différentes)
+model ChainNode {
+  id      String          @id @default(uuid())
+  chainId String
+  chain   ProductionChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
+
+  reviewType String // "flower" | "hash" | "concentrate" | "edible" — clé normalisée interne
+  reviewId   String // = Review.id
+  label      String // copie du nom au moment de l'ajout (fallback si review supprimée)
+
+  position String // JSON: {x: number, y: number}
+  color    String @default("#10b981")
+
+  sourceEdges ChainEdge[] @relation("chainSourceNode")
+  targetEdges ChainEdge[] @relation("chainTargetNode")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([chainId, reviewType, reviewId])
+  @@index([chainId])
+  @@index([reviewType, reviewId])
+  @@map("chain_nodes")
+}
+
+// Modèle ChainEdge (arête portant les métadonnées de transformation entre deux
+// fiches techniques : technique utilisée, date, notes)
+model ChainEdge {
+  id      String          @id @default(uuid())
+  chainId String
+  chain   ProductionChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
+
+  sourceNodeId String
+  sourceNode   ChainNode @relation("chainSourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+
+  targetNodeId String
+  targetNode   ChainNode @relation("chainTargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+
+  technique String? // ex: "Extraction rosin 90µ", "Curing 30j", "Décarboxylation"
+  date      DateTime?
+  notes     String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([sourceNodeId, targetNodeId])
+  @@index([chainId])
+  @@index([sourceNodeId])
+  @@index([targetNodeId])
+  @@map("chain_edges")
 }
 
 // ================================================

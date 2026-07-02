@@ -44,6 +44,7 @@ export function useAccountFeatures() {
         canAccessProductorStats: isProducer, // Stats culture, rendements
         canExportUnlimited: isProducer,
         canAccessGeneticsCanvas: isProducer, // Généalogie cultivars
+        canAccessProductionChain: isProducer, // Chaîne de production (liaisons entre fiches techniques)
         canUseFertilizerTracking: isProducer,
         canAccessSavedPresets: isProducer,
 
@@ -158,6 +159,7 @@ function getRequiredTierForFeature(featureName) {
         canAccessAdvancedStats: 'producteur',
         canAccessProductorStats: 'producteur',
         canAccessGeneticsCanvas: 'producteur',
+        canAccessProductionChain: 'producteur',
         canUseFertilizerTracking: 'producteur',
 
         // Producteur + Influenceur

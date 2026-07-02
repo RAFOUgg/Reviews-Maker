@@ -15,6 +15,7 @@
  * 
  * GET    /api/genetics/trees/:id/edges - Lister les arêtes d'un arbre
  * POST   /api/genetics/trees/:id/edges - Ajouter une arête
+ * PUT    /api/genetics/edges/:edgeId   - Modifier une arête
  * DELETE /api/genetics/edges/:edgeId   - Supprimer une arête
  */
 
@@ -25,12 +26,16 @@ import {
     validateTreeUpdate,
     validateNodeCreation,
     validateNodeUpdate,
-    validateEdgeCreation
+    validateEdgeCreation,
+    validateEdgeUpdate
 } from '../middleware/validateGenetics.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
+import { requireFeature } from '../middleware/permissions.js'
+import { wouldCreateCycle } from '../utils/graphCycle.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
+const requireGeneticsAccess = requireFeature('genetics_canvas')
 
 // =============================================================================
 // TREES ROUTES
@@ -54,7 +59,7 @@ router.get("/trees", requireAuth, async (req, res) => {
                 createdAt: true,
                 updatedAt: true,
                 _count: {
-                    select: { nodes: true, edges: true }
+                    select: { nodes: true, edges: true, flowerReviews: true }
                 }
             },
             orderBy: { updatedAt: "desc" }
@@ -70,7 +75,7 @@ router.get("/trees", requireAuth, async (req, res) => {
  * POST /api/genetics/trees
  * Créer un nouvel arbre généalogique
  */
-router.post("/trees", requireAuth, validateTreeCreation, async (req, res) => {
+router.post("/trees", requireAuth, requireGeneticsAccess, validateTreeCreation, async (req, res) => {
     try {
         const { name, description, projectType = "phenohunt", isPublic = false } = req.body;
 
@@ -125,6 +130,9 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         relationshipType: true,
                         notes: true
                     }
+                },
+                _count: {
+                    select: { flowerReviews: true }
                 }
             }
         });
@@ -148,7 +156,7 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
  * PUT /api/genetics/trees/:id
  * Modifier un arbre généalogique
  */
-router.put("/trees/:id", requireAuth, validateTreeUpdate, async (req, res) => {
+router.put("/trees/:id", requireAuth, requireGeneticsAccess, validateTreeUpdate, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id }
@@ -185,7 +193,7 @@ router.put("/trees/:id", requireAuth, validateTreeUpdate, async (req, res) => {
  * DELETE /api/genetics/trees/:id
  * Supprimer un arbre généalogique (et tous ses nœuds/arêtes en cascade)
  */
-router.delete("/trees/:id", requireAuth, async (req, res) => {
+router.delete("/trees/:id", requireAuth, requireGeneticsAccess, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id }
@@ -260,7 +268,7 @@ router.get("/trees/:id/nodes", optionalAuth, async (req, res) => {
  * POST /api/genetics/trees/:id/nodes
  * Ajouter un nœud à un arbre
  */
-router.post("/trees/:id/nodes", requireAuth, validateNodeCreation, async (req, res) => {
+router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNodeCreation, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id }
@@ -315,7 +323,7 @@ router.post("/trees/:id/nodes", requireAuth, validateNodeCreation, async (req, r
  * PUT /api/genetics/nodes/:nodeId
  * Modifier un nœud
  */
-router.put("/nodes/:nodeId", requireAuth, validateNodeUpdate, async (req, res) => {
+router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpdate, async (req, res) => {
     try {
         const node = await prisma.genNode.findUnique({
             where: { id: req.params.nodeId },
@@ -365,7 +373,7 @@ router.put("/nodes/:nodeId", requireAuth, validateNodeUpdate, async (req, res) =
  * DELETE /api/genetics/nodes/:nodeId
  * Supprimer un nœud (et ses arêtes associées)
  */
-router.delete("/nodes/:nodeId", requireAuth, async (req, res) => {
+router.delete("/nodes/:nodeId", requireAuth, requireGeneticsAccess, async (req, res) => {
     try {
         const node = await prisma.genNode.findUnique({
             where: { id: req.params.nodeId },
@@ -439,7 +447,7 @@ router.get("/trees/:id/edges", optionalAuth, async (req, res) => {
  * POST /api/genetics/trees/:id/edges
  * Ajouter une arête (relation parent-enfant)
  */
-router.post("/trees/:id/edges", requireAuth, validateEdgeCreation, async (req, res) => {
+router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdgeCreation, async (req, res) => {
     try {
         const tree = await prisma.geneticTree.findUnique({
             where: { id: req.params.id }
@@ -474,6 +482,16 @@ router.post("/trees/:id/edges", requireAuth, validateEdgeCreation, async (req, r
             return res.status(400).json({ error: "Invalid parent or child node" });
         }
 
+        const existingEdges = await prisma.genEdge.findMany({
+            where: { treeId: req.params.id },
+            select: { parentNodeId: true, childNodeId: true }
+        });
+        const normalizedEdges = existingEdges.map(e => ({ source: e.parentNodeId, target: e.childNodeId }));
+
+        if (wouldCreateCycle(normalizedEdges, parentNodeId, childNodeId)) {
+            return res.status(400).json({ error: "This relationship would create a cycle" });
+        }
+
         try {
             const edge = await prisma.genEdge.create({
                 data: {
@@ -499,10 +517,52 @@ router.post("/trees/:id/edges", requireAuth, validateEdgeCreation, async (req, r
 });
 
 /**
+ * PUT /api/genetics/edges/:edgeId
+ * Modifier une arête (relationshipType/notes uniquement — pas les extrémités)
+ */
+router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpdate, async (req, res) => {
+    try {
+        const edge = await prisma.genEdge.findUnique({
+            where: { id: req.params.edgeId },
+            include: { tree: true }
+        });
+
+        if (!edge) {
+            return res.status(404).json({ error: "Edge not found" });
+        }
+
+        if (edge.tree.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" });
+        }
+
+        const { relationshipType, notes } = req.body;
+
+        try {
+            const updated = await prisma.genEdge.update({
+                where: { id: req.params.edgeId },
+                data: {
+                    ...(relationshipType && { relationshipType }),
+                    ...(notes !== undefined && { notes: notes?.trim() || null })
+                }
+            });
+
+            res.json(updated);
+        } catch (error) {
+            if (error.code === "P2002") {
+                return res.status(409).json({ error: "This relationship already exists" });
+            }
+            throw error;
+        }
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update edge" });
+    }
+});
+
+/**
  * DELETE /api/genetics/edges/:edgeId
  * Supprimer une arête
  */
-router.delete("/edges/:edgeId", requireAuth, async (req, res) => {
+router.delete("/edges/:edgeId", requireAuth, requireGeneticsAccess, async (req, res) => {
     try {
         const edge = await prisma.genEdge.findUnique({
             where: { id: req.params.edgeId },

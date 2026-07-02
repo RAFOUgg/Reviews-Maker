@@ -15,6 +15,7 @@ const EdgeFormModal = ({ onClose }) => {
     const [error, setError] = useState(null);
 
     const formData = store.edgeFormData || {};
+    const isEdit = formData.id !== undefined;
 
     const handleChange = (field, value) => {
         store.updateEdgeFormData({ [field]: value });
@@ -34,12 +35,19 @@ const EdgeFormModal = ({ onClose }) => {
                 throw new Error('Le parent et l\'enfant ne peuvent pas être le même nœud');
             }
 
-            await store.addEdge({
-                parentNodeId: formData.parentNodeId,
-                childNodeId: formData.childNodeId,
-                relationshipType: formData.relationshipType || 'parent',
-                notes: formData.notes || null
-            });
+            if (isEdit) {
+                await store.updateEdge(formData.id, {
+                    relationshipType: formData.relationshipType || 'parent',
+                    notes: formData.notes || null
+                });
+            } else {
+                await store.addEdge({
+                    parentNodeId: formData.parentNodeId,
+                    childNodeId: formData.childNodeId,
+                    relationshipType: formData.relationshipType || 'parent',
+                    notes: formData.notes || null
+                });
+            }
 
             onClose();
         } catch (err) {
@@ -66,8 +74,8 @@ const EdgeFormModal = ({ onClose }) => {
             onClose={onClose}
             title={
                 <div className="flex items-center gap-2">
-                    <span>➕</span>
-                    <span>Créer une relation</span>
+                    <span>{isEdit ? '✏️' : '➕'}</span>
+                    <span>{isEdit ? 'Éditer la relation' : 'Créer une relation'}</span>
                 </div>
             }
             size="md"
@@ -84,7 +92,7 @@ const EdgeFormModal = ({ onClose }) => {
                         loading={loading}
                         icon={Save}
                     >
-                        Créer la relation
+                        {isEdit ? 'Mettre à jour' : 'Créer la relation'}
                     </LiquidButton>
                 </div>
             }
@@ -101,6 +109,7 @@ const EdgeFormModal = ({ onClose }) => {
                     label="Cultivar parent *"
                     value={formData.parentNodeId || ''}
                     onChange={(e) => handleChange('parentNodeId', e.target.value)}
+                    disabled={isEdit}
                     options={[
                         { value: '', label: 'Sélectionner un parent...' },
                         ...store.nodes.map(node => ({
@@ -129,6 +138,7 @@ const EdgeFormModal = ({ onClose }) => {
                     label="Cultivar enfant *"
                     value={formData.childNodeId || ''}
                     onChange={(e) => handleChange('childNodeId', e.target.value)}
+                    disabled={isEdit}
                     options={[
                         { value: '', label: 'Sélectionner un enfant...' },
                         ...store.nodes

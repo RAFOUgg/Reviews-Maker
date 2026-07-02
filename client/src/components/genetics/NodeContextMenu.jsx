@@ -7,7 +7,7 @@
 import React, { useEffect, useRef } from 'react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
-const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly }) => {
+const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useGeneticsStore();
     const menuRef = useRef(null);
 
@@ -30,22 +30,20 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly }) => {
         onClose();
     };
 
-    const handleDelete = async () => {
-        if (confirm(`Êtes-vous sûr de vouloir supprimer "${node.cultivarName}" ?`)) {
-            await store.deleteNode(nodeId);
-            onClose();
-        }
+    const handleDelete = () => {
+        onRequestDelete({ type: 'node', id: nodeId, label: node?.cultivarName });
+        onClose();
     };
 
     const handleCreateChild = () => {
         store.openNodeForm({
             cultivarName: '',
-            position: { x: 0, y: 0 },
+            position: { x: (node?.position?.x || 0) + 150, y: (node?.position?.y || 0) + 100 },
             color: '#FF6B9D',
             genetics: null,
-            notes: ''
+            notes: '',
+            _pendingParentId: nodeId
         });
-        // Le formulaire devrait avoir une option "parent sélectionné"
         onClose();
     };
 

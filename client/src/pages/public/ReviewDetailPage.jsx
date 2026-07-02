@@ -1,12 +1,15 @@
 import React, { useEffect, useState, Suspense } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
+import { ReactFlowProvider } from 'reactflow'
 import { parseImages } from '../../utils/imageUtils'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
 import OrchardCardRenderer from '../../components/gallery/OrchardCardRenderer'
+import ProductionChainCanvas from '../../components/production-chain/ProductionChainCanvas'
+import { apiTypeToInternal } from '../../utils/reviewTypeMeta'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
-import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2 } from 'lucide-react'
+import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2, GitBranch } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
 
 
@@ -20,10 +23,23 @@ export default function ReviewDetailPage() {
     const [selectedImage, setSelectedImage] = useState(null)
     const [viewMode, setViewMode] = useState('full') // 'full' or 'orchard'
     const [showExportModal, setShowExportModal] = useState(false)
+    const [productionChains, setProductionChains] = useState([])
+    const [expandedChainId, setExpandedChainId] = useState(null)
 
     useEffect(() => {
         fetchReview()
     }, [id])
+
+    useEffect(() => {
+        if (!review?.type) return
+        const reviewType = apiTypeToInternal(review.type)
+        if (!reviewType) return
+
+        fetch(`/api/production-chains/for-review/${reviewType}/${review.id}`, { credentials: 'include' })
+            .then(r => r.ok ? r.json() : [])
+            .then(chains => setProductionChains(Array.isArray(chains) ? chains : []))
+            .catch(() => {})
+    }, [review?.id, review?.type])
 
     const fetchReview = async () => {
         try {
@@ -136,6 +152,51 @@ export default function ReviewDetailPage() {
                         </div>
                     )}
                 </div>
+
+                {/* Lien vers l'arbre généalogique lié (PhenoHunt), si présent et visible */}
+                {review.flowerData?.geneticTree && (
+                    <LiquidCard glow="purple" padding="md" className="mb-6">
+                        <button
+                            onClick={() => navigate(`/phenohunt?tree=${review.flowerData.geneticTree.id}`)}
+                            className="flex items-center gap-3 w-full text-left"
+                        >
+                            <span className="text-2xl">🧬</span>
+                            <div>
+                                <div className="text-white font-medium">Arbre généalogique lié</div>
+                                <div className="text-white/60 text-sm">{review.flowerData.geneticTree.name}</div>
+                            </div>
+                        </button>
+                    </LiquidCard>
+                )}
+
+                {/* Chaîne(s) de production contenant cette fiche technique, en lecture seule */}
+                {productionChains.length > 0 && (
+                    <div className="mb-6 space-y-3">
+                        {productionChains.map(chain => (
+                            <LiquidCard key={chain.id} glow="none" padding="none" className="overflow-hidden">
+                                <button
+                                    onClick={() => setExpandedChainId(expandedChainId === chain.id ? null : chain.id)}
+                                    className="flex items-center gap-3 w-full text-left p-4"
+                                >
+                                    <GitBranch className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                                    <div className="flex-1">
+                                        <div className="text-white font-medium">{chain.name}</div>
+                                        <div className="text-white/50 text-sm">
+                                            {chain._count?.nodes || 0} produits • {chain._count?.edges || 0} transformations
+                                        </div>
+                                    </div>
+                                </button>
+                                {expandedChainId === chain.id && (
+                                    <div className="h-[500px] border-t border-white/10">
+                                        <ReactFlowProvider>
+                                            <ProductionChainCanvas chainId={chain.id} readOnly />
+                                        </ReactFlowProvider>
+                                    </div>
+                                )}
+                            </LiquidCard>
+                        ))}
+                    </div>
+                )}
 
                 {/* View Mode Switcher - Only show if Orchard config exists */}
                 {review.orchardConfig && (

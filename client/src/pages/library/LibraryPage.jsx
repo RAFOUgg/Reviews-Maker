@@ -15,14 +15,15 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useStore } from '../../store/useStore'
+import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 import { useToast } from '../../components/shared/ToastContainer'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Library, FileText, Leaf, Palette, Database, BarChart3,
     Plus, Settings, Download, Upload,
-    ChevronRight, Brain, ExternalLink
+    ChevronRight, Brain, ExternalLink, GitBranch
 } from 'lucide-react'
 
 // Import des onglets
@@ -32,6 +33,7 @@ import TemplatesTab from './tabs/TemplatesTab'
 import WatermarksTab from './tabs/WatermarksTab'
 import DataTab from './tabs/DataTab'
 import StatsTab from './tabs/StatsTab'
+import ProductionChainTab from './tabs/ProductionChainTab'
 
 // Configuration des onglets
 const TABS = [
@@ -68,6 +70,14 @@ const TABS = [
         description: 'Gérez vos filigranes personnalisés'
     },
     {
+        id: 'production-chain',
+        label: 'Chaîne de production',
+        mobileLabel: 'Chaîne',
+        icon: GitBranch,
+        producerOnly: true,
+        description: 'Liez vos fiches techniques entre elles et documentez chaque transformation'
+    },
+    {
         id: 'data',
         label: 'Données Récurrentes',
         mobileLabel: 'Données',
@@ -87,9 +97,11 @@ const TABS = [
 
 export default function LibraryPage() {
     const navigate = useNavigate()
+    const [searchParams] = useSearchParams()
     const toast = useToast()
     const { user } = useStore()
-    const [activeTab, setActiveTab] = useState('reviews')
+    const { isProducteur: isProducer } = useAccountFeatures()
+    const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'reviews')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
     // Vérifier authentification
@@ -100,7 +112,6 @@ export default function LibraryPage() {
     }, [user, navigate])
 
     // Déterminer les onglets disponibles selon le type de compte
-    const isProducer = user?.accountType === 'producer'
     const availableTabs = TABS.filter(t => t.all || (t.producerOnly && isProducer))
 
     // Rendu de l'onglet actif
@@ -114,6 +125,8 @@ export default function LibraryPage() {
                 return <TemplatesTab userTier={user?.accountType} />
             case 'watermarks':
                 return <WatermarksTab />
+            case 'production-chain':
+                return isProducer ? <ProductionChainTab /> : null
             case 'data':
                 return isProducer ? <DataTab /> : null
             case 'stats':

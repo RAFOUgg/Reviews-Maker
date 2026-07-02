@@ -1,161 +1,133 @@
 /**
- * Zustand Store pour la gestion des arbres généalogiques (Genetics)
- * 
- * Remplace usePhenoHuntStore avec intégration backend complète
- * Gère: arbres, nœuds, arêtes, sélection, modification, état UI
+ * Zustand Store pour la gestion des chaînes de production (Production Chain)
+ *
+ * Graphe liant plusieurs fiches techniques (reviews Fleur/Hash/Concentré/Comestible)
+ * avec les données de transformation (technique/date/notes) sur les liaisons.
+ * Structure miroir de useGeneticsStore.js, adaptée aux nœuds "review" plutôt que "cultivar".
  */
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
-// Configuration API
-const API_BASE = '/api/genetics';
+const API_BASE = '/api/production-chains';
 
-const useGeneticsStore = create(
+const useProductionChainStore = create(
     devtools(
         (set, get) => ({
-            // ============================================================================
-            // STATE - TREES
-            // ============================================================================
-            trees: [],
-            selectedTreeId: null,
-            treeLoading: false,
-            treeError: null,
+            // STATE - CHAINS
+            chains: [],
+            selectedChainId: null,
+            chainLoading: false,
+            chainError: null,
 
-            // ============================================================================
             // STATE - NODES & EDGES
-            // ============================================================================
-            nodes: [], // Nœuds de l'arbre sélectionné
-            edges: [], // Arêtes de l'arbre sélectionné
+            nodes: [],
+            edges: [],
             selectedNodeId: null,
             selectedEdgeId: null,
 
-            // ============================================================================
             // STATE - UI
-            // ============================================================================
-            mode: 'view', // 'view' | 'edit' | 'create'
-            showNodeForm: false,
             showEdgeForm: false,
-            showTreeForm: false,
-            nodeFormData: null,
             edgeFormData: null,
-            treeFormData: null,
 
-            // ============================================================================
             // STATE - CANVAS
-            // ============================================================================
-            canvasZoom: 1,
-            canvasPosition: { x: 0, y: 0 },
             canvasLoading: false,
 
             // ============================================================================
-            // TREES - Fetch
+            // CHAINS - Fetch
             // ============================================================================
-            fetchTrees: async () => {
-                set({ treeLoading: true, treeError: null });
+            fetchChains: async () => {
+                set({ chainLoading: true, chainError: null });
                 try {
-                    const response = await fetch(`${API_BASE}/trees`, {
+                    const response = await fetch(`${API_BASE}/chains`, {
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' }
                     });
 
                     if (!response.ok) {
-                        throw new Error(`Failed to fetch trees: ${response.status}`);
+                        throw new Error(`Failed to fetch chains: ${response.status}`);
                     }
 
-                    const trees = await response.json();
-                    set({ trees, treeLoading: false });
-                    return { data: trees };
+                    const chains = await response.json();
+                    set({ chains, chainLoading: false });
+                    return { data: chains };
                 } catch (error) {
-                    const errorMsg = error.message || 'Failed to fetch genetic trees';
-                    set({ treeError: errorMsg, treeLoading: false });
-                    console.error('Fetch trees error:', error);
+                    const errorMsg = error.message || 'Failed to fetch production chains';
+                    set({ chainError: errorMsg, chainLoading: false });
                     return { error: errorMsg };
                 }
             },
 
-            /**
-             * Charge un arbre spécifique avec tous ses nœuds et arêtes
-             */
-            loadTree: async (treeId) => {
-                set({ canvasLoading: true, treeError: null });
+            loadChain: async (chainId) => {
+                set({ canvasLoading: true, chainError: null });
                 try {
-                    const response = await fetch(`${API_BASE}/trees/${treeId}`, {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}`, {
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' }
                     });
 
                     if (!response.ok) {
-                        throw new Error(`Failed to load tree: ${response.status}`);
+                        throw new Error(`Failed to load chain: ${response.status}`);
                     }
 
-                    const tree = await response.json();
+                    const chain = await response.json();
 
-                    // Parser les JSON fields
-                    const parsedNodes = tree.nodes.map(n => ({
+                    const parsedNodes = chain.nodes.map(n => ({
                         ...n,
-                        position: typeof n.position === 'string' ? JSON.parse(n.position) : n.position,
-                        genetics: typeof n.genetics === 'string' ? JSON.parse(n.genetics) : n.genetics
+                        position: typeof n.position === 'string' ? JSON.parse(n.position) : n.position
                     }));
 
                     set({
-                        selectedTreeId: treeId,
+                        selectedChainId: chainId,
                         nodes: parsedNodes,
-                        edges: tree.edges || [],
-                        canvasLoading: false,
-                        mode: 'edit'
+                        edges: chain.edges || [],
+                        canvasLoading: false
                     });
 
-                    return { data: tree };
+                    return { data: chain };
                 } catch (error) {
-                    const errorMsg = error.message || 'Failed to load tree';
-                    set({ treeError: errorMsg, canvasLoading: false });
-                    console.error('Load tree error:', error);
+                    const errorMsg = error.message || 'Failed to load chain';
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
 
             // ============================================================================
-            // TREES - Create/Update/Delete
+            // CHAINS - Create/Update/Delete
             // ============================================================================
-            createTree: async (treeData) => {
-                set({ treeLoading: true, treeError: null });
+            createChain: async (chainData) => {
+                set({ chainLoading: true, chainError: null });
                 try {
-                    // DEBUG: Log du body envoyé à l'API
-                    console.log('[Genetics] createTree - body envoyé:', treeData);
-                    const response = await fetch(`${API_BASE}/trees`, {
+                    const response = await fetch(`${API_BASE}/chains`, {
                         method: 'POST',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(treeData)
+                        body: JSON.stringify(chainData)
                     });
 
                     if (!response.ok) {
                         const error = await response.json();
-                        throw new Error(error.error || 'Failed to create tree');
+                        throw new Error(error.error || 'Failed to create chain');
                     }
 
-                    const newTree = await response.json();
+                    const newChain = await response.json();
 
                     set(state => ({
-                        trees: [newTree, ...state.trees],
-                        treeLoading: false,
-                        showTreeForm: false,
-                        treeFormData: null
+                        chains: [newChain, ...state.chains],
+                        chainLoading: false
                     }));
 
-                    return { data: newTree };
+                    return { data: newChain };
                 } catch (error) {
-                    const errorMsg = error.message || 'Failed to create tree';
-                    set({ treeError: errorMsg, treeLoading: false });
+                    const errorMsg = error.message || 'Failed to create chain';
+                    set({ chainError: errorMsg, chainLoading: false });
                     return { error: errorMsg };
                 }
             },
 
-            updateTree: async (treeId, updateData) => {
-                set({ treeLoading: true, treeError: null });
+            updateChain: async (chainId, updateData) => {
                 try {
-                    const response = await fetch(`${API_BASE}/trees/${treeId}`, {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}`, {
                         method: 'PUT',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
@@ -164,48 +136,45 @@ const useGeneticsStore = create(
 
                     if (!response.ok) {
                         const error = await response.json();
-                        throw new Error(error.error || 'Failed to update tree');
+                        throw new Error(error.error || 'Failed to update chain');
                     }
 
                     const updated = await response.json();
 
                     set(state => ({
-                        trees: state.trees.map(t => t.id === treeId ? updated : t),
-                        treeLoading: false
+                        chains: state.chains.map(c => c.id === chainId ? updated : c)
                     }));
 
                     return { data: updated };
                 } catch (error) {
-                    const errorMsg = error.message || 'Failed to update tree';
-                    set({ treeError: errorMsg, treeLoading: false });
-                    return { error: errorMsg };
+                    return { error: error.message || 'Failed to update chain' };
                 }
             },
 
-            deleteTree: async (treeId) => {
-                set({ treeLoading: true, treeError: null });
+            deleteChain: async (chainId) => {
+                set({ chainLoading: true, chainError: null });
                 try {
-                    const response = await fetch(`${API_BASE}/trees/${treeId}`, {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}`, {
                         method: 'DELETE',
                         credentials: 'include'
                     });
 
                     if (!response.ok) {
-                        throw new Error(`Failed to delete tree: ${response.status}`);
+                        throw new Error(`Failed to delete chain: ${response.status}`);
                     }
 
                     set(state => ({
-                        trees: state.trees.filter(t => t.id !== treeId),
-                        selectedTreeId: state.selectedTreeId === treeId ? null : state.selectedTreeId,
-                        nodes: state.selectedTreeId === treeId ? [] : state.nodes,
-                        edges: state.selectedTreeId === treeId ? [] : state.edges,
-                        treeLoading: false
+                        chains: state.chains.filter(c => c.id !== chainId),
+                        selectedChainId: state.selectedChainId === chainId ? null : state.selectedChainId,
+                        nodes: state.selectedChainId === chainId ? [] : state.nodes,
+                        edges: state.selectedChainId === chainId ? [] : state.edges,
+                        chainLoading: false
                     }));
 
                     return { success: true };
                 } catch (error) {
-                    const errorMsg = error.message || 'Failed to delete tree';
-                    set({ treeError: errorMsg, treeLoading: false });
+                    const errorMsg = error.message || 'Failed to delete chain';
+                    set({ chainError: errorMsg, chainLoading: false });
                     return { error: errorMsg };
                 }
             },
@@ -215,13 +184,13 @@ const useGeneticsStore = create(
             // ============================================================================
             addNode: async (nodeData) => {
                 const state = get();
-                if (!state.selectedTreeId) {
-                    return { error: 'No tree selected' };
+                if (!state.selectedChainId) {
+                    return { error: 'No chain selected' };
                 }
 
-                set({ canvasLoading: true, treeError: null });
+                set({ canvasLoading: true, chainError: null });
                 try {
-                    const response = await fetch(`${API_BASE}/trees/${state.selectedTreeId}/nodes`, {
+                    const response = await fetch(`${API_BASE}/chains/${state.selectedChainId}/nodes`, {
                         method: 'POST',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
@@ -240,21 +209,19 @@ const useGeneticsStore = create(
 
                     set(state => ({
                         nodes: [...state.nodes, newNode],
-                        canvasLoading: false,
-                        showNodeForm: false,
-                        nodeFormData: null
+                        canvasLoading: false
                     }));
 
                     return { data: newNode };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to add node';
-                    set({ treeError: errorMsg, canvasLoading: false });
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
 
             updateNode: async (nodeId, updateData) => {
-                set({ canvasLoading: true, treeError: null });
+                set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/nodes/${nodeId}`, {
                         method: 'PUT',
@@ -278,13 +245,13 @@ const useGeneticsStore = create(
                     return { data: updated };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to update node';
-                    set({ treeError: errorMsg, canvasLoading: false });
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
 
             deleteNode: async (nodeId) => {
-                set({ canvasLoading: true, treeError: null });
+                set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/nodes/${nodeId}`, {
                         method: 'DELETE',
@@ -297,7 +264,7 @@ const useGeneticsStore = create(
 
                     set(state => ({
                         nodes: state.nodes.filter(n => n.id !== nodeId),
-                        edges: state.edges.filter(e => e.parentNodeId !== nodeId && e.childNodeId !== nodeId),
+                        edges: state.edges.filter(e => e.sourceNodeId !== nodeId && e.targetNodeId !== nodeId),
                         selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
                         canvasLoading: false
                     }));
@@ -305,30 +272,27 @@ const useGeneticsStore = create(
                     return { success: true };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to delete node';
-                    set({ treeError: errorMsg, canvasLoading: false });
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
 
             // ============================================================================
-            // EDGES - Create/Delete
+            // EDGES - Create/Update/Delete
             // ============================================================================
             addEdge: async (edgeData) => {
                 const state = get();
-                if (!state.selectedTreeId) {
-                    return { error: 'No tree selected' };
+                if (!state.selectedChainId) {
+                    return { error: 'No chain selected' };
                 }
 
-                set({ canvasLoading: true, treeError: null });
+                set({ canvasLoading: true, chainError: null });
                 try {
-                    const response = await fetch(`${API_BASE}/trees/${state.selectedTreeId}/edges`, {
+                    const response = await fetch(`${API_BASE}/chains/${state.selectedChainId}/edges`, {
                         method: 'POST',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            ...edgeData,
-                            relationshipType: edgeData.relationshipType || 'parent'
-                        })
+                        body: JSON.stringify(edgeData)
                     });
 
                     if (!response.ok) {
@@ -348,13 +312,13 @@ const useGeneticsStore = create(
                     return { data: newEdge };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to create edge';
-                    set({ treeError: errorMsg, canvasLoading: false });
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
 
             updateEdge: async (edgeId, updateData) => {
-                set({ canvasLoading: true, treeError: null });
+                set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/edges/${edgeId}`, {
                         method: 'PUT',
@@ -380,13 +344,13 @@ const useGeneticsStore = create(
                     return { data: updated };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to update edge';
-                    set({ treeError: errorMsg, canvasLoading: false });
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
 
             deleteEdge: async (edgeId) => {
-                set({ canvasLoading: true, treeError: null });
+                set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/edges/${edgeId}`, {
                         method: 'DELETE',
@@ -406,7 +370,7 @@ const useGeneticsStore = create(
                     return { success: true };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to delete edge';
-                    set({ treeError: errorMsg, canvasLoading: false });
+                    set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
             },
@@ -414,53 +378,24 @@ const useGeneticsStore = create(
             // ============================================================================
             // UI - Selection & Forms
             // ============================================================================
-            selectNode: (nodeId) => {
-                set({ selectedNodeId: nodeId });
-            },
-
-            selectEdge: (edgeId) => {
-                set({ selectedEdgeId: edgeId });
-            },
-
-            openNodeForm: (nodeData = null) => {
-                set({
-                    showNodeForm: true,
-                    nodeFormData: nodeData || {
-                        cultivarName: '',
-                        position: { x: 0, y: 0 },
-                        color: '#FF6B9D',
-                        genetics: null,
-                        notes: ''
-                    }
-                });
-            },
-
-            closeNodeForm: () => {
-                set({ showNodeForm: false, nodeFormData: null });
-            },
-
-            updateNodeFormData: (updates) => {
-                set(state => ({
-                    nodeFormData: { ...(state.nodeFormData || {}), ...updates }
-                }));
-            },
+            selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
+            selectEdge: (edgeId) => set({ selectedEdgeId: edgeId }),
 
             /**
-             * Ouvre le formulaire d'arête.
-             * - openEdgeForm() : création vide
-             * - openEdgeForm(parentNodeId, childNodeId) : création pré-remplie (ex: connexion drag&drop)
+             * - openEdgeForm(sourceNodeId, targetNodeId) : création pré-remplie (connexion drag&drop)
              * - openEdgeForm(edgeObject) : édition d'une arête existante (doit contenir `id`)
              */
-            openEdgeForm: (parentNodeIdOrEdge = null, childNodeId = null) => {
-                if (parentNodeIdOrEdge && typeof parentNodeIdOrEdge === 'object') {
-                    const edge = parentNodeIdOrEdge;
+            openEdgeForm: (sourceNodeIdOrEdge = null, targetNodeId = null) => {
+                if (sourceNodeIdOrEdge && typeof sourceNodeIdOrEdge === 'object') {
+                    const edge = sourceNodeIdOrEdge;
                     set({
                         showEdgeForm: true,
                         edgeFormData: {
                             id: edge.id,
-                            parentNodeId: edge.parentNodeId || '',
-                            childNodeId: edge.childNodeId || '',
-                            relationshipType: edge.relationshipType || 'parent',
+                            sourceNodeId: edge.sourceNodeId || '',
+                            targetNodeId: edge.targetNodeId || '',
+                            technique: edge.technique || '',
+                            date: edge.date ? edge.date.substring(0, 10) : '',
                             notes: edge.notes || ''
                         }
                     });
@@ -470,17 +405,16 @@ const useGeneticsStore = create(
                 set({
                     showEdgeForm: true,
                     edgeFormData: {
-                        parentNodeId: parentNodeIdOrEdge || '',
-                        childNodeId: childNodeId || '',
-                        relationshipType: 'parent',
+                        sourceNodeId: sourceNodeIdOrEdge || '',
+                        targetNodeId: targetNodeId || '',
+                        technique: '',
+                        date: '',
                         notes: ''
                     }
                 });
             },
 
-            closeEdgeForm: () => {
-                set({ showEdgeForm: false, edgeFormData: null });
-            },
+            closeEdgeForm: () => set({ showEdgeForm: false, edgeFormData: null }),
 
             updateEdgeFormData: (updates) => {
                 set(state => ({
@@ -488,55 +422,14 @@ const useGeneticsStore = create(
                 }));
             },
 
-            openTreeForm: (treeData = null) => {
-                set({
-                    showTreeForm: true,
-                    treeFormData: treeData || {
-                        name: '',
-                        description: '',
-                        projectType: 'phenohunt',
-                        isPublic: false
-                    }
-                });
-            },
-
-            closeTreeForm: () => {
-                set({ showTreeForm: false, treeFormData: null });
-            },
-
-            updateTreeFormData: (updates) => {
-                set(state => ({
-                    treeFormData: state.treeFormData ? { ...state.treeFormData, ...updates } : null
-                }));
-            },
-
-            // ============================================================================
-            // CANVAS - Zoom & Navigation
-            // ============================================================================
-            setCanvasZoom: (zoom) => {
-                set({ canvasZoom: Math.max(0.1, Math.min(zoom, 3)) });
-            },
-
-            setCanvasPosition: (position) => {
-                set({ canvasPosition: position });
-            },
-
-            resetCanvas: () => {
-                set({ canvasZoom: 1, canvasPosition: { x: 0, y: 0 } });
-            },
-
             // ============================================================================
             // MODE & STATE MANAGEMENT
             // ============================================================================
-            setMode: (mode) => {
-                set({ mode });
-            },
-
             clearSelection: () => {
                 set({
                     selectedNodeId: null,
                     selectedEdgeId: null,
-                    selectedTreeId: null,
+                    selectedChainId: null,
                     nodes: [],
                     edges: []
                 });
@@ -544,29 +437,22 @@ const useGeneticsStore = create(
 
             resetStore: () => {
                 set({
-                    trees: [],
-                    selectedTreeId: null,
+                    chains: [],
+                    selectedChainId: null,
                     nodes: [],
                     edges: [],
                     selectedNodeId: null,
                     selectedEdgeId: null,
-                    mode: 'view',
-                    showNodeForm: false,
                     showEdgeForm: false,
-                    showTreeForm: false,
-                    nodeFormData: null,
                     edgeFormData: null,
-                    treeFormData: null,
-                    canvasZoom: 1,
-                    canvasPosition: { x: 0, y: 0 },
-                    treeLoading: false,
+                    chainLoading: false,
                     canvasLoading: false,
-                    treeError: null
+                    chainError: null
                 });
             }
         }),
-        { name: 'GeneticsStore' }
+        { name: 'ProductionChainStore' }
     )
 );
 
-export default useGeneticsStore;
+export default useProductionChainStore;

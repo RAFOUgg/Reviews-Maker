@@ -24,6 +24,7 @@ import paymentRoutes from './routes/payment.js'
 import accountRoutes from './routes/account.js'
 import cultivarsRoutes from './routes/cultivars.js'
 import geneticsRoutes from './routes/genetics.js'
+import productionChainsRoutes from './routes/production-chains.js'
 import pipelinesRoutes from './routes/pipelines.js'
 import pipelineCultureRoutes from './routes/pipeline-culture.js'
 import flowerReviewsRoutes from './routes/flower-reviews.js'
@@ -113,6 +114,7 @@ app.use('/api/payment', paymentRoutes)
 app.use('/api/account', accountRoutes)
 app.use('/api/cultivars', cultivarsRoutes)
 app.use('/api/genetics', geneticsRoutes)
+app.use('/api/production-chains', productionChainsRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
 app.use(pipelineCultureRoutes)
 app.use('/api/flower-reviews', flowerReviewsRoutes)

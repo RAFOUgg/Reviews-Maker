@@ -82,6 +82,10 @@ const validateEdgeCreation = (req, res, next) => {
         return res.status(400).json({ error: "Child node ID is required" });
     }
 
+    if (parentNodeId === childNodeId) {
+        return res.status(400).json({ error: "A node cannot be related to itself" });
+    }
+
     // Validation relationshipType (optionnel)
     const validTypes = ["parent", "pollen_donor", "sibling", "clone", "mutation"];
     if (relationshipType && !validTypes.includes(relationshipType)) {
@@ -91,6 +95,27 @@ const validateEdgeCreation = (req, res, next) => {
     // Validation notes (optionnel)
     if (notes && (typeof notes !== "string" || notes.length > 500)) {
         return res.status(400).json({ error: "Notes must be less than 500 characters" });
+    }
+
+    next();
+};
+
+const validateEdgeUpdate = (req, res, next) => {
+    const { relationshipType, notes } = req.body;
+
+    // Validation relationshipType (optionnel)
+    if (relationshipType !== undefined) {
+        const validTypes = ["parent", "pollen_donor", "sibling", "clone", "mutation"];
+        if (!validTypes.includes(relationshipType)) {
+            return res.status(400).json({ error: `Invalid relationship type. Must be one of: ${validTypes.join(", ")}` });
+        }
+    }
+
+    // Validation notes (optionnel)
+    if (notes !== undefined) {
+        if (notes && (typeof notes !== "string" || notes.length > 500)) {
+            return res.status(400).json({ error: "Notes must be less than 500 characters" });
+        }
     }
 
     next();
@@ -188,5 +213,6 @@ export {
     validateTreeUpdate,
     validateNodeCreation,
     validateNodeUpdate,
-    validateEdgeCreation
+    validateEdgeCreation,
+    validateEdgeUpdate
 };

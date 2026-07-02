@@ -35,6 +35,7 @@ import EdgeContextMenu from './EdgeContextMenu';
 import NodeFormModal from './NodeFormModal';
 import EdgeFormModal from './EdgeFormModal';
 import TreeToolbar from './TreeToolbar';
+import ConfirmModal from '../shared/ConfirmModal';
 
 const nodeTypes = {
     cultivar: CultivarNode
@@ -53,6 +54,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge'
+    const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
 
     // Synchroniser les nœuds et arêtes du store vers React Flow
     useEffect(() => {
@@ -242,6 +244,17 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         setContextMenuType(null);
     }, []);
 
+    // Confirmation de suppression (nœud ou arête) — remplace les confirm() natifs des menus contextuels
+    const handleConfirmDelete = useCallback(async () => {
+        if (!deleteConfirm) return;
+        if (deleteConfirm.type === 'node') {
+            await store.deleteNode(deleteConfirm.id);
+        } else {
+            await store.deleteEdge(deleteConfirm.id);
+        }
+        setDeleteConfirm(null);
+    }, [deleteConfirm, store]);
+
     // Charger l'arbre au montage
     useEffect(() => {
         if (treeId && treeId !== store.selectedTreeId) {
@@ -334,6 +347,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     y={contextMenu.y}
                     onClose={closeContextMenu}
                     readOnly={readOnly}
+                    onRequestDelete={setDeleteConfirm}
                 />
             )}
 
@@ -344,6 +358,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     y={contextMenu.y}
                     onClose={closeContextMenu}
                     readOnly={readOnly}
+                    onRequestDelete={setDeleteConfirm}
                 />
             )}
 
@@ -360,6 +375,19 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     onClose={store.closeEdgeForm}
                 />
             )}
+
+            <ConfirmModal
+                open={!!deleteConfirm}
+                title={deleteConfirm?.type === 'node' ? 'Supprimer ce cultivar' : 'Supprimer cette relation'}
+                message={
+                    deleteConfirm?.type === 'node'
+                        ? `Supprimer "${deleteConfirm?.label || 'ce cultivar'}" ? Ses relations avec les autres nœuds seront aussi supprimées.`
+                        : 'Supprimer cette relation ?'
+                }
+                confirmLabel="Supprimer"
+                onCancel={() => setDeleteConfirm(null)}
+                onConfirm={handleConfirmDelete}
+            />
         </div>
     );
 };

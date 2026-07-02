@@ -40,7 +40,15 @@ const NodeFormModal = ({ isEdit, onClose }) => {
             if (isEdit) {
                 await store.updateNode(formData.id, formData);
             } else {
-                await store.addNode(formData);
+                const { _pendingParentId, ...nodeData } = formData;
+                const result = await store.addNode(nodeData);
+                if (_pendingParentId && result?.data?.id) {
+                    await store.addEdge({
+                        parentNodeId: _pendingParentId,
+                        childNodeId: result.data.id,
+                        relationshipType: 'parent'
+                    });
+                }
             }
             onClose();
         } catch (err) {

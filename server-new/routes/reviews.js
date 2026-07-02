@@ -159,6 +159,13 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     const review = await prisma.review.findUnique({
         where: { id: req.params.id },
         include: {
+            flowerData: {
+                include: {
+                    geneticTree: {
+                        select: { id: true, name: true, isPublic: true, userId: true }
+                    }
+                }
+            },
             hashData: true,
             concentrateData: true,
             edibleData: true,
@@ -192,6 +199,15 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
             currentUserId: currentUser?.id
         })
         throw Errors.FORBIDDEN()
+    }
+
+    // Ne renvoyer l'arbre généalogique lié que s'il est public ou si l'utilisateur en est propriétaire
+    if (review.flowerData?.geneticTree) {
+        const tree = review.flowerData.geneticTree
+        const canSeeTree = tree.isPublic || (currentUser && tree.userId === currentUser.id)
+        review.flowerData.geneticTree = canSeeTree
+            ? { id: tree.id, name: tree.name, isPublic: tree.isPublic }
+            : null
     }
 
     // Formater la review

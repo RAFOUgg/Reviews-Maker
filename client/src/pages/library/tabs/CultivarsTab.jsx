@@ -863,7 +863,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         <ConfirmModal
             open={confirmDeleteTree.open}
             title="Supprimer cet arbre"
-            message="Supprimer cet arbre généalogique ? Cette action est irréversible."
+            message={(() => {
+                const tree = [...trees, ...phenoHuntProjects].find(t => t.id === confirmDeleteTree.treeId)
+                const count = tree?._count?.flowerReviews || 0
+                return count > 0
+                    ? `Cet arbre est lié à ${count} review${count > 1 ? 's' : ''}. La suppression déliera ces reviews (elles resteront intactes mais perdront leur généalogie). Continuer ?`
+                    : 'Supprimer cet arbre généalogique ? Cette action est irréversible.'
+            })()}
             confirmLabel="Supprimer"
             onCancel={() => setConfirmDeleteTree({ open: false, treeId: null })}
             onConfirm={confirmDeleteTreeNow}
