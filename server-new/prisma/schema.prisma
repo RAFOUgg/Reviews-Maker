@@ -847,11 +847,11 @@ model HashReview {
   graines             Float? // Graines (10=aucune) /10
 
   // ===== ODEURS =====
-  fideliteCultivars   Float? // Fidélité cultivars /10
-  intensiteAromatique Float? // Intensité aromatique /10
+  fideliteCultivars    Float? // Fidélité cultivars /10
+  intensiteAromatique  Float? // Intensité aromatique /10
   complexiteAromeScore Float? // Complexité arôme /10 (même nom de colonne que FlowerReview)
-  notesDominantes     String? // JSON: max 7
-  notesSecondaires    String? // JSON: max 7
+  notesDominantes      String? // JSON: max 7
+  notesSecondaires     String? // JSON: max 7
 
   // ===== TEXTURE =====
   durete                     Float? // Dureté /10
@@ -966,11 +966,11 @@ model ConcentrateReview {
   moisissure          Float? // Moisissure (10=aucune) /10
 
   // ===== ODEURS =====
-  fideliteCultivars   Float? // Fidélité cultivars /10
-  intensiteAromatique Float? // Intensité aromatique /10
+  fideliteCultivars    Float? // Fidélité cultivars /10
+  intensiteAromatique  Float? // Intensité aromatique /10
   complexiteAromeScore Float? // Complexité arôme /10 (même nom de colonne que FlowerReview/HashReview)
-  notesDominantes     String? // JSON: max 7
-  notesSecondaires    String? // JSON: max 7
+  notesDominantes      String? // JSON: max 7
+  notesSecondaires     String? // JSON: max 7
 
   // ===== TEXTURE =====
   durete                     Float? // Dureté /10
@@ -1053,17 +1053,17 @@ model EdibleReview {
   saveursDominantes  String? // JSON: max 7
 
   // ===== EFFETS =====
-  monteeRapidite      Float? // Montée /10
-  intensiteEffets     Float? // Intensité /10
-  effetsChoisis       String? // JSON: max 8
-  effetsFiltre        String? // "tous", "neutre", "positif", "negatif"
-  dureeEffets         String? // "5-15min", "15-30min", etc.
-  consumptionMethod   String? // Méthode de consommation — même nom que FlowerReview
-  dosage              Float? // Dosage estimé — même nom que FlowerReview
-  dosageUnit          String? // Unité de dosage ("g", "mg", "ml") — même nom que FlowerReview
-  effectDuration      String? // Durée précise HH:MM — même nom/format que FlowerReview
-  effectOnset         String? // "immédiat", "différé" — même nom que FlowerReview
-  preferredUse        String? // JSON: usages préférés — même nom que FlowerReview
+  monteeRapidite    Float? // Montée /10
+  intensiteEffets   Float? // Intensité /10
+  effetsChoisis     String? // JSON: max 8
+  effetsFiltre      String? // "tous", "neutre", "positif", "negatif"
+  dureeEffets       String? // "5-15min", "15-30min", etc.
+  consumptionMethod String? // Méthode de consommation — même nom que FlowerReview
+  dosage            Float? // Dosage estimé — même nom que FlowerReview
+  dosageUnit        String? // Unité de dosage ("g", "mg", "ml") — même nom que FlowerReview
+  effectDuration    String? // Durée précise HH:MM — même nom/format que FlowerReview
+  effectOnset       String? // "immédiat", "différé" — même nom que FlowerReview
+  preferredUse      String? // JSON: usages préférés — même nom que FlowerReview
 
   // Timestamps
   createdAt DateTime @default(now())
