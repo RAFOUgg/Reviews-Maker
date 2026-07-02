@@ -232,7 +232,7 @@ export default function CreateConcentrateReview() {
                 subtitle="Documentez votre rosin, BHO ou autre concentré"
                 loading={loading}
                 saving={saving}
-                wide={['extraction', 'curing'].includes(sections[currentSection]?.id)}
+                wide={false}
             >
                 <AnimatePresence mode="wait">
                     <motion.div
@@ -241,19 +241,17 @@ export default function CreateConcentrateReview() {
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.2 }}
-                        className={['extraction', 'curing'].includes(sections[currentSection]?.id) ? 'h-full' : 'space-y-6'}
+                        className="space-y-6"
                     >
-                        {!['extraction', 'curing'].includes(sections[currentSection]?.id) && (
-                            <div className="flex items-center gap-3 mb-6">
-                                <span className="text-3xl">{sections[currentSection].icon}</span>
-                                <div>
-                                    <h2 className="text-xl font-semibold text-white">
-                                        {sections[currentSection].title}
-                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                    </h2>
-                                </div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="text-3xl">{sections[currentSection].icon}</span>
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">
+                                    {sections[currentSection].title}
+                                    {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
+                                </h2>
                             </div>
-                        )}
+                        </div>
 
                         {currentSection === 0 && (
                             <InfosGenerales
