@@ -72,6 +72,44 @@ router.get("/trees", requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/genetics/find-node-for-review/:reviewId?name=X
+ * Rattrapage pour les nœuds créés avant l'introduction de GenNode.sourceReviewId (2026-07) :
+ * cette review peut déjà exister comme nœud dans un arbre de l'utilisateur sans que le lien
+ * retour (FlowerReview.geneticTreeId) n'ait jamais été posé. Cherche d'abord une correspondance
+ * fiable (sourceReviewId exact), puis à défaut une correspondance par nom (moins fiable — un nom
+ * de cultivar n'est pas unique — d'où `matchType` pour laisser le front décider comment le
+ * présenter, jamais d'auto-association silencieuse basée sur le nom).
+ */
+router.get("/find-node-for-review/:reviewId", requireAuth, async (req, res) => {
+    try {
+        const { reviewId } = req.params
+        const name = (req.query.name || '').trim()
+
+        const exact = await prisma.genNode.findFirst({
+            where: { sourceReviewId: reviewId, tree: { userId: req.user.id } },
+            select: { id: true, treeId: true, tree: { select: { name: true } } }
+        })
+        if (exact) {
+            return res.json({ found: true, matchType: 'exact', nodeId: exact.id, treeId: exact.treeId, treeName: exact.tree.name })
+        }
+
+        if (name) {
+            const byName = await prisma.genNode.findFirst({
+                where: { cultivarName: name, tree: { userId: req.user.id } },
+                select: { id: true, treeId: true, tree: { select: { name: true } } }
+            })
+            if (byName) {
+                return res.json({ found: true, matchType: 'name', nodeId: byName.id, treeId: byName.treeId, treeName: byName.tree.name })
+            }
+        }
+
+        res.json({ found: false })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to search for existing node" })
+    }
+})
+
+/**
  * POST /api/genetics/trees
  * Créer un nouvel arbre généalogique
  */
@@ -360,7 +398,8 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
             color,
             image,
             genetics,
-            notes
+            notes,
+            sourceReviewId
         } = req.body;
 
         const updated = await prisma.genNode.update({
@@ -371,7 +410,8 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
                 ...(color && { color }),
                 ...(image !== undefined && { image: image || null }),
                 ...(genetics !== undefined && { genetics: genetics ? JSON.stringify(genetics) : null }),
-                ...(notes !== undefined && { notes: notes?.trim() || null })
+                ...(notes !== undefined && { notes: notes?.trim() || null }),
+                ...(sourceReviewId !== undefined && { sourceReviewId: sourceReviewId || null })
             }
         });
 

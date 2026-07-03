@@ -28,6 +28,11 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     // même que le fetch ait eu le temps de démarrer (sinon elle s'affiche par erreur en mode
     // édition même quand un arbre est déjà lié à la review)
     const [hasCheckedTrees, setHasCheckedTrees] = useState(false)
+    // Rattrapage pour les nœuds créés avant l'introduction de GenNode.sourceReviewId : cette
+    // review peut déjà être présente comme nœud dans un arbre sans que FlowerReview.geneticTreeId
+    // n'ait jamais été posé. null = pas encore vérifié, 'checked-none' = vérifié sans résultat,
+    // objet = correspondance trouvée (exacte = auto-liée silencieusement, par nom = proposée)
+    const [orphanMatch, setOrphanMatch] = useState(null)
 
     const { user } = useStore()
     const genetics = formData.genetics || {}
@@ -131,14 +136,62 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
         }
     }, [selectedTreeId])
 
-    // Si cette review n'a encore aucun arbre lié, proposer explicitement à l'utilisateur d'en
-    // créer un ou d'en importer un existant — y compris quand il a déjà des arbres pour
-    // d'autres reviews (sinon on retombe sur la sélection arbitraire de trees[0])
+    // Rattrapage : avant de proposer "créer/importer un arbre", vérifier que cette review n'est
+    // pas déjà présente comme nœud orphelin (créé avant l'introduction de sourceReviewId).
     useEffect(() => {
-        if (hasCheckedTrees && !treeLoading && !formData.geneticTreeId && !selectedTreeId) {
+        if (!hasCheckedTrees || treeLoading || formData.geneticTreeId || selectedTreeId || orphanMatch !== null) return
+        if (!reviewId) { setOrphanMatch('checked-none'); return } // review pas encore sauvegardée : rien à chercher
+
+        let cancelled = false
+        const name = formData.nomCommercial || ''
+        fetch(`/api/genetics/find-node-for-review/${reviewId}${name ? `?name=${encodeURIComponent(name)}` : ''}`, { credentials: 'include' })
+            .then(r => r.ok ? r.json() : { found: false })
+            .then(result => {
+                if (cancelled) return
+                if (result.found && result.matchType === 'exact') {
+                    loadTree(result.treeId)
+                    setOrphanMatch('checked-none') // relais pris par le sync selectedTreeId → geneticTreeId
+                } else if (result.found && result.matchType === 'name') {
+                    setOrphanMatch(result)
+                } else {
+                    setOrphanMatch('checked-none')
+                }
+            })
+            .catch(() => { if (!cancelled) setOrphanMatch('checked-none') })
+        return () => { cancelled = true }
+    }, [hasCheckedTrees, treeLoading, formData.geneticTreeId, selectedTreeId, orphanMatch, reviewId])
+
+    // Si cette review n'a encore aucun arbre lié (et qu'aucun nœud orphelin correspondant n'a été
+    // trouvé/proposé), proposer explicitement à l'utilisateur d'en créer un ou d'en importer un
+    // existant — y compris quand il a déjà des arbres pour d'autres reviews (sinon on retombe sur
+    // la sélection arbitraire de trees[0])
+    useEffect(() => {
+        if (hasCheckedTrees && !treeLoading && !formData.geneticTreeId && !selectedTreeId
+            && (orphanMatch === 'checked-none' || !reviewId)) {
             setShowInitialModal(true)
         }
-    }, [hasCheckedTrees, treeLoading, formData.geneticTreeId, selectedTreeId])
+    }, [hasCheckedTrees, treeLoading, formData.geneticTreeId, selectedTreeId, orphanMatch, reviewId])
+
+    // Confirmer/rejeter la correspondance par nom (moins fiable qu'un sourceReviewId exact — un
+    // nom de cultivar n'est pas garanti unique, d'où une confirmation explicite plutôt qu'un
+    // rattachement silencieux)
+    const handleConfirmOrphanMatch = async () => {
+        if (!orphanMatch || typeof orphanMatch !== 'object') return
+        try {
+            await fetch(`/api/genetics/nodes/${orphanMatch.nodeId}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ sourceReviewId: reviewId })
+            })
+        } catch { /* best-effort : le lien reviendra en 'name' au prochain essai si ça échoue */ }
+        loadTree(orphanMatch.treeId)
+        setOrphanMatch('checked-none')
+    }
+
+    const handleRejectOrphanMatch = () => {
+        setOrphanMatch('checked-none')
+    }
 
     // Filet de sécurité : si la modale était affichée mais qu'un arbre a fini par être
     // sélectionné pour cette review, on la referme automatiquement
@@ -204,7 +257,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     const handleCreateTreeFromCurrentFlower = async () => {
         setCreatingTree(true)
         try {
-            const flowerName = formData.generalInfo?.commercialName || 'Nouvelle Fleur'
+            const flowerName = formData.nomCommercial || 'Nouvelle Fleur'
 
             // 1. Créer l'arbre via API
             const treeResult = await createTree({
@@ -251,7 +304,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     const handleImportToTree = async (treeId) => {
         setCreatingTree(true)
         try {
-            const flowerName = formData.generalInfo?.commercialName || 'Nouvelle Fleur'
+            const flowerName = formData.nomCommercial || 'Nouvelle Fleur'
             await loadTree(treeId)
             await addNode({
                 cultivarName: flowerName,
@@ -547,15 +600,15 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                                 className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-500/50 transition-all"
                                             >
                                                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center overflow-hidden">
-                                                    {(() => {
-                                                        const imgs = review.images
-                                                        const first = Array.isArray(imgs) ? imgs[0] : (typeof imgs === 'string' ? (() => { try { return JSON.parse(imgs)?.[0] } catch { return null } })() : null)
-                                                        return first ? (
-                                                            <img src={first} alt={review.holderName} className="w-full h-full object-cover" />
-                                                        ) : (
-                                                            <Leaf className="w-8 h-8 text-purple-400" />
-                                                        )
-                                                    })()}
+                                                    {getFirstReviewImage(review) ? (
+                                                        <img
+                                                            src={getFirstReviewImage(review)}
+                                                            alt={review.holderName}
+                                                            className="w-full h-full object-cover"
+                                                            onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                                        />
+                                                    ) : null}
+                                                    <Leaf className="w-8 h-8 text-purple-400" style={getFirstReviewImage(review) ? { display: 'none' } : undefined} />
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <p className="text-sm font-semibold text-white truncate">
@@ -605,7 +658,15 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                                     className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-green-500/50 transition-all"
                                                 >
                                                     <div className="w-16 h-16 bg-gradient-to-br from-green-500/20 to-emerald-500/20 rounded-lg flex items-center justify-center overflow-hidden">
-                                                        <Leaf className="w-8 h-8 text-green-400" />
+                                                        {cultivar.image ? (
+                                                            <img
+                                                                src={cultivar.image.startsWith('http') || cultivar.image.startsWith('/') ? cultivar.image : `/images/${cultivar.image}`}
+                                                                alt={cultivar.name}
+                                                                className="w-full h-full object-cover"
+                                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                                            />
+                                                        ) : null}
+                                                        <Leaf className="w-8 h-8 text-green-400" style={cultivar.image ? { display: 'none' } : undefined} />
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <p className="text-sm font-semibold text-white truncate">
@@ -895,6 +956,18 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
             confirmLabel="Supprimer"
             onCancel={() => setConfirmDeleteTree({ open: false, treeId: null })}
             onConfirm={confirmDeleteTreeNow}
+        />
+        <ConfirmModal
+            open={!!(orphanMatch && typeof orphanMatch === 'object')}
+            title="Nœud existant détecté"
+            message={orphanMatch && typeof orphanMatch === 'object'
+                ? `Un nœud nommé "${formData.nomCommercial || ''}" existe déjà dans l'arbre "${orphanMatch.treeName}". Il s'agit probablement de cette même fleur — l'associer à cette review ? (Un nom de cultivar n'étant pas garanti unique, vérifiez qu'il s'agit bien du même nœud.)`
+                : ''}
+            confirmLabel="Associer"
+            cancelLabel="Non, proposer autre chose"
+            onCancel={handleRejectOrphanMatch}
+            onConfirm={handleConfirmOrphanMatch}
+            variant="info"
         />
         </>
     )

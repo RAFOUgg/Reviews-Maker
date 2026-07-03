@@ -32,6 +32,15 @@ const CultivarNode = ({ data, selected }) => {
             style={{ '--accent-color': accentColor }}
         >
             <Handle type="target" position={Position.Top} className="node-handle top" />
+            {/* Handles gauche/droite : liens horizontaux entre nœuds (ex: frères/sœurs, croisement
+                entre deux lignées) en plus du lien vertical parent→enfant haut/bas. Deux handles
+                superposés par côté (source + target) pour pouvoir tirer un lien DEPUIS ce point ou
+                en recevoir un — React Flow n'autorise à tirer un lien que depuis un handle "source".
+                Un point React Flow accepte nativement plusieurs connexions simultanées. */}
+            <Handle type="target" id="left-target" position={Position.Left} className="node-handle left" />
+            <Handle type="source" id="left-source" position={Position.Left} className="node-handle left" />
+            <Handle type="target" id="right-target" position={Position.Right} className="node-handle right" />
+            <Handle type="source" id="right-source" position={Position.Right} className="node-handle right" />
 
             <div className="node-photo">
                 {data.image ? (
