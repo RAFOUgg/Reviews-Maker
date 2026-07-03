@@ -1,4 +1,3 @@
-import { Sparkles } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
@@ -68,11 +67,14 @@ export default function CreateEdibleReview() {
     const { isMobile } = useResponsiveLayout()
     const forceWizard = searchParams.get('mode') === 'auto'
     const [wizardDismissed, setWizardDismissed] = useState(false)
+    // Survit au démontage/remontage de WizardFlow — cf. CreateFlowerReview/index.jsx.
+    const [wizardIndex, setWizardIndex] = useState(0)
     const useWizardMode = (isMobile || forceWizard) && !wizardDismissed
     const wizardQuestions = getEdibleWizardQuestions()
     const handleOpenHandoff = (target) => {
         const index = sections.findIndex(s => s.id === target)
         setWizardDismissed(true)
+        setWizardIndex(i => Math.min(i + 1, wizardQuestions.length - 1))
         if (index >= 0) setCurrentSection(index)
     }
 
@@ -243,6 +245,8 @@ export default function CreateEdibleReview() {
                     onExitToClassic={() => setWizardDismissed(true)}
                     onOpenHandoff={handleOpenHandoff}
                     onComplete={() => setShowOrchard(true)}
+                    initialIndex={wizardIndex}
+                    onIndexChange={setWizardIndex}
                     saving={saving}
                     isDirty={isDirty}
                     onSave={() => handleSave({ silent: false })}
@@ -262,6 +266,7 @@ export default function CreateEdibleReview() {
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
                 onSave={() => handleSave({ silent: false })}
+                onEnableWizard={() => setWizardDismissed(false)}
                 isDirty={isDirty}
                 title="Créer une review Comestible"
                 subtitle="Documentez votre brownie, cookie, gummies ou autre comestible"
@@ -278,25 +283,14 @@ export default function CreateEdibleReview() {
                         transition={{ duration: 0.2 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center justify-between gap-3 mb-6">
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl">{sections[currentSection].icon}</span>
-                                <div>
-                                    <h2 className="text-xl font-semibold text-white">
-                                        {sections[currentSection].title}
-                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                    </h2>
-                                </div>
+                        <div className="flex items-center gap-3 mb-6">
+                            <span className="text-3xl">{sections[currentSection].icon}</span>
+                            <div>
+                                <h2 className="text-xl font-semibold text-white">
+                                    {sections[currentSection].title}
+                                    {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
+                                </h2>
                             </div>
-                            <button
-                                type="button"
-                                onClick={() => setWizardDismissed(false)}
-                                title="Passer en mode automatique (une question à la fois)"
-                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-200 text-xs font-medium transition-colors flex-shrink-0"
-                            >
-                                <Sparkles className="w-3.5 h-3.5" />
-                                Mode automatique
-                            </button>
                         </div>
 
                         {currentSection === 0 && (

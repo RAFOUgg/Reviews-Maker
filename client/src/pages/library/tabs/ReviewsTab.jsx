@@ -13,6 +13,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
+import { parseImages } from '../../../utils/imageUtils'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -45,12 +46,77 @@ const TYPE_TO_ROUTE = {
 }
 
 // Hash/Concentrate/Edible n'ont pas de champ mainImage sur la review de base (stocké sur leur
-// propre sous-table) — mainImageUrl/images sont déjà des URLs complètes remontées par le backend
-const getCardImageSrc = (review) => {
-    if (review.mainImageUrl) return review.mainImageUrl
-    if (review.mainImage) return `/api/images/${review.mainImage}`
-    if (Array.isArray(review.images) && review.images.length > 0) return review.images[0]
-    return null
+// propre sous-table) — mais reviewFormatter.js remonte déjà toutes leurs photos dans review.images
+// (fallback depuis hashData/concentrateData/edibleData), donc parseImages() couvre les 4 types.
+const getCardImages = (review) => {
+    const parsed = parseImages(review.images)
+    if (parsed.length > 0) return parsed
+    // Fallback : review sans tableau images mais avec une image principale connue
+    if (review.mainImageUrl) return [review.mainImageUrl]
+    if (review.mainImage) return [`/api/images/${review.mainImage}`]
+    return []
+}
+
+// Mosaïque façon Instagram (1 pleine largeur / 2 côte à côte / 3 en L / 4+ en grille avec "+N")
+// — même pattern déjà éprouvé dans HomeReviewCard.jsx pour la galerie publique.
+const renderCardImages = (review, TypeIcon) => {
+    const images = getCardImages(review)
+
+    if (images.length === 0) {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                <TypeIcon className="w-12 h-12 text-white/20" />
+            </div>
+        )
+    }
+
+    if (images.length === 1) {
+        return (
+            <img
+                src={images[0]}
+                alt={review.holderName}
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            />
+        )
+    }
+
+    if (images.length === 2) {
+        return (
+            <div className="grid grid-cols-2 gap-0.5 h-full">
+                {images.map((src, i) => (
+                    <img key={i} src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
+                ))}
+            </div>
+        )
+    }
+
+    if (images.length === 3) {
+        return (
+            <div className="grid grid-rows-2 gap-0.5 h-full">
+                <div className="grid grid-cols-2 gap-0.5">
+                    {images.slice(0, 2).map((src, i) => (
+                        <img key={i} src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
+                    ))}
+                </div>
+                <img src={images[2]} alt={`${review.holderName} 3`} className="w-full h-full object-cover" />
+            </div>
+        )
+    }
+
+    return (
+        <div className="grid grid-cols-2 grid-rows-2 gap-0.5 h-full">
+            {images.slice(0, 4).map((src, i) => (
+                <div key={i} className="relative overflow-hidden">
+                    <img src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
+                    {i === 3 && images.length > 4 && (
+                        <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-bold">
+                            +{images.length - 4}
+                        </div>
+                    )}
+                </div>
+            ))}
+        </div>
+    )
 }
 
 const VIEW_MODES = [
@@ -245,6 +311,7 @@ export default function ReviewsTab() {
     const renderReviewCard = (review, index) => {
         const typeConfig = PRODUCT_TYPES.find(t => t.id === review.type)
         const TypeIcon = typeConfig?.icon || Flower2
+        const cardImages = getCardImages(review)
 
         if (viewMode === 'list') {
             return (
@@ -257,16 +324,21 @@ export default function ReviewsTab() {
                     <LiquidCard glow="none" padding="sm" className="hover:border-purple-500/30 transition-all">
                         <div className="flex items-center gap-4">
                             {/* Image */}
-                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0">
-                                {getCardImageSrc(review) ? (
+                            <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0 relative">
+                                {cardImages.length > 0 ? (
                                     <img
-                                        src={getCardImageSrc(review)}
+                                        src={cardImages[0]}
                                         alt={review.holderName}
                                         className="w-full h-full object-cover"
                                     />
                                 ) : (
                                     <div className="w-full h-full flex items-center justify-center">
                                         <TypeIcon className="w-6 h-6 text-white/30" />
+                                    </div>
+                                )}
+                                {cardImages.length > 1 && (
+                                    <div className="absolute bottom-0 right-0 px-1 rounded-tl-md bg-black/70 text-white text-[10px] font-bold leading-tight">
+                                        +{cardImages.length - 1}
                                     </div>
                                 )}
                             </div>
@@ -368,19 +440,9 @@ export default function ReviewsTab() {
                 className="group"
             >
                 <LiquidCard glow="none" padding="none" className="overflow-hidden hover:border-purple-500/30 transition-all">
-                    {/* Image */}
+                    {/* Image(s) */}
                     <div className="aspect-square bg-white/5 relative overflow-hidden">
-                        {getCardImageSrc(review) ? (
-                            <img
-                                src={getCardImageSrc(review)}
-                                alt={review.holderName}
-                                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                        ) : (
-                            <div className="w-full h-full flex items-center justify-center">
-                                <TypeIcon className="w-12 h-12 text-white/20" />
-                            </div>
-                        )}
+                        {renderCardImages(review, TypeIcon)}
 
                         {/* Overlay actions */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">

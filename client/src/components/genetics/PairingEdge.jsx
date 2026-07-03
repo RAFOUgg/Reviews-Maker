@@ -97,6 +97,7 @@ export default function PairingEdge({
         <>
             <BaseEdge
                 path={edgePath}
+                interactionWidth={24}
                 style={{
                     stroke: selected ? '#f472b6' : '#ec4899',
                     strokeWidth: selected ? 2.5 : 2,
@@ -125,20 +126,28 @@ export default function PairingEdge({
                     />
                 )}
 
+                {/* Zone de saisie agrandie (32x32) autour de la bulle visuelle (20x20) — les
+                    gestionnaires vivent sur ce conteneur, pas sur la bulle elle-même, pour que
+                    la marge invisible autour reste tout aussi cliquable/tactile qu'elle. */}
                 <div
                     style={{
                         position: 'absolute',
                         transform: `translate(-50%, -50%) translate(${bendX}px,${bendY}px)`,
+                        width: 32,
+                        height: 32,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         pointerEvents: 'all',
                     }}
                     className="nodrag nopan"
+                    onPointerDown={handlePointerDown}
+                    onDoubleClick={handleDoubleClick}
                     title={dropTargetId
                         ? 'Relâcher pour relier ce nœud comme enfant du couple'
                         : 'Glisser pour courber • glisser jusqu\'à un nœud pour le relier comme enfant du couple • double-clic pour réinitialiser'}
                 >
                     <div
-                        onPointerDown={handlePointerDown}
-                        onDoubleClick={handleDoubleClick}
                         style={{
                             width: 20,
                             height: 20,
@@ -161,7 +170,8 @@ export default function PairingEdge({
                     </div>
                 </div>
 
-                {/* Poignées d'extrémité — mêmes gestes que PhenoEdge.jsx */}
+                {/* Poignées d'extrémité — mêmes gestes que PhenoEdge.jsx, même agrandissement
+                    de zone de saisie (26x26) autour du point visuel (9x9). */}
                 {[
                     { end: 'source', x: sx, y: sy, nodeId: source, active: !!data?.sourceHandle },
                     { end: 'target', x: tx, y: ty, nodeId: target, active: !!data?.targetHandle },
@@ -171,6 +181,11 @@ export default function PairingEdge({
                         style={{
                             position: 'absolute',
                             transform: `translate(-50%, -50%) translate(${x}px,${y}px)`,
+                            width: 26,
+                            height: 26,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             pointerEvents: 'all',
                             opacity: selected || active || dragging === end ? 1 : 0,
                             transition: dragging ? 'none' : 'opacity 150ms ease-in-out',

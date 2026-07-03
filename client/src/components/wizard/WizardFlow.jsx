@@ -25,6 +25,8 @@ export default function WizardFlow({
     saving = false,
     isDirty = false,
     onSave,
+    initialIndex = 0,
+    onIndexChange,
 }) {
     const {
         question,
@@ -37,7 +39,7 @@ export default function WizardFlow({
         onSkip,
         goNext,
         goPrevious,
-    } = useWizardEngine({ questions, formData, handleChange })
+    } = useWizardEngine({ questions, formData, handleChange, initialIndex, onIndexChange })
 
     const handleNext = () => {
         if (isLast) {

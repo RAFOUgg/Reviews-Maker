@@ -174,8 +174,16 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 selected: store.selectedEdgeId === e1.id || store.selectedEdgeId === e2.id,
                 markerEnd: { type: MarkerType.ArrowClosed },
                 data: {
-                    parentAPos: nodeA.position || { x: 0, y: 0 },
-                    parentBPos: nodeB.position || { x: 0, y: 0 },
+                    // Le stem du T doit partir du MÊME point d'attache que la ligne de couple réelle
+                    // (mêmes ids/handles/waypoint que la PairingEdge) — pas d'un milieu recalculé
+                    // indépendamment, sinon la fourche vers l'enfant ne concorde pas visuellement
+                    // avec le point où la ligne pointillée du couple se coude réellement.
+                    parentAId: pair.parentNodeId,
+                    parentBId: pair.childNodeId,
+                    pairingSourceHandle: pair.sourceHandle,
+                    pairingTargetHandle: pair.targetHandle,
+                    pairingWaypointX: pair.waypointX,
+                    pairingWaypointY: pair.waypointY,
                     // Cette arête est purement visuelle (fusion des 2 liens réels ci-dessous) — son
                     // id "family-…" n'existe pas en base. Le menu contextuel doit agir sur les vrais
                     // GenEdge sous-jacents, jamais sur cet id synthétique (sinon 404 au clic Supprimer).

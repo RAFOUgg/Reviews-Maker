@@ -7,8 +7,20 @@ import { SENTINEL_BY_WIDGET } from './wizardFieldTypes'
  * exactement comme le feraient les sections classiques. Ça garde l'autosave existant
  * (déclenché par le useEffect sur [formData] de chaque CreateXReview/index.jsx) intact.
  */
-export function useWizardEngine({ questions, formData, handleChange }) {
-    const [currentIndex, setCurrentIndex] = useState(0)
+export function useWizardEngine({ questions, formData, handleChange, initialIndex = 0, onIndexChange }) {
+    const [currentIndex, setCurrentIndexState] = useState(initialIndex)
+
+    // Remonte chaque changement de position au parent (via onIndexChange) pour que la position
+    // survive un aller-retour vers le formulaire classique (ex: handoff pipeline) — WizardFlow est
+    // démonté/remonté à chaque bascule de mode, donc ce state interne seul serait perdu à chaque fois.
+    const setCurrentIndex = (updater) => {
+        setCurrentIndexState(prev => {
+            const next = typeof updater === 'function' ? updater(prev) : updater
+            const clamped = Math.max(0, Math.min(questions.length - 1, next))
+            onIndexChange?.(clamped)
+            return clamped
+        })
+    }
 
     const question = questions[currentIndex]
     const total = questions.length

@@ -94,6 +94,7 @@ export default function PhenoEdge({
         <>
             <BaseEdge
                 path={edgePath}
+                interactionWidth={24}
                 style={{
                     stroke: selected ? '#10b981' : '#059669',
                     strokeWidth: selected ? 2.5 : 2,
@@ -129,11 +130,18 @@ export default function PhenoEdge({
                 </div>
 
                 {/* Poignée de courbure — visible seulement au survol/sélection pour ne pas
-                    encombrer un arbre dense, sauf si déjà déplacée (hasCustomBend) */}
+                    encombrer un arbre dense, sauf si déjà déplacée (hasCustomBend). Zone de
+                    saisie agrandie (28x28) autour du point visuel (10x10) : plus facile à
+                    attraper à la souris comme au doigt sans changer l'encombrement visuel. */}
                 <div
                     style={{
                         position: 'absolute',
                         transform: `translate(-50%, -50%) translate(${bendX}px,${bendY}px)`,
+                        width: 28,
+                        height: 28,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
                         pointerEvents: 'all',
                         opacity: selected || hasCustomBend ? 1 : 0,
                         transition: 'opacity 150ms ease-in-out',
@@ -157,7 +165,8 @@ export default function PhenoEdge({
 
                 {/* Poignées d'extrémité — glisser vers un autre côté du MÊME nœud pour forcer
                     l'accroche à cet endroit (double-clic : retour à l'accroche automatique).
-                    Visibles au survol/sélection ou pendant le glisser en cours. */}
+                    Visibles au survol/sélection ou pendant le glisser en cours. Même agrandissement
+                    de zone de saisie que la poignée de courbure ci-dessus. */}
                 {[
                     { end: 'source', x: sx, y: sy, nodeId: source, active: !!data?.sourceHandle },
                     { end: 'target', x: tx, y: ty, nodeId: target, active: !!data?.targetHandle },
@@ -167,6 +176,11 @@ export default function PhenoEdge({
                         style={{
                             position: 'absolute',
                             transform: `translate(-50%, -50%) translate(${x}px,${y}px)`,
+                            width: 26,
+                            height: 26,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
                             pointerEvents: 'all',
                             opacity: selected || active || dragging === end ? 1 : 0,
                             transition: dragging ? 'none' : 'opacity 150ms ease-in-out',

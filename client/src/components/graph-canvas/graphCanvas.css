@@ -223,6 +223,23 @@
     position: absolute;
 }
 
+/* Agrandit la zone de HIT (souris ET tactile) sans changer la taille visuelle (8x8px,
+   inchangée) — même technique que le pseudo-élément mobile ci-dessous (pseudo-élément
+   transparent surdimensionné et centré, le navigateur route les clics/touches qui tombent
+   dedans vers l'élément réel .react-flow__handle). 28px sur desktop pour rester praticable
+   même sur un arbre dense (poignées rapprochées) ; passe à 44px (seuil tactile recommandé
+   WCAG/Apple/Material) en dessous de 768px, cf. media query plus bas. */
+.node-handle::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 28px;
+    height: 28px;
+    transform: translate(-50%, -50%);
+    background: transparent;
+}
+
 /* Canvas Edges */
 .react-flow__edges {
     z-index: 1;
