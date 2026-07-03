@@ -239,8 +239,34 @@ export default function Genetiques({ formData, handleChange }) {
         }
     }
 
-    const handleImportToExistingTree = () => {
-        setShowInitialModal(false)
+    // Affiche la liste des arbres existants à l'intérieur de la même modale plutôt que de
+    // fermer sans rien faire (bug précédent : le clic ne faisait strictement rien, la fleur
+    // n'était jamais réellement importée nulle part).
+    const [showTreePicker, setShowTreePicker] = useState(false)
+
+    const handleImportToTree = async (treeId) => {
+        setCreatingTree(true)
+        try {
+            const flowerName = formData.generalInfo?.commercialName || 'Nouvelle Fleur'
+            await loadTree(treeId)
+            await addNode({
+                cultivarName: flowerName,
+                position: { x: 300, y: 200 },
+                color: '#FF6B9D',
+                genetics: {
+                    breeder: genetics.breeder || '',
+                    type: genetics.type || 'hybrid',
+                    indicaRatio: genetics.indicaRatio || 50
+                },
+                notes: `Importé depuis la review`
+            })
+            setShowTreePicker(false)
+            setShowInitialModal(false)
+        } catch (error) {
+            console.error('Error importing flower to tree:', error)
+        } finally {
+            setCreatingTree(false)
+        }
     }
 
     // Ajouter un nouvel arbre
@@ -351,75 +377,105 @@ export default function Genetiques({ formData, handleChange }) {
                                 <FolderTree className="w-6 h-6 text-purple-400" />
                                 Gestion de l'Arbre Généalogique
                             </h3>
-                            <p className="text-sm text-white/60 mb-6">
-                                Comment souhaitez-vous procéder avec cette fiche technique ?
-                            </p>
-
-                            <div className="space-y-3">
-                                <button
-                                    onClick={handleCreateEmptyTree}
-                                    disabled={creatingTree}
-                                    className="w-full p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl hover:border-purple-400 transition-all text-left group disabled:opacity-50"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-purple-600 text-white rounded-lg group-hover:scale-110 transition-transform">
-                                            {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-white">Créer un arbre vide</p>
-                                            <p className="text-xs text-white/50 mt-1">
-                                                Commencez un nouvel arbre généalogique depuis zéro
-                                            </p>
-                                        </div>
+                            {showTreePicker ? (
+                                <>
+                                    <p className="text-sm text-white/60 mb-4">
+                                        Choisissez l'arbre auquel ajouter cette fiche :
+                                    </p>
+                                    <div className="space-y-2 max-h-80 overflow-y-auto">
+                                        {trees.map(tree => (
+                                            <button
+                                                key={tree.id}
+                                                onClick={() => handleImportToTree(tree.id)}
+                                                disabled={creatingTree}
+                                                className="w-full p-3 bg-white/5 border border-white/10 rounded-xl hover:border-green-400 transition-all text-left flex items-center justify-between disabled:opacity-50"
+                                            >
+                                                <span className="text-white font-medium">{tree.name}</span>
+                                                {creatingTree ? <RefreshCw className="w-4 h-4 animate-spin text-white/40" /> : <Upload className="w-4 h-4 text-white/40" />}
+                                            </button>
+                                        ))}
                                     </div>
-                                </button>
-
-                                <button
-                                    onClick={handleCreateTreeFromCurrentFlower}
-                                    disabled={creatingTree}
-                                    className="w-full p-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl hover:border-blue-400 transition-all text-left group disabled:opacity-50"
-                                >
-                                    <div className="flex items-start gap-3">
-                                        <div className="p-2 bg-blue-600 text-white rounded-lg group-hover:scale-110 transition-transform">
-                                            {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Leaf className="w-5 h-5" />}
-                                        </div>
-                                        <div>
-                                            <p className="font-semibold text-white">Créer un arbre à partir de cette fleur</p>
-                                            <p className="text-xs text-white/50 mt-1">
-                                                Utilisez cette fiche comme point de départ de l'arbre
-                                            </p>
-                                        </div>
-                                    </div>
-                                </button>
-
-                                {trees.length > 0 && (
                                     <button
-                                        onClick={handleImportToExistingTree}
+                                        onClick={() => setShowTreePicker(false)}
                                         disabled={creatingTree}
-                                        className="w-full p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl hover:border-green-400 transition-all text-left group disabled:opacity-50"
+                                        className="w-full mt-4 px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
                                     >
-                                        <div className="flex items-start gap-3">
-                                            <div className="p-2 bg-green-600 text-white rounded-lg group-hover:scale-110 transition-transform">
-                                                <Upload className="w-5 h-5" />
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-white">Importer cette fleur à un arbre</p>
-                                                <p className="text-xs text-white/50 mt-1">
-                                                    Ajoutez cette fiche à un arbre existant ({trees.length} arbre{trees.length > 1 ? 's' : ''})
-                                                </p>
-                                            </div>
-                                        </div>
+                                        Retour
                                     </button>
-                                )}
-                            </div>
+                                </>
+                            ) : (
+                                <>
+                                    <p className="text-sm text-white/60 mb-6">
+                                        Comment souhaitez-vous procéder avec cette fiche technique ?
+                                    </p>
 
-                            {trees.length > 0 && (
-                                <button
-                                    onClick={() => setShowInitialModal(false)}
-                                    className="w-full mt-4 px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
-                                >
-                                    Annuler
-                                </button>
+                                    <div className="space-y-3">
+                                        <button
+                                            onClick={handleCreateEmptyTree}
+                                            disabled={creatingTree}
+                                            className="w-full p-4 bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30 rounded-xl hover:border-purple-400 transition-all text-left group disabled:opacity-50"
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2 bg-purple-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                                    {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-white">Créer un arbre vide</p>
+                                                    <p className="text-xs text-white/50 mt-1">
+                                                        Commencez un nouvel arbre généalogique depuis zéro
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </button>
+
+                                        <button
+                                            onClick={handleCreateTreeFromCurrentFlower}
+                                            disabled={creatingTree}
+                                            className="w-full p-4 bg-gradient-to-r from-blue-500/10 to-indigo-500/10 border border-blue-500/30 rounded-xl hover:border-blue-400 transition-all text-left group disabled:opacity-50"
+                                        >
+                                            <div className="flex items-start gap-3">
+                                                <div className="p-2 bg-blue-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                                    {creatingTree ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Leaf className="w-5 h-5" />}
+                                                </div>
+                                                <div>
+                                                    <p className="font-semibold text-white">Créer un arbre à partir de cette fleur</p>
+                                                    <p className="text-xs text-white/50 mt-1">
+                                                        Utilisez cette fiche comme point de départ de l'arbre
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </button>
+
+                                        {trees.length > 0 && (
+                                            <button
+                                                onClick={() => setShowTreePicker(true)}
+                                                disabled={creatingTree}
+                                                className="w-full p-4 bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30 rounded-xl hover:border-green-400 transition-all text-left group disabled:opacity-50"
+                                            >
+                                                <div className="flex items-start gap-3">
+                                                    <div className="p-2 bg-green-600 text-white rounded-lg group-hover:scale-110 transition-transform">
+                                                        <Upload className="w-5 h-5" />
+                                                    </div>
+                                                    <div>
+                                                        <p className="font-semibold text-white">Importer cette fleur à un arbre</p>
+                                                        <p className="text-xs text-white/50 mt-1">
+                                                            Ajoutez cette fiche à un arbre existant ({trees.length} arbre{trees.length > 1 ? 's' : ''})
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {trees.length > 0 && (
+                                        <button
+                                            onClick={() => setShowInitialModal(false)}
+                                            className="w-full mt-4 px-4 py-2 text-sm text-white/50 hover:text-white transition-colors"
+                                        >
+                                            Annuler
+                                        </button>
+                                    )}
+                                </>
                             )}
                         </motion.div>
                     </motion.div>

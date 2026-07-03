@@ -47,7 +47,11 @@ export default function ProductionChainEditorPage() {
                 <ProductAddSidebar existingReviewIds={existingReviewIds} />
 
                 <div className="flex-1 overflow-hidden rounded-xl border border-white/10">
-                    {store.canvasLoading ? (
+                    {/* canvasLoading est aussi vrai pendant chaque mutation en arrière-plan (déplacer
+                        un nœud...) — ne démonter tout le ReactFlowProvider que lors du tout premier
+                        chargement, sinon chaque drag fait disparaître puis réapparaître tout le canvas
+                        (perte du zoom/pan). Cf. UnifiedGeneticsCanvas.jsx / ProductionChainCanvas.jsx. */}
+                    {store.canvasLoading && store.nodes.length === 0 ? (
                         <div className="h-full flex items-center justify-center bg-slate-900">
                             <div className="text-center text-slate-400">
                                 <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3" />

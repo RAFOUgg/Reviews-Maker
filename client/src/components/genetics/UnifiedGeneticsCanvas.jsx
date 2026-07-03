@@ -154,21 +154,29 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             notes: '',
             position,
             color: '#10b981',
+            // Relie la review en retour à cet arbre (côté backend) quand le nœud provient d'une
+            // fiche technique et non de la bibliothèque — sinon la review reste "sans arbre" pour
+            // toujours et le modal de création d'arbre réapparaît à chaque réédition.
+            sourceReviewId: !isLibraryCultivar ? cultivar.reviewId : null,
         });
     }, [readOnly, store]);
 
-    // Gestion du drag & drop des nœuds
-    const handleNodeDragStop = useCallback(async (event, node) => {
+    // Gestion du drag & drop des nœuds. React Flow passe en 3e argument TOUS les nœuds
+    // effectivement déplacés (cas d'une sélection multiple déplacée ensemble) — n'utiliser que
+    // `node` (le seul déclencheur du drag) faisait persister uniquement sa position ; les autres
+    // nœuds sélectionnés revenaient visuellement à leur ancienne position dès que le store se
+    // resynchronisait après la réponse API.
+    const handleNodeDragStop = useCallback(async (event, node, draggedNodes) => {
         if (readOnly) return;
 
-        // Mettre à jour la position du nœud dans le store
-        const newPosition = node.position;
-        await store.updateNode(node.id, { position: newPosition });
+        const movedNodes = Array.isArray(draggedNodes) && draggedNodes.length > 0 ? draggedNodes : [node];
 
-        // Mettre à jour aussi dans React Flow
-        setNodes(nodes => nodes.map(n =>
-            n.id === node.id ? { ...n, position: newPosition } : n
-        ));
+        await Promise.all(movedNodes.map(n => store.updateNode(n.id, { position: n.position })));
+
+        setNodes(nodes => nodes.map(n => {
+            const moved = movedNodes.find(m => m.id === n.id);
+            return moved ? { ...n, position: moved.position } : n;
+        }));
     }, [readOnly, store, setNodes]);
 
     // Gestion de la connexion entre deux nœuds
@@ -262,8 +270,12 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         }
     }, [treeId, store.selectedTreeId, store.loadTree]);
 
-    // Loading state
-    if (store.canvasLoading) {
+    // Loading state — canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan
+    // (déplacer un nœud, ajouter une arête...), pas seulement le chargement initial de l'arbre.
+    // Ne démonter le canvas (spinner plein écran) que lors du tout premier chargement, quand il
+    // n'y a encore aucun nœud à afficher — sinon chaque glisser-déposer de nœud provoquait un
+    // flash "spinner + reset du zoom/pan" (ReactFlow `fitView` se redéclenche au remount).
+    if (store.canvasLoading && nodes.length === 0) {
         return (
             <div className="canvas-loading">
                 <div className="spinner"></div>

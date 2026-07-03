@@ -227,13 +227,25 @@ export const EXPERIENCE_VALUES = {
         { value: 'autre', label: 'Autre méthode' }
     ],
 
-    // Début des effets
+    // Début des effets — inhalation (Fleur/Hash/Concentré) : absorption pulmonaire quasi immédiate.
+    // Non pertinent pour un comestible, voir debutEffetsEdible (absorption digestive, bien plus lente).
     debutEffets: [
         { value: 'immediat', label: 'Immédiat (< 2 min)' },
         { value: 'rapide', label: 'Rapide (2-5 min)' },
         { value: 'moyen', label: 'Moyen (5-15 min)' },
         { value: 'differe', label: 'Différé (15-30 min)' },
         { value: 'long', label: 'Long (30+ min)' }
+    ],
+
+    // Début des effets — comestible : absorption digestive (foie, effet de premier passage),
+    // typiquement 30 min à 2h+, très variable selon l'estomac plein/vide. Les paliers
+    // "immédiat/rapide" de debutEffets n'ont pas de sens ici et induiraient une donnée fausse.
+    debutEffetsEdible: [
+        { value: 'rapide', label: 'Rapide (< 30 min)' },
+        { value: 'moyen', label: 'Modéré (30-60 min)' },
+        { value: 'differe', label: 'Différé (1-2h)' },
+        { value: 'long', label: 'Long (2h+)' },
+        { value: 'tres-long', label: 'Très long / variable (au-delà de 3h)' }
     ],
 
     // Durée des effets

@@ -290,7 +290,12 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
             color = "#FF6B9D",
             image = null,
             genetics = null,
-            notes = null
+            notes = null,
+            // Présent quand le nœud est créé par glisser-déposer d'une fiche technique Fleur
+            // (pas un cultivar de bibliothèque) — permet de relier cette review à l'arbre en
+            // retour, sinon FlowerReviewData.geneticTreeId reste null malgré la présence du
+            // nœud, et la modale "créer un arbre" réapparaît à chaque réédition de cette review.
+            sourceReviewId = null
         } = req.body;
 
         if (!cultivarName || cultivarName.trim().length === 0) {
@@ -309,6 +314,13 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
                 notes: notes?.trim() || null
             }
         });
+
+        if (sourceReviewId) {
+            await prisma.flowerReview.updateMany({
+                where: { reviewId: sourceReviewId },
+                data: { geneticTreeId: req.params.id }
+            }).catch(() => {}); // best-effort : ne bloque pas la création du nœud si la review n'existe pas/plus
+        }
 
         res.status(201).json({
             ...node,

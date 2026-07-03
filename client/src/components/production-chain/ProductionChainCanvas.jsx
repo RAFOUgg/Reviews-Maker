@@ -129,11 +129,17 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         });
     }, [readOnly, store]);
 
-    const handleNodeDragStop = useCallback(async (event, node) => {
+    // Cf. UnifiedGeneticsCanvas.jsx (genetics) : React Flow passe en 3e argument TOUS les nœuds
+    // déplacés lors d'une sélection multiple — ne persister que le nœud déclencheur du drag
+    // faisait revenir les autres à leur ancienne position au resync suivant du store.
+    const handleNodeDragStop = useCallback(async (event, node, draggedNodes) => {
         if (readOnly) return;
-        const newPosition = node.position;
-        await store.updateNode(node.id, { position: newPosition });
-        setNodes(nodes => nodes.map(n => n.id === node.id ? { ...n, position: newPosition } : n));
+        const movedNodes = Array.isArray(draggedNodes) && draggedNodes.length > 0 ? draggedNodes : [node];
+        await Promise.all(movedNodes.map(n => store.updateNode(n.id, { position: n.position })));
+        setNodes(nodes => nodes.map(n => {
+            const moved = movedNodes.find(m => m.id === n.id);
+            return moved ? { ...n, position: moved.position } : n;
+        }));
     }, [readOnly, store, setNodes]);
 
     const handleConnect = useCallback(async (connection) => {
@@ -253,7 +259,11 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         }
     }, [chainId, store.selectedChainId, store.loadChain]);
 
-    if (store.canvasLoading) {
+    // canvasLoading est aussi vrai pendant chaque mutation en arrière-plan (déplacer un nœud,
+    // ajouter une arête...) — cf. UnifiedGeneticsCanvas.jsx. Ne démonter le canvas que lors du
+    // tout premier chargement (aucun nœud encore affiché), sinon chaque drag provoque un flash
+    // spinner + reset du zoom/pan (fitView se redéclenche au remount de ReactFlow).
+    if (store.canvasLoading && nodes.length === 0) {
         return (
             <div className="canvas-loading">
                 <div className="spinner"></div>

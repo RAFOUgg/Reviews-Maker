@@ -8,6 +8,10 @@ import EffectsWheelPicker from '@/components/shared/charts/EffectsWheelPicker';
 
 export default function EffectsSection({ productType, data: directData, onChange, formData, handleChange }) {
     const effectsData = directData || formData?.effets || {};
+    // Comestible : pas de combustion/vapeur/inhalation possible, l'ingestion est toujours le
+    // mode de consommation — inutile de le redemander. Dosage en mg (THC/dose) plutôt qu'en g,
+    // et fenêtres de début d'effet digestives (30min-2h+) au lieu des fenêtres d'inhalation.
+    const isEdible = productType === 'Edible';
 
     const updateHandler = (newData) => {
         if (typeof onChange === 'function') onChange(newData);
@@ -19,9 +23,9 @@ export default function EffectsSection({ productType, data: directData, onChange
     const [duration, setDuration] = useState(effectsData?.duration || '1-2h');
     const [selectedEffects, setSelectedEffects] = useState(effectsData?.effects || []);
 
-    const [methodeConsommation, setMethodeConsommation] = useState(effectsData?.methodeConsommation || '');
+    const [methodeConsommation, setMethodeConsommation] = useState(effectsData?.methodeConsommation || (isEdible ? 'comestible' : ''));
     const [dosageUtilise, setDosageUtilise] = useState(effectsData?.dosageUtilise || '');
-    const [dosageUnite, setDosageUnite] = useState(effectsData?.dosageUnite || 'g');
+    const [dosageUnite, setDosageUnite] = useState(effectsData?.dosageUnite || (isEdible ? 'mg' : 'g'));
     const [dureeEffetsHeures, setDureeEffetsHeures] = useState(effectsData?.dureeEffetsHeures || '');
     const [dureeEffetsMinutes, setDureeEffetsMinutes] = useState(effectsData?.dureeEffetsMinutes || '');
     const [debutEffets, setDebutEffets] = useState(effectsData?.debutEffets || '');
@@ -40,7 +44,10 @@ export default function EffectsSection({ productType, data: directData, onChange
         if (isFirstRunRef.current) {
             isFirstRunRef.current = false;
             const hasIncoming = effectsData && Object.keys(effectsData).length > 0;
-            const hasManual = selectedEffects.length > 0 || methodeConsommation || dosageUtilise || dureeEffetsHeures || dureeEffetsMinutes || debutEffets;
+            // methodeConsommation='comestible' est un défaut auto-appliqué pour ce type (pas une
+            // vraie interaction) — ne doit pas à lui seul déclencher un brouillon vide (cf. bug
+            // des brouillons fantômes corrigé plus tôt sur les autres sections).
+            const hasManual = selectedEffects.length > 0 || (methodeConsommation && !(isEdible && methodeConsommation === 'comestible')) || dosageUtilise || dureeEffetsHeures || dureeEffetsMinutes || debutEffets;
             if (!hasIncoming && !hasManual) return;
         }
 
@@ -119,19 +126,21 @@ export default function EffectsSection({ productType, data: directData, onChange
 
             {expandExperience && (
                 <div className="mt-2 space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
-                    <div className="space-y-2">
-                        <label className="text-sm font-medium text-white/80 flex items-center gap-2">💨 Méthode de consommation *</label>
-                        <select
-                            value={methodeConsommation}
-                            onChange={(e) => setMethodeConsommation(e.target.value)}
-                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
-                        >
-                            <option value="" className="bg-gray-900">Sélectionner une méthode...</option>
-                            {EXPERIENCE_VALUES.methodeConsommation.map(m => (
-                                <option key={m.value} value={m.value} className="bg-gray-900">{m.label}</option>
-                            ))}
-                        </select>
-                    </div>
+                    {!isEdible && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-white/80 flex items-center gap-2">💨 Méthode de consommation *</label>
+                            <select
+                                value={methodeConsommation}
+                                onChange={(e) => setMethodeConsommation(e.target.value)}
+                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none transition-all"
+                            >
+                                <option value="" className="bg-gray-900">Sélectionner une méthode...</option>
+                                {EXPERIENCE_VALUES.methodeConsommation.map(m => (
+                                    <option key={m.value} value={m.value} className="bg-gray-900">{m.label}</option>
+                                ))}
+                            </select>
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="space-y-2">
@@ -151,9 +160,18 @@ export default function EffectsSection({ productType, data: directData, onChange
                                     onChange={(e) => setDosageUnite(e.target.value)}
                                     className="px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white focus:ring-2 focus:ring-cyan-500/50 outline-none"
                                 >
-                                    <option value="g" className="bg-gray-900">g</option>
-                                    <option value="mg" className="bg-gray-900">mg</option>
-                                    <option value="ml" className="bg-gray-900">ml</option>
+                                    {isEdible ? (
+                                        <>
+                                            <option value="mg" className="bg-gray-900">mg (THC/dose)</option>
+                                            <option value="g" className="bg-gray-900">g</option>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <option value="g" className="bg-gray-900">g</option>
+                                            <option value="mg" className="bg-gray-900">mg</option>
+                                            <option value="ml" className="bg-gray-900">ml</option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
                         </div>
@@ -173,10 +191,13 @@ export default function EffectsSection({ productType, data: directData, onChange
                             <label className="text-sm font-medium text-white/80">🚀 Début des effets</label>
                             <select value={debutEffets} onChange={(e) => setDebutEffets(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
                                 <option value="" className="bg-gray-900">Sélectionner...</option>
-                                {EXPERIENCE_VALUES.debutEffets.map(d => (
+                                {(isEdible ? EXPERIENCE_VALUES.debutEffetsEdible : EXPERIENCE_VALUES.debutEffets).map(d => (
                                     <option key={d.value} value={d.value} className="bg-gray-900">{d.label}</option>
                                 ))}
                             </select>
+                            {isEdible && (
+                                <p className="text-xs text-white/40">Absorption digestive — bien plus lente et variable qu'à l'inhalation.</p>
+                            )}
                         </div>
 
                         <div className="space-y-2">
