@@ -73,3 +73,59 @@ export function useFloatingNodeRect(nodeId) {
         return { x: position.x, y: position.y, width: node.width, height: node.height };
     }, [nodeId]));
 }
+
+/** Point exact au milieu d'un côté ("top"|"bottom"|"left"|"right") du rectangle d'un nœud. */
+export function getHandlePosition(node, side) {
+    const position = node.positionAbsolute || node.position;
+    const width = node.width ?? 140;
+    const height = node.height ?? 140;
+    switch (side) {
+        case 'top': return { x: position.x + width / 2, y: position.y };
+        case 'bottom': return { x: position.x + width / 2, y: position.y + height };
+        case 'left': return { x: position.x, y: position.y + height / 2 };
+        case 'right': return { x: position.x + width, y: position.y + height / 2 };
+        default: return { x: position.x + width / 2, y: position.y + height / 2 };
+    }
+}
+
+/**
+ * Points d'attache d'une liaison, en respectant un choix manuel de côté par extrémité
+ * (sourceHandle/targetHandle, ex: l'utilisateur a glissé la poignée sur le côté droit) — pour
+ * l'extrémité non fixée manuellement, retombe sur le calcul flottant automatique habituel.
+ */
+export function useEdgeEndpointParams(sourceId, targetId, sourceHandle, targetHandle) {
+    const sourceNode = useStore(useCallback((store) => store.nodeInternals.get(sourceId), [sourceId]));
+    const targetNode = useStore(useCallback((store) => store.nodeInternals.get(targetId), [targetId]));
+
+    if (!sourceNode || !targetNode || !sourceNode.width || !targetNode.width) return null;
+
+    const floating = getFloatingEdgeParams(sourceNode, targetNode);
+    const sourcePoint = sourceHandle ? getHandlePosition(sourceNode, sourceHandle) : { x: floating.sx, y: floating.sy };
+    const targetPoint = targetHandle ? getHandlePosition(targetNode, targetHandle) : { x: floating.tx, y: floating.ty };
+
+    return { sx: sourcePoint.x, sy: sourcePoint.y, tx: targetPoint.x, ty: targetPoint.y };
+}
+
+/** Détermine le côté ("top"|"bottom"|"left"|"right") d'un nœud le plus proche d'un point donné
+ *  (coordonnées flow) — utilisé quand l'utilisateur relâche la poignée d'extrémité d'une liaison
+ *  au-dessus d'un nœud, pour choisir sur quel côté l'accrocher. */
+export function nearestHandleSide(node, point) {
+    const position = node.positionAbsolute || node.position;
+    const width = node.width ?? 140;
+    const height = node.height ?? 140;
+    const cx = position.x + width / 2;
+    const cy = position.y + height / 2;
+    const nx = (point.x - cx) / (width / 2);
+    const ny = (point.y - cy) / (height / 2);
+    if (Math.abs(nx) > Math.abs(ny)) return nx > 0 ? 'right' : 'left';
+    return ny > 0 ? 'bottom' : 'top';
+}
+
+/** true si `point` (coordonnées flow) tombe dans le rectangle du nœud. */
+export function isPointInNode(node, point) {
+    const position = node.positionAbsolute || node.position;
+    const width = node.width ?? 140;
+    const height = node.height ?? 140;
+    return point.x >= position.x && point.x <= position.x + width
+        && point.y >= position.y && point.y <= position.y + height;
+}

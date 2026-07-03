@@ -1,14 +1,16 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
-import { useFloatingEdgeParams } from '../graph-canvas/floatingEdgeUtils';
+import { useEdgeEndpointParams } from '../graph-canvas/floatingEdgeUtils';
+import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 
 /**
  * PhenoEdge - Edge personnalisé pour les connexions généalogiques
  *
- * Point d'attache flottant (voir graph-canvas/floatingEdgeUtils.js) : la ligne part toujours du
- * bord réel des nœuds en fonction de leur position relative, pas du handle fixe utilisé lors de
- * la création de la connexion — sinon la liaison semble partir "du mauvais endroit" dès qu'un
- * nœud est déplacé ailleurs que dans l'axe du handle d'origine.
+ * Point d'attache flottant par défaut (voir graph-canvas/floatingEdgeUtils.js) : la ligne part du
+ * bord réel des nœuds selon leur position relative, pas d'un handle fixe — sinon la liaison
+ * semble partir "du mauvais endroit" dès qu'un nœud est déplacé. Chaque extrémité peut aussi être
+ * ancrée manuellement à un côté précis (haut/bas/gauche/droite) en glissant sa poignée — visible
+ * au survol/sélection, cf. useDraggableEndpoint.
  *
  * Supporte aussi un point de courbure ("waypoint") déplaçable à la main : par défaut la liaison
  * est une ligne droite parent→enfant, mais on peut glisser la poignée médiane sur le côté
@@ -30,10 +32,22 @@ export default function PhenoEdge({
     const { screenToFlowPosition } = useReactFlow();
     const [dragPos, setDragPos] = useState(null);
 
-    const floating = useFloatingEdgeParams(source, target);
-    const [sx, sy, tx, ty] = floating
-        ? [floating.sx, floating.sy, floating.tx, floating.ty]
+    const endpoints = useEdgeEndpointParams(source, target, data?.sourceHandle, data?.targetHandle);
+    const [baseSx, baseSy, baseTx, baseTy] = endpoints
+        ? [endpoints.sx, endpoints.sy, endpoints.tx, endpoints.ty]
         : [sourceX, sourceY, targetX, targetY];
+
+    const handleAssignEndpoint = useCallback((end, side) => {
+        data?.onEndpointHandleChange?.(id, end === 'source' ? { sourceHandle: side } : { targetHandle: side });
+    }, [id, data]);
+    const { dragging, dragPreviewPos, startDrag } = useDraggableEndpoint(handleAssignEndpoint);
+
+    // Pendant le glisser d'une extrémité, elle suit le curseur (aperçu live) ; l'autre extrémité
+    // ne bouge pas.
+    const sx = (dragging === 'source' && dragPreviewPos) ? dragPreviewPos.x : baseSx;
+    const sy = (dragging === 'source' && dragPreviewPos) ? dragPreviewPos.y : baseSy;
+    const tx = (dragging === 'target' && dragPreviewPos) ? dragPreviewPos.x : baseTx;
+    const ty = (dragging === 'target' && dragPreviewPos) ? dragPreviewPos.y : baseTy;
 
     const defaultMidX = (sx + tx) / 2;
     const defaultMidY = (sy + ty) / 2;
@@ -69,6 +83,12 @@ export default function PhenoEdge({
         event.stopPropagation();
         data?.onWaypointChange?.(id, null);
     }, [id, data]);
+
+    const handleEndpointDoubleClick = useCallback((end) => (event) => {
+        // Double-clic sur une poignée d'extrémité : retour à l'accroche flottante automatique
+        event.stopPropagation();
+        handleAssignEndpoint(end, null);
+    }, [handleAssignEndpoint]);
 
     return (
         <>
@@ -126,6 +146,40 @@ export default function PhenoEdge({
                         }}
                     />
                 </div>
+
+                {/* Poignées d'extrémité — glisser vers un autre côté du MÊME nœud pour forcer
+                    l'accroche à cet endroit (double-clic : retour à l'accroche automatique).
+                    Visibles au survol/sélection ou pendant le glisser en cours. */}
+                {[
+                    { end: 'source', x: sx, y: sy, nodeId: source, active: !!data?.sourceHandle },
+                    { end: 'target', x: tx, y: ty, nodeId: target, active: !!data?.targetHandle },
+                ].map(({ end, x, y, nodeId, active }) => (
+                    <div
+                        key={end}
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${x}px,${y}px)`,
+                            pointerEvents: 'all',
+                            opacity: selected || active || dragging === end ? 1 : 0,
+                            transition: dragging ? 'none' : 'opacity 150ms ease-in-out',
+                        }}
+                        className="nodrag nopan edge-endpoint-handle"
+                        onPointerDown={startDrag(end, nodeId)}
+                        onDoubleClick={handleEndpointDoubleClick(end)}
+                        title="Glisser vers un autre côté du nœud pour ancrer la liaison ici — double-clic pour revenir à l'accroche automatique"
+                    >
+                        <div
+                            style={{
+                                width: 9,
+                                height: 9,
+                                borderRadius: '50%',
+                                background: active ? '#fbbf24' : (selected ? '#10b981' : '#059669'),
+                                border: '2px solid rgba(255,255,255,0.7)',
+                                cursor: 'grab',
+                            }}
+                        />
+                    </div>
+                ))}
             </EdgeLabelRenderer>
 
             <defs>

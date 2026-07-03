@@ -204,7 +204,9 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         pollinationMethod: true,
                         notes: true,
                         waypointX: true,
-                        waypointY: true
+                        waypointY: true,
+                        sourceHandle: true,
+                        targetHandle: true
                     }
                 },
                 _count: {
@@ -551,6 +553,8 @@ router.get("/trees/:id/edges", optionalAuth, async (req, res) => {
                 notes: true,
                 waypointX: true,
                 waypointY: true,
+                sourceHandle: true,
+                targetHandle: true,
                 createdAt: true,
                 updatedAt: true
             },
@@ -661,7 +665,15 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
             return res.status(403).json({ error: "Forbidden" });
         }
 
-        const { relationshipType, pollinationMethod, notes, waypointX, waypointY } = req.body;
+        const VALID_HANDLES = ["top", "bottom", "left", "right"];
+        const { relationshipType, pollinationMethod, notes, waypointX, waypointY, sourceHandle, targetHandle } = req.body;
+
+        if (sourceHandle !== undefined && sourceHandle !== null && !VALID_HANDLES.includes(sourceHandle)) {
+            return res.status(400).json({ error: `Invalid sourceHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
+        }
+        if (targetHandle !== undefined && targetHandle !== null && !VALID_HANDLES.includes(targetHandle)) {
+            return res.status(400).json({ error: `Invalid targetHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
+        }
 
         try {
             const updated = await prisma.genEdge.update({
@@ -672,7 +684,10 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
                     ...(notes !== undefined && { notes: notes?.trim() || null }),
                     // null explicite = retour à la ligne droite (réinitialisation du point de courbure)
                     ...(waypointX !== undefined && { waypointX: waypointX === null ? null : Number(waypointX) }),
-                    ...(waypointY !== undefined && { waypointY: waypointY === null ? null : Number(waypointY) })
+                    ...(waypointY !== undefined && { waypointY: waypointY === null ? null : Number(waypointY) }),
+                    // null explicite = retour à l'accroche automatique flottante
+                    ...(sourceHandle !== undefined && { sourceHandle: sourceHandle || null }),
+                    ...(targetHandle !== undefined && { targetHandle: targetHandle || null })
                 }
             });
 

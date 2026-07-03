@@ -32,7 +32,7 @@ export default function CreateHashReview() {
     const toast = useToast()
     const { id } = useParams()
     const [searchParams] = useSearchParams()
-    const { isAuthenticated } = useStore()
+    const { isAuthenticated, authChecked } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
     const [isDirty, setIsDirty] = useState(false)
@@ -91,6 +91,16 @@ export default function CreateHashReview() {
         try {
             setSaving(true)
             const flatData = flattenHashFormData(formData)
+
+            // Cf. CreateFlowerReview/index.jsx : ne jamais auto-créer silencieusement une toute
+            // nouvelle review sans nom (sinon un "Brouillon" fantôme apparaît en bibliothèque dès
+            // qu'une autre section est touchée avant le nom) — un save explicite ou l'update d'une
+            // review déjà créée passent toujours.
+            if (!id && silent && !flatData.nomCommercial?.trim()) {
+                setSaving(false)
+                return undefined
+            }
+
             const dataToSend = id ? diffFlatData(flatData, lastSavedFlatRef.current) : flatData
             const existingImages = photos
                 .filter(p => p.existing)
@@ -210,8 +220,10 @@ export default function CreateHashReview() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // Vérifier auth
-    if (!isAuthenticated && !loading) {
+    // Vérifier auth — authChecked garde : ne rediriger qu'une fois checkAuth() résolu, sinon un
+    // accès direct (nouvel onglet, lien partagé...) redirige à tort avant confirmation du cookie
+    // de session (cf. CreateFlowerReview/index.jsx)
+    if (authChecked && !isAuthenticated && !loading) {
         toast.error('Vous devez être connecté')
         navigate('/login')
         return null

@@ -497,6 +497,15 @@
     cursor: grabbing;
 }
 
+/* Poignées d'extrémité des liaisons (ancrage manuel sur un côté du nœud) — PhenoEdge/PairingEdge */
+.edge-endpoint-handle {
+    cursor: grab;
+}
+
+.edge-endpoint-handle:active {
+    cursor: grabbing;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .canvas-toolbar {

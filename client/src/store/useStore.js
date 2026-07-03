@@ -18,6 +18,12 @@ export const useStore = create((set, get) => ({
     // User state
     user: null,
     isAuthenticated: false,
+    // Devient true une fois que checkAuth() a résolu (succès OU échec) — tant que c'est false,
+    // isAuthenticated===false ne veut PAS dire "non connecté", juste "pas encore vérifié". Sans
+    // cette distinction, une page qui redirige vers /login dès `!isAuthenticated` (ex: ouvrir
+    // "Éditer la review" dans un nouvel onglet) le fait à tort avant que le cookie de session
+    // n'ait eu le temps d'être confirmé par l'appel réseau checkAuth().
+    authChecked: false,
     accountType: 'consumer', // 'consumer' | 'producer' | 'influencer' | 'admin' (backend keys)
 
     // Cache pour éviter les requêtes répétées
@@ -44,7 +50,7 @@ export const useStore = create((set, get) => ({
             // Utiliser directement user.accountType fourni par le backend
             // Le backend calcule déjà le type correct via getUserAccountType()
             const accountType = user?.accountType || 'consumer'
-            set({ user, isAuthenticated: true, accountType })
+            set({ user, isAuthenticated: true, accountType, authChecked: true })
 
             // Force permission resync on login to avoid stale local cache
             try {
@@ -59,7 +65,7 @@ export const useStore = create((set, get) => ({
 
             return user
         } catch (error) {
-            set({ user: null, isAuthenticated: false, accountType: 'consumer' })
+            set({ user: null, isAuthenticated: false, accountType: 'consumer', authChecked: true })
             return null
         }
     },

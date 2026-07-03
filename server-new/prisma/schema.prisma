@@ -1530,6 +1530,14 @@ model GenEdge {
   waypointX Float?
   waypointY Float?
 
+  // Côté du nœud (parent/enfant) où l'utilisateur a choisi d'ancrer manuellement l'extrémité de
+  // la liaison ("top"|"bottom"|"left"|"right"), en glissant la poignée d'extrémité vers un autre
+  // point d'accroche du nœud. Null = accroche automatique "flottante" (calculée sur le bord réel
+  // du nœud selon sa position relative, cf. graph-canvas/floatingEdgeUtils.js) — le choix manuel
+  // n'est appliqué que si l'utilisateur l'a explicitement fixé.
+  sourceHandle String?
+  targetHandle String?
+
   // Metadata
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

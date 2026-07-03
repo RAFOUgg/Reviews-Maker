@@ -34,7 +34,7 @@ export default function CreateFlowerReview() {
     const toast = useToast()
     const { id } = useParams()
     const [searchParams] = useSearchParams()
-    const { user, isAuthenticated } = useStore()
+    const { user, isAuthenticated, authChecked } = useStore()
 
     // Récupérer les permissions selon le type de compte
     const {
@@ -137,12 +137,15 @@ export default function CreateFlowerReview() {
     // Current section data
     const currentSectionData = sections[currentSection]
 
+    // authChecked garde : ne rediriger vers /login qu'une fois checkAuth() résolu — sinon un
+    // accès direct (nouvel onglet via "Éditer la review" depuis PhenoHunt, lien partagé...)
+    // redirige à tort avant que le cookie de session ait eu le temps d'être confirmé.
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (authChecked && !isAuthenticated) {
             toast.error('Vous devez être connecté')
             navigate('/login')
         }
-    }, [isAuthenticated])
+    }, [isAuthenticated, authChecked])
 
     // Debug: log form state whenever the current section changes to help reproduce lost values
     useEffect(() => {
@@ -160,6 +163,19 @@ export default function CreateFlowerReview() {
         try {
             setSaving(true)
             const flatData = flattenFlowerFormData(formData)
+
+            // Ne jamais auto-créer silencieusement une toute nouvelle review tant qu'aucun nom
+            // n'a été saisi — sinon lier un arbre PhenoHunt, ajouter une photo ou toucher n'importe
+            // quelle autre section avant de remplir le nom suffit à faire apparaître un "Brouillon"
+            // fantôme en bibliothèque. Ne s'applique qu'à l'autosave silencieux d'une review encore
+            // jamais sauvegardée (id absent) — un clic explicite sur "Sauvegarder" passe toujours
+            // (choix assumé par l'utilisateur), et les updates d'une review déjà créée aussi
+            // (retirer ce garde là a explicitement causé des pertes de données par le passé).
+            if (!id && silent && !flatData.nomCommercial?.trim()) {
+                setSaving(false)
+                return undefined
+            }
+
             const dataToSend = id ? diffFlatData(flatData, lastSavedFlatRef.current) : flatData
             const existingImages = photos
                 .filter(p => p.existing)

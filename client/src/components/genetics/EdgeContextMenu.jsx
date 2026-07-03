@@ -56,6 +56,24 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
         onClose();
     };
 
+    // Couple parental (pairing) : crée un nœud enfant relié aux DEUX individus du couple d'un
+    // coup, plutôt que de devoir ajouter manuellement 2 relations séparées. _pendingParentIds
+    // (tableau) est traité par NodeFormModal.jsx après la création du nœud.
+    const handleAddChildToPairing = () => {
+        if (!parentNode || !childNode) { onClose(); return; }
+        const midX = ((parentNode.position?.x || 0) + (childNode.position?.x || 0)) / 2;
+        const midY = Math.max(parentNode.position?.y || 0, childNode.position?.y || 0) + 180;
+        store.openNodeForm({
+            cultivarName: '',
+            position: { x: midX, y: midY },
+            color: '#FF6B9D',
+            genetics: null,
+            notes: '',
+            _pendingParentIds: [edge.parentNodeId, edge.childNodeId]
+        });
+        onClose();
+    };
+
     const relationshipLabel = {
         'parent': '👨‍👩‍👧 Parent',
         'pollen_donor': '🌼 Donateur de pollen',
@@ -108,6 +126,11 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
                     <button className="context-menu-item" onClick={handleEdit}>
                         ✏️ Éditer relation
                     </button>
+                    {edge?.relationshipType === 'pairing' && (
+                        <button className="context-menu-item" onClick={handleAddChildToPairing}>
+                            👶 Ajouter un enfant à ce couple
+                        </button>
+                    )}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>
             )}

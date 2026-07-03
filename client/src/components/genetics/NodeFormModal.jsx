@@ -52,14 +52,20 @@ const NodeFormModal = ({ isEdit, onClose }) => {
             if (isEdit) {
                 await store.updateNode(formData.id, formData);
             } else {
-                const { _pendingParentId, ...nodeData } = formData;
+                const { _pendingParentId, _pendingParentIds, ...nodeData } = formData;
                 const result = await store.addNode(nodeData);
-                if (_pendingParentId && result?.data?.id) {
-                    await store.addEdge({
-                        parentNodeId: _pendingParentId,
-                        childNodeId: result.data.id,
-                        relationshipType: 'parent'
-                    });
+                // Un seul parent (clic droit "Ajouter enfant" sur un nœud) ou les deux membres
+                // d'un couple d'un coup (clic droit "Ajouter un enfant à ce couple" sur un
+                // PairingEdge) — jamais les deux en même temps.
+                const parentIds = _pendingParentIds || (_pendingParentId ? [_pendingParentId] : []);
+                if (parentIds.length > 0 && result?.data?.id) {
+                    for (const parentId of parentIds) {
+                        await store.addEdge({
+                            parentNodeId: parentId,
+                            childNodeId: result.data.id,
+                            relationshipType: 'parent'
+                        });
+                    }
                 }
             }
             onClose();

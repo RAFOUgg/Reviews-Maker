@@ -29,6 +29,7 @@ import PairingEdge from './PairingEdge';
 import FamilyDropEdge from './FamilyDropEdge';
 import NodeContextMenu from './NodeContextMenu';
 import EdgeContextMenu from './EdgeContextMenu';
+import PaneContextMenu from './PaneContextMenu';
 import NodeFormModal from './NodeFormModal';
 import EdgeFormModal from './EdgeFormModal';
 import ConfirmModal from '../shared/ConfirmModal';
@@ -49,13 +50,13 @@ const PARENT_CHILD_TYPES = ['parent', 'pollen_donor', 'clone', 'mutation'];
 
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const store = useGeneticsStore();
-    const { fitView } = useReactFlow();
+    const { fitView, screenToFlowPosition } = useReactFlow();
 
     // State local pour le canvas
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [contextMenu, setContextMenu] = useState(null);
-    const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge'
+    const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane'
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
 
     // Persistance du point de courbure d'une liaison glissée à la main (PhenoEdge/PairingEdge).
@@ -65,6 +66,13 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             waypointX: pos ? pos.x : null,
             waypointY: pos ? pos.y : null
         });
+    }, [store]);
+
+    // Persistance du côté d'accroche manuel d'une extrémité de liaison glissée à la main
+    // (useDraggableEndpoint) — { sourceHandle } ou { targetHandle }, valeur null = retour à
+    // l'accroche flottante automatique (double-clic sur la poignée).
+    const handleEdgeEndpointChange = useCallback((edgeId, patch) => {
+        store.updateEdge(edgeId, patch);
     }, [store]);
 
     // Synchroniser les nœuds et arêtes du store vers React Flow
@@ -165,13 +173,16 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     notes: edge.notes,
                     waypointX: edge.waypointX,
                     waypointY: edge.waypointY,
-                    onWaypointChange: handleEdgeWaypointChange
+                    onWaypointChange: handleEdgeWaypointChange,
+                    sourceHandle: edge.sourceHandle,
+                    targetHandle: edge.targetHandle,
+                    onEndpointHandleChange: handleEdgeEndpointChange
                 }
             }));
 
         setNodes(rfNodes);
         setEdges([...rfEdges, ...familyEdges]);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange]);
+    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {
@@ -314,6 +325,30 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         }
     }, [readOnly, store]);
 
+    // Clic droit sur le fond vide du canvas — menu "Ajouter un individu inconnu", point d'entrée
+    // supplémentaire (déjà possible via double-clic ou le bouton toolbar) plus découvrable.
+    const handlePaneContextMenu = useCallback((event) => {
+        if (readOnly) return;
+        event.preventDefault();
+        setContextMenuType('pane');
+        setContextMenu({
+            x: event.clientX,
+            y: event.clientY,
+            flowPosition: screenToFlowPosition({ x: event.clientX, y: event.clientY })
+        });
+    }, [readOnly, screenToFlowPosition]);
+
+    const handleAddUnknownIndividual = useCallback(() => {
+        const position = contextMenu?.flowPosition || { x: 0, y: 0 };
+        store.openNodeForm({
+            cultivarName: '',
+            position,
+            color: '#FF6B9D',
+            genetics: null,
+            notes: ''
+        });
+    }, [contextMenu, store]);
+
     // Fermer le menu contextuel
     const closeContextMenu = useCallback(() => {
         setContextMenu(null);
@@ -355,6 +390,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onCanvasClick={handleCanvasClick}
+            onPaneContextMenu={handlePaneContextMenu}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             // canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan (déplacer un
@@ -415,6 +451,14 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                         onRequestDelete={setDeleteConfirm}
                         isFamily={contextMenu.isFamily}
                         underlyingEdges={contextMenu.underlyingEdges}
+                    />
+                )}
+                {contextMenu && contextMenuType === 'pane' && (
+                    <PaneContextMenu
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                        onAddUnknownIndividual={handleAddUnknownIndividual}
                     />
                 )}
             </>}

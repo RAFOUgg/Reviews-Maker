@@ -28,7 +28,7 @@ export default function CreateEdibleReview() {
     const toast = useToast()
     const { id } = useParams()
     const [searchParams] = useSearchParams()
-    const { isAuthenticated } = useStore()
+    const { isAuthenticated, authChecked } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [isDirty, setIsDirty] = useState(false)
 
@@ -81,6 +81,16 @@ export default function CreateEdibleReview() {
         try {
             setSaving(true)
             const flatData = flattenEdibleFormData(formData)
+
+            // Cf. CreateFlowerReview/index.jsx : ne jamais auto-créer silencieusement une toute
+            // nouvelle review sans nom (sinon un "Brouillon" fantôme apparaît en bibliothèque dès
+            // qu'une autre section est touchée avant le nom) — un save explicite ou l'update d'une
+            // review déjà créée passent toujours.
+            if (!id && silent && !flatData.nomProduit?.trim()) {
+                setSaving(false)
+                return undefined
+            }
+
             const dataToSend = id ? diffFlatData(flatData, lastSavedFlatRef.current) : flatData
             const existingImages = photos
                 .filter(p => p.existing)
@@ -196,7 +206,8 @@ export default function CreateEdibleReview() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    if (!isAuthenticated && !loading) {
+    // authChecked garde : cf. CreateFlowerReview/index.jsx
+    if (authChecked && !isAuthenticated && !loading) {
         toast.error('Vous devez être connecté')
         navigate('/login')
         return null

@@ -26,6 +26,7 @@ export default function GraphCanvasShell({
     onNodeDragStop,
     onEdgeClick,
     onEdgeContextMenu,
+    onPaneContextMenu,
     nodeTypes,
     edgeTypes,
     onCanvasClick,
@@ -72,6 +73,7 @@ export default function GraphCanvasShell({
                 onNodeDragStop={onNodeDragStop}
                 onEdgeClick={onEdgeClick}
                 onEdgeContextMenu={onEdgeContextMenu}
+                onPaneContextMenu={onPaneContextMenu}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 fitView
