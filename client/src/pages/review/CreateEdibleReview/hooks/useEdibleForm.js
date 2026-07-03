@@ -36,7 +36,9 @@ export function useEdibleForm(reviewId = null) {
 
             const gouts = {
                 intensity: ed.intensite ?? 0,
-                aggressiveness: ed.agressivitePiquant ?? 0,
+                // Comestible : agressivitePiquant stocke la persistance en bouche/arrière-goût
+                // (TasteSection.jsx lit aftertastePersistence pour ce type, pas aggressiveness).
+                aftertastePersistence: ed.agressivitePiquant ?? 0,
                 dryPuffNotes: parseArr(ed.dryPuff, []),
                 inhalationNotes: parseArr(ed.inhalation, []),
                 exhalationNotes: parseArr(ed.expiration, []),

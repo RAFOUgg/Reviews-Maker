@@ -264,7 +264,9 @@ export const TASTE_INTENSITY_LEVELS = [
 ];
 
 /**
- * Niveaux d'agressivité/piquant
+ * Niveaux d'agressivité/piquant — pertinent pour Fleur/Hash/Concentré (piquant en gorge à
+ * l'inhalation). Non applicable aux comestibles (aucune combustion/inhalation) : voir
+ * EDIBLE_AFTERTASTE_LEVELS pour l'équivalent adapté à la dégustation en bouche.
  */
 export const AGGRESSIVENESS_LEVELS = [
     { value: 1, label: 'Très doux', color: 'text-green-600' },
@@ -277,4 +279,22 @@ export const AGGRESSIVENESS_LEVELS = [
     { value: 8, label: 'Très piquant', color: 'text-orange-600' },
     { value: 9, label: 'Agressif', color: 'text-red-500' },
     { value: 10, label: 'Très agressif', color: 'text-red-600' }
+];
+
+/**
+ * Persistance en bouche / arrière-goût — remplace AGGRESSIVENESS_LEVELS pour les comestibles :
+ * dimension réellement spécifique à la dégustation (masquage du goût cannabis par la recette,
+ * durée de l'arrière-goût), sans équivalent pertinent en "piquant à l'inhalation".
+ */
+export const EDIBLE_AFTERTASTE_LEVELS = [
+    { value: 1, label: 'Inexistante (goût cannabis totalement masqué)', color: 'text-green-600' },
+    { value: 2, label: 'Très légère', color: 'text-green-500' },
+    { value: 3, label: 'Légère', color: '' },
+    { value: 4, label: 'Perceptible', color: '' },
+    { value: 5, label: 'Modérée', color: 'text-yellow-500' },
+    { value: 6, label: 'Présente', color: 'text-yellow-600' },
+    { value: 7, label: 'Marquée', color: 'text-orange-500' },
+    { value: 8, label: 'Longue en bouche', color: 'text-orange-600' },
+    { value: 9, label: 'Très persistante', color: 'text-red-500' },
+    { value: 10, label: 'Goût cannabis dominant et persistant', color: 'text-red-600' }
 ];

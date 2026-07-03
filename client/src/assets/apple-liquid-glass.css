@@ -1377,7 +1377,7 @@ input[type="range"].liquid-range::-moz-range-thumb,
     position: absolute;
     left: 4px;
     top: 4px;
-    height: calc(100% - 8px);
+    bottom: 4px;
     border-radius: 999px;
     box-shadow: inset 0 1px 8px rgba(255, 255, 255, 0.04), 0 8px 30px rgba(0, 0, 0, 0.3);
 }
@@ -1438,6 +1438,19 @@ input[type="range"].liquid-range::-moz-range-thumb,
     padding: 3px;
 }
 
+/* .liquid-slider-fill utilise un inset fixe (left/top 4px) qui ne suivait pas le padding
+   des variantes de taille — le remplissage coloré n'était donc pas cadré sur le track réel
+   pour data-size="sm"/"lg". Chaque variante doit redéfinir son propre inset.
+   Attention : top/bottom d'un absolu se résolvent contre la boîte de padding du conteneur
+   (border-box moins la bordure de 1px de chaque côté), PAS contre le `padding` déclaré sur
+   .liquid-slider-track lui-même (qui ne s'applique pas à un enfant positionné en absolute) —
+   inset top+bottom trop grand par rapport à cette boîte de padding réduite = hauteur nulle. */
+.liquid-slider .liquid-slider-track[data-size="sm"] .liquid-slider-fill {
+    left: 2px;
+    top: 2px;
+    bottom: 2px;
+}
+
 .liquid-slider .liquid-slider-track[data-size="sm"] .liquid-slider-thumb-inner {
     width: 36px;
     height: 36px
@@ -1446,6 +1459,12 @@ input[type="range"].liquid-range::-moz-range-thumb,
 .liquid-slider .liquid-slider-track[data-size="lg"] {
     height: 16px;
     padding: 6px
+}
+
+.liquid-slider .liquid-slider-track[data-size="lg"] .liquid-slider-fill {
+    left: 5px;
+    top: 5px;
+    bottom: 5px;
 }
 
 /* subtle decorative bubbles */

@@ -420,14 +420,15 @@ export default function ReviewsTab() {
                             {review.isPublic ? 'Publique' : 'Privée'}
                         </div>
 
-                        {/* Badge aperçu (manquant = avertissement) */}
+                        {/* Badge aperçu (manquant = avertissement) — placé sous le badge visibilité (top-right),
+                            jamais en bas où il chevaucherait la barre d'actions au survol (bottom-2, pleine largeur) */}
                         {!review.isPublic && !review.orchardPreset && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}?openExport=1`);
                                 }}
-                                className="absolute bottom-2 right-2 px-2 py-1 rounded-lg bg-amber-500/80 backdrop-blur text-white text-xs font-bold hover:bg-amber-500 transition-colors"
+                                className="absolute top-11 right-2 px-2 py-1 rounded-lg bg-amber-500/80 backdrop-blur text-white text-xs font-bold hover:bg-amber-500 transition-colors"
                                 title="Créer un aperçu avec Export Maker pour pouvoir publier"
                             >
                                 📸 Aperçu

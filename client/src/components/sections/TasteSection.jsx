@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS } from '../../data/tasteNotes';
+import { TASTE_INTENSITY_LEVELS, AGGRESSIVENESS_LEVELS, EDIBLE_AFTERTASTE_LEVELS } from '../../data/tasteNotes';
 import { Coffee, Sparkles } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
@@ -21,9 +21,12 @@ export default function TasteSection({ productType, data: directData, onChange, 
     // (réutilise TasteWheelPicker, même pattern CATA que Hash/Concentré/Fleur, max 7).
     const isEdible = productType === 'Edible';
 
-    // Default to 0 so sliders start at 0 when no data is present
+    // Default to 0 so sliders start at 0 when no data is present.
+    // aggressiveness (Fleur/Hash/Concentré, "piquant en gorge") et aftertastePersistence
+    // (Comestible, "persistance en bouche/masquage du goût cannabis") sont mutuellement
+    // exclusifs — un seul des deux existe en base selon le type, d'où le fallback ?? .
     const [intensity, setIntensity] = useState(data?.intensity ?? 0);
-    const [aggressiveness, setAggressiveness] = useState(data?.aggressiveness ?? 0);
+    const [aggressiveness, setAggressiveness] = useState((isEdible ? data?.aftertastePersistence : data?.aggressiveness) ?? 0);
     const [dryPuffNotes, setDryPuffNotes] = useState(data?.dryPuffNotes || []);
     const [inhalationNotes, setInhalationNotes] = useState(data?.inhalationNotes || []);
     const [exhalationNotes, setExhalationNotes] = useState(data?.exhalationNotes || []);
@@ -42,7 +45,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
         if (isEdible) {
             safeUpdate({
                 intensity,
-                aggressiveness,
+                aftertastePersistence: aggressiveness,
                 saveursDominantes
             })
         } else {
@@ -89,7 +92,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
 
                 <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
-                        label="Agressivité / Piquant"
+                        label={isEdible ? 'Persistance en bouche / Arrière-goût' : 'Agressivité / Piquant'}
                         value={aggressiveness}
                         min={0}
                         max={10}
@@ -97,7 +100,11 @@ export default function TasteSection({ productType, data: directData, onChange, 
                         color="orange"
                         onChange={(val) => setAggressiveness(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{aggressiveness > 0 ? AGGRESSIVENESS_LEVELS[aggressiveness - 1]?.label : 'Non évalué'}</p>
+                    <p className="text-xs text-white/40 mt-2">
+                        {aggressiveness > 0
+                            ? (isEdible ? EDIBLE_AFTERTASTE_LEVELS : AGGRESSIVENESS_LEVELS)[aggressiveness - 1]?.label
+                            : 'Non évalué'}
+                    </p>
                 </div>
             </div>
 

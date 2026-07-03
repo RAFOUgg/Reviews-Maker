@@ -57,6 +57,9 @@ export function flattenCommonFormData(data) {
     if (data.gouts) {
         if (data.gouts.intensity !== undefined) flat.intensiteGoutScore = data.gouts.intensity
         if (data.gouts.aggressiveness !== undefined) flat.agressiviteScore = data.gouts.aggressiveness
+        // Comestible : même colonne que aggressiveness (agressiviteScore), les deux sont mutuellement
+        // exclusifs par type de produit — pas de champ "piquant à l'inhalation" pour un comestible.
+        if (data.gouts.aftertastePersistence !== undefined) flat.agressiviteScore = data.gouts.aftertastePersistence
         if (data.gouts.dryPuffNotes) flat.dryPuffNotes = data.gouts.dryPuffNotes
         if (data.gouts.inhalationNotes) flat.inhalationNotes = data.gouts.inhalationNotes
         if (data.gouts.exhalationNotes) flat.expirationNotes = data.gouts.exhalationNotes

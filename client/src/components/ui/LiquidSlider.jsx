@@ -18,6 +18,7 @@ const LiquidSlider = ({
     unit = '/10',
     gradient = false,
     color = 'purple',
+    size = 'sm', // 'sm' | 'md' | 'lg' — cf. .liquid-slider-track[data-size] dans apple-liquid-glass.css
     className = '',
     ...props
 }) => {
@@ -36,12 +37,13 @@ const LiquidSlider = ({
 
     const percentage = ((value - min) / (max - min)) * 100;
 
-    // Track has 4px padding on each side. Fill and thumb must both be computed
-    // relative to that padded inner width (100% - 8px), otherwise the fill's
-    // right edge and the thumb's center drift apart near the min/max ends
-    // (fill stayed inside the padding while the thumb ignored it entirely).
-    const fillWidth = percentage <= 0 ? '0%' : `calc((100% - 8px) * ${percentage / 100})`;
-    const thumbLeft = `calc(4px + (100% - 8px) * ${percentage / 100})`;
+    // Doit rester synchronisé avec l'inset `left` de .liquid-slider-fill par taille dans
+    // apple-liquid-glass.css (sm=2px, md=4px, lg=5px). Fill et thumb doivent être calculés
+    // relativement à cette largeur utile (100% - 2*pad), sinon le bord droit du fill et le
+    // centre du thumb divergent près des bornes.
+    const trackPad = size === 'sm' ? 2 : size === 'lg' ? 5 : 4;
+    const fillWidth = percentage <= 0 ? '0%' : `calc((100% - ${trackPad * 2}px) * ${percentage / 100})`;
+    const thumbLeft = `calc(${trackPad}px + (100% - ${trackPad * 2}px) * ${percentage / 100})`;
 
     function setFromPointer(clientX) {
         const track = trackRef.current
@@ -58,7 +60,7 @@ const LiquidSlider = ({
     return (
         <div className={`w-full liquid-slider ${className}`}>
             {label && (
-                <div className="flex justify-between items-center mb-1.5">
+                <div className="flex justify-between items-center mb-1">
                     <label className="text-sm font-medium text-[var(--text-primary)]">
                         {label}
                     </label>
@@ -67,7 +69,7 @@ const LiquidSlider = ({
                             key={value}
                             initial={{ scale: 1.2 }}
                             animate={{ scale: 1 }}
-                            className="liquid-glass px-3 py-1 rounded-lg text-sm font-semibold"
+                            className="liquid-glass px-2.5 py-0.5 rounded-lg text-xs font-semibold"
                         >
                             {value}{unit}
                         </motion.span>
@@ -85,7 +87,7 @@ const LiquidSlider = ({
                 onMouseLeave={() => { setHover(false); setDragging(false) }}
             >
                 {/* Track (glass) */}
-                <div className="liquid-slider-track liquid-glass h-3 rounded-full overflow-hidden">
+                <div data-size={size} className="liquid-slider-track liquid-glass rounded-full overflow-hidden">
                     <motion.div
                         className={`liquid-slider-fill bg-gradient-to-r ${colorClasses[color]} rounded-full`}
                         initial={{ width: '0%' }}
@@ -137,7 +139,7 @@ const LiquidSlider = ({
             </div>
 
             {/* Scale indicators */}
-            <div className="flex justify-between mt-1 text-xs text-[var(--text-tertiary)]">
+            <div className="flex justify-between mt-0.5 text-[10px] text-[var(--text-tertiary)]">
                 <span>{min}</span>
                 <span>{Math.floor((max - min) / 2)}</span>
                 <span>{max}</span>

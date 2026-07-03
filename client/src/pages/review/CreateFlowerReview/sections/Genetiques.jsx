@@ -426,9 +426,9 @@ export default function Genetiques({ formData, handleChange }) {
                 )}
             </AnimatePresence>
 
-            <div className="flex gap-4 h-[700px] xl:h-[78vh] mt-6">
+            <div className="flex flex-col md:flex-row gap-4 h-[60vh] min-h-[420px] max-h-[650px] mt-6">
                 {/* SIDEBAR GAUCHE */}
-                <div className="w-80 flex-shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
+                <div className="w-full md:w-80 md:flex-shrink-0 h-48 md:h-auto bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
                     {/* Onglets Cultivars / Projets */}
                     <div className="flex border-b border-white/10 bg-white/5">
                         <button
