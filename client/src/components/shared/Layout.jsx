@@ -30,8 +30,16 @@ export default function Layout() {
 
     const visibleNavItems = navItems.filter(item => item.show);
 
+    // Pages "app plein écran" (canvas React Flow) : même traitement que create/edit — hauteur
+    // fixe au viewport + overflow-hidden, sinon le nav fixe + le padding par défaut de <main>
+    // poussent le contenu au-delà de 100vh et toute la page devient scrollable (le canvas lui-
+    // même reste correctement bordé, mais "on doit tout voir sans scroller" ne l'était pas).
+    const isFullScreenAppRoute = /^\/(create|edit)\//.test(location.pathname)
+        || location.pathname === '/phenohunt'
+        || /^\/library\/production-chains\//.test(location.pathname)
+
     return (
-        <div className={`flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white ${/^\/(create|edit)\//.test(location.pathname) ? 'h-dvh overflow-hidden' : location.pathname === '/library' ? '' : 'min-h-screen'}`}>
+        <div className={`flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white ${isFullScreenAppRoute ? 'h-dvh overflow-hidden' : location.pathname === '/library' ? '' : 'min-h-screen'}`}>
             {/* Navigation - Glassmorphism navbar - positioned below RDR banner */}
             <nav className="fixed top-[40px] left-0 right-0 z-[100] bg-white/5 backdrop-blur-xl border-b border-white/10">
                 <div className="container mx-auto px-4 py-3">
@@ -191,12 +199,13 @@ export default function Layout() {
 
             {/* Main Content - with top padding for RDR banner (40px) + navbar */}
             {/* Form routes (create/edit) get overflow-hidden so their internal layout controls scroll */}
-            <main className={`flex-1 w-full pt-28 ${/^\/(create|edit)\//.test(location.pathname) ? 'overflow-hidden flex flex-col' : location.pathname === '/library' ? '' : 'px-4 py-8'}`}>
+            <main className={`flex-1 w-full pt-28 ${isFullScreenAppRoute ? 'overflow-hidden flex flex-col' : location.pathname === '/library' ? '' : 'px-4 py-8'}`}>
                 <Outlet />
             </main>
 
-            {/* Footer global masqué sur les routes de formulaire (create/edit) et sur /library qui a sa propre barre de stats */}
-            {!/^\/(create|edit)\//.test(location.pathname) && location.pathname !== '/library' && <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
+            {/* Footer global masqué sur les routes plein écran (create/edit, phenohunt, chaîne de
+                production) et sur /library qui a sa propre barre de stats */}
+            {!isFullScreenAppRoute && location.pathname !== '/library' && <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
                 {/* Subtle glow line */}
                 <div
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px"

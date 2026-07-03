@@ -1,15 +1,18 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
+import { useFloatingEdgeParams } from '../graph-canvas/floatingEdgeUtils';
 
 /**
  * PairingEdge - Liaison "couple parental" (convention pedigree : ligne de jonction entre deux
- * parents, distincte des liens de filiation). Les enfants communs à ce couple ne se connectent
- * pas directement à cette ligne : FamilyDropEdge calcule son propre point de jonction à partir
- * des positions des deux nœuds (voir UnifiedGeneticsCanvas). Supporte le même glisser-déposer
- * de courbure que PhenoEdge.
+ * parents, distincte des liens de filiation). Point d'attache flottant, voir PhenoEdge.jsx.
+ * Les enfants communs à ce couple ne se connectent pas directement à cette ligne :
+ * FamilyDropEdge calcule son propre point de jonction à partir des positions des deux nœuds
+ * (voir UnifiedGeneticsCanvas). Supporte le même glisser-déposer de courbure que PhenoEdge.
  */
 export default function PairingEdge({
     id,
+    source,
+    target,
     sourceX,
     sourceY,
     targetX,
@@ -20,13 +23,18 @@ export default function PairingEdge({
     const { screenToFlowPosition } = useReactFlow();
     const [dragPos, setDragPos] = useState(null);
 
-    const defaultMidX = (sourceX + targetX) / 2;
-    const defaultMidY = (sourceY + targetY) / 2;
+    const floating = useFloatingEdgeParams(source, target);
+    const [sx, sy, tx, ty] = floating
+        ? [floating.sx, floating.sy, floating.tx, floating.ty]
+        : [sourceX, sourceY, targetX, targetY];
+
+    const defaultMidX = (sx + tx) / 2;
+    const defaultMidY = (sy + ty) / 2;
     const bendX = dragPos ? dragPos.x : (data?.waypointX ?? defaultMidX);
     const bendY = dragPos ? dragPos.y : (data?.waypointY ?? defaultMidY);
     const hasCustomBend = dragPos !== null || (data?.waypointX != null && data?.waypointY != null);
 
-    const edgePath = `M ${sourceX},${sourceY} L ${bendX},${bendY} L ${targetX},${targetY}`;
+    const edgePath = `M ${sx},${sy} L ${bendX},${bendY} L ${tx},${ty}`;
 
     const handlePointerDown = useCallback((event) => {
         event.stopPropagation();

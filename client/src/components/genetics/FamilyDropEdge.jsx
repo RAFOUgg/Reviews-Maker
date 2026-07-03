@@ -1,30 +1,37 @@
 import React from 'react';
 import { BaseEdge } from 'reactflow';
+import { useFloatingNodeRect } from '../graph-canvas/floatingEdgeUtils';
 
-// Doit correspondre à .cultivar-node (width/height 140px, cf. UnifiedGeneticsCanvas.css) — sert
-// uniquement à ancrer visuellement le point de jonction au bas des deux nœuds parents.
-const NODE_WIDTH = 140;
-const NODE_HEIGHT = 140;
+// Fallback si React Flow n'a pas encore mesuré les nœuds (premier rendu) — doit correspondre à
+// .cultivar-node (cf. UnifiedGeneticsCanvas.css).
+const FALLBACK_NODE_SIZE = 140;
 
 /**
  * FamilyDropEdge - Ligne de descendance "pedigree" : un enfant issu de deux parents déjà reliés
  * par un PairingEdge se connecte depuis le MILIEU de cette liaison plutôt que par deux traits
  * séparés. Remplace les deux GenEdge individuels (parentA→enfant, parentB→enfant) dans le rendu
  * uniquement — les deux GenEdge réels restent inchangés en base (voir UnifiedGeneticsCanvas).
+ * Point d'arrivée sur l'enfant : ancré au centre-haut de son rectangle RÉEL (mesuré par React
+ * Flow) plutôt qu'au `targetX/targetY` du handle résolu — sinon la ligne peut sembler arriver
+ * "du mauvais côté" selon le handle utilisé lors de la création de la connexion sous-jacente.
  */
-export default function FamilyDropEdge({ targetX, targetY, data, selected }) {
+export default function FamilyDropEdge({ target, targetX, targetY, data, selected }) {
     const { parentAPos, parentBPos } = data || {};
     if (!parentAPos || !parentBPos) return null;
 
-    const aX = parentAPos.x + NODE_WIDTH / 2;
-    const aY = parentAPos.y + NODE_HEIGHT;
-    const bX = parentBPos.x + NODE_WIDTH / 2;
-    const bY = parentBPos.y + NODE_HEIGHT;
+    const childRect = useFloatingNodeRect(target);
+    const tx = childRect ? childRect.x + childRect.width / 2 : targetX;
+    const ty = childRect ? childRect.y : targetY;
+
+    const aX = parentAPos.x + FALLBACK_NODE_SIZE / 2;
+    const aY = parentAPos.y + FALLBACK_NODE_SIZE;
+    const bX = parentBPos.x + FALLBACK_NODE_SIZE / 2;
+    const bY = parentBPos.y + FALLBACK_NODE_SIZE;
     const midX = (aX + bX) / 2;
     const midY = Math.max(aY, bY);
-    const dropY = midY + (targetY - midY) * 0.5;
+    const dropY = midY + (ty - midY) * 0.5;
 
-    const edgePath = `M ${midX},${midY} L ${midX},${dropY} L ${targetX},${dropY} L ${targetX},${targetY}`;
+    const edgePath = `M ${midX},${midY} L ${midX},${dropY} L ${tx},${dropY} L ${tx},${ty}`;
 
     return (
         <BaseEdge

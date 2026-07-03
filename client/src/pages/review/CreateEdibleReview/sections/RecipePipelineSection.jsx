@@ -4,7 +4,7 @@
  * Gestion ingrédients (standard/cannabinique) + étapes préparation
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, Plus, X, ChevronDown, Cannabis } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
@@ -25,7 +25,15 @@ const RecipePipelineSection = ({ data = {}, onChange }) => {
     const [showIngredients, setShowIngredients] = useState(true);
     const [showSteps, setShowSteps] = useState(true);
 
+    // isFirstRunRef évite d'émettre {ingredients:[], steps:[]} au simple montage de la section
+    // (ex: l'utilisateur clique sur cet onglet sans rien remplir) — sinon formData change de
+    // référence et déclenche l'autosave d'un brouillon vide (même pattern que AnalyticsSection.jsx).
+    const isFirstRunRef = useRef(true);
     useEffect(() => {
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            return;
+        }
         onChange?.(config);
     }, [config]);
 

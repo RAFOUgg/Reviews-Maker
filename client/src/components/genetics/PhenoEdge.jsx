@@ -1,16 +1,24 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
+import { useFloatingEdgeParams } from '../graph-canvas/floatingEdgeUtils';
 
 /**
  * PhenoEdge - Edge personnalisé pour les connexions généalogiques
  *
- * Supporte un point de courbure ("waypoint") déplaçable à la main : par défaut la liaison
+ * Point d'attache flottant (voir graph-canvas/floatingEdgeUtils.js) : la ligne part toujours du
+ * bord réel des nœuds en fonction de leur position relative, pas du handle fixe utilisé lors de
+ * la création de la connexion — sinon la liaison semble partir "du mauvais endroit" dès qu'un
+ * nœud est déplacé ailleurs que dans l'axe du handle d'origine.
+ *
+ * Supporte aussi un point de courbure ("waypoint") déplaçable à la main : par défaut la liaison
  * est une ligne droite parent→enfant, mais on peut glisser la poignée médiane sur le côté
  * pour la faire dévier (utile pour désenchevêtrer des arbres denses). Le point est persisté
  * via data.onWaypointChange, fourni par UnifiedGeneticsCanvas (délègue à store.updateEdge).
  */
 export default function PhenoEdge({
     id,
+    source,
+    target,
     sourceX,
     sourceY,
     targetX,
@@ -22,13 +30,18 @@ export default function PhenoEdge({
     const { screenToFlowPosition } = useReactFlow();
     const [dragPos, setDragPos] = useState(null);
 
-    const defaultMidX = (sourceX + targetX) / 2;
-    const defaultMidY = (sourceY + targetY) / 2;
+    const floating = useFloatingEdgeParams(source, target);
+    const [sx, sy, tx, ty] = floating
+        ? [floating.sx, floating.sy, floating.tx, floating.ty]
+        : [sourceX, sourceY, targetX, targetY];
+
+    const defaultMidX = (sx + tx) / 2;
+    const defaultMidY = (sy + ty) / 2;
     const bendX = dragPos ? dragPos.x : (data?.waypointX ?? defaultMidX);
     const bendY = dragPos ? dragPos.y : (data?.waypointY ?? defaultMidY);
     const hasCustomBend = dragPos !== null || (data?.waypointX != null && data?.waypointY != null);
 
-    const edgePath = `M ${sourceX},${sourceY} L ${bendX},${bendY} L ${targetX},${targetY}`;
+    const edgePath = `M ${sx},${sy} L ${bendX},${bendY} L ${tx},${ty}`;
     const labelX = bendX;
     const labelY = bendY;
 

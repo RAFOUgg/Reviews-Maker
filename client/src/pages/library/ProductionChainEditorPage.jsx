@@ -26,7 +26,9 @@ export default function ProductionChainEditorPage() {
     const existingReviewIds = store.nodes.map(n => n.reviewId);
 
     return (
-        <div className="h-screen bg-slate-950 flex flex-col">
+        // h-full (pas h-screen) : voir PhenoHuntPage.jsx — Layout.jsx dimensionne déjà <main>
+        // exactement au viewport moins le nav fixe pour cette route (isFullScreenAppRoute).
+        <div className="h-full bg-slate-950 flex flex-col">
             <header className="h-16 bg-gradient-to-r from-slate-900 to-slate-800 border-b border-emerald-500/20 px-3 sm:px-6 flex items-center justify-between shadow-xl">
                 <div className="flex items-center gap-4">
                     <button

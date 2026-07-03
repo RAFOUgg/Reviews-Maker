@@ -222,6 +222,31 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
             return res.status(403).json({ error: "Forbidden" });
         }
 
+        // Résolution dynamique de la photo pour les nœuds liés à une review (sourceReviewId) :
+        // `node.image` n'est qu'une copie figée au moment de la liaison — si la review n'avait
+        // pas encore de photo à ce moment-là (ou en a reçu une depuis), le nœud reste sans image
+        // pour toujours sans ce rattrapage. PhenoHunt ne lie que des FlowerReview, donc pas besoin
+        // du fallback vers les sous-tables hash/concentrate/edible utilisé ailleurs.
+        const linkedIds = tree.nodes.filter(n => n.sourceReviewId && !n.image).map(n => n.sourceReviewId);
+        if (linkedIds.length > 0) {
+            const linkedReviews = await prisma.review.findMany({
+                where: { id: { in: linkedIds } },
+                select: { id: true, images: true }
+            });
+            const imageByReviewId = new Map();
+            for (const r of linkedReviews) {
+                try {
+                    const parsed = r.images ? JSON.parse(r.images) : [];
+                    if (Array.isArray(parsed) && parsed.length > 0) imageByReviewId.set(r.id, parsed[0]);
+                } catch { /* pas de photo exploitable */ }
+            }
+            tree.nodes = tree.nodes.map(n =>
+                (!n.image && n.sourceReviewId && imageByReviewId.has(n.sourceReviewId))
+                    ? { ...n, image: imageByReviewId.get(n.sourceReviewId) }
+                    : n
+            );
+        }
+
         res.json(tree);
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch genetic tree" });

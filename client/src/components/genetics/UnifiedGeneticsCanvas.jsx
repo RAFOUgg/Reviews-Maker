@@ -14,19 +14,14 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import ReactFlow, {
-    addEdge,
+import {
     useNodesState,
     useEdgesState,
-    Background,
-    Controls,
-    MiniMap,
     Panel,
     useReactFlow,
     MarkerType
 } from 'reactflow';
-import 'reactflow/dist/style.css';
-import './UnifiedGeneticsCanvas.css';
+import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import CultivarNode from './CultivarNode';
 import PhenoEdge from './PhenoEdge';
@@ -343,143 +338,110 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         }
     }, [treeId, store.selectedTreeId, store.loadTree]);
 
-    // Loading state — canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan
-    // (déplacer un nœud, ajouter une arête...), pas seulement le chargement initial de l'arbre.
-    // Ne démonter le canvas (spinner plein écran) que lors du tout premier chargement, quand il
-    // n'y a encore aucun nœud à afficher — sinon chaque glisser-déposer de nœud provoquait un
-    // flash "spinner + reset du zoom/pan" (ReactFlow `fitView` se redéclenche au remount).
-    if (store.canvasLoading && nodes.length === 0) {
-        return (
-            <div className="canvas-loading">
-                <div className="spinner"></div>
-                <p>Chargement de l'arbre généalogique...</p>
-            </div>
-        );
-    }
-
-    // Error state
-    if (store.treeError) {
-        return (
-            <div className="canvas-error">
-                <p>❌ Erreur: {store.treeError}</p>
-                <button onClick={() => store.clearSelection()}>Réinitialiser</button>
-            </div>
-        );
-    }
+    const selectedNode = store.selectedNodeId ? store.nodes.find(n => n.id === store.selectedNodeId) : null;
 
     return (
-        <div className="unified-genetics-canvas" onClick={handleCanvasClick} onDragOver={handleDragOver} onDrop={handleDrop}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={handleConnect}
-                onNodeClick={handleNodeClick}
-                onNodeContextMenu={handleNodeContextMenu}
-                onNodeDragStop={handleNodeDragStop}
-                onEdgeClick={handleEdgeClick}
-                onEdgeContextMenu={handleEdgeContextMenu}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                fitView
-            >
-                <Background color="#aaa" gap={16} />
-                <Controls />
-                <MiniMap />
-
-
-                {/* Info sur le nœud sélectionné */}
-                {store.selectedNodeId && (
-                    <Panel position="top-right" className="node-info-panel">
-                        {(() => {
-                            const node = store.nodes.find(n => n.id === store.selectedNodeId);
-                            return (
-                                <div className="info-content">
-                                    <h4>{node?.cultivarName}</h4>
-                                    {node?.genetics && (
-                                        <p>Type: {node.genetics.type || 'N/A'}</p>
-                                    )}
-                                    {node?.notes && (
-                                        <p className="notes">{node.notes}</p>
-                                    )}
-                                    {!readOnly && (
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                className="btn-edit"
-                                                onClick={() => store.openNodeForm(node)}
-                                            >
-                                                Éditer
-                                            </button>
-                                            {node?.sourceReviewId && (
-                                                <button
-                                                    className="btn-edit"
-                                                    onClick={() => window.open(`/edit/flower/${node.sourceReviewId}`, '_blank', 'noopener')}
-                                                >
-                                                    Éditer la review
-                                                </button>
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })()}
-                    </Panel>
+        <GraphCanvasShell
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={handleConnect}
+            onNodeClick={handleNodeClick}
+            onNodeContextMenu={handleNodeContextMenu}
+            onNodeDragStop={handleNodeDragStop}
+            onEdgeClick={handleEdgeClick}
+            onEdgeContextMenu={handleEdgeContextMenu}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onCanvasClick={handleCanvasClick}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            // canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan (déplacer un
+            // nœud, ajouter une arête...), pas seulement le chargement initial de l'arbre. Ne
+            // démonter le canvas (spinner plein écran) que lors du tout premier chargement, quand
+            // il n'y a encore aucun nœud à afficher — sinon chaque glisser-déposer de nœud provoque
+            // un flash "spinner + reset du zoom/pan" (ReactFlow `fitView` se redéclenche au remount).
+            loading={store.canvasLoading && nodes.length === 0}
+            loadingLabel="Chargement de l'arbre généalogique..."
+            error={store.treeError}
+            onErrorReset={() => store.clearSelection()}
+            sidePanel={selectedNode && (
+                <Panel position="top-right" className="node-info-panel">
+                    <div className="info-content">
+                        <h4>{selectedNode.cultivarName}</h4>
+                        {selectedNode.genetics && (
+                            <p>Type: {selectedNode.genetics.type || 'N/A'}</p>
+                        )}
+                        {selectedNode.notes && (
+                            <p className="notes">{selectedNode.notes}</p>
+                        )}
+                        {!readOnly && (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button className="btn-edit" onClick={() => store.openNodeForm(selectedNode)}>
+                                    Éditer
+                                </button>
+                                {selectedNode.sourceReviewId && (
+                                    <button
+                                        className="btn-edit"
+                                        onClick={() => window.open(`/edit/flower/${selectedNode.sourceReviewId}`, '_blank', 'noopener')}
+                                    >
+                                        Éditer la review
+                                    </button>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                </Panel>
+            )}
+            contextMenu={<>
+                {contextMenu && contextMenuType === 'node' && (
+                    <NodeContextMenu
+                        nodeId={contextMenu.nodeId}
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                        readOnly={readOnly}
+                        onRequestDelete={setDeleteConfirm}
+                    />
                 )}
-            </ReactFlow>
-
-            {/* Menus contextuels */}
-            {contextMenu && contextMenuType === 'node' && (
-                <NodeContextMenu
-                    nodeId={contextMenu.nodeId}
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    onClose={closeContextMenu}
-                    readOnly={readOnly}
-                    onRequestDelete={setDeleteConfirm}
+                {contextMenu && contextMenuType === 'edge' && (
+                    <EdgeContextMenu
+                        edgeId={contextMenu.edgeId}
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                        readOnly={readOnly}
+                        onRequestDelete={setDeleteConfirm}
+                        isFamily={contextMenu.isFamily}
+                        underlyingEdges={contextMenu.underlyingEdges}
+                    />
+                )}
+            </>}
+            modals={<>
+                {store.showNodeForm && (
+                    <NodeFormModal
+                        isEdit={store.nodeFormData?.id !== undefined}
+                        onClose={store.closeNodeForm}
+                    />
+                )}
+                {store.showEdgeForm && (
+                    <EdgeFormModal onClose={store.closeEdgeForm} />
+                )}
+                <ConfirmModal
+                    open={!!deleteConfirm}
+                    title={deleteConfirm?.type === 'node' ? 'Supprimer ce cultivar' : 'Supprimer cette relation'}
+                    message={
+                        deleteConfirm?.type === 'node'
+                            ? `Supprimer "${deleteConfirm?.label || 'ce cultivar'}" ? Ses relations avec les autres nœuds seront aussi supprimées.`
+                            : `Supprimer ${deleteConfirm?.label || 'cette relation'} ?`
+                    }
+                    confirmLabel="Supprimer"
+                    onCancel={() => setDeleteConfirm(null)}
+                    onConfirm={handleConfirmDelete}
                 />
-            )}
-
-            {contextMenu && contextMenuType === 'edge' && (
-                <EdgeContextMenu
-                    edgeId={contextMenu.edgeId}
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    onClose={closeContextMenu}
-                    readOnly={readOnly}
-                    onRequestDelete={setDeleteConfirm}
-                    isFamily={contextMenu.isFamily}
-                    underlyingEdges={contextMenu.underlyingEdges}
-                />
-            )}
-
-            {/* Modales de formulaires */}
-            {store.showNodeForm && (
-                <NodeFormModal
-                    isEdit={store.nodeFormData?.id !== undefined}
-                    onClose={store.closeNodeForm}
-                />
-            )}
-
-            {store.showEdgeForm && (
-                <EdgeFormModal
-                    onClose={store.closeEdgeForm}
-                />
-            )}
-
-            <ConfirmModal
-                open={!!deleteConfirm}
-                title={deleteConfirm?.type === 'node' ? 'Supprimer ce cultivar' : 'Supprimer cette relation'}
-                message={
-                    deleteConfirm?.type === 'node'
-                        ? `Supprimer "${deleteConfirm?.label || 'ce cultivar'}" ? Ses relations avec les autres nœuds seront aussi supprimées.`
-                        : `Supprimer ${deleteConfirm?.label || 'cette relation'} ?`
-                }
-                confirmLabel="Supprimer"
-                onCancel={() => setDeleteConfirm(null)}
-                onConfirm={handleConfirmDelete}
-            />
-        </div>
+            </>}
+        />
     );
 };
 

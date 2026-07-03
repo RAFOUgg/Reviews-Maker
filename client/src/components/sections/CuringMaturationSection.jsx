@@ -20,8 +20,16 @@ const CuringMaturationSection = ({ data = {}, onChange, productType = 'flower' }
     // Use a ref for `data` so it doesn't trigger the effect — only timelineData changes matter
     const dataRef = useRef(data);
     useEffect(() => { dataRef.current = data; }); // keep ref always current
+    // isFirstRunRef évite d'émettre curingTimeline:[] au simple montage de la section (ex:
+    // l'utilisateur clique sur cet onglet sans rien remplir) — sinon formData change de référence
+    // et déclenche l'autosave d'un brouillon vide (même pattern que AnalyticsSection.jsx).
+    const isFirstRunRef = useRef(true);
     useEffect(() => {
         if (!onChange) return;
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            return;
+        }
         onChange({
             ...dataRef.current,
             curingTimeline: timelineData

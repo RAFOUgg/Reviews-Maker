@@ -164,11 +164,16 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
         }
     }, [trees, selectedTreeId, formData.geneticTreeId])
 
-    // Synchroniser geneticTreeId dans formData quand l'arbre sélectionné change
+    // Synchroniser geneticTreeId dans formData quand l'arbre sélectionné change — mais jamais en
+    // no-op (null → null au montage de la section sans arbre lié), sinon le simple fait d'ouvrir
+    // l'onglet Génétiques change la référence de formData et déclenche l'autosave d'un brouillon
+    // vide (même pattern que AnalyticsSection.jsx/OdorSection.jsx).
     useEffect(() => {
-        if (selectedTreeId !== undefined) {
-            handleChange('geneticTreeId', selectedTreeId || null)
-        }
+        if (selectedTreeId === undefined) return
+        const next = selectedTreeId || null
+        if ((formData.geneticTreeId || null) === next) return
+        handleChange('geneticTreeId', next)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [selectedTreeId])
 
     // Rattrapage : avant de proposer "créer/importer un arbre", vérifier que cette review n'est

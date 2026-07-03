@@ -11,18 +11,14 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
-import ReactFlow, {
+import {
     useNodesState,
     useEdgesState,
-    Background,
-    Controls,
-    MiniMap,
     Panel,
     useReactFlow,
     MarkerType
 } from 'reactflow';
-import 'reactflow/dist/style.css';
-import '../genetics/UnifiedGeneticsCanvas.css';
+import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import ReviewNode from './ReviewNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
@@ -259,118 +255,91 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         }
     }, [chainId, store.selectedChainId, store.loadChain]);
 
-    // canvasLoading est aussi vrai pendant chaque mutation en arrière-plan (déplacer un nœud,
-    // ajouter une arête...) — cf. UnifiedGeneticsCanvas.jsx. Ne démonter le canvas que lors du
-    // tout premier chargement (aucun nœud encore affiché), sinon chaque drag provoque un flash
-    // spinner + reset du zoom/pan (fitView se redéclenche au remount de ReactFlow).
-    if (store.canvasLoading && nodes.length === 0) {
-        return (
-            <div className="canvas-loading">
-                <div className="spinner"></div>
-                <p>Chargement de la chaîne de production...</p>
-            </div>
-        );
-    }
-
-    if (store.chainError) {
-        return (
-            <div className="canvas-error">
-                <p>❌ Erreur: {store.chainError}</p>
-                <button onClick={() => store.clearSelection()}>Réinitialiser</button>
-            </div>
-        );
-    }
-
     return (
-        <div className="unified-genetics-canvas" onClick={handleCanvasClick} onDragOver={handleDragOver} onDrop={handleDrop}>
-            <ReactFlow
-                nodes={nodes}
-                edges={edges}
-                onNodesChange={onNodesChange}
-                onEdgesChange={onEdgesChange}
-                onConnect={handleConnect}
-                onNodeClick={handleNodeClick}
-                onNodeContextMenu={handleNodeContextMenu}
-                onNodeDragStop={handleNodeDragStop}
-                onEdgeClick={handleEdgeClick}
-                onEdgeContextMenu={handleEdgeContextMenu}
-                nodeTypes={nodeTypes}
-                edgeTypes={edgeTypes}
-                fitView
-            >
-                <Background color="#aaa" gap={16} />
-                <Controls />
-                <MiniMap />
-
-                {!readOnly && (
-                    <Panel position="top-left" className="canvas-toolbar">
-                        <div className="flex items-center gap-2">
-                            <button
-                                className="toolbar-btn secondary"
-                                onClick={() => fitView()}
-                                title="Réinitialiser le zoom"
-                            >
-                                <RotateCcw size={14} /> Zoom
-                            </button>
-                            <button
-                                className="toolbar-btn secondary"
-                                onClick={handleImportLineage}
-                                disabled={importing}
-                                title="Importer depuis la traçabilité existante (sourceLineage)"
-                            >
-                                <Upload size={14} /> {importing ? 'Import...' : 'Importer traçabilité'}
-                            </button>
-                            <button
-                                className="toolbar-btn secondary"
-                                onClick={handleExportJSON}
-                                title="Exporter en JSON"
-                            >
-                                <Download size={14} /> JSON
-                            </button>
-                        </div>
-                    </Panel>
+        <GraphCanvasShell
+            nodes={nodes}
+            edges={edges}
+            onNodesChange={onNodesChange}
+            onEdgesChange={onEdgesChange}
+            onConnect={handleConnect}
+            onNodeClick={handleNodeClick}
+            onNodeContextMenu={handleNodeContextMenu}
+            onNodeDragStop={handleNodeDragStop}
+            onEdgeClick={handleEdgeClick}
+            onEdgeContextMenu={handleEdgeContextMenu}
+            nodeTypes={nodeTypes}
+            edgeTypes={edgeTypes}
+            onCanvasClick={handleCanvasClick}
+            onDragOver={handleDragOver}
+            onDrop={handleDrop}
+            // canvasLoading est aussi vrai pendant chaque mutation en arrière-plan (déplacer un
+            // nœud, ajouter une arête...) — cf. UnifiedGeneticsCanvas.jsx. Ne démonter le canvas
+            // que lors du tout premier chargement (aucun nœud encore affiché), sinon chaque drag
+            // provoque un flash spinner + reset du zoom/pan (fitView se redéclenche au remount).
+            loading={store.canvasLoading && nodes.length === 0}
+            loadingLabel="Chargement de la chaîne de production..."
+            error={store.chainError}
+            onErrorReset={() => store.clearSelection()}
+            toolbar={!readOnly && (
+                <Panel position="top-left" className="canvas-toolbar">
+                    <div className="flex items-center gap-2">
+                        <button className="toolbar-btn secondary" onClick={() => fitView()} title="Réinitialiser le zoom">
+                            <RotateCcw size={14} /> Zoom
+                        </button>
+                        <button
+                            className="toolbar-btn secondary"
+                            onClick={handleImportLineage}
+                            disabled={importing}
+                            title="Importer depuis la traçabilité existante (sourceLineage)"
+                        >
+                            <Upload size={14} /> {importing ? 'Import...' : 'Importer traçabilité'}
+                        </button>
+                        <button className="toolbar-btn secondary" onClick={handleExportJSON} title="Exporter en JSON">
+                            <Download size={14} /> JSON
+                        </button>
+                    </div>
+                </Panel>
+            )}
+            contextMenu={<>
+                {contextMenu && contextMenuType === 'node' && (
+                    <ChainNodeContextMenu
+                        nodeId={contextMenu.nodeId}
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                        readOnly={readOnly}
+                        onRequestDelete={setDeleteConfirm}
+                    />
                 )}
-            </ReactFlow>
-
-            {contextMenu && contextMenuType === 'node' && (
-                <ChainNodeContextMenu
-                    nodeId={contextMenu.nodeId}
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    onClose={closeContextMenu}
-                    readOnly={readOnly}
-                    onRequestDelete={setDeleteConfirm}
+                {contextMenu && contextMenuType === 'edge' && (
+                    <ChainEdgeContextMenu
+                        edgeId={contextMenu.edgeId}
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                        readOnly={readOnly}
+                        onRequestDelete={setDeleteConfirm}
+                    />
+                )}
+            </>}
+            modals={<>
+                {store.showEdgeForm && (
+                    <ChainEdgeFormModal onClose={store.closeEdgeForm} />
+                )}
+                <ConfirmModal
+                    open={!!deleteConfirm}
+                    title={deleteConfirm?.type === 'node' ? 'Retirer ce produit' : 'Supprimer cette transformation'}
+                    message={
+                        deleteConfirm?.type === 'node'
+                            ? `Retirer "${deleteConfirm?.label || 'ce produit'}" du graphe ? La review elle-même ne sera pas supprimée.`
+                            : 'Supprimer cette liaison de transformation ?'
+                    }
+                    confirmLabel="Confirmer"
+                    onCancel={() => setDeleteConfirm(null)}
+                    onConfirm={handleConfirmDelete}
                 />
-            )}
-
-            {contextMenu && contextMenuType === 'edge' && (
-                <ChainEdgeContextMenu
-                    edgeId={contextMenu.edgeId}
-                    x={contextMenu.x}
-                    y={contextMenu.y}
-                    onClose={closeContextMenu}
-                    readOnly={readOnly}
-                    onRequestDelete={setDeleteConfirm}
-                />
-            )}
-
-            {store.showEdgeForm && (
-                <ChainEdgeFormModal onClose={store.closeEdgeForm} />
-            )}
-
-            <ConfirmModal
-                open={!!deleteConfirm}
-                title={deleteConfirm?.type === 'node' ? 'Retirer ce produit' : 'Supprimer cette transformation'}
-                message={
-                    deleteConfirm?.type === 'node'
-                        ? `Retirer "${deleteConfirm?.label || 'ce produit'}" du graphe ? La review elle-même ne sera pas supprimée.`
-                        : 'Supprimer cette liaison de transformation ?'
-                }
-                confirmLabel="Confirmer"
-                onCancel={() => setDeleteConfirm(null)}
-                onConfirm={handleConfirmDelete}
-            />
-        </div>
+            </>}
+        />
     );
 };
 

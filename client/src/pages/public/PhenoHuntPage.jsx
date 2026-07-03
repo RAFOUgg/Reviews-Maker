@@ -10,7 +10,7 @@ import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI';
 import {
     Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight,
     GitBranch, Menu, X, Search, Trash2, Pencil, FileText, Dna,
-    FilePlus2, Link2, Download, Image as ImageIcon, RefreshCw
+    Link2, Download, Image as ImageIcon, RefreshCw, Sprout
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 
@@ -212,7 +212,10 @@ export default function PhenoHuntPage() {
     const activeTree = store.trees.find(t => t.id === store.selectedTreeId);
 
     return (
-        <div className="h-screen bg-[#07070f] flex flex-col">
+        // h-full (pas h-screen) : la page est déjà nichée dans un <main> dimensionné exactement
+        // au viewport moins le nav fixe (voir Layout.jsx isFullScreenAppRoute) — un h-screen ici
+        // en plus ferait déborder le total de la hauteur du nav, remettant un scroll de page.
+        <div className="h-full bg-[#07070f] flex flex-col">
             {/* Header */}
             <header className="h-16 bg-white/[0.02] border-b border-white/10 px-3 sm:px-6 flex items-center justify-between backdrop-blur-xl flex-shrink-0">
                 <div className="flex items-center gap-4">
@@ -478,9 +481,9 @@ export default function PhenoHuntPage() {
                                     <button
                                         onClick={handleAddRootNode}
                                         className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors flex-shrink-0"
-                                        title="Ajouter un nœud racine (sans parent)"
+                                        title="Ajouter un individu sans fiche technique liée (ex: parent externe, landrace, ruderalis...) — sa génétique se renseigne à la main dans le formulaire"
                                     >
-                                        <FilePlus2 className="w-3.5 h-3.5" /> Nœud racine
+                                        <Sprout className="w-3.5 h-3.5" /> Individu inconnu
                                     </button>
                                     <button
                                         onClick={handleAddEdge}

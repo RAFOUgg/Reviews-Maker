@@ -1,12 +1,16 @@
 import React from 'react';
 import { EdgeLabelRenderer, BaseEdge, getStraightPath } from 'reactflow';
+import { useFloatingEdgeParams } from '../graph-canvas/floatingEdgeUtils';
 
 /**
  * ChainEdgeComponent - Edge personnalisé pour les liaisons de transformation
- * entre deux fiches techniques d'une chaîne de production. Modelé sur PhenoEdge.jsx.
+ * entre deux fiches techniques d'une chaîne de production. Modelé sur PhenoEdge.jsx, y compris
+ * le point d'attache flottant (voir graph-canvas/floatingEdgeUtils.js).
  */
 export default function ChainEdgeComponent({
     id,
+    source,
+    target,
     sourceX,
     sourceY,
     targetX,
@@ -14,12 +18,12 @@ export default function ChainEdgeComponent({
     selected,
     data,
 }) {
-    const [edgePath, labelX, labelY] = getStraightPath({
-        sourceX,
-        sourceY,
-        targetX,
-        targetY,
-    });
+    const floating = useFloatingEdgeParams(source, target);
+    const [edgePath, labelX, labelY] = getStraightPath(
+        floating
+            ? { sourceX: floating.sx, sourceY: floating.sy, targetX: floating.tx, targetY: floating.ty }
+            : { sourceX, sourceY, targetX, targetY }
+    );
 
     const label = data?.technique || 'Transformation';
     const date = data?.date ? new Date(data.date).toLocaleDateString('fr-FR') : null;

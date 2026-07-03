@@ -1,6 +1,10 @@
-/* UnifiedGeneticsCanvas Styles */
+/* GraphCanvasShell Styles — partagé par PhenoHunt (UnifiedGeneticsCanvas) et la Chaîne de
+   production (ProductionChainCanvas). Les classes de nœud/menu/modale ci-dessous ne sont PAS
+   préfixées par .graph-canvas-shell : elles sont réutilisées telles quelles par CultivarNode.jsx
+   ET ReviewNode.jsx (même recette visuelle, cf. graph-canvas/floatingEdgeUtils.js pour la partie
+   liaisons du même wrapper commun). */
 
-.unified-genetics-canvas {
+.graph-canvas-shell {
     width: 100%;
     height: 100%;
     display: flex;
@@ -13,21 +17,22 @@
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-.unified-genetics-canvas .react-flow {
+.graph-canvas-shell .react-flow {
     width: 100%;
     height: 100%;
     background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
 }
 
-.unified-genetics-canvas .react-flow__background {
+.graph-canvas-shell .react-flow__background {
     background-color: #0f172a;
 }
 
-.unified-genetics-canvas .react-flow__background pattern {
+.graph-canvas-shell .react-flow__background pattern {
     fill: #334155;
 }
 
-/* Cultivar Node Styling — forme par sexe : rond = femelle, carré = mâle, arrondi = inconnu */
+/* Cultivar/Review Node Styling — forme par sexe pour PhenoHunt (rond = femelle, carré = mâle,
+   arrondi = inconnu) ; toujours "rounded" pour les nœuds Chaîne de production (pas de sexe) */
 .cultivar-node {
     display: flex;
     flex-direction: column;
@@ -70,7 +75,7 @@
     justify-content: center;
 }
 
-/* Sexe inconnu = carte arrondie classique */
+/* Sexe inconnu / nœud Chaîne de production = carte arrondie classique */
 .cultivar-node.shape-rounded {
     border-radius: 16px;
 }
@@ -481,6 +486,15 @@
 .genetics-modal-content .btn-secondary:hover {
     background-color: rgba(71, 85, 105, 0.7);
     border-color: #64748b;
+}
+
+/* Poignée de courbure des liaisons (waypoint) — PhenoEdge/PairingEdge */
+.edge-waypoint-handle {
+    cursor: grab;
+}
+
+.edge-waypoint-handle:active {
+    cursor: grabbing;
 }
 
 /* Responsive */
