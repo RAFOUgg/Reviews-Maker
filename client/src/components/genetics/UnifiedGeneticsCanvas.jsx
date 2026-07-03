@@ -75,6 +75,34 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         store.updateEdge(edgeId, patch);
     }, [store]);
 
+    // Glisser la bulle médiane d'un couple parental (PairingEdge) directement sur un autre nœud
+    // du canvas : crée les liens de filiation manquants (couple -> nœud cible) sans passer par le
+    // formulaire "Ajouter un enfant" — même résultat que EdgeContextMenu.handleAddChildToPairing
+    // mais pour un individu déjà présent sur le canvas plutôt qu'un nouveau nœud à créer. Ignore
+    // silencieusement les parents déjà liés à ce nœud (permet de "compléter" un couple partiel).
+    const handlePairingDropOnNode = useCallback(async (pairingEdgeId, targetNodeId, targetHandleSide) => {
+        if (readOnly) return;
+        const pairing = store.edges.find(e => e.id === pairingEdgeId);
+        if (!pairing) return;
+        const { parentNodeId, childNodeId } = pairing;
+        if (targetNodeId === parentNodeId || targetNodeId === childNodeId) return;
+
+        const existingParents = new Set(
+            store.edges
+                .filter(e => PARENT_CHILD_TYPES.includes(e.relationshipType) && e.childNodeId === targetNodeId)
+                .map(e => e.parentNodeId)
+        );
+        const toLink = [parentNodeId, childNodeId].filter(pid => !existingParents.has(pid));
+        if (toLink.length === 0) return;
+
+        for (const pid of toLink) {
+            const result = await store.addEdge({ parentNodeId: pid, childNodeId: targetNodeId, relationshipType: 'parent' });
+            if (result?.data?.id && targetHandleSide) {
+                await store.updateEdge(result.data.id, { targetHandle: targetHandleSide });
+            }
+        }
+    }, [readOnly, store]);
+
     // Synchroniser les nœuds et arêtes du store vers React Flow
     useEffect(() => {
         if (!store.nodes || store.nodes.length === 0) {
@@ -176,13 +204,14 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     onWaypointChange: handleEdgeWaypointChange,
                     sourceHandle: edge.sourceHandle,
                     targetHandle: edge.targetHandle,
-                    onEndpointHandleChange: handleEdgeEndpointChange
+                    onEndpointHandleChange: handleEdgeEndpointChange,
+                    onDropChildLink: handlePairingDropOnNode
                 }
             }));
 
         setNodes(rfNodes);
         setEdges([...rfEdges, ...familyEdges]);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange]);
+    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handlePairingDropOnNode]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {

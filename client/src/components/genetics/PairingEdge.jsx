@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
-import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
-import { useEdgeEndpointParams } from '../graph-canvas/floatingEdgeUtils';
+import { EdgeLabelRenderer, BaseEdge, useReactFlow, useStoreApi } from 'reactflow';
+import { useEdgeEndpointParams, useFloatingNodeRect, findNodeAtPoint, nearestHandleSide } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 
 /**
@@ -10,6 +10,11 @@ import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
  * pas directement à cette ligne : FamilyDropEdge calcule son propre point de jonction à partir
  * des positions des deux nœuds (voir UnifiedGeneticsCanvas). Supporte le même glisser-déposer
  * de courbure que PhenoEdge.
+ *
+ * La bulle médiane a un second usage : la glisser jusqu'à la relâcher AU-DESSUS d'un autre nœud
+ * du canvas relie ce nœud comme enfant commun du couple (2 liens de filiation créés d'un coup),
+ * raccourci direct équivalent à "Ajouter un enfant à ce couple" (EdgeContextMenu) mais pour un
+ * individu déjà présent sur le canvas plutôt qu'un nouveau nœud à créer via modal.
  */
 export default function PairingEdge({
     id,
@@ -23,7 +28,10 @@ export default function PairingEdge({
     data,
 }) {
     const { screenToFlowPosition } = useReactFlow();
+    const store = useStoreApi();
     const [dragPos, setDragPos] = useState(null);
+    const [dropTargetId, setDropTargetId] = useState(null);
+    const dropTargetRect = useFloatingNodeRect(dropTargetId);
 
     const endpoints = useEdgeEndpointParams(source, target, data?.sourceHandle, data?.targetHandle);
     const [baseSx, baseSy, baseTx, baseTy] = endpoints
@@ -52,17 +60,27 @@ export default function PairingEdge({
         event.stopPropagation();
         event.preventDefault();
         const handleMove = (moveEvent) => {
-            setDragPos(screenToFlowPosition({ x: moveEvent.clientX, y: moveEvent.clientY }));
+            const pos = screenToFlowPosition({ x: moveEvent.clientX, y: moveEvent.clientY });
+            setDragPos(pos);
+            const hit = findNodeAtPoint(store.getState().nodeInternals, pos, [source, target]);
+            setDropTargetId(hit?.id || null);
         };
         const handleUp = (upEvent) => {
             window.removeEventListener('pointermove', handleMove);
             window.removeEventListener('pointerup', handleUp);
-            data?.onWaypointChange?.(id, screenToFlowPosition({ x: upEvent.clientX, y: upEvent.clientY }));
+            const pos = screenToFlowPosition({ x: upEvent.clientX, y: upEvent.clientY });
+            const hit = findNodeAtPoint(store.getState().nodeInternals, pos, [source, target]);
+            if (hit) {
+                data?.onDropChildLink?.(id, hit.id, nearestHandleSide(hit, pos));
+            } else {
+                data?.onWaypointChange?.(id, pos);
+            }
             setDragPos(null);
+            setDropTargetId(null);
         };
         window.addEventListener('pointermove', handleMove);
         window.addEventListener('pointerup', handleUp);
-    }, [id, data, screenToFlowPosition]);
+    }, [id, data, screenToFlowPosition, store, source, target]);
 
     const handleDoubleClick = useCallback((event) => {
         event.stopPropagation();
@@ -88,6 +106,24 @@ export default function PairingEdge({
             />
 
             <EdgeLabelRenderer>
+                {/* Surbrillance du nœud survolé pendant le glisser — signale qu'une dépose ici
+                    reliera ce nœud comme enfant du couple plutôt que de courber la ligne. */}
+                {dropTargetRect && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(${dropTargetRect.x - 4}px, ${dropTargetRect.y - 4}px)`,
+                            width: dropTargetRect.width + 8,
+                            height: dropTargetRect.height + 8,
+                            border: '3px solid #fbbf24',
+                            borderRadius: 14,
+                            boxShadow: '0 0 16px 2px #fbbf24',
+                            pointerEvents: 'none',
+                            zIndex: 5,
+                        }}
+                    />
+                )}
+
                 <div
                     style={{
                         position: 'absolute',
@@ -95,7 +131,9 @@ export default function PairingEdge({
                         pointerEvents: 'all',
                     }}
                     className="nodrag nopan"
-                    title="Couple parental — glisser pour courber, double-clic pour réinitialiser"
+                    title={dropTargetId
+                        ? 'Relâcher pour relier ce nœud comme enfant du couple'
+                        : 'Glisser pour courber • glisser jusqu\'à un nœud pour le relier comme enfant du couple • double-clic pour réinitialiser'}
                 >
                     <div
                         onPointerDown={handlePointerDown}
@@ -108,13 +146,14 @@ export default function PairingEdge({
                             alignItems: 'center',
                             justifyContent: 'center',
                             fontSize: 11,
-                            background: 'rgba(30, 41, 59, 0.9)',
-                            border: `2px solid ${selected ? '#f472b6' : '#ec4899'}`,
+                            background: dropTargetId ? 'rgba(251, 191, 36, 0.9)' : 'rgba(30, 41, 59, 0.9)',
+                            border: `2px solid ${dropTargetId ? '#fbbf24' : (selected ? '#f472b6' : '#ec4899')}`,
                             cursor: 'grab',
-                            opacity: selected || hasCustomBend ? 1 : 0.55,
+                            opacity: selected || hasCustomBend || dropTargetId ? 1 : 0.55,
+                            transition: dragPos ? 'none' : 'background 150ms ease-in-out, border-color 150ms ease-in-out',
                         }}
                     >
-                        💑
+                        {dropTargetId ? '👶' : '💑'}
                     </div>
                 </div>
 

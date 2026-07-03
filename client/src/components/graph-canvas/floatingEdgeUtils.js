@@ -129,3 +129,16 @@ export function isPointInNode(node, point) {
     return point.x >= position.x && point.x <= position.x + width
         && point.y >= position.y && point.y <= position.y + height;
 }
+
+/** Nœud (React Flow, déjà mesuré) dont le rectangle contient `point` (coordonnées flow), en
+ *  excluant les ids donnés — sert à détecter sur quel nœud on relâche une liaison glissée depuis
+ *  un point qui n'est pas déjà lié à un nœud précis (ex: bulle médiane d'un PairingEdge relâchée
+ *  sur un individu existant, pour le relier comme enfant du couple). */
+export function findNodeAtPoint(nodeInternals, point, excludeIds = []) {
+    for (const node of nodeInternals.values()) {
+        if (excludeIds.includes(node.id)) continue;
+        if (!node.width || !node.height) continue;
+        if (isPointInNode(node, point)) return node;
+    }
+    return null;
+}
