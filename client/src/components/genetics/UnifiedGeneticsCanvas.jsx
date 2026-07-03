@@ -21,8 +21,10 @@ import {
     useReactFlow,
     MarkerType
 } from 'reactflow';
+import { Sprout } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useGeneticsStore from '../../store/useGeneticsStore';
+import useResponsiveLayout from '../../hooks/useResponsiveLayout';
 import CultivarNode from './CultivarNode';
 import PhenoEdge from './PhenoEdge';
 import PairingEdge from './PairingEdge';
@@ -51,6 +53,7 @@ const PARENT_CHILD_TYPES = ['parent', 'pollen_donor', 'clone', 'mutation'];
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const store = useGeneticsStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
+    const { isMobile } = useResponsiveLayout();
 
     // State local pour le canvas
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -367,16 +370,31 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         });
     }, [readOnly, screenToFlowPosition]);
 
-    const handleAddUnknownIndividual = useCallback(() => {
-        const position = contextMenu?.flowPosition || { x: 0, y: 0 };
+    // Action "Ajouter un individu inconnu" — extraite pour être réutilisable depuis PLUSIEURS
+    // points d'entrée (menu contextuel fond de canvas, bouton toolbar desktop, FAB mobile) sans
+    // dupliquer la logique d'ouverture du formulaire.
+    const addUnknownIndividual = useCallback((position) => {
+        if (readOnly) return;
         store.openNodeForm({
             cultivarName: '',
-            position,
+            position: position || { x: 0, y: 0 },
             color: '#FF6B9D',
             genetics: null,
             notes: ''
         });
-    }, [contextMenu, store]);
+    }, [readOnly, store]);
+
+    const handleAddUnknownIndividual = useCallback(() => {
+        addUnknownIndividual(contextMenu?.flowPosition);
+    }, [contextMenu, addUnknownIndividual]);
+
+    // FAB mobile (cf. ci-dessous, visible seulement si isMobile) : pas de point de clic connu
+    // comme pour le clic droit sur le fond, on cible donc le centre de l'écran converti en
+    // coordonnées du graphe.
+    const handleFabAddUnknownIndividual = useCallback(() => {
+        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        addUnknownIndividual(center);
+    }, [addUnknownIndividual, screenToFlowPosition]);
 
     // Fermer le menu contextuel
     const closeContextMenu = useCallback(() => {
@@ -422,6 +440,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             onPaneContextMenu={handlePaneContextMenu}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
+            minimapNodeColor={(node) => node.data?.color || '#FF6B9D'}
             // canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan (déplacer un
             // nœud, ajouter une arête...), pas seulement le chargement initial de l'arbre. Ne
             // démonter le canvas (spinner plein écran) que lors du tout premier chargement, quand
@@ -514,6 +533,17 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     onConfirm={handleConfirmDelete}
                 />
             </>}
+            fab={isMobile && !readOnly && (
+                <button
+                    type="button"
+                    className="mobile-add-node-fab"
+                    onClick={handleFabAddUnknownIndividual}
+                    title="Ajouter un individu inconnu"
+                    aria-label="Ajouter un individu inconnu"
+                >
+                    <Sprout />
+                </button>
+            )}
         />
     );
 };

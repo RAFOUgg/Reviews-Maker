@@ -4,10 +4,17 @@
  * Liquid Glass UI Design System
  */
 
+import { useState } from 'react';
 import PropTypes from 'prop-types';
 import { motion } from 'framer-motion';
+import { Sparkles, Check } from 'lucide-react';
 
 export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
+    // "Mode automatique" (wizard une-question-à-la-fois) : le bouton central arme l'intention,
+    // le clic sur une des 4 cartes ci-dessous la propage à la navigation. Sur mobile le wizard
+    // se déclenche de toute façon automatiquement (cf. useResponsiveLayout dans CreateXReview) —
+    // ce bouton sert surtout à l'activer explicitement depuis un desktop.
+    const [wizardIntent, setWizardIntent] = useState(false)
     const productTypes = [
         {
             name: 'Fleur',
@@ -50,6 +57,25 @@ export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
                 </p>
             </div>
 
+            {isAuthenticated && (
+                <div className="flex flex-col items-center gap-1.5">
+                    <button
+                        type="button"
+                        onClick={() => setWizardIntent(v => !v)}
+                        className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-full border transition-all ${wizardIntent
+                            ? 'bg-violet-500/40 border-violet-400 text-white'
+                            : 'bg-violet-500/20 border-violet-500/40 text-violet-200 hover:bg-violet-500/30'
+                            }`}
+                    >
+                        {wizardIntent ? <Check className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                        Mode automatique (une question à la fois)
+                    </button>
+                    {wizardIntent && (
+                        <p className="text-xs text-violet-300/80">Choisissez maintenant un type de produit ci-dessous</p>
+                    )}
+                </div>
+            )}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
                 {productTypes.map((type, index) => (
                     <motion.button
@@ -59,7 +85,7 @@ export default function ProductTypeCards({ isAuthenticated, onCreateReview }) {
                         transition={{ delay: index * 0.1 }}
                         whileHover={isAuthenticated ? { scale: 1.05, y: -5 } : {}}
                         whileTap={isAuthenticated ? { scale: 0.98 } : {}}
-                        onClick={() => isAuthenticated && onCreateReview(type.name)}
+                        onClick={() => isAuthenticated && onCreateReview(type.name, { wizard: wizardIntent })}
                         disabled={!isAuthenticated}
                         className={`group relative overflow-hidden rounded-2xl p-8 transition-all duration-300 backdrop-blur-md border ${type.border} bg-gradient-to-br ${type.gradient} ${isAuthenticated
                             ? 'cursor-pointer hover:shadow-2xl'

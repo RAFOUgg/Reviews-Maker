@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow, useStoreApi } from 'reactflow';
+import { Heart, Baby } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect, findNodeAtPoint, nearestHandleSide } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 
@@ -145,15 +146,18 @@ export default function PairingEdge({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            fontSize: 11,
-                            background: dropTargetId ? 'rgba(251, 191, 36, 0.9)' : 'rgba(30, 41, 59, 0.9)',
+                            background: dropTargetId ? 'rgba(251, 191, 36, 0.9)' : 'rgba(20, 20, 30, 0.85)',
                             border: `2px solid ${dropTargetId ? '#fbbf24' : (selected ? '#f472b6' : '#ec4899')}`,
+                            boxShadow: '0 2px 8px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.15)',
+                            backdropFilter: 'blur(6px)',
                             cursor: 'grab',
                             opacity: selected || hasCustomBend || dropTargetId ? 1 : 0.55,
                             transition: dragPos ? 'none' : 'background 150ms ease-in-out, border-color 150ms ease-in-out',
                         }}
                     >
-                        {dropTargetId ? '👶' : '💑'}
+                        {dropTargetId
+                            ? <Baby size={11} color="#78350f" />
+                            : <Heart size={10} color="#ec4899" fill="#ec4899" />}
                     </div>
                 </div>
 

@@ -115,7 +115,15 @@ export default function PhenoEdge({
                     }}
                     className="nodrag nopan"
                 >
-                    <div className="px-2 py-1 bg-slate-800/90 border border-emerald-500/30 rounded text-emerald-300 backdrop-blur-sm hover:bg-slate-700/90 hover:border-emerald-400/50 transition-all cursor-pointer">
+                    <div
+                        className="px-2.5 py-1 rounded-lg text-emerald-300 cursor-pointer transition-all hover:bg-white/10 hover:border-emerald-400/50"
+                        style={{
+                            background: 'rgba(255,255,255,0.06)',
+                            border: '1px solid rgba(16,185,129,0.3)',
+                            backdropFilter: 'blur(12px) saturate(150%)',
+                            boxShadow: '0 2px 12px -2px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08)',
+                        }}
+                    >
                         {label || 'F1'}
                     </div>
                 </div>

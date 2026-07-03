@@ -3,11 +3,14 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
+import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout'
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { flattenFlowerFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
+import WizardFlow from '../../../components/wizard/WizardFlow'
+import { getFlowerWizardQuestions } from '../../../components/wizard/schemas/flowerWizardQuestions'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -136,6 +139,24 @@ export default function CreateFlowerReview() {
 
     // Current section data
     const currentSectionData = sections[currentSection]
+
+    // Mode automatique (wizard une-question-à-la-fois) : auto sur mobile, ou forcé via
+    // ?mode=auto (bouton central sur la page d'accueil, cf. ProductTypeCards.jsx).
+    // wizardDismissed permet de revenir au formulaire classique à tout moment sans perdre
+    // les réponses déjà saisies (même formData/handleChange dans les deux modes).
+    const { isMobile } = useResponsiveLayout()
+    const forceWizard = searchParams.get('mode') === 'auto'
+    const [wizardDismissed, setWizardDismissed] = useState(false)
+    const useWizardMode = (isMobile || forceWizard) && !wizardDismissed
+    const wizardQuestions = getFlowerWizardQuestions({ isProducteur })
+
+    // Étapes complexes (génétique/culture/curing) non linéarisables en questions : on quitte
+    // le wizard et on saute directement sur la section correspondante du formulaire classique.
+    const handleOpenHandoff = (target) => {
+        const index = sections.findIndex(s => s.id === target)
+        setWizardDismissed(true)
+        if (index >= 0) setCurrentSection(index)
+    }
 
     // authChecked garde : ne rediriger vers /login qu'une fois checkAuth() résolu — sinon un
     // accès direct (nouvel onglet via "Éditer la review" depuis PhenoHunt, lien partagé...)
@@ -338,6 +359,23 @@ export default function CreateFlowerReview() {
 
     return (
         <>
+            {useWizardMode ? (
+                <WizardFlow
+                    questions={wizardQuestions}
+                    formData={formData}
+                    handleChange={handleChange}
+                    photos={photos}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                    title="Créer une review Fleur"
+                    onExitToClassic={() => setWizardDismissed(true)}
+                    onOpenHandoff={handleOpenHandoff}
+                    onComplete={() => setShowOrchard(true)}
+                    saving={saving}
+                    isDirty={isDirty}
+                    onSave={() => handleSave({ silent: false })}
+                />
+            ) : (
             <ResponsiveCreateReviewLayout
                 currentSection={currentSection}
                 totalSections={sections.length}
@@ -361,14 +399,25 @@ export default function CreateFlowerReview() {
                         transition={{ duration: 0.3 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-3xl">{currentSectionData.icon}</span>
-                            <div>
-                                <h2 className="text-xl font-semibold text-white">
-                                    {currentSectionData.title}
-                                    {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
-                                </h2>
+                        <div className="flex items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl">{currentSectionData.icon}</span>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">
+                                        {currentSectionData.title}
+                                        {currentSectionData.required && <span className="text-red-500 ml-2">*</span>}
+                                    </h2>
+                                </div>
                             </div>
+                            {isMobile && (
+                                <button
+                                    type="button"
+                                    onClick={() => setWizardDismissed(false)}
+                                    className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2 flex-shrink-0"
+                                >
+                                    Mode automatique
+                                </button>
+                            )}
                         </div>
 
                         {/* Render current section by ID */}
@@ -438,6 +487,7 @@ export default function CreateFlowerReview() {
                     </motion.div>
                 </AnimatePresence>
             </ResponsiveCreateReviewLayout>
+            )}
 
             {/* Orchard Preview Panel – OUTSIDE layout to avoid z-index stacking context issues */}
             {showOrchard && (

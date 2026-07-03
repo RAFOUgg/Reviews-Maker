@@ -107,7 +107,7 @@ function ColorPickerBlock({ selectedColors, onAdd, onRemove, onUpdatePct, palett
             )}
 
             {/* Palette grid */}
-            <div className="grid grid-cols-9 gap-1.5">
+            <div className="grid grid-cols-5 sm:grid-cols-9 gap-1.5">
                 {palette.map((color) => {
                     const isSelected = selectedColors.some(c => c.id === color.id);
                     return (

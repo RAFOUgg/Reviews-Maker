@@ -6,11 +6,11 @@ import useGeneticsStore from '../../store/useGeneticsStore';
 import UnifiedGeneticsCanvas from '../../components/genetics/UnifiedGeneticsCanvas';
 import TreeFormModal from '../../components/genetics/TreeFormModal';
 import ConfirmModal from '../../components/shared/ConfirmModal';
-import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI';
+import { LiquidCard, LiquidButton, LiquidInput, LiquidSkeleton } from '@/components/ui/LiquidUI';
 import {
     Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight,
     GitBranch, Menu, X, Search, Trash2, Pencil, FileText, Dna,
-    Link2, Download, Image as ImageIcon, RefreshCw, Sprout
+    Link2, Download, Image as ImageIcon, Sprout
 } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 
@@ -219,15 +219,16 @@ export default function PhenoHuntPage() {
             {/* Header */}
             <header className="h-16 bg-white/[0.02] border-b border-white/10 px-3 sm:px-6 flex items-center justify-between backdrop-blur-xl flex-shrink-0">
                 <div className="flex items-center gap-4">
-                    <button
+                    <LiquidButton
                         onClick={() => navigate(-1)}
-                        className="p-2 text-white/50 hover:text-white transition-colors"
+                        variant="ghost"
+                        size="sm"
+                        icon={Home}
                         title="Retour"
-                    >
-                        <Home className="w-5 h-5" />
-                    </button>
+                    />
                     <h1 className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2">
-                        🌿 PhenoHunt
+                        <Leaf className="w-5 h-5 text-emerald-400" />
+                        PhenoHunt
                     </h1>
                 </div>
 
@@ -241,22 +242,23 @@ export default function PhenoHuntPage() {
                         <span className="hidden sm:inline">Nouvel arbre</span>
                     </LiquidButton>
 
-                    <button
+                    <LiquidButton
                         onClick={() => activeTree && store.openTreeForm(activeTree)}
                         disabled={!activeTree}
-                        className="p-1.5 text-white/50 hover:text-emerald-400 transition-colors disabled:opacity-30 disabled:hover:text-white/50"
+                        variant="ghost"
+                        size="sm"
+                        icon={Settings}
                         title={activeTree ? `Paramètres de "${activeTree.name}"` : 'Sélectionnez un arbre'}
-                    >
-                        <Settings className="w-5 h-5" />
-                    </button>
+                    />
 
-                    <button
+                    <LiquidButton
                         onClick={() => setMobileSidebarOpen(o => !o)}
-                        className="md:hidden p-1.5 text-white/50 hover:text-emerald-400 transition-colors"
+                        variant="ghost"
+                        size="sm"
+                        icon={Menu}
+                        className="md:hidden"
                         title="Bibliothèque"
-                    >
-                        <Menu className="w-5 h-5" />
-                    </button>
+                    />
                 </div>
             </header>
 
@@ -264,9 +266,10 @@ export default function PhenoHuntPage() {
             <div className="flex-1 flex overflow-hidden">
                 {isLoading ? (
                     <div className="flex-1 flex items-center justify-center">
-                        <div className="text-center text-white/50">
-                            <div className="animate-spin w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full mx-auto mb-3" />
-                            <p>Chargement...</p>
+                        <div className="w-80 p-4 space-y-2">
+                            <LiquidSkeleton height={64} rounded="lg" />
+                            <LiquidSkeleton height={64} rounded="lg" />
+                            <LiquidSkeleton height={64} rounded="lg" />
                         </div>
                     </div>
                 ) : (
@@ -293,16 +296,14 @@ export default function PhenoHuntPage() {
                                         </p>
                                     </div>
                                     {store.trees.length > 3 && (
-                                        <div className="relative mb-3">
-                                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                                            <input
-                                                type="text"
-                                                placeholder="Rechercher un arbre..."
-                                                value={treeSearch}
-                                                onChange={(e) => setTreeSearch(e.target.value)}
-                                                className="w-full pl-8 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 text-xs focus:outline-none focus:border-emerald-500/50"
-                                            />
-                                        </div>
+                                        <LiquidInput
+                                            icon={Search}
+                                            placeholder="Rechercher un arbre..."
+                                            value={treeSearch}
+                                            onChange={(e) => setTreeSearch(e.target.value)}
+                                            wrapperClassName="mb-3"
+                                            className="!py-1.5 !pl-9 !text-xs"
+                                        />
                                     )}
 
                                     {filteredTrees.length === 0 ? (
@@ -314,13 +315,10 @@ export default function PhenoHuntPage() {
                                             {filteredTrees.map(tree => (
                                                 <LiquidCard
                                                     key={tree.id}
-                                                    glow="none"
+                                                    glow={store.selectedTreeId === tree.id ? 'green' : 'none'}
                                                     padding="sm"
                                                     onClick={() => handleSelectTree(tree.id)}
-                                                    className={`cursor-pointer group transition-colors ${store.selectedTreeId === tree.id
-                                                        ? 'border-emerald-500/50 bg-emerald-500/10'
-                                                        : 'hover:border-white/20'
-                                                        }`}
+                                                    className={`cursor-pointer group transition-colors ${store.selectedTreeId === tree.id ? '' : 'hover:border-white/20'}`}
                                                 >
                                                     <div className="flex items-center gap-2">
                                                         <div className="w-8 h-8 rounded-lg bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
@@ -373,25 +371,29 @@ export default function PhenoHuntPage() {
                                                 <p className="text-xs text-white/30 italic">Aucune fiche technique fleur</p>
                                             ) : (
                                                 userReviews.map(review => (
-                                                    <div
+                                                    <LiquidCard
                                                         key={review.id}
+                                                        glow="none"
+                                                        padding="sm"
                                                         draggable
                                                         onDragStart={(e) => handleDragStart(e, { ...review, _source: 'review' })}
-                                                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-white/70 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-emerald-500/30 cursor-grab active:cursor-grabbing transition-colors"
+                                                        className="cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors"
                                                     >
-                                                        <div className="w-6 h-6 rounded-full overflow-hidden bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
-                                                            {getFirstReviewImage(review) ? (
-                                                                <img
-                                                                    src={getFirstReviewImage(review)}
-                                                                    alt=""
-                                                                    className="w-full h-full object-cover"
-                                                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-                                                                />
-                                                            ) : null}
-                                                            <Leaf className="w-3 h-3 text-emerald-400/60" style={getFirstReviewImage(review) ? { display: 'none' } : undefined} />
+                                                        <div className="flex items-center gap-2">
+                                                            <div className="w-6 h-6 rounded-full overflow-hidden bg-emerald-500/10 flex items-center justify-center flex-shrink-0">
+                                                                {getFirstReviewImage(review) ? (
+                                                                    <img
+                                                                        src={getFirstReviewImage(review)}
+                                                                        alt=""
+                                                                        className="w-full h-full object-cover"
+                                                                        onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                                                    />
+                                                                ) : null}
+                                                                <Leaf className="w-3 h-3 text-emerald-400/60" style={getFirstReviewImage(review) ? { display: 'none' } : undefined} />
+                                                            </div>
+                                                            <span className="truncate text-sm text-white/70">{review.holderName || review.name || 'Sans nom'}</span>
                                                         </div>
-                                                        <span className="truncate">{review.holderName || review.name || 'Sans nom'}</span>
-                                                    </div>
+                                                    </LiquidCard>
                                                 ))
                                             )}
                                         </div>
@@ -411,16 +413,13 @@ export default function PhenoHuntPage() {
                                     {cultivarsOpen && (
                                         <div className="px-4 pb-4 space-y-3">
                                             {cultivarLibrary.length > 3 && (
-                                                <div className="relative">
-                                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                                                    <input
-                                                        type="text"
-                                                        placeholder="Rechercher un cultivar..."
-                                                        value={cultivarSearch}
-                                                        onChange={(e) => setCultivarSearch(e.target.value)}
-                                                        className="w-full pl-8 pr-3 py-1.5 bg-white/5 border border-white/10 rounded-lg text-white placeholder-white/30 text-xs focus:outline-none focus:border-emerald-500/50"
-                                                    />
-                                                </div>
+                                                <LiquidInput
+                                                    icon={Search}
+                                                    placeholder="Rechercher un cultivar..."
+                                                    value={cultivarSearch}
+                                                    onChange={(e) => setCultivarSearch(e.target.value)}
+                                                    className="!py-1.5 !pl-9 !text-xs"
+                                                />
                                             )}
                                             {Object.keys(groupedCultivars).length === 0 ? (
                                                 <p className="text-xs text-white/30 italic">
@@ -443,23 +442,27 @@ export default function PhenoHuntPage() {
                                                         {expandedGroups.has(groupName) && (
                                                             <div className="ml-5 space-y-1">
                                                                 {cultivars.map(c => (
-                                                                    <div
+                                                                    <LiquidCard
                                                                         key={c.id}
+                                                                        glow="none"
+                                                                        padding="sm"
                                                                         draggable
                                                                         onDragStart={(e) => handleDragStart(e, { ...c, _source: 'library' })}
-                                                                        className="flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm text-white/70 hover:bg-white/5 cursor-grab active:cursor-grabbing transition-colors"
+                                                                        className="cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors"
                                                                     >
-                                                                        {c.image ? (
-                                                                            <img
-                                                                                src={getImageUrl(c.image)}
-                                                                                alt=""
-                                                                                className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                                                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-                                                                            />
-                                                                        ) : null}
-                                                                        <Leaf className="w-3 h-3 text-emerald-400/50 flex-shrink-0" style={c.image ? { display: 'none' } : undefined} />
-                                                                        <span className="truncate">{c.name}</span>
-                                                                    </div>
+                                                                        <div className="flex items-center gap-2">
+                                                                            {c.image ? (
+                                                                                <img
+                                                                                    src={getImageUrl(c.image)}
+                                                                                    alt=""
+                                                                                    className="w-4 h-4 rounded-full object-cover flex-shrink-0"
+                                                                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                                                                />
+                                                                            ) : null}
+                                                                            <Leaf className="w-3 h-3 text-emerald-400/50 flex-shrink-0" style={c.image ? { display: 'none' } : undefined} />
+                                                                            <span className="truncate text-sm text-white/70">{c.name}</span>
+                                                                        </div>
+                                                                    </LiquidCard>
                                                                 ))}
                                                             </div>
                                                         )}
@@ -478,36 +481,49 @@ export default function PhenoHuntPage() {
                                 {/* Bande d'outils ancrée au-dessus du canvas — remplace l'ancien panneau
                                     flottant TreeToolbar (retiré du canvas lui-même) */}
                                 <div className="flex items-center gap-1 px-3 py-2 bg-white/[0.02] border-b border-white/10 flex-shrink-0 overflow-x-auto">
-                                    <button
+                                    <LiquidButton
                                         onClick={handleAddRootNode}
-                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors flex-shrink-0"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon={Sprout}
+                                        className="flex-shrink-0"
                                         title="Ajouter un individu sans fiche technique liée (ex: parent externe, landrace, ruderalis...) — sa génétique se renseigne à la main dans le formulaire"
                                     >
-                                        <Sprout className="w-3.5 h-3.5" /> Individu inconnu
-                                    </button>
-                                    <button
+                                        Individu inconnu
+                                    </LiquidButton>
+                                    <LiquidButton
                                         onClick={handleAddEdge}
-                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors flex-shrink-0"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon={Link2}
+                                        className="flex-shrink-0"
                                         title="Créer une relation manuellement"
                                     >
-                                        <Link2 className="w-3.5 h-3.5" /> Relation
-                                    </button>
+                                        Relation
+                                    </LiquidButton>
                                     <div className="w-px h-5 bg-white/10 mx-1 flex-shrink-0" />
-                                    <button
+                                    <LiquidButton
                                         onClick={handleExportJSON}
-                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors flex-shrink-0"
+                                        variant="ghost"
+                                        size="sm"
+                                        icon={Download}
+                                        className="flex-shrink-0"
                                         title="Exporter en JSON"
                                     >
-                                        <Download className="w-3.5 h-3.5" /> JSON
-                                    </button>
-                                    <button
+                                        JSON
+                                    </LiquidButton>
+                                    <LiquidButton
                                         onClick={handleExportSVG}
                                         disabled={exporting}
-                                        className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-medium text-white/70 hover:bg-white/10 hover:text-white transition-colors disabled:opacity-50 flex-shrink-0"
+                                        loading={exporting}
+                                        variant="ghost"
+                                        size="sm"
+                                        icon={ImageIcon}
+                                        className="flex-shrink-0"
                                         title="Exporter en SVG"
                                     >
-                                        {exporting ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <ImageIcon className="w-3.5 h-3.5" />} SVG
-                                    </button>
+                                        SVG
+                                    </LiquidButton>
 
                                     <div className="flex-1" />
                                     <div className="flex items-center gap-2 text-xs text-white/40 flex-shrink-0 pr-1">

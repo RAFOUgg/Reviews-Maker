@@ -7,19 +7,19 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { Leaf } from 'lucide-react';
+import { Leaf, Venus, Mars, CircleHelp, MessageSquare } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 
 const SEX_CONFIG = {
-    female: { shapeClass: 'shape-circle', icon: '♀', label: 'Femelle' },
-    male: { shapeClass: 'shape-square', icon: '♂', label: 'Mâle' },
-    unknown: { shapeClass: 'shape-rounded', icon: '?', label: 'Sexe inconnu' }
+    female: { shapeClass: 'shape-circle', Icon: Venus, label: 'Femelle' },
+    male: { shapeClass: 'shape-square', Icon: Mars, label: 'Mâle' },
+    unknown: { shapeClass: 'shape-rounded', Icon: CircleHelp, label: 'Sexe inconnu' }
 };
 
 const CultivarNode = ({ data, selected }) => {
     const genetics = data.genetics || {};
     const sex = SEX_CONFIG[genetics.sex] ? genetics.sex : 'unknown';
-    const { shapeClass, icon: sexIcon, label: sexLabel } = SEX_CONFIG[sex];
+    const { shapeClass, Icon: SexIcon, label: sexLabel } = SEX_CONFIG[sex];
     const accentColor = data.color || '#FF6B9D';
     // data.selected reflète store.selectedNodeId (pilote le panneau métadonnées dans
     // Genetiques.jsx) — prioritaire sur le `selected` natif de React Flow pour que le
@@ -52,7 +52,9 @@ const CultivarNode = ({ data, selected }) => {
                 ) : (
                     <Leaf className="node-photo-placeholder" />
                 )}
-                <span className="node-sex-badge" title={sexLabel}>{sexIcon}</span>
+                <span className="node-sex-badge" title={sexLabel}>
+                    <SexIcon size={11} strokeWidth={2.5} />
+                </span>
             </div>
 
             <div className="node-content">
@@ -67,7 +69,9 @@ const CultivarNode = ({ data, selected }) => {
             </div>
 
             {data.notes && (
-                <div className="node-notes" title={data.notes}>💬</div>
+                <div className="node-notes" title={data.notes}>
+                    <MessageSquare size={11} strokeWidth={2.5} />
+                </div>
             )}
 
             <Handle type="source" position={Position.Bottom} className="node-handle bottom" />

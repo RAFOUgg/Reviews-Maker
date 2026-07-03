@@ -3,6 +3,7 @@ import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 import SourceLineageSelector from '@/components/forms/helpers/SourceLineageSelector'
 import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
+import UnknownValueButton from '@/components/ui/UnknownValueButton'
 
 const CONCENTRATE_TYPES = [
     'Rosin',
@@ -69,9 +70,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <LiquidInput
                             label={
-                                <span className="flex items-center justify-between">
+                                <span className="flex items-center justify-between gap-2">
                                     Hashmaker / Extracteur
-                                    <FillMyselfButton onFill={(name) => handleChange('hashmaker', name)} />
+                                    <span className="flex items-center gap-1.5">
+                                        <FillMyselfButton onFill={(name) => handleChange('hashmaker', name)} />
+                                        <UnknownValueButton onClick={() => handleChange('hashmaker', '')} />
+                                    </span>
                                 </span>
                             }
                             value={formData.hashmaker || ''}
@@ -80,7 +84,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         />
 
                         <LiquidInput
-                            label="Laboratoire de production"
+                            label={
+                                <span className="flex items-center justify-between">
+                                    Laboratoire de production
+                                    <UnknownValueButton onClick={() => handleChange('laboratoire', '')} />
+                                </span>
+                            }
                             value={formData.laboratoire || ''}
                             onChange={(e) => handleChange('laboratoire', e.target.value)}
                             placeholder="Nom du laboratoire"

@@ -8,7 +8,7 @@ import React, { useState } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import { POLLINATION_METHODS } from '../../config/phenoNodeFields';
-import { Save, X, ArrowDown } from 'lucide-react';
+import { Save, X, ArrowDown, Users, Flower2, VenusAndMars, Repeat, Zap, Heart } from 'lucide-react';
 
 const EdgeFormModal = ({ onClose }) => {
     const store = useGeneticsStore();
@@ -61,12 +61,12 @@ const EdgeFormModal = ({ onClose }) => {
     };
 
     const relationshipTypes = [
-        { value: 'parent', label: '👨‍👩‍👧 Parent' },
-        { value: 'pollen_donor', label: '🌼 Donateur de pollen' },
-        { value: 'sibling', label: '👯 Frère/Sœur' },
-        { value: 'clone', label: '🔄 Clone' },
-        { value: 'mutation', label: '⚡ Mutation' },
-        { value: 'pairing', label: '💑 Couple parental (liaison)' }
+        { value: 'parent', label: 'Parent', icon: <Users size={15} /> },
+        { value: 'pollen_donor', label: 'Donateur de pollen', icon: <Flower2 size={15} /> },
+        { value: 'sibling', label: 'Frère/Sœur', icon: <VenusAndMars size={15} /> },
+        { value: 'clone', label: 'Clone', icon: <Repeat size={15} /> },
+        { value: 'mutation', label: 'Mutation', icon: <Zap size={15} /> },
+        { value: 'pairing', label: 'Couple parental (liaison)', icon: <Heart size={15} /> }
     ];
 
     const isPairing = formData.relationshipType === 'pairing';

@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(timeout 25 ssh vps-lafoncedalle \"source ~/.nvm/nvm.sh 2>/dev/null; cd ~/Reviews-Maker/server-new && node check_vps.mjs && rm check_vps.mjs\")",
+      "Bash(timeout 15 ssh vps-lafoncedalle \"source ~/.nvm/nvm.sh 2>/dev/null; pm2 logs reviews-maker --lines 15 --nostream 2>&1 | grep -c 'c64c21e8'\")",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(timeout 300 ssh vps-lafoncedalle \"cd ~/Reviews-Maker && bash deploy.sh --vps 2>&1\")",
+      "Bash(timeout 25 npm run build)",
+      "Bash(npx eslint *)",
+      "Bash(npx esbuild *)",
+      "Bash(grep -i \"error\" /tmp/uc.out /tmp/gcs.out /tmp/css.out | head -20; echo \"---LOG---\"; cat /tmp/vite-dev.log)",
+      "Read(//tmp/**)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)"
+    ]
+  }
+}

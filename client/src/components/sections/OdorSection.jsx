@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Flower2 } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
+import UnknownValueButton from '@/components/ui/UnknownValueButton';
 import AromaWheelPicker from '../shared/charts/AromaWheelPicker';
 
 /**
@@ -136,6 +137,9 @@ export default function OdorSection({ productType, data: directData, onChange, f
                         color="green"
                         onChange={(val) => setIntensity(val)}
                     />
+                    <div className="flex justify-end mt-2">
+                        <UnknownValueButton onClick={() => setIntensity(0)} label="Non évalué" />
+                    </div>
                 </div>
 
                 <div className="p-2 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-cyan-500/20">
@@ -148,6 +152,9 @@ export default function OdorSection({ productType, data: directData, onChange, f
                         color="green"
                         onChange={(val) => setComplexity(val)}
                     />
+                    <div className="flex justify-end mt-2">
+                        <UnknownValueButton onClick={() => setComplexity(0)} label="Non évalué" />
+                    </div>
                 </div>
             </div>
 

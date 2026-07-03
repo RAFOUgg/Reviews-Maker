@@ -14,21 +14,25 @@
        nœud glissé loin du centre s'affiche visuellement en dehors du cadre du canvas
        (déborde sur le reste de la page) au lieu d'être clippé par le viewport React Flow */
     overflow: hidden;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: #07070f;
 }
 
 .graph-canvas-shell .react-flow {
     width: 100%;
     height: 100%;
-    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    background: #07070f;
+    /* Délègue entièrement le pan/zoom/pinch tactile à react-flow (d3-zoom) plutôt qu'au
+       navigateur — sans ça, iOS Safari notamment peut intercepter certains gestes tactiles
+       (rubber-band scroll, double-tap zoom natif de la page) avant que react-flow ne les voie. */
+    touch-action: none;
 }
 
 .graph-canvas-shell .react-flow__background {
-    background-color: #0f172a;
+    background-color: #07070f;
 }
 
 .graph-canvas-shell .react-flow__background pattern {
-    fill: #334155;
+    fill: rgba(255, 255, 255, 0.08);
 }
 
 /* Cultivar/Review Node Styling — forme par sexe pour PhenoHunt (rond = femelle, carré = mâle,
@@ -40,23 +44,47 @@
     gap: 6px;
     width: 140px;
     padding: 10px;
-    background: linear-gradient(135deg, rgba(30, 41, 59, 0.95) 0%, rgba(15, 23, 42, 0.95) 100%);
+    background: rgba(255, 255, 255, 0.05);
     border: 2px solid var(--accent-color, #FF6B9D);
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-    backdrop-filter: blur(6px);
+    box-shadow:
+        0 4px 24px -4px rgba(0, 0, 0, 0.4),
+        0 12px 32px -12px rgba(0, 0, 0, 0.5),
+        inset 0 1px 1px rgba(255, 255, 255, 0.1),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(16px) saturate(150%);
     transition: all 0.25s ease;
     position: relative;
     cursor: pointer;
 }
 
+/* Reflet lumineux du haut ("sheen"), même recette que .liquid-card::after (apple-liquid-glass.css)
+   mais opacité réduite : à pleine intensité (0.7) le reflet lave la photo/le label sur des cartes
+   aussi petites (140px). border-radius: inherit pour suivre les 3 formes rond/carré/arrondi. */
+.cultivar-node::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--liquid-sheen);
+    border-radius: inherit;
+    opacity: 0.35;
+    pointer-events: none;
+}
+
 .cultivar-node:hover {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5), 0 0 20px color-mix(in srgb, var(--accent-color, #FF6B9D) 40%, transparent);
+    box-shadow:
+        0 8px 32px -4px rgba(0, 0, 0, 0.5),
+        0 0 20px color-mix(in srgb, var(--accent-color, #FF6B9D) 40%, transparent),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
     transform: translateY(-2px);
 }
 
 .cultivar-node.selected {
     border-color: #fbbf24;
-    box-shadow: 0 8px 28px rgba(251, 191, 36, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
+    box-shadow:
+        0 8px 28px rgba(251, 191, 36, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
 }
 
 /* Femelle = rond */
@@ -82,6 +110,7 @@
 
 .node-photo {
     position: relative;
+    z-index: 1;
     width: 56px;
     height: 56px;
     border-radius: 50%;
@@ -115,8 +144,6 @@
     border-radius: 50%;
     background: var(--accent-color, #FF6B9D);
     color: #0f172a;
-    font-size: 11px;
-    font-weight: 700;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -124,6 +151,8 @@
 }
 
 .node-content {
+    position: relative;
+    z-index: 1;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -168,9 +197,10 @@
 
 .node-notes {
     position: absolute;
+    z-index: 1;
     top: -6px;
     left: -6px;
-    font-size: 12px;
+    color: rgba(255, 255, 255, 0.75);
     background: rgba(15, 23, 42, 0.9);
     border: 1px solid rgba(255, 255, 255, 0.15);
     border-radius: 50%;
@@ -179,6 +209,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
 .node-handle {
@@ -186,6 +217,10 @@
     height: 8px !important;
     background: var(--accent-color, #FF6B9D) !important;
     border: 1.5px solid rgba(15, 23, 42, 0.9) !important;
+    /* Ancre pour l'agrandissement tactile de la zone de hit ci-dessous (::before) — react-flow
+       positionne déjà la poignée en position: absolute par défaut, donc l'ancre est déjà en
+       place, mais on la répète ici pour ne pas dépendre silencieusement de son propre CSS. */
+    position: absolute;
 }
 
 /* Canvas Edges */
@@ -216,29 +251,34 @@
     font-weight: 500;
 }
 
-/* Canvas Controls */
+/* Canvas Controls — même recette glass (blur+saturate, ombre en couches) que .liquid-card
+   (apple-liquid-glass.css), partagée par PhenoHunt et la Chaîne de production. */
 .react-flow__controls {
-    background-color: rgba(30, 41, 59, 0.8) !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
-    border-radius: 8px !important;
+    background-color: rgba(255, 255, 255, 0.06) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 14px !important;
+    backdrop-filter: blur(16px) saturate(150%) !important;
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 .react-flow__controls button {
-    background-color: rgba(51, 65, 85, 0.6) !important;
+    background-color: rgba(255, 255, 255, 0.05) !important;
     color: #cbd5e1 !important;
-    border: 1px solid rgba(71, 85, 105, 0.5) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
 .react-flow__controls button:hover {
-    background-color: rgba(71, 85, 105, 0.8) !important;
+    background-color: rgba(255, 255, 255, 0.12) !important;
     color: #10b981 !important;
 }
 
 /* MiniMap */
 .react-flow__minimap {
-    background-color: rgba(30, 41, 59, 0.8) !important;
-    border: 1px solid rgba(59, 130, 246, 0.2) !important;
-    border-radius: 8px !important;
+    background-color: rgba(255, 255, 255, 0.04) !important;
+    border: 1px solid rgba(255, 255, 255, 0.12) !important;
+    border-radius: 14px !important;
+    backdrop-filter: blur(16px) saturate(150%) !important;
+    box-shadow: 0 4px 24px -4px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.08) !important;
 }
 
 /* Panels */
@@ -506,6 +546,38 @@
     cursor: grabbing;
 }
 
+/* Bouton flottant (FAB) "Ajouter un individu inconnu" — visible seulement sur mobile, cf.
+   UnifiedGeneticsCanvas.jsx (isMobile via useResponsiveLayout). Bas-gauche pour ne pas
+   chevaucher les Controls react-flow, recalés en bas-droite sur mobile ci-dessous. */
+.mobile-add-node-fab {
+    position: absolute;
+    left: 16px;
+    bottom: 16px;
+    z-index: 900;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.15);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-add-node-fab svg {
+    width: 24px;
+    height: 24px;
+}
+
+.mobile-add-node-fab:active {
+    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+    transform: scale(0.96);
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .canvas-toolbar {
@@ -520,5 +592,29 @@
     .react-flow__controls {
         bottom: 20px !important;
         right: 20px !important;
+    }
+
+    /* Poignées de connexion (.node-handle) — agrandit la zone de HIT tactile sans changer la
+       taille visuelle (8x8px, inchangée). Technique du pseudo-élément transparent surdimensionné
+       et centré : le navigateur route les événements touch qui tombent dans cette zone vers
+       l'élément réel (.react-flow__handle), qui porte déjà les listeners onTouchStart/onMouseDown
+       posés par react-flow (cf. @reactflow/core Handle). 44px = seuil tactile recommandé
+       WCAG/Apple/Material. */
+    .node-handle::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 44px;
+        height: 44px;
+        transform: translate(-50%, -50%);
+        background: transparent;
+    }
+
+    /* Confort tactile des menus contextuels (déjà anti-débordement viewport, cf.
+       NodeContextMenu.jsx/EdgeContextMenu.jsx) — hauteur de ligne minimale recommandée. */
+    .context-menu button {
+        min-height: 44px;
+        font-size: 14px;
     }
 }

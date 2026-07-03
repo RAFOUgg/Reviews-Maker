@@ -5,6 +5,9 @@ import { edibleReviewsService } from '../../../services/apiService'
 import ResponsiveCreateReviewLayout from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useRef, lazy, Suspense } from 'react'
+import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout'
+import WizardFlow from '../../../components/wizard/WizardFlow'
+import { getEdibleWizardQuestions } from '../../../components/wizard/schemas/edibleWizardQuestions'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
 import { flattenEdibleFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
@@ -59,6 +62,18 @@ export default function CreateEdibleReview() {
         { id: 'gouts', icon: '😋', title: 'Goûts' },
         { id: 'effets', icon: '💥', title: 'Effets + Expérience' }
     ]
+
+    // Mode automatique (wizard) — cf. CreateFlowerReview/index.jsx pour le détail du mécanisme.
+    const { isMobile } = useResponsiveLayout()
+    const forceWizard = searchParams.get('mode') === 'auto'
+    const [wizardDismissed, setWizardDismissed] = useState(false)
+    const useWizardMode = (isMobile || forceWizard) && !wizardDismissed
+    const wizardQuestions = getEdibleWizardQuestions()
+    const handleOpenHandoff = (target) => {
+        const index = sections.findIndex(s => s.id === target)
+        setWizardDismissed(true)
+        if (index >= 0) setCurrentSection(index)
+    }
 
     const handlePrevious = () => {
         if (currentSection > 0) {
@@ -215,6 +230,23 @@ export default function CreateEdibleReview() {
 
     return (
         <>
+            {useWizardMode ? (
+                <WizardFlow
+                    questions={wizardQuestions}
+                    formData={formData}
+                    handleChange={handleChange}
+                    photos={photos}
+                    handlePhotoUpload={handlePhotoUpload}
+                    removePhoto={removePhoto}
+                    title="Créer une review Comestible"
+                    onExitToClassic={() => setWizardDismissed(true)}
+                    onOpenHandoff={handleOpenHandoff}
+                    onComplete={() => setShowOrchard(true)}
+                    saving={saving}
+                    isDirty={isDirty}
+                    onSave={() => handleSave({ silent: false })}
+                />
+            ) : (
             <ResponsiveCreateReviewLayout
                 sections={sections}
                 sectionEmojis={sections.map(s => s.icon)}
@@ -245,14 +277,25 @@ export default function CreateEdibleReview() {
                         transition={{ duration: 0.2 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-3xl">{sections[currentSection].icon}</span>
-                            <div>
-                                <h2 className="text-xl font-semibold text-white">
-                                    {sections[currentSection].title}
-                                    {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                </h2>
+                        <div className="flex items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl">{sections[currentSection].icon}</span>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">
+                                        {sections[currentSection].title}
+                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
+                                    </h2>
+                                </div>
                             </div>
+                            {isMobile && (
+                                <button
+                                    type="button"
+                                    onClick={() => setWizardDismissed(false)}
+                                    className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2 flex-shrink-0"
+                                >
+                                    Mode automatique
+                                </button>
+                            )}
                         </div>
 
                         {currentSection === 0 && (
@@ -287,6 +330,7 @@ export default function CreateEdibleReview() {
                     </motion.div>
                 </AnimatePresence>
             </ResponsiveCreateReviewLayout>
+            )}
 
             <AnimatePresence>
                 {showOrchard && (

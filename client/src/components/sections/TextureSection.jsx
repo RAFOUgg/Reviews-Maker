@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Hand, Sparkles } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import LiquidSlider from '@/components/ui/LiquidSlider';
+import UnknownValueButton from '@/components/ui/UnknownValueButton';
 
 /**
  * Niveaux de qualité pour les sliders de texture
@@ -169,7 +170,10 @@ export default function TextureSection({ productType, data: directData, onChange
                         color="pink"
                         onChange={(val) => setHardness(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.hardness[hardness] || 'Non évalué'}</p>
+                    <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-white/40">{TEXTURE_LABELS.hardness[hardness] || 'Non évalué'}</p>
+                        <UnknownValueButton onClick={() => setHardness(0)} label="Non évalué" />
+                    </div>
                 </div>
 
                 <div className="p-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
@@ -182,7 +186,10 @@ export default function TextureSection({ productType, data: directData, onChange
                         color="pink"
                         onChange={(val) => setDensity(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.density[density] || 'Non évalué'}</p>
+                    <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-white/40">{TEXTURE_LABELS.density[density] || 'Non évalué'}</p>
+                        <UnknownValueButton onClick={() => setDensity(0)} label="Non évalué" />
+                    </div>
                 </div>
 
                 <div className="p-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
@@ -195,7 +202,10 @@ export default function TextureSection({ productType, data: directData, onChange
                         color="pink"
                         onChange={(val) => setStickiness(val)}
                     />
-                    <p className="text-xs text-white/40 mt-2">{TEXTURE_LABELS.stickiness[stickiness] || 'Non évalué'}</p>
+                    <div className="flex items-center justify-between mt-2">
+                        <p className="text-xs text-white/40">{TEXTURE_LABELS.stickiness[stickiness] || 'Non évalué'}</p>
+                        <UnknownValueButton onClick={() => setStickiness(0)} label="Non évalué" />
+                    </div>
                 </div>
 
                 {/* Élasticité (Fleurs uniquement) */}

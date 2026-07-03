@@ -13,7 +13,7 @@ export default function HomePage() {
     const { user, isAuthenticated } = useStore()
     const { hasFeature } = usePermissions()
 
-    const handleCreateReview = (type) => {
+    const handleCreateReview = (type, opts = {}) => {
         if (!isAuthenticated) {
             toast.warning('Vous devez être connecté pour créer une review')
             return
@@ -28,7 +28,7 @@ export default function HomePage() {
         }
 
         const route = typeMap[type] || type.toLowerCase()
-        navigate(`/create/${route}`)
+        navigate(`/create/${route}${opts.wizard ? '?mode=auto' : ''}`)
     }
 
     const handleNavigateToPhenoHunt = () => {

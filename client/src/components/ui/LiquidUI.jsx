@@ -25,7 +25,8 @@ export function LiquidCard({
     padding = 'md', // none | sm | md | lg
     onClick,
     as: Component = 'div',
-    liquidEffect = true // enable/disable cursor tracking
+    liquidEffect = true, // enable/disable cursor tracking
+    ...rest // extra DOM props (draggable, onDragStart, etc.) passed through to the root element
 }) {
     const cardRef = useRef(null)
     const [smoothPosition, setSmoothPosition] = useState({ x: 50, y: 50 })
@@ -143,6 +144,7 @@ export function LiquidCard({
                 '--mouse-x': `${smoothPosition.x}%`,
                 '--mouse-y': `${smoothPosition.y}%`
             }}
+            {...rest}
         >
             {/* Soft ambient glow that follows cursor */}
             {liquidEffect && (

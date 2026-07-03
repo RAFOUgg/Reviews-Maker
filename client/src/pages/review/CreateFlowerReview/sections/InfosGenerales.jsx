@@ -2,6 +2,7 @@ import React from 'react'
 import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
+import UnknownValueButton from '@/components/ui/UnknownValueButton'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
 
@@ -53,7 +54,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
 
                         <div>
                             <LiquidInput
-                                label="Cultivar(s)"
+                                label={
+                                    <span className="flex items-center justify-between">
+                                        Cultivar(s)
+                                        <UnknownValueButton onClick={() => handleChange('cultivars', '')} />
+                                    </span>
+                                }
                                 value={formData.cultivars || ''}
                                 onChange={(e) => handleChange('cultivars', e.target.value)}
                                 placeholder="Ex: OG Kush, Purple Haze, Wedding Cake..."
@@ -68,9 +74,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                     <div>
                         <LiquidInput
                             label={
-                                <span className="flex items-center justify-between">
+                                <span className="flex items-center justify-between gap-2">
                                     Farm / Producteur
-                                    <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
+                                    <span className="flex items-center gap-1.5">
+                                        <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
+                                        <UnknownValueButton onClick={() => handleChange('farm', '')} />
+                                    </span>
                                 </span>
                             }
                             value={formData.farm || ''}
