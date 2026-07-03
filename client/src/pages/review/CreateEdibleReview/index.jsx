@@ -1,3 +1,4 @@
+import { Sparkles } from 'lucide-react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
@@ -287,15 +288,15 @@ export default function CreateEdibleReview() {
                                     </h2>
                                 </div>
                             </div>
-                            {isMobile && (
-                                <button
-                                    type="button"
-                                    onClick={() => setWizardDismissed(false)}
-                                    className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2 flex-shrink-0"
-                                >
-                                    Mode automatique
-                                </button>
-                            )}
+                            <button
+                                type="button"
+                                onClick={() => setWizardDismissed(false)}
+                                title="Passer en mode automatique (une question à la fois)"
+                                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-200 text-xs font-medium transition-colors flex-shrink-0"
+                            >
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Mode automatique
+                            </button>
                         </div>
 
                         {currentSection === 0 && (
