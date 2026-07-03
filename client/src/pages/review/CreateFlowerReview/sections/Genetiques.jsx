@@ -6,6 +6,7 @@ import { LiquidCard, LiquidChip, LiquidButton, LiquidDivider, LiquidModal } from
 import ConfirmModal from '../../../../components/shared/ConfirmModal'
 import PhenoCodeGenerator from '../../../../components/forms/helpers/PhenoCodeGenerator'
 import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneticsCanvas'
+import TreeFormModal from '../../../../components/genetics/TreeFormModal'
 import useGeneticsStore from '../../../../store/useGeneticsStore'
 import { useStore } from '../../../../store/useStore'
 
@@ -33,6 +34,10 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     // n'ait jamais été posé. null = pas encore vérifié, 'checked-none' = vérifié sans résultat,
     // objet = correspondance trouvée (exacte = auto-liée silencieusement, par nom = proposée)
     const [orphanMatch, setOrphanMatch] = useState(null)
+    // Menu contextuel clic droit sur les cartes de la sidebar (reviews + cultivars bibliothèque)
+    // — remplace le menu natif du navigateur qui s'affichait faute de handler dédié.
+    const [sidebarContextMenu, setSidebarContextMenu] = useState(null) // { x, y, item } | null
+    const sidebarMenuRef = useRef(null)
 
     const { user } = useStore()
     const genetics = formData.genetics || {}
@@ -52,11 +57,36 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
         createTree,
         deleteTree: deleteTreeApi,
         addNode,
-        updateNode
+        updateNode,
+        showTreeForm,
+        treeFormData,
+        openTreeForm,
+        closeTreeForm
     } = useGeneticsStore()
 
     // Trouver le nœud sélectionné
     const selectedNode = selectedNodeId ? nodes.find(n => n.id === selectedNodeId) : null
+
+    // Menu contextuel (clic droit) sur un onglet d'arbre — édition du nom/stats de l'arbre complet
+    const [treeContextMenu, setTreeContextMenu] = useState(null) // { treeId, x, y } | null
+    const treeMenuRef = useRef(null)
+    useEffect(() => {
+        if (!treeContextMenu) return
+        const handleClickOutside = (e) => {
+            if (treeMenuRef.current && !treeMenuRef.current.contains(e.target)) setTreeContextMenu(null)
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [treeContextMenu])
+    const handleTreeContextMenu = (e, treeId) => {
+        e.preventDefault()
+        setTreeContextMenu({ treeId, x: e.clientX, y: e.clientY })
+    }
+    const handleEditTreeFromMenu = () => {
+        const tree = trees.find(t => t.id === treeContextMenu?.treeId)
+        if (tree) openTreeForm(tree)
+        setTreeContextMenu(null)
+    }
 
     // Local state pour le panneau métadonnées du nœud sélectionné
     const [nodeEditMeta, setNodeEditMeta] = useState({ breeder: '', type: '', sex: 'unknown', relations: [], phenotypeCode: '' })
@@ -83,8 +113,13 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
             const newMeta = { ...prev, ...updates }
             if (nodeUpdateTimerRef.current) clearTimeout(nodeUpdateTimerRef.current)
             nodeUpdateTimerRef.current = setTimeout(() => {
+                // Objet brut, pas de JSON.stringify ici : la route PUT /nodes/:id le stringifie
+                // déjà elle-même avant écriture (JSON.stringify(genetics) côté serveur) — un
+                // double encodage envoyait une string là où le backend valide un objet, d'où
+                // l'erreur "Genetics must be a valid object or null" (400) à chaque modification
+                // via ce panneau.
                 updateNode(selectedNode.id, {
-                    genetics: JSON.stringify({ ...(selectedNode.genetics || {}), ...newMeta })
+                    genetics: { ...(selectedNode.genetics || {}), ...newMeta }
                 })
             }, 600)
             return newMeta
@@ -101,7 +136,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
             nodeUpdateTimerRef.current = setTimeout(() => {
                 if (!selectedNode) return
                 updateNode(selectedNode.id, {
-                    genetics: JSON.stringify({ ...(selectedNode.genetics || {}), ...newMeta })
+                    genetics: { ...(selectedNode.genetics || {}), ...newMeta }
                 })
             }, 600)
             return newMeta
@@ -270,12 +305,19 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                 // 2. Charger l'arbre créé
                 await loadTree(treeResult.data.id)
 
+                // Photo : cette review apparaît normalement dans userReviews (liste "Mes reviews
+                // fleurs" déjà chargée pour la sidebar) — absente du payload jusqu'ici, le nœud
+                // créé depuis ce bouton n'avait donc jamais d'image malgré une review qui en a une.
+                const currentReview = userReviews.find(r => r.id === reviewId)
+                const image = currentReview ? getFirstReviewImage(currentReview) : null
+
                 // 3. Ajouter le nœud de la fleur actuelle
                 // Note: addNode(nodeData) uses state.selectedTreeId internally
                 await addNode({
                     cultivarName: flowerName,
                     position: { x: 300, y: 200 },
                     color: '#FF6B9D',
+                    image,
                     genetics: {
                         breeder: genetics.breeder || '',
                         type: genetics.type || 'hybrid',
@@ -305,11 +347,14 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
         setCreatingTree(true)
         try {
             const flowerName = formData.nomCommercial || 'Nouvelle Fleur'
+            const currentReview = userReviews.find(r => r.id === reviewId)
+            const image = currentReview ? getFirstReviewImage(currentReview) : null
             await loadTree(treeId)
             await addNode({
                 cultivarName: flowerName,
                 position: { x: 300, y: 200 },
                 color: '#FF6B9D',
+                image,
                 genetics: {
                     breeder: genetics.breeder || '',
                     type: genetics.type || 'hybrid',
@@ -397,6 +442,44 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
         }
         e.dataTransfer.setData('application/json', JSON.stringify(dragPayload))
         e.dataTransfer.effectAllowed = 'copy'
+    }
+
+    useEffect(() => {
+        if (!sidebarContextMenu) return
+        const handleClickOutside = (e) => {
+            if (sidebarMenuRef.current && !sidebarMenuRef.current.contains(e.target)) setSidebarContextMenu(null)
+        }
+        document.addEventListener('mousedown', handleClickOutside)
+        return () => document.removeEventListener('mousedown', handleClickOutside)
+    }, [sidebarContextMenu])
+
+    const handleSidebarContextMenu = (e, item) => {
+        e.preventDefault()
+        setSidebarContextMenu({ x: e.clientX, y: e.clientY, item })
+    }
+
+    // Équivalent "clic" du glisser-déposer sur le canvas : même mapping de payload que
+    // handleDragStart, décalé légèrement à chaque ajout pour éviter l'empilement parfait.
+    const handleAddToCanvasFromMenu = async () => {
+        const item = sidebarContextMenu?.item
+        if (!item || !selectedTreeId) { setSidebarContextMenu(null); return }
+        const offset = (nodes.length % 6) * 40
+        await addNode({
+            cultivarName: item.cultivarName || item.holderName || item.name || item.generalInfo?.commercialName,
+            position: { x: 300 + offset, y: 200 + offset },
+            color: item._source === 'library' ? '#22C55E' : '#FF6B9D',
+            image: item._source === 'library' ? (item.image || null) : getFirstReviewImage(item),
+            genetics: item.genetics || null,
+            notes: item._source === 'library' ? 'Ajouté depuis la bibliothèque' : 'Ajouté depuis la sidebar',
+            sourceReviewId: item._source === 'library' ? null : (item.id || null)
+        })
+        setSidebarContextMenu(null)
+    }
+
+    const handleEditReviewFromMenu = () => {
+        const item = sidebarContextMenu?.item
+        if (item?.id) window.open(`/edit/flower/${item.id}`, '_blank', 'noopener')
+        setSidebarContextMenu(null)
     }
 
     return (
@@ -597,6 +680,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                                 key={review.id}
                                                 draggable
                                                 onDragStart={(e) => handleDragStart(e, review)}
+                                                onContextMenu={(e) => handleSidebarContextMenu(e, { ...review, _source: 'review' })}
                                                 className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-purple-500/50 transition-all"
                                             >
                                                 <div className="w-16 h-16 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg flex items-center justify-center overflow-hidden">
@@ -627,7 +711,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation()
-                                                            // TODO: Open review edit
+                                                            window.open(`/edit/flower/${review.id}`, '_blank', 'noopener')
                                                         }}
                                                         className="p-1.5 hover:bg-white/10 rounded transition-colors"
                                                     >
@@ -653,6 +737,14 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                                         generalInfo: { commercialName: cultivar.name },
                                                         genetics: { breeder: cultivar.breeder, variety: cultivar.name },
                                                         cultivars: cultivar.name,
+                                                        _source: 'library'
+                                                    })}
+                                                    onContextMenu={(e) => handleSidebarContextMenu(e, {
+                                                        id: cultivar.id,
+                                                        generalInfo: { commercialName: cultivar.name },
+                                                        genetics: { breeder: cultivar.breeder, variety: cultivar.name },
+                                                        cultivarName: cultivar.name,
+                                                        image: cultivar.image,
                                                         _source: 'library'
                                                     })}
                                                     className="bg-white/5 border border-white/10 rounded-lg p-3 flex items-center gap-3 cursor-move hover:shadow-md hover:border-green-500/50 transition-all"
@@ -763,6 +855,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                     : 'text-white/50 hover:text-white hover:bg-white/10'
                                     }`}
                                 onClick={() => handleSelectTree(tree.id)}
+                                onContextMenu={(e) => handleTreeContextMenu(e, tree.id)}
                             >
                                 <span className="text-sm font-medium">{tree.name}</span>
                                 {trees.length > 1 && (
@@ -969,6 +1062,54 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
             onConfirm={handleConfirmOrphanMatch}
             variant="info"
         />
+        {treeContextMenu && (() => {
+            const tree = trees.find(t => t.id === treeContextMenu.treeId)
+            return (
+                <div
+                    ref={treeMenuRef}
+                    className="context-menu"
+                    style={{ position: 'fixed', left: `${treeContextMenu.x}px`, top: `${treeContextMenu.y}px` }}
+                >
+                    <button className="context-menu-item" onClick={handleEditTreeFromMenu}>
+                        ✏️ Éditer l'arbre
+                    </button>
+                    {tree && (
+                        <div style={{ padding: '8px 12px', fontSize: '12px', color: '#94a3b8', cursor: 'default' }}>
+                            📍 {tree._count?.nodes ?? 0} nœud{(tree._count?.nodes ?? 0) > 1 ? 's' : ''} · 🔗 {tree._count?.edges ?? 0} liaison{(tree._count?.edges ?? 0) > 1 ? 's' : ''}
+                        </div>
+                    )}
+                </div>
+            )
+        })()}
+        {showTreeForm && <TreeFormModal isEdit={!!treeFormData?.id} onClose={closeTreeForm} />}
+        {sidebarContextMenu && (() => {
+            const isLibrary = sidebarContextMenu.item?._source === 'library'
+            const label = sidebarContextMenu.item?.cultivarName || sidebarContextMenu.item?.holderName || sidebarContextMenu.item?.name || 'cet élément'
+            return (
+                <div
+                    ref={sidebarMenuRef}
+                    className="context-menu"
+                    style={{ position: 'fixed', left: `${sidebarContextMenu.x}px`, top: `${sidebarContextMenu.y}px` }}
+                >
+                    <div style={{ padding: '6px 12px', fontSize: '12px', color: '#94a3b8', cursor: 'default' }} className="truncate">
+                        {label}
+                    </div>
+                    <button
+                        className="context-menu-item"
+                        onClick={handleAddToCanvasFromMenu}
+                        disabled={!selectedTreeId}
+                        title={!selectedTreeId ? 'Sélectionnez ou créez un arbre pour ajouter au canvas' : undefined}
+                    >
+                        ➕ Ajouter au canvas
+                    </button>
+                    {!isLibrary && (
+                        <button className="context-menu-item" onClick={handleEditReviewFromMenu}>
+                            📝 Éditer la review
+                        </button>
+                    )}
+                </div>
+            )
+        })()}
         </>
     )
 }

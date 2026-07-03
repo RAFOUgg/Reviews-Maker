@@ -4,12 +4,26 @@
  * Menu contextuel (clic droit) pour les opérations sur les arêtes
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
 const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useGeneticsStore();
     const menuRef = useRef(null);
+    // Cf. NodeContextMenu.jsx : recale le menu s'il déborde du viewport près des bords.
+    const [pos, setPos] = useState({ left: x, top: y })
+
+    useEffect(() => {
+        const el = menuRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const margin = 8
+        let left = x
+        let top = y
+        if (left + rect.width > window.innerWidth - margin) left = Math.max(margin, window.innerWidth - rect.width - margin)
+        if (top + rect.height > window.innerHeight - margin) top = Math.max(margin, window.innerHeight - rect.height - margin)
+        setPos({ left, top })
+    }, [x, y])
 
     const edge = store.edges.find(e => e.id === edgeId);
     const parentNode = edge ? store.nodes.find(n => n.id === edge.parentNodeId) : null;
@@ -42,7 +56,8 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) =
         'pollen_donor': '🌼 Donateur de pollen',
         'sibling': '👯 Frère/Sœur',
         'clone': '🔄 Clone',
-        'mutation': '⚡ Mutation'
+        'mutation': '⚡ Mutation',
+        'pairing': '💑 Couple parental'
     };
 
     return (
@@ -50,8 +65,8 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) =
             ref={menuRef}
             className="context-menu"
             style={{
-                left: `${x}px`,
-                top: `${y}px`
+                left: `${pos.left}px`,
+                top: `${pos.top}px`
             }}
         >
             {!readOnly && (

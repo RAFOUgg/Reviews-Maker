@@ -65,8 +65,11 @@ const EdgeFormModal = ({ onClose }) => {
         { value: 'pollen_donor', label: '🌼 Donateur de pollen' },
         { value: 'sibling', label: '👯 Frère/Sœur' },
         { value: 'clone', label: '🔄 Clone' },
-        { value: 'mutation', label: '⚡ Mutation' }
+        { value: 'mutation', label: '⚡ Mutation' },
+        { value: 'pairing', label: '💑 Couple parental (liaison)' }
     ];
+
+    const isPairing = formData.relationshipType === 'pairing';
 
     const parentNode = store.nodes.find(n => n.id === formData.parentNodeId);
     const childNode = store.nodes.find(n => n.id === formData.childNodeId);
@@ -109,7 +112,7 @@ const EdgeFormModal = ({ onClose }) => {
 
                 {/* Parent Selection */}
                 <LiquidSelect
-                    label="Cultivar parent *"
+                    label={isPairing ? 'Premier partenaire *' : 'Cultivar parent *'}
                     value={formData.parentNodeId || ''}
                     onChange={(v) => handleChange('parentNodeId', v)}
                     disabled={isEdit}
@@ -135,10 +138,16 @@ const EdgeFormModal = ({ onClose }) => {
                     onChange={(v) => handleChange('relationshipType', v)}
                     options={relationshipTypes}
                 />
+                {isPairing && (
+                    <p className="text-white/40 text-xs -mt-2">
+                        Lie visuellement ces deux nœuds comme un couple parental : leurs enfants communs se
+                        connecteront depuis le milieu de cette liaison plutôt que par deux lignes séparées.
+                    </p>
+                )}
 
                 {/* Child Selection */}
                 <LiquidSelect
-                    label="Cultivar enfant *"
+                    label={isPairing ? 'Second partenaire *' : 'Cultivar enfant *'}
                     value={formData.childNodeId || ''}
                     onChange={(v) => handleChange('childNodeId', v)}
                     disabled={isEdit}
@@ -159,32 +168,50 @@ const EdgeFormModal = ({ onClose }) => {
                     </div>
                 )}
 
-                {/* Méthode d'insémination/pollinisation */}
-                <LiquidSelect
-                    label="Méthode d'insémination"
-                    value={formData.pollinationMethod || ''}
-                    onChange={(v) => handleChange('pollinationMethod', v)}
-                    options={POLLINATION_METHODS}
-                />
-                <p className="text-white/40 text-xs -mt-2">
-                    Technique physique de pollinisation — pour un rétrocroisement (BX), voir le champ Génération sur le nœud enfant.
-                </p>
+                {/* Méthode d'insémination/pollinisation — sans objet pour un lien de couple */}
+                {!isPairing && (
+                    <>
+                        <LiquidSelect
+                            label="Méthode d'insémination"
+                            value={formData.pollinationMethod || ''}
+                            onChange={(v) => handleChange('pollinationMethod', v)}
+                            options={POLLINATION_METHODS}
+                        />
+                        <p className="text-white/40 text-xs -mt-2">
+                            Technique physique de pollinisation — pour un rétrocroisement (BX), voir le champ Génération sur le nœud enfant.
+                        </p>
+                    </>
+                )}
 
                 {/* Relationship Preview */}
                 {parentNode && childNode && (
                     <LiquidCard className="p-4">
                         <p className="text-xs text-white/40 mb-2">Aperçu de la relation</p>
-                        <div className="flex flex-col items-center gap-2">
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: parentNode.color }} />
-                                <span className="text-sm text-white">{parentNode.cultivarName}</span>
+                        {isPairing ? (
+                            <div className="flex items-center justify-center gap-3">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: parentNode.color }} />
+                                    <span className="text-sm text-white">{parentNode.cultivarName}</span>
+                                </div>
+                                <span className="text-pink-400 text-sm">💑 ─────</span>
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: childNode.color }} />
+                                    <span className="text-sm text-white">{childNode.cultivarName}</span>
+                                </div>
                             </div>
-                            <ArrowDown className="w-4 h-4 text-blue-400" />
-                            <div className="flex items-center gap-2">
-                                <div className="w-3 h-3 rounded-full" style={{ backgroundColor: childNode.color }} />
-                                <span className="text-sm text-white">{childNode.cultivarName}</span>
+                        ) : (
+                            <div className="flex flex-col items-center gap-2">
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: parentNode.color }} />
+                                    <span className="text-sm text-white">{parentNode.cultivarName}</span>
+                                </div>
+                                <ArrowDown className="w-4 h-4 text-blue-400" />
+                                <div className="flex items-center gap-2">
+                                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: childNode.color }} />
+                                    <span className="text-sm text-white">{childNode.cultivarName}</span>
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </LiquidCard>
                 )}
 

@@ -95,7 +95,7 @@ const validateEdgeCreation = (req, res, next) => {
     }
 
     // Validation relationshipType (optionnel)
-    const validTypes = ["parent", "pollen_donor", "sibling", "clone", "mutation"];
+    const validTypes = ["parent", "pollen_donor", "sibling", "clone", "mutation", "pairing"];
     if (relationshipType && !validTypes.includes(relationshipType)) {
         return res.status(400).json({ error: `Invalid relationship type. Must be one of: ${validTypes.join(", ")}` });
     }
@@ -118,7 +118,7 @@ const validateEdgeUpdate = (req, res, next) => {
 
     // Validation relationshipType (optionnel)
     if (relationshipType !== undefined) {
-        const validTypes = ["parent", "pollen_donor", "sibling", "clone", "mutation"];
+        const validTypes = ["parent", "pollen_donor", "sibling", "clone", "mutation", "pairing"];
         if (!validTypes.includes(relationshipType)) {
             return res.status(400).json({ error: `Invalid relationship type. Must be one of: ${validTypes.join(", ")}` });
         }
@@ -134,6 +134,15 @@ const validateEdgeUpdate = (req, res, next) => {
         if (notes && (typeof notes !== "string" || notes.length > 500)) {
             return res.status(400).json({ error: "Notes must be less than 500 characters" });
         }
+    }
+
+    // Validation waypointX/waypointY (optionnel) — null autorisé (réinitialise la courbure)
+    const { waypointX, waypointY } = req.body;
+    if (waypointX !== undefined && waypointX !== null && typeof waypointX !== "number") {
+        return res.status(400).json({ error: "waypointX must be a number or null" });
+    }
+    if (waypointY !== undefined && waypointY !== null && typeof waypointY !== "number") {
+        return res.status(400).json({ error: "waypointY must be a number or null" });
     }
 
     next();

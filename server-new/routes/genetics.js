@@ -42,6 +42,40 @@ const requireGeneticsAccess = requireFeature('genetics_canvas')
 // =============================================================================
 
 /**
+ * GET /api/genetics/next-pheno-code/:prefix
+ * Prochain code phénotype auto-incrémenté pour ce préfixe (ex: PH-04 après PH-01, PH-03).
+ * phenotypeCode vit dans GenNode.genetics (JSON), pas une colonne dédiée — filtre SQL grossier
+ * par contains() puis parsing exact côté JS pour éviter les faux positifs de sous-chaîne.
+ */
+router.get("/next-pheno-code/:prefix", requireAuth, async (req, res) => {
+    try {
+        const prefix = req.params.prefix
+        const nodes = await prisma.genNode.findMany({
+            where: {
+                tree: { userId: req.user.id },
+                genetics: { contains: `"phenotypeCode":"${prefix}-` }
+            },
+            select: { genetics: true }
+        })
+
+        const pattern = new RegExp(`^${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}-(\\d+)$`)
+        let maxNum = 0
+        for (const n of nodes) {
+            try {
+                const g = JSON.parse(n.genetics)
+                const match = g?.phenotypeCode?.match(pattern)
+                if (match) maxNum = Math.max(maxNum, parseInt(match[1], 10))
+            } catch { /* genetics non-JSON, ignoré */ }
+        }
+
+        const nextNum = String(maxNum + 1).padStart(2, '0')
+        res.json({ code: `${prefix}-${nextNum}` })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to generate pheno code" })
+    }
+})
+
+/**
  * GET /api/genetics/trees
  * Lister tous les arbres généalogiques de l'utilisateur connecté
  */
@@ -168,7 +202,9 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         childNodeId: true,
                         relationshipType: true,
                         pollinationMethod: true,
-                        notes: true
+                        notes: true,
+                        waypointX: true,
+                        waypointY: true
                     }
                 },
                 _count: {
@@ -488,6 +524,8 @@ router.get("/trees/:id/edges", optionalAuth, async (req, res) => {
                 relationshipType: true,
                 pollinationMethod: true,
                 notes: true,
+                waypointX: true,
+                waypointY: true,
                 createdAt: true,
                 updatedAt: true
             },
@@ -540,14 +578,18 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
             return res.status(400).json({ error: "Invalid parent or child node" });
         }
 
-        const existingEdges = await prisma.genEdge.findMany({
-            where: { treeId: req.params.id },
-            select: { parentNodeId: true, childNodeId: true }
-        });
-        const normalizedEdges = existingEdges.map(e => ({ source: e.parentNodeId, target: e.childNodeId }));
+        // "pairing" relie deux parents entre eux (pas une filiation) : l'exclure de la détection
+        // de cycle, qui ne raisonne que sur des liens d'ascendance réelle.
+        if (relationshipType !== "pairing") {
+            const existingEdges = await prisma.genEdge.findMany({
+                where: { treeId: req.params.id, relationshipType: { not: "pairing" } },
+                select: { parentNodeId: true, childNodeId: true }
+            });
+            const normalizedEdges = existingEdges.map(e => ({ source: e.parentNodeId, target: e.childNodeId }));
 
-        if (wouldCreateCycle(normalizedEdges, parentNodeId, childNodeId)) {
-            return res.status(400).json({ error: "This relationship would create a cycle" });
+            if (wouldCreateCycle(normalizedEdges, parentNodeId, childNodeId)) {
+                return res.status(400).json({ error: "This relationship would create a cycle" });
+            }
         }
 
         try {
@@ -594,7 +636,7 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
             return res.status(403).json({ error: "Forbidden" });
         }
 
-        const { relationshipType, pollinationMethod, notes } = req.body;
+        const { relationshipType, pollinationMethod, notes, waypointX, waypointY } = req.body;
 
         try {
             const updated = await prisma.genEdge.update({
@@ -602,7 +644,10 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
                 data: {
                     ...(relationshipType && { relationshipType }),
                     ...(pollinationMethod !== undefined && { pollinationMethod: pollinationMethod || null }),
-                    ...(notes !== undefined && { notes: notes?.trim() || null })
+                    ...(notes !== undefined && { notes: notes?.trim() || null }),
+                    // null explicite = retour à la ligne droite (réinitialisation du point de courbure)
+                    ...(waypointX !== undefined && { waypointX: waypointX === null ? null : Number(waypointX) }),
+                    ...(waypointY !== undefined && { waypointY: waypointY === null ? null : Number(waypointY) })
                 }
             });
 

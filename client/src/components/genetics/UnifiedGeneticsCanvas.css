@@ -360,6 +360,16 @@
     color: #10b981;
 }
 
+.context-menu button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.context-menu button:disabled:hover {
+    background-color: transparent;
+    color: #cbd5e1;
+}
+
 /* Modal Styles */
 .genetics-modal {
     position: fixed;

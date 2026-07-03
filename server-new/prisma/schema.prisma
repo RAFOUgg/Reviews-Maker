@@ -1519,11 +1519,16 @@ model GenEdge {
   childNode   GenNode @relation("childNode", fields: [childNodeId], references: [id], onDelete: Cascade)
 
   // Métadonnées de relation
-  relationshipType String  @default("parent") // "parent", "pollen_donor", "sibling", "clone", "mutation"
+  relationshipType String  @default("parent") // "parent", "pollen_donor", "sibling", "clone", "mutation", "pairing"
   pollinationMethod String? // "open", "controlled-manual", "isolation-selected-male", "pollination-bag",
                              // "brush", "pollen-collection-storage", "male-flower-harvest",
-                             // "selfing-inversion", "backcross", "chemical-feminization"
+                             // "selfing-inversion", "chemical-feminization"
   notes            String? // Notes supplémentaires
+
+  // Point de courbure optionnel (coordonnées canvas) permettant de décaler la liaison à la main
+  // plutôt que de suivre une ligne droite systématique. Null = ligne droite par défaut.
+  waypointX Float?
+  waypointY Float?
 
   // Metadata
   createdAt DateTime @default(now())

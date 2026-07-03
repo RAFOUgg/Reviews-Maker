@@ -105,7 +105,7 @@ const TreeFormModal = ({ isEdit, onClose }) => {
                     placeholder="ex: Gorilla Glue Hunt 2025"
                     required
                     maxLength={200}
-                    helperText={`${(formData.name || '').length}/200`}
+                    hint={`${(formData.name || '').length}/200`}
                 />
 
                 {/* Project Type */}
@@ -134,7 +134,7 @@ const TreeFormModal = ({ isEdit, onClose }) => {
                     placeholder="Objectifs, notes sur ce projet..."
                     maxLength={1000}
                     rows={3}
-                    helperText={`${(formData.description || '').length}/1000`}
+                    hint={`${(formData.description || '').length}/1000`}
                 />
 
                 {/* Visibility */}

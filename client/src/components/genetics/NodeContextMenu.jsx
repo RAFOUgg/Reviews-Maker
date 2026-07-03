@@ -4,12 +4,28 @@
  * Menu contextuel (clic droit) pour les opérations sur les nœuds
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
 const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useGeneticsStore();
     const menuRef = useRef(null);
+    // x/y sont le point de clic brut (clientX/clientY) — sans correction, le menu peut déborder
+    // hors du viewport (coupé/inaccessible) près des bords droit/bas de l'écran ou de la fenêtre
+    // de review incrustée. On mesure sa taille réelle après montage et on le recale si besoin.
+    const [pos, setPos] = useState({ left: x, top: y })
+
+    useEffect(() => {
+        const el = menuRef.current
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        const margin = 8
+        let left = x
+        let top = y
+        if (left + rect.width > window.innerWidth - margin) left = Math.max(margin, window.innerWidth - rect.width - margin)
+        if (top + rect.height > window.innerHeight - margin) top = Math.max(margin, window.innerHeight - rect.height - margin)
+        setPos({ left, top })
+    }, [x, y])
 
     const node = store.nodes.find(n => n.id === nodeId);
 
@@ -78,8 +94,8 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
             ref={menuRef}
             className="context-menu"
             style={{
-                left: `${x}px`,
-                top: `${y}px`
+                left: `${pos.left}px`,
+                top: `${pos.top}px`
             }}
         >
             {!readOnly && (

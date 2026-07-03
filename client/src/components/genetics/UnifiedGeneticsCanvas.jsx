@@ -30,11 +30,12 @@ import './UnifiedGeneticsCanvas.css';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import CultivarNode from './CultivarNode';
 import PhenoEdge from './PhenoEdge';
+import PairingEdge from './PairingEdge';
+import FamilyDropEdge from './FamilyDropEdge';
 import NodeContextMenu from './NodeContextMenu';
 import EdgeContextMenu from './EdgeContextMenu';
 import NodeFormModal from './NodeFormModal';
 import EdgeFormModal from './EdgeFormModal';
-import TreeToolbar from './TreeToolbar';
 import ConfirmModal from '../shared/ConfirmModal';
 
 const nodeTypes = {
@@ -42,8 +43,14 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-    pheno: PhenoEdge
+    pheno: PhenoEdge,
+    pairing: PairingEdge,
+    family: FamilyDropEdge
 };
+
+// Types de relation parent→enfant réels (filiation) — "sibling" et "pairing" en sont exclus :
+// un lien fraternel ne relie pas un parent à son enfant, et "pairing" relie deux parents entre eux.
+const PARENT_CHILD_TYPES = ['parent', 'pollen_donor', 'clone', 'mutation'];
 
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const store = useGeneticsStore();
@@ -55,6 +62,15 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge'
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
+
+    // Persistance du point de courbure d'une liaison glissée à la main (PhenoEdge/PairingEdge).
+    // pos=null réinitialise la ligne droite (double-clic sur la poignée).
+    const handleEdgeWaypointChange = useCallback((edgeId, pos) => {
+        store.updateEdge(edgeId, {
+            waypointX: pos ? pos.x : null,
+            waypointY: pos ? pos.y : null
+        });
+    }, [store]);
 
     // Synchroniser les nœuds et arêtes du store vers React Flow
     useEffect(() => {
@@ -88,24 +104,71 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             };
         });
 
+        // Regrouper les enfants communs à un couple parental ("pairing") : leurs deux liens de
+        // filiation individuels sont remplacés, dans le RENDU uniquement, par une seule liaison
+        // "family" partant du milieu de la ligne de couple (convention pedigree). Les GenEdge
+        // réels ne changent pas — seule leur représentation visuelle est fusionnée.
+        const pairingEdges = store.edges.filter(e => e.relationshipType === 'pairing');
+        const childParentEdges = new Map(); // childNodeId -> [edge, ...]
+        store.edges.forEach(edge => {
+            if (!PARENT_CHILD_TYPES.includes(edge.relationshipType)) return;
+            const list = childParentEdges.get(edge.childNodeId) || [];
+            list.push(edge);
+            childParentEdges.set(edge.childNodeId, list);
+        });
+
+        const consumedEdgeIds = new Set();
+        const familyEdges = [];
+        childParentEdges.forEach((parentEdges, childId) => {
+            if (parentEdges.length !== 2) return;
+            const [e1, e2] = parentEdges;
+            const pair = pairingEdges.find(p =>
+                (p.parentNodeId === e1.parentNodeId && p.childNodeId === e2.parentNodeId) ||
+                (p.parentNodeId === e2.parentNodeId && p.childNodeId === e1.parentNodeId)
+            );
+            if (!pair) return;
+            const nodeA = store.nodes.find(n => n.id === pair.parentNodeId);
+            const nodeB = store.nodes.find(n => n.id === pair.childNodeId);
+            if (!nodeA || !nodeB) return;
+            consumedEdgeIds.add(e1.id);
+            consumedEdgeIds.add(e2.id);
+            familyEdges.push({
+                id: `family-${pair.id}-${childId}`,
+                source: pair.parentNodeId,
+                target: childId,
+                type: 'family',
+                selected: store.selectedEdgeId === e1.id || store.selectedEdgeId === e2.id,
+                markerEnd: { type: MarkerType.ArrowClosed },
+                data: {
+                    parentAPos: nodeA.position || { x: 0, y: 0 },
+                    parentBPos: nodeB.position || { x: 0, y: 0 }
+                }
+            });
+        });
+
         // Convertir les arêtes du store au format React Flow
-        const rfEdges = store.edges.map(edge => ({
-            id: edge.id,
-            source: edge.parentNodeId,
-            target: edge.childNodeId,
-            type: 'pheno',
-            selected: store.selectedEdgeId === edge.id,
-            label: edge.relationshipType,
-            markerEnd: { type: MarkerType.ArrowClosed },
-            data: {
-                relationshipType: edge.relationshipType,
-                notes: edge.notes
-            }
-        }));
+        const rfEdges = store.edges
+            .filter(edge => !consumedEdgeIds.has(edge.id))
+            .map(edge => ({
+                id: edge.id,
+                source: edge.parentNodeId,
+                target: edge.childNodeId,
+                type: edge.relationshipType === 'pairing' ? 'pairing' : 'pheno',
+                selected: store.selectedEdgeId === edge.id,
+                label: edge.relationshipType === 'pairing' ? undefined : edge.relationshipType,
+                markerEnd: edge.relationshipType === 'pairing' ? undefined : { type: MarkerType.ArrowClosed },
+                data: {
+                    relationshipType: edge.relationshipType,
+                    notes: edge.notes,
+                    waypointX: edge.waypointX,
+                    waypointY: edge.waypointY,
+                    onWaypointChange: handleEdgeWaypointChange
+                }
+            }));
 
         setNodes(rfNodes);
-        setEdges(rfEdges);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges]);
+        setEdges([...rfEdges, ...familyEdges]);
+    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {
@@ -315,12 +378,6 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 <Controls />
                 <MiniMap />
 
-                {/* Toolbar en haut */}
-                {!readOnly && (
-                    <Panel position="top-left" className="canvas-toolbar">
-                        <TreeToolbar treeId={treeId} />
-                    </Panel>
-                )}
 
                 {/* Info sur le nœud sélectionné */}
                 {store.selectedNodeId && (
