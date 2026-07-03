@@ -94,11 +94,16 @@ export default function CreateFlowerReview() {
         })
     }, [id, formData.images])
 
-    // Synchroniser les photos avec formData
+    // Synchroniser les photos avec formData (juste pour Validation.jsx qui lit formData.photos.length)
+    // — comparer la LONGUEUR avant d'appeler handleChange, pas juste "photos.length > 0" : handleSave()
+    // reconstruit `photos` avec de nouvelles références à chaque sauvegarde réussie (même contenu),
+    // donc sans ce garde-fou chaque save déclenchait ce useEffect → handleChange → nouvelle formData
+    // → re-déclenchait l'autosave (effect ci-dessous) → nouveau save → boucle infinie toutes les 2.5s.
     useEffect(() => {
-        if (photos.length > 0) {
+        if (photos.length > 0 && formData.photos?.length !== photos.length) {
             handleChange('photos', photos)
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [photos])
 
     // Définition des 10 sections avec permissions selon PERMISSIONS.md :
