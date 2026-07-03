@@ -346,7 +346,7 @@ export default function CreateFlowerReview() {
                             />
                         )}
                         {currentSectionData.id === 'genetics' && (
-                            <Genetiques formData={formData} handleChange={handleChange} />
+                            <Genetiques formData={formData} handleChange={handleChange} reviewId={id} />
                         )}
                         {currentSectionData.id === 'culture' && (
                             <CulturePipelineSection

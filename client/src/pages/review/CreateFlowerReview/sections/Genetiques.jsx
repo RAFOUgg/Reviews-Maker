@@ -15,7 +15,7 @@ import { useStore } from '../../../../store/useStore'
  * - Sidebar avec reviews fleurs de l'utilisateur
  * - Canvas ReactFlow pour visualisation
  */
-export default function Genetiques({ formData, handleChange }) {
+export default function Genetiques({ formData, handleChange, reviewId }) {
     const [showInitialModal, setShowInitialModal] = useState(false)
     const [activeTab, setActiveTab] = useState('cultivars')
     const [userReviews, setUserReviews] = useState([])
@@ -228,7 +228,11 @@ export default function Genetiques({ formData, handleChange }) {
                         type: genetics.type || 'hybrid',
                         indicaRatio: genetics.indicaRatio || 50
                     },
-                    notes: `Créé depuis la review`
+                    notes: `Créé depuis la review`,
+                    // Permet le raccourci "Éditer la review" depuis le nœud (menu contextuel).
+                    // undefined en mode création (review pas encore sauvegardée, pas d'id) — le
+                    // nœud reste alors sans lien, comme avant ce fix.
+                    sourceReviewId: reviewId || null
                 })
             }
             setShowInitialModal(false)
@@ -258,7 +262,8 @@ export default function Genetiques({ formData, handleChange }) {
                     type: genetics.type || 'hybrid',
                     indicaRatio: genetics.indicaRatio || 50
                 },
-                notes: `Importé depuis la review`
+                notes: `Importé depuis la review`,
+                sourceReviewId: reviewId || null
             })
             setShowTreePicker(false)
             setShowInitialModal(false)

@@ -265,7 +265,7 @@ export default function VisualSection({ productType = 'flower', data: directData
                     />
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {activeFields.map(field => (
-                            <div key={field.key} className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                            <div key={field.key} className="p-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                                 <LiquidSlider
                                     label={field.label}
                                     value={sliders[field.key] ?? 0}
@@ -358,20 +358,20 @@ export default function VisualSection({ productType = 'flower', data: directData
 
                     {/* Sliders fleur */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                             <LiquidSlider label="Couleur / Nuancier" value={colorRating} min={1} max={10} step={1} color="purple" onChange={setColorRating} />
                         </div>
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                             <LiquidSlider label="Densité" value={density} min={1} max={10} step={1} color="purple" onChange={setDensity} />
                         </div>
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                             <LiquidSlider label="Trichomes" value={trichomes} min={1} max={10} step={1} color="purple" onChange={setTrichomes} />
                             <p className="text-xs text-white/35 mt-1">Quantité et qualité des cristaux</p>
                         </div>
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                             <LiquidSlider label="Moisissures (10=aucune)" value={mold} min={1} max={10} step={1} color="green" onChange={setMold} />
                         </div>
-                        <div className="p-3 bg-white/5 rounded-xl border border-white/10">
+                        <div className="p-2 bg-white/5 rounded-xl border border-white/10">
                             <LiquidSlider label="Graines (10=aucune)" value={seeds} min={1} max={10} step={1} color="green" onChange={setSeeds} />
                         </div>
                     </div>

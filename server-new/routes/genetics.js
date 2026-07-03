@@ -118,6 +118,7 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         image: true,
                         genetics: true,
                         notes: true,
+                        sourceReviewId: true,
                         createdAt: true,
                         updatedAt: true
                     }
@@ -253,6 +254,7 @@ router.get("/trees/:id/nodes", optionalAuth, async (req, res) => {
                 image: true,
                 genetics: true,
                 notes: true,
+                sourceReviewId: true,
                 createdAt: true,
                 updatedAt: true
             },
@@ -311,7 +313,8 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
                 color: color || "#FF6B9D",
                 image: image || null,
                 genetics: genetics ? JSON.stringify(genetics) : null,
-                notes: notes?.trim() || null
+                notes: notes?.trim() || null,
+                sourceReviewId: sourceReviewId || null
             }
         });
 

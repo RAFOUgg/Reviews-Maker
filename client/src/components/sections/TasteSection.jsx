@@ -77,7 +77,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
 
             {/* Intensité et Agressivité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label="Intensité gustative"
                         value={intensity}
@@ -90,7 +90,7 @@ export default function TasteSection({ productType, data: directData, onChange, 
                     <p className="text-xs text-white/40 mt-2">{intensity > 0 ? TASTE_INTENSITY_LEVELS[intensity - 1]?.label : 'Non évalué'}</p>
                 </div>
 
-                <div className="p-3 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
+                <div className="p-2 bg-white/5 backdrop-blur-sm rounded-xl border border-white/10">
                     <LiquidSlider
                         label={isEdible ? 'Persistance en bouche / Arrière-goût' : 'Agressivité / Piquant'}
                         value={aggressiveness}

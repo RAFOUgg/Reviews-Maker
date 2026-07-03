@@ -76,7 +76,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
 
             {/* Fidélité cultivars (Hash/Concentrés uniquement) */}
             {(productType === 'Hash' || productType === 'Concentré') && (
-                <div className="p-4 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20">
+                <div className="p-2 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-xl border border-purple-500/20">
                     <LiquidSlider
                         label="Fidélité aux cultivars"
                         value={fidelity}
@@ -113,7 +113,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
 
             {/* Sliders Intensité et Complexité */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="p-3 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
+                <div className="p-2 bg-gradient-to-br from-orange-500/10 to-red-500/10 rounded-xl border border-orange-500/20">
                     <LiquidSlider
                         label="💪 Intensité globale"
                         value={intensity}
@@ -125,7 +125,7 @@ export default function OdorSection({ productType, data: directData, onChange, f
                     />
                 </div>
 
-                <div className="p-3 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-cyan-500/20">
+                <div className="p-2 bg-gradient-to-br from-blue-500/10 to-cyan-500/10 rounded-xl border border-cyan-500/20">
                     <LiquidSlider
                         label="🌈 Complexité aromatique"
                         value={complexity}

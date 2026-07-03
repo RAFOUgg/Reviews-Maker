@@ -29,7 +29,15 @@ export default function FilterBar({ reviews, onFilteredChange }) {
 
     const [showAdvanced, setShowAdvanced] = useState(false);
 
-    const productTypes = ['flower', 'hash', 'concentrate', 'edible'];
+    // Valeurs EXACTES stockées en review.type (pas de convention uniforme entre les 4 types —
+    // 'Fleurs' est le seul capitalisé en français, historique ; cf. reviewTypeMeta.js et le même
+    // bug corrigé dans ReviewsTab.jsx). 'flower' ne matchait jamais aucune review Fleur.
+    const productTypes = [
+        { value: 'Fleurs', label: 'Fleur' },
+        { value: 'hash', label: 'Hash' },
+        { value: 'concentrate', label: 'Concentré' },
+        { value: 'edible', label: 'Comestible' },
+    ];
     const dureeOptions = choiceCatalog.dureeEffet || ['5-15min', '15-30min', '30min-1h', '1h-2h', '2h-4h', '4h-8h', '8h+'];
 
     const applyFilters = (newFilters) => {
@@ -179,7 +187,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
             landrace: choiceCatalog.landraceTypes || []
         };
 
-        if (type === 'Hash' || type === 'Concentré' || type === 'all') {
+        if (type === 'hash' || type === 'concentrate' || type === 'all') {
             options.extraction = [
                 ...(choiceCatalog.extractionSolvants || []),
                 ...(choiceCatalog.extractionSansSolvants || []),
@@ -187,9 +195,9 @@ export default function FilterBar({ reviews, onFilteredChange }) {
             ];
         }
 
-        if (type === 'Hash') {
+        if (type === 'hash') {
             options.texture = choiceCatalog.textureHash || [];
-        } else if (type === 'Concentré') {
+        } else if (type === 'concentrate') {
             options.texture = choiceCatalog.textureConcentre || [];
         } else if (type === 'all') {
             options.texture = [
@@ -230,7 +238,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                         onChange={(v) => handleFilterChange('type', v)}
                         options={[
                             { value: 'all', label: 'Tous les types' },
-                            ...productTypes.map(t => ({ value: t, label: t }))
+                            ...productTypes
                         ]}
                     />
                 </div>
@@ -336,7 +344,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                             </div>
 
                             {/* Section 2: Filtres culture & génétique (Fleur) */}
-                            {(filters.type === 'flower' || filters.type === 'all') && (
+                            {(filters.type === 'Fleurs' || filters.type === 'all') && (
                                 <div className="pt-4 border-t border-white/10">
                                     <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-green-400">
                                         🌱 Filtres Culture & Génétique
@@ -388,7 +396,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                             )}
 
                             {/* Section 3: Filtres extraction (Hash et Concentré) */}
-                            {(filters.type === 'Hash' || filters.type === 'Concentré' || filters.type === 'all') && advancedOptions.extraction.length > 0 && (
+                            {(filters.type === 'hash' || filters.type === 'concentrate' || filters.type === 'all') && advancedOptions.extraction.length > 0 && (
                                 <div className="pt-4 border-t border-white/10">
                                     <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-amber-400">
                                         ⚗️ Filtres Extraction & Texture
@@ -428,7 +436,7 @@ export default function FilterBar({ reviews, onFilteredChange }) {
                             )}
 
                             {/* Section 4: Filtres comestibles */}
-                            {(filters.type === 'Comestible' || filters.type === 'all') && (
+                            {(filters.type === 'edible' || filters.type === 'all') && (
                                 <div className="pt-4 border-t border-white/10">
                                     <h3 className="text-sm font-semibold mb-3 flex items-center gap-2 text-rose-400">
                                         🍰 Filtres Comestibles

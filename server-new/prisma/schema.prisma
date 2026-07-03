@@ -1487,6 +1487,12 @@ model GenNode {
   genetics String? // JSON: {breeder, type, ratio, notes}
   notes    String? // Notes supplémentaires
 
+  // Référence applicative vers la FlowerReview dont ce nœud a été créé (glisser-déposer d'une
+  // fiche, "Créer un arbre à partir de cette fleur", "Importer cette fleur à un arbre") — permet
+  // un raccourci "Éditer la review" direct depuis le nœud. Pas de FK Prisma (même pattern que
+  // ChainNode.reviewId) : nullable, best-effort, jamais garanti (nœuds créés à vide notamment).
+  sourceReviewId String?
+
   // Relations sortantes et entrantes
   childEdges  GenEdge[] @relation("parentNode")
   parentEdges GenEdge[] @relation("childNode")

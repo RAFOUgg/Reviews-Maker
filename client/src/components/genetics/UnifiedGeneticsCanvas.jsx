@@ -337,12 +337,22 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                                         <p className="notes">{node.notes}</p>
                                     )}
                                     {!readOnly && (
-                                        <button
-                                            className="btn-edit"
-                                            onClick={() => store.openNodeForm(node)}
-                                        >
-                                            Éditer
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                className="btn-edit"
+                                                onClick={() => store.openNodeForm(node)}
+                                            >
+                                                Éditer
+                                            </button>
+                                            {node?.sourceReviewId && (
+                                                <button
+                                                    className="btn-edit"
+                                                    onClick={() => window.open(`/edit/flower/${node.sourceReviewId}`, '_blank', 'noopener')}
+                                                >
+                                                    Éditer la review
+                                                </button>
+                                            )}
+                                        </div>
                                     )}
                                 </div>
                             );

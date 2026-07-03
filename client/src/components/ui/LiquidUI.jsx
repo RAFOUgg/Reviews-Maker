@@ -678,7 +678,15 @@ export function LiquidModal({
     size = 'md', // sm | md | lg | xl | full
     closeOnOverlay = true,
     closeOnEsc = true,
-    showCloseButton = true
+    showCloseButton = true,
+    // Convention par props (utilisée par ~20 modales de l'app : NodeFormModal, EdgeFormModal,
+    // ChainEdgeFormModal, PipelineCellModal, TreeFormModal...) — auparavant silencieusement
+    // ignorée par ce composant (seul `children` était rendu), donc ni le titre ni le footer
+    // (boutons Annuler/Valider) n'apparaissaient jamais. `glowColor` reste décoratif (accepté
+    // pour compatibilité, pas encore branché sur un style réel).
+    title,
+    footer,
+    glowColor
 }) {
     const sizeClasses = {
         sm: 'max-w-sm w-full',
@@ -740,27 +748,54 @@ export function LiquidModal({
 
                         {/* Modal content */}
                         <motion.div
-                            className={`relative w-full my-auto ${sizeClasses[size]}`}
+                            className={`relative w-full my-auto ${sizeClasses[size]} max-h-[90vh] flex flex-col`}
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             exit={{ opacity: 0, scale: 0.9, y: 20 }}
                             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="liquid-card glow-purple p-0 overflow-visible">
+                            <div className="liquid-card glow-purple p-0 overflow-hidden flex flex-col max-h-[90vh]">
                                 <div className="liquid-card-shimmer" />
-                                <div className="liquid-card-content relative z-10">
-                                    {showCloseButton && (
-                                        <button
-                                            type="button"
-                                            className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
-                                            onClick={onClose}
-                                        >
-                                            <X size={18} className="text-white/60" />
-                                        </button>
-                                    )}
-                                    {children}
-                                </div>
+                                {(title || footer) ? (
+                                    <div className="liquid-card-content relative z-10 flex flex-col min-h-0 flex-1">
+                                        {title && (
+                                            <div className="flex items-center justify-between gap-3 px-6 pt-6 pb-4 flex-shrink-0">
+                                                <div className="flex-1 min-w-0 text-lg font-semibold text-white">{title}</div>
+                                                {showCloseButton && (
+                                                    <button
+                                                        type="button"
+                                                        className="p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors flex-shrink-0"
+                                                        onClick={onClose}
+                                                    >
+                                                        <X size={18} className="text-white/60" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        )}
+                                        <div className="px-6 py-4 overflow-y-auto min-h-0">
+                                            {children}
+                                        </div>
+                                        {footer && (
+                                            <div className="px-6 py-4 border-t border-white/10 flex-shrink-0">
+                                                {footer}
+                                            </div>
+                                        )}
+                                    </div>
+                                ) : (
+                                    <div className="liquid-card-content relative z-10 overflow-y-auto min-h-0">
+                                        {showCloseButton && (
+                                            <button
+                                                type="button"
+                                                className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-white/5 hover:bg-white/10 transition-colors"
+                                                onClick={onClose}
+                                            >
+                                                <X size={18} className="text-white/60" />
+                                            </button>
+                                        )}
+                                        {children}
+                                    </div>
+                                )}
                             </div>
                         </motion.div>
                     </motion.div>

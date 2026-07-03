@@ -30,6 +30,16 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
+    // node.sourceReviewId n'est renseigné que si ce nœud a été créé depuis une fiche technique
+    // Fleur (glisser-déposer, "Créer un arbre à partir de cette fleur", "Importer cette fleur à
+    // un arbre") — absent pour un nœud créé à vide/sans lien, dans quel cas ce raccourci ne
+    // s'affiche pas plutôt que de pointer vers une review inexistante.
+    const handleEditReview = () => {
+        if (!node?.sourceReviewId) return;
+        window.open(`/edit/flower/${node.sourceReviewId}`, '_blank', 'noopener');
+        onClose();
+    };
+
     const handleDelete = () => {
         onRequestDelete({ type: 'node', id: nodeId, label: node?.cultivarName });
         onClose();
@@ -77,6 +87,11 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                     <button className="context-menu-item" onClick={handleEdit}>
                         ✏️ Éditer
                     </button>
+                    {node?.sourceReviewId && (
+                        <button className="context-menu-item" onClick={handleEditReview}>
+                            📝 Éditer la review
+                        </button>
+                    )}
                     <button className="context-menu-item" onClick={handleCreateChild}>
                         ➕ Ajouter enfant
                     </button>

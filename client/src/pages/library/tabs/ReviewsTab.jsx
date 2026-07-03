@@ -22,22 +22,26 @@ import {
     Link2, ArrowRight
 } from 'lucide-react'
 
-// Types de produits avec icônes (IDs = valeurs exactes stockées en DB)
+// Types de produits avec icônes. IDs = valeurs EXACTES stockées en review.type — pas de
+// convention uniforme entre les 4 types (vérifié contre les routes POST de chaque type,
+// cf. reviewTypeMeta.js) : 'Fleurs' est le seul capitalisé en français (historique), les
+// 3 autres sont en anglais minuscule. Utiliser une capitalisation française pour Hash/
+// Concentré/Comestible ici faisait échouer tout filtre/comptage par type pour ces 3 types
+// (les cartes s'affichaient bien sous "Tous" mais les compteurs d'onglets restaient à 0).
 const PRODUCT_TYPES = [
     { id: 'all', label: 'Tous', icon: null },
     { id: 'Fleurs', label: 'Fleurs', icon: Flower2, color: 'green' },
-    { id: 'Hash', label: 'Hash', icon: Hash, color: 'amber' },
-    { id: 'Concentrés', label: 'Concentrés', icon: FlaskConical, color: 'purple' },
-    { id: 'Comestibles', label: 'Comestibles', icon: Cookie, color: 'pink' },
+    { id: 'hash', label: 'Hash', icon: Hash, color: 'amber' },
+    { id: 'concentrate', label: 'Concentrés', icon: FlaskConical, color: 'purple' },
+    { id: 'edible', label: 'Comestibles', icon: Cookie, color: 'pink' },
 ]
 
 // Mapping DB type → slug de route d'édition
 const TYPE_TO_ROUTE = {
     'Fleurs': 'flower',
-    'Hash': 'hash',
-    'Concentrés': 'concentrate',
-    'Comestibles': 'edible',
-    'Concentré': 'concentrate',
+    'hash': 'hash',
+    'concentrate': 'concentrate',
+    'edible': 'edible',
 }
 
 // Hash/Concentrate/Edible n'ont pas de champ mainImage sur la review de base (stocké sur leur
