@@ -194,7 +194,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     placeholder="ex: Gorilla Glue #4"
                     required
                     maxLength={200}
-                    helperText={`${(formData.cultivarName || '').length}/200`}
+                    hint={`${(formData.cultivarName || '').length}/200`}
                 />
 
                 {/* Color Picker */}
@@ -220,7 +220,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     value={formData.image || ''}
                     onChange={(e) => handleChange('image', e.target.value)}
                     placeholder="https://..."
-                    helperText="Affichée sur le nœud de l'arbre"
+                    hint="Affichée sur le nœud de l'arbre"
                 />
 
                 {/* Genetics Section — champs historiques, clés à ne pas renommer */}
@@ -315,7 +315,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     placeholder="Observations, caractéristiques, etc..."
                     maxLength={500}
                     rows={3}
-                    helperText={`${(formData.notes || '').length}/500`}
+                    hint={`${(formData.notes || '').length}/500`}
                 />
             </form>
         </LiquidModal>

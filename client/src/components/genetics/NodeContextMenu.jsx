@@ -46,13 +46,25 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
-    // node.sourceReviewId n'est renseigné que si ce nœud a été créé depuis une fiche technique
+    // node.sourceReviewId n'est renseigné que si ce nœud a déjà été lié à une fiche technique
     // Fleur (glisser-déposer, "Créer un arbre à partir de cette fleur", "Importer cette fleur à
-    // un arbre") — absent pour un nœud créé à vide/sans lien, dans quel cas ce raccourci ne
-    // s'affiche pas plutôt que de pointer vers une review inexistante.
+    // un arbre", ou ce bouton lui-même après une première sauvegarde). Sans lien existant, on
+    // ouvre un formulaire de création pré-rempli (nom + génétique du nœud) et on relie
+    // automatiquement ce nœud à la review une fois qu'elle est sauvegardée (voir
+    // CreateFlowerReview/index.jsx:handleSave, params `prefillName`/`linkNodeId`).
     const handleEditReview = () => {
-        if (!node?.sourceReviewId) return;
-        window.open(`/edit/flower/${node.sourceReviewId}`, '_blank', 'noopener');
+        if (node?.sourceReviewId) {
+            window.open(`/edit/flower/${node.sourceReviewId}`, '_blank', 'noopener');
+            onClose();
+            return;
+        }
+        const params = new URLSearchParams();
+        if (node?.cultivarName) params.set('prefillName', node.cultivarName);
+        if (node?.genetics?.breeder) params.set('prefillBreeder', node.genetics.breeder);
+        if (node?.genetics?.type) params.set('prefillType', node.genetics.type);
+        if (node?.genetics?.indicaRatio != null) params.set('prefillIndica', String(node.genetics.indicaRatio));
+        params.set('linkNodeId', nodeId);
+        window.open(`/create/flower?${params.toString()}`, '_blank', 'noopener');
         onClose();
     };
 
@@ -103,11 +115,9 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                     <button className="context-menu-item" onClick={handleEdit}>
                         ✏️ Éditer
                     </button>
-                    {node?.sourceReviewId && (
-                        <button className="context-menu-item" onClick={handleEditReview}>
-                            📝 Éditer la review
-                        </button>
-                    )}
+                    <button className="context-menu-item" onClick={handleEditReview}>
+                        📝 {node?.sourceReviewId ? 'Éditer la review' : 'Créer la review liée'}
+                    </button>
                     <button className="context-menu-item" onClick={handleCreateChild}>
                         ➕ Ajouter enfant
                     </button>

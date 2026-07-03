@@ -141,7 +141,15 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 markerEnd: { type: MarkerType.ArrowClosed },
                 data: {
                     parentAPos: nodeA.position || { x: 0, y: 0 },
-                    parentBPos: nodeB.position || { x: 0, y: 0 }
+                    parentBPos: nodeB.position || { x: 0, y: 0 },
+                    // Cette arête est purement visuelle (fusion des 2 liens réels ci-dessous) — son
+                    // id "family-…" n'existe pas en base. Le menu contextuel doit agir sur les vrais
+                    // GenEdge sous-jacents, jamais sur cet id synthétique (sinon 404 au clic Supprimer).
+                    isFamily: true,
+                    underlyingEdges: [e1, e2].map(e => ({
+                        id: e.id,
+                        parentName: store.nodes.find(n => n.id === e.parentNodeId)?.cultivarName || '?'
+                    }))
                 }
             });
         });
@@ -286,7 +294,9 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         setContextMenu({
             x: event.clientX,
             y: event.clientY,
-            edgeId: edge.id
+            edgeId: edge.id,
+            isFamily: !!edge.data?.isFamily,
+            underlyingEdges: edge.data?.underlyingEdges || null
         });
     }, [readOnly]);
 
@@ -438,6 +448,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     onClose={closeContextMenu}
                     readOnly={readOnly}
                     onRequestDelete={setDeleteConfirm}
+                    isFamily={contextMenu.isFamily}
+                    underlyingEdges={contextMenu.underlyingEdges}
                 />
             )}
 
@@ -461,7 +473,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 message={
                     deleteConfirm?.type === 'node'
                         ? `Supprimer "${deleteConfirm?.label || 'ce cultivar'}" ? Ses relations avec les autres nœuds seront aussi supprimées.`
-                        : 'Supprimer cette relation ?'
+                        : `Supprimer ${deleteConfirm?.label || 'cette relation'} ?`
                 }
                 confirmLabel="Supprimer"
                 onCancel={() => setDeleteConfirm(null)}

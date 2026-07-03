@@ -188,6 +188,21 @@ export default function CreateFlowerReview() {
             setIsDirty(false)
             if (!silent) toast.success('Brouillon sauvegardé ✅')
 
+            // Rattache ce nœud PhenoHunt à la review qu'on vient de créer pour lui (voir
+            // NodeContextMenu.jsx "Créer la review liée") — best-effort, ne bloque jamais la
+            // sauvegarde de la review si ça échoue.
+            if (!id && savedReview?.id) {
+                const linkNodeId = searchParams.get('linkNodeId')
+                if (linkNodeId) {
+                    fetch(`/api/genetics/nodes/${linkNodeId}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ sourceReviewId: savedReview.id })
+                    }).catch(() => { /* best-effort */ })
+                }
+            }
+
             // skipNavigate : le filet de sécurité au démontage (ligne ~228) appelle handleSave après
             // que le composant a déjà été retiré de l'arbre (ex: clic sur un bouton de nav globale) —
             // naviguer à ce moment-là écraserait la destination que l'utilisateur vient de choisir.

@@ -5,7 +5,7 @@
  */
 
 import React, { useState } from 'react';
-import { LiquidModal, LiquidButton, LiquidInput, LiquidTextarea, LiquidCard, LiquidChip } from '@/components/ui/LiquidUI';
+import { LiquidModal, LiquidButton, LiquidInput, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import { Save, X } from 'lucide-react';
 
@@ -112,17 +112,23 @@ const TreeFormModal = ({ isEdit, onClose }) => {
                 <div className="space-y-2">
                     <label className="block text-sm font-medium text-white">Type de projet *</label>
                     <div className="grid grid-cols-2 gap-2">
-                        {projectTypes.map(type => (
-                            <LiquidChip
-                                key={type.value}
-                                selected={formData.projectType === type.value}
-                                onClick={() => handleChange('projectType', type.value)}
-                                className="flex flex-col items-start p-3 text-left"
-                            >
-                                <span className="font-semibold">{type.label}</span>
-                                <span className="text-xs text-white/50">{type.description}</span>
-                            </LiquidChip>
-                        ))}
+                        {projectTypes.map(type => {
+                            const isSelected = formData.projectType === type.value;
+                            return (
+                                <button
+                                    key={type.value}
+                                    type="button"
+                                    onClick={() => handleChange('projectType', type.value)}
+                                    className={`flex flex-col items-start p-3 text-left rounded-xl border transition-colors ${isSelected
+                                        ? 'border-green-500/60 bg-green-500/10'
+                                        : 'border-white/10 bg-white/5 hover:border-white/20'
+                                        }`}
+                                >
+                                    <span className="font-semibold text-sm text-white">{type.label}</span>
+                                    <span className="text-xs text-white/50">{type.description}</span>
+                                </button>
+                            );
+                        })}
                     </div>
                 </div>
 

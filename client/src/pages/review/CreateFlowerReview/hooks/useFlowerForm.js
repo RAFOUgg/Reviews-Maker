@@ -7,14 +7,36 @@ import { useToast } from '../../../../components/shared/ToastContainer'
  */
 export function useFlowerForm(reviewId = null) {
     const toast = useToast()
-    const [formData, setFormData] = useState({
-        type: 'flower',
-        // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
-        // Start at 0 so empty reviews don't appear pre-filled in OrchardPanel
-        colorRating: 0, densite: 0, trichomes: 0, pistils: 0, manucure: 0, moisissure: 0, graines: 0,
-        selectedColors: [],
-        // Visual sub-object — all scores start at 0
-        visual: { colors: [], colorRating: 0, density: 0, trichomes: 0, mold: 0, seeds: 0 }
+    const [formData, setFormData] = useState(() => {
+        const base = {
+            type: 'flower',
+            // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
+            // Start at 0 so empty reviews don't appear pre-filled in OrchardPanel
+            colorRating: 0, densite: 0, trichomes: 0, pistils: 0, manucure: 0, moisissure: 0, graines: 0,
+            selectedColors: [],
+            // Visual sub-object — all scores start at 0
+            visual: { colors: [], colorRating: 0, density: 0, trichomes: 0, mold: 0, seeds: 0 }
+        }
+        // Pré-remplissage depuis le bouton "Créer la review liée" du menu contextuel PhenoHunt
+        // (NodeContextMenu.jsx) — uniquement en création pure (reviewId absent), sinon
+        // loadReview() ci-dessous prend le relai et écraserait ce pré-remplissage de toute façon.
+        if (reviewId) return base
+        const params = new URLSearchParams(window.location.search)
+        const prefillName = params.get('prefillName')
+        const prefillBreeder = params.get('prefillBreeder')
+        const prefillType = params.get('prefillType')
+        const prefillIndica = params.get('prefillIndica')
+        if (!prefillName && !prefillBreeder && !prefillType) return base
+        return {
+            ...base,
+            nomCommercial: prefillName || '',
+            cultivars: prefillName || '',
+            genetics: {
+                ...(prefillBreeder ? { breeder: prefillBreeder } : {}),
+                ...(prefillType ? { type: prefillType } : {}),
+                ...(prefillIndica ? { indicaRatio: Number(prefillIndica) } : {})
+            }
+        }
     })
     const [loading, setLoading] = useState(!!reviewId)
     const [saving, setSaving] = useState(false)

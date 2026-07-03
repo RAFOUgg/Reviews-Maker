@@ -36,27 +36,24 @@ export default function TasteSection({ productType, data: directData, onChange, 
     // montage de la section (cf. AnalyticsSection.jsx).
     const isFirstRunRef = React.useRef(true);
     useEffect(() => {
+        const payload = isEdible
+            ? { intensity, aftertastePersistence: aggressiveness, saveursDominantes }
+            : { intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes };
+
         if (isFirstRunRef.current) {
             isFirstRunRef.current = false;
+            // Le state local est initialisé DEPUIS data : si le payload calculé au montage est
+            // strictement identique à ce que le parent a déjà, ne rien remonter — sinon un simple
+            // remontage de section (navigation) déclenche l'autosave sans modification réelle.
+            const incomingComparable = isEdible
+                ? { intensity: data?.intensity ?? 0, aftertastePersistence: data?.aftertastePersistence ?? 0, saveursDominantes: data?.saveursDominantes || [] }
+                : { intensity: data?.intensity ?? 0, aggressiveness: data?.aggressiveness ?? 0, dryPuffNotes: data?.dryPuffNotes || [], inhalationNotes: data?.inhalationNotes || [], exhalationNotes: data?.exhalationNotes || [] };
+            if (JSON.stringify(payload) === JSON.stringify(incomingComparable)) return;
             const hasIncoming = !!(data && Object.keys(data).length > 0);
             const hasManual = intensity || aggressiveness || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || saveursDominantes.length > 0;
             if (!hasIncoming && !hasManual) return;
         }
-        if (isEdible) {
-            safeUpdate({
-                intensity,
-                aftertastePersistence: aggressiveness,
-                saveursDominantes
-            })
-        } else {
-            safeUpdate({
-                intensity,
-                aggressiveness,
-                dryPuffNotes,
-                inhalationNotes,
-                exhalationNotes
-            })
-        }
+        safeUpdate(payload);
     }, [intensity, aggressiveness, dryPuffNotes, inhalationNotes, exhalationNotes, saveursDominantes, isEdible]);
 
     return (

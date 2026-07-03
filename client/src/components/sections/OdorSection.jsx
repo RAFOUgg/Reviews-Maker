@@ -31,14 +31,27 @@ export default function OdorSection({ productType, data: directData, onChange, f
 
     // Remonter les changements locaux vers le parent
     useEffect(() => {
+        const payload = { dominantNotes, secondaryNotes, intensity, complexity, fidelity };
+        const str = JSON.stringify(payload);
         if (isFirstRunRef.current) {
             isFirstRunRef.current = false;
+            // Le state local est initialisé DEPUIS `data` : si le payload calculé au montage est
+            // strictement identique à ce que le parent a déjà, ne rien remonter. Sinon un simple
+            // remontage de section (navigation) réémet un payload "identique" qui change quand
+            // même la référence de formData côté parent et déclenche la sauvegarde automatique
+            // — alors que l'utilisateur n'a rien modifié.
+            const incomingStr = JSON.stringify({
+                dominantNotes: data?.dominantNotes || [],
+                secondaryNotes: data?.secondaryNotes || [],
+                intensity: data?.intensity ?? 0,
+                complexity: data?.complexity ?? 0,
+                fidelity: data?.fidelity ?? 0
+            });
+            if (str === incomingStr) { lastSentStrRef.current = str; return; }
             const hasIncoming = !!(data && Object.keys(data).length > 0);
             const hasManual = dominantNotes.length > 0 || secondaryNotes.length > 0 || intensity || complexity || fidelity;
             if (!hasIncoming && !hasManual) return;
         }
-        const payload = { dominantNotes, secondaryNotes, intensity, complexity, fidelity };
-        const str = JSON.stringify(payload);
         lastSentStrRef.current = str;
         safeUpdate(payload);
     }, [dominantNotes, secondaryNotes, intensity, complexity, fidelity]);

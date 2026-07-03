@@ -40,18 +40,7 @@ export default function EffectsSection({ productType, data: directData, onChange
     const isFirstRunRef = React.useRef(true);
 
     useEffect(() => {
-        // If initial mount and there's no incoming data, skip sending defaults
-        if (isFirstRunRef.current) {
-            isFirstRunRef.current = false;
-            const hasIncoming = effectsData && Object.keys(effectsData).length > 0;
-            // methodeConsommation='comestible' est un défaut auto-appliqué pour ce type (pas une
-            // vraie interaction) — ne doit pas à lui seul déclencher un brouillon vide (cf. bug
-            // des brouillons fantômes corrigé plus tôt sur les autres sections).
-            const hasManual = selectedEffects.length > 0 || (methodeConsommation && !(isEdible && methodeConsommation === 'comestible')) || dosageUtilise || dureeEffetsHeures || dureeEffetsMinutes || debutEffets;
-            if (!hasIncoming && !hasManual) return;
-        }
-
-        updateHandler({
+        const payload = {
             onset,
             intensity,
             duration,
@@ -66,7 +55,40 @@ export default function EffectsSection({ productType, data: directData, onChange
             profilsEffets,
             effetsSecondaires,
             usagesPreferes
-        });
+        };
+
+        // If initial mount and there's no incoming data, skip sending defaults
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            // Le state local est initialisé DEPUIS effectsData : si le payload calculé au montage
+            // est strictement identique à ce que le parent a déjà, ne rien remonter — sinon un
+            // simple remontage de section (navigation) déclenche l'autosave sans modification réelle.
+            const incomingComparable = {
+                onset: effectsData?.onset || 5,
+                intensity: effectsData?.intensity || 5,
+                duration: effectsData?.duration || '1-2h',
+                effects: effectsData?.effects || [],
+                methodeConsommation: effectsData?.methodeConsommation || (isEdible ? 'comestible' : ''),
+                dosageUtilise: effectsData?.dosageUtilise || '',
+                dosageUnite: effectsData?.dosageUnite || (isEdible ? 'mg' : 'g'),
+                dureeEffetsHeures: effectsData?.dureeEffetsHeures || '',
+                dureeEffetsMinutes: effectsData?.dureeEffetsMinutes || '',
+                debutEffets: effectsData?.debutEffets || '',
+                dureeEffetsCategorie: effectsData?.dureeEffetsCategorie || 'moyenne',
+                profilsEffets: effectsData?.profilsEffets || [],
+                effetsSecondaires: effectsData?.effetsSecondaires || [],
+                usagesPreferes: effectsData?.usagesPreferes || []
+            };
+            if (JSON.stringify(payload) === JSON.stringify(incomingComparable)) return;
+            const hasIncoming = effectsData && Object.keys(effectsData).length > 0;
+            // methodeConsommation='comestible' est un défaut auto-appliqué pour ce type (pas une
+            // vraie interaction) — ne doit pas à lui seul déclencher un brouillon vide (cf. bug
+            // des brouillons fantômes corrigé plus tôt sur les autres sections).
+            const hasManual = selectedEffects.length > 0 || (methodeConsommation && !(isEdible && methodeConsommation === 'comestible')) || dosageUtilise || dureeEffetsHeures || dureeEffetsMinutes || debutEffets;
+            if (!hasIncoming && !hasManual) return;
+        }
+
+        updateHandler(payload);
     }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes]);
 
     const toggleMultiSelect = (key, value) => {

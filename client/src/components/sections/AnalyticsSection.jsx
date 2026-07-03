@@ -58,13 +58,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     // référence et déclenche l'autosave d'un brouillon vide (cf. EffectsSectionImpl.jsx).
     const isFirstRunRef = React.useRef(true);
     useEffect(() => {
-        if (isFirstRunRef.current) {
-            isFirstRunRef.current = false;
-            const hasIncoming = !!(data && Object.keys(data).length > 0);
-            const hasManual = !!(thc || cbd || cbg || cbc || uploadedFile || terpeneFile);
-            if (!hasIncoming && !hasManual) return;
-        }
-        safeUpdate({
+        const payload = {
             thcPercent: thc ? parseFloat(thc) : null,
             cbdPercent: cbd ? parseFloat(cbd) : null,
             cbgPercent: cbg ? parseFloat(cbg) : null,
@@ -76,7 +70,28 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             // mais le formulaire local perdrait la référence au prochain re-render du parent.
             labReportUrl: existingCertUrl,
             terpeneFileUrl: existingTerpUrl
-        });
+        };
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            // Le state local est initialisé DEPUIS data : si le payload calculé au montage est
+            // strictement identique à ce que le parent a déjà, ne rien remonter — sinon un simple
+            // remontage de section (navigation) déclenche l'autosave sans modification réelle.
+            const incomingComparable = {
+                thcPercent: data?.thcPercent ?? (data?.thc != null ? parseFloat(data.thc) : null),
+                cbdPercent: data?.cbdPercent ?? (data?.cbd != null ? parseFloat(data.cbd) : null),
+                cbgPercent: data?.cbgPercent ?? (data?.cbg != null ? parseFloat(data.cbg) : null),
+                cbcPercent: data?.cbcPercent ?? (data?.cbc != null ? parseFloat(data.cbc) : null),
+                certificateFile: data?.certificateFile || null,
+                terpeneFile: data?.terpeneFile || null,
+                labReportUrl: data?.certificateFile ? null : (data?.labReportUrl || null),
+                terpeneFileUrl: data?.terpeneFile ? null : (data?.terpeneFileUrl || null)
+            };
+            if (JSON.stringify(payload) === JSON.stringify(incomingComparable)) return;
+            const hasIncoming = !!(data && Object.keys(data).length > 0);
+            const hasManual = !!(thc || cbd || cbg || cbc || uploadedFile || terpeneFile);
+            if (!hasIncoming && !hasManual) return;
+        }
+        safeUpdate(payload);
     }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile, existingCertUrl, existingTerpUrl]);
 
     const handleFileUpload = (e, type = 'cannabinoid') => {

@@ -99,12 +99,6 @@ export default function TextureSection({ productType, data: directData, onChange
     // montage de la section sans interaction réelle (cf. AnalyticsSection.jsx).
     const isFirstRunRef = React.useRef(true);
     useEffect(() => {
-        if (isFirstRunRef.current) {
-            isFirstRunRef.current = false;
-            const hasIncoming = !!(textureData && Object.keys(textureData).length > 0);
-            const hasManual = hardness || density || malleability || elasticity || stickiness || melting || (residue && residue !== 10) || friability || viscosity;
-            if (!hasIncoming && !hasManual) return;
-        }
         const newTextureData = {
             hardness,
             density,
@@ -128,6 +122,20 @@ export default function TextureSection({ productType, data: directData, onChange
 
         if (productType === 'Concentré') {
             newTextureData.viscosity = viscosity;
+        }
+
+        if (isFirstRunRef.current) {
+            isFirstRunRef.current = false;
+            // Le state local est initialisé DEPUIS textureData : si le payload calculé au montage
+            // est strictement identique à ce que le parent a déjà, ne rien remonter — sinon un
+            // simple remontage de section (navigation) déclenche la sauvegarde automatique sans
+            // que l'utilisateur ait rien modifié (cf. OdorSection.jsx pour le même correctif).
+            const incomingComparable = {};
+            Object.keys(newTextureData).forEach(k => { incomingComparable[k] = textureData?.[k] ?? 0; });
+            if (JSON.stringify(incomingComparable) === JSON.stringify(newTextureData)) return;
+            const hasIncoming = !!(textureData && Object.keys(textureData).length > 0);
+            const hasManual = hardness || density || malleability || elasticity || stickiness || melting || (residue && residue !== 10) || friability || viscosity;
+            if (!hasIncoming && !hasManual) return;
         }
 
         updateHandler(newTextureData);

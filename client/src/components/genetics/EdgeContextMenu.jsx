@@ -7,7 +7,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
-const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) => {
+const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isFamily, underlyingEdges }) => {
     const store = useGeneticsStore();
     const menuRef = useRef(null);
     // Cf. NodeContextMenu.jsx : recale le menu s'il déborde du viewport près des bords.
@@ -51,6 +51,11 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
+    const handleDetachParent = (underlyingEdge) => {
+        onRequestDelete({ type: 'edge', id: underlyingEdge.id, label: `le lien avec ${underlyingEdge.parentName}` });
+        onClose();
+    };
+
     const relationshipLabel = {
         'parent': '👨‍👩‍👧 Parent',
         'pollen_donor': '🌼 Donateur de pollen',
@@ -59,6 +64,35 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) =
         'mutation': '⚡ Mutation',
         'pairing': '💑 Couple parental'
     };
+
+    // Arête "family" : ligne visuelle fusionnant les 2 vrais liens de filiation d'un couple —
+    // son id n'existe pas en base (voir UnifiedGeneticsCanvas.jsx), donc pas d'édition/suppression
+    // directe possible. On propose plutôt de détacher un parent en particulier (agit sur le vrai
+    // GenEdge sous-jacent).
+    if (isFamily) {
+        return (
+            <div
+                ref={menuRef}
+                className="context-menu"
+                style={{ left: `${pos.left}px`, top: `${pos.top}px` }}
+            >
+                <div style={{ padding: '8px 12px', fontSize: '12px', color: '#94a3b8', cursor: 'default' }}>
+                    💜 Liaison combinée (couple → enfant)
+                </div>
+                <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                {!readOnly && (underlyingEdges || []).map(ue => (
+                    <button key={ue.id} className="context-menu-item danger" onClick={() => handleDetachParent(ue)}>
+                        🗑️ Retirer {ue.parentName} comme parent
+                    </button>
+                ))}
+                {readOnly && (
+                    <button className="context-menu-item" disabled>
+                        👁️ Lecture seule
+                    </button>
+                )}
+            </div>
+        );
+    }
 
     return (
         <div
