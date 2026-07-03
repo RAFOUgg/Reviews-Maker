@@ -114,7 +114,7 @@ const validateEdgeCreation = (req, res, next) => {
 };
 
 const validateEdgeUpdate = (req, res, next) => {
-    const { relationshipType, pollinationMethod, notes } = req.body;
+    const { relationshipType, pollinationMethod, notes, parentNodeId, childNodeId } = req.body;
 
     // Validation relationshipType (optionnel)
     if (relationshipType !== undefined) {
@@ -122,6 +122,18 @@ const validateEdgeUpdate = (req, res, next) => {
         if (!validTypes.includes(relationshipType)) {
             return res.status(400).json({ error: `Invalid relationship type. Must be one of: ${validTypes.join(", ")}` });
         }
+    }
+
+    // Validation parentNodeId/childNodeId (optionnel — reconnexion d'une extrémité vers un autre
+    // nœud, ex: inverser une relation ou glisser une extrémité sur un nœud différent)
+    if (parentNodeId !== undefined && (typeof parentNodeId !== "string" || parentNodeId.trim().length === 0)) {
+        return res.status(400).json({ error: "parentNodeId must be a non-empty string" });
+    }
+    if (childNodeId !== undefined && (typeof childNodeId !== "string" || childNodeId.trim().length === 0)) {
+        return res.status(400).json({ error: "childNodeId must be a non-empty string" });
+    }
+    if (parentNodeId !== undefined && childNodeId !== undefined && parentNodeId === childNodeId) {
+        return res.status(400).json({ error: "parentNodeId and childNodeId must be different" });
     }
 
     // Validation pollinationMethod (optionnel)

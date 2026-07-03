@@ -1,8 +1,9 @@
 /**
  * LibraryPage.jsx - Page Bibliothèque Utilisateur Refactorisée
  *
- * Conforme au CDC:
- * - Onglets: Reviews, Cultivars (Producteur), Templates, Filigranes, Données (Producteur), Stats
+ * Onglets:
+ * - Groupe principal: Vue d'ensemble, Mes Reviews, Templates Export (incl. Filigranes), Statistiques
+ * - Groupe PRO (producteur uniquement): Cultivars & Génétiques, Chaîne de production, Données Récurrentes
  * - Filtres par type de produit (Fleur, Hash, Concentré, Comestible)
  * - Vue Grid/List/Timeline pour les reviews
  * - Partage templates par code unique
@@ -21,37 +22,40 @@ import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 import { useToast } from '../../components/shared/ToastContainer'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
-    Library, FileText, Leaf, Palette, Database, BarChart3,
-    Plus, Settings, Download, Upload,
+    Library, LayoutDashboard, FileText, Leaf, Palette, Database, BarChart3,
+    Plus, Download, Upload,
     ChevronRight, Brain, ExternalLink, GitBranch
 } from 'lucide-react'
 
 // Import des onglets
+import OverviewTab from './tabs/OverviewTab'
 import ReviewsTab from './tabs/ReviewsTab'
 import CultivarsTab from './tabs/CultivarsTab'
 import TemplatesTab from './tabs/TemplatesTab'
-import WatermarksTab from './tabs/WatermarksTab'
 import DataTab from './tabs/DataTab'
 import StatsTab from './tabs/StatsTab'
 import ProductionChainTab from './tabs/ProductionChainTab'
 
-// Configuration des onglets
+// Configuration des onglets. `group` détermine le placement dans la sidebar :
+// 'main' en haut, 'pro' regroupé sous un séparateur "PRO" (producteur uniquement).
 const TABS = [
+    {
+        id: 'overview',
+        label: 'Vue d\'ensemble',
+        mobileLabel: 'Accueil',
+        icon: LayoutDashboard,
+        all: true,
+        group: 'main',
+        description: 'Aperçu global de votre bibliothèque'
+    },
     {
         id: 'reviews',
         label: 'Mes Reviews',
         mobileLabel: 'Reviews',
         icon: FileText,
         all: true,
+        group: 'main',
         description: 'Gérez vos reviews sauvegardées'
-    },
-    {
-        id: 'cultivars',
-        label: 'Cultivars & Génétiques',
-        mobileLabel: 'Cultivars',
-        icon: Leaf,
-        producerOnly: true,
-        description: 'Bibliothèque de cultivars et arbres généalogiques'
     },
     {
         id: 'templates',
@@ -59,15 +63,26 @@ const TABS = [
         mobileLabel: 'Templates',
         icon: Palette,
         all: true,
-        description: 'Templates d\'export prédéfinis et personnalisés'
+        group: 'main',
+        description: 'Templates d\'export, filigranes et personnalisation'
     },
     {
-        id: 'watermarks',
-        label: 'Filigranes',
-        mobileLabel: 'Filigranes',
-        icon: Settings,
+        id: 'stats',
+        label: 'Statistiques',
+        mobileLabel: 'Stats',
+        icon: BarChart3,
         all: true,
-        description: 'Gérez vos filigranes personnalisés'
+        group: 'main',
+        description: 'Statistiques de votre bibliothèque'
+    },
+    {
+        id: 'cultivars',
+        label: 'Cultivars & Génétiques',
+        mobileLabel: 'Cultivars',
+        icon: Leaf,
+        producerOnly: true,
+        group: 'pro',
+        description: 'Bibliothèque de cultivars et arbres généalogiques'
     },
     {
         id: 'production-chain',
@@ -75,6 +90,7 @@ const TABS = [
         mobileLabel: 'Chaîne',
         icon: GitBranch,
         producerOnly: true,
+        group: 'pro',
         description: 'Liez vos fiches techniques entre elles et documentez chaque transformation'
     },
     {
@@ -83,15 +99,8 @@ const TABS = [
         mobileLabel: 'Données',
         icon: Database,
         producerOnly: true,
+        group: 'pro',
         description: 'Substrats, engrais, techniques sauvegardés'
-    },
-    {
-        id: 'stats',
-        label: 'Statistiques',
-        mobileLabel: 'Stats',
-        icon: BarChart3,
-        all: true,
-        description: 'Statistiques de votre bibliothèque'
     },
 ]
 
@@ -101,7 +110,7 @@ export default function LibraryPage() {
     const toast = useToast()
     const { user } = useStore()
     const { isProducteur: isProducer } = useAccountFeatures()
-    const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'reviews')
+    const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
 
     // Vérifier authentification
@@ -113,18 +122,20 @@ export default function LibraryPage() {
 
     // Déterminer les onglets disponibles selon le type de compte
     const availableTabs = TABS.filter(t => t.all || (t.producerOnly && isProducer))
+    const mainTabs = availableTabs.filter(t => t.group === 'main')
+    const proTabs = availableTabs.filter(t => t.group === 'pro')
 
     // Rendu de l'onglet actif
     const renderTab = () => {
         switch (activeTab) {
+            case 'overview':
+                return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={setActiveTab} />
             case 'reviews':
                 return <ReviewsTab />
             case 'cultivars':
                 return isProducer ? <CultivarsTab /> : null
             case 'templates':
                 return <TemplatesTab userTier={user?.accountType} />
-            case 'watermarks':
-                return <WatermarksTab />
             case 'production-chain':
                 return isProducer ? <ProductionChainTab /> : null
             case 'data':
@@ -132,7 +143,7 @@ export default function LibraryPage() {
             case 'stats':
                 return <StatsTab />
             default:
-                return <ReviewsTab />
+                return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={setActiveTab} />
         }
     }
 
@@ -167,8 +178,8 @@ export default function LibraryPage() {
                     </div>
 
                     {/* Navigation Onglets */}
-                    <nav className="flex-1 p-2 space-y-1">
-                        {availableTabs.map((tab) => {
+                    <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
+                        {mainTabs.map((tab) => {
                             const Icon = tab.icon
                             const isActive = activeTab === tab.id
                             return (
@@ -183,16 +194,43 @@ export default function LibraryPage() {
                                 >
                                     <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-purple-400' : ''}`} />
                                     {!sidebarCollapsed && (
-                                        <>
-                                            <span className="flex-1 text-left text-sm font-medium truncate">{tab.label}</span>
-                                            {tab.producerOnly && (
-                                                <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded shrink-0">PRO</span>
-                                            )}
-                                        </>
+                                        <span className="flex-1 text-left text-sm font-medium truncate">{tab.label}</span>
                                     )}
                                 </button>
                             )
                         })}
+
+                        {proTabs.length > 0 && (
+                            <>
+                                <div className={`pt-3 pb-1 ${sidebarCollapsed ? 'px-0' : 'px-3'}`}>
+                                    {sidebarCollapsed ? (
+                                        <div className="h-px bg-white/10" />
+                                    ) : (
+                                        <span className="text-[10px] font-bold tracking-wider text-amber-400/80">PRO</span>
+                                    )}
+                                </div>
+                                {proTabs.map((tab) => {
+                                    const Icon = tab.icon
+                                    const isActive = activeTab === tab.id
+                                    return (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveTab(tab.id)}
+                                            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
+                                                ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
+                                                : 'text-white/60 hover:text-white hover:bg-white/5'
+                                                }`}
+                                            title={sidebarCollapsed ? tab.label : undefined}
+                                        >
+                                            <Icon className={`w-5 h-5 shrink-0 ${isActive ? 'text-purple-400' : ''}`} />
+                                            {!sidebarCollapsed && (
+                                                <span className="flex-1 text-left text-sm font-medium truncate">{tab.label}</span>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </>
+                        )}
                     </nav>
 
                     {/* Actions rapides */}

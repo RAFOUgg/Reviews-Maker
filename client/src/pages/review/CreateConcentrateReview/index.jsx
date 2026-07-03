@@ -75,14 +75,16 @@ export default function CreateConcentrateReview() {
     // Mode automatique (wizard) — cf. CreateFlowerReview/index.jsx pour le détail du mécanisme.
     const { isMobile } = useResponsiveLayout()
     const forceWizard = searchParams.get('mode') === 'auto'
-    const [wizardDismissed, setWizardDismissed] = useState(false)
+    // wizardOverride = choix explicite (bouton "Mode auto"/"Voir toutes les questions"), prime
+    // sur le déclenchement auto (mobile/query param) — cf. CreateFlowerReview/index.jsx.
+    const [wizardOverride, setWizardOverride] = useState(null)
     // Survit au démontage/remontage de WizardFlow — cf. CreateFlowerReview/index.jsx.
     const [wizardIndex, setWizardIndex] = useState(0)
-    const useWizardMode = (isMobile || forceWizard) && !wizardDismissed
+    const useWizardMode = wizardOverride !== null ? wizardOverride : (isMobile || forceWizard)
     const wizardQuestions = getConcentrateWizardQuestions()
     const handleOpenHandoff = (target) => {
         const index = sections.findIndex(s => s.id === target)
-        setWizardDismissed(true)
+        setWizardOverride(false)
         setWizardIndex(i => Math.min(i + 1, wizardQuestions.length - 1))
         if (index >= 0) setCurrentSection(index)
     }
@@ -251,7 +253,7 @@ export default function CreateConcentrateReview() {
                     handlePhotoUpload={handlePhotoUpload}
                     removePhoto={removePhoto}
                     title="Créer une review Concentré"
-                    onExitToClassic={() => setWizardDismissed(true)}
+                    onExitToClassic={() => setWizardOverride(false)}
                     onOpenHandoff={handleOpenHandoff}
                     onComplete={() => setShowOrchard(true)}
                     initialIndex={wizardIndex}
@@ -275,7 +277,7 @@ export default function CreateConcentrateReview() {
                 removePhoto={removePhoto}
                 onOpenPreview={() => setShowOrchard(true)}
                 onSave={() => handleSave({ silent: false })}
-                onEnableWizard={() => setWizardDismissed(false)}
+                onEnableWizard={() => setWizardOverride(true)}
                 isDirty={isDirty}
                 title="Créer une review Concentré"
                 subtitle="Documentez votre rosin, BHO ou autre concentré"

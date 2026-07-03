@@ -229,24 +229,33 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
         // pas encore de photo à ce moment-là (ou en a reçu une depuis), le nœud reste sans image
         // pour toujours sans ce rattrapage. PhenoHunt ne lie que des FlowerReview, donc pas besoin
         // du fallback vers les sous-tables hash/concentrate/edible utilisé ailleurs.
-        const linkedIds = tree.nodes.filter(n => n.sourceReviewId && !n.image).map(n => n.sourceReviewId);
-        if (linkedIds.length > 0) {
+        //
+        // Cette même requête sert aussi à détecter les liens cassés : sourceReviewId n'a pas de FK
+        // Prisma (best-effort, cf. schema.prisma), donc rien n'empêche une review d'être supprimée
+        // en laissant les nœuds qui la référençaient intacts. On vérifie ici TOUS les nœuds ayant un
+        // sourceReviewId (pas seulement ceux sans image, un nœud orphelin peut déjà avoir une image
+        // en cache) et on marque sourceReviewOrphaned sur ceux dont l'id ne résout plus.
+        const allSourceReviewIds = [...new Set(tree.nodes.filter(n => n.sourceReviewId).map(n => n.sourceReviewId))];
+        if (allSourceReviewIds.length > 0) {
             const linkedReviews = await prisma.review.findMany({
-                where: { id: { in: linkedIds } },
+                where: { id: { in: allSourceReviewIds } },
                 select: { id: true, images: true }
             });
+            const foundReviewIds = new Set();
             const imageByReviewId = new Map();
             for (const r of linkedReviews) {
+                foundReviewIds.add(r.id);
                 try {
                     const parsed = r.images ? JSON.parse(r.images) : [];
                     if (Array.isArray(parsed) && parsed.length > 0) imageByReviewId.set(r.id, parsed[0]);
                 } catch { /* pas de photo exploitable */ }
             }
-            tree.nodes = tree.nodes.map(n =>
-                (!n.image && n.sourceReviewId && imageByReviewId.has(n.sourceReviewId))
-                    ? { ...n, image: imageByReviewId.get(n.sourceReviewId) }
-                    : n
-            );
+            tree.nodes = tree.nodes.map(n => {
+                if (!n.sourceReviewId) return n;
+                const patch = { sourceReviewOrphaned: !foundReviewIds.has(n.sourceReviewId) };
+                if (!n.image && imageByReviewId.has(n.sourceReviewId)) patch.image = imageByReviewId.get(n.sourceReviewId);
+                return { ...n, ...patch };
+            });
         }
 
         res.json(tree);
@@ -585,16 +594,26 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
             return res.status(403).json({ error: "Forbidden" });
         }
 
+        const VALID_HANDLES = ["top", "bottom", "left", "right"];
         const {
             parentNodeId,
             childNodeId,
             relationshipType = "parent",
             pollinationMethod = null,
-            notes = null
+            notes = null,
+            sourceHandle = null,
+            targetHandle = null
         } = req.body;
 
         if (!parentNodeId || !childNodeId) {
             return res.status(400).json({ error: "Parent and child node IDs are required" });
+        }
+
+        if (sourceHandle !== null && !VALID_HANDLES.includes(sourceHandle)) {
+            return res.status(400).json({ error: `Invalid sourceHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
+        }
+        if (targetHandle !== null && !VALID_HANDLES.includes(targetHandle)) {
+            return res.status(400).json({ error: `Invalid targetHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
         }
 
         // Vérifier que les nœuds existent et appartiennent à cet arbre
@@ -629,7 +648,9 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
                     childNodeId,
                     relationshipType: relationshipType || "parent",
                     pollinationMethod: pollinationMethod || null,
-                    notes: notes?.trim() || null
+                    notes: notes?.trim() || null,
+                    sourceHandle: sourceHandle || null,
+                    targetHandle: targetHandle || null
                 }
             });
 
@@ -648,7 +669,9 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
 
 /**
  * PUT /api/genetics/edges/:edgeId
- * Modifier une arête (relationshipType/notes uniquement — pas les extrémités)
+ * Modifier une arête — relationshipType/notes/courbure/accroche, ET les extrémités
+ * (parentNodeId/childNodeId, ex: inverser une relation ou reconnecter une liaison glissée
+ * sur un nœud différent). Revalide l'absence de cycle quand une extrémité change.
  */
 router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpdate, async (req, res) => {
     try {
@@ -666,13 +689,45 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
         }
 
         const VALID_HANDLES = ["top", "bottom", "left", "right"];
-        const { relationshipType, pollinationMethod, notes, waypointX, waypointY, sourceHandle, targetHandle } = req.body;
+        const { relationshipType, pollinationMethod, notes, waypointX, waypointY, sourceHandle, targetHandle, parentNodeId, childNodeId } = req.body;
 
         if (sourceHandle !== undefined && sourceHandle !== null && !VALID_HANDLES.includes(sourceHandle)) {
             return res.status(400).json({ error: `Invalid sourceHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
         }
         if (targetHandle !== undefined && targetHandle !== null && !VALID_HANDLES.includes(targetHandle)) {
             return res.status(400).json({ error: `Invalid targetHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
+        }
+
+        const finalParentId = parentNodeId ?? edge.parentNodeId;
+        const finalChildId = childNodeId ?? edge.childNodeId;
+        const endpointsChanged = parentNodeId !== undefined || childNodeId !== undefined;
+
+        if (endpointsChanged) {
+            if (finalParentId === finalChildId) {
+                return res.status(400).json({ error: "Invalid parent or child node" });
+            }
+
+            const [parentNode, childNode] = await Promise.all([
+                prisma.genNode.findUnique({ where: { id: finalParentId } }),
+                prisma.genNode.findUnique({ where: { id: finalChildId } })
+            ]);
+
+            if (!parentNode || !childNode || parentNode.treeId !== edge.treeId || childNode.treeId !== edge.treeId) {
+                return res.status(400).json({ error: "Invalid parent or child node" });
+            }
+
+            const finalRelationshipType = relationshipType || edge.relationshipType;
+            if (finalRelationshipType !== "pairing") {
+                const existingEdges = await prisma.genEdge.findMany({
+                    where: { treeId: edge.treeId, id: { not: edge.id }, relationshipType: { not: "pairing" } },
+                    select: { parentNodeId: true, childNodeId: true }
+                });
+                const normalizedEdges = existingEdges.map(e => ({ source: e.parentNodeId, target: e.childNodeId }));
+
+                if (wouldCreateCycle(normalizedEdges, finalParentId, finalChildId)) {
+                    return res.status(400).json({ error: "This relationship would create a cycle" });
+                }
+            }
         }
 
         try {
@@ -687,7 +742,9 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
                     ...(waypointY !== undefined && { waypointY: waypointY === null ? null : Number(waypointY) }),
                     // null explicite = retour à l'accroche automatique flottante
                     ...(sourceHandle !== undefined && { sourceHandle: sourceHandle || null }),
-                    ...(targetHandle !== undefined && { targetHandle: targetHandle || null })
+                    ...(targetHandle !== undefined && { targetHandle: targetHandle || null }),
+                    ...(parentNodeId !== undefined && { parentNodeId }),
+                    ...(childNodeId !== undefined && { childNodeId })
                 }
             });
 

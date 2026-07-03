@@ -142,16 +142,19 @@ export default function CreateFlowerReview() {
 
     // Mode automatique (wizard une-question-à-la-fois) : auto sur mobile, ou forcé via
     // ?mode=auto (bouton central sur la page d'accueil, cf. ProductTypeCards.jsx).
-    // wizardDismissed permet de revenir au formulaire classique à tout moment sans perdre
-    // les réponses déjà saisies (même formData/handleChange dans les deux modes).
+    // wizardOverride est le choix explicite de l'utilisateur (bouton "Mode auto" en vue classique,
+    // ou "Voir toutes les questions" en vue wizard) — il prime sur le déclenchement automatique
+    // (mobile/query param), sinon cliquer "Mode auto" sur desktop sans ?mode=auto ne faisait rien
+    // puisque (isMobile || forceWizard) restait false. null = pas de choix explicite (comportement
+    // auto par défaut).
     const { isMobile } = useResponsiveLayout()
     const forceWizard = searchParams.get('mode') === 'auto'
-    const [wizardDismissed, setWizardDismissed] = useState(false)
+    const [wizardOverride, setWizardOverride] = useState(null)
     // Survit au démontage/remontage de WizardFlow (une bascule wizard<->classique remonte tout le
     // composant) — sans ça, revenir en mode automatique après un handoff repartait toujours de la
     // question 1 au lieu de reprendre là où l'utilisateur s'était arrêté.
     const [wizardIndex, setWizardIndex] = useState(0)
-    const useWizardMode = (isMobile || forceWizard) && !wizardDismissed
+    const useWizardMode = wizardOverride !== null ? wizardOverride : (isMobile || forceWizard)
     const wizardQuestions = getFlowerWizardQuestions({ isProducteur })
 
     // Étapes complexes (génétique/culture/curing) non linéarisables en questions : on quitte
@@ -160,7 +163,7 @@ export default function CreateFlowerReview() {
     // (au lieu de rester bloqué sur la même étape handoff).
     const handleOpenHandoff = (target) => {
         const index = sections.findIndex(s => s.id === target)
-        setWizardDismissed(true)
+        setWizardOverride(false)
         setWizardIndex(i => Math.min(i + 1, wizardQuestions.length - 1))
         if (index >= 0) setCurrentSection(index)
     }
@@ -375,7 +378,7 @@ export default function CreateFlowerReview() {
                     handlePhotoUpload={handlePhotoUpload}
                     removePhoto={removePhoto}
                     title="Créer une review Fleur"
-                    onExitToClassic={() => setWizardDismissed(true)}
+                    onExitToClassic={() => setWizardOverride(false)}
                     onOpenHandoff={handleOpenHandoff}
                     onComplete={() => setShowOrchard(true)}
                     initialIndex={wizardIndex}
@@ -395,7 +398,7 @@ export default function CreateFlowerReview() {
                 showProgress={true}
                 onOpenPreview={() => setShowOrchard(true)}
                 onSave={() => handleSave({ silent: false })}
-                onEnableWizard={() => setWizardDismissed(false)}
+                onEnableWizard={() => setWizardOverride(true)}
                 isDirty={isDirty}
                 saving={saving}
             >

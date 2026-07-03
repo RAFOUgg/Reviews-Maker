@@ -12,11 +12,17 @@ import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
+import WatermarksTab from './WatermarksTab'
 import {
     Layout, LayoutGrid, LayoutList, Copy, Trash2, Eye, Star,
     Share2, Download, Plus, Check, Lock, Sparkles,
-    Smartphone, Monitor, FileText, Settings2
+    Smartphone, Monitor, FileText, Settings2, Stamp
 } from 'lucide-react'
+
+const SUB_TABS = [
+    { id: 'templates', label: 'Templates', icon: Layout },
+    { id: 'watermarks', label: 'Filigranes', icon: Stamp },
+]
 
 // Templates prédéfinis selon le CDC
 const PREDEFINED_TEMPLATES = [
@@ -81,6 +87,7 @@ const TIER_CONFIG = {
 export default function TemplatesTab({ userTier = 'amateur' }) {
     const toast = useToast()
 
+    const [subTab, setSubTab] = useState('templates')
     const [savedTemplates, setSavedTemplates] = useState([])
     const [loading, setLoading] = useState(true)
     const [defaultTemplateId, setDefaultTemplateId] = useState(null)
@@ -387,16 +394,53 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
         )
     }
 
+    // Rendu du switcher de sous-onglets (Templates / Filigranes)
+    const renderSubTabNav = () => (
+        <div className="flex gap-1 p-1 bg-white/5 rounded-xl w-fit">
+            {SUB_TABS.map(t => {
+                const Icon = t.icon
+                const isActive = subTab === t.id
+                return (
+                    <button
+                        key={t.id}
+                        onClick={() => setSubTab(t.id)}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${isActive
+                            ? 'bg-purple-500/20 text-purple-400'
+                            : 'text-white/50 hover:text-white hover:bg-white/5'
+                            }`}
+                    >
+                        <Icon className="w-4 h-4" />
+                        {t.label}
+                    </button>
+                )
+            })}
+        </div>
+    )
+
+    if (subTab === 'watermarks') {
+        return (
+            <div className="space-y-6">
+                {renderSubTabNav()}
+                <WatermarksTab />
+            </div>
+        )
+    }
+
     if (loading) {
         return (
-            <div className="flex items-center justify-center py-20">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+            <div className="space-y-6">
+                {renderSubTabNav()}
+                <div className="flex items-center justify-center py-20">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-500"></div>
+                </div>
             </div>
         )
     }
 
     return (
-        <div className="space-y-8">
+        <div className="space-y-6">
+            {renderSubTabNav()}
+            <div className="space-y-8">
             {/* Import par code */}
             <LiquidCard glow="none" padding="md">
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -514,6 +558,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                     </motion.div>
                 )}
             </AnimatePresence>
+            </div>
         </div>
     )
 }
