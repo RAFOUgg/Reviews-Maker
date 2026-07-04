@@ -10,24 +10,27 @@
 import { useState, useEffect, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
-import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
+import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Flower2, Plus, Trash2, Edit, Eye, GitBranch, Search,
-    Filter, Grid3X3, List, FolderTree, Dna,
+    Filter, Grid3X3, List, FolderTree, Dna, LayoutGrid, Moon, Sun, Shuffle, HeartPulse,
     X, Check, ChevronRight, Tag, Calendar, User, ExternalLink, RefreshCw
 } from 'lucide-react'
 import useGeneticsStore from '../../../store/useGeneticsStore'
 import { getImageUrl } from '../../../utils/imageUtils'
 
-// Types de cultivars
+// Types de cultivars — la couleur est restreinte aux 4 teintes de glow réellement définies pour
+// LiquidChip actif (purple/green/cyan/amber, cf. apple-liquid-glass.css .liquid-chip.active.*) ;
+// "Tous" et "Indica" partagent le violet sans ambiguïté visuelle puisqu'un seul chip est actif
+// à la fois.
 const CULTIVAR_TYPES = [
-    { id: 'all', label: 'Tous', color: 'purple' },
-    { id: 'indica', label: 'Indica', color: 'indigo' },
-    { id: 'sativa', label: 'Sativa', color: 'green' },
-    { id: 'hybrid', label: 'Hybride', color: 'amber' },
-    { id: 'cbd', label: 'CBD', color: 'blue' },
+    { id: 'all', label: 'Tous', color: 'purple', icon: LayoutGrid },
+    { id: 'indica', label: 'Indica', color: 'purple', icon: Moon },
+    { id: 'sativa', label: 'Sativa', color: 'green', icon: Sun },
+    { id: 'hybrid', label: 'Hybride', color: 'amber', icon: Shuffle },
+    { id: 'cbd', label: 'CBD', color: 'cyan', icon: HeartPulse },
 ]
 
 const CANNABINOID_SOURCE_LABELS = {
@@ -261,18 +264,19 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                             </div>
 
                             <div className="flex items-center gap-1">
-                                <button
+                                <LiquidButton
                                     onClick={() => openEdit(cultivar)}
-                                    className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-amber-400 transition-colors"
-                                >
-                                    <Edit className="w-4 h-4" />
-                                </button>
-                                <button
+                                    variant="ghost"
+                                    size="sm"
+                                    icon={Edit}
+                                />
+                                <LiquidButton
                                     onClick={() => deleteCultivar(cultivar.id)}
-                                    className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-red-400 transition-colors"
-                                >
-                                    <Trash2 className="w-4 h-4" />
-                                </button>
+                                    variant="ghost"
+                                    size="sm"
+                                    icon={Trash2}
+                                    className="hover:!text-red-400"
+                                />
                             </div>
                         </div>
                     </LiquidCard>
@@ -361,19 +365,22 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
                     {/* Actions */}
                     <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <button
+                        <LiquidButton
                             onClick={() => openEdit(cultivar)}
-                            className="flex-1 py-2 px-3 rounded-lg bg-white/5 text-white/60 hover:bg-white/10 hover:text-white text-sm transition-colors flex items-center justify-center gap-1"
+                            variant="ghost"
+                            size="sm"
+                            icon={Edit}
+                            className="flex-1"
                         >
-                            <Edit className="w-3 h-3" />
                             Modifier
-                        </button>
-                        <button
+                        </LiquidButton>
+                        <LiquidButton
                             onClick={() => deleteCultivar(cultivar.id)}
-                            className="p-2 rounded-lg bg-white/5 text-white/60 hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </button>
+                            variant="ghost"
+                            size="sm"
+                            icon={Trash2}
+                            className="hover:!text-red-400"
+                        />
                     </div>
                 </LiquidCard>
             </motion.div>
@@ -456,16 +463,17 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         variant="primary"
                         size="sm"
                         className="flex-1"
-                        leftIcon={<ExternalLink className="w-3 h-3" />}
+                        icon={ExternalLink}
                     >
                         Ouvrir l'éditeur
                     </LiquidButton>
-                    <button
+                    <LiquidButton
                         onClick={(e) => handleDeleteTree(tree.id, e)}
-                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:bg-red-500/20 hover:text-red-400 transition-colors"
-                    >
-                        <Trash2 className="w-4 h-4" />
-                    </button>
+                        variant="ghost"
+                        size="sm"
+                        icon={Trash2}
+                        className="hover:!text-red-400"
+                    />
                 </div>
             </LiquidCard>
         </motion.div>
@@ -521,19 +529,18 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                     : cultivars.filter(c => c.type === type.id).length
 
                                 return (
-                                    <button
+                                    <LiquidChip
                                         key={type.id}
+                                        active={isActive}
+                                        color={type.color}
+                                        icon={type.icon}
                                         onClick={() => setTypeFilter(type.id)}
-                                        className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${isActive
-                                            ? `bg-${type.color}-500/20 text-${type.color}-400 border border-${type.color}-500/30`
-                                            : 'bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent'
-                                            }`}
                                     >
-                                        <span className="text-sm font-medium">{type.label}</span>
-                                        <span className={`text-xs px-1.5 py-0.5 rounded ${isActive ? `bg-${type.color}-500/30` : 'bg-white/10'}`}>
+                                        {type.label}
+                                        <span className={`ml-1.5 px-1.5 py-0.5 rounded text-xs ${isActive ? 'bg-white/20' : 'bg-white/10'}`}>
                                             {count}
                                         </span>
-                                    </button>
+                                    </LiquidChip>
                                 )
                             })}
                         </div>
@@ -553,28 +560,26 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 />
                             </div>
 
-                            <div className="flex bg-white/5 rounded-xl p-1 border border-white/10">
-                                <button
+                            <div className="flex bg-white/5 rounded-xl p-1 border border-white/10 gap-1">
+                                <LiquidButton
                                     onClick={() => setViewMode('grid')}
-                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'grid' ? 'bg-green-500 text-white' : 'text-white/50 hover:text-white'
-                                        }`}
-                                >
-                                    <Grid3X3 className="w-4 h-4" />
-                                </button>
-                                <button
+                                    variant={viewMode === 'grid' ? 'primary' : 'ghost'}
+                                    size="sm"
+                                    icon={Grid3X3}
+                                />
+                                <LiquidButton
                                     onClick={() => setViewMode('list')}
-                                    className={`p-2 rounded-lg transition-colors ${viewMode === 'list' ? 'bg-green-500 text-white' : 'text-white/50 hover:text-white'
-                                        }`}
-                                >
-                                    <List className="w-4 h-4" />
-                                </button>
+                                    variant={viewMode === 'list' ? 'primary' : 'ghost'}
+                                    size="sm"
+                                    icon={List}
+                                />
                             </div>
 
                             <LiquidButton
                                 onClick={() => setIsCreating(true)}
                                 variant="primary"
                                 size="sm"
-                                leftIcon={<Plus className="w-4 h-4" />}
+                                icon={Plus}
                             >
                                 Ajouter
                             </LiquidButton>
@@ -808,10 +813,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                     </div>
 
                                     <div className="flex justify-end gap-3 mt-6 pt-6 border-t border-white/10">
-                                        <LiquidButton onClick={resetForm} variant="ghost" leftIcon={<X className="w-4 h-4" />}>
+                                        <LiquidButton onClick={resetForm} variant="ghost" icon={X}>
                                             Annuler
                                         </LiquidButton>
-                                        <LiquidButton onClick={saveCultivar} variant="primary" leftIcon={<Check className="w-4 h-4" />}>
+                                        <LiquidButton onClick={saveCultivar} variant="primary" icon={Check}>
                                             {editingCultivar ? 'Mettre à jour' : 'Créer'}
                                         </LiquidButton>
                                     </div>
@@ -840,7 +845,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                     <LiquidButton
                                         onClick={() => setIsCreating(true)}
                                         variant="primary"
-                                        leftIcon={<Plus className="w-4 h-4" />}
+                                        icon={Plus}
                                     >
                                         Ajouter un cultivar
                                     </LiquidButton>
@@ -870,7 +875,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 onClick={() => navigate('/phenohunt')}
                                 variant="ghost"
                                 size="sm"
-                                leftIcon={<ExternalLink className="w-4 h-4" />}
+                                icon={ExternalLink}
                             >
                                 Ouvrir PhenoHunt
                             </LiquidButton>
@@ -878,7 +883,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 onClick={handleCreateTree}
                                 variant="primary"
                                 size="sm"
-                                leftIcon={<Plus className="w-4 h-4" />}
+                                icon={Plus}
                             >
                                 Nouvel arbre
                             </LiquidButton>
@@ -900,10 +905,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                     Créez votre premier arbre ou utilisez le canvas PhenoHunt
                                 </p>
                                 <div className="flex gap-3 justify-center">
-                                    <LiquidButton onClick={handleCreateTree} variant="primary" leftIcon={<Plus className="w-4 h-4" />}>
+                                    <LiquidButton onClick={handleCreateTree} variant="primary" icon={Plus}>
                                         Créer un arbre
                                     </LiquidButton>
-                                    <LiquidButton onClick={() => navigate('/phenohunt')} variant="ghost" leftIcon={<ExternalLink className="w-4 h-4" />}>
+                                    <LiquidButton onClick={() => navigate('/phenohunt')} variant="ghost" icon={ExternalLink}>
                                         Ouvrir PhenoHunt
                                     </LiquidButton>
                                 </div>
