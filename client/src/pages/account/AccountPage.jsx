@@ -284,7 +284,7 @@ const AccountPage = () => {
             )}
 
             {activeTab === 'security' && (
-              <SecuritySection t={t} />
+              <SecuritySection t={t} user={user} onStatusChange={checkAuth} />
             )}
           </motion.div>
         </LiquidCard>
@@ -411,10 +411,82 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
   )
 }
 
-function SecuritySection({ t }) {
+function SecuritySection({ t, user, onStatusChange }) {
   const toast = useToast()
   const [pwForm, setPwForm] = useState({ current: '', next: '', confirm: '' })
   const [pwLoading, setPwLoading] = useState(false)
+
+  const [totpSetup, setTotpSetup] = useState(null) // { secret, qrCodeDataUrl }
+  const [totpCode, setTotpCode] = useState('')
+  const [totpLoading, setTotpLoading] = useState(false)
+  const [disablePassword, setDisablePassword] = useState('')
+  const [showDisableForm, setShowDisableForm] = useState(false)
+
+  const handleStartTotpSetup = async () => {
+    setTotpLoading(true)
+    try {
+      const response = await fetch('/api/user/settings/2fa/setup', { method: 'POST', credentials: 'include' })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Erreur lors de la génération du QR code')
+      setTotpSetup(data)
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setTotpLoading(false)
+    }
+  }
+
+  const handleVerifyTotp = async () => {
+    if (!totpCode || totpCode.length !== 6) {
+      toast.error('Entrez le code à 6 chiffres de votre application d\'authentification')
+      return
+    }
+    setTotpLoading(true)
+    try {
+      const response = await fetch('/api/user/settings/2fa/verify', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ secret: totpSetup.secret, token: totpCode })
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Code invalide')
+      toast.success('2FA activée avec succès')
+      setTotpSetup(null)
+      setTotpCode('')
+      await onStatusChange?.()
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setTotpLoading(false)
+    }
+  }
+
+  const handleDisableTotp = async () => {
+    if (!disablePassword) {
+      toast.error('Entrez votre mot de passe pour désactiver la 2FA')
+      return
+    }
+    setTotpLoading(true)
+    try {
+      const response = await fetch('/api/user/settings/2fa/disable', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: disablePassword })
+      })
+      const data = await response.json()
+      if (!response.ok) throw new Error(data.error || 'Erreur lors de la désactivation')
+      toast.success('2FA désactivée')
+      setDisablePassword('')
+      setShowDisableForm(false)
+      await onStatusChange?.()
+    } catch (err) {
+      toast.error(err.message)
+    } finally {
+      setTotpLoading(false)
+    }
+  }
 
   const handleChangePassword = async () => {
     if (!pwForm.current || !pwForm.next || !pwForm.confirm) {
@@ -501,9 +573,61 @@ function SecuritySection({ t }) {
             Authentification à deux facteurs (2FA)
           </h4>
           <p className="text-white/40 text-sm mb-4">Ajoutez une couche de sécurité supplémentaire à votre compte</p>
-          <LiquidButton variant="secondary" glow="green">
-            Activer 2FA
-          </LiquidButton>
+
+          {user?.totpEnabled ? (
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 text-emerald-400 text-sm">
+                <Check size={16} /> 2FA activée
+              </div>
+              {!showDisableForm ? (
+                <LiquidButton variant="outline" glow="red" onClick={() => setShowDisableForm(true)}>
+                  Désactiver la 2FA
+                </LiquidButton>
+              ) : (
+                <div className="space-y-3 p-4 bg-white/5 rounded-xl border border-white/10">
+                  <LiquidInput
+                    type="password"
+                    placeholder="Mot de passe actuel"
+                    value={disablePassword}
+                    onChange={(e) => setDisablePassword(e.target.value)}
+                  />
+                  <div className="flex gap-2">
+                    <LiquidButton variant="ghost" onClick={() => { setShowDisableForm(false); setDisablePassword('') }}>
+                      Annuler
+                    </LiquidButton>
+                    <LiquidButton variant="primary" glow="red" onClick={handleDisableTotp} disabled={totpLoading}>
+                      {totpLoading ? 'Désactivation...' : 'Confirmer la désactivation'}
+                    </LiquidButton>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : !totpSetup ? (
+            <LiquidButton variant="secondary" glow="green" onClick={handleStartTotpSetup} disabled={totpLoading}>
+              {totpLoading ? 'Génération...' : 'Activer 2FA'}
+            </LiquidButton>
+          ) : (
+            <div className="space-y-4 p-4 bg-white/5 rounded-xl border border-white/10">
+              <p className="text-sm text-white/70">Scannez ce QR code avec votre application d'authentification (Google Authenticator, Authy...), puis entrez le code généré.</p>
+              <img src={totpSetup.qrCodeDataUrl} alt="QR code 2FA" className="mx-auto rounded-lg bg-white p-2 w-48 h-48" />
+              <p className="text-xs text-white/40 text-center break-all">Clé manuelle : {totpSetup.secret}</p>
+              <LiquidInput
+                type="text"
+                placeholder="Code à 6 chiffres"
+                value={totpCode}
+                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                maxLength={6}
+              />
+              <div className="flex gap-2">
+                <LiquidButton variant="ghost" onClick={() => { setTotpSetup(null); setTotpCode('') }}>
+                  Annuler
+                </LiquidButton>
+                <LiquidButton variant="primary" glow="green" onClick={handleVerifyTotp} disabled={totpLoading} fullWidth>
+                  {totpLoading ? 'Vérification...' : 'Confirmer et activer'}
+                </LiquidButton>
+              </div>
+            </div>
+          )}
         </LiquidCard>
 
         {/* Active Sessions */}

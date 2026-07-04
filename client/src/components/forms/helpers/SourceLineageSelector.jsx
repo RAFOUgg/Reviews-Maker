@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { Search, X, ChevronDown, Plus, Flower2, Link2 } from 'lucide-react'
 import { TYPE_META } from '../../../utils/reviewTypeMeta'
 
@@ -25,7 +26,13 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
     // limité) dès que le champ est proche du bord droit/bas de l'écran — inaccessible au clic.
     // On le passe en `position: fixed` avec des coordonnées calculées après montage (comme
     // NodeContextMenu.jsx), et on le recale/retourne (au-dessus, ou aligné à droite) s'il
-    // déborderait sinon.
+    // déborderait sinon. Rendu via un Portal vers document.body : ce champ vit à l'intérieur
+    // d'un `motion.div` (framer-motion, section de formulaire animée) qui pose un `transform`
+    // CSS pendant/après son animation — un ancêtre avec `transform` devient le containing block
+    // des descendants en `position: fixed`, ce qui les fait positionner relativement à CET
+    // ancêtre au lieu du viewport (le calcul ci-dessous devient alors juste mais mal appliqué).
+    // Le Portal sort le panneau de cette arborescence, donc `position: fixed` redevient
+    // réellement relatif au viewport.
     const triggerRef = useRef(null)
     const panelRef = useRef(null)
     const [panelStyle, setPanelStyle] = useState({ position: 'fixed', top: -9999, left: -9999 })
@@ -105,8 +112,13 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
     }, [allowedTypes.join(',')])
 
     useEffect(() => {
+        // Le panneau est rendu via portail dans document.body (cf. plus haut) — il n'est donc
+        // plus un descendant DOM de dropdownRef, il faut vérifier panelRef séparément sinon
+        // chaque clic à l'intérieur du panneau (rechercher, choisir une fiche) le referme aussitôt.
         const handleClick = (e) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(e.target)) setOpen(false)
+            if (dropdownRef.current?.contains(e.target)) return
+            if (panelRef.current?.contains(e.target)) return
+            setOpen(false)
         }
         if (open) document.addEventListener('mousedown', handleClick)
         return () => document.removeEventListener('mousedown', handleClick)
@@ -136,6 +148,63 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
     }
 
     const allowedLabels = allowedTypes.map(t => TYPE_META[t]?.label).join(' / ')
+
+    // Contenu du panneau — factorisé car identique entre les variantes compact/complète (seule
+    // la largeur calculée dans panelStyle diffère). Rendu via portail (cf. commentaire plus haut).
+    const renderPanel = () => createPortal(
+        <div ref={panelRef} style={panelStyle} className="z-50 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+            <div className="p-2 border-b border-white/10">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
+                    <Search className="w-4 h-4 text-white/40 shrink-0" />
+                    <input
+                        autoFocus
+                        type="text"
+                        value={search}
+                        onChange={e => setSearch(e.target.value)}
+                        placeholder="Rechercher..."
+                        className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none"
+                    />
+                </div>
+            </div>
+
+            <div className="max-h-52 overflow-y-auto">
+                {candidates.length === 0 && !loading && (
+                    <div className="px-4 py-6 text-center text-sm text-white/40">
+                        Aucune review {allowedLabels} trouvée
+                    </div>
+                )}
+                {filtered.length === 0 && candidates.length > 0 && (
+                    <div className="px-4 py-4 text-center text-sm text-white/40">
+                        {candidates.length === selectedIds.size ? 'Toutes les reviews disponibles sont déjà liées' : 'Aucun résultat'}
+                    </div>
+                )}
+                {filtered.map(candidate => {
+                    const meta = TYPE_META[candidate.type] || TYPE_META.flower
+                    const Icon = meta.icon
+                    return (
+                        <button
+                            key={candidate.id}
+                            type="button"
+                            onClick={() => handleAdd(candidate)}
+                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
+                        >
+                            <Icon className={`w-4 h-4 shrink-0 ${meta.color}`} />
+                            <div className="flex-1 min-w-0">
+                                <div className="text-sm font-medium text-white truncate">{candidate.label}</div>
+                                {candidate.cultivars && (
+                                    <div className="text-xs text-white/40 truncate">{candidate.cultivars}</div>
+                                )}
+                            </div>
+                            {candidate.note != null && (
+                                <span className="text-xs font-bold text-amber-400 shrink-0">{candidate.note}/10</span>
+                            )}
+                        </button>
+                    )
+                })}
+            </div>
+        </div>,
+        document.body
+    )
 
     if (compact) {
         return (
@@ -172,59 +241,7 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
                         Lier une fiche {allowedLabels}
                     </button>
 
-                    {open && (
-                        <div ref={panelRef} style={panelStyle} className="z-50 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-                            <div className="p-2 border-b border-white/10">
-                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
-                                    <Search className="w-4 h-4 text-white/40 shrink-0" />
-                                    <input
-                                        autoFocus
-                                        type="text"
-                                        value={search}
-                                        onChange={e => setSearch(e.target.value)}
-                                        placeholder="Rechercher..."
-                                        className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none"
-                                    />
-                                </div>
-                            </div>
-
-                            <div className="max-h-52 overflow-y-auto">
-                                {candidates.length === 0 && !loading && (
-                                    <div className="px-4 py-6 text-center text-sm text-white/40">
-                                        Aucune review {allowedLabels} trouvée
-                                    </div>
-                                )}
-                                {filtered.length === 0 && candidates.length > 0 && (
-                                    <div className="px-4 py-4 text-center text-sm text-white/40">
-                                        {candidates.length === selectedIds.size ? 'Toutes les reviews disponibles sont déjà liées' : 'Aucun résultat'}
-                                    </div>
-                                )}
-                                {filtered.map(candidate => {
-                                    const meta = TYPE_META[candidate.type] || TYPE_META.flower
-                                    const Icon = meta.icon
-                                    return (
-                                        <button
-                                            key={candidate.id}
-                                            type="button"
-                                            onClick={() => handleAdd(candidate)}
-                                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
-                                        >
-                                            <Icon className={`w-4 h-4 shrink-0 ${meta.color}`} />
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-sm font-medium text-white truncate">{candidate.label}</div>
-                                                {candidate.cultivars && (
-                                                    <div className="text-xs text-white/40 truncate">{candidate.cultivars}</div>
-                                                )}
-                                            </div>
-                                            {candidate.note != null && (
-                                                <span className="text-xs font-bold text-amber-400 shrink-0">{candidate.note}/10</span>
-                                            )}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-                    )}
+                    {open && renderPanel()}
                 </div>
             </div>
         )
@@ -274,59 +291,7 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
                     <ChevronDown className={`w-4 h-4 text-white/30 transition-transform shrink-0 ${open ? 'rotate-180' : ''}`} />
                 </button>
 
-                {open && (
-                    <div ref={panelRef} style={panelStyle} className="z-50 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
-                        <div className="p-2 border-b border-white/10">
-                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
-                                <Search className="w-4 h-4 text-white/40 shrink-0" />
-                                <input
-                                    autoFocus
-                                    type="text"
-                                    value={search}
-                                    onChange={e => setSearch(e.target.value)}
-                                    placeholder="Rechercher..."
-                                    className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none"
-                                />
-                            </div>
-                        </div>
-
-                        <div className="max-h-52 overflow-y-auto">
-                            {candidates.length === 0 && !loading && (
-                                <div className="px-4 py-6 text-center text-sm text-white/40">
-                                    Aucune review {allowedLabels} trouvée
-                                </div>
-                            )}
-                            {filtered.length === 0 && candidates.length > 0 && (
-                                <div className="px-4 py-4 text-center text-sm text-white/40">
-                                    {candidates.length === selectedIds.size ? 'Toutes les reviews disponibles sont déjà liées' : 'Aucun résultat'}
-                                </div>
-                            )}
-                            {filtered.map(candidate => {
-                                const meta = TYPE_META[candidate.type] || TYPE_META.flower
-                                const Icon = meta.icon
-                                return (
-                                    <button
-                                        key={candidate.id}
-                                        type="button"
-                                        onClick={() => handleAdd(candidate)}
-                                        className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
-                                    >
-                                        <Icon className={`w-4 h-4 shrink-0 ${meta.color}`} />
-                                        <div className="flex-1 min-w-0">
-                                            <div className="text-sm font-medium text-white truncate">{candidate.label}</div>
-                                            {candidate.cultivars && (
-                                                <div className="text-xs text-white/40 truncate">{candidate.cultivars}</div>
-                                            )}
-                                        </div>
-                                        {candidate.note != null && (
-                                            <span className="text-xs font-bold text-amber-400 shrink-0">{candidate.note}/10</span>
-                                        )}
-                                    </button>
-                                )
-                            })}
-                        </div>
-                    </div>
-                )}
+                {open && renderPanel()}
             </div>
         </div>
     )

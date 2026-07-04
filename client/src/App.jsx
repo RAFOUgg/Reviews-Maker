@@ -37,6 +37,8 @@ const AccountPage = lazy(() => import('./pages/account/AccountPage'))
 const AccountChoicePage = lazy(() => import('./pages/account/AccountChoicePage'))
 const AgeVerificationPage = lazy(() => import('./pages/auth/AgeVerificationPage'))
 const DisclaimerRDR = lazy(() => import('./components/legal/DisclaimerRDR'))
+const LegalRequiredPage = lazy(() => import('./pages/legal/LegalRequiredPage'))
+const UnderagePage = lazy(() => import('./pages/legal/UnderagePage'))
 const RegisterPage = lazy(() => import('./pages/auth/RegisterPage'))
 const EmailVerificationPage = lazy(() => import('./pages/auth/EmailVerificationPage'))
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
@@ -192,6 +194,8 @@ function App() {
 
                                 <Route path="/age-verification" element={<AgeVerificationPage />} />
                                 <Route path="/disclaimer-rdr" element={<DisclaimerRDR />} />
+                                <Route path="/legal-required" element={<LegalRequiredPage />} />
+                                <Route path="/underage" element={<UnderagePage />} />
                                 <Route path="/auth/callback" element={<AuthCallback />} />
                             </Routes>
                         </Suspense>

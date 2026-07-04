@@ -391,6 +391,16 @@ export const authService = {
     },
 
     /**
+     * Deuxième étape du login si la 2FA TOTP est activée
+     */
+    async loginWithTotp(payload) {
+        return fetchAPI(`${API_BASE}/auth/email/login/totp`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+    },
+
+    /**
      * Se déconnecter
      */
     async logout() {

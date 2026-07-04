@@ -4,6 +4,7 @@ import { asyncHandler, Errors } from '../utils/errorHandler.js'
 import { prisma } from '../server.js'
 import { ACCOUNT_TYPES, getUserAccountType } from '../services/account.js'
 import { hashPassword, verifyPassword } from '../services/password.js'
+import { verifyUserTOTP } from '../services/totp.js'
 import { getUserLimits } from '../middleware/permissions.js'
 
 const router = express.Router()
@@ -87,7 +88,8 @@ function sanitizeUser(user) {
         consentRDR: user.consentRDR || false,
         birthdate: user.birthdate || null,
         country: user.country || null,
-        region: user.region || null
+        region: user.region || null,
+        totpEnabled: user.totpEnabled || false
     }
 }
 
@@ -212,6 +214,56 @@ router.post('/email/login', asyncHandler(async (req, res) => {
     const valid = await verifyPassword(password, user.passwordHash)
     if (!valid) {
         return res.status(401).json({ error: 'invalid_credentials', message: 'Identifiants invalides' })
+    }
+
+    if (user.totpEnabled) {
+        return res.json({ requiresTotp: true, email: normalizedEmail })
+    }
+
+    await new Promise((resolve, reject) => {
+        req.login(user, (err) => {
+            if (err) return reject(err)
+            resolve()
+        })
+    })
+
+    res.json(sanitizeUser(user))
+}))
+
+// POST /api/auth/email/login/totp - Deuxième étape du login si la 2FA TOTP est activée
+router.post('/email/login/totp', asyncHandler(async (req, res) => {
+    const { email, password, token } = req.body || {}
+
+    if (!email || !password || !token) {
+        return res.status(400).json({ error: 'missing_fields', message: 'Email, mot de passe et code requis' })
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase()
+    const user = await prisma.user.findFirst({ where: { email: normalizedEmail } })
+
+    if (!user || !user.passwordHash) {
+        return res.status(401).json({ error: 'invalid_credentials', message: 'Identifiants invalides' })
+    }
+
+    // Revalider le mot de passe : ne jamais faire confiance à un état côté client
+    const valid = await verifyPassword(password, user.passwordHash)
+    if (!valid) {
+        return res.status(401).json({ error: 'invalid_credentials', message: 'Identifiants invalides' })
+    }
+
+    if (!user.totpEnabled) {
+        return res.status(400).json({ error: 'totp_not_enabled', message: '2FA non activée pour ce compte' })
+    }
+
+    let totpValid
+    try {
+        totpValid = verifyUserTOTP(user, token)
+    } catch (err) {
+        totpValid = false
+    }
+
+    if (!totpValid) {
+        return res.status(401).json({ error: 'invalid_totp', message: 'Code de vérification invalide' })
     }
 
     await new Promise((resolve, reject) => {

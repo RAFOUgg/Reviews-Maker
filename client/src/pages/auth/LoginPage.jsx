@@ -1,11 +1,10 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import OAuthButtons from '../../components/account/OAuthButtons'
-import AgeVerification from '../../components/legal/AgeVerification'
 import { LiquidCard, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI'
 import { authService } from '../../services/apiService'
 import { useStore } from '../../store/useStore'
-import { Mail, Lock, ArrowRight, LogIn, UserPlus, Home, AlertTriangle } from 'lucide-react'
+import { Mail, Lock, ArrowRight, LogIn, UserPlus, Home, AlertTriangle, ShieldCheck } from 'lucide-react'
 
 export default function LoginPage() {
     const navigate = useNavigate()
@@ -14,7 +13,23 @@ export default function LoginPage() {
     const [password, setPassword] = useState('')
     const [error, setError] = useState('')
     const [loading, setLoading] = useState(false)
-    const [showAgeVerification, setShowAgeVerification] = useState(false)
+    const [requiresTotp, setRequiresTotp] = useState(false)
+    const [totpCode, setTotpCode] = useState('')
+
+    const completeLogin = (user) => {
+        setUser(user)
+        // La vérification légale (âge/consentement) est gérée globalement par
+        // le gate de App.jsx (useAuth) une fois authentifié, pas besoin de la refaire ici.
+        if (user.accountType === 'influencer' || user.accountType === 'producer') {
+            if (user.subscriptionStatus !== 'active' || user.kycStatus !== 'verified') {
+                navigate('/account')
+            } else {
+                navigate('/')
+            }
+        } else {
+            navigate('/')
+        }
+    }
 
     const handleSubmitEmail = async (e) => {
         e.preventDefault()
@@ -22,24 +37,14 @@ export default function LoginPage() {
         setLoading(true)
 
         try {
-            const user = await authService.loginWithEmail({ email, password })
-            setUser(user)
+            const result = await authService.loginWithEmail({ email, password })
 
-            // Vérifier si l'utilisateur a déjà validé son âge ET accepté le disclaimer
-            if (!user.legalAge || !user.consentRDR) {
-                setShowAgeVerification(true)
-            } else {
-                // Redirection selon type de compte
-                if (user.accountType === 'influencer' || user.accountType === 'producer') {
-                    if (user.subscriptionStatus !== 'active' || user.kycStatus !== 'verified') {
-                        navigate('/account')
-                    } else {
-                        navigate('/')
-                    }
-                } else {
-                    navigate('/')
-                }
+            if (result.requiresTotp) {
+                setRequiresTotp(true)
+                return
             }
+
+            completeLogin(result)
         } catch (err) {
             // Gérer les différents types d'erreurs avec des messages adaptés
             if (err.code === 'user_not_found') {
@@ -56,18 +61,89 @@ export default function LoginPage() {
         }
     }
 
-    const handleAgeVerified = () => {
-        navigate('/')
+    const handleSubmitTotp = async (e) => {
+        e.preventDefault()
+        setError('')
+        if (totpCode.length !== 6) {
+            setError('Entrez le code à 6 chiffres de votre application d\'authentification')
+            return
+        }
+        setLoading(true)
+
+        try {
+            const user = await authService.loginWithTotp({ email, password, token: totpCode })
+            completeLogin(user)
+        } catch (err) {
+            setError(err.message || 'Code invalide')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (requiresTotp) {
+        return (
+            <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white flex items-center justify-center px-4 py-8">
+                <div className="w-full max-w-md">
+                    <div className="text-center mb-8 space-y-4">
+                        <div className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-gradient-to-br from-emerald-500/20 to-cyan-500/20 border border-white/10 backdrop-blur-xl mb-4">
+                            <ShieldCheck className="w-10 h-10 text-emerald-400" strokeWidth={2} />
+                        </div>
+                        <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+                            Vérification en deux étapes
+                        </h1>
+                        <p className="text-white/60">
+                            Entrez le code généré par votre application d'authentification
+                        </p>
+                    </div>
+
+                    <LiquidCard glow="cyan" padding="lg">
+                        <form className="space-y-5" onSubmit={handleSubmitTotp}>
+                            <LiquidInput
+                                label="Code à 6 chiffres"
+                                type="text"
+                                value={totpCode}
+                                onChange={(e) => setTotpCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                                placeholder="123456"
+                                maxLength={6}
+                                autoFocus
+                                required
+                            />
+
+                            {error && (
+                                <div className="flex items-center gap-3 p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+                                    <AlertTriangle className="w-5 h-5 text-red-400 flex-shrink-0" />
+                                    <span className="text-red-400 text-sm">{error}</span>
+                                </div>
+                            )}
+
+                            <LiquidButton
+                                type="submit"
+                                variant="primary"
+                                size="lg"
+                                loading={loading}
+                                icon={ArrowRight}
+                                iconPosition="right"
+                                className="w-full"
+                            >
+                                Vérifier
+                            </LiquidButton>
+
+                            <button
+                                type="button"
+                                onClick={() => { setRequiresTotp(false); setTotpCode(''); setError('') }}
+                                className="w-full text-sm text-white/50 hover:text-white/80 transition-colors"
+                            >
+                                Retour
+                            </button>
+                        </form>
+                    </LiquidCard>
+                </div>
+            </div>
+        )
     }
 
     return (
         <>
-            <AgeVerification
-                isOpen={showAgeVerification}
-                onVerified={handleAgeVerified}
-                onReject={() => setShowAgeVerification(false)}
-            />
-
             <div className="min-h-screen bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white flex items-center justify-center px-4 py-8">
                 <div className="w-full max-w-md">
                     {/* Header */}
