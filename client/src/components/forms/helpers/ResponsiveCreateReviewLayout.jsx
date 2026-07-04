@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles } from 'lucide-react';
+import WizardModeToggle from '../../ui/WizardModeToggle';
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout';
 
 /**
@@ -420,17 +420,11 @@ export const ResponsiveCreateReviewLayout = ({
 
                                 {/* Mode automatique — bascule vers le wizard une-question-à-la-fois */}
                                 {onEnableWizard && (
-                                    <div className="flex-shrink-0">
-                                        <button
-                                            onClick={onEnableWizard}
-                                            title="Passer en mode automatique (une question à la fois)"
-                                            className={`rounded-xl bg-violet-500/15 hover:bg-violet-500/25 border border-violet-500/30 text-violet-200 transition-all font-medium flex items-center gap-1.5 ${layout.isMobile ? 'px-2 py-2' : 'px-3 py-2 text-sm'
-                                                }`}
-                                        >
-                                            <Sparkles className="w-4 h-4 flex-shrink-0" />
-                                            {!layout.isMobile && <span>Mode auto</span>}
-                                        </button>
-                                    </div>
+                                    <WizardModeToggle
+                                        active={false}
+                                        onClick={onEnableWizard}
+                                        compact={layout.isMobile}
+                                    />
                                 )}
 
                                 {/* Preview button */}

@@ -1,4 +1,5 @@
 import React from 'react'
+import WizardModeToggle from '../ui/WizardModeToggle'
 
 export default function WizardProgressBar({ currentIndex, total, sectionLabel, onExitToClassic }) {
     const percent = total > 0 ? ((currentIndex + 1) / total) * 100 : 0
@@ -10,13 +11,7 @@ export default function WizardProgressBar({ currentIndex, total, sectionLabel, o
                 <div className="flex items-center gap-3">
                     <span className="text-xs text-white/40">{currentIndex + 1}/{total}</span>
                     {onExitToClassic && (
-                        <button
-                            type="button"
-                            onClick={onExitToClassic}
-                            className="text-xs text-violet-300 hover:text-violet-200 underline underline-offset-2"
-                        >
-                            Voir toutes les questions
-                        </button>
+                        <WizardModeToggle active onClick={onExitToClassic} compact />
                     )}
                 </div>
             </div>

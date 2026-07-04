@@ -157,13 +157,26 @@ export default function CreateFlowerReview() {
     const useWizardMode = wizardOverride !== null ? wizardOverride : (isMobile || forceWizard)
     const wizardQuestions = getFlowerWizardQuestions({ isProducteur })
 
+    // Index de la section classique visitée via un handoff (pipeline/génétique) — permet de
+    // repasser automatiquement en mode automatique dès qu'on la quitte (voir useEffect plus bas),
+    // sans quoi cliquer "Configurer..." puis "→" laissait l'utilisateur bloqué en vue classique
+    // pour toutes les sections suivantes malgré ?mode=auto dans l'URL.
+    const [handoffSectionIndex, setHandoffSectionIndex] = useState(null)
+    useEffect(() => {
+        if (handoffSectionIndex !== null && currentSection !== handoffSectionIndex) {
+            setWizardOverride(null)
+            setHandoffSectionIndex(null)
+        }
+    }, [currentSection, handoffSectionIndex])
+
     // Étapes complexes (génétique/culture/curing) non linéarisables en questions : on quitte
     // temporairement le wizard pour la section correspondante du formulaire classique, et on
-    // avance l'index à la question suivante pour que "Mode automatique" reprenne juste après
-    // (au lieu de rester bloqué sur la même étape handoff).
+    // avance l'index à la question suivante pour que le mode automatique reprenne juste après
+    // (au lieu de rester bloqué sur la même étape handoff) dès qu'on quitte cette section.
     const handleOpenHandoff = (target) => {
         const index = sections.findIndex(s => s.id === target)
         setWizardOverride(false)
+        setHandoffSectionIndex(index)
         setWizardIndex(i => Math.min(i + 1, wizardQuestions.length - 1))
         if (index >= 0) setCurrentSection(index)
     }

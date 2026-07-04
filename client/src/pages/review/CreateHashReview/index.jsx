@@ -83,9 +83,21 @@ export default function CreateHashReview() {
     const [wizardIndex, setWizardIndex] = useState(0)
     const useWizardMode = wizardOverride !== null ? wizardOverride : (isMobile || forceWizard)
     const wizardQuestions = getHashWizardQuestions()
+
+    // Repasse automatiquement en mode auto dès qu'on quitte la section handoff — cf.
+    // CreateFlowerReview/index.jsx pour le détail.
+    const [handoffSectionIndex, setHandoffSectionIndex] = useState(null)
+    useEffect(() => {
+        if (handoffSectionIndex !== null && currentSection !== handoffSectionIndex) {
+            setWizardOverride(null)
+            setHandoffSectionIndex(null)
+        }
+    }, [currentSection, handoffSectionIndex])
+
     const handleOpenHandoff = (target) => {
         const index = sections.findIndex(s => s.id === target)
         setWizardOverride(false)
+        setHandoffSectionIndex(index)
         setWizardIndex(i => Math.min(i + 1, wizardQuestions.length - 1))
         if (index >= 0) setCurrentSection(index)
     }
