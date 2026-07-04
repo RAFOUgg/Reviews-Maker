@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react'
+import React, { useState, useEffect, useLayoutEffect, useRef, useMemo } from 'react'
 import { Search, X, ChevronDown, Plus, Flower2, Link2 } from 'lucide-react'
 import { TYPE_META } from '../../../utils/reviewTypeMeta'
 
@@ -20,6 +20,63 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
     const [open, setOpen] = useState(false)
     const [search, setSearch] = useState('')
     const dropdownRef = useRef(null)
+    // Positionnement intelligent du panneau déroulant : celui-ci vivait en `position: absolute`
+    // relatif à son bouton, ce qui le fait déborder hors du viewport (ou d'un ancêtre à overflow
+    // limité) dès que le champ est proche du bord droit/bas de l'écran — inaccessible au clic.
+    // On le passe en `position: fixed` avec des coordonnées calculées après montage (comme
+    // NodeContextMenu.jsx), et on le recale/retourne (au-dessus, ou aligné à droite) s'il
+    // déborderait sinon.
+    const triggerRef = useRef(null)
+    const panelRef = useRef(null)
+    const [panelStyle, setPanelStyle] = useState({ position: 'fixed', top: -9999, left: -9999 })
+
+    useLayoutEffect(() => {
+        if (!open) return
+        const compute = () => {
+            const trigger = triggerRef.current
+            const panel = panelRef.current
+            if (!trigger || !panel) return
+            const margin = 8
+            const triggerRect = trigger.getBoundingClientRect()
+            const panelWidth = panel.offsetWidth || 288
+            const panelHeight = panel.offsetHeight || 300
+
+            let left = triggerRect.left
+            if (left + panelWidth > window.innerWidth - margin) {
+                left = Math.max(margin, triggerRect.right - panelWidth)
+            }
+            left = Math.max(margin, left)
+
+            let top = triggerRect.bottom + 8
+            if (top + panelHeight > window.innerHeight - margin) {
+                const upTop = triggerRect.top - panelHeight - 8
+                top = upTop >= margin ? upTop : Math.max(margin, window.innerHeight - panelHeight - margin)
+            }
+
+            setPanelStyle({ position: 'fixed', left, top, width: compact ? panelWidth : triggerRect.width })
+        }
+        compute()
+        window.addEventListener('resize', compute)
+        window.addEventListener('scroll', compute, true)
+
+        // Le contenu du panneau change de hauteur de façon asynchrone (liste de candidats
+        // chargée après le premier calcul de position, résultats de recherche qui filtrent la
+        // liste) — sans ResizeObserver, la position calculée au premier rendu (panneau encore
+        // vide/court) devient fausse une fois le contenu réel affiché, et le panneau déborde en
+        // bas de l'écran sans jamais se recorriger.
+        let resizeObserver
+        if (panelRef.current && typeof ResizeObserver !== 'undefined') {
+            resizeObserver = new ResizeObserver(() => compute())
+            resizeObserver.observe(panelRef.current)
+        }
+
+        return () => {
+            window.removeEventListener('resize', compute)
+            window.removeEventListener('scroll', compute, true)
+            resizeObserver?.disconnect()
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [open])
 
     useEffect(() => {
         let cancelled = false
@@ -106,6 +163,7 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
 
                 <div ref={dropdownRef} className="relative inline-block">
                     <button
+                        ref={triggerRef}
                         type="button"
                         onClick={() => setOpen(o => !o)}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-500/15 hover:bg-green-500/25 text-green-300 hover:text-green-200 text-[11px] font-medium transition-colors"
@@ -115,7 +173,7 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
                     </button>
 
                     {open && (
-                        <div className="absolute z-50 mt-2 w-72 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                        <div ref={panelRef} style={panelStyle} className="z-50 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
                             <div className="p-2 border-b border-white/10">
                                 <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
                                     <Search className="w-4 h-4 text-white/40 shrink-0" />
@@ -204,6 +262,7 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
 
             <div ref={dropdownRef} className="relative">
                 <button
+                    ref={triggerRef}
                     type="button"
                     onClick={() => setOpen(o => !o)}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 hover:border-white/20 transition-all text-left"
@@ -216,7 +275,7 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
                 </button>
 
                 {open && (
-                    <div className="absolute z-50 mt-2 w-full rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                    <div ref={panelRef} style={panelStyle} className="z-50 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
                         <div className="p-2 border-b border-white/10">
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
                                 <Search className="w-4 h-4 text-white/40 shrink-0" />

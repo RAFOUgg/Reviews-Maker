@@ -33,6 +33,24 @@ const CULTIVAR_TYPES = [
     { id: 'cbd', label: 'CBD', color: 'cyan', icon: HeartPulse },
 ]
 
+// Types de projet d'arbre généalogique — même principe que CULTIVAR_TYPES (badge coloré en
+// haut à droite de la carte), mappé sur GeneticTree.projectType côté Prisma.
+const TREE_TYPES = {
+    phenohunt: { label: 'PhenoHunt', color: 'purple' },
+    selection: { label: 'Sélection', color: 'green' },
+    crossing: { label: 'Croisement', color: 'amber' },
+    hunt: { label: 'Hunt', color: 'cyan' },
+}
+
+function formatTreeDate(iso) {
+    if (!iso) return null
+    try {
+        return new Date(iso).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+    } catch {
+        return null
+    }
+}
+
 const CANNABINOID_SOURCE_LABELS = {
     breeder_claim: 'Annoncé breeder',
     lab_tested: 'Analyse labo (COA)'
@@ -468,45 +486,124 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         toast.success('Arbre supprimé')
     }
 
-    // Rendu d'un arbre généalogique — même structure que ProductionChainTab.jsx (carte
-    // cliquable en entier pour ouvrir l'éditeur, icône carrée + titre + stats, suppression en
-    // icône seule révélée au survol) plutôt que des boutons d'action séparés en pied de carte.
-    const renderTreeCard = (tree, index) => (
-        <motion.div
-            key={tree.id}
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: index * 0.04 }}
-        >
-            <LiquidCard
-                glow="none"
-                padding="md"
-                className="hover:border-violet-500/30 transition-all cursor-pointer group"
-                onClick={() => navigate(`/phenohunt?tree=${tree.id}`)}
+    // Rendu d'un arbre généalogique — même gabarit visuel que renderCultivarCard (header icône
+    // carrée + titre/sous-titre + badge coloré, grille de stats rapides, actions révélées au
+    // survol) pour que les deux onglets de la bibliothèque (Cultivars / Arbres Généalogiques)
+    // se lisent comme un seul système cohérent plutôt que deux designs différents.
+    const renderTreeCard = (tree, index) => {
+        const typeConfig = TREE_TYPES[tree.projectType] || TREE_TYPES.phenohunt
+        const nodesCount = tree._count?.nodes ?? tree.nodes?.length ?? 0
+        const edgesCount = tree._count?.edges ?? tree.edges?.length ?? 0
+        const dateLabel = formatTreeDate(tree.updatedAt || tree.createdAt)
+
+        if (viewMode === 'list') {
+            return (
+                <motion.div
+                    key={tree.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.03 }}
+                >
+                    <LiquidCard glow="none" padding="sm" className="hover:border-violet-500/30 transition-all cursor-pointer" onClick={() => navigate(`/phenohunt?tree=${tree.id}`)}>
+                        <div className="flex items-center gap-4">
+                            <div className={`w-10 h-10 rounded-lg bg-${typeConfig.color}-500/20 flex items-center justify-center flex-shrink-0`}>
+                                <Dna className={`w-5 h-5 text-${typeConfig.color}-400`} />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <h3 className="font-bold text-white truncate">{tree.name}</h3>
+                                <div className="flex items-center gap-3 text-sm text-white/50">
+                                    <span>{nodesCount} nœuds • {edgesCount} liens</span>
+                                    <span className={`px-2 py-0.5 rounded bg-${typeConfig.color}-500/20 text-${typeConfig.color}-400`}>
+                                        {typeConfig.label}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <LiquidButton
+                                    onClick={(e) => { e.stopPropagation(); navigate(`/phenohunt?tree=${tree.id}`) }}
+                                    variant="ghost"
+                                    size="sm"
+                                    icon={Edit}
+                                />
+                                <LiquidButton
+                                    onClick={(e) => handleDeleteTree(tree.id, e)}
+                                    variant="ghost"
+                                    size="sm"
+                                    icon={Trash2}
+                                    className="hover:!text-red-400"
+                                />
+                            </div>
+                        </div>
+                    </LiquidCard>
+                </motion.div>
+            )
+        }
+
+        // Vue Grid — même structure que renderCultivarCard
+        return (
+            <motion.div
+                key={tree.id}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: index * 0.03 }}
             >
-                <div className="flex items-start gap-3 mb-3">
-                    <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
-                        <Dna className="w-6 h-6 text-violet-400" />
+                <LiquidCard
+                    glow="none"
+                    padding="md"
+                    className="hover:border-violet-500/30 transition-all cursor-pointer group"
+                    onClick={() => navigate(`/phenohunt?tree=${tree.id}`)}
+                >
+                    <div className="flex items-start gap-3 mb-3">
+                        <div className={`w-12 h-12 rounded-xl bg-${typeConfig.color}-500/20 flex items-center justify-center flex-shrink-0`}>
+                            <Dna className={`w-6 h-6 text-${typeConfig.color}-400`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-white truncate">{tree.name}</h3>
+                            <p className="text-sm text-white/50 truncate">{tree.description || 'Aucune description'}</p>
+                        </div>
+                        <span className={`px-2 py-1 rounded-lg bg-${typeConfig.color}-500/20 text-${typeConfig.color}-400 text-xs font-bold`}>
+                            {typeConfig.label}
+                        </span>
                     </div>
-                    <div className="flex-1 min-w-0">
-                        <h3 className="font-bold text-white truncate">{tree.name}</h3>
-                        <p className="text-sm text-white/50">
-                            {tree._count?.nodes ?? tree.nodes?.length ?? 0} nœuds • {tree._count?.edges ?? tree.edges?.length ?? 0} liens
-                        </p>
+
+                    {/* Stats rapides — même grille que cultivar (THC/floraison/etc.) */}
+                    <div className="grid grid-cols-2 gap-2 text-xs mb-4">
+                        <div className="px-2 py-1 bg-white/5 rounded text-white/60">
+                            🌿 {nodesCount} nœud{nodesCount > 1 ? 's' : ''}
+                        </div>
+                        <div className="px-2 py-1 bg-white/5 rounded text-white/60">
+                            🔗 {edgesCount} lien{edgesCount > 1 ? 's' : ''}
+                        </div>
+                        {dateLabel && (
+                            <div className="px-2 py-1 bg-white/5 rounded text-white/60 col-span-2">
+                                📅 {dateLabel}
+                            </div>
+                        )}
                     </div>
-                    <button
-                        onClick={(e) => handleDeleteTree(tree.id, e)}
-                        className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
-                    >
-                        <Trash2 className="w-4 h-4 text-red-400" />
-                    </button>
-                </div>
-                {tree.description && (
-                    <p className="text-xs text-white/40 truncate">{tree.description}</p>
-                )}
-            </LiquidCard>
-        </motion.div>
-    )
+
+                    {/* Actions */}
+                    <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <LiquidButton
+                            onClick={(e) => { e.stopPropagation(); navigate(`/phenohunt?tree=${tree.id}`) }}
+                            variant="ghost"
+                            size="sm"
+                            icon={Edit}
+                            className="flex-1"
+                        >
+                            Ouvrir
+                        </LiquidButton>
+                        <LiquidButton
+                            onClick={(e) => handleDeleteTree(tree.id, e)}
+                            variant="ghost"
+                            size="sm"
+                            icon={Trash2}
+                            className="hover:!text-red-400"
+                        />
+                    </div>
+                </LiquidCard>
+            </motion.div>
+        )
+    }
 
     if (loading) {
         return (
@@ -977,7 +1074,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                             <p className="text-xs text-white/30 mt-1">Créez-en un pour construire vos lignées</p>
                         </LiquidCard>
                     ) : (
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        <div className={viewMode === 'grid'
+                            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
+                            : 'space-y-2'
+                        }>
                             <AnimatePresence>
                                 {trees.map((tree, index) => renderTreeCard(tree, index))}
                             </AnimatePresence>
