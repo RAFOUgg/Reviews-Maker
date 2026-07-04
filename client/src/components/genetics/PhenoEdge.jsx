@@ -1,7 +1,8 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
-import { useEdgeEndpointParams } from '../graph-canvas/floatingEdgeUtils';
+import { useEdgeEndpointParams, useFloatingNodeRect } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
+import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
 
 /**
  * PhenoEdge - Edge personnalisé pour les connexions généalogiques
@@ -40,7 +41,20 @@ export default function PhenoEdge({
     const handleAssignEndpoint = useCallback((end, side) => {
         data?.onEndpointHandleChange?.(id, end === 'source' ? { sourceHandle: side } : { targetHandle: side });
     }, [id, data]);
-    const { dragging, dragPreviewPos, startDrag } = useDraggableEndpoint(handleAssignEndpoint);
+    const handleReconnect = useCallback((end, newNodeId, side) => {
+        data?.onEndpointReconnect?.(id, end, newNodeId, side);
+    }, [id, data]);
+    const { dragging, dragPreviewPos, hoverNodeId, startDrag } = useDraggableEndpoint({
+        onAssign: handleAssignEndpoint,
+        onReconnect: handleReconnect
+    });
+
+    // Surbrillance uniquement quand le survol pointe vers un AUTRE nœud que celui déjà attaché à
+    // cette extrémité — un survol du nœud d'origine (simple changement de côté) n'a pas besoin de
+    // cette mise en avant, déjà géré par l'opacité de la poignée elle-même.
+    const draggingOriginId = dragging === 'source' ? source : dragging === 'target' ? target : null;
+    const showReconnectHighlight = hoverNodeId && hoverNodeId !== draggingOriginId;
+    const hoverRect = useFloatingNodeRect(showReconnectHighlight ? hoverNodeId : null);
 
     // Pendant le glisser d'une extrémité, elle suit le curseur (aperçu live) ; l'autre extrémité
     // ne bouge pas.
@@ -105,6 +119,10 @@ export default function PhenoEdge({
             />
 
             <EdgeLabelRenderer>
+                {/* Surbrillance du nœud survolé pendant le glisser d'une extrémité vers un AUTRE
+                    nœud — signale qu'une dépose ici reconnectera réellement la liaison. */}
+                <DropTargetHighlight rect={hoverRect} />
+
                 {/* Label de relation, décalé au-dessus de la poignée pour ne pas la masquer */}
                 <div
                     style={{
@@ -164,13 +182,14 @@ export default function PhenoEdge({
                 </div>
 
                 {/* Poignées d'extrémité — glisser vers un autre côté du MÊME nœud pour forcer
-                    l'accroche à cet endroit (double-clic : retour à l'accroche automatique).
-                    Visibles au survol/sélection ou pendant le glisser en cours. Même agrandissement
-                    de zone de saisie que la poignée de courbure ci-dessus. */}
+                    l'accroche à cet endroit, ou vers un AUTRE nœud pour reconnecter réellement
+                    la liaison (double-clic : retour à l'accroche automatique). Visibles au
+                    survol/sélection ou pendant le glisser en cours. Même agrandissement de zone
+                    de saisie que la poignée de courbure ci-dessus. */}
                 {[
-                    { end: 'source', x: sx, y: sy, nodeId: source, active: !!data?.sourceHandle },
-                    { end: 'target', x: tx, y: ty, nodeId: target, active: !!data?.targetHandle },
-                ].map(({ end, x, y, nodeId, active }) => (
+                    { end: 'source', x: sx, y: sy, nodeId: source, otherNodeId: target, active: !!data?.sourceHandle },
+                    { end: 'target', x: tx, y: ty, nodeId: target, otherNodeId: source, active: !!data?.targetHandle },
+                ].map(({ end, x, y, nodeId, otherNodeId, active }) => (
                     <div
                         key={end}
                         style={{
@@ -186,9 +205,9 @@ export default function PhenoEdge({
                             transition: dragging ? 'none' : 'opacity 150ms ease-in-out',
                         }}
                         className="nodrag nopan edge-endpoint-handle"
-                        onPointerDown={startDrag(end, nodeId)}
+                        onPointerDown={startDrag(end, nodeId, otherNodeId)}
                         onDoubleClick={handleEndpointDoubleClick(end)}
-                        title="Glisser vers un autre côté du nœud pour ancrer la liaison ici — double-clic pour revenir à l'accroche automatique"
+                        title="Glisser vers un autre côté du nœud pour ancrer la liaison ici, ou vers un autre nœud pour reconnecter la liaison — double-clic pour revenir à l'accroche automatique"
                     >
                         <div
                             style={{

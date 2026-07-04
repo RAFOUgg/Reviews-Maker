@@ -48,7 +48,12 @@ const EdgeFormModal = ({ onClose }) => {
                     childNodeId: formData.childNodeId,
                     relationshipType: formData.relationshipType || 'parent',
                     pollinationMethod: formData.pollinationMethod || null,
-                    notes: formData.notes || null
+                    notes: formData.notes || null,
+                    // Renseigné par UnifiedGeneticsCanvas.handleConnect quand la relation vient
+                    // d'un glisser-déposer de connexion natif React Flow (mémorise le côté du
+                    // handle réellement utilisé, cohérent avec l'accroche manuelle).
+                    sourceHandle: formData.sourceHandle || null,
+                    targetHandle: formData.targetHandle || null
                 });
             }
 

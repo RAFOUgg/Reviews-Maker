@@ -12,6 +12,7 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
     const menuRef = useRef(null);
     // Cf. NodeContextMenu.jsx : recale le menu s'il déborde du viewport près des bords.
     const [pos, setPos] = useState({ left: x, top: y })
+    const [showTypeMenu, setShowTypeMenu] = useState(false);
 
     useEffect(() => {
         const el = menuRef.current
@@ -74,6 +75,26 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
         onClose();
     };
 
+    // Alternative rapide à l'ouverture de la modale complète pour le cas courant "je veux juste
+    // corriger le type" — réutilise relationshipLabel (défini plus bas) comme unique source des
+    // libellés/emojis, pas de duplication.
+    const handleChangeType = (value) => {
+        store.updateEdge(edgeId, { relationshipType: value });
+        onClose();
+    };
+
+    // Échange parentNodeId/childNodeId (et les côtés d'accroche manuels s'ils existent) — corrige
+    // une relation créée dans le mauvais sens sans avoir à la supprimer et la recréer.
+    const handleReverseDirection = () => {
+        store.updateEdge(edgeId, {
+            parentNodeId: edge.childNodeId,
+            childNodeId: edge.parentNodeId,
+            sourceHandle: edge.targetHandle || null,
+            targetHandle: edge.sourceHandle || null
+        });
+        onClose();
+    };
+
     const relationshipLabel = {
         'parent': '👨‍👩‍👧 Parent',
         'pollen_donor': '🌼 Donateur de pollen',
@@ -126,9 +147,26 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
                     <button className="context-menu-item" onClick={handleEdit}>
                         ✏️ Éditer relation
                     </button>
+                    {edge?.relationshipType !== 'pairing' && !showTypeMenu && (
+                        <button className="context-menu-item" onClick={() => setShowTypeMenu(true)}>
+                            🏷️ Changer le type de relation
+                        </button>
+                    )}
+                    {showTypeMenu && Object.entries(relationshipLabel)
+                        .filter(([value]) => value !== 'pairing' && value !== edge?.relationshipType)
+                        .map(([value, label]) => (
+                            <button key={value} className="context-menu-item" onClick={() => handleChangeType(value)}>
+                                {label}
+                            </button>
+                        ))}
                     {edge?.relationshipType === 'pairing' && (
                         <button className="context-menu-item" onClick={handleAddChildToPairing}>
                             👶 Ajouter un enfant à ce couple
+                        </button>
+                    )}
+                    {edge?.relationshipType !== 'pairing' && (
+                        <button className="context-menu-item" onClick={handleReverseDirection}>
+                            🔀 Inverser la direction
                         </button>
                     )}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />

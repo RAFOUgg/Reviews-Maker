@@ -3,6 +3,7 @@ import { EdgeLabelRenderer, BaseEdge, useReactFlow, useStoreApi } from 'reactflo
 import { Heart, Baby } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect, findNodeAtPoint, nearestHandleSide } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
+import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
 
 /**
  * PairingEdge - Liaison "couple parental" (convention pedigree : ligne de jonction entre deux
@@ -42,7 +43,19 @@ export default function PairingEdge({
     const handleAssignEndpoint = useCallback((end, side) => {
         data?.onEndpointHandleChange?.(id, end === 'source' ? { sourceHandle: side } : { targetHandle: side });
     }, [id, data]);
-    const { dragging, dragPreviewPos, startDrag } = useDraggableEndpoint(handleAssignEndpoint);
+    const handleReconnect = useCallback((end, newNodeId, side) => {
+        data?.onEndpointReconnect?.(id, end, newNodeId, side);
+    }, [id, data]);
+    const { dragging, dragPreviewPos, hoverNodeId, startDrag } = useDraggableEndpoint({
+        onAssign: handleAssignEndpoint,
+        onReconnect: handleReconnect
+    });
+
+    // Surbrillance uniquement quand le survol pointe vers un AUTRE nœud que celui déjà attaché à
+    // cette extrémité (distinct de dropTargetId, qui suit le geste séparé de la bulle médiane).
+    const endpointDraggingOriginId = dragging === 'source' ? source : dragging === 'target' ? target : null;
+    const showEndpointReconnectHighlight = hoverNodeId && hoverNodeId !== endpointDraggingOriginId;
+    const endpointHoverRect = useFloatingNodeRect(showEndpointReconnectHighlight ? hoverNodeId : null);
 
     const sx = (dragging === 'source' && dragPreviewPos) ? dragPreviewPos.x : baseSx;
     const sy = (dragging === 'source' && dragPreviewPos) ? dragPreviewPos.y : baseSy;
@@ -110,21 +123,11 @@ export default function PairingEdge({
             <EdgeLabelRenderer>
                 {/* Surbrillance du nœud survolé pendant le glisser — signale qu'une dépose ici
                     reliera ce nœud comme enfant du couple plutôt que de courber la ligne. */}
-                {dropTargetRect && (
-                    <div
-                        style={{
-                            position: 'absolute',
-                            transform: `translate(${dropTargetRect.x - 4}px, ${dropTargetRect.y - 4}px)`,
-                            width: dropTargetRect.width + 8,
-                            height: dropTargetRect.height + 8,
-                            border: '3px solid #fbbf24',
-                            borderRadius: 14,
-                            boxShadow: '0 0 16px 2px #fbbf24',
-                            pointerEvents: 'none',
-                            zIndex: 5,
-                        }}
-                    />
-                )}
+                <DropTargetHighlight rect={dropTargetRect} />
+
+                {/* Même surbrillance pour le glisser d'une extrémité de la ligne de couple
+                    vers un AUTRE nœud (reconnexion, geste distinct de la bulle médiane). */}
+                <DropTargetHighlight rect={endpointHoverRect} />
 
                 {/* Zone de saisie agrandie (32x32) autour de la bulle visuelle (20x20) — les
                     gestionnaires vivent sur ce conteneur, pas sur la bulle elle-même, pour que
@@ -170,12 +173,13 @@ export default function PairingEdge({
                     </div>
                 </div>
 
-                {/* Poignées d'extrémité — mêmes gestes que PhenoEdge.jsx, même agrandissement
-                    de zone de saisie (26x26) autour du point visuel (9x9). */}
+                {/* Poignées d'extrémité — mêmes gestes que PhenoEdge.jsx (dont la reconnexion
+                    vers un autre nœud), même agrandissement de zone de saisie (26x26) autour du
+                    point visuel (9x9). */}
                 {[
-                    { end: 'source', x: sx, y: sy, nodeId: source, active: !!data?.sourceHandle },
-                    { end: 'target', x: tx, y: ty, nodeId: target, active: !!data?.targetHandle },
-                ].map(({ end, x, y, nodeId, active }) => (
+                    { end: 'source', x: sx, y: sy, nodeId: source, otherNodeId: target, active: !!data?.sourceHandle },
+                    { end: 'target', x: tx, y: ty, nodeId: target, otherNodeId: source, active: !!data?.targetHandle },
+                ].map(({ end, x, y, nodeId, otherNodeId, active }) => (
                     <div
                         key={end}
                         style={{
@@ -191,9 +195,9 @@ export default function PairingEdge({
                             transition: dragging ? 'none' : 'opacity 150ms ease-in-out',
                         }}
                         className="nodrag nopan edge-endpoint-handle"
-                        onPointerDown={startDrag(end, nodeId)}
+                        onPointerDown={startDrag(end, nodeId, otherNodeId)}
                         onDoubleClick={handleEndpointDoubleClick(end)}
-                        title="Glisser vers un autre côté du nœud pour ancrer la liaison ici — double-clic pour revenir à l'accroche automatique"
+                        title="Glisser vers un autre côté du nœud pour ancrer la liaison ici, ou vers un autre nœud pour reconnecter la liaison — double-clic pour revenir à l'accroche automatique"
                     >
                         <div
                             style={{

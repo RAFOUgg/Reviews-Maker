@@ -196,6 +196,15 @@ export default function GraphCanvasShell({
                 zoomOnPinch
                 panOnDrag
                 preventScrolling
+                // Magnétisme des connexions : rayon par défaut de React Flow (20, en unités flow)
+                // trop serré sur un arbre dense ou dézoomé — 60 reste sous la moitié de la largeur
+                // par défaut d'un nœud (140px) pour éviter toute ambiguïté entre nœuds voisins.
+                connectionRadius={60}
+                // Sans ce garde-fou, une auto-boucle reste possible : le mode Strict (par défaut)
+                // ne vérifie que la compatibilité des types de handle, jamais que les deux bouts
+                // sont des nœuds différents — CultivarNode expose un handle source ET target sur
+                // chaque côté, donc un nœud peut sinon se connecter à lui-même.
+                isValidConnection={(c) => c.source !== c.target}
             >
                 <Background color="#aaa" gap={16} />
                 <Controls />

@@ -21,7 +21,7 @@ import {
     useReactFlow,
     MarkerType
 } from 'reactflow';
-import { Sprout } from 'lucide-react';
+import { Sprout, AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import useResponsiveLayout from '../../hooks/useResponsiveLayout';
@@ -61,6 +61,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane'
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
+    const [confirmDetachAll, setConfirmDetachAll] = useState(false);
 
     // Persistance du point de courbure d'une liaison glissée à la main (PhenoEdge/PairingEdge).
     // pos=null réinitialise la ligne droite (double-clic sur la poignée).
@@ -77,6 +78,16 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const handleEdgeEndpointChange = useCallback((edgeId, patch) => {
         store.updateEdge(edgeId, patch);
     }, [store]);
+
+    // Reconnexion réelle d'une extrémité de liaison vers un AUTRE nœud (glisser la poignée
+    // source/target au-dessus d'un nœud différent de celui déjà attaché) — change parentNodeId
+    // ou childNodeId, pas seulement le côté d'accroche. Backend revalide l'absence de cycle.
+    const handleEdgeEndpointReconnect = useCallback((edgeId, end, newNodeId, newHandleSide) => {
+        if (readOnly) return;
+        store.updateEdge(edgeId, end === 'source'
+            ? { parentNodeId: newNodeId, sourceHandle: newHandleSide }
+            : { childNodeId: newNodeId, targetHandle: newHandleSide });
+    }, [readOnly, store]);
 
     // Glisser la bulle médiane d'un couple parental (PairingEdge) directement sur un autre nœud
     // du canvas : crée les liens de filiation manquants (couple -> nœud cible) sans passer par le
@@ -131,7 +142,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     color: node.color || '#FF6B9D',
                     genetics: genetics || {},
                     notes: node.notes,
-                    selected: store.selectedNodeId === node.id
+                    selected: store.selectedNodeId === node.id,
+                    sourceReviewOrphaned: node.sourceReviewOrphaned
                 },
                 position: node.position || { x: 0, y: 0 },
                 type: 'cultivar'
@@ -216,13 +228,14 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     sourceHandle: edge.sourceHandle,
                     targetHandle: edge.targetHandle,
                     onEndpointHandleChange: handleEdgeEndpointChange,
+                    onEndpointReconnect: handleEdgeEndpointReconnect,
                     onDropChildLink: handlePairingDropOnNode
                 }
             }));
 
         setNodes(rfNodes);
         setEdges([...rfEdges, ...familyEdges]);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handlePairingDropOnNode]);
+    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {
@@ -296,13 +309,28 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         }));
     }, [readOnly, store, setNodes]);
 
+    // React Flow expose l'id réel du handle utilisé ("left-source"/"right-target"/null pour
+    // top/bottom, non nommés) — à normaliser vers le vocabulaire top|bottom|left|right attendu
+    // par GenEdge.sourceHandle/targetHandle (même vocabulaire que l'accroche manuelle glissée).
+    const normalizeHandleSide = useCallback((rawId, fallback) => {
+        if (!rawId) return fallback;
+        if (rawId.startsWith('left')) return 'left';
+        if (rawId.startsWith('right')) return 'right';
+        return fallback;
+    }, []);
+
     // Gestion de la connexion entre deux nœuds
     const handleConnect = useCallback(async (connection) => {
         if (readOnly) return;
 
-        // Ouvrir le formulaire d'arête
+        // Ouvrir le formulaire d'arête, pré-rempli avec le côté d'accroche réellement utilisé
+        // pour glisser la connexion — cohérent avec l'accroche manuelle (glisser une extrémité).
         store.openEdgeForm(connection.source, connection.target);
-    }, [readOnly, store]);
+        store.updateEdgeFormData({
+            sourceHandle: normalizeHandleSide(connection.sourceHandle, 'bottom'),
+            targetHandle: normalizeHandleSide(connection.targetHandle, 'top')
+        });
+    }, [readOnly, store, normalizeHandleSide]);
 
     // Clic sur un nœud
     const handleNodeClick = useCallback((event, node) => {
@@ -421,6 +449,17 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         setDeleteConfirm(null);
     }, [deleteConfirm, store]);
 
+    // Nœuds dont la review liée (sourceReviewId) a été supprimée depuis — calculé côté client à
+    // partir du flag posé par le backend (GET /trees/:id), pas de champ agrégé à maintenir en sync.
+    const orphanedNodeIds = store.nodes.filter(n => n.sourceReviewOrphaned).map(n => n.id);
+
+    // "Tout détacher" : même pattern que handleNodeDragStop ci-dessus pour un déplacement multiple
+    // (boucle Promise.all sur updateNode), pas de nouvel endpoint bulk.
+    const handleDetachAllOrphans = useCallback(async () => {
+        await Promise.all(orphanedNodeIds.map(id => store.updateNode(id, { sourceReviewId: null })));
+        setConfirmDetachAll(false);
+    }, [orphanedNodeIds, store]);
+
     // Charger l'arbre au montage
     useEffect(() => {
         if (treeId && treeId !== store.selectedTreeId) {
@@ -449,6 +488,19 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             minimapNodeColor={(node) => node.data?.color || '#FF6B9D'}
+            toolbar={orphanedNodeIds.length > 0 && (
+                <Panel position="top-center" className="orphan-banner">
+                    <AlertTriangle size={14} />
+                    <span>
+                        {orphanedNodeIds.length} lien{orphanedNodeIds.length > 1 ? 's' : ''} cassé{orphanedNodeIds.length > 1 ? 's' : ''} (review supprimée)
+                    </span>
+                    {!readOnly && (
+                        <button type="button" onClick={() => setConfirmDetachAll(true)}>
+                            Tout détacher
+                        </button>
+                    )}
+                </Panel>
+            )}
             // canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan (déplacer un
             // nœud, ajouter une arête...), pas seulement le chargement initial de l'arbre. Ne
             // démonter le canvas (spinner plein écran) que lors du tout premier chargement, quand
@@ -468,17 +520,30 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                         {selectedNode.notes && (
                             <p className="notes">{selectedNode.notes}</p>
                         )}
+                        {selectedNode.sourceReviewOrphaned && (
+                            <p className="notes" style={{ color: '#fbbf24' }}>
+                                ⚠️ La review liée à ce nœud a été supprimée
+                            </p>
+                        )}
                         {!readOnly && (
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button className="btn-edit" onClick={() => store.openNodeForm(selectedNode)}>
                                     Éditer
                                 </button>
-                                {selectedNode.sourceReviewId && (
+                                {selectedNode.sourceReviewId && !selectedNode.sourceReviewOrphaned && (
                                     <button
                                         className="btn-edit"
                                         onClick={() => window.open(`/edit/flower/${selectedNode.sourceReviewId}`, '_blank', 'noopener')}
                                     >
                                         Éditer la review
+                                    </button>
+                                )}
+                                {selectedNode.sourceReviewId && (
+                                    <button
+                                        className="btn-edit"
+                                        onClick={() => store.updateNode(selectedNode.id, { sourceReviewId: null })}
+                                    >
+                                        Détacher la review
                                     </button>
                                 )}
                             </div>
@@ -539,6 +604,14 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     confirmLabel="Supprimer"
                     onCancel={() => setDeleteConfirm(null)}
                     onConfirm={handleConfirmDelete}
+                />
+                <ConfirmModal
+                    open={confirmDetachAll}
+                    title="Détacher tous les liens cassés"
+                    message={`Détacher ${orphanedNodeIds.length} nœud(s) de leur review supprimée ? Les nœuds resteront dans l'arbre, seul le lien vers la review disparaît.`}
+                    confirmLabel="Tout détacher"
+                    onCancel={() => setConfirmDetachAll(false)}
+                    onConfirm={handleDetachAllOrphans}
                 />
             </>}
             fab={isMobile && !readOnly && (

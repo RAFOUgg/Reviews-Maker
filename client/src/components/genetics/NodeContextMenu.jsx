@@ -5,10 +5,12 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+import { useReactFlow } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
 const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useGeneticsStore();
+    const { fitView } = useReactFlow();
     const menuRef = useRef(null);
     // x/y sont le point de clic brut (clientX/clientY) — sans correction, le menu peut déborder
     // hors du viewport (coupé/inaccessible) près des bords droit/bas de l'écran ou de la fenêtre
@@ -85,6 +87,30 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
+    // Symétrique de "Ajouter enfant" — le nœud créé devient PARENT de celui-ci (cf.
+    // NodeFormModal._pendingChildId, crée l'edge retour une fois le nouveau nœud sauvegardé).
+    const handleCreateParent = () => {
+        store.openNodeForm({
+            cultivarName: '',
+            position: { x: (node?.position?.x || 0) - 150, y: (node?.position?.y || 0) - 100 },
+            color: '#FF6B9D',
+            genetics: null,
+            notes: '',
+            _pendingChildId: nodeId
+        });
+        onClose();
+    };
+
+    const handleDetachReview = () => {
+        store.updateNode(nodeId, { sourceReviewId: null });
+        onClose();
+    };
+
+    const handleCenterView = () => {
+        fitView({ nodes: [{ id: nodeId }], duration: 300 });
+        onClose();
+    };
+
     const handleDuplicate = async () => {
         const duplicatedNode = await store.addNode({
             cultivarName: `${node.cultivarName} (copie)`,
@@ -115,14 +141,32 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                     <button className="context-menu-item" onClick={handleEdit}>
                         ✏️ Éditer
                     </button>
-                    <button className="context-menu-item" onClick={handleEditReview}>
-                        📝 {node?.sourceReviewId ? 'Éditer la review' : 'Créer la review liée'}
+                    {node?.sourceReviewOrphaned ? (
+                        <button className="context-menu-item" disabled>
+                            ⚠️ Review introuvable (supprimée)
+                        </button>
+                    ) : (
+                        <button className="context-menu-item" onClick={handleEditReview}>
+                            📝 {node?.sourceReviewId ? 'Éditer la review' : 'Créer la review liée'}
+                        </button>
+                    )}
+                    {node?.sourceReviewId && (
+                        <button className="context-menu-item" onClick={handleDetachReview}>
+                            ✂️ Détacher la review liée
+                        </button>
+                    )}
+                    <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    <button className="context-menu-item" onClick={handleCreateParent}>
+                        ⬆️ Ajouter un parent
                     </button>
                     <button className="context-menu-item" onClick={handleCreateChild}>
                         ➕ Ajouter enfant
                     </button>
                     <button className="context-menu-item" onClick={handleDuplicate}>
                         📋 Dupliquer
+                    </button>
+                    <button className="context-menu-item" onClick={handleCenterView}>
+                        🎯 Centrer la vue sur ce nœud
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                     <button className="context-menu-item danger" onClick={handleDelete}>

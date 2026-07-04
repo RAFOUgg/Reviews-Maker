@@ -9,9 +9,11 @@
  */
 
 import React, { useEffect, useRef } from 'react';
-import { Sprout } from 'lucide-react';
+import { useReactFlow } from 'reactflow';
+import { Sprout, RotateCcw } from 'lucide-react';
 
 const PaneContextMenu = ({ x, y, onClose, onAddUnknownIndividual }) => {
+    const { fitView } = useReactFlow();
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -32,6 +34,13 @@ const PaneContextMenu = ({ x, y, onClose, onAddUnknownIndividual }) => {
             >
                 <Sprout className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
                 Ajouter un individu inconnu
+            </button>
+            <button
+                className="context-menu-item"
+                onClick={() => { fitView(); onClose(); }}
+            >
+                <RotateCcw className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
+                Centrer / Réinitialiser le zoom
             </button>
         </div>
     );

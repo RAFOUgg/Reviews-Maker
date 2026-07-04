@@ -52,7 +52,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
             if (isEdit) {
                 await store.updateNode(formData.id, formData);
             } else {
-                const { _pendingParentId, _pendingParentIds, ...nodeData } = formData;
+                const { _pendingParentId, _pendingParentIds, _pendingChildId, ...nodeData } = formData;
                 const result = await store.addNode(nodeData);
                 // Un seul parent (clic droit "Ajouter enfant" sur un nœud) ou les deux membres
                 // d'un couple d'un coup (clic droit "Ajouter un enfant à ce couple" sur un
@@ -66,6 +66,15 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                             relationshipType: 'parent'
                         });
                     }
+                }
+                // Symétrique : "Ajouter un parent" depuis le clic droit d'un nœud existant — le
+                // nouveau nœud créé ici devient le PARENT, l'edge part donc de lui vers ce nœud.
+                if (_pendingChildId && result?.data?.id) {
+                    await store.addEdge({
+                        parentNodeId: result.data.id,
+                        childNodeId: _pendingChildId,
+                        relationshipType: 'parent'
+                    });
                 }
             }
             onClose();

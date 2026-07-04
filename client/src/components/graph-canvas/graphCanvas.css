@@ -212,6 +212,27 @@
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
 }
 
+/* Avertissement "review supprimée" (sourceReviewId ne résout plus, cf. GET /trees/:id côté
+   serveur) — coin haut-droit, seul coin libre (haut-gauche = notes, bas-droit = badge sexe dans
+   .node-photo, un espace de coordonnées différent). Palette ambre pour se distinguer nettement
+   des accents fonctionnels existants (rose/vert/violet). */
+.node-orphan-badge {
+    position: absolute;
+    z-index: 1;
+    top: -6px;
+    right: -6px;
+    color: #fde68a;
+    background: rgba(120, 53, 15, 0.9);
+    border: 1px solid #f59e0b;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3), 0 0 8px -1px rgba(245, 158, 11, 0.6);
+}
+
 .node-handle {
     width: 8px !important;
     height: 8px !important;
@@ -238,6 +259,61 @@
     height: 28px;
     transform: translate(-50%, -50%);
     background: transparent;
+}
+
+/* Magnétisme visuel pendant le glisser d'une nouvelle connexion — classes posées automatiquement
+   par React Flow sur le handle candidat (vérifié dans le bundle @reactflow/core installé) :
+   "connecting" dès qu'un handle est ciblé, "valid" en plus si la connexion y serait acceptée.
+   Grandit via width/height (pas transform: scale) pour ne pas entrer en conflit avec le
+   transform: translate(...) de positionnement déjà posé par React Flow sur ces mêmes éléments. */
+.node-handle.connecting,
+.node-handle.react-flow__handle-connecting {
+    width: 14px !important;
+    height: 14px !important;
+    transition: width 100ms ease-out, height 100ms ease-out, background 100ms ease-out;
+}
+
+.node-handle.valid,
+.node-handle.react-flow__handle-valid {
+    width: 16px !important;
+    height: 16px !important;
+    background: #fbbf24 !important;
+    border-color: #fff !important;
+    box-shadow: 0 0 0 6px rgba(251, 191, 36, 0.35), 0 0 14px 3px rgba(251, 191, 36, 0.7);
+}
+
+/* Bannière "liens cassés" (nœuds dont sourceReviewId ne résout plus, cf. GET /trees/:id) —
+   ancrée en Panel top-center par UnifiedGeneticsCanvas.jsx, même recette glass ambre que
+   .node-orphan-badge pour rester cohérent avec ce même avertissement au niveau de l'arbre. */
+.orphan-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    background: rgba(120, 53, 15, 0.9);
+    border: 1px solid #f59e0b;
+    border-radius: 8px;
+    color: #fde68a;
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(10px);
+}
+
+.orphan-banner button {
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.5);
+    color: #fde68a;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s ease;
+}
+
+.orphan-banner button:hover {
+    background: rgba(245, 158, 11, 0.35);
 }
 
 /* Canvas Edges */

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { Leaf, Venus, Mars, CircleHelp, MessageSquare } from 'lucide-react';
+import { Leaf, Venus, Mars, CircleHelp, MessageSquare, AlertTriangle } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 
 const SEX_CONFIG = {
@@ -71,6 +71,12 @@ const CultivarNode = ({ data, selected }) => {
             {data.notes && (
                 <div className="node-notes" title={data.notes}>
                     <MessageSquare size={11} strokeWidth={2.5} />
+                </div>
+            )}
+
+            {data.sourceReviewOrphaned && (
+                <div className="node-orphan-badge" title="La review liée à ce nœud a été supprimée">
+                    <AlertTriangle size={11} strokeWidth={2.5} />
                 </div>
             )}
 
