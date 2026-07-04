@@ -1585,7 +1585,10 @@ model ChainNode {
   chain   ProductionChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
 
   reviewType String // "flower" | "hash" | "concentrate" | "edible" — clé normalisée interne
-  reviewId   String // = Review.id
+  // Nullable (comme GenNode.sourceReviewId côté PhenoHunt) : "Tout détacher" sur un lien cassé
+  // (review supprimée) met reviewId à null plutôt que de forcer la suppression du nœud —
+  // il garde sa position/couleur/notes et reste réassignable via "Changer la review liée".
+  reviewId   String? // = Review.id
   label      String // copie du nom au moment de l'ajout (fallback si review supprimée)
   image      String? // copie de la première photo au moment de l'ajout (même raison que label)
 

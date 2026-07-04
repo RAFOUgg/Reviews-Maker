@@ -72,7 +72,7 @@ const validateChainNodeCreation = (req, res, next) => {
 }
 
 const validateChainNodeUpdate = (req, res, next) => {
-    const { position, color } = req.body
+    const { position, color, reviewType, reviewId } = req.body
 
     if (position !== undefined) {
         if (position && (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number")) {
@@ -83,6 +83,18 @@ const validateChainNodeUpdate = (req, res, next) => {
     if (color !== undefined) {
         if (color && (typeof color !== "string" || !/#[0-9A-F]{6}/i.test(color))) {
             return res.status(400).json({ error: "Color must be a valid hex color code" })
+        }
+    }
+
+    // reviewId peut être explicitement `null` (détacher un lien cassé) ou une nouvelle
+    // référence (changer la review liée) — dans ce dernier cas reviewType doit accompagner
+    // reviewId pour que la route puisse revalider le type contre REVIEW_TYPE_TO_DB.
+    if (reviewId !== undefined && reviewId !== null) {
+        if (typeof reviewId !== "string" || reviewId.trim().length === 0) {
+            return res.status(400).json({ error: "reviewId must be a non-empty string or null" })
+        }
+        if (!reviewType || !isValidReviewType(reviewType)) {
+            return res.status(400).json({ error: "Valid reviewType is required when changing reviewId" })
         }
     }
 

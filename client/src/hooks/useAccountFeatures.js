@@ -11,14 +11,17 @@ import { useStore } from '../store/useStore'
  * if (!canAccessTemplates) return <LockedFeature />
  */
 export function useAccountFeatures() {
-    const { accountType } = useStore()
+    const { accountType, user } = useStore()
 
     // Déterminer les features par type de compte
     // Normalize account type to accept both French and English values
     const normalized = String(accountType || '').toLowerCase()
-    const isProducer = ['producteur', 'producer'].includes(normalized)
-    const isInfluencer = ['influenceur', 'influencer'].includes(normalized)
-    const isAmateur = ['amateur', 'consumer'].includes(normalized)
+    // isAdmin vient du tableau `roles` (rôle additif), jamais de `accountType` : un compte peut
+    // être à la fois producteur ET admin, `accountType` reflète alors le tier payant réel.
+    const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
+    const isProducer = isAdmin || ['producteur', 'producer'].includes(normalized)
+    const isInfluencer = isAdmin || ['influenceur', 'influencer'].includes(normalized)
+    const isAmateur = !isAdmin && ['amateur', 'consumer'].includes(normalized)
 
     const features = {
         // ========== TOUTES LES TIERS ==========
@@ -62,11 +65,11 @@ export function useAccountFeatures() {
         isAmateurOrAbove: normalized !== '',
 
         // ========== ADMIN ==========
-        isAdmin: normalized === 'admin',
-        canAccessAdminPanel: normalized === 'admin',
-        canManageUsers: normalized === 'admin',
-        canViewAllReviews: normalized === 'admin',
-        canModerateContent: normalized === 'admin',
+        isAdmin,
+        canAccessAdminPanel: isAdmin,
+        canManageUsers: isAdmin,
+        canViewAllReviews: isAdmin,
+        canModerateContent: isAdmin,
 
         // ========== AMATEUR (gratuit) ==========
         isAmateur: isAmateur,
@@ -82,10 +85,11 @@ export function useAccountFeatures() {
  * Hook pour obtenir des détails sur les limites d'utilisation
  */
 export function useAccountLimits() {
-    const { accountType } = useStore()
+    const { accountType, user } = useStore()
     const normalized = String(accountType || '').toLowerCase()
-    const isProducer = ['producteur', 'producer'].includes(normalized)
-    const isInfluencer = ['influenceur', 'influencer'].includes(normalized)
+    const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
+    const isProducer = isAdmin || ['producteur', 'producer'].includes(normalized)
+    const isInfluencer = isAdmin || ['influenceur', 'influencer'].includes(normalized)
 
     return {
         // Limites d'export — alignées sur EXPORT_LIMITS serveur
@@ -104,7 +108,7 @@ export function useAccountLimits() {
         exportDPI: (isProducer || isInfluencer) ? 300 : 150,
 
         // Features disponibles
-        supportedFormats: getExportFormats(normalized),
+        supportedFormats: getExportFormats(isProducer ? 'producer' : normalized),
     }
 }
 

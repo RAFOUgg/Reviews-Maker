@@ -23,7 +23,8 @@ export function requireAuth(req, res, next) {
 
 // Check whether a given format is allowed for the user's account
 export function canExportFormat(accountType, format) {
-    const formats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
+    const effectiveType = accountType === ACCOUNT_TYPES.ADMIN ? ACCOUNT_TYPES.PRODUCER : accountType;
+    const formats = EXPORT_FORMATS[effectiveType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
     return formats.includes(String(format).toLowerCase());
 }
 
@@ -59,7 +60,7 @@ export function requireTemplateAccess(templateType) {
         const accountType = getUserAccountType(req.user);
         const producerOnly = ['batch', 'custom'];
 
-        if (producerOnly.includes(templateType) && ![ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT, ACCOUNT_TYPES.BETA_TESTER].includes(accountType)) {
+        if (producerOnly.includes(templateType) && ![ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT, ACCOUNT_TYPES.BETA_TESTER, ACCOUNT_TYPES.ADMIN].includes(accountType)) {
             return res.status(403).json({ error: 'template_restricted', message: 'Template réservé aux comptes Producer', upgradeRequired: 'producer' });
         }
 
@@ -148,8 +149,8 @@ export function canAccessFeature(user, feature, options = {}) {
 
     const accountType = getUserAccountType(user);
 
-    // Beta testers : accès complet à tout
-    if (accountType === ACCOUNT_TYPES.BETA_TESTER) {
+    // Beta testers et admins : accès complet à tout
+    if (accountType === ACCOUNT_TYPES.BETA_TESTER || accountType === ACCOUNT_TYPES.ADMIN) {
         return { allowed: true, accountType };
     }
 
@@ -632,9 +633,12 @@ export function canAccessSection(accountType, section) {
  */
 export function getUserLimits(user) {
     const accountType = getUserAccountType(user);
-    const limits = EXPORT_LIMITS[accountType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
-    const formats = EXPORT_FORMATS[accountType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
-    const dpi = EXPORT_DPI[accountType] || EXPORT_DPI[ACCOUNT_TYPES.CONSUMER];
+    // Un admin a un accès omniscient : mêmes limites/formats que le tier Producteur (illimité)
+    const effectiveType = accountType === ACCOUNT_TYPES.ADMIN ? ACCOUNT_TYPES.PRODUCER : accountType;
+    const limits = EXPORT_LIMITS[effectiveType] || EXPORT_LIMITS[ACCOUNT_TYPES.CONSUMER];
+    const formats = EXPORT_FORMATS[effectiveType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
+    const dpi = EXPORT_DPI[effectiveType] || EXPORT_DPI[ACCOUNT_TYPES.CONSUMER];
+    const isAdmin = accountType === ACCOUNT_TYPES.ADMIN;
 
     return {
         accountType,
@@ -642,20 +646,20 @@ export function getUserLimits(user) {
         formats,
         dpi,
         features: {
-            customTemplates: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            highQualityExport: [
+            customTemplates: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            highQualityExport: isAdmin || [
                 ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ].includes(accountType),
-            advancedStats: [
+            advancedStats: isAdmin || [
                 ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ].includes(accountType),
-            pipelines: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            genetics: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            branding: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            pipelines: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            genetics: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            branding: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
         }
     };
 }

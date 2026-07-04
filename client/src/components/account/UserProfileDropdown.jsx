@@ -6,7 +6,7 @@ import { useStore } from '../../store/useStore'
 import { usePermissions } from '../../hooks/usePermissions'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 import { LiquidAvatar } from '@/components/ui/LiquidUI'
-import { User, Library, Dna, LogOut, ChevronDown, Settings, Brain, ExternalLink } from 'lucide-react'
+import { User, Library, Dna, LogOut, ChevronDown, Settings, Brain, ExternalLink, Shield } from 'lucide-react'
 
 export default function UserProfileDropdown() {
     const [isOpen, setIsOpen] = useState(false)
@@ -14,7 +14,7 @@ export default function UserProfileDropdown() {
     const buttonRef = useRef(null)
     const { user, logout } = useStore()
     const { hasFeature } = usePermissions()
-    const { isProducteur } = useAccountFeatures()
+    const { isProducteur, isAdmin } = useAccountFeatures()
 
     useLayoutEffect(() => {
         if (isOpen && buttonRef.current) {
@@ -119,6 +119,27 @@ export default function UserProfileDropdown() {
                                     <p className="text-xs text-white/40 truncate">Relevés automatiques & IA de culture</p>
                                 </div>
                             </a>
+                        </div>
+                    )}
+
+                    {/* Panel Admin - réservé aux comptes avec le rôle admin */}
+                    {isAdmin && (
+                        <div className="px-2 pb-2">
+                            <Link
+                                to="/admin"
+                                className="flex items-center gap-3 px-4 py-3 rounded-xl bg-red-500/10 hover:bg-red-500/20 transition-all duration-200 group"
+                                onClick={() => setIsOpen(false)}
+                            >
+                                <div className="p-2 rounded-xl bg-red-500/10 group-hover:bg-red-500/20 transition-colors">
+                                    <Shield className="w-4 h-4 text-red-400" />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                    <p className="font-medium text-red-300 group-hover:text-red-200 transition-colors">
+                                        Panel Admin
+                                    </p>
+                                    <p className="text-xs text-white/40 truncate">Gestion utilisateurs & modération</p>
+                                </div>
+                            </Link>
                         </div>
                     )}
 

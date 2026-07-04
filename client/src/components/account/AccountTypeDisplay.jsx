@@ -8,7 +8,8 @@ import { paymentService, accountService } from '../../services/apiService'
  * Affiche: Type, badge couleur, prix, statut
  */
 export default function AccountTypeDisplay({ onUpgradeClick }) {
-    const { accountType } = useStore()
+    const { accountType, user } = useStore()
+    const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
 
     const getSubscriptionInfo = () => {
         // Normalize incoming accountType (backend uses English keys)
@@ -103,7 +104,14 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                     <div className="flex items-center gap-3">
                         <span className="text-4xl">{info.emoji}</span>
                         <div>
-                            <h3 className="text-2xl font-bold">{info.label}</h3>
+                            <h3 className="text-2xl font-bold flex items-center gap-2">
+                                {info.label}
+                                {isAdmin && (
+                                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-red-500/30 border border-red-400/50">
+                                        🛡️ Admin
+                                    </span>
+                                )}
+                            </h3>
                             <p className="opacity-90 text-sm">{info.description}</p>
                         </div>
                     </div>

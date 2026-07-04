@@ -81,8 +81,10 @@ export function getUserAccountType(user) {
         return ACCOUNT_TYPES.CONSUMER;
     }
 
-    // Ordre de priorité: Admin > Producteur > Influenceur > Amateur
-    if (roles.includes('admin')) return ACCOUNT_TYPES.ADMIN;
+    // Ordre de priorité: Producteur > Influenceur > Admin > Amateur
+    // Admin est un rôle additif (accès panel admin via `roles`, indépendant de accountType,
+    // cf. PrivateRoute.jsx et requireAdmin) : il ne doit jamais masquer le tier payant réel
+    // d'un compte qui est À LA FOIS producteur/influenceur ET admin.
     if (roles.includes('producteur')) return ACCOUNT_TYPES.PRODUCER;
     if (roles.includes('influenceur')) return ACCOUNT_TYPES.INFLUENCER;
 
@@ -93,6 +95,7 @@ export function getUserAccountType(user) {
     if (roles.includes('influencer_pro') || roles.includes('influencer_basic')) {
         return ACCOUNT_TYPES.INFLUENCER;
     }
+    if (roles.includes('admin')) return ACCOUNT_TYPES.ADMIN;
     if (roles.includes('consumer')) return ACCOUNT_TYPES.CONSUMER;
 
     return ACCOUNT_TYPES.CONSUMER;

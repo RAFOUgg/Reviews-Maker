@@ -126,6 +126,24 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
             return res.status(403).json({ error: "Forbidden" })
         }
 
+        // Détection des liens cassés : reviewId n'a pas de FK Prisma (4 tables de review
+        // différentes possibles), donc rien n'empêche une review d'être supprimée en laissant
+        // le ChainNode qui la référençait intact. Même pattern que genetics.js (GET /trees/:id,
+        // sourceReviewOrphaned) — on vérifie tous les nœuds ayant un reviewId non-null et on
+        // marque reviewOrphaned sur ceux dont l'id ne résout plus.
+        const linkedReviewIds = [...new Set(chain.nodes.filter(n => n.reviewId).map(n => n.reviewId))]
+        if (linkedReviewIds.length > 0) {
+            const foundReviews = await prisma.review.findMany({
+                where: { id: { in: linkedReviewIds } },
+                select: { id: true }
+            })
+            const foundReviewIds = new Set(foundReviews.map(r => r.id))
+            chain.nodes = chain.nodes.map(n => {
+                if (!n.reviewId) return n
+                return { ...n, reviewOrphaned: !foundReviewIds.has(n.reviewId) }
+            })
+        }
+
         res.json(chain)
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch production chain" })
@@ -274,17 +292,60 @@ router.put("/nodes/:nodeId", requireAuth, requireChainAccess, validateChainNodeU
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { position, color } = req.body
+        const { position, color, reviewType, reviewId } = req.body
+        const data = {
+            ...(position && { position: JSON.stringify(position) }),
+            ...(color && { color })
+        }
 
-        const updated = await prisma.chainNode.update({
-            where: { id: req.params.nodeId },
-            data: {
-                ...(position && { position: JSON.stringify(position) }),
-                ...(color && { color })
+        // reviewId === null : détache un lien cassé (garde label/image en cache, "Tout détacher").
+        // reviewId (string) : change la review liée — même validation d'existence/type/propriété
+        // que POST /chains/:id/nodes, et on recalcule label/image comme à la création.
+        if (reviewId === null) {
+            data.reviewId = null
+        } else if (reviewId !== undefined) {
+            const review = await prisma.review.findUnique({
+                where: { id: reviewId },
+                select: {
+                    id: true, authorId: true, type: true, holderName: true, images: true,
+                    hashData: { select: { photos: true } },
+                    concentrateData: { select: { photos: true } },
+                    edibleData: { select: { photos: true } }
+                }
+            })
+
+            if (!review || review.type !== REVIEW_TYPE_TO_DB[reviewType]) {
+                return res.status(400).json({ error: "Invalid review reference" })
             }
-        })
+            if (review.authorId !== req.user.id) {
+                return res.status(403).json({ error: "You can only link your own reviews" })
+            }
 
-        res.json({ ...updated, position: JSON.parse(updated.position) })
+            let image = null
+            try {
+                const rawPhotos = review.images || review.hashData?.photos || review.concentrateData?.photos || review.edibleData?.photos
+                const parsed = rawPhotos ? JSON.parse(rawPhotos) : []
+                image = Array.isArray(parsed) && parsed.length > 0 ? parsed[0] : null
+            } catch { /* pas de photo exploitable */ }
+
+            data.reviewType = reviewType
+            data.reviewId = reviewId
+            data.label = review.holderName || 'Sans nom'
+            data.image = image
+        }
+
+        try {
+            const updated = await prisma.chainNode.update({
+                where: { id: req.params.nodeId },
+                data
+            })
+            res.json({ ...updated, position: JSON.parse(updated.position) })
+        } catch (error) {
+            if (error.code === "P2002") {
+                return res.status(409).json({ error: "This review is already in the chain" })
+            }
+            throw error
+        }
     } catch (error) {
         res.status(500).json({ error: "Failed to update chain node" })
     }

@@ -14,7 +14,12 @@
       "Bash(grep -i \"error\" /tmp/uc.out /tmp/gcs.out /tmp/css.out | head -20; echo \"---LOG---\"; cat /tmp/vite-dev.log)",
       "Read(//tmp/**)",
       "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
-      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path\")"
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path\")",
+      "Bash(npx prisma *)",
+      "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*server.js*'\\\\'' } | Select-Object -ExpandProperty ProcessId')",
+      "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
+      "Bash(node -e ' *)",
+      "Bash(curl -s http://localhost:3000/api/auth/email/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"admintest@example.com\",\"password\":\"TestPass123\"}')"
     ]
   }
 }
