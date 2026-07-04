@@ -20,9 +20,13 @@ export const useProfileData = () => {
     publicProfile: true,
     // Champs entreprise (Producteur/Influenceur)
     companyName: '',
+    businessType: 'farm',
     siret: '',
     billingAddress: '',
-    vatNumber: ''
+    vatNumber: '',
+    verificationStatus: 'none',
+    verificationRejectionReason: '',
+    verificationDoc: null
   })
 
   const [isEditing, setIsEditing] = useState(false)

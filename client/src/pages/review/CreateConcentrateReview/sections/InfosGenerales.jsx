@@ -3,6 +3,7 @@ import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 import SourceLineageSelector from '@/components/forms/helpers/SourceLineageSelector'
 import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
+import FillCompanyButton from '@/components/forms/helpers/FillCompanyButton'
 import UnknownValueButton from '@/components/ui/UnknownValueButton'
 
 const CONCENTRATE_TYPES = [
@@ -85,9 +86,12 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
 
                         <LiquidInput
                             label={
-                                <span className="flex items-center justify-between">
+                                <span className="flex items-center justify-between gap-2">
                                     Laboratoire de production
-                                    <UnknownValueButton onClick={() => handleChange('laboratoire', '')} />
+                                    <span className="flex items-center gap-1.5">
+                                        <FillCompanyButton onFill={(name) => handleChange('laboratoire', name)} />
+                                        <UnknownValueButton onClick={() => handleChange('laboratoire', '')} />
+                                    </span>
                                 </span>
                             }
                             value={formData.laboratoire || ''}

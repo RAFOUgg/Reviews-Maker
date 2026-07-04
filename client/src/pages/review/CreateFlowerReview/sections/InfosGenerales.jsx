@@ -2,6 +2,7 @@ import React from 'react'
 import { Camera, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
+import FillCompanyButton from '@/components/forms/helpers/FillCompanyButton'
 import UnknownValueButton from '@/components/ui/UnknownValueButton'
 
 const PHOTO_TAGS = ['Macro', 'Full plant', 'Bud sec', 'Trichomes', 'Drying', 'Curing']
@@ -77,6 +78,7 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 <span className="flex items-center justify-between gap-2">
                                     Farm / Producteur
                                     <span className="flex items-center gap-1.5">
+                                        <FillCompanyButton onFill={(name) => handleChange('farm', name)} />
                                         <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
                                         <UnknownValueButton onClick={() => handleChange('farm', '')} />
                                     </span>
