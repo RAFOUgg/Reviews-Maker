@@ -1,9 +1,19 @@
-import React, { useRef } from 'react'
+import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Edit2, Save, X, Upload, Mail, User, Globe, FileText, Link as LinkIcon, Building2, MapPin, CreditCard } from 'lucide-react'
+import { Edit2, Save, X, Upload, Mail, User, Globe, FileText, Link as LinkIcon, Building2, MapPin, CreditCard, ShieldCheck, ShieldAlert, ShieldQuestion } from 'lucide-react'
 import { useProfileData } from '../../../hooks/useProfileData'
 import { useStore } from '../../../store/useStore'
+import { isValidSiretFormat } from '../../../utils/siret'
 import { LiquidCard, LiquidButton, LiquidInput, LiquidTextarea, LiquidSelect, LiquidToggle, LiquidAvatar, LiquidBadge } from '@/components/ui/LiquidUI'
+
+const BUSINESS_TYPES = [
+  { value: 'farm', label: '🌾 Farm / Culture' },
+  { value: 'laboratory', label: '🧪 Laboratoire' },
+  { value: 'extractor', label: '⚗️ Extraction' },
+  { value: 'manufacturer', label: '🏭 Fabricant' },
+  { value: 'distributor', label: '🚚 Distributeur' },
+  { value: 'other', label: 'Autre' }
+]
 
 /**
  * ProfileSection - Gestion des informations personnelles
@@ -12,10 +22,16 @@ import { LiquidCard, LiquidButton, LiquidInput, LiquidTextarea, LiquidSelect, Li
 export default function ProfileSection() {
   const { t } = useTranslation()
   const fileInputRef = useRef(null)
+  const verificationDocInputRef = useRef(null)
   const { accountType } = useStore()
 
   // Comptes payants ont accès aux données entreprise
-  const isPaidAccount = accountType === 'producteur' || accountType === 'influenceur'
+  const isPaidAccount = accountType === 'producteur' || accountType === 'influenceur' || accountType === 'producer' || accountType === 'influencer'
+
+  const [siretCheck, setSiretCheck] = useState(null) // { validFormat, found, active, officialName }
+  const [checkingSiret, setCheckingSiret] = useState(false)
+  const [isSubmittingVerification, setIsSubmittingVerification] = useState(false)
+  const [isUploadingDoc, setIsUploadingDoc] = useState(false)
 
   const {
     profileData,
@@ -52,6 +68,89 @@ export default function ProfileSection() {
     const file = e.target.files?.[0]
     if (file) {
       uploadAvatar(file)
+    }
+  }
+
+  const handleSiretBlur = async () => {
+    const siret = profileData.siret
+    if (!siret) {
+      setSiretCheck(null)
+      return
+    }
+
+    if (!isValidSiretFormat(siret)) {
+      setSiretCheck({ validFormat: false })
+      return
+    }
+
+    setCheckingSiret(true)
+    try {
+      const response = await fetch('/api/account/verify-siret', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ siret })
+      })
+      const data = await response.json()
+      setSiretCheck(data)
+    } catch (error) {
+      setSiretCheck(null)
+    } finally {
+      setCheckingSiret(false)
+    }
+  }
+
+  const handleVerificationDocSelect = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setIsUploadingDoc(true)
+    const formData = new FormData()
+    formData.append('document', file)
+
+    try {
+      const response = await fetch('/api/account/verification-document', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData
+      })
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || 'Erreur upload document')
+      }
+      const data = await response.json()
+      updateField('verificationDoc', data.documentUrl)
+    } catch (error) {
+      alert(error.message)
+    } finally {
+      setIsUploadingDoc(false)
+    }
+  }
+
+  const handleRequestVerification = async () => {
+    setIsSubmittingVerification(true)
+    try {
+      const response = await fetch('/api/account/request-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          companyName: profileData.companyName,
+          businessType: profileData.businessType,
+          siret: profileData.siret,
+          country: profileData.country || 'FR',
+          documentUrl: profileData.verificationDoc
+        })
+      })
+      const data = await response.json()
+      if (!response.ok) {
+        throw new Error(data.message || 'Erreur lors de la demande de vérification')
+      }
+      updateField('verificationStatus', data.profile.verificationStatus)
+    } catch (error) {
+      alert(error.message)
+    } finally {
+      setIsSubmittingVerification(false)
     }
   }
 
@@ -290,12 +389,34 @@ export default function ProfileSection() {
             <Building2 className="w-5 h-5" />
             Données Entreprise
             <LiquidBadge variant="premium" size="sm">
-              {accountType === 'producteur' ? '🌾 Producteur' : '⭐ Influenceur'}
+              {accountType === 'producteur' || accountType === 'producer' ? '🌾 Producteur' : '⭐ Influenceur'}
             </LiquidBadge>
+            {profileData.verificationStatus === 'verified' && (
+              <LiquidBadge variant="success" size="sm">
+                <span className="flex items-center gap-1"><ShieldCheck className="w-3 h-3" /> Vérifié</span>
+              </LiquidBadge>
+            )}
+            {profileData.verificationStatus === 'pending' && (
+              <LiquidBadge variant="warning" size="sm">
+                <span className="flex items-center gap-1"><ShieldQuestion className="w-3 h-3" /> En attente</span>
+              </LiquidBadge>
+            )}
+            {profileData.verificationStatus === 'rejected' && (
+              <LiquidBadge variant="danger" size="sm">
+                <span className="flex items-center gap-1"><ShieldAlert className="w-3 h-3" /> Rejeté</span>
+              </LiquidBadge>
+            )}
           </h3>
           <p className="text-xs text-white/50 mb-4">
-            Ces informations sont utilisées pour la facturation et les documents légaux.
+            Ces informations sont utilisées pour la facturation, les documents légaux, et permettent
+            de vous identifier comme producteur via le bouton "Ma production" dans vos reviews.
           </p>
+
+          {profileData.verificationStatus === 'rejected' && profileData.verificationRejectionReason && (
+            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/30 text-red-400 text-xs">
+              Motif du rejet : {profileData.verificationRejectionReason}
+            </div>
+          )}
 
           <div className="grid md:grid-cols-2 gap-4">
             {/* Nom d'entreprise */}
@@ -311,18 +432,47 @@ export default function ProfileSection() {
               />
             </div>
 
-            {/* SIRET / Registre commerce */}
+            {/* Type d'entreprise */}
             <div className="space-y-2">
+              <label className="text-xs text-white/50 uppercase tracking-wider font-semibold">
+                Type d'entreprise
+              </label>
+              <LiquidSelect
+                value={profileData.businessType || 'farm'}
+                onChange={(v) => updateField('businessType', v)}
+                disabled={!isEditing}
+                options={BUSINESS_TYPES}
+              />
+            </div>
+
+            {/* SIRET / Registre commerce */}
+            <div className="space-y-2 md:col-span-2">
               <label className="text-xs text-white/50 uppercase tracking-wider font-semibold flex items-center gap-2">
                 <CreditCard className="w-4 h-4" />
                 SIRET / Registre Commerce
               </label>
               <LiquidInput
                 value={profileData.siret || ''}
-                onChange={(e) => updateField('siret', e.target.value)}
+                onChange={(e) => { updateField('siret', e.target.value); setSiretCheck(null) }}
+                onBlur={handleSiretBlur}
                 disabled={!isEditing}
                 placeholder="Ex: 123 456 789 00012"
               />
+              {checkingSiret && (
+                <p className="text-xs text-white/40">Vérification en cours...</p>
+              )}
+              {!checkingSiret && siretCheck && (
+                <p className={`text-xs flex items-center gap-1 ${
+                  siretCheck.validFormat && siretCheck.found ? 'text-green-400'
+                    : siretCheck.validFormat && siretCheck.found === null ? 'text-white/40'
+                    : 'text-red-400'
+                }`}>
+                  {!siretCheck.validFormat && '❌ Format de SIRET invalide'}
+                  {siretCheck.validFormat && siretCheck.found === true && `✅ ${siretCheck.officialName || 'Entreprise trouvée'}${siretCheck.active === false ? ' (fermée)' : ''}`}
+                  {siretCheck.validFormat && siretCheck.found === false && '⚠️ Aucune entreprise trouvée pour ce SIRET'}
+                  {siretCheck.validFormat && siretCheck.found === null && 'ℹ️ Format valide (vérification indisponible pour le moment)'}
+                </p>
+              )}
             </div>
 
             {/* Adresse de facturation */}
@@ -352,7 +502,48 @@ export default function ProfileSection() {
                 placeholder="Ex: FR12345678901"
               />
             </div>
+
+            {/* Document justificatif */}
+            <div className="space-y-2">
+              <label className="text-xs text-white/50 uppercase tracking-wider font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4" />
+                Document justificatif (Kbis, extrait SIRENE...)
+              </label>
+              <input
+                ref={verificationDocInputRef}
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleVerificationDocSelect}
+                disabled={!isEditing || isUploadingDoc}
+                className="hidden"
+              />
+              <LiquidButton
+                variant="ghost"
+                size="sm"
+                disabled={!isEditing || isUploadingDoc}
+                onClick={() => verificationDocInputRef.current?.click()}
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                {isUploadingDoc ? 'Envoi...' : profileData.verificationDoc ? 'Document envoyé ✓' : 'Envoyer un document'}
+              </LiquidButton>
+            </div>
           </div>
+
+          {profileData.verificationStatus !== 'verified' && (
+            <div className="mt-4 flex justify-end">
+              <LiquidButton
+                variant="primary"
+                glow="amber"
+                disabled={isSubmittingVerification || !profileData.companyName || profileData.verificationStatus === 'pending'}
+                onClick={handleRequestVerification}
+              >
+                <ShieldCheck className="w-4 h-4 mr-2" />
+                {profileData.verificationStatus === 'pending'
+                  ? 'Demande en attente de traitement'
+                  : isSubmittingVerification ? 'Envoi...' : 'Envoyer ma demande de vérification'}
+              </LiquidButton>
+            </div>
+          )}
         </LiquidCard>
       )}
 

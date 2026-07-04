@@ -37,7 +37,8 @@ export const useProfileData = () => {
   // Initialiser avec les données de l'utilisateur
   useEffect(() => {
     if (user) {
-      setProfileData({
+      setProfileData(prev => ({
+        ...prev,
         username: user.username || '',
         email: user.email || '',
         firstName: user.firstName || '',
@@ -47,15 +48,39 @@ export const useProfileData = () => {
         website: user.website || '',
         avatar: user.avatar || null,
         publicProfile: user.publicProfile ?? true,
-        // Champs entreprise
-        companyName: user.companyName || '',
-        siret: user.siret || '',
-        billingAddress: user.billingAddress || '',
-        vatNumber: user.vatNumber || ''
-      })
+        // Champs entreprise (écrasés ensuite par /producer-profile si dispo)
+        companyName: user.companyName || prev.companyName,
+        siret: user.siret || prev.siret,
+        billingAddress: user.billingAddress || prev.billingAddress,
+        vatNumber: user.vatNumber || prev.vatNumber
+      }))
     }
     setIsLoadingProfile(false)
   }, [user])
+
+  // Charger le profil producteur (nom d'entreprise, SIRET, statut de vérification)
+  useEffect(() => {
+    const accountType = user?.accountType
+    if (accountType !== 'producer' && accountType !== 'producteur' && accountType !== 'influencer' && accountType !== 'influenceur') {
+      return
+    }
+
+    fetch('/api/account/producer-profile', { credentials: 'include' })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!data) return
+        setProfileData(prev => ({
+          ...prev,
+          companyName: data.companyName || prev.companyName,
+          businessType: data.businessType || prev.businessType,
+          siret: data.siret || prev.siret,
+          verificationStatus: data.verificationStatus || 'none',
+          verificationRejectionReason: data.verificationRejectionReason || '',
+          verificationDoc: data.verificationDoc || null
+        }))
+      })
+      .catch(() => {})
+  }, [user?.accountType])
 
   /**
    * Met à jour un champ du profil
@@ -88,6 +113,7 @@ export const useProfileData = () => {
           publicProfile: profileData.publicProfile,
           // Champs entreprise
           companyName: profileData.companyName,
+          businessType: profileData.businessType,
           siret: profileData.siret,
           billingAddress: profileData.billingAddress,
           vatNumber: profileData.vatNumber
@@ -163,7 +189,8 @@ export const useProfileData = () => {
    * Annule les modifications
    */
   const cancelEdit = () => {
-    setProfileData({
+    setProfileData(prev => ({
+      ...prev,
       username: user?.username || '',
       email: user?.email || '',
       firstName: user?.firstName || '',
@@ -173,12 +200,12 @@ export const useProfileData = () => {
       website: user?.website || '',
       avatar: user?.avatar || null,
       publicProfile: user?.publicProfile ?? true,
-      // Champs entreprise
-      companyName: user?.companyName || '',
-      siret: user?.siret || '',
-      billingAddress: user?.billingAddress || '',
-      vatNumber: user?.vatNumber || ''
-    })
+      // Champs entreprise (businessType/verificationStatus restent tels que chargés depuis /producer-profile)
+      companyName: user?.companyName || prev.companyName,
+      siret: user?.siret || prev.siret,
+      billingAddress: user?.billingAddress || prev.billingAddress,
+      vatNumber: user?.vatNumber || prev.vatNumber
+    }))
     setIsEditing(false)
     setSaveMessage('')
   }

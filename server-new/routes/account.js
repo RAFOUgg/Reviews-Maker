@@ -508,7 +508,7 @@ router.put('/update', requireAuth, asyncHandler(async (req, res) => {
         // Champs profil personnel
         firstName, lastName, country, bio, website, publicProfile,
         // Champs entreprise (Producteur/Influenceur)
-        companyName, siret, billingAddress, vatNumber
+        companyName, businessType, siret, billingAddress, vatNumber
     } = req.body;
 
     // Validation basique
@@ -599,7 +599,7 @@ router.put('/update', requireAuth, asyncHandler(async (req, res) => {
     let producerProfile = null;
     const userAccountType = getUserAccountType(updatedUser);
 
-    if ((companyName || siret || billingAddress || vatNumber) &&
+    if ((companyName || businessType || siret || billingAddress || vatNumber) &&
         (userAccountType === 'producer' || userAccountType === 'influencer')) {
         // Rechercher ou créer le ProducerProfile
         producerProfile = await prisma.producerProfile.upsert({
@@ -607,11 +607,13 @@ router.put('/update', requireAuth, asyncHandler(async (req, res) => {
             create: {
                 userId: req.user.id,
                 companyName: companyName?.trim() || '',
+                businessType: businessType || 'farm',
                 siret: siret?.trim() || null,
                 country: country?.trim() || 'FR',
             },
             update: {
                 companyName: companyName?.trim() || undefined,
+                businessType: businessType || undefined,
                 siret: siret?.trim() || undefined,
             }
         });
@@ -637,6 +639,7 @@ router.put('/update', requireAuth, asyncHandler(async (req, res) => {
         publicProfile: updatedUser.publicProfile,
         // Données entreprise
         companyName: producerProfile?.companyName || null,
+        businessType: producerProfile?.businessType || null,
         siret: producerProfile?.siret || null,
         billingAddress: billingAddress || null, // Stocké côté client pour l'instant
         vatNumber: vatNumber || null, // Stocké côté client pour l'instant

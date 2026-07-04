@@ -6,6 +6,7 @@
 import React from 'react'
 import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidBadge } from '@/components/ui/LiquidUI'
 import { Palette, Globe, Building2, Upload, CreditCard, FileText, Landmark, HelpCircle, Book, MessageCircle, Activity } from 'lucide-react'
+import KYCUploader from '@/components/legal/KYCUploader'
 
 // Preferences Tab
 export const PreferencesTab = ({ user, onStatusChange }) => {
@@ -91,33 +92,7 @@ export const CompanyTab = ({ user }) => {
 
 // KYC Tab (Producteur only)
 export const KYCTab = ({ user }) => {
-    return (
-        <div className="space-y-6">
-            <LiquidCard glow="cyan" padding="lg">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-2">
-                    <Upload className="w-5 h-5" />
-                    Vérification KYC
-                </h3>
-                <p className="text-white/50 text-sm mb-6">
-                    Complétez votre vérification KYC pour débloquer les fonctionnalités Producteur
-                </p>
-
-                <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-xl mb-4">
-                    <p className="text-sm text-amber-400 flex items-center gap-2">
-                        <span className="font-semibold">Statut:</span>
-                        <LiquidBadge variant={user?.kycStatus === 'verified' ? 'success' : 'warning'}>
-                            {user?.kycStatus === 'verified' ? '✓ Vérifié' : 'En attente'}
-                        </LiquidBadge>
-                    </p>
-                </div>
-
-                <LiquidButton glow="purple" className="w-full">
-                    <Upload className="w-4 h-4 mr-2" />
-                    Télécharger les documents
-                </LiquidButton>
-            </LiquidCard>
-        </div>
-    )
+    return <KYCUploader userId={user?.id} accountType={user?.accountType} />
 }
 
 // Payment Tab

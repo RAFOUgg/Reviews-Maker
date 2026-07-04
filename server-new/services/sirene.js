@@ -3,7 +3,7 @@
  * recherche-entreprises.api.gouv.fr (gratuite, sans clé, gérée par l'État français)
  */
 
-const SIRENE_SEARCH_URL = 'https://recherche-entreprises.api.gouv.fr/api/v1/search'
+const SIRENE_SEARCH_URL = 'https://recherche-entreprises.api.gouv.fr/search'
 
 /**
  * Valide le format d'un SIRET (14 chiffres + algorithme de Luhn)
@@ -33,7 +33,7 @@ export function isValidSiretFormat(siret) {
 /**
  * Vérifie l'existence réelle d'une entreprise via son SIRET
  * @param {string} siret
- * @returns {Promise<{ found: boolean|null, active: boolean|null, officialName: string|null, activityLabel: string|null }>}
+ * @returns {Promise<{ found: boolean|null, active: boolean|null, officialName: string|null, activityCode: string|null }>}
  */
 export async function checkSiretExists(siret) {
     const digits = siret.replace(/\s/g, '')
@@ -43,25 +43,25 @@ export async function checkSiretExists(siret) {
         const response = await fetch(url, { signal: AbortSignal.timeout(8000) })
 
         if (!response.ok) {
-            return { found: null, active: null, officialName: null, activityLabel: null }
+            return { found: null, active: null, officialName: null, activityCode: null }
         }
 
         const data = await response.json()
         const result = data?.results?.[0]
 
         if (!result || result.siege?.siret !== digits) {
-            return { found: false, active: null, officialName: null, activityLabel: null }
+            return { found: false, active: null, officialName: null, activityCode: null }
         }
 
         return {
             found: true,
-            active: result.etat_administratif === 'A',
+            active: result.siege?.etat_administratif === 'A',
             officialName: result.nom_complet || result.nom_raison_sociale || null,
-            activityLabel: result.activite_principale_libelle || result.activite_principale || null,
+            activityCode: result.siege?.activite_principale || result.activite_principale || null,
         }
     } catch (error) {
         // Indisponibilité réseau/API : ne bloque jamais la sauvegarde du profil
-        return { found: null, active: null, officialName: null, activityLabel: null }
+        return { found: null, active: null, officialName: null, activityCode: null }
     }
 }
 

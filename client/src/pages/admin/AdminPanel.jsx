@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Users, Settings, Shield, AlertCircle, RefreshCw, Search, Trash2, Lock, Unlock, CheckCircle2 } from 'lucide-react'
+import { Users, Settings, Shield, AlertCircle, RefreshCw, Search, Trash2, Lock, Unlock, CheckCircle2, FileCheck, ExternalLink } from 'lucide-react'
 import LiquidCard from '../../components/ui/LiquidCard'
 import LiquidButton from '../../components/ui/LiquidButton'
 
@@ -17,6 +17,8 @@ export default function AdminPanel() {
     const [showBanModal, setShowBanModal] = useState(false)
     const [banReason, setBanReason] = useState('')
     const [authError, setAuthError] = useState(false)
+    const [verifications, setVerifications] = useState([])
+    const [verificationsLoading, setVerificationsLoading] = useState(true)
 
     useEffect(() => {
         console.log('🔧 AdminPanel useEffect - checking auth...')
@@ -24,7 +26,40 @@ export default function AdminPanel() {
         checkAuth()
         fetchUsers()
         fetchStats()
+        fetchVerifications()
     }, [])
+
+    const fetchVerifications = async () => {
+        try {
+            const response = await fetch('/api/admin/producer-verifications?status=pending', {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' }
+            })
+            if (!response.ok) throw new Error('Failed to fetch verifications')
+            const data = await response.json()
+            setVerifications(data.profiles || [])
+        } catch (err) {
+            console.error('Error fetching producer verifications:', err)
+        } finally {
+            setVerificationsLoading(false)
+        }
+    }
+
+    const reviewVerification = async (id, action) => {
+        const reason = action === 'reject' ? window.prompt('Motif du rejet (optionnel) :') || '' : undefined
+
+        try {
+            const response = await fetch(`/api/admin/producer-verifications/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action, reason })
+            })
+            if (!response.ok) throw new Error('Failed to review verification')
+            setVerifications(verifications.filter(v => v.id !== id))
+        } catch (err) {
+            alert('Error: ' + err.message)
+        }
+    }
 
     const checkAuth = async () => {
         try {
@@ -283,6 +318,74 @@ export default function AdminPanel() {
                         <p className="text-red-400 text-sm">{error}</p>
                     </div>
                 )}
+
+                {/* Producer Verifications */}
+                <LiquidCard>
+                    <div className="p-6 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <FileCheck className="w-5 h-5 text-amber-400" />
+                                Vérifications Producteur en attente ({verifications.length})
+                            </h2>
+                            <LiquidButton variant="secondary" size="sm" onClick={fetchVerifications} icon={RefreshCw}>
+                                Rafraîchir
+                            </LiquidButton>
+                        </div>
+
+                        {verificationsLoading ? (
+                            <p className="text-gray-400 text-sm">Chargement...</p>
+                        ) : verifications.length === 0 ? (
+                            <p className="text-gray-400 text-sm">Aucune demande en attente.</p>
+                        ) : (
+                            <div className="space-y-3">
+                                {verifications.map((v) => (
+                                    <div key={v.id} className="p-4 bg-gray-800/60 border border-gray-700 rounded-lg space-y-3">
+                                        <div className="flex items-start justify-between gap-4 flex-wrap">
+                                            <div>
+                                                <p className="font-bold text-white">{v.companyName} <span className="text-xs text-gray-400 font-normal">({v.businessType})</span></p>
+                                                <p className="text-xs text-gray-400">{v.username} · {v.email}</p>
+                                                <p className="text-xs text-gray-400 mt-1">SIRET: {v.siret || '—'} · {v.country}</p>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                {v.verificationDoc && (
+                                                    <a
+                                                        href={v.verificationDoc}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white text-xs rounded-lg flex items-center gap-1"
+                                                    >
+                                                        <ExternalLink className="w-3 h-3" /> Document
+                                                    </a>
+                                                )}
+                                                <button
+                                                    onClick={() => reviewVerification(v.id, 'approve')}
+                                                    className="px-3 py-2 bg-green-500/20 text-green-400 border border-green-500/50 hover:bg-green-500/30 text-xs font-bold rounded-lg"
+                                                >
+                                                    Approuver
+                                                </button>
+                                                <button
+                                                    onClick={() => reviewVerification(v.id, 'reject')}
+                                                    className="px-3 py-2 bg-red-500/20 text-red-400 border border-red-500/50 hover:bg-red-500/30 text-xs font-bold rounded-lg"
+                                                >
+                                                    Rejeter
+                                                </button>
+                                            </div>
+                                        </div>
+                                        {v.sireneSnapshot && (
+                                            <p className="text-xs text-gray-400">
+                                                Sirene: {v.sireneSnapshot.found === true
+                                                    ? `${v.sireneSnapshot.officialName || 'trouvé'} (${v.sireneSnapshot.active ? 'active' : 'fermée'})`
+                                                    : v.sireneSnapshot.found === false
+                                                        ? 'aucune entreprise trouvée'
+                                                        : 'vérification indisponible'}
+                                            </p>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </div>
+                </LiquidCard>
 
                 {/* Users Table */}
                 {filteredUsers.length === 0 ? (

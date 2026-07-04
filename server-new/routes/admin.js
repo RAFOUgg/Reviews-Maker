@@ -21,7 +21,8 @@ const requireAdmin = (req, res, next) => {
     let userRoles = []
     if (typeof req.user.roles === 'string') {
         try {
-            userRoles = JSON.parse(req.user.roles)
+            const parsed = JSON.parse(req.user.roles)
+            userRoles = Array.isArray(parsed) ? parsed : (Array.isArray(parsed?.roles) ? parsed.roles : [])
         } catch (e) {
             userRoles = []
         }
@@ -39,10 +40,11 @@ const requireAdmin = (req, res, next) => {
 // Check admin auth
 router.get('/check-auth', async (req, res) => {
     try {
-        const isAdmin = process.env.ADMIN_MODE === 'true' ||
-            (req.user && req.user.roles &&
-                (typeof req.user.roles === 'string' ? JSON.parse(req.user.roles) : req.user.roles)
-                    .includes('admin'))
+        const parsedRoles = req.user?.roles
+            ? (typeof req.user.roles === 'string' ? JSON.parse(req.user.roles) : req.user.roles)
+            : []
+        const roleList = Array.isArray(parsedRoles) ? parsedRoles : (Array.isArray(parsedRoles?.roles) ? parsedRoles.roles : [])
+        const isAdmin = process.env.ADMIN_MODE === 'true' || roleList.includes('admin')
 
         if (!isAdmin) {
             return res.status(401).json({
