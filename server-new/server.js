@@ -16,7 +16,6 @@ import reviewRoutes from './routes/reviews.js'
 import userRoutes from './routes/users.js'
 import userProfileRoutes from './routes/userProfile.js'
 import userSettingsRoutes from './routes/userSettings.js'
-import userKYCRoutes from './routes/userKYC.js'
 import templatesRoutes from './routes/templates.js'
 import legalRoutes from './routes/legal.js'
 import kycRoutes from './routes/kyc.js'
@@ -106,7 +105,6 @@ app.use('/api/reviews', reviewRoutes)
 app.use('/api/users', userRoutes)
 app.use('/api/user/profile', userProfileRoutes)
 app.use('/api/user/settings', userSettingsRoutes)
-app.use('/api/user/kyc', userKYCRoutes)
 app.use('/api/templates', templatesRoutes)
 app.use('/api/legal', legalRoutes)
 app.use('/api/kyc', kycRoutes)

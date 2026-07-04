@@ -87,24 +87,22 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 label="Matière première(s) utilisée(s)"
                                 value={formData.typeGenetiques || ''}
                                 onChange={(e) => handleChange('typeGenetiques', e.target.value)}
-                                placeholder="Génétiques ou cultivars utilisés"
+                                placeholder="Génétiques ou cultivars, ou liez une fiche ci-dessous"
                             />
-                            <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                            <div className="mt-1.5">
+                                <SourceLineageSelector
+                                    compact
+                                    value={formData.sourceLineage || []}
+                                    allowedTypes={['flower', 'hash', 'concentrate']}
+                                    onChange={(sources, aggregatedCultivars) => {
+                                        handleChange('sourceLineage', sources)
+                                        if (aggregatedCultivars.length > 0) {
+                                            handleChange('typeGenetiques', aggregatedCultivars.join(', '))
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
-                    </div>
-
-                    {/* Lien matière première (fleur, hash et/ou concentré) */}
-                    <div>
-                        <SourceLineageSelector
-                            value={formData.sourceLineage || []}
-                            allowedTypes={['flower', 'hash', 'concentrate']}
-                            onChange={(sources, aggregatedCultivars) => {
-                                handleChange('sourceLineage', sources)
-                                if (aggregatedCultivars.length > 0) {
-                                    handleChange('typeGenetiques', aggregatedCultivars.join(', '))
-                                }
-                            }}
-                        />
                     </div>
 
                     {/* Photos */}

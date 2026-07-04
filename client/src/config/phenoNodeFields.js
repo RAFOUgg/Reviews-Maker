@@ -6,12 +6,17 @@
  * dessus pour générer les sections/champs.
  *
  * Volontairement EXCLUS car déjà capturés par la fiche technique liée (FlowerReview/etc.)
- * et ne doivent pas être dupliqués ici : odeur/arôme, profil terpénique, profil
- * cannabinoïde, production de résine, maturité des trichomes, couleur/pigmentation,
- * notes de goût. Volontairement EXCLUS car déjà représentés par la structure du graphe
- * (nœuds + arêtes) plutôt que dupliqués en texte : sexe des parents (sur le nœud parent
- * lui-même), lien parent-enfant strict (les arêtes), code du pollen donor/de la mère
- * (ce sont d'autres nœuds, avec leur propre phenotypeCode).
+ * et ne doivent pas être dupliqués ici : odeur/arôme, profil terpénique, production de
+ * résine, maturité des trichomes, couleur/pigmentation, notes de goût. Volontairement
+ * EXCLUS car déjà représentés par la structure du graphe (nœuds + arêtes) plutôt que
+ * dupliqués en texte : sexe des parents (sur le nœud parent lui-même), lien parent-enfant
+ * strict (les arêtes), code du pollen donor/de la mère (ce sont d'autres nœuds, avec leur
+ * propre phenotypeCode).
+ *
+ * Le profil cannabinoïde (thcMin/thcMax/cbdMin/cbdMax + source, section "Type génétique")
+ * N'EST PAS exclu malgré le doublon apparent avec la fiche technique liée : un nœud sans
+ * review liée (parent externe, ancêtre, individu de bibliothèque) n'a sinon aucun moyen
+ * d'enregistrer cette donnée pourtant utile pour justifier une classification "Chanvre".
  *
  * Clés historiques à ne jamais renommer (lues ailleurs : CultivarNode.jsx, Genetiques.jsx) :
  * sex, type, breeder, ratio, notes, phenotypeCode, relations.
@@ -59,7 +64,7 @@ export const PHENO_NODE_SECTIONS = [
         label: 'Type génétique',
         icon: '🧬',
         fields: [
-            { id: 'geneticType', label: 'Classification', type: 'select', hint: 'Classification génétique globale — pour la génération exacte du cross (F1, BX1...), voir le champ Génération ci-dessus.', options: [
+            { id: 'geneticType', label: 'Origine de la lignée', type: 'select', hint: 'Structure de la lignée (à distinguer du "Type" de base — chémotype populaire — et de la Génération exacte du cross ci-dessus).', options: [
                 { value: '', label: 'Non précisé' },
                 { value: 'landrace', label: 'Landrace / variété locale' },
                 { value: 'ibl', label: 'IBL (lignée consanguine stable)' },
@@ -74,6 +79,18 @@ export const PHENO_NODE_SECTIONS = [
                 { value: 'landrace', label: 'Landrace' },
                 { value: 'ibl', label: 'IBL' },
                 { value: 'polyhybrid', label: 'Polyhybride' }
+            ]},
+            { id: 'thcMin', label: 'THC min (%)', type: 'number', min: 0, max: 100, placeholder: 'ex: 0.2' },
+            { id: 'thcMax', label: 'THC max (%)', type: 'number', min: 0, max: 100, placeholder: 'ex: 0.3' },
+            { id: 'thcSource', label: 'Source THC', type: 'select', options: [
+                { value: 'breeder_claim', label: 'Annoncé breeder' },
+                { value: 'lab_tested', label: 'Analyse labo (COA)' }
+            ]},
+            { id: 'cbdMin', label: 'CBD min (%)', type: 'number', min: 0, max: 100, placeholder: 'ex: 8' },
+            { id: 'cbdMax', label: 'CBD max (%)', type: 'number', min: 0, max: 100, placeholder: 'ex: 12' },
+            { id: 'cbdSource', label: 'Source CBD', type: 'select', options: [
+                { value: 'breeder_claim', label: 'Annoncé breeder' },
+                { value: 'lab_tested', label: 'Analyse labo (COA)' }
             ]}
         ]
     },

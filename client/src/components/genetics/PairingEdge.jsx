@@ -1,9 +1,23 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow, useStoreApi } from 'reactflow';
-import { Heart, Baby } from 'lucide-react';
+import { Heart, Baby, Venus, Mars, CircleHelp } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect, findNodeAtPoint, nearestHandleSide } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
+
+const SEX_ICON = { female: Venus, male: Mars };
+
+// Résumé compact "♀ Indica × ♂ Ruderalis" du croisement — mêmes icônes que le badge sexe des
+// nœuds (CultivarNode.jsx) pour une cohérence visuelle immédiate entre nœud et liaison.
+function PartnerBadge({ partner }) {
+    const Icon = SEX_ICON[partner?.sex] || CircleHelp;
+    return (
+        <span className="inline-flex items-center gap-0.5">
+            <Icon size={10} />
+            {partner?.type || '?'}
+        </span>
+    );
+}
 
 /**
  * PairingEdge - Liaison "couple parental" (convention pedigree : ligne de jonction entre deux
@@ -128,6 +142,34 @@ export default function PairingEdge({
                 {/* Même surbrillance pour le glisser d'une extrémité de la ligne de couple
                     vers un AUTRE nœud (reconnexion, geste distinct de la bulle médiane). */}
                 <DropTargetHighlight rect={endpointHoverRect} />
+
+                {/* Résumé du croisement ("♀ Indica × ♂ Ruderalis") — affiché seulement si l'un des
+                    deux partenaires a au moins un sexe ou un type renseigné, sinon "? × ?" partout
+                    serait du bruit visuel pur sans information. */}
+                {(data?.partnerA?.sex || data?.partnerA?.type || data?.partnerB?.sex || data?.partnerB?.type) && (
+                    <div
+                        style={{
+                            position: 'absolute',
+                            transform: `translate(-50%, -50%) translate(${bendX}px,${bendY - 22}px)`,
+                            pointerEvents: 'none',
+                        }}
+                        className="nodrag nopan"
+                    >
+                        <div
+                            className="px-2 py-0.5 rounded-md text-pink-200 text-[10px] font-medium whitespace-nowrap flex items-center gap-1"
+                            style={{
+                                background: 'rgba(255,255,255,0.06)',
+                                border: '1px solid rgba(236,72,153,0.3)',
+                                backdropFilter: 'blur(12px) saturate(150%)',
+                                boxShadow: '0 2px 12px -2px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.08)',
+                            }}
+                        >
+                            <PartnerBadge partner={data?.partnerA} />
+                            <span className="text-pink-300/50">×</span>
+                            <PartnerBadge partner={data?.partnerB} />
+                        </div>
+                    </div>
+                )}
 
                 {/* Zone de saisie agrandie (32x32) autour de la bulle visuelle (20x20) — les
                     gestionnaires vivent sur ce conteneur, pas sur la bulle elle-même, pour que

@@ -4,6 +4,7 @@
  */
 
 import { prisma } from '../server.js'
+import { isValidSiretFormat, checkSiretExists } from './sirene.js'
 
 /**
  * Types de comptes disponibles - Conforme CDC
@@ -334,16 +335,35 @@ export async function requestProducerVerification(userId, verificationData) {
         throw new Error('Votre compte est déjà vérifié');
     }
 
+    // Ne jamais faire confiance au SIRET fourni côté client : on le revalide ici
+    let sireneSnapshot = null;
+    let sireneCheckedAt = null;
+    if (verificationData.siret && isValidSiretFormat(verificationData.siret)) {
+        const sireneResult = await checkSiretExists(verificationData.siret);
+        sireneSnapshot = JSON.stringify(sireneResult);
+        sireneCheckedAt = new Date();
+    }
+
     // Mettre à jour le profil avec les infos de vérification
     const updatedProfile = await prisma.producerProfile.update({
         where: { id: user.producerProfile.id },
         data: {
             companyName: verificationData.companyName,
+            businessType: verificationData.businessType || user.producerProfile.businessType,
             siret: verificationData.siret || null,
             ein: verificationData.ein || null,
             country: verificationData.country,
-            verificationDoc: verificationData.documentUrl || null,
+            verificationDoc: verificationData.documentUrl || user.producerProfile.verificationDoc,
+            verificationStatus: 'pending',
+            sireneSnapshot,
+            sireneCheckedAt,
         },
+    });
+
+    // Refléter la demande en cours sur le statut eKYC générique de l'utilisateur
+    await prisma.user.update({
+        where: { id: userId },
+        data: { kycStatus: 'pending' },
     });
 
     // Logger la demande
@@ -363,6 +383,57 @@ export async function requestProducerVerification(userId, verificationData) {
     return updatedProfile;
 }
 
+/**
+ * Traite une demande de vérification producteur (admin uniquement)
+ * @param {string} producerProfileId - ID du ProducerProfile
+ * @param {'approve'|'reject'} action
+ * @param {string} [reason] - Motif de rejet
+ * @returns {Promise<Object>}
+ */
+export async function reviewProducerVerification(producerProfileId, action, reason) {
+    const profile = await prisma.producerProfile.findUnique({
+        where: { id: producerProfileId },
+    });
+
+    if (!profile) {
+        throw new Error('Profil producteur non trouvé');
+    }
+
+    const approved = action === 'approve';
+
+    const updatedProfile = await prisma.producerProfile.update({
+        where: { id: producerProfileId },
+        data: {
+            verificationStatus: approved ? 'verified' : 'rejected',
+            isVerified: approved,
+            verifiedAt: approved ? new Date() : null,
+            verificationRejectionReason: approved ? null : (reason || null),
+        },
+    });
+
+    // Synchroniser le statut eKYC générique de l'utilisateur (une seule action ferme les deux)
+    await prisma.user.update({
+        where: { id: profile.userId },
+        data: {
+            kycStatus: approved ? 'verified' : 'rejected',
+            kycVerifiedAt: approved ? new Date() : null,
+            kycRejectionReason: approved ? null : (reason || null),
+        },
+    });
+
+    await prisma.auditLog.create({
+        data: {
+            userId: profile.userId,
+            action: approved ? 'producer.verification.approved' : 'producer.verification.rejected',
+            entityType: 'producerProfile',
+            entityId: producerProfileId,
+            metadata: JSON.stringify({ reason: reason || null }),
+        },
+    });
+
+    return updatedProfile;
+}
+
 export default {
     ACCOUNT_TYPES,
     getUserAccountType,
@@ -370,4 +441,5 @@ export default {
     changeAccountType,
     getAccountInfo,
     requestProducerVerification,
+    reviewProducerVerification,
 };

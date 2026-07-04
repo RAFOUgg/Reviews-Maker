@@ -13,7 +13,8 @@
       "Bash(npx esbuild *)",
       "Bash(grep -i \"error\" /tmp/uc.out /tmp/gcs.out /tmp/css.out | head -20; echo \"---LOG---\"; cat /tmp/vite-dev.log)",
       "Read(//tmp/**)",
-      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)"
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173)",
+      "Bash(powershell -Command \"Get-Process node -ErrorAction SilentlyContinue | Select-Object Id,ProcessName,Path\")"
     ]
   }
 }

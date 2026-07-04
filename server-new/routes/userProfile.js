@@ -9,7 +9,6 @@ import path from 'path'
 import fs from 'fs'
 import { prisma } from '../server.js'
 import { fileURLToPath } from 'url'
-import { randomUUID } from 'crypto'
 import { requireAuth } from '../middleware/auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -225,131 +224,6 @@ router.post('/banner', requireAuth, upload.single('banner'), async (req, res) =>
         res.status(500).json({ error: 'Failed to upload banner' });
     }
 });
-
-// ==================== GET COMPANY (Producteur) ====================
-// GET /api/user/company
-router.get('/company', requireAuth, async (req, res) => {
-    try {
-        // Only Producteur can have company
-        if (!['Producteur', 'producer'].includes(req.user.accountType)) {
-            return res.status(403).json({ error: 'Only Producteur accounts can have company info' });
-        }
-
-        const company = await prisma.company.findUnique({
-            where: { userId: req.user.id },
-            select: {
-                id: true,
-                companyName: true,
-                registrationNumber: true,
-                registrationType: true,
-                country: true,
-                address: true,
-                city: true,
-                postalCode: true,
-                taxId: true,
-                businessType: true,
-                website: true,
-                phoneNumber: true,
-                logoUrl: true,
-                verificationStatus: true,
-                verificationDocuments: true,
-                verificationRejectionReason: true,
-                verificationReviewedAt: true,
-                createdAt: true,
-                updatedAt: true
-            }
-        });
-
-        res.json(company || null);
-    } catch (error) {
-        console.error('GET /company error:', error);
-        res.status(500).json({ error: 'Failed to fetch company info' });
-    }
-});
-
-// ==================== CREATE/UPDATE COMPANY ====================
-// POST/PUT /api/user/company
-router.post('/company', requireAuth, async (req, res) => {
-    return updateOrCreateCompany(req, res);
-});
-
-router.put('/company', requireAuth, async (req, res) => {
-    return updateOrCreateCompany(req, res);
-});
-
-async function updateOrCreateCompany(req, res) {
-    try {
-        if (!['Producteur', 'producer'].includes(req.user.accountType)) {
-            return res.status(403).json({ error: 'Only Producteur accounts can have company info' });
-        }
-
-        const { companyName, registrationNumber, registrationType, country, address, city, postalCode, taxId, businessType, website, phoneNumber } = req.body;
-
-        // Validation
-        const errors = {};
-        if (!companyName || companyName.length === 0) errors.companyName = 'Company name required';
-        if (companyName && companyName.length > 255) errors.companyName = 'Max 255 characters';
-        if (registrationNumber && registrationNumber.length > 50) errors.registrationNumber = 'Invalid registration number';
-        if (businessType && !['producer', 'distributor', 'retailer', 'laboratory'].includes(businessType)) errors.businessType = 'Invalid business type';
-
-        if (Object.keys(errors).length > 0) {
-            return res.status(400).json({ errors });
-        }
-
-        // Check if company exists
-        const existingCompany = await prisma.company.findUnique({
-            where: { userId: req.user.id }
-        });
-
-        let company;
-        if (existingCompany) {
-            company = await prisma.company.update({
-                where: { userId: req.user.id },
-                data: {
-                    companyName,
-                    registrationNumber,
-                    registrationType,
-                    country,
-                    address,
-                    city,
-                    postalCode,
-                    taxId,
-                    businessType,
-                    website,
-                    phoneNumber,
-                    updatedAt: new Date()
-                }
-            });
-        } else {
-            company = await prisma.company.create({
-                data: {
-                    id: randomUUID(),
-                    userId: req.user.id,
-                    companyName,
-                    registrationNumber,
-                    registrationType,
-                    country,
-                    address,
-                    city,
-                    postalCode,
-                    taxId,
-                    businessType,
-                    website,
-                    phoneNumber,
-                    verificationStatus: 'unverified',
-                    verificationDocuments: '[]',
-                    createdAt: new Date(),
-                    updatedAt: new Date()
-                }
-            });
-        }
-
-        res.json(company);
-    } catch (error) {
-        console.error('POST/PUT /company error:', error);
-        res.status(500).json({ error: 'Failed to save company info' });
-    }
-}
 
 export default router
 

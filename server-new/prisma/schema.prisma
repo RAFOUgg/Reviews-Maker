@@ -438,15 +438,20 @@ model ProducerProfile {
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   // Informations légales
-  companyName String
-  siret       String? // France
-  ein         String? // USA
-  country     String
+  companyName  String
+  businessType String  @default("farm") // farm | laboratory | extractor | manufacturer | distributor | other
+  siret        String? // France
+  ein          String? // USA
+  country      String
 
   // Vérification
-  isVerified      Boolean   @default(false)
-  verifiedAt      DateTime?
-  verificationDoc String? // URL document justificatif
+  isVerified                  Boolean   @default(false)
+  verifiedAt                  DateTime?
+  verificationDoc             String? // URL document justificatif
+  verificationStatus          String    @default("none") // none | pending | verified | rejected
+  verificationRejectionReason String?
+  sireneSnapshot              String? // JSON du dernier résultat API recherche-entreprises (nom officiel, activité, statut)
+  sireneCheckedAt             DateTime?
 
   // Timestamps
   createdAt DateTime @default(now())

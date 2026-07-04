@@ -125,14 +125,20 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             return;
         }
 
-        // Convertir les nœuds du store au format React Flow
-        const rfNodes = store.nodes.map(node => {
-            // genetics est stocké en JSON string côté API — le parser ici une fois pour
-            // toutes, sinon CultivarNode.jsx ne peut jamais lire genetics.type/.breeder/.sex
-            let genetics = node.genetics;
+        // genetics est stocké en JSON string côté API — parsé une fois ici (pour les nœuds ET
+        // les partenaires d'un couple ci-dessous), sinon CultivarNode.jsx/PairingEdge.jsx ne
+        // peuvent jamais lire genetics.type/.breeder/.sex.
+        const parseGenetics = (node) => {
+            let genetics = node?.genetics;
             if (typeof genetics === 'string') {
                 try { genetics = JSON.parse(genetics); } catch { genetics = {}; }
             }
+            return genetics || {};
+        };
+
+        // Convertir les nœuds du store au format React Flow
+        const rfNodes = store.nodes.map(node => {
+            const genetics = parseGenetics(node);
             return {
                 id: node.id,
                 data: {
@@ -211,27 +217,43 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         // Convertir les arêtes du store au format React Flow
         const rfEdges = store.edges
             .filter(edge => !consumedEdgeIds.has(edge.id))
-            .map(edge => ({
-                id: edge.id,
-                source: edge.parentNodeId,
-                target: edge.childNodeId,
-                type: edge.relationshipType === 'pairing' ? 'pairing' : 'pheno',
-                selected: store.selectedEdgeId === edge.id,
-                label: edge.relationshipType === 'pairing' ? undefined : edge.relationshipType,
-                markerEnd: edge.relationshipType === 'pairing' ? undefined : { type: MarkerType.ArrowClosed },
-                data: {
-                    relationshipType: edge.relationshipType,
-                    notes: edge.notes,
-                    waypointX: edge.waypointX,
-                    waypointY: edge.waypointY,
-                    onWaypointChange: handleEdgeWaypointChange,
-                    sourceHandle: edge.sourceHandle,
-                    targetHandle: edge.targetHandle,
-                    onEndpointHandleChange: handleEdgeEndpointChange,
-                    onEndpointReconnect: handleEdgeEndpointReconnect,
-                    onDropChildLink: handlePairingDropOnNode
+            .map(edge => {
+                const isPairing = edge.relationshipType === 'pairing';
+                // Résumé sexe/type des deux partenaires d'un couple, affiché directement sur la
+                // liaison (PairingEdge) — évite de devoir cliquer sur chaque nœud pour savoir ce
+                // qui est croisé.
+                let partnerA = null, partnerB = null;
+                if (isPairing) {
+                    const nodeA = store.nodes.find(n => n.id === edge.parentNodeId);
+                    const nodeB = store.nodes.find(n => n.id === edge.childNodeId);
+                    if (nodeA) { const g = parseGenetics(nodeA); partnerA = { sex: g.sex, type: g.type }; }
+                    if (nodeB) { const g = parseGenetics(nodeB); partnerB = { sex: g.sex, type: g.type }; }
                 }
-            }));
+                return {
+                    id: edge.id,
+                    source: edge.parentNodeId,
+                    target: edge.childNodeId,
+                    type: isPairing ? 'pairing' : 'pheno',
+                    selected: store.selectedEdgeId === edge.id,
+                    label: isPairing ? undefined : edge.relationshipType,
+                    markerEnd: isPairing ? undefined : { type: MarkerType.ArrowClosed },
+                    data: {
+                        relationshipType: edge.relationshipType,
+                        pollinationMethod: edge.pollinationMethod,
+                        notes: edge.notes,
+                        waypointX: edge.waypointX,
+                        waypointY: edge.waypointY,
+                        onWaypointChange: handleEdgeWaypointChange,
+                        sourceHandle: edge.sourceHandle,
+                        targetHandle: edge.targetHandle,
+                        onEndpointHandleChange: handleEdgeEndpointChange,
+                        onEndpointReconnect: handleEdgeEndpointReconnect,
+                        onDropChildLink: handlePairingDropOnNode,
+                        partnerA,
+                        partnerB
+                    }
+                };
+            });
 
         setNodes(rfNodes);
         setEdges([...rfEdges, ...familyEdges]);

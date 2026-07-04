@@ -3,6 +3,11 @@
  */
 
 import express from 'express';
+import multer from 'multer';
+import path from 'path';
+import fs from 'fs/promises';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
 import { PrismaClient } from '@prisma/client';
 import { asyncHandler } from '../utils/errorHandler.js';
 import {
@@ -12,10 +17,36 @@ import {
     requestProducerVerification,
     ACCOUNT_TYPES,
 } from '../services/account.js';
+import { isValidSiretFormat, checkSiretExists } from '../services/sirene.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 const prisma = new PrismaClient();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const verificationDocDir = join(__dirname, '../../db/producer_verification_docs');
+await fs.mkdir(verificationDocDir, { recursive: true });
+
+const verificationDocUpload = multer({
+    storage: multer.diskStorage({
+        destination: async (req, file, cb) => {
+            const userDir = join(verificationDocDir, req.user.id.toString());
+            await fs.mkdir(userDir, { recursive: true });
+            cb(null, userDir);
+        },
+        filename: (req, file, cb) => {
+            const ext = path.extname(file.originalname);
+            cb(null, `verification_${Date.now()}${ext}`);
+        },
+    }),
+    limits: { fileSize: 10 * 1024 * 1024 },
+    fileFilter: (req, file, cb) => {
+        const allowed = /jpeg|jpg|png|pdf/;
+        const ok = allowed.test(path.extname(file.originalname).toLowerCase()) && allowed.test(file.mimetype);
+        cb(ok ? null : new Error('Type de fichier non autorisé. Formats acceptés: JPEG, PNG, PDF'), ok);
+    },
+});
 
 /**
  * GET /api/account/info
@@ -199,6 +230,91 @@ router.post('/change-type', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 /**
+ * POST /api/account/verify-siret
+ * Vérifie le format (Luhn) et l'existence légale d'un SIRET, sans rien persister
+ */
+router.post('/verify-siret', requireAuth, asyncHandler(async (req, res) => {
+    const { siret } = req.body;
+
+    if (!siret) {
+        return res.status(400).json({
+            error: 'missing_siret',
+            message: 'Le SIRET est requis',
+        });
+    }
+
+    if (!isValidSiretFormat(siret)) {
+        return res.json({
+            validFormat: false,
+            found: null,
+            active: null,
+            officialName: null,
+        });
+    }
+
+    const result = await checkSiretExists(siret);
+
+    res.json({
+        validFormat: true,
+        ...result,
+    });
+}));
+
+/**
+ * POST /api/account/verification-document
+ * Upload du document justificatif pour la vérification producteur
+ */
+router.post('/verification-document', requireAuth, verificationDocUpload.single('document'), asyncHandler(async (req, res) => {
+    if (!req.file) {
+        return res.status(400).json({
+            error: 'no_file',
+            message: 'Aucun fichier fourni',
+        });
+    }
+
+    const documentUrl = `/api/account/verification-document/${req.user.id}/${req.file.filename}`;
+
+    const producerProfile = await prisma.producerProfile.findUnique({
+        where: { userId: req.user.id },
+    });
+
+    if (!producerProfile) {
+        await fs.unlink(req.file.path);
+        return res.status(400).json({
+            error: 'not_producer',
+            message: 'Vous devez d\'abord créer un compte producteur',
+        });
+    }
+
+    await prisma.producerProfile.update({
+        where: { userId: req.user.id },
+        data: { verificationDoc: documentUrl },
+    });
+
+    res.json({ success: true, documentUrl });
+}));
+
+/**
+ * GET /api/account/verification-document/:userId/:filename
+ * Sert le document justificatif uploadé (propriétaire uniquement)
+ */
+router.get('/verification-document/:userId/:filename', requireAuth, asyncHandler(async (req, res) => {
+    if (req.user.id !== req.params.userId) {
+        return res.status(403).json({ error: 'forbidden', message: 'Accès refusé' });
+    }
+
+    const filePath = join(verificationDocDir, req.params.userId, req.params.filename);
+
+    try {
+        await fs.access(filePath);
+    } catch {
+        return res.status(404).json({ error: 'file_not_found', message: 'Fichier introuvable' });
+    }
+
+    res.sendFile(filePath);
+}));
+
+/**
  * POST /api/account/request-verification
  * Demande de vérification pour compte producteur
  */
@@ -210,7 +326,7 @@ router.post('/request-verification', requireAuth, asyncHandler(async (req, res) 
         });
     }
 
-    const { companyName, siret, ein, country, documentUrl } = req.body;
+    const { companyName, businessType, siret, ein, country, documentUrl } = req.body;
 
     if (!companyName || !country) {
         return res.status(400).json({
@@ -222,6 +338,7 @@ router.post('/request-verification', requireAuth, asyncHandler(async (req, res) 
     try {
         const updatedProfile = await requestProducerVerification(req.user.id, {
             companyName,
+            businessType,
             siret,
             ein,
             country,
@@ -233,7 +350,9 @@ router.post('/request-verification', requireAuth, asyncHandler(async (req, res) 
             message: 'Demande de vérification envoyée. Nous vous contacterons sous 3-5 jours ouvrés.',
             profile: {
                 companyName: updatedProfile.companyName,
+                businessType: updatedProfile.businessType,
                 country: updatedProfile.country,
+                verificationStatus: updatedProfile.verificationStatus,
                 isVerified: updatedProfile.isVerified,
             },
         });
@@ -281,11 +400,16 @@ router.get('/producer-profile', requireAuth, asyncHandler(async (req, res) => {
 
     res.json({
         companyName: producerProfile.companyName,
+        businessType: producerProfile.businessType,
         siret: producerProfile.siret,
         ein: producerProfile.ein,
         country: producerProfile.country,
         isVerified: producerProfile.isVerified,
         verifiedAt: producerProfile.verifiedAt,
+        verificationStatus: producerProfile.verificationStatus,
+        verificationRejectionReason: producerProfile.verificationRejectionReason,
+        verificationDoc: producerProfile.verificationDoc,
+        sireneSnapshot: producerProfile.sireneSnapshot ? JSON.parse(producerProfile.sireneSnapshot) : null,
     });
 }));
 

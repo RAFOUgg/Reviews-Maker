@@ -102,23 +102,21 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                             label="Matière première(s) utilisée(s)"
                             value={formData.cultivarsUtilises || formData.cultivars || ''}
                             onChange={(e) => handleChange('cultivarsUtilises', e.target.value)}
-                            placeholder="Cultivars utilisés (séparés par des virgules)"
+                            placeholder="Cultivars utilisés, ou liez une fiche ci-dessous"
                         />
-                        <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
-                    </div>
-
-                    {/* Lien matière première (fleur et/ou hash) */}
-                    <div>
-                        <SourceLineageSelector
-                            value={formData.sourceLineage || []}
-                            allowedTypes={['flower', 'hash']}
-                            onChange={(sources, aggregatedCultivars) => {
-                                handleChange('sourceLineage', sources)
-                                if (aggregatedCultivars.length > 0) {
-                                    handleChange('cultivarsUtilises', aggregatedCultivars.join(', '))
-                                }
-                            }}
-                        />
+                        <div className="mt-1.5">
+                            <SourceLineageSelector
+                                compact
+                                value={formData.sourceLineage || []}
+                                allowedTypes={['flower', 'hash']}
+                                onChange={(sources, aggregatedCultivars) => {
+                                    handleChange('sourceLineage', sources)
+                                    if (aggregatedCultivars.length > 0) {
+                                        handleChange('cultivarsUtilises', aggregatedCultivars.join(', '))
+                                    }
+                                }}
+                            />
+                        </div>
                     </div>
 
                     {/* Photos */}

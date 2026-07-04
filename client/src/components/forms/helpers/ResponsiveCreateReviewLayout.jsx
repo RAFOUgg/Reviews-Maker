@@ -51,6 +51,14 @@ export const ResponsiveCreateReviewLayout = ({
     const [isDragging, setIsDragging] = useState(false);
     const [shouldUseCarousel, setShouldUseCarousel] = useState(false);
     const carouselRef = useRef(null);
+    // <main> est le même noeud DOM d'une section à l'autre (seul `children` change) — sans ce
+    // reset, quitter une section longue (ex: Informations générales scrollée) puis arriver sur
+    // une section plus courte (Pipeline, Analytiques, Génétique, Visuel & Technique) laisse le
+    // scroll en place et cache le haut du nouveau contenu sous l'en-tête sticky.
+    const mainRef = useRef(null);
+    useEffect(() => {
+        if (mainRef.current) mainRef.current.scrollTop = 0;
+    }, [currentSection]);
     const containerRef = useRef(null);
 
     const VISIBLE_ITEMS = 5;
@@ -248,8 +256,12 @@ export const ResponsiveCreateReviewLayout = ({
             )}
 
             <div className="relative z-10 flex flex-col flex-1 min-h-0 overflow-hidden">
-                {/* Header - Responsive Padding & Safe Area - z-30 to stay ABOVE main content (z-10) but BELOW modals (z-[8888]) */}
-                <div className={`sticky top-[4.5rem] z-30 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
+                {/* Header — le parent est déjà flex-col (le header est un flex-item, pas un enfant
+                    d'un conteneur qui scrolle) : `sticky top-[4.5rem]` n'y sert à rien et provoque
+                    un léger chevauchement sur le haut du contenu de <main> (même bug que celui
+                    corrigé dans WizardProgressBar.jsx — cf. mémoire projet). flex-shrink-0 suffit
+                    à le garder au-dessus de <main>, sans z-index ni position ambigus. */}
+                <div className={`flex-shrink-0 bg-[#07070f]/95 backdrop-blur-xl border-b border-white/10 ${layout.isMobile
                     ? 'px-3 py-2 safe-area-inset-top'
                     : 'px-6 md:px-8 py-2'
                     }`}>
@@ -356,6 +368,7 @@ export const ResponsiveCreateReviewLayout = ({
 
                 {/* Main Content — pour les pipelines (wide), overflow-hidden + h-full pour éviter le scroll page */}
                 <main
+                    ref={mainRef}
                     className={`flex-1 min-h-0 no-scrollbar ${wide ? 'overflow-hidden' : 'overflow-y-auto'} ${layout.isMobile
                         ? `px-3 ${wide ? 'py-0' : 'py-2 pb-16'}`
                         : `px-6 md:px-8 ${wide ? 'py-0' : 'py-2 pb-16'}`

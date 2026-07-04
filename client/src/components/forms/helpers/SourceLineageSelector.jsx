@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react'
-import { Search, X, ChevronDown, Plus, Flower2 } from 'lucide-react'
+import { Search, X, ChevronDown, Plus, Flower2, Link2 } from 'lucide-react'
 import { TYPE_META } from '../../../utils/reviewTypeMeta'
 
 /**
@@ -10,8 +10,11 @@ import { TYPE_META } from '../../../utils/reviewTypeMeta'
  * value: tableau [{ type, id, label, cultivars }]
  * onChange(newValue, aggregatedCultivars): aggregatedCultivars = liste dédupliquée des cultivars
  *   de toutes les sources liées, pratique pour auto-remplir le champ Cultivar(s) utilisés.
+ * compact: variante sans label ni bloc pleine largeur — un petit bouton "Lier une fiche" +
+ *   chips, pensée pour se poser directement sous le champ texte "Matière première(s) utilisée(s)"
+ *   (même question : soit on tape, soit on lie une fiche existante — pas deux sections séparées).
  */
-export default function SourceLineageSelector({ value = [], onChange, allowedTypes = ['flower'] }) {
+export default function SourceLineageSelector({ value = [], onChange, allowedTypes = ['flower'], compact = false }) {
     const [candidates, setCandidates] = useState([])
     const [loading, setLoading] = useState(false)
     const [open, setOpen] = useState(false)
@@ -76,6 +79,98 @@ export default function SourceLineageSelector({ value = [], onChange, allowedTyp
     }
 
     const allowedLabels = allowedTypes.map(t => TYPE_META[t]?.label).join(' / ')
+
+    if (compact) {
+        return (
+            <div className="space-y-1.5">
+                {value.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5">
+                        {value.map(v => {
+                            const meta = TYPE_META[v.type] || TYPE_META.flower
+                            const Icon = meta.icon
+                            return (
+                                <span
+                                    key={v.id}
+                                    className="flex items-center gap-1 px-2 py-1 rounded-lg bg-white/5 border border-white/10 text-xs"
+                                >
+                                    <Icon className={`w-3 h-3 ${meta.color}`} />
+                                    <span className="text-white">{v.label}</span>
+                                    <button type="button" onClick={() => handleRemove(v.id)} className="text-white/40 hover:text-red-400 transition-colors">
+                                        <X className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            )
+                        })}
+                    </div>
+                )}
+
+                <div ref={dropdownRef} className="relative inline-block">
+                    <button
+                        type="button"
+                        onClick={() => setOpen(o => !o)}
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-green-500/15 hover:bg-green-500/25 text-green-300 hover:text-green-200 text-[11px] font-medium transition-colors"
+                    >
+                        <Link2 className="w-3 h-3" />
+                        Lier une fiche {allowedLabels}
+                    </button>
+
+                    {open && (
+                        <div className="absolute z-50 mt-2 w-72 rounded-xl border border-white/15 bg-gray-900/95 backdrop-blur-xl shadow-2xl overflow-hidden">
+                            <div className="p-2 border-b border-white/10">
+                                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-white/5">
+                                    <Search className="w-4 h-4 text-white/40 shrink-0" />
+                                    <input
+                                        autoFocus
+                                        type="text"
+                                        value={search}
+                                        onChange={e => setSearch(e.target.value)}
+                                        placeholder="Rechercher..."
+                                        className="flex-1 bg-transparent text-sm text-white placeholder-white/30 outline-none"
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="max-h-52 overflow-y-auto">
+                                {candidates.length === 0 && !loading && (
+                                    <div className="px-4 py-6 text-center text-sm text-white/40">
+                                        Aucune review {allowedLabels} trouvée
+                                    </div>
+                                )}
+                                {filtered.length === 0 && candidates.length > 0 && (
+                                    <div className="px-4 py-4 text-center text-sm text-white/40">
+                                        {candidates.length === selectedIds.size ? 'Toutes les reviews disponibles sont déjà liées' : 'Aucun résultat'}
+                                    </div>
+                                )}
+                                {filtered.map(candidate => {
+                                    const meta = TYPE_META[candidate.type] || TYPE_META.flower
+                                    const Icon = meta.icon
+                                    return (
+                                        <button
+                                            key={candidate.id}
+                                            type="button"
+                                            onClick={() => handleAdd(candidate)}
+                                            className="w-full flex items-center gap-3 px-4 py-3 hover:bg-white/10 transition-colors text-left"
+                                        >
+                                            <Icon className={`w-4 h-4 shrink-0 ${meta.color}`} />
+                                            <div className="flex-1 min-w-0">
+                                                <div className="text-sm font-medium text-white truncate">{candidate.label}</div>
+                                                {candidate.cultivars && (
+                                                    <div className="text-xs text-white/40 truncate">{candidate.cultivars}</div>
+                                                )}
+                                            </div>
+                                            {candidate.note != null && (
+                                                <span className="text-xs font-bold text-amber-400 shrink-0">{candidate.note}/10</span>
+                                            )}
+                                        </button>
+                                    )
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        )
+    }
 
     return (
         <div className="space-y-2">

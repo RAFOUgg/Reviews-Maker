@@ -155,12 +155,13 @@ const NodeFormModal = ({ isEdit, onClose }) => {
         return (
             <LiquidInput
                 key={field.id}
-                type={field.type === 'date' ? 'date' : 'text'}
+                type={field.type === 'date' ? 'date' : field.type === 'number' ? 'number' : 'text'}
                 label={field.label}
-                value={value || ''}
+                value={value ?? ''}
                 onChange={(e) => handleGeneticsChange(field.id, e.target.value)}
                 placeholder={field.placeholder}
                 hint={field.hint}
+                {...(field.type === 'number' ? { min: field.min ?? 0, max: field.max, step: field.step ?? 0.1 } : {})}
             />
         );
     };
@@ -262,7 +263,8 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                             { value: 'Indica', label: 'Indica' },
                             { value: 'Sativa', label: 'Sativa' },
                             { value: 'Hybride', label: 'Hybride' },
-                            { value: 'CBD', label: 'CBD' }
+                            { value: 'Ruderalis', label: 'Ruderalis' },
+                            { value: 'Chanvre', label: 'Chanvre (Hemp)' }
                         ]}
                     />
 
@@ -274,20 +276,14 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     />
 
                     <LiquidInput
-                        label="Ratio Indica/Sativa"
-                        value={formData.genetics?.ratio || ''}
+                        type="number"
+                        min="0"
+                        max="100"
+                        label="Ratio Indica/Sativa (%)"
+                        value={formData.genetics?.ratio ?? ''}
                         onChange={(e) => handleGeneticsChange('ratio', e.target.value)}
-                        placeholder="ex: 70/30"
+                        placeholder="ex: 70 (0 = Sativa pur, 100 = Indica pur)"
                         hint="Classification empirique/commerciale, pas une taxonomie botanique validée — le chémotype (profil terpénique/cannabinoïde) est aujourd'hui considéré plus fiable scientifiquement."
-                    />
-
-                    <LiquidTextarea
-                        label="Autres notes génétiques"
-                        value={formData.genetics?.notes || ''}
-                        onChange={(e) => handleGeneticsChange('notes', e.target.value)}
-                        placeholder="Autres informations..."
-                        maxLength={200}
-                        rows={2}
                     />
                 </LiquidCard>
 

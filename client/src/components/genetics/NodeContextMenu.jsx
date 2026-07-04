@@ -7,10 +7,12 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
 import useGeneticsStore from '../../store/useGeneticsStore';
+import { useToast } from '../shared/ToastContainer';
 
 const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useGeneticsStore();
     const { fitView } = useReactFlow();
+    const toast = useToast();
     const menuRef = useRef(null);
     // x/y sont le point de clic brut (clientX/clientY) — sans correction, le menu peut déborder
     // hors du viewport (coupé/inaccessible) près des bords droit/bas de l'écran ou de la fenêtre
@@ -111,6 +113,26 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
+    // Réutilise la route de recherche inverse déjà existante côté Chaîne de production
+    // (aucune review → aucune chaîne possible, donc masqué si sourceReviewId absent).
+    const handleGoToProductionChain = async () => {
+        onClose();
+        try {
+            const res = await fetch(`/api/production-chains/for-review/flower/${node.sourceReviewId}`, {
+                credentials: 'include'
+            });
+            if (!res.ok) throw new Error('request failed');
+            const chains = await res.json();
+            if (chains.length === 0) {
+                toast.info('Aucune chaîne de production ne contient cette review');
+                return;
+            }
+            window.open(`/library/production-chains/${chains[0].id}`, '_blank', 'noopener');
+        } catch {
+            toast.error('Erreur lors de la recherche de la chaîne de production');
+        }
+    };
+
     const handleDuplicate = async () => {
         const duplicatedNode = await store.addNode({
             cultivarName: `${node.cultivarName} (copie)`,
@@ -153,6 +175,11 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                     {node?.sourceReviewId && (
                         <button className="context-menu-item" onClick={handleDetachReview}>
                             ✂️ Détacher la review liée
+                        </button>
+                    )}
+                    {node?.sourceReviewId && !node?.sourceReviewOrphaned && (
+                        <button className="context-menu-item" onClick={handleGoToProductionChain}>
+                            🏭 Accéder à la chaîne de production
                         </button>
                     )}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />

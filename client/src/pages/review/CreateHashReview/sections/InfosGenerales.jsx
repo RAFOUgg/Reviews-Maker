@@ -67,24 +67,22 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 label="Matière première(s) utilisée(s)"
                                 value={formData.cultivarsUtilises || formData.cultivars || ''}
                                 onChange={(e) => handleChange('cultivarsUtilises', e.target.value)}
-                                placeholder="Cultivars utilisés"
+                                placeholder="Cultivars utilisés, ou liez une fiche ci-dessous"
                             />
-                            <p className="text-xs text-white/40 mt-1">(Auto-rempli depuis les matières premières liées, ou modifiable manuellement)</p>
+                            <div className="mt-1.5">
+                                <SourceLineageSelector
+                                    compact
+                                    value={formData.sourceLineage || []}
+                                    allowedTypes={['flower']}
+                                    onChange={(sources, aggregatedCultivars) => {
+                                        handleChange('sourceLineage', sources)
+                                        if (aggregatedCultivars.length > 0) {
+                                            handleChange('cultivarsUtilises', aggregatedCultivars.join(', '))
+                                        }
+                                    }}
+                                />
+                            </div>
                         </div>
-                    </div>
-
-                    {/* Lien matière première (fleur) */}
-                    <div>
-                        <SourceLineageSelector
-                            value={formData.sourceLineage || []}
-                            allowedTypes={['flower']}
-                            onChange={(sources, aggregatedCultivars) => {
-                                handleChange('sourceLineage', sources)
-                                if (aggregatedCultivars.length > 0) {
-                                    handleChange('cultivarsUtilises', aggregatedCultivars.join(', '))
-                                }
-                            }}
-                        />
                     </div>
 
                     {/* Photos */}

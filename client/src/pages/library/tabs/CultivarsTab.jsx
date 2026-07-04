@@ -16,10 +16,10 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
     Flower2, Plus, Trash2, Edit, Eye, GitBranch, Search,
     Filter, Grid3X3, List, FolderTree, Dna, LayoutGrid, Moon, Sun, Shuffle, HeartPulse,
-    X, Check, ChevronRight, Tag, Calendar, User, ExternalLink, RefreshCw
+    X, Check, ChevronRight, Tag, User, ExternalLink, RefreshCw, Download
 } from 'lucide-react'
 import useGeneticsStore from '../../../store/useGeneticsStore'
-import { getImageUrl } from '../../../utils/imageUtils'
+import { getImageUrl, parseImages } from '../../../utils/imageUtils'
 
 // Types de cultivars — la couleur est restreinte aux 4 teintes de glow réellement définies pour
 // LiquidChip actif (purple/green/cyan/amber, cf. apple-liquid-glass.css .liquid-chip.active.*) ;
@@ -67,6 +67,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     const [isCreating, setIsCreating] = useState(false)
     const [editingCultivar, setEditingCultivar] = useState(null)
     const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
+    // Reviews Fleurs importables comme cultivars (bibliothèque vide malgré des reviews/arbres
+    // existants — la bibliothèque de cultivars est une table à part, jamais peuplée
+    // automatiquement) et suivi local des reviews déjà importées cette session (pas de lien
+    // Cultivar↔Review en base, donc pas de détection serveur possible).
+    const [myFlowerReviews, setMyFlowerReviews] = useState([])
+    const [importingReviewId, setImportingReviewId] = useState(null)
+    const [importedReviewIds, setImportedReviewIds] = useState(new Set())
 
     // Formulaire cultivar
     const [formData, setFormData] = useState({
@@ -109,12 +116,55 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 const data = await cultivarsRes.json()
                 setCultivars(data.cultivars || [])
             }
+
+            // Reviews Fleurs de l'utilisateur — proposées en import rapide quand la bibliothèque
+            // de cultivars est vide (même pattern que PhenoHuntPage.jsx "Mes reviews Fleurs").
+            const reviewsRes = await fetch('/api/reviews/my', { credentials: 'include' })
+            if (reviewsRes.ok) {
+                const data = await reviewsRes.json()
+                const all = Array.isArray(data) ? data : (data.reviews || [])
+                setMyFlowerReviews(all.filter(r => r.type === 'Fleurs' || r.productType === 'flower'))
+            }
         } catch (error) {
             toast.error('Erreur lors du chargement')
         } finally {
             setLoading(false)
         }
     }, [toast])
+
+    // Importer une review Fleur comme entrée de bibliothèque — pré-remplit ce qu'on connaît déjà
+    // (nom, breeder, lignée, photo) ; l'utilisateur complète le reste (type/THC-CBD/etc.) ensuite
+    // via "Modifier" comme pour n'importe quel cultivar.
+    const importReviewAsCultivar = async (review) => {
+        setImportingReviewId(review.id)
+        try {
+            const images = parseImages(review.images)
+            const response = await fetch('/api/library/cultivars', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                    name: review.holderName || review.name || 'Sans nom',
+                    breeder: review.breeder || review.farm || '',
+                    type: 'hybrid',
+                    genetics: review.cultivars || '',
+                    image: images[0] || ''
+                })
+            })
+            if (response.ok) {
+                const saved = await response.json()
+                setCultivars(prev => [...prev, saved])
+                setImportedReviewIds(prev => new Set(prev).add(review.id))
+                toast.success(`"${saved.name}" ajouté à la bibliothèque`)
+            } else {
+                toast.error('Erreur lors de l\'import')
+            }
+        } catch {
+            toast.error('Erreur de connexion')
+        } finally {
+            setImportingReviewId(null)
+        }
+    }
 
     useEffect(() => {
         fetchData()
@@ -418,7 +468,9 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         toast.success('Arbre supprimé')
     }
 
-    // Rendu d'un arbre généalogique
+    // Rendu d'un arbre généalogique — même structure que ProductionChainTab.jsx (carte
+    // cliquable en entier pour ouvrir l'éditeur, icône carrée + titre + stats, suppression en
+    // icône seule révélée au survol) plutôt que des boutons d'action séparés en pied de carte.
     const renderTreeCard = (tree, index) => (
         <motion.div
             key={tree.id}
@@ -426,55 +478,32 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: index * 0.04 }}
         >
-            <LiquidCard glow="none" padding="md" className="hover:border-violet-500/30 transition-all group">
-                <div className="flex items-start gap-3 mb-4">
+            <LiquidCard
+                glow="none"
+                padding="md"
+                className="hover:border-violet-500/30 transition-all cursor-pointer group"
+                onClick={() => navigate(`/phenohunt?tree=${tree.id}`)}
+            >
+                <div className="flex items-start gap-3 mb-3">
                     <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center flex-shrink-0">
                         <Dna className="w-6 h-6 text-violet-400" />
                     </div>
                     <div className="flex-1 min-w-0">
                         <h3 className="font-bold text-white truncate">{tree.name}</h3>
                         <p className="text-sm text-white/50">
-                            {tree._count?.nodes ?? tree.nodes?.length ?? 0} nœuds •{' '}
-                            {tree._count?.edges ?? tree.edges?.length ?? 0} liens
+                            {tree._count?.nodes ?? tree.nodes?.length ?? 0} nœuds • {tree._count?.edges ?? tree.edges?.length ?? 0} liens
                         </p>
                     </div>
-                    <span className="px-2 py-1 rounded-lg bg-violet-500/20 text-violet-400 text-xs font-bold">
-                        {tree.projectType || 'selection'}
-                    </span>
-                </div>
-
-                {tree.description && (
-                    <p className="text-sm text-white/60 mb-3 line-clamp-2">{tree.description}</p>
-                )}
-
-                <div className="flex items-center justify-between text-xs text-white/40 mb-4">
-                    <span className="flex items-center gap-1">
-                        <Calendar className="w-3 h-3" />
-                        {new Date(tree.updatedAt).toLocaleDateString('fr-FR')}
-                    </span>
-                    {tree.isPublic && (
-                        <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400">Public</span>
-                    )}
-                </div>
-
-                <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <LiquidButton
-                        onClick={() => navigate(`/phenohunt?tree=${tree.id}`)}
-                        variant="primary"
-                        size="sm"
-                        className="flex-1"
-                        icon={ExternalLink}
-                    >
-                        Ouvrir l'éditeur
-                    </LiquidButton>
-                    <LiquidButton
+                    <button
                         onClick={(e) => handleDeleteTree(tree.id, e)}
-                        variant="ghost"
-                        size="sm"
-                        icon={Trash2}
-                        className="hover:!text-red-400"
-                    />
+                        className="p-1.5 hover:bg-red-500/20 rounded-lg transition-colors opacity-0 group-hover:opacity-100"
+                    >
+                        <Trash2 className="w-4 h-4 text-red-400" />
+                    </button>
                 </div>
+                {tree.description && (
+                    <p className="text-xs text-white/40 truncate">{tree.description}</p>
+                )}
             </LiquidCard>
         </motion.div>
     )
@@ -852,7 +881,56 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 )}
                             </div>
                         </LiquidCard>
-                    ) : (
+                    ) : null}
+
+                    {/* Import rapide depuis les reviews Fleurs existantes — la bibliothèque de
+                        cultivars est une table à part, jamais peuplée automatiquement par les
+                        reviews ou les arbres PhenoHunt : sans ce raccourci, "Aucun cultivar"
+                        reste vrai indéfiniment même avec des fiches techniques déjà créées. */}
+                    {cultivars.length === 0 && myFlowerReviews.filter(r => !importedReviewIds.has(r.id)).length > 0 && (
+                        <LiquidCard glow="none" padding="md">
+                            <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
+                                <Download className="w-4 h-4 text-green-400" />
+                                Importer depuis vos fiches techniques Fleurs
+                            </h3>
+                            <p className="text-xs text-white/40 mb-3">
+                                Ajoute une entrée de bibliothèque pré-remplie (nom, breeder, lignée, photo) à partir d'une review existante.
+                            </p>
+                            <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
+                                {myFlowerReviews.filter(r => !importedReviewIds.has(r.id)).map(review => {
+                                    const images = parseImages(review.images)
+                                    return (
+                                        <div
+                                            key={review.id}
+                                            className="flex items-center gap-2.5 px-2.5 py-2 rounded-lg bg-white/5 border border-white/5"
+                                        >
+                                            <div className="w-8 h-8 rounded-lg overflow-hidden bg-green-500/10 flex items-center justify-center flex-shrink-0">
+                                                {images[0] ? (
+                                                    <img src={images[0]} alt="" className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <Flower2 className="w-4 h-4 text-green-400/60" />
+                                                )}
+                                            </div>
+                                            <span className="flex-1 min-w-0 truncate text-sm text-white/70">
+                                                {review.holderName || review.name || 'Sans nom'}
+                                            </span>
+                                            <LiquidButton
+                                                onClick={() => importReviewAsCultivar(review)}
+                                                variant="ghost"
+                                                size="sm"
+                                                icon={Plus}
+                                                loading={importingReviewId === review.id}
+                                            >
+                                                Ajouter
+                                            </LiquidButton>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        </LiquidCard>
+                    )}
+
+                    {filteredCultivars.length > 0 && (
                         <div className={viewMode === 'grid'
                             ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'
                             : 'space-y-2'
@@ -864,58 +942,42 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                     )}
                 </>
             ) : (
-                /* Tab Arbres Généalogiques */
+                /* Tab Arbres Généalogiques — même structure/style que ProductionChainTab.jsx
+                   (titre+icône+sous-titre à gauche, un seul CTA primaire à droite, carte
+                   cliquable en entier plutôt que des boutons d'action séparés) */
                 <>
-                    <div className="flex justify-between items-center">
-                        <p className="text-white/60">
-                            Vos arbres généalogiques de cultivars. Editez-les dans l'éditeur PhenoHunt complet.
-                        </p>
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                                <Dna className="w-5 h-5 text-violet-400" />
+                                Arbres généalogiques
+                            </h2>
+                            <p className="text-sm text-white/50 mt-1">
+                                Construisez et éditez vos lignées dans l'éditeur PhenoHunt complet
+                            </p>
+                        </div>
                         <div className="flex gap-3">
-                            <LiquidButton
-                                onClick={() => navigate('/phenohunt')}
-                                variant="ghost"
-                                size="sm"
-                                icon={ExternalLink}
-                            >
+                            <LiquidButton onClick={() => navigate('/phenohunt')} variant="ghost" icon={ExternalLink}>
                                 Ouvrir PhenoHunt
                             </LiquidButton>
-                            <LiquidButton
-                                onClick={handleCreateTree}
-                                variant="primary"
-                                size="sm"
-                                icon={Plus}
-                            >
+                            <LiquidButton onClick={handleCreateTree} variant="primary" icon={Plus}>
                                 Nouvel arbre
                             </LiquidButton>
                         </div>
                     </div>
 
                     {treesLoading ? (
-                        <div className="flex items-center justify-center py-20">
-                            <RefreshCw className="w-8 h-8 animate-spin text-violet-400" />
+                        <div className="text-center py-16">
+                            <RefreshCw className="w-8 h-8 animate-spin text-violet-400 mx-auto" />
                         </div>
                     ) : trees.length === 0 ? (
-                        <LiquidCard glow="none" padding="lg">
-                            <div className="text-center py-12">
-                                <div className="w-16 h-16 mx-auto bg-violet-500/10 rounded-full flex items-center justify-center mb-4 border border-violet-500/20">
-                                    <Dna className="w-8 h-8 text-violet-400/50" />
-                                </div>
-                                <h3 className="text-lg font-bold text-white mb-2">Aucun arbre généalogique</h3>
-                                <p className="text-white/50 mb-6">
-                                    Créez votre premier arbre ou utilisez le canvas PhenoHunt
-                                </p>
-                                <div className="flex gap-3 justify-center">
-                                    <LiquidButton onClick={handleCreateTree} variant="primary" icon={Plus}>
-                                        Créer un arbre
-                                    </LiquidButton>
-                                    <LiquidButton onClick={() => navigate('/phenohunt')} variant="ghost" icon={ExternalLink}>
-                                        Ouvrir PhenoHunt
-                                    </LiquidButton>
-                                </div>
-                            </div>
+                        <LiquidCard glow="none" padding="lg" className="text-center py-16">
+                            <Dna className="w-12 h-12 mx-auto text-white/20 mb-4" />
+                            <p className="text-white/50">Aucun arbre généalogique pour le moment</p>
+                            <p className="text-xs text-white/30 mt-1">Créez-en un pour construire vos lignées</p>
                         </LiquidCard>
                     ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                             <AnimatePresence>
                                 {trees.map((tree, index) => renderTreeCard(tree, index))}
                             </AnimatePresence>

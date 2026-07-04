@@ -1,5 +1,6 @@
 import express from 'express'
 import { PrismaClient } from '@prisma/client'
+import { reviewProducerVerification } from '../services/account.js'
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -216,6 +217,63 @@ router.patch('/users/:id/ban', requireAdmin, async (req, res) => {
     } catch (error) {
         console.error('Error banning user:', error)
         res.status(500).json({ error: 'Failed to ban user' })
+    }
+})
+
+// List producer verification requests
+router.get('/producer-verifications', requireAdmin, async (req, res) => {
+    try {
+        const { status } = req.query
+
+        const profiles = await prisma.producerProfile.findMany({
+            where: status ? { verificationStatus: status } : undefined,
+            include: {
+                user: {
+                    select: { id: true, username: true, email: true }
+                }
+            },
+            orderBy: { updatedAt: 'desc' }
+        })
+
+        res.json({
+            profiles: profiles.map(p => ({
+                id: p.id,
+                userId: p.userId,
+                username: p.user.username,
+                email: p.user.email,
+                companyName: p.companyName,
+                businessType: p.businessType,
+                siret: p.siret,
+                country: p.country,
+                verificationStatus: p.verificationStatus,
+                verificationRejectionReason: p.verificationRejectionReason,
+                verificationDoc: p.verificationDoc,
+                sireneSnapshot: p.sireneSnapshot ? JSON.parse(p.sireneSnapshot) : null,
+                sireneCheckedAt: p.sireneCheckedAt,
+                updatedAt: p.updatedAt
+            }))
+        })
+    } catch (error) {
+        console.error('Error fetching producer verifications:', error)
+        res.status(500).json({ error: 'Failed to fetch producer verifications' })
+    }
+})
+
+// Approve/reject a producer verification request
+router.patch('/producer-verifications/:id', requireAdmin, async (req, res) => {
+    try {
+        const { action, reason } = req.body
+
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid action' })
+        }
+
+        const updatedProfile = await reviewProducerVerification(req.params.id, action, reason)
+
+        res.json({ success: true, profile: updatedProfile })
+    } catch (error) {
+        console.error('Error reviewing producer verification:', error)
+        res.status(500).json({ error: error.message || 'Failed to review producer verification' })
     }
 })
 

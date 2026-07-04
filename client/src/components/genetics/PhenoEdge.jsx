@@ -3,6 +3,11 @@ import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
 import { useEdgeEndpointParams, useFloatingNodeRect } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
+import { POLLINATION_METHODS } from '../../config/phenoNodeFields';
+
+const POLLINATION_LABEL_BY_VALUE = Object.fromEntries(
+    POLLINATION_METHODS.filter(m => m.value).map(m => [m.value, m.label])
+);
 
 /**
  * PhenoEdge - Edge personnalisé pour les connexions généalogiques
@@ -144,6 +149,13 @@ export default function PhenoEdge({
                         }}
                     >
                         {label || 'F1'}
+                        {/* Méthode de pollinisation — invisible jusqu'ici sur le canvas (seulement
+                            éditable dans EdgeFormModal). Affichée uniquement si renseignée. */}
+                        {data?.pollinationMethod && POLLINATION_LABEL_BY_VALUE[data.pollinationMethod] && (
+                            <div className="text-[10px] font-normal text-emerald-300/70 mt-0.5 whitespace-nowrap">
+                                {POLLINATION_LABEL_BY_VALUE[data.pollinationMethod]}
+                            </div>
+                        )}
                     </div>
                 </div>
 
