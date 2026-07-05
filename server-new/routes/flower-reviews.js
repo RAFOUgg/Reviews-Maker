@@ -14,6 +14,7 @@ import {
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { requireAuth } from '../middleware/auth.js'
+import { syncCultivarsFromFlowerReview } from '../utils/cultivarSync.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -763,6 +764,17 @@ router.post('/',
         }
 
         console.log('✅ FlowerReview created successfully:', formattedReview.id)
+
+        // Synchroniser la bibliothèque de Cultivars (non-bloquant : ne doit jamais faire échouer la sauvegarde)
+        await syncCultivarsFromFlowerReview(req.user.id, {
+            cultivars: validation.cleaned.cultivars,
+            geneticType: validation.cleaned.geneticType,
+            varietyType: validation.cleaned.varietyType,
+            thcPercent: result.flowerReview.thcPercent,
+            cbdPercent: result.flowerReview.cbdPercent,
+            labReportUrl: result.flowerReview.labReportUrl
+        }).catch((err) => console.warn('⚠️ syncCultivarsFromFlowerReview (create) failed:', err.message))
+
         res.status(201).json(formattedReview)
     }))
 
@@ -1071,6 +1083,17 @@ router.put('/:id',
         }
 
         console.log('✅ FlowerReview updated successfully:', formattedReview.id)
+
+        // Synchroniser la bibliothèque de Cultivars (non-bloquant : ne doit jamais faire échouer la sauvegarde)
+        await syncCultivarsFromFlowerReview(req.user.id, {
+            cultivars: validation.cleaned.cultivars || review.cultivars,
+            geneticType: validation.cleaned.geneticType,
+            varietyType: validation.cleaned.varietyType,
+            thcPercent: result.flowerReview.thcPercent,
+            cbdPercent: result.flowerReview.cbdPercent,
+            labReportUrl: result.flowerReview.labReportUrl
+        }).catch((err) => console.warn('⚠️ syncCultivarsFromFlowerReview (update) failed:', err.message))
+
         res.json(formattedReview)
     }))
 

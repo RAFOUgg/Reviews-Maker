@@ -17,6 +17,7 @@ const useProductionChainStore = create(
             // STATE - CHAINS
             chains: [],
             selectedChainId: null,
+            selectedChain: null,
             chainLoading: false,
             chainError: null,
 
@@ -79,6 +80,7 @@ const useProductionChainStore = create(
 
                     set({
                         selectedChainId: chainId,
+                        selectedChain: { id: chain.id, name: chain.name, description: chain.description, isPublic: chain.isPublic },
                         nodes: parsedNodes,
                         edges: chain.edges || [],
                         canvasLoading: false
@@ -142,7 +144,10 @@ const useProductionChainStore = create(
                     const updated = await response.json();
 
                     set(state => ({
-                        chains: state.chains.map(c => c.id === chainId ? updated : c)
+                        chains: state.chains.map(c => c.id === chainId ? updated : c),
+                        selectedChain: state.selectedChainId === chainId
+                            ? { id: updated.id, name: updated.name, description: updated.description, isPublic: updated.isPublic }
+                            : state.selectedChain
                     }));
 
                     return { data: updated };
@@ -430,6 +435,7 @@ const useProductionChainStore = create(
                     selectedNodeId: null,
                     selectedEdgeId: null,
                     selectedChainId: null,
+                    selectedChain: null,
                     nodes: [],
                     edges: []
                 });
@@ -439,6 +445,7 @@ const useProductionChainStore = create(
                 set({
                     chains: [],
                     selectedChainId: null,
+                    selectedChain: null,
                     nodes: [],
                     edges: [],
                     selectedNodeId: null,

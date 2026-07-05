@@ -158,10 +158,10 @@ export default function LibraryPage() {
     }
 
     return (
-        <div className="bg-[#07070f]">
-            <div className="flex">
+        <div className="h-full flex flex-col bg-[#07070f]">
+            <div className="flex-1 flex overflow-hidden">
                 {/* ─── Sidebar – Desktop uniquement ─── */}
-                <aside className={`hidden md:flex ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white/[0.02] border-r border-white/10 transition-all duration-300 flex-col`}>
+                <aside className={`hidden md:flex h-full ${sidebarCollapsed ? 'w-16' : 'w-64'} bg-white/[0.02] border-r border-white/10 transition-all duration-300 flex-col`}>
                     {/* Header Sidebar */}
                     <div className="p-4 border-b border-white/10">
                         <div className="flex items-center gap-3">
@@ -287,9 +287,9 @@ export default function LibraryPage() {
                 </aside>
 
                 {/* ─── Contenu principal ─── */}
-                <main className="flex-1 pb-20 md:pb-0">
+                <main className="flex-1 flex flex-col overflow-hidden pb-20 md:pb-0">
                     {/* Header */}
-                    <header className="sticky top-0 z-10 bg-[#07070f]/90 backdrop-blur-xl border-b border-white/10">
+                    <header className="shrink-0 bg-[#07070f]/90 backdrop-blur-xl border-b border-white/10">
                         {/* Mobile : titre compact centré */}
                         <div className="flex md:hidden items-center gap-3 px-4 py-3">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow shadow-purple-500/30 shrink-0">
@@ -316,7 +316,7 @@ export default function LibraryPage() {
                     </header>
 
                     {/* Contenu de l'onglet */}
-                    <div className="p-3 md:p-6">
+                    <div className="flex-1 overflow-y-auto p-3 md:p-6">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}

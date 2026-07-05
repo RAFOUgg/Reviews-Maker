@@ -727,11 +727,14 @@ router.get('/cultivars', requireAuth, asyncHandler(async (req, res) => {
     const where = {
         userId: req.user.id,
         ...(type && type !== 'all' && { type }),
+        // Note: `mode: 'insensitive'` n'est pas supporté par Prisma sur SQLite (lève une
+        // PrismaClientValidationError) — recherche par sous-chaîne sensible à la casse en attendant
+        // une éventuelle migration vers un moteur supportant la recherche insensible nativement.
         ...(search && {
             OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { breeder: { contains: search, mode: 'insensitive' } },
-                { parentage: { contains: search, mode: 'insensitive' } },
+                { name: { contains: search } },
+                { breeder: { contains: search } },
+                { parentage: { contains: search } },
             ],
         }),
     };
@@ -763,7 +766,7 @@ router.post('/cultivars', requireAuth, asyncHandler(async (req, res) => {
             userId: req.user.id,
             name,
             breeder: breeder || null,
-            type: type || 'Hybride',
+            type: type || null,
             parentage: genetics || null, // genetics -> parentage
             phenotype: phenotype || null,
             notes: description || null, // texte libre uniquement, plus de JSON stocké ici

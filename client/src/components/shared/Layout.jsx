@@ -36,10 +36,11 @@ export default function Layout() {
     // même reste correctement bordé, mais "on doit tout voir sans scroller" ne l'était pas).
     const isFullScreenAppRoute = /^\/(create|edit)\//.test(location.pathname)
         || location.pathname === '/phenohunt'
+        || location.pathname === '/library'
         || /^\/library\/production-chains\//.test(location.pathname)
 
     return (
-        <div className={`flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white ${isFullScreenAppRoute ? 'h-dvh overflow-hidden' : location.pathname === '/library' ? '' : 'min-h-screen'}`}>
+        <div className={`flex flex-col bg-gradient-to-br from-[#07070f] via-[#0a0a1a] to-[#07070f] text-white ${isFullScreenAppRoute ? 'h-dvh overflow-hidden' : 'min-h-screen'}`}>
             {/* Navigation - Glassmorphism navbar - positioned below RDR banner */}
             <nav className="fixed top-[40px] left-0 right-0 z-[100] bg-white/5 backdrop-blur-xl border-b border-white/10">
                 <div className="container mx-auto px-4 py-3">
@@ -199,13 +200,13 @@ export default function Layout() {
 
             {/* Main Content - with top padding for RDR banner (40px) + navbar */}
             {/* Form routes (create/edit) get overflow-hidden so their internal layout controls scroll */}
-            <main className={`flex-1 w-full pt-28 ${isFullScreenAppRoute ? 'overflow-hidden flex flex-col' : location.pathname === '/library' ? '' : 'px-4 py-8'}`}>
+            <main className={`flex-1 w-full pt-28 ${isFullScreenAppRoute ? 'overflow-hidden flex flex-col' : 'px-4 py-8'}`}>
                 <Outlet />
             </main>
 
             {/* Footer global masqué sur les routes plein écran (create/edit, phenohunt, chaîne de
-                production) et sur /library qui a sa propre barre de stats */}
-            {!isFullScreenAppRoute && location.pathname !== '/library' && <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
+                production, bibliothèque) */}
+            {!isFullScreenAppRoute && <footer className="relative bg-white/5 backdrop-blur-xl border-t border-white/10 py-8">
                 {/* Subtle glow line */}
                 <div
                     className="absolute top-0 left-1/2 -translate-x-1/2 w-1/2 h-px"

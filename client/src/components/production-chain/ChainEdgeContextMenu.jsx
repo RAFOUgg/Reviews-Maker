@@ -4,12 +4,17 @@
  * Menu contextuel (clic droit) pour les liaisons de transformation d'une chaîne de production.
  */
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import useProductionChainStore from '../../store/useProductionChainStore';
+
+// Techniques courantes proposées en raccourci — la valeur réelle reste du texte libre
+// (ChainEdge.technique), ces options ne sont qu'un pré-remplissage rapide.
+const QUICK_TECHNIQUES = ['Extraction', 'Séparation', 'Curing', 'Décarboxylation', 'Infusion', 'Distillation'];
 
 const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useProductionChainStore();
     const menuRef = useRef(null);
+    const [showTypeMenu, setShowTypeMenu] = useState(false);
 
     const edge = store.edges.find(e => e.id === edgeId);
     const sourceNode = edge ? store.nodes.find(n => n.id === edge.sourceNodeId) : null;
@@ -36,12 +41,42 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
+    const handleChangeTechnique = (value) => {
+        store.updateEdge(edgeId, { technique: value });
+        onClose();
+    };
+
+    // Échange source/target — corrige une liaison créée dans le mauvais sens sans avoir à la
+    // supprimer et la recréer (même geste que EdgeContextMenu.jsx côté PhenoHunt).
+    const handleReverseDirection = () => {
+        store.updateEdge(edgeId, {
+            sourceNodeId: edge.targetNodeId,
+            targetNodeId: edge.sourceNodeId
+        });
+        onClose();
+    };
+
     return (
         <div ref={menuRef} className="context-menu" style={{ left: `${x}px`, top: `${y}px` }}>
             {!readOnly && (
                 <>
                     <button className="context-menu-item" onClick={handleEdit}>
                         ✏️ Éditer la transformation
+                    </button>
+                    {!showTypeMenu && (
+                        <button className="context-menu-item" onClick={() => setShowTypeMenu(true)}>
+                            🏷️ Changer la technique rapidement
+                        </button>
+                    )}
+                    {showTypeMenu && QUICK_TECHNIQUES
+                        .filter(t => t !== edge?.technique)
+                        .map(t => (
+                            <button key={t} className="context-menu-item" onClick={() => handleChangeTechnique(t)}>
+                                {t}
+                            </button>
+                        ))}
+                    <button className="context-menu-item" onClick={handleReverseDirection}>
+                        🔀 Inverser la direction
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>

@@ -164,7 +164,9 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 body: JSON.stringify({
                     name: review.holderName || review.name || 'Sans nom',
                     breeder: review.breeder || review.farm || '',
-                    type: 'hybrid',
+                    // Le type (Indica/Sativa/Hybride/CBD) n'est pas connu depuis cette liste de reviews :
+                    // laisser vide plutôt que de mal-classer, l'utilisateur le complète via "Modifier".
+                    type: null,
                     genetics: review.cultivars || '',
                     image: images[0] || ''
                 })

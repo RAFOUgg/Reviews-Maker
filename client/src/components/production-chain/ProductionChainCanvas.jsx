@@ -18,15 +18,19 @@ import {
     useReactFlow,
     MarkerType
 } from 'reactflow';
+import { toSvg } from 'html-to-image';
+import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import ReviewNode from './ReviewNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
 import ChainNodeContextMenu from './ChainNodeContextMenu';
 import ChainEdgeContextMenu from './ChainEdgeContextMenu';
+import ChainPaneContextMenu from './ChainPaneContextMenu';
 import ChainEdgeFormModal from './ChainEdgeFormModal';
+import ChainFormModal from './ChainFormModal';
 import ConfirmModal from '../shared/ConfirmModal';
-import { Download, Upload, RotateCcw } from 'lucide-react';
+import { Download, Upload, RotateCcw, FileImage, Edit2 } from 'lucide-react';
 
 const nodeTypes = {
     reviewProduct: ReviewNode
@@ -43,9 +47,34 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [contextMenu, setContextMenu] = useState(null);
-    const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge'
+    const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane'
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [importing, setImporting] = useState(false);
+    const [exportingSvg, setExportingSvg] = useState(false);
+    const [confirmDetachAll, setConfirmDetachAll] = useState(false);
+    const [showRenameModal, setShowRenameModal] = useState(false);
+
+    // Persistance du point de courbure d'une liaison glissée à la main — même pattern que
+    // UnifiedGeneticsCanvas.jsx (PhenoHunt).
+    const handleEdgeWaypointChange = useCallback((edgeId, pos) => {
+        store.updateEdge(edgeId, {
+            waypointX: pos ? pos.x : null,
+            waypointY: pos ? pos.y : null
+        });
+    }, [store]);
+
+    const handleEdgeEndpointChange = useCallback((edgeId, patch) => {
+        store.updateEdge(edgeId, patch);
+    }, [store]);
+
+    // Reconnexion réelle d'une extrémité de liaison vers un AUTRE nœud (change sourceNodeId ou
+    // targetNodeId) — le backend revalide l'absence de cycle et de doublon.
+    const handleEdgeEndpointReconnect = useCallback((edgeId, end, newNodeId, newHandleSide) => {
+        if (readOnly) return;
+        store.updateEdge(edgeId, end === 'source'
+            ? { sourceNodeId: newNodeId, sourceHandle: newHandleSide }
+            : { targetNodeId: newNodeId, targetHandle: newHandleSide });
+    }, [readOnly, store]);
 
     // Synchroniser les nœuds et arêtes du store vers React Flow
     useEffect(() => {
@@ -63,7 +92,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 reviewType: node.reviewType,
                 reviewId: node.reviewId,
                 color: node.color || '#10b981',
-                selected: store.selectedNodeId === node.id
+                selected: store.selectedNodeId === node.id,
+                reviewOrphaned: node.reviewOrphaned
             },
             position: node.position || { x: 0, y: 0 },
             type: 'reviewProduct'
@@ -79,13 +109,20 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             data: {
                 technique: edge.technique,
                 date: edge.date,
-                notes: edge.notes
+                notes: edge.notes,
+                waypointX: edge.waypointX,
+                waypointY: edge.waypointY,
+                onWaypointChange: handleEdgeWaypointChange,
+                sourceHandle: edge.sourceHandle,
+                targetHandle: edge.targetHandle,
+                onEndpointHandleChange: handleEdgeEndpointChange,
+                onEndpointReconnect: handleEdgeEndpointReconnect
             }
         }));
 
         setNodes(rfNodes);
         setEdges(rfEdges);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges]);
+    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect]);
 
     // Drag & drop depuis ProductAddSidebar — un nœud référence toujours une review
     // existante, pas de création de nœud vide comme dans UnifiedGeneticsCanvas
@@ -173,6 +210,15 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         setContextMenu(null);
     }, []);
 
+    // Clic droit sur le fond vide du canvas — même point d'entrée que PhenoHunt, action limitée
+    // au recentrage (pas d'équivalent "nœud sans review" côté chaîne, cf. ChainPaneContextMenu.jsx)
+    const handlePaneContextMenu = useCallback((event) => {
+        if (readOnly) return;
+        event.preventDefault();
+        setContextMenuType('pane');
+        setContextMenu({ x: event.clientX, y: event.clientY });
+    }, [readOnly]);
+
     const closeContextMenu = useCallback(() => {
         setContextMenu(null);
         setContextMenuType(null);
@@ -249,6 +295,34 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         URL.revokeObjectURL(url);
     }, [chainId, store.nodes, store.edges]);
 
+    const handleExportSVG = useCallback(async () => {
+        setExportingSvg(true);
+        try {
+            const viewport = document.querySelector('.react-flow__viewport');
+            if (!viewport) throw new Error('Canvas introuvable');
+            const dataUrl = await toSvg(viewport, { backgroundColor: '#07070f' });
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `production-chain-${chainId}.svg`;
+            a.click();
+        } catch (error) {
+            console.error('Export SVG error:', error);
+        } finally {
+            setExportingSvg(false);
+        }
+    }, [chainId]);
+
+    // Nœuds dont la review liée (reviewId) a été supprimée depuis — calculé côté client à partir
+    // du flag posé par le backend (GET /chains/:id), même pattern que UnifiedGeneticsCanvas.jsx.
+    const orphanedNodeIds = store.nodes.filter(n => n.reviewOrphaned).map(n => n.id);
+
+    const handleDetachAllOrphans = useCallback(async () => {
+        await Promise.all(orphanedNodeIds.map(id => store.updateNode(id, { reviewId: null })));
+        setConfirmDetachAll(false);
+    }, [orphanedNodeIds, store]);
+
+    const selectedNode = store.selectedNodeId ? store.nodes.find(n => n.id === store.selectedNodeId) : null;
+
     useEffect(() => {
         if (chainId && chainId !== store.selectedChainId) {
             store.loadChain(chainId);
@@ -270,6 +344,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onCanvasClick={handleCanvasClick}
+            onPaneContextMenu={handlePaneContextMenu}
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             // canvasLoading est aussi vrai pendant chaque mutation en arrière-plan (déplacer un
@@ -280,23 +355,77 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             loadingLabel="Chargement de la chaîne de production..."
             error={store.chainError}
             onErrorReset={() => store.clearSelection()}
-            toolbar={!readOnly && (
-                <Panel position="top-left" className="canvas-toolbar">
-                    <div className="flex items-center gap-2">
-                        <button className="toolbar-btn secondary" onClick={() => fitView()} title="Réinitialiser le zoom">
-                            <RotateCcw size={14} /> Zoom
-                        </button>
-                        <button
-                            className="toolbar-btn secondary"
-                            onClick={handleImportLineage}
-                            disabled={importing}
-                            title="Importer depuis la traçabilité existante (sourceLineage)"
-                        >
-                            <Upload size={14} /> {importing ? 'Import...' : 'Importer traçabilité'}
-                        </button>
-                        <button className="toolbar-btn secondary" onClick={handleExportJSON} title="Exporter en JSON">
-                            <Download size={14} /> JSON
-                        </button>
+            toolbar={<>
+                {orphanedNodeIds.length > 0 && (
+                    <Panel position="top-center" className="orphan-banner">
+                        <AlertTriangle size={14} />
+                        <span>
+                            {orphanedNodeIds.length} produit{orphanedNodeIds.length > 1 ? 's' : ''} orphelin{orphanedNodeIds.length > 1 ? 's' : ''} (review supprimée)
+                        </span>
+                        {!readOnly && (
+                            <button type="button" onClick={() => setConfirmDetachAll(true)}>
+                                Tout détacher
+                            </button>
+                        )}
+                    </Panel>
+                )}
+                {!readOnly && (
+                    <Panel position="top-left" className="canvas-toolbar">
+                        <div className="flex items-center gap-2">
+                            <button className="toolbar-btn secondary" onClick={() => setShowRenameModal(true)} title="Renommer la chaîne">
+                                <Edit2 size={14} /> Renommer
+                            </button>
+                            <button className="toolbar-btn secondary" onClick={() => fitView()} title="Réinitialiser le zoom">
+                                <RotateCcw size={14} /> Zoom
+                            </button>
+                            <button
+                                className="toolbar-btn secondary"
+                                onClick={handleImportLineage}
+                                disabled={importing}
+                                title="Importer depuis la traçabilité existante (sourceLineage)"
+                            >
+                                <Upload size={14} /> {importing ? 'Import...' : 'Importer traçabilité'}
+                            </button>
+                            <button className="toolbar-btn secondary" onClick={handleExportJSON} title="Exporter en JSON">
+                                <Download size={14} /> JSON
+                            </button>
+                            <button className="toolbar-btn secondary" onClick={handleExportSVG} disabled={exportingSvg} title="Exporter en SVG">
+                                <FileImage size={14} /> {exportingSvg ? 'Export...' : 'SVG'}
+                            </button>
+                        </div>
+                    </Panel>
+                )}
+            </>}
+            sidePanel={selectedNode && (
+                <Panel position="top-right" className="node-info-panel">
+                    <div className="info-content">
+                        <h4>{selectedNode.label}</h4>
+                        <p>Type: {selectedNode.reviewType}</p>
+                        {selectedNode.reviewOrphaned && (
+                            <p className="notes" style={{ color: '#fbbf24' }}>
+                                ⚠️ La review liée à ce produit a été supprimée
+                            </p>
+                        )}
+                        {!readOnly && (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {selectedNode.reviewId && !selectedNode.reviewOrphaned && (
+                                    <button
+                                        className="btn-edit"
+                                        onClick={() => window.open(`/review/${selectedNode.reviewId}`, '_blank', 'noopener')}
+                                    >
+                                        Voir la review
+                                    </button>
+                                )}
+                                {selectedNode.reviewId && (
+                                    <button
+                                        className="btn-edit"
+                                        onClick={() => store.updateNode(selectedNode.id, { reviewId: null })}
+                                    >
+                                        Détacher la review
+                                    </button>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </Panel>
             )}
@@ -321,10 +450,20 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         onRequestDelete={setDeleteConfirm}
                     />
                 )}
+                {contextMenu && contextMenuType === 'pane' && (
+                    <ChainPaneContextMenu
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                    />
+                )}
             </>}
             modals={<>
                 {store.showEdgeForm && (
                     <ChainEdgeFormModal onClose={store.closeEdgeForm} />
+                )}
+                {showRenameModal && store.selectedChain && (
+                    <ChainFormModal chain={store.selectedChain} onClose={() => setShowRenameModal(false)} />
                 )}
                 <ConfirmModal
                     open={!!deleteConfirm}
@@ -337,6 +476,14 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                     confirmLabel="Confirmer"
                     onCancel={() => setDeleteConfirm(null)}
                     onConfirm={handleConfirmDelete}
+                />
+                <ConfirmModal
+                    open={confirmDetachAll}
+                    title="Détacher tous les produits orphelins"
+                    message={`Détacher ${orphanedNodeIds.length} produit(s) de leur review supprimée ? Les nœuds resteront dans la chaîne, seul le lien vers la review disparaît.`}
+                    confirmLabel="Tout détacher"
+                    onCancel={() => setConfirmDetachAll(false)}
+                    onConfirm={handleDetachAllOrphans}
                 />
             </>}
         />

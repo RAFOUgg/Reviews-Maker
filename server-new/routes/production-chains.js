@@ -112,7 +112,11 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                         targetNodeId: true,
                         technique: true,
                         date: true,
-                        notes: true
+                        notes: true,
+                        waypointX: true,
+                        waypointY: true,
+                        sourceHandle: true,
+                        targetHandle: true
                     }
                 }
             }
@@ -451,14 +455,51 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { technique, date, notes } = req.body
+        const { technique, date, notes, sourceNodeId, targetNodeId, waypointX, waypointY, sourceHandle, targetHandle } = req.body
+
+        // Inverser la direction (ou reconnecter vers un autre nœud) : les deux nœuds doivent
+        // appartenir à la même chaîne, l'échange ne doit pas créer de cycle ni dupliquer une
+        // liaison déjà existante (contrainte @@unique([sourceNodeId, targetNodeId])).
+        if (sourceNodeId !== undefined || targetNodeId !== undefined) {
+            const newSource = sourceNodeId !== undefined ? sourceNodeId : edge.sourceNodeId
+            const newTarget = targetNodeId !== undefined ? targetNodeId : edge.targetNodeId
+
+            const [sourceExists, targetExists] = await Promise.all([
+                prisma.chainNode.findFirst({ where: { id: newSource, chainId: edge.chainId } }),
+                prisma.chainNode.findFirst({ where: { id: newTarget, chainId: edge.chainId } })
+            ])
+            if (!sourceExists || !targetExists) {
+                return res.status(400).json({ error: "Source/target node not found in this chain" })
+            }
+
+            const otherEdges = await prisma.chainEdge.findMany({
+                where: { chainId: edge.chainId, id: { not: edge.id } },
+                select: { sourceNodeId: true, targetNodeId: true }
+            })
+
+            const duplicate = otherEdges.some(e => e.sourceNodeId === newSource && e.targetNodeId === newTarget)
+            if (duplicate) {
+                return res.status(400).json({ error: "A transformation already exists between these two products" })
+            }
+
+            const normalizedEdges = otherEdges.map(e => ({ source: e.sourceNodeId, target: e.targetNodeId }))
+            if (wouldCreateCycle(normalizedEdges, newSource, newTarget)) {
+                return res.status(400).json({ error: "This would create a cycle in the chain" })
+            }
+        }
 
         const updated = await prisma.chainEdge.update({
             where: { id: req.params.edgeId },
             data: {
                 ...(technique !== undefined && { technique: technique?.trim() || null }),
                 ...(date !== undefined && { date: date ? new Date(date) : null }),
-                ...(notes !== undefined && { notes: notes?.trim() || null })
+                ...(notes !== undefined && { notes: notes?.trim() || null }),
+                ...(sourceNodeId !== undefined && { sourceNodeId }),
+                ...(targetNodeId !== undefined && { targetNodeId }),
+                ...(waypointX !== undefined && { waypointX }),
+                ...(waypointY !== undefined && { waypointY }),
+                ...(sourceHandle !== undefined && { sourceHandle }),
+                ...(targetHandle !== undefined && { targetHandle })
             }
         })
 

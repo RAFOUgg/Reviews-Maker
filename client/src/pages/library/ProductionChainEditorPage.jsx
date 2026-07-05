@@ -22,7 +22,7 @@ export default function ProductionChainEditorPage() {
         }
     }, [chainId]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const chainName = store.chains.find(c => c.id === chainId)?.name || 'Chaîne de production';
+    const chainName = store.selectedChain?.name || store.chains.find(c => c.id === chainId)?.name || 'Chaîne de production';
     const existingReviewIds = store.nodes.map(n => n.reviewId);
 
     return (

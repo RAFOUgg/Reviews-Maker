@@ -1624,6 +1624,13 @@ model ChainEdge {
   date      DateTime?
   notes     String?
 
+  // Point de courbure optionnel + côté d'accroche manuel — mêmes conventions que
+  // GenEdge.waypointX/Y/sourceHandle/targetHandle (PhenoHunt), cf. commentaire là-bas.
+  waypointX    Float?
+  waypointY    Float?
+  sourceHandle String?
+  targetHandle String?
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
