@@ -33,6 +33,7 @@ import NodeContextMenu from './NodeContextMenu';
 import EdgeContextMenu from './EdgeContextMenu';
 import PaneContextMenu from './PaneContextMenu';
 import NodeFormModal from './NodeFormModal';
+import LinkExistingReviewModal from './LinkExistingReviewModal';
 import EdgeFormModal from './EdgeFormModal';
 import ConfirmModal from '../shared/ConfirmModal';
 
@@ -568,6 +569,14 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                                         Détacher la review
                                     </button>
                                 )}
+                                {!selectedNode.sourceReviewId && (
+                                    <button
+                                        className="btn-edit"
+                                        onClick={() => store.openLinkReviewPicker(selectedNode.id)}
+                                    >
+                                        Lier à une review existante
+                                    </button>
+                                )}
                             </div>
                         )}
                     </div>
@@ -614,6 +623,9 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 )}
                 {store.showEdgeForm && (
                     <EdgeFormModal onClose={store.closeEdgeForm} />
+                )}
+                {store.linkReviewPickerNodeId && (
+                    <LinkExistingReviewModal />
                 )}
                 <ConfirmModal
                     open={!!deleteConfirm}

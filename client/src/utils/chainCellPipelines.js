@@ -20,18 +20,32 @@ import { resolveIntervalKey } from '../config/intervalTypes'
 export const REVIEW_TYPE_PIPELINES = {
     flower: [
         { key: 'culture', label: 'Culture', dataKey: 'cultureTimelineData', configKey: 'cultureTimelineConfig' },
-        { key: 'curing', label: 'Curing / Maturation', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' }
+        { key: 'curing', label: 'Curing / Maturation', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
+        { key: 'general', label: 'Autres données' }
     ],
     hash: [
         { key: 'separation', label: 'Séparation', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
-        { key: 'curing', label: 'Curing / Maturation', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' }
+        { key: 'curing', label: 'Curing / Maturation', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
+        { key: 'general', label: 'Autres données' }
     ],
     concentrate: [
         { key: 'extraction', label: 'Extraction', dataKey: 'extractionTimelineData', configKey: 'extractionTimelineConfig' },
-        { key: 'curing', label: 'Curing / Maturation', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' }
+        { key: 'curing', label: 'Curing / Maturation', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
+        { key: 'general', label: 'Autres données' }
     ],
-    edible: []
+    // L'edible n'a pas de timeline (pas de "cellule" à proprement parler) mais a une recette
+    // (ingredients/etapesPreparation) — traitée comme catégorie à part (getRecipeCells), pas comme
+    // un pipeline temporel. 'general' n'a pas d'équivalent utile ici (peu de champs scores communs).
+    edible: [
+        { key: 'recipe', label: 'Recette' }
+    ]
 }
+
+// Catégories qui ne sont PAS des timelines de pipeline (pas d'upsert possible via
+// /api/review-pipeline-cells, pas de "cellule vide" à remplir depuis la chaîne) — juste un
+// instantané en lecture des données déjà présentes sur la fiche, sélectionnable pour comparaison
+// visuelle entre produits/nœuds.
+export const READONLY_CELL_CATEGORIES = new Set(['general', 'recipe'])
 
 const FIELD_LOOKUPS = {
     culture: getCultureFieldById,
@@ -225,25 +239,171 @@ export function summarizeCellFields(pipelineType, entry) {
         })
 }
 
-/**
- * @param {object} reviewFlat review aplatie (flowerData/hashData/concentrateData fusionné à plat)
- * @param {object} pipelineDef un élément de REVIEW_TYPE_PIPELINES
- * @returns {Array<{timestamp, cellLabel, fields, data}>} cellules non vides, prêtes à être
- *          affichées/sélectionnées dans le picker d'import
- */
-export function getFilledCellsForPipeline(reviewFlat, pipelineDef) {
-    if (!reviewFlat || !pipelineDef) return []
-    const rawData = safeParse(reviewFlat[pipelineDef.dataKey])
-    const data = Array.isArray(rawData) ? rawData : []
-    const config = safeParse(reviewFlat[pipelineDef.configKey]) || {}
+// Sections de données déjà renseignées sur la fiche (pas des pipelines) — noms de colonnes
+// vérifiés directement dans schema.prisma pour chaque modèle (Flower/Hash/Concentrate n'ont
+// PAS de convention de nommage uniforme pour les mêmes concepts : ex. "dureteScore" côté Fleur
+// vs "durete" côté Hash/Concentré). Chaque triplet est [clé de colonne, libellé, unité?].
+const GENERAL_SECTIONS_BY_TYPE = {
+    flower: [
+        { key: 'analytics', label: 'Analytique', fields: [
+            ['thcPercent', 'THC', '%'], ['cbdPercent', 'CBD', '%'], ['cbgPercent', 'CBG', '%'],
+            ['cbcPercent', 'CBC', '%'], ['cbnPercent', 'CBN', '%'], ['thcvPercent', 'THCV', '%']
+        ] },
+        { key: 'visual', label: 'Visuel', fields: [
+            ['couleurScore', 'Couleur'], ['densiteVisuelle', 'Densité'], ['trichomesScore', 'Trichomes'],
+            ['pistilsScore', 'Pistils'], ['manucureScore', 'Manucure'], ['moisissureScore', 'Moisissure'], ['grainesScore', 'Graines']
+        ] },
+        { key: 'aromas', label: 'Arômes', fields: [
+            ['notesOdeursDominantes', 'Notes dominantes'], ['notesOdeursSecondaires', 'Notes secondaires'],
+            ['intensiteAromeScore', 'Intensité'], ['complexiteAromeScore', 'Complexité'], ['fideliteAromeScore', 'Fidélité']
+        ] },
+        { key: 'texture', label: 'Texture', fields: [
+            ['dureteScore', 'Dureté'], ['densiteTactileScore', 'Densité tactile'], ['elasticiteScore', 'Élasticité'],
+            ['collantScore', 'Collant'], ['malleabiliteScore', 'Malléabilité'], ['friabiliteScore', 'Friabilité'],
+            ['viscositeScore', 'Viscosité'], ['meltingScore', 'Melting'], ['residuScore', 'Résidus']
+        ] },
+        { key: 'effects', label: 'Effets & goût', fields: [
+            ['effetsChoisis', 'Effets'], ['monteeScore', 'Montée'], ['intensiteEffetScore', 'Intensité effet'],
+            ['intensiteGoutScore', 'Intensité goût'], ['agressiviteScore', 'Agressivité']
+        ] }
+    ],
+    hash: [
+        { key: 'analytics', label: 'Analytique', fields: [
+            ['thcPercent', 'THC', '%'], ['cbdPercent', 'CBD', '%'], ['cbgPercent', 'CBG', '%'],
+            ['cbcPercent', 'CBC', '%'], ['cbnPercent', 'CBN', '%'], ['thcvPercent', 'THCV', '%']
+        ] },
+        { key: 'visual', label: 'Visuel', fields: [
+            ['couleurTransparence', 'Couleur/Transparence'], ['pureteVisuelle', 'Pureté'], ['densiteVisuelle', 'Densité'],
+            ['pistils', 'Pistils'], ['moisissure', 'Moisissure'], ['graines', 'Graines']
+        ] },
+        { key: 'aromas', label: 'Arômes', fields: [
+            ['notesDominantes', 'Notes dominantes'], ['notesSecondaires', 'Notes secondaires'],
+            ['intensiteAromatique', 'Intensité'], ['complexiteAromeScore', 'Complexité'], ['fideliteCultivars', 'Fidélité']
+        ] },
+        { key: 'texture', label: 'Texture', fields: [
+            ['durete', 'Dureté'], ['densiteTactile', 'Densité tactile'], ['collantScore', 'Collant'],
+            ['malleabiliteScore', 'Malléabilité'], ['textureMeltingScore', 'Melting'], ['textureResiduScore', 'Résidus']
+        ] },
+        { key: 'effects', label: 'Effets & goût', fields: [
+            ['effetsChoisis', 'Effets'], ['monteeRapidite', 'Montée'], ['intensiteEffets', 'Intensité effet'],
+            ['intensite', 'Intensité goût'], ['agressivitePiquant', 'Agressivité']
+        ] }
+    ],
+    concentrate: [
+        { key: 'analytics', label: 'Analytique', fields: [
+            ['thcPercent', 'THC', '%'], ['cbdPercent', 'CBD', '%'], ['cbgPercent', 'CBG', '%'],
+            ['cbcPercent', 'CBC', '%'], ['cbnPercent', 'CBN', '%'], ['thcvPercent', 'THCV', '%']
+        ] },
+        { key: 'visual', label: 'Visuel', fields: [
+            ['couleurTransparence', 'Couleur/Transparence'], ['viscosite', 'Viscosité'], ['pureteVisuelle', 'Pureté'],
+            ['melting', 'Melting'], ['residus', 'Résidus'], ['pistils', 'Pistils'], ['moisissure', 'Moisissure']
+        ] },
+        { key: 'aromas', label: 'Arômes', fields: [
+            ['notesDominantes', 'Notes dominantes'], ['notesSecondaires', 'Notes secondaires'],
+            ['intensiteAromatique', 'Intensité'], ['complexiteAromeScore', 'Complexité'], ['fideliteCultivars', 'Fidélité']
+        ] },
+        { key: 'texture', label: 'Texture', fields: [
+            ['durete', 'Dureté'], ['densiteTactile', 'Densité tactile'], ['collantScore', 'Collant'],
+            ['textureMeltingScore', 'Melting'], ['textureResiduScore', 'Résidus']
+        ] },
+        { key: 'effects', label: 'Effets & goût', fields: [
+            ['effetsChoisis', 'Effets'], ['monteeRapidite', 'Montée'], ['intensiteEffets', 'Intensité effet'],
+            ['intensite', 'Intensité goût'], ['agressivitePiquant', 'Agressivité']
+        ] }
+    ]
+}
 
-    return data
-        .filter(entry => entry && entry.timestamp !== undefined && entry.timestamp !== null)
-        .map(entry => ({
-            timestamp: entry.timestamp,
-            cellLabel: formatCellTimestamp(entry.timestamp, config),
-            fields: summarizeCellFields(pipelineDef.key, entry),
-            data: entry
-        }))
-        .filter(cell => cell.fields.length > 0)
+function resolveGeneralFieldValue(reviewFlat, key) {
+    let value = reviewFlat[key]
+    if (value === null || value === undefined || value === '') return null
+    if (typeof value === 'string' && (value.startsWith('[') || value.startsWith('{'))) {
+        const parsed = safeParse(value)
+        if (parsed !== null) value = parsed
+    }
+    if (Array.isArray(value)) {
+        if (value.length === 0) return null
+        value = value.join(', ')
+    }
+    return value
+}
+
+/**
+ * "Autres données" — un instantané en lecture des scores/valeurs déjà renseignés sur la fiche
+ * (analytique, visuel, arômes, texture, effets), regroupés par section comme une cellule de
+ * pipeline, pour comparer visuellement deux produits sur n'importe quelle donnée, pas seulement
+ * les pipelines de fabrication.
+ */
+export function getGeneralDataCells(reviewFlat, reviewType) {
+    if (!reviewFlat) return []
+    const sections = GENERAL_SECTIONS_BY_TYPE[reviewType] || []
+    return sections
+        .map(section => {
+            const fields = section.fields
+                .map(([key, label, unit]) => {
+                    const value = resolveGeneralFieldValue(reviewFlat, key)
+                    if (value === null) return null
+                    return { key, label, value: `${value}${unit || ''}` }
+                })
+                .filter(Boolean)
+            return {
+                timestamp: section.key,
+                cellLabel: section.label,
+                hasData: fields.length > 0,
+                fields,
+                data: Object.fromEntries(fields.map(f => [f.key, reviewFlat[f.key]]))
+            }
+        })
+        .filter(cell => cell.hasData)
+}
+
+/**
+ * "Recette" (edible) — chaque ingrédient et chaque étape de préparation devient une cellule
+ * sélectionnable, sur le même modèle que les cellules de pipeline (label + champs résumés).
+ */
+export function getRecipeCells(reviewFlat) {
+    if (!reviewFlat) return []
+    const ingredients = safeParse(reviewFlat.ingredients) || []
+    const steps = safeParse(reviewFlat.etapesPreparation) || []
+    const cells = []
+
+    ;(Array.isArray(ingredients) ? ingredients : []).forEach((ing, i) => {
+        const fields = []
+        const qty = ing.quantite ?? ing.quantity
+        if (qty) fields.push({ key: 'quantite', label: 'Quantité', value: `${qty}${ing.unite || ing.unit || ''}` })
+        if (ing.type) fields.push({ key: 'type', label: 'Type', value: ing.type })
+        cells.push({
+            timestamp: `ingredient-${i}`,
+            cellLabel: ing.nom || ing.name || `Ingrédient ${i + 1}`,
+            hasData: true,
+            fields,
+            data: ing
+        })
+    })
+
+    ;(Array.isArray(steps) ? steps : []).forEach((step, i) => {
+        const fields = []
+        const duree = step.duree ?? step.duration
+        if (duree) fields.push({ key: 'duree', label: 'Durée', value: `${duree} min` })
+        if (step.temperature) fields.push({ key: 'temperature', label: 'Température', value: `${step.temperature}°C` })
+        cells.push({
+            timestamp: `step-${i}`,
+            cellLabel: step.action || `Étape ${i + 1}`,
+            hasData: true,
+            fields,
+            data: step
+        })
+    })
+
+    return cells
+}
+
+/**
+ * Point d'entrée unique du picker : dispatch selon la catégorie (timeline de pipeline vs
+ * "Autres données" vs "Recette") — évite à ChainCellPickerModal de connaître ces distinctions.
+ */
+export function getCellsForPipelineDef(reviewFlat, pipelineDef, reviewType) {
+    if (!pipelineDef) return []
+    if (pipelineDef.key === 'general') return getGeneralDataCells(reviewFlat, reviewType)
+    if (pipelineDef.key === 'recipe') return getRecipeCells(reviewFlat)
+    return getAllCellsForPipeline(reviewFlat, pipelineDef)
 }

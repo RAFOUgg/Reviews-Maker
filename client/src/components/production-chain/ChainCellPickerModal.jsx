@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidTabs, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
-import { getPipelineDefsForReviewType, getAllCellsForPipeline, getFieldSchemaForPipeline } from '../../utils/chainCellPipelines';
+import { getPipelineDefsForReviewType, getCellsForPipelineDef, getFieldSchemaForPipeline, READONLY_CELL_CATEGORIES } from '../../utils/chainCellPipelines';
 import PipelineCellEditor from '../pipelines/core/PipelineCellEditor';
 import { Download, CheckSquare, Square, Plus, Pencil, X, Loader2 } from 'lucide-react';
 
@@ -85,10 +85,11 @@ const ChainCellPickerModal = () => {
     }, [sourceReviewId, pipelineKey]);
 
     const cells = useMemo(
-        () => (review && activePipelineDef ? getAllCellsForPipeline(review, activePipelineDef) : []),
-        [review, activePipelineDef]
+        () => (review && activePipelineDef ? getCellsForPipelineDef(review, activePipelineDef, sourceNode?.reviewType) : []),
+        [review, activePipelineDef, sourceNode?.reviewType]
     );
     const filledCount = cells.filter(c => c.hasData).length;
+    const isReadonlyCategory = activePipelineDef && READONLY_CELL_CATEGORIES.has(activePipelineDef.key);
 
     if (!picker) return null;
 
@@ -291,7 +292,9 @@ const ChainCellPickerModal = () => {
                             )}
                         </div>
                         <p className="text-xs text-white/40 mb-3 flex items-center gap-2">
-                            Cliquez une cellule remplie pour la sélectionner (import), l'icône crayon pour l'éditer. Une cellule vide s'ouvre directement en édition — la sauvegarde remplit la fiche technique en simultané.
+                            {isReadonlyCategory
+                                ? "Instantané en lecture des données déjà renseignées sur la fiche — cliquez pour sélectionner (import)."
+                                : "Cliquez une cellule remplie pour la sélectionner (import), l'icône crayon pour l'éditer. Une cellule vide s'ouvre directement en édition — la sauvegarde remplit la fiche technique en simultané."}
                             {savingCell && <span className="text-emerald-400 flex items-center gap-1"><Loader2 size={11} className="animate-spin" /> Sauvegarde...</span>}
                         </p>
 
@@ -313,14 +316,16 @@ const ChainCellPickerModal = () => {
                                                     : 'border-dashed border-white/10 bg-white/[0.02] hover:bg-white/5'
                                             }`}
                                         >
-                                            <button
-                                                type="button"
-                                                title={cell.hasData ? 'Éditer cette cellule' : 'Ajouter des données à cette cellule'}
-                                                onClick={(e) => { e.stopPropagation(); setEditingCell(cell); }}
-                                                className="absolute top-1 right-1 p-0.5 rounded text-white/30 hover:text-white/70 hover:bg-white/10"
-                                            >
-                                                <Pencil size={11} />
-                                            </button>
+                                            {!isReadonlyCategory && (
+                                                <button
+                                                    type="button"
+                                                    title={cell.hasData ? 'Éditer cette cellule' : 'Ajouter des données à cette cellule'}
+                                                    onClick={(e) => { e.stopPropagation(); setEditingCell(cell); }}
+                                                    className="absolute top-1 right-1 p-0.5 rounded text-white/30 hover:text-white/70 hover:bg-white/10"
+                                                >
+                                                    <Pencil size={11} />
+                                                </button>
+                                            )}
                                             <div className="flex items-center gap-1.5 mb-1 pr-4">
                                                 {cell.hasData ? (
                                                     isSelected ? <CheckSquare size={13} className="text-emerald-400 flex-shrink-0" /> : <Square size={13} className="text-white/30 flex-shrink-0" />

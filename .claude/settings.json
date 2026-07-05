@@ -38,7 +38,11 @@
       "Bash(curl -s http://localhost:3000/api/reviews/f99deac9-1f93-458a-9f92-f6ef87587088)",
       "Bash(curl -s http://localhost:3000/api/health)",
       "Bash(curl -s http://localhost:3000/api/flower-reviews/f7dadc47-94df-4832-a9c4-577fceaa0310)",
-      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); fd=d.get\\('flowerData',{}\\); print\\(json.dumps\\({k:v for k,v in fd.items\\(\\) if k in ['thcPercent','cbdPercent','cbgPercent','cbcPercent','cbnPercent','thcvPercent','terpeneProfile','effetsChoisis','notesOdeursDominantes','notesOdeursSecondaires','dryPuffNotes','inhalationNotes','expirationNotes','poidsBrut','poidsNet','curingDuration','curingType','curingTemperature','curingHumidity','modeRecolte']}, indent=2, ensure_ascii=False\\)\\)\")"
+      "Bash(python -c \"import json,sys; d=json.load\\(sys.stdin\\); fd=d.get\\('flowerData',{}\\); print\\(json.dumps\\({k:v for k,v in fd.items\\(\\) if k in ['thcPercent','cbdPercent','cbgPercent','cbcPercent','cbnPercent','thcvPercent','terpeneProfile','effetsChoisis','notesOdeursDominantes','notesOdeursSecondaires','dryPuffNotes','inhalationNotes','expirationNotes','poidsBrut','poidsNet','curingDuration','curingType','curingTemperature','curingHumidity','modeRecolte']}, indent=2, ensure_ascii=False\\)\\)\")",
+      "Bash(cd \"c:\\\\Users\\\\Rafi\\\\Documents\\\\.0AMes-Logiciel\\\\Reviews-Maker\\\\client\" && ls -la | grep -i eslint; ls -la ..; cat package.json | grep -A5 '\"lint\"')",
+      "Read(//c/Users/Rafi/Documents/.0AMes-Logiciel/**)",
+      "Bash(node -e \"console.log\\(require\\('playwright/package.json'\\).version\\)\")",
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")"
     ]
   }
 }

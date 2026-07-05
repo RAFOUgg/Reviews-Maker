@@ -3,8 +3,10 @@ import PipelineDragDropView from '../views/PipelineDragDropView';
 import { SEPARATION_SIDEBAR_CONTENT } from '../../../config/separationSidebarContent';
 import { SEPARATION_PHASES } from '../../../config/pipelinePhases';
 import ChainSectionEmbed from '../../production-chain/ChainSectionEmbed';
+import useProductionChainStore from '../../../store/useProductionChainStore';
 
 const SeparationPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {
+    const linkOpen = useProductionChainStore(s => s.linkOpen);
     const timelineDataRef = useRef(data.separationTimelineData || []);
 
     React.useEffect(() => {
@@ -93,21 +95,24 @@ const SeparationPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel,
 
     return (
         <div className="space-y-4">
-            <ChainSectionEmbed
-                reviewId={reviewId}
-                reviewType="hash"
-                reviewLabel={reviewLabel}
-                reviewImage={reviewImage}
-            />
-            <PipelineDragDropView
-                type="separation"
-                sidebarContent={sidebarArray}
-                timelineConfig={timelineConfig}
-                timelineData={data.separationTimelineData || []}
-                onConfigChange={handleConfigChange}
-                onDataChange={handleDataChange}
-                onClearTimeline={handleClearTimeline}
-            />
+            {linkOpen ? (
+                <ChainSectionEmbed
+                    reviewId={reviewId}
+                    reviewType="hash"
+                    reviewLabel={reviewLabel}
+                    reviewImage={reviewImage}
+                />
+            ) : (
+                <PipelineDragDropView
+                    type="separation"
+                    sidebarContent={sidebarArray}
+                    timelineConfig={timelineConfig}
+                    timelineData={data.separationTimelineData || []}
+                    onConfigChange={handleConfigChange}
+                    onDataChange={handleDataChange}
+                    onClearTimeline={handleClearTimeline}
+                />
+            )}
         </div>
     );
 };

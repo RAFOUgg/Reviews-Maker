@@ -42,6 +42,22 @@ const useProductionChainStore = create(
             // STATE - CANVAS
             canvasLoading: false,
 
+            // STATE - CHAIN SECTION LINK (toggle Pipeline <-> Chaîne de production dans les
+            // formulaires de review — un seul embed actif à la fois par page, donc un état
+            // global partagé évite le prop-drilling entre le bouton (dans le titre de section)
+            // et le panneau (dans la section pipeline elle-même).
+            linkOpen: false,
+            linkStatusLoading: true,
+            linkedChains: [],
+            linkSelectedChainId: null,
+            linkForceChoicePanel: false,
+            linkShowImportPicker: false,
+            linkBusy: false,
+            linkError: null,
+            // Guard `${reviewType}:${reviewId}` — évite de refetch/reset à chaque re-render et
+            // ignore une réponse qui arriverait après que l'utilisateur ait changé de fiche.
+            linkReviewKey: null,
+
             // ============================================================================
             // CHAINS - Fetch
             // ============================================================================
@@ -434,6 +450,84 @@ const useProductionChainStore = create(
             },
 
             // ============================================================================
+            // CHAIN SECTION LINK - Toggle + actions du bouton "Chaîne de production" embarqué
+            // dans les sections pipeline des formulaires de review
+            // ============================================================================
+            setLinkOpen: (open) => set({ linkOpen: open }),
+            setLinkState: (partial) => set(partial),
+
+            // Résout dès le montage du bouton si cette fiche appartient déjà à une chaîne — le
+            // bouton fermé doit afficher "Créer" ou "Ouvrir" sans attendre un clic.
+            ensureLinkStatus: async (reviewType, reviewId) => {
+                const key = `${reviewType}:${reviewId}`;
+                if (get().linkReviewKey === key) return;
+                set({
+                    linkReviewKey: key, linkStatusLoading: true, linkedChains: [], linkOpen: false,
+                    linkSelectedChainId: null, linkForceChoicePanel: false, linkShowImportPicker: false,
+                    linkError: null
+                });
+                const [forReviewResult] = await Promise.all([
+                    get().fetchChainsForReview(reviewType, reviewId),
+                    get().fetchChains()
+                ]);
+                // La fiche a changé pendant le fetch (navigation rapide entre sections/reviews) —
+                // une réponse tardive ne doit pas écraser l'état de la fiche courante.
+                if (get().linkReviewKey !== key) return;
+                const chains = forReviewResult?.data || [];
+                set({ linkedChains: chains, linkSelectedChainId: chains[0]?.id || null, linkStatusLoading: false });
+            },
+
+            linkCreateEmpty: async (reviewLabel) => {
+                set({ linkBusy: true, linkError: null });
+                const result = await get().createChain({ name: `Chaîne de production - ${reviewLabel || 'Sans nom'}` });
+                if (result?.data) {
+                    await get().loadChain(result.data.id);
+                    set(state => ({
+                        linkedChains: [...state.linkedChains, result.data],
+                        linkSelectedChainId: result.data.id,
+                        linkForceChoicePanel: false
+                    }));
+                } else {
+                    set({ linkError: result?.error || 'Erreur lors de la création' });
+                }
+                set({ linkBusy: false });
+            },
+
+            linkCreateFromReview: async (reviewLabel, nodePayload) => {
+                set({ linkBusy: true, linkError: null });
+                const result = await get().createChain({ name: `Chaîne de production - ${reviewLabel || 'Sans nom'}` });
+                if (result?.data) {
+                    await get().loadChain(result.data.id);
+                    await get().addNode(nodePayload);
+                    set(state => ({
+                        linkedChains: [...state.linkedChains, result.data],
+                        linkSelectedChainId: result.data.id,
+                        linkForceChoicePanel: false
+                    }));
+                } else {
+                    set({ linkError: result?.error || 'Erreur lors de la création' });
+                }
+                set({ linkBusy: false });
+            },
+
+            linkImportToChain: async (chain, nodePayload) => {
+                set({ linkBusy: true, linkError: null });
+                await get().loadChain(chain.id);
+                const result = await get().addNode(nodePayload);
+                if (result?.data) {
+                    set(state => ({
+                        linkedChains: [...state.linkedChains, chain],
+                        linkSelectedChainId: chain.id,
+                        linkForceChoicePanel: false,
+                        linkShowImportPicker: false
+                    }));
+                } else {
+                    set({ linkError: result?.error || "Erreur lors de l'import" });
+                }
+                set({ linkBusy: false });
+            },
+
+            // ============================================================================
             // CELL DATA - Import/édition des cellules de pipeline attachées à un nœud/liaison
             // ============================================================================
             // targetIds peut être vide (ouverture depuis le fond du canvas) — la modale laisse
@@ -593,7 +687,16 @@ const useProductionChainStore = create(
                     editingCell: null,
                     chainLoading: false,
                     canvasLoading: false,
-                    chainError: null
+                    chainError: null,
+                    linkOpen: false,
+                    linkStatusLoading: true,
+                    linkedChains: [],
+                    linkSelectedChainId: null,
+                    linkForceChoicePanel: false,
+                    linkShowImportPicker: false,
+                    linkBusy: false,
+                    linkError: null,
+                    linkReviewKey: null
                 });
             }
         }),

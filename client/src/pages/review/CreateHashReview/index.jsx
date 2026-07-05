@@ -15,6 +15,7 @@ import { flattenHashFormData, createFormDataFromFlat, diffFlatData } from '../..
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import { SeparationPipelineAdapter, CuringMaturationAdapter } from '../../../components/pipelines/adapters'
+import ChainToggleButton from '../../../components/production-chain/ChainToggleButton'
 import AnalyticsSection from '../../../components/sections/AnalyticsSection'
 import VisualSection from '../../../components/sections/VisualSection'
 import OdorSection from '../../../components/sections/OdorSection'
@@ -313,14 +314,19 @@ export default function CreateHashReview() {
                         transition={{ duration: 0.2 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center gap-3 mb-6">
-                            <span className="text-3xl">{sections[currentSection].icon}</span>
-                            <div>
-                                <h2 className="text-xl font-semibold text-white">
-                                    {sections[currentSection].title}
-                                    {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                </h2>
+                        <div className="flex items-center justify-between gap-3 mb-6">
+                            <div className="flex items-center gap-3">
+                                <span className="text-3xl">{sections[currentSection].icon}</span>
+                                <div>
+                                    <h2 className="text-xl font-semibold text-white">
+                                        {sections[currentSection].title}
+                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
+                                    </h2>
+                                </div>
                             </div>
+                            {sections[currentSection].id === 'separation' && (
+                                <ChainToggleButton reviewId={id} reviewType="hash" />
+                            )}
                         </div>
 
                         {currentSection === 0 && (

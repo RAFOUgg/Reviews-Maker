@@ -40,6 +40,8 @@ const useGeneticsStore = create(
             nodeFormData: null,
             edgeFormData: null,
             treeFormData: null,
+            // Nœud pour lequel le picker "Lier à une review existante" est ouvert (null = fermé)
+            linkReviewPickerNodeId: null,
 
             // ============================================================================
             // STATE - CANVAS
@@ -438,6 +440,9 @@ const useGeneticsStore = create(
             closeNodeForm: () => {
                 set({ showNodeForm: false, nodeFormData: null });
             },
+
+            openLinkReviewPicker: (nodeId) => set({ linkReviewPickerNodeId: nodeId }),
+            closeLinkReviewPicker: () => set({ linkReviewPickerNodeId: null }),
 
             updateNodeFormData: (updates) => {
                 set(state => ({

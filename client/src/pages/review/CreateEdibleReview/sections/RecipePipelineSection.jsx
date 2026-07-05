@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, Plus, X, ChevronDown, Cannabis } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import ChainSectionEmbed from '../../../../components/production-chain/ChainSectionEmbed';
+import useProductionChainStore from '../../../../store/useProductionChainStore';
 
 const UNITS = ['g', 'kg', 'ml', 'L', 'c. à soupe', 'c. à café', 'pincée', 'pcs', 'autre'];
 const PREPARATION_ACTIONS = [
@@ -17,6 +18,7 @@ const PREPARATION_ACTIONS = [
 ];
 
 const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {
+    const linkOpen = useProductionChainStore(s => s.linkOpen);
     const [config, setConfig] = useState({
         ingredients: data.ingredients || [],
         steps: data.steps || [],
@@ -100,15 +102,21 @@ const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, rev
     const cannabinicIngredients = config.ingredients.filter(i => i.type === 'cannabinique');
     const standardIngredients = config.ingredients.filter(i => i.type === 'standard');
 
+    if (linkOpen) {
+        return (
+            <div className="space-y-6">
+                <ChainSectionEmbed
+                    reviewId={reviewId}
+                    reviewType="edible"
+                    reviewLabel={reviewLabel}
+                    reviewImage={reviewImage}
+                />
+            </div>
+        );
+    }
+
     return (
         <div className="space-y-6">
-            <ChainSectionEmbed
-                reviewId={reviewId}
-                reviewType="edible"
-                reviewLabel={reviewLabel}
-                reviewImage={reviewImage}
-            />
-
             {/* Ingrédients */}
             <LiquidCard glow="amber" padding="lg">
                 <div className="flex items-center justify-between mb-4">

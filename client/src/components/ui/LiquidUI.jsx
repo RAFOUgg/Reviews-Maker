@@ -695,7 +695,10 @@ export function LiquidModal({
         md: 'max-w-lg w-full',
         lg: 'max-w-xl w-full',
         xl: 'max-w-2xl w-full',
-        full: 'max-w-4xl w-full'
+        full: 'max-w-4xl w-full',
+        // Pour les formulaires denses (beaucoup de sections/champs) qui restent étriqués même en
+        // "full" sur un écran desktop large — cf. NodeFormModal.jsx (PhenoHunt).
+        wide: 'max-w-6xl w-full'
     }
 
     // Handle ESC key — only the topmost open LiquidModal closes

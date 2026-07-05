@@ -176,7 +176,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     <span>{isEdit ? 'Éditer cultivar' : 'Ajouter cultivar'}</span>
                 </div>
             }
-            size="xl"
+            size="wide"
             glowColor="green"
             footer={
                 <div className="flex gap-3">
@@ -203,48 +203,50 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     </LiquidCard>
                 )}
 
-                {/* Cultivar Name */}
-                <LiquidInput
-                    label="Nom du cultivar *"
-                    value={formData.cultivarName || ''}
-                    onChange={(e) => handleChange('cultivarName', e.target.value)}
-                    placeholder="ex: Gorilla Glue #4"
-                    required
-                    maxLength={200}
-                    hint={`${(formData.cultivarName || '').length}/200`}
-                />
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                    {/* Cultivar Name */}
+                    <LiquidInput
+                        label="Nom du cultivar *"
+                        value={formData.cultivarName || ''}
+                        onChange={(e) => handleChange('cultivarName', e.target.value)}
+                        placeholder="ex: Gorilla Glue #4"
+                        required
+                        maxLength={200}
+                        hint={`${(formData.cultivarName || '').length}/200`}
+                    />
 
-                {/* Color Picker */}
-                <div className="space-y-2">
-                    <label className="block text-sm font-medium text-white">Couleur du nœud</label>
-                    <div className="flex items-center gap-3">
-                        <input
-                            type="color"
-                            value={formData.color || '#FF6B9D'}
-                            onChange={(e) => handleColorChange(e.target.value)}
-                            className="w-12 h-12 rounded-xl border border-white/20 cursor-pointer bg-transparent"
-                        />
-                        <div
-                            className="w-8 h-8 rounded-full border-2 border-white/30"
-                            style={{ backgroundColor: formData.color || '#FF6B9D' }}
-                        />
+                    {/* Photo */}
+                    <LiquidInput
+                        label="Photo (URL)"
+                        value={formData.image || ''}
+                        onChange={(e) => handleChange('image', e.target.value)}
+                        placeholder="https://..."
+                        hint="Affichée sur le nœud de l'arbre"
+                    />
+
+                    {/* Color Picker */}
+                    <div className="space-y-2">
+                        <label className="block text-sm font-medium text-white">Couleur du nœud</label>
+                        <div className="flex items-center gap-3">
+                            <input
+                                type="color"
+                                value={formData.color || '#FF6B9D'}
+                                onChange={(e) => handleColorChange(e.target.value)}
+                                className="w-12 h-12 rounded-xl border border-white/20 cursor-pointer bg-transparent"
+                            />
+                            <div
+                                className="w-8 h-8 rounded-full border-2 border-white/30"
+                                style={{ backgroundColor: formData.color || '#FF6B9D' }}
+                            />
+                        </div>
                     </div>
                 </div>
-
-                {/* Photo */}
-                <LiquidInput
-                    label="Photo (URL)"
-                    value={formData.image || ''}
-                    onChange={(e) => handleChange('image', e.target.value)}
-                    placeholder="https://..."
-                    hint="Affichée sur le nœud de l'arbre"
-                />
 
                 {/* Genetics Section — champs historiques, clés à ne pas renommer */}
                 <LiquidCard className="p-4 space-y-4">
                     <h4 className="text-sm font-semibold text-white">Informations génétiques de base</h4>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <LiquidSelect
                             label="Sexe"
                             value={formData.genetics?.sex || 'unknown'}
@@ -314,11 +316,11 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                                     {section.sectionHint && (
                                         <p className="text-white/40 text-xs -mt-2">{section.sectionHint}</p>
                                     )}
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {section.fields.map(field => (
                                             <div
                                                 key={field.id}
-                                                className={field.type === 'textarea' ? 'sm:col-span-2' : ''}
+                                                className={field.type === 'textarea' ? 'sm:col-span-2 lg:col-span-3' : ''}
                                             >
                                                 {renderField(field)}
                                             </div>

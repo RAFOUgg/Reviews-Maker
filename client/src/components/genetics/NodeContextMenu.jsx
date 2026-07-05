@@ -108,6 +108,11 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         onClose();
     };
 
+    const handleLinkExistingReview = () => {
+        store.openLinkReviewPicker(nodeId);
+        onClose();
+    };
+
     const handleCenterView = () => {
         fitView({ nodes: [{ id: nodeId }], duration: 300 });
         onClose();
@@ -175,6 +180,11 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                     {node?.sourceReviewId && (
                         <button className="context-menu-item" onClick={handleDetachReview}>
                             ✂️ Détacher la review liée
+                        </button>
+                    )}
+                    {!node?.sourceReviewId && (
+                        <button className="context-menu-item" onClick={handleLinkExistingReview}>
+                            🔗 Lier à une review existante
                         </button>
                     )}
                     {node?.sourceReviewId && !node?.sourceReviewOrphaned && (

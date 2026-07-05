@@ -487,6 +487,25 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
             }
         });
 
+        // Même rattrapage de lien retour que POST /trees/:id/nodes (sinon relier un nœud déjà
+        // existant à une review — ré-attacher après détachement, ou changer de review liée —
+        // laisse FlowerReview.geneticTreeId à null pour toujours, et le modal "créer un arbre"
+        // réapparaît à chaque réédition de cette review).
+        if (sourceReviewId !== undefined && sourceReviewId !== node.sourceReviewId) {
+            if (sourceReviewId) {
+                await prisma.flowerReview.updateMany({
+                    where: { reviewId: sourceReviewId },
+                    data: { geneticTreeId: node.treeId }
+                }).catch(() => {});
+            }
+            if (node.sourceReviewId) {
+                await prisma.flowerReview.updateMany({
+                    where: { reviewId: node.sourceReviewId, geneticTreeId: node.treeId },
+                    data: { geneticTreeId: null }
+                }).catch(() => {});
+            }
+        }
+
         res.json({
             ...updated,
             position: JSON.parse(updated.position),
