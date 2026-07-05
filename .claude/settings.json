@@ -28,7 +28,13 @@
       "Bash(node --check scripts/backfill-cultivar-links.js)",
       "Bash(node scripts/backfill-cultivar-links.js)",
       "Bash(node \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit/capture.mjs\" \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")",
-      "Bash(node _mobile_audit_capture.mjs \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")"
+      "Bash(node _mobile_audit_capture.mjs \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")",
+      "Bash(node _mobile_audit_chain.mjs \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")",
+      "Bash(node _mobile_audit_chain2.mjs \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")",
+      "Bash(awk '{print $5, $9}')",
+      "Bash(rm -f _mobile_audit_capture.mjs _mobile_audit_chain.mjs _mobile_audit_chain2.mjs)",
+      "Bash(pkill -f \"node server.js\")",
+      "Bash(pkill -f \"vite --host\")"
     ]
   }
 }
