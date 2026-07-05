@@ -452,6 +452,9 @@ export default function CreateFlowerReview() {
                             <CulturePipelineSection
                                 data={formData.culture || {}}
                                 onChange={(cultureData) => handleChange('culture', cultureData)}
+                                reviewId={id}
+                                reviewLabel={formData.nomCommercial}
+                                reviewImage={photos.find(p => p.existing)?.preview || null}
                             />
                         )}
                         {currentSectionData.id === 'analytics' && (

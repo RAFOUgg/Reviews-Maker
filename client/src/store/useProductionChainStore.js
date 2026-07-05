@@ -59,6 +59,28 @@ const useProductionChainStore = create(
                 }
             },
 
+            // Chaînes contenant déjà un ChainNode pour cette review précise (reviewType+reviewId) —
+            // pas de FK sur la review elle-même, donc c'est le seul moyen de savoir si elle est
+            // déjà liée. Une review peut appartenir à plusieurs chaînes (pas de contrainte d'unicité
+            // inter-chaînes), d'où le tableau plutôt qu'un id unique.
+            fetchChainsForReview: async (reviewType, reviewId) => {
+                try {
+                    const response = await fetch(`${API_BASE}/for-review/${reviewType}/${reviewId}`, {
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch chains for review: ${response.status}`);
+                    }
+
+                    const chains = await response.json();
+                    return { data: chains };
+                } catch (error) {
+                    return { error: error.message || 'Failed to fetch chains for review' };
+                }
+            },
+
             loadChain: async (chainId) => {
                 set({ canvasLoading: true, chainError: null });
                 try {

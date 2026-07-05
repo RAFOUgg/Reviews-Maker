@@ -2,8 +2,9 @@ import React, { useRef, useMemo } from 'react';
 import PipelineDragDropView from '../views/PipelineDragDropView';
 import { EXTRACTION_SIDEBAR_CONTENT } from '../../../config/extractionSidebarContent';
 import { EXTRACTION_PHASES } from '../../../config/pipelinePhases';
+import ChainSectionEmbed from '../../production-chain/ChainSectionEmbed';
 
-const ExtractionPipelineSection = ({ data = {}, onChange }) => {
+const ExtractionPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {
     const timelineDataRef = useRef(data.extractionTimelineData || []);
 
     React.useEffect(() => {
@@ -91,15 +92,23 @@ const ExtractionPipelineSection = ({ data = {}, onChange }) => {
     };
 
     return (
-        <PipelineDragDropView
-            type="extraction"
-            sidebarContent={sidebarArray}
-            timelineConfig={timelineConfig}
-            timelineData={data.extractionTimelineData || []}
-            onConfigChange={handleConfigChange}
-            onDataChange={handleDataChange}
-            onClearTimeline={handleClearTimeline}
-        />
+        <div className="space-y-4">
+            <ChainSectionEmbed
+                reviewId={reviewId}
+                reviewType="concentrate"
+                reviewLabel={reviewLabel}
+                reviewImage={reviewImage}
+            />
+            <PipelineDragDropView
+                type="extraction"
+                sidebarContent={sidebarArray}
+                timelineConfig={timelineConfig}
+                timelineData={data.extractionTimelineData || []}
+                onConfigChange={handleConfigChange}
+                onDataChange={handleDataChange}
+                onClearTimeline={handleClearTimeline}
+            />
+        </div>
     );
 };
 

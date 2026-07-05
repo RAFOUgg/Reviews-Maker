@@ -5,12 +5,15 @@
 
 import ExtractionPipelineSection from '../sections/ExtractionPipelineSection';
 
-const ExtractionPipelineAdapter = ({ data = {}, onChange, productType }) => {
+const ExtractionPipelineAdapter = ({ data = {}, onChange, productType, reviewId, reviewLabel, reviewImage }) => {
     return (
         <ExtractionPipelineSection
             data={data}
             onChange={onChange}
             productType={productType}
+            reviewId={reviewId}
+            reviewLabel={reviewLabel}
+            reviewImage={reviewImage}
         />
     );
 };

@@ -5,12 +5,15 @@
 
 import SeparationPipelineSection from '../sections/SeparationPipelineSection';
 
-const SeparationPipelineAdapter = ({ data = {}, onChange, productType }) => {
+const SeparationPipelineAdapter = ({ data = {}, onChange, productType, reviewId, reviewLabel, reviewImage }) => {
     return (
         <SeparationPipelineSection
             data={data}
             onChange={onChange}
             productType={productType}
+            reviewId={reviewId}
+            reviewLabel={reviewLabel}
+            reviewImage={reviewImage}
         />
     );
 };

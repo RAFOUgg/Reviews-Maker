@@ -320,6 +320,9 @@ export default function CreateEdibleReview() {
                             <RecipePipelineSection
                                 data={formData.recipe || {}}
                                 onChange={(data) => handleChange('recipe', data)}
+                                reviewId={id}
+                                reviewLabel={formData.nomProduit}
+                                reviewImage={photos.find(p => p.existing)?.preview || null}
                             />
                         )}
                         {currentSection === 2 && (

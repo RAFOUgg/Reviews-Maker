@@ -330,6 +330,9 @@ export default function CreateConcentrateReview() {
                                 productType="concentrate"
                                 data={formData.extractionPipeline || {}}
                                 onChange={(data) => handleChange('extractionPipeline', data)}
+                                reviewId={id}
+                                reviewLabel={formData.nomCommercial}
+                                reviewImage={photos.find(p => p.existing)?.preview || null}
                             />
                         )}
                         {currentSection === 2 && (

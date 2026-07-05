@@ -337,6 +337,9 @@ export default function CreateHashReview() {
                                 productType="hash"
                                 data={formData.separationPipeline || {}}
                                 onChange={(data) => handleChange('separationPipeline', data)}
+                                reviewId={id}
+                                reviewLabel={formData.nomCommercial}
+                                reviewImage={photos.find(p => p.existing)?.preview || null}
                             />
                         )}
                         {currentSection === 2 && (

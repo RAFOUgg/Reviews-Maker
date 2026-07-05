@@ -2,8 +2,9 @@ import React, { useRef, useMemo } from 'react';
 import PipelineDragDropView from '../views/PipelineDragDropView';
 import { SEPARATION_SIDEBAR_CONTENT } from '../../../config/separationSidebarContent';
 import { SEPARATION_PHASES } from '../../../config/pipelinePhases';
+import ChainSectionEmbed from '../../production-chain/ChainSectionEmbed';
 
-const SeparationPipelineSection = ({ data = {}, onChange }) => {
+const SeparationPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {
     const timelineDataRef = useRef(data.separationTimelineData || []);
 
     React.useEffect(() => {
@@ -91,15 +92,23 @@ const SeparationPipelineSection = ({ data = {}, onChange }) => {
     };
 
     return (
-        <PipelineDragDropView
-            type="separation"
-            sidebarContent={sidebarArray}
-            timelineConfig={timelineConfig}
-            timelineData={data.separationTimelineData || []}
-            onConfigChange={handleConfigChange}
-            onDataChange={handleDataChange}
-            onClearTimeline={handleClearTimeline}
-        />
+        <div className="space-y-4">
+            <ChainSectionEmbed
+                reviewId={reviewId}
+                reviewType="hash"
+                reviewLabel={reviewLabel}
+                reviewImage={reviewImage}
+            />
+            <PipelineDragDropView
+                type="separation"
+                sidebarContent={sidebarArray}
+                timelineConfig={timelineConfig}
+                timelineData={data.separationTimelineData || []}
+                onConfigChange={handleConfigChange}
+                onDataChange={handleDataChange}
+                onClearTimeline={handleClearTimeline}
+            />
+        </div>
     );
 };
 
