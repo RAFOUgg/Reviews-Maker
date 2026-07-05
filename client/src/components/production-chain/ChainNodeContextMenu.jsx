@@ -8,12 +8,14 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
+import { useNavigate } from 'react-router-dom';
 import { Download, Clipboard, Copy } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
 const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
     const store = useProductionChainStore();
     const { fitView } = useReactFlow();
+    const navigate = useNavigate();
     const menuRef = useRef(null);
     // Cf. NodeContextMenu.jsx (genetics) : recale le menu s'il déborde du viewport près des bords.
     const [pos, setPos] = useState({ left: x, top: y });
@@ -51,6 +53,11 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
     const handleDetach = () => {
         store.updateNode(nodeId, { reviewId: null });
         onClose();
+    };
+
+    const handleEditReview = () => {
+        onClose();
+        navigate(`/edit/${node.reviewType}/${node.reviewId}`);
     };
 
     const handleCenterView = () => {
@@ -102,8 +109,8 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                             ⚠️ Review introuvable (supprimée)
                         </button>
                     ) : node?.reviewId && (
-                        <button className="context-menu-item" onClick={() => window.open(`/review/${node.reviewId}`, '_blank', 'noopener')}>
-                            📝 Voir la review
+                        <button className="context-menu-item" onClick={handleEditReview}>
+                            ✏️ Éditer la review
                         </button>
                     )}
                     {node?.reviewId && (

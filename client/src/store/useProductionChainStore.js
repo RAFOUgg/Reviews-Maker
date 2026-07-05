@@ -234,6 +234,7 @@ const useProductionChainStore = create(
                 if (!state.selectedChainId) {
                     return { error: 'No chain selected' };
                 }
+                const wasEmpty = state.nodes.length === 0;
 
                 set({ canvasLoading: true, chainError: null });
                 try {
@@ -258,6 +259,16 @@ const useProductionChainStore = create(
                         nodes: [...state.nodes, newNode],
                         canvasLoading: false
                     }));
+
+                    // Renomme automatiquement une chaîne encore au nom générique (créée vide
+                    // depuis la Bibliothèque, "Chaîne N") dès l'ajout de son premier produit —
+                    // évite une bibliothèque pleine de chaînes jamais renommées manuellement.
+                    // Ne touche jamais un nom déjà personnalisé par l'utilisateur.
+                    const currentName = get().selectedChain?.name || '';
+                    const looksLikeDefaultName = /^Chaîne \d+$/.test(currentName) || currentName.startsWith('Chaîne de production - ');
+                    if (wasEmpty && looksLikeDefaultName && newNode.label && newNode.label !== 'Sans nom') {
+                        get().updateChain(state.selectedChainId, { name: newNode.label });
+                    }
 
                     return { data: newNode };
                 } catch (error) {

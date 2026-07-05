@@ -1,10 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ReactFlowProvider } from 'reactflow';
-import { Home, GitBranch } from 'lucide-react';
+import { Home, GitBranch, Edit2 } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import ProductionChainCanvas from '../../components/production-chain/ProductionChainCanvas';
 import ProductAddSidebar from '../../components/production-chain/ProductAddSidebar';
+import ChainFormModal from '../../components/production-chain/ChainFormModal';
 
 /**
  * ProductionChainEditorPage — page dédiée à l'édition d'une chaîne de production,
@@ -15,6 +16,7 @@ export default function ProductionChainEditorPage() {
     const navigate = useNavigate();
     const { chainId } = useParams();
     const store = useProductionChainStore();
+    const [showRenameModal, setShowRenameModal] = useState(false);
 
     useEffect(() => {
         if (chainId && chainId !== store.selectedChainId) {
@@ -42,8 +44,19 @@ export default function ProductionChainEditorPage() {
                         <GitBranch className="w-5 h-5 text-emerald-400" />
                         {chainName}
                     </h1>
+                    <button
+                        onClick={() => setShowRenameModal(true)}
+                        className="p-2 text-slate-400 hover:text-white transition-colors"
+                        title="Renommer la chaîne"
+                    >
+                        <Edit2 className="w-4 h-4" />
+                    </button>
                 </div>
             </header>
+
+            {showRenameModal && store.selectedChain && (
+                <ChainFormModal chain={store.selectedChain} onClose={() => setShowRenameModal(false)} />
+            )}
 
             <div className="flex-1 flex overflow-hidden p-3 gap-3">
                 <ProductAddSidebar existingReviewIds={existingReviewIds} />

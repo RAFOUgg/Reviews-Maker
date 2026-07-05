@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
     useNodesState,
     useEdgesState,
@@ -45,6 +46,7 @@ const edgeTypes = {
 const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const store = useProductionChainStore();
     const { fitView } = useReactFlow();
+    const navigate = useNavigate();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -415,9 +417,9 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                                 {selectedNode.reviewId && !selectedNode.reviewOrphaned && (
                                     <button
                                         className="btn-edit"
-                                        onClick={() => window.open(`/review/${selectedNode.reviewId}`, '_blank', 'noopener')}
+                                        onClick={() => navigate(`/edit/${selectedNode.reviewType}/${selectedNode.reviewId}`)}
                                     >
-                                        Voir la review
+                                        Éditer la review
                                     </button>
                                 )}
                                 {selectedNode.reviewId && (
