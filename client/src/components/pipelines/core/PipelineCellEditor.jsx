@@ -27,7 +27,7 @@ const PipelineCellEditor = ({
     onSave,
     onDelete,
     title = 'Éditer la cellule'
-}) {
+}) => {
     const [editedData, setEditedData] = useState(cellData);
     const [collapsedSections, setCollapsedSections] = useState(
         fieldSchema?.sections?.reduce((acc, section) => {

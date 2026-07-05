@@ -112,6 +112,18 @@ const ChainEdgeFormModal = ({ onClose }) => {
     const matchedTechnique = techniqueOptions.find(o => o.label === formData.technique);
     const showCustomTechniqueInput = techniqueOptions.length === 0 || (!!formData.technique && !matchedTechnique) || customTechnique;
 
+    // Edible sans vocabulaire de technique fixe (getTechniqueOptionsForReviewType renvoie []) —
+    // propose un choix rapide entre la préparation générique et la préparation spécifique au
+    // typeComestible détecté sur la fiche destination (ex: "Préparation culinaire" vs
+    // "Préparation Cookies"), plutôt que de forcer un seul repli silencieux.
+    const quickTechniqueSuggestions = useMemo(() => {
+        if (pipelineSummary?.kind !== 'recipe') return [];
+        const suggestions = [];
+        if (pipelineSummary.typeComestible) suggestions.push(`Préparation ${pipelineSummary.typeComestible}`);
+        suggestions.push('Préparation culinaire');
+        return [...new Set(suggestions)];
+    }, [pipelineSummary]);
+
     const handleTechniqueSelectChange = (v) => {
         if (v === '__custom__') {
             setCustomTechnique(true);
@@ -221,6 +233,12 @@ const ChainEdgeFormModal = ({ onClose }) => {
                         </p>
                         <div className="text-sm text-white space-y-1">
                             {pipelineSummary.technique && <p>Méthode : <span className="text-white/70">{pipelineSummary.technique}</span></p>}
+                            {pipelineSummary.materialType && <p>Matière première : <span className="text-white/70">{pipelineSummary.materialType}</span></p>}
+                            {pipelineSummary.materialState && <p>État de la matière : <span className="text-white/70">{pipelineSummary.materialState}</span></p>}
+                            {pipelineSummary.mesh && <p>Maillage utilisé : <span className="text-white/70">{pipelineSummary.mesh}</span></p>}
+                            {(pipelineSummary.dosage || pipelineSummary.dosageUnit) && (
+                                <p>Dosage : <span className="text-white/70">{pipelineSummary.dosage ?? '?'} {pipelineSummary.dosageUnit || ''}</span></p>
+                            )}
                             {pipelineSummary.stepCount > 0 && <p>Étapes enregistrées : <span className="text-white/70">{pipelineSummary.stepCount}</span></p>}
                             {pipelineSummary.detail && <p className="text-white/70">{pipelineSummary.detail}</p>}
                         </div>
@@ -251,13 +269,33 @@ const ChainEdgeFormModal = ({ onClose }) => {
                                 )}
                             </>
                         ) : (
-                            <LiquidInput
-                                label="Technique utilisée"
-                                value={formData.technique || ''}
-                                onChange={(e) => handleChange('technique', e.target.value)}
-                                placeholder="ex: Extraction rosin 90µ, Curing 30j..."
-                                maxLength={200}
-                            />
+                            <>
+                                <LiquidInput
+                                    label="Technique utilisée"
+                                    value={formData.technique || ''}
+                                    onChange={(e) => handleChange('technique', e.target.value)}
+                                    placeholder="ex: Extraction rosin 90µ, Curing 30j..."
+                                    maxLength={200}
+                                />
+                                {quickTechniqueSuggestions.length > 0 && (
+                                    <div className="flex flex-wrap gap-2 mt-1.5">
+                                        {quickTechniqueSuggestions.map(s => (
+                                            <button
+                                                key={s}
+                                                type="button"
+                                                onClick={() => handleChange('technique', s)}
+                                                className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                                                    formData.technique === s
+                                                        ? 'border-emerald-400/60 bg-emerald-500/15 text-emerald-300'
+                                                        : 'border-white/15 bg-white/5 text-white/60 hover:bg-white/10'
+                                                }`}
+                                            >
+                                                {s}
+                                            </button>
+                                        ))}
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
 

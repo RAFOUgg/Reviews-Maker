@@ -5,6 +5,7 @@ import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
 import CustomTemplate from '../shared/config/CustomTemplate';
+import { buildExportReviewData } from '../../utils/exportDataAdapter';
 
 // Mapping des templates
 const TEMPLATES = {
@@ -28,6 +29,7 @@ const RATIO_DIMENSIONS = {
 export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'orchard-template-canvas' }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useOrchardStore((state) => state.templates);
+    const adaptedReviewData = buildExportReviewData(reviewData);
 
     // If the configured template is a registered custom template (layout=custom) use CustomTemplate
     if (!TemplateComponent && templatesMeta?.[config.template]?.layout === 'custom') {
@@ -84,7 +86,7 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         >
             <TemplateComponent
                 config={filteredConfig}
-                reviewData={reviewData}
+                reviewData={adaptedReviewData}
                 dimensions={dimensions}
                 pageMode={pageMode}
             />

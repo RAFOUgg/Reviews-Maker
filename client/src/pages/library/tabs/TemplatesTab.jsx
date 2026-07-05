@@ -9,10 +9,12 @@
  */
 
 import { useState, useEffect, useCallback } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
 import WatermarksTab from './WatermarksTab'
+import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore'
 import {
     Layout, LayoutGrid, LayoutList, Copy, Trash2, Eye, Star,
     Share2, Download, Plus, Check, Lock, Sparkles,
@@ -24,8 +26,32 @@ const SUB_TABS = [
     { id: 'watermarks', label: 'Filigranes', icon: Stamp },
 ]
 
-// Templates prédéfinis selon le CDC
+// Templates prédéfinis Export Maker — reflète le vrai registre Orchard
+// (client/src/store/orchardConstants.js::DEFAULT_TEMPLATES + TemplateRenderer.jsx::TEMPLATES),
+// remplace l'ancienne liste (ids compact/detailed/complete/influencer/custom) qui ne
+// correspondait à aucun template réellement sélectionnable dans Export Maker.
+const TEMPLATE_ICONS = { modernCompact: LayoutGrid, detailedCard: LayoutList, blogArticle: FileText, socialStory: Smartphone, custom: Settings2 }
 const PREDEFINED_TEMPLATES = [
+    ...Object.values(DEFAULT_TEMPLATES).map(t => ({
+        id: t.id,
+        name: t.name,
+        description: t.description,
+        format: t.supportedRatios || [t.defaultRatio],
+        tier: 'free',
+        icon: TEMPLATE_ICONS[t.id] || Layout,
+    })),
+    {
+        id: 'custom',
+        name: 'Personnalisé',
+        description: 'Drag & drop complet avec zones personnalisables',
+        format: ['1:1', '9:16'],
+        tier: 'producer',
+        icon: Settings2,
+    },
+]
+
+// Ancienne liste conservée en référence (ids ne correspondant à aucun template réel) :
+const _LEGACY_PREDEFINED_TEMPLATES = [
     {
         id: 'compact',
         name: 'Compact',

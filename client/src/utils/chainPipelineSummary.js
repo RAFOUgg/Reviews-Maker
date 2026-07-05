@@ -26,12 +26,34 @@ import { getCuringFieldById } from '../config/curingSidebarContent'
 const SEPARATION_TYPE_OPTIONS = getSeparationFieldById('separationType')?.options || []
 const EXTRACTION_METHOD_OPTIONS = getExtractionFieldById('extractionMethod')?.options || []
 const CURING_TYPE_OPTIONS = getCuringFieldById('curingType')?.options || []
+// Champs de la section MATIERE_PREMIERE (separationSidebarContent.js) : décrivent la matière
+// utilisée pour SÉPARER le hash, pas la review source — mais dans PipelineDragDropView (CDC),
+// ces "items de configuration" sont déposés sur UNE cellule de la timeline (comme n'importe quel
+// autre champ), jamais stockés en colonne dédiée. D'où findFieldInTimeline plus bas.
+const MATERIAL_TYPE_OPTIONS = getSeparationFieldById('materialType')?.options || []
+const MATERIAL_STATE_OPTIONS = getSeparationFieldById('materialState')?.options || []
 
 const toLabelMap = (options) => options.reduce((acc, o) => { acc[o.value] = o.label; return acc }, {})
 
 const SEPARATION_TYPE_LABELS = toLabelMap(SEPARATION_TYPE_OPTIONS)
 const EXTRACTION_METHOD_LABELS = toLabelMap(EXTRACTION_METHOD_OPTIONS)
 const CURING_TYPE_LABELS = toLabelMap(CURING_TYPE_OPTIONS)
+const MATERIAL_TYPE_LABELS = toLabelMap(MATERIAL_TYPE_OPTIONS)
+const MATERIAL_STATE_LABELS = toLabelMap(MATERIAL_STATE_OPTIONS)
+
+// Les champs de configuration (type de matière, état, maillage...) sont déposés par
+// drag&drop sur N'IMPORTE QUELLE cellule de la timeline (pas une colonne dédiée) — on scanne
+// donc toutes les entrées pour trouver la première valeur renseignée pour cette clé.
+function findFieldInTimeline(entries, key) {
+    if (!Array.isArray(entries)) return null
+    for (const entry of entries) {
+        const value = entry?.[key]
+        if (value === null || value === undefined || value === '') continue
+        if (Array.isArray(value) && value.length === 0) continue
+        return value
+    }
+    return null
+}
 
 /**
  * Options canoniques pour le champ "Technique" d'une liaison de chaîne, selon le type de la
@@ -63,12 +85,27 @@ export function getPipelineSummaryForEdge(targetReviewType, targetReview) {
         const config = safeParse(targetReview.separationTimelineConfig)
         const data = safeParse(targetReview.separationTimelineData) || []
         if (!config && data.length === 0) return null
+
+        // separationType peut être posé au niveau config OU déposé sur une cellule (les deux
+        // chemins coexistent selon la version du formulaire utilisée pour créer la fiche).
+        const separationTypeValue = config?.separationType || findFieldInTimeline(data, 'separationType')
+        const materialType = findFieldInTimeline(data, 'materialType')
+        const materialState = findFieldInTimeline(data, 'materialState')
+        const bagMicrons = findFieldInTimeline(data, 'bagMicrons')
+        const screenMicrons = findFieldInTimeline(data, 'screenMicrons')
+        const mesh = (Array.isArray(bagMicrons) && bagMicrons.length) ? bagMicrons
+            : (Array.isArray(screenMicrons) && screenMicrons.length) ? screenMicrons
+                : null
+
         return {
             kind: 'separation',
             label: 'Séparation',
-            technique: SEPARATION_TYPE_LABELS[config?.separationType] || config?.separationType || null,
+            technique: SEPARATION_TYPE_LABELS[separationTypeValue] || separationTypeValue || null,
             stepCount: data.length,
-            detail: config?.batchSize ? `Batch : ${config.batchSize}g` : null
+            detail: config?.batchSize ? `Batch : ${config.batchSize}g` : null,
+            materialType: materialType ? (MATERIAL_TYPE_LABELS[materialType] || materialType) : null,
+            materialState: materialState ? (MATERIAL_STATE_LABELS[materialState] || materialState) : null,
+            mesh: mesh ? mesh.map(m => `${m}µm`).join(', ') : null
         }
     }
 
@@ -101,13 +138,19 @@ export function getPipelineSummaryForEdge(targetReviewType, targetReview) {
     if (targetReviewType === 'edible') {
         const ingredients = safeParse(targetReview.ingredients) || []
         const steps = safeParse(targetReview.etapesPreparation) || []
-        if (ingredients.length === 0 && steps.length === 0) return null
+        const typeComestible = targetReview.typeComestible || null
+        if (ingredients.length === 0 && steps.length === 0 && !typeComestible) return null
         return {
             kind: 'recipe',
             label: 'Recette',
-            technique: null,
+            // Sans type de comestible renseigné, repli générique — avec, on propose directement
+            // la préparation correspondante (ex: "Préparation Cookies").
+            technique: typeComestible ? `Préparation ${typeComestible}` : 'Préparation culinaire',
             stepCount: steps.length,
-            detail: `${ingredients.length} ingrédient${ingredients.length > 1 ? 's' : ''}`
+            detail: `${ingredients.length} ingrédient${ingredients.length > 1 ? 's' : ''}`,
+            typeComestible,
+            dosage: targetReview.dosage || null,
+            dosageUnit: targetReview.dosageUnit || null
         }
     }
 

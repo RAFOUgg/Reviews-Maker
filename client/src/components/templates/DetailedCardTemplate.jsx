@@ -14,6 +14,16 @@ import {
     getResponsiveAdjustments,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
+import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
+
+const TIMELINE_PIPELINES = [
+    { type: 'culture', name: 'Culture', icon: '🌱', dataKey: 'cultureTimelineData', configKey: 'cultureTimelineConfig' },
+    { type: 'curing', name: 'Curing & Maturation', icon: '🔥', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
+    { type: 'extraction', name: 'Extraction', icon: '⚗️', dataKey: 'extractionTimelineData', configKey: 'extractionTimelineConfig' },
+    { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
+];
 
 /**
  * DetailedCardTemplate - Template fiche technique complète et professionnelle
@@ -308,9 +318,16 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     borderRadius: isSquare ? 8 : 10,
                 }}>
                     <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{pipeline.icon}</span>
-                    <span style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>
-                        {pipeline.name}
-                    </span>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
+                        <span style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.textPrimary }}>
+                            {pipeline.name}
+                        </span>
+                        {pipeline.configMeta && (
+                            <span style={{ fontSize: `${fontSize.small * 0.8}px`, color: colors.textSecondary }}>
+                                {pipeline.configMeta}
+                            </span>
+                        )}
+                    </div>
                     <span style={{
                         fontSize: `${fontSize.small * 0.88}px`, color: colors.accent,
                         backgroundColor: colorWithOpacity(colors.accent, 20),
@@ -824,6 +841,45 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         <Section title="Processus de Production" icon="⚗️">
                             <div>
                                 {visiblePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} />)}
+                            </div>
+                        </Section>
+                    );
+                })()}
+
+                {/* Vue interactive PhenoHunt (généalogie) — le composant gère lui-même son
+                    titre et se masque entièrement si aucun arbre n'est lié (évite un
+                    titre de section vide pendant/après le fetch async) */}
+                {contentModules.phenoHuntView && (
+                    <div style={{ marginBottom: `${spacing.section}px` }}>
+                        <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
+                    </div>
+                )}
+
+                {/* Vue interactive Chaîne de production — même logique de masquage async */}
+                {contentModules.productionChainView && (
+                    <div style={{ marginBottom: `${spacing.section}px` }}>
+                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
+                    </div>
+                )}
+
+                {/* Vue interactive Pipelines (grilles cliquables) */}
+                {contentModules.pipelineInteractiveView && (() => {
+                    const activeTimelines = TIMELINE_PIPELINES.filter(t => reviewData[t.dataKey] && reviewData[t.configKey]);
+                    if (activeTimelines.length === 0) return null;
+                    return (
+                        <Section title="Pipelines — vue détaillée" icon="📅">
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.section}px` }}>
+                                {activeTimelines.map(t => (
+                                    <PipelineMiniGrid
+                                        key={t.type}
+                                        type={t.type}
+                                        name={t.name}
+                                        icon={t.icon}
+                                        timelineData={reviewData[t.dataKey]}
+                                        timelineConfig={reviewData[t.configKey]}
+                                        accentColor={colors.accent}
+                                    />
+                                ))}
                             </div>
                         </Section>
                     );

@@ -200,6 +200,11 @@ const DEFAULT_CONFIG = {
         floweringTime: true,
         harvestDate: true,
 
+        // === VUES INTERACTIVES (Fiche Détaillée uniquement) ===
+        phenoHuntView: true,
+        productionChainView: true,
+        pipelineInteractiveView: true,
+
         // === CONTENU TEXTE ===
         conclusion: true,
         notes: true,
@@ -443,7 +448,9 @@ export const useOrchardStore = create(
                 return { config: { ...state.config, sectionStyles: rest } };
             }),
 
-            // Gestion des préréglages
+            // Gestion des préréglages — persistés localement (réactivité immédiate) ET côté
+            // serveur via /api/library/templates (templateType 'orchard') pour qu'ils survivent
+            // au nettoyage du navigateur et apparaissent dans Bibliothèque > Templates.
             savePreset: (name, description = '') => {
                 const preset = {
                     id: Date.now().toString(),
@@ -458,7 +465,53 @@ export const useOrchardStore = create(
                     activePreset: preset.id
                 }));
 
+                fetch('/api/library/templates', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name,
+                        description,
+                        templateType: 'orchard',
+                        format: preset.config.ratio || '1:1',
+                        config: preset.config,
+                    }),
+                }).then(res => (res.ok ? res.json() : null)).then(saved => {
+                    if (!saved) return;
+                    set((state) => ({
+                        presets: state.presets.map(p => p.id === preset.id ? { ...p, remoteId: saved.id } : p)
+                    }));
+                }).catch(() => { /* préréglage local conservé même si la synchro échoue */ });
+
                 return preset;
+            },
+
+            // Récupère les préréglages Orchard sauvegardés côté serveur et les fusionne avec
+            // les préréglages locaux (par remoteId, pour éviter les doublons entre navigateurs).
+            fetchRemotePresets: async () => {
+                try {
+                    const res = await fetch('/api/library/templates?templateType=orchard', { credentials: 'include' });
+                    if (!res.ok) return;
+                    const remote = await res.json();
+                    if (!Array.isArray(remote)) return;
+
+                    set((state) => {
+                        const knownRemoteIds = new Set(state.presets.map(p => p.remoteId).filter(Boolean));
+                        const newOnes = remote
+                            .filter(t => !knownRemoteIds.has(t.id))
+                            .map(t => ({
+                                id: `remote-${t.id}`,
+                                remoteId: t.id,
+                                name: t.name,
+                                description: t.description || '',
+                                config: typeof t.config === 'string' ? JSON.parse(t.config) : t.config,
+                                createdAt: t.createdAt,
+                            }));
+                        return newOnes.length > 0 ? { presets: [...state.presets, ...newOnes] } : {};
+                    });
+                } catch {
+                    // pas bloquant — les préréglages locaux restent utilisables hors-ligne
+                }
             },
 
             loadPreset: (presetId) => {
@@ -471,16 +524,33 @@ export const useOrchardStore = create(
                 });
             },
 
-            deletePreset: (presetId) => set((state) => ({
-                presets: state.presets.filter(p => p.id !== presetId),
-                activePreset: state.activePreset === presetId ? null : state.activePreset
-            })),
+            deletePreset: (presetId) => {
+                const preset = get().presets.find(p => p.id === presetId);
+                set((state) => ({
+                    presets: state.presets.filter(p => p.id !== presetId),
+                    activePreset: state.activePreset === presetId ? null : state.activePreset
+                }));
+                if (preset?.remoteId) {
+                    fetch(`/api/library/templates/${preset.remoteId}`, { method: 'DELETE', credentials: 'include' }).catch(() => {});
+                }
+            },
 
-            updatePreset: (presetId, updates) => set((state) => ({
-                presets: state.presets.map(p =>
-                    p.id === presetId ? { ...p, ...updates } : p
-                )
-            })),
+            updatePreset: (presetId, updates) => {
+                set((state) => ({
+                    presets: state.presets.map(p =>
+                        p.id === presetId ? { ...p, ...updates } : p
+                    )
+                }));
+                const preset = get().presets.find(p => p.id === presetId);
+                if (preset?.remoteId) {
+                    fetch(`/api/library/templates/${preset.remoteId}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name: preset.name, description: preset.description, config: preset.config }),
+                    }).catch(() => {});
+                }
+            },
 
             // Actions de l'interface
             setActivePanel: (panel) => set({ activePanel: panel }),

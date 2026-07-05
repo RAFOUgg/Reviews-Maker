@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
 
@@ -10,6 +10,11 @@ export default function PresetManager() {
     const loadPreset = useOrchardStore((state) => state.loadPreset);
     const deletePreset = useOrchardStore((state) => state.deletePreset);
     const updatePreset = useOrchardStore((state) => state.updatePreset);
+    const fetchRemotePresets = useOrchardStore((state) => state.fetchRemotePresets);
+
+    // Récupère les préréglages sauvegardés côté serveur (autres navigateurs/appareils)
+    // au montage du panneau, fusionnés avec les préréglages locaux par le store.
+    useEffect(() => { fetchRemotePresets(); }, [fetchRemotePresets]);
 
     const [showSaveModal, setShowSaveModal] = useState(false);
     const [presetName, setPresetName] = useState('');

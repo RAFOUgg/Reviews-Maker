@@ -388,7 +388,19 @@ export function extractExtraData(extraData, reviewData = null) {
             // Process
             'purgevide', 'sechage', 'curing',
             // Culture
-            'typeCulture', 'spectre', 'techniquesPropagation'
+            'typeCulture', 'spectre', 'techniquesPropagation',
+            // Cannabinoïdes secondaires
+            'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent',
+            // Culture (Fleur) — cultureTimelineData/Config gérés séparément par extractPipelines
+            'cultureDuration', 'cultureMode',
+            // Récolte (Fleur)
+            'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet',
+            // Curing (tous types)
+            'curingDuration', 'curingType', 'curingTemperature', 'curingHumidity',
+            // Séparation (Hash)
+            'rendementEstime', 'qualiteMatierePremiere', 'tempsTotalSeparation',
+            // Extraction (Concentré)
+            'methodeExtraction'
         ];
         directFields.forEach(f => {
             if (merged[f] === undefined && reviewData[f] !== undefined && reviewData[f] !== null && reviewData[f] !== '') {
@@ -476,6 +488,32 @@ export function extractExtraData(extraData, reviewData = null) {
         { key: 'purgevide', label: 'Purge vide', icon: '🫧', category: 'process' },
         { key: 'sechage', label: 'Séchage', icon: '☀️', category: 'process' },
         { key: 'curing', label: 'Curing', icon: '🫙', category: 'process' },
+        // Cannabinoïdes secondaires
+        { key: 'cbgPercent', label: 'CBG', icon: '🔬', category: 'analytics' },
+        { key: 'cbcPercent', label: 'CBC', icon: '🔬', category: 'analytics' },
+        { key: 'cbnPercent', label: 'CBN', icon: '🔬', category: 'analytics' },
+        { key: 'thcvPercent', label: 'THCV', icon: '🔬', category: 'analytics' },
+        // Culture (Fleur)
+        { key: 'cultureDuration', label: 'Durée de culture (jours)', icon: '📅', category: 'culture' },
+        { key: 'cultureMode', label: 'Mode de culture', icon: '🏠', category: 'culture' },
+        // Récolte (Fleur)
+        { key: 'trichomesTranslucides', label: 'Trichomes translucides (%)', icon: '💎', category: 'harvest' },
+        { key: 'trichomesLaiteux', label: 'Trichomes laiteux (%)', icon: '🌫️', category: 'harvest' },
+        { key: 'trichomesAmbres', label: 'Trichomes ambrés (%)', icon: '🟠', category: 'harvest' },
+        { key: 'modeRecolte', label: 'Mode de récolte', icon: '✂️', category: 'harvest' },
+        { key: 'poidsBrut', label: 'Poids brut (g)', icon: '⚖️', category: 'harvest' },
+        { key: 'poidsNet', label: 'Poids net (g)', icon: '⚖️', category: 'harvest' },
+        // Curing (tous types)
+        { key: 'curingDuration', label: 'Durée curing', icon: '🫙', category: 'curing' },
+        { key: 'curingType', label: 'Type de curing', icon: '❄️', category: 'curing' },
+        { key: 'curingTemperature', label: 'Température curing (°C)', icon: '🌡️', category: 'curing' },
+        { key: 'curingHumidity', label: 'Humidité curing (%)', icon: '💧', category: 'curing' },
+        // Séparation (Hash)
+        { key: 'rendementEstime', label: 'Rendement estimé (%)', icon: '📈', category: 'separation' },
+        { key: 'qualiteMatierePremiere', label: 'Qualité matière première', icon: '🌿', category: 'separation' },
+        { key: 'tempsTotalSeparation', label: 'Temps total séparation (min)', icon: '⏱️', category: 'separation' },
+        // Extraction (Concentré)
+        { key: 'methodeExtraction', label: "Méthode d'extraction", icon: '⚗️', category: 'extraction' },
     ];
 
     const results = fieldDefs
@@ -504,6 +542,26 @@ export function extractExtraData(extraData, reviewData = null) {
     console.log('📦 extractExtraData - Found:', results.length, 'fields from merged data');
 
     return results;
+}
+
+/**
+ * Construit un court résumé lisible des métadonnées d'une xxxTimelineConfig
+ * (interval, durée, mode...) — jusqu'ici jamais lues, seul le xxxTimelineData
+ * (les étapes) était affiché.
+ * @param {*} rawConfig - JSON string ou objet {interval, duration, mode, ...}
+ * @returns {string|null}
+ */
+function buildTimelineConfigMeta(rawConfig) {
+    const config = safeParse(rawConfig, null);
+    if (!config || typeof config !== 'object') return null;
+    const parts = [];
+    if (config.interval) parts.push(`Intervalle: ${config.interval}`);
+    if (config.duration != null) parts.push(`Durée: ${config.duration}`);
+    if (config.mode) parts.push(`Mode: ${config.mode}`);
+    if (config.extractionMethod) parts.push(`Méthode: ${config.extractionMethod}`);
+    if (config.separationType) parts.push(`Type: ${config.separationType}`);
+    if (config.batchSize) parts.push(`Lot: ${config.batchSize}`);
+    return parts.length > 0 ? parts.join(' · ') : null;
 }
 
 /**
@@ -609,8 +667,48 @@ export function extractPipelines(reviewData) {
                 rawSteps: arr.map(step =>
                     (typeof step === 'object' && step !== null) ? step : { label: String(step) }
                 ),
+                configMeta: buildTimelineConfigMeta(reviewData.cultureTimelineConfig),
             });
         }
+    }
+
+    // Extraction (Concentré) / Séparation (Hash) — même pattern que culture/curing,
+    // jamais couvert par pipelineTypes car les données vivent dans xxxTimelineData
+    const timelineDefs = [
+        { dataKey: 'extractionTimelineData', configKey: 'extractionTimelineConfig', pipelineKey: 'pipelineExtraction', name: 'Extraction', icon: '⚗️' },
+        { dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig', pipelineKey: 'pipelineSeparation', name: 'Séparation', icon: '🔬' },
+    ];
+    for (const { dataKey, configKey, pipelineKey, name, icon } of timelineDefs) {
+        const timeline = reviewData[dataKey];
+        if (!timeline) continue;
+        const arr = asArray(timeline);
+        if (arr.length > 0 && !pipelines.find(p => p.key === pipelineKey)) {
+            pipelines.push({
+                key: dataKey,
+                name,
+                icon,
+                steps: arr.map(step => {
+                    if (typeof step === 'object' && step !== null) {
+                        const date = step.date || step.semaine || step.phase || step.jour || step.timestamp || '';
+                        const note = step.note || step.comment || extractLabel(step);
+                        return date ? `${date}: ${note}` : note;
+                    }
+                    return extractLabel(step);
+                }),
+                rawSteps: arr.map(step =>
+                    (typeof step === 'object' && step !== null) ? step : { label: String(step) }
+                ),
+                configMeta: buildTimelineConfigMeta(reviewData[configKey]),
+            });
+        }
+    }
+
+    // Attache aussi les métadonnées de config (interval/mode/durée) aux pipelines curing déjà
+    // poussés plus haut (curingTimeline / pipelineCuring), sans les dupliquer.
+    const curingConfigMeta = buildTimelineConfigMeta(reviewData.curingTimelineConfig);
+    if (curingConfigMeta) {
+        const curingPipeline = pipelines.find(p => p.key === 'curingTimeline' || p.key === 'pipelineCuring');
+        if (curingPipeline && !curingPipeline.configMeta) curingPipeline.configMeta = curingConfigMeta;
     }
 
     return pipelines;

@@ -557,23 +557,19 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         }
 
         try {
-            // Capturer la configuration actuelle
-            const templateConfig = {
-                name: templateName.trim(),
-                description: templateDescription.trim(),
-                baseTemplate: selectedTemplate,
-                format: format,
-                watermark: watermark,
-                productType: productType,
-                createdAt: new Date().toISOString()
-            };
-
-            // Sauvegarder via API
+            // Sauvegarder via API — templateType/format/config sont requis par
+            // server-new/routes/library.js (missing_fields 400 sinon)
             const response = await fetch('/api/library/templates', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 credentials: 'include',
-                body: JSON.stringify(templateConfig)
+                body: JSON.stringify({
+                    name: templateName.trim(),
+                    description: templateDescription.trim(),
+                    templateType: selectedTemplate || 'custom',
+                    format: format || '1:1',
+                    config: { baseTemplate: selectedTemplate, format, watermark, productType },
+                })
             });
 
             if (!response.ok) {

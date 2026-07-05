@@ -31,6 +31,44 @@ export default function CustomTemplate({ config, reviewData, dimensions }) {
         if (!contentModules[key]) return null;
         const val = resolveValue(reviewData, key);
 
+        // Pipelines (timelines culture/curing/extraction/séparation) — steps riches (objets avec
+        // date/température/humidité/note), pas de simples tags aplatis comme le ferait le `default`
+        if (findFieldDef(key)?.type === 'pipeline') {
+            const steps = asArray(val);
+            if (steps.length === 0) return null;
+            return (
+                <div key={key} className="col-span-12" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    <span style={{ fontSize: `${(typography.textSize || 14) - 2}px`, color: colors.textSecondary }}>
+                        {findFieldDef(key)?.label || key}
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                        {steps.slice(0, 12).map((step, i) => {
+                            const isObj = step && typeof step === 'object';
+                            const label = isObj
+                                ? (step.label || step.date || step.semaine || step.phase || step.jour || `${i + 1}`)
+                                : extractLabel(step);
+                            const temp = isObj ? (step.temperature ?? step.temp) : null;
+                            const humidity = isObj ? (step.humidity ?? step.humidite) : null;
+                            const tooltip = [temp != null ? `${temp}°C` : '', humidity != null ? `${humidity}%` : ''].filter(Boolean).join(' · ');
+                            return (
+                                <span key={i} title={tooltip || undefined} style={{
+                                    fontSize: `${(typography.textSize || 14) - 2}px`, padding: '2px 8px', borderRadius: '12px',
+                                    backgroundColor: colorWithOpacity(colors.accent, 18), color: colors.accent, fontWeight: '500',
+                                }}>
+                                    {String(label).slice(0, 12)}
+                                </span>
+                            );
+                        })}
+                        {steps.length > 12 && (
+                            <span style={{ fontSize: `${(typography.textSize || 14) - 2}px`, color: colors.textSecondary, alignSelf: 'center' }}>
+                                +{steps.length - 12}
+                            </span>
+                        )}
+                    </div>
+                </div>
+            );
+        }
+
         switch (key) {
             case 'title':
             case 'nomCommercial':

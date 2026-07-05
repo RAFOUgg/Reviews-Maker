@@ -120,6 +120,10 @@ export const DRAGGABLE_FIELDS = {
     levels: [
         { id: 'thcLevel', label: 'Niveau THC', icon: '🔥', type: 'text' },
         { id: 'cbdLevel', label: 'Niveau CBD', icon: '🛡️', type: 'text' },
+        { id: 'cbgLevel', label: 'Niveau CBG', icon: '🔬', type: 'text' },
+        { id: 'cbcLevel', label: 'Niveau CBC', icon: '🔬', type: 'text' },
+        { id: 'cbnLevel', label: 'Niveau CBN', icon: '🔬', type: 'text' },
+        { id: 'thcvLevel', label: 'Niveau THCV', icon: '🔬', type: 'text' },
         { id: 'indicaRatio', label: 'Ratio Indica/Sativa', icon: '⚖️', type: 'text' },
         { id: 'strainRatio', label: 'Ratio strain', icon: '📊', type: 'text' }
     ],
@@ -131,8 +135,28 @@ export const DRAGGABLE_FIELDS = {
         { id: 'pipelineSeparation', label: 'Pipeline Séparation', icon: '🧪', type: 'pipeline' },
         { id: 'pipelinePurification', label: 'Pipeline Purification', icon: '✨', type: 'pipeline' },
         { id: 'fertilizationPipeline', label: 'Pipeline Fertilisation', icon: '🌾', type: 'pipeline' },
+        { id: 'cultureTimelineData', label: 'Timeline Culture', icon: '🌱', type: 'pipeline' },
+        { id: 'curingTimelineData', label: 'Timeline Curing', icon: '🔥', type: 'pipeline' },
+        { id: 'extractionTimelineData', label: 'Timeline Extraction', icon: '⚗️', type: 'pipeline' },
+        { id: 'separationTimelineData', label: 'Timeline Séparation', icon: '🔬', type: 'pipeline' },
         { id: 'substratMix', label: 'Substrat Mix', icon: '🧩', type: 'substrat-mix' },
         { id: 'purgevide', label: 'Purge à vide', icon: '🫧', type: 'boolean' }
+    ],
+
+    // --- CULTURE / CURING / RÉCOLTE ---
+    harvest: [
+        { id: 'cultureDuration', label: 'Durée de culture (jours)', icon: '📅', type: 'text' },
+        { id: 'cultureMode', label: 'Mode de culture', icon: '🏠', type: 'text' },
+        { id: 'trichomesTranslucides', label: 'Trichomes translucides (%)', icon: '💎', type: 'slider' },
+        { id: 'trichomesLaiteux', label: 'Trichomes laiteux (%)', icon: '🌫️', type: 'slider' },
+        { id: 'trichomesAmbres', label: 'Trichomes ambrés (%)', icon: '🟠', type: 'slider' },
+        { id: 'modeRecolte', label: 'Mode de récolte', icon: '✂️', type: 'text' },
+        { id: 'poidsBrut', label: 'Poids brut (g)', icon: '⚖️', type: 'text' },
+        { id: 'poidsNet', label: 'Poids net (g)', icon: '⚖️', type: 'text' },
+        { id: 'curingDuration', label: 'Durée curing', icon: '🫙', type: 'text' },
+        { id: 'curingType', label: 'Type de curing', icon: '❄️', type: 'text' },
+        { id: 'curingTemperature', label: 'Température curing (°C)', icon: '🌡️', type: 'slider' },
+        { id: 'curingHumidity', label: 'Humidité curing (%)', icon: '💧', type: 'slider' }
     ],
 
     // --- CONTENU TEXTE ---
@@ -164,6 +188,7 @@ export const SECTION_LABELS = {
     sensorial: '🌸 Données Sensorielles',
     levels: '📊 Niveaux THC/CBD',
     pipelines: '⚗️ Pipelines & Culture',
+    harvest: '🌾 Culture / Curing / Récolte',
     content: '📝 Contenu Texte',
     stickers: '🎨 Stickers & Déco'
 };
