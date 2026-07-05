@@ -31,6 +31,14 @@ const useProductionChainStore = create(
             showEdgeForm: false,
             edgeFormData: null,
 
+            // STATE - CELL DATA (import de cellules de pipeline vers un nœud/liaison)
+            // cellPicker : { targetType: 'node'|'edge', targetIds: string[] } | null
+            cellPicker: null,
+            // cellClipboard : cellules copiées (sans id — un nouvel id est généré à chaque collage)
+            cellClipboard: [],
+            // editingCell : { targetType: 'node'|'edge', targetId: string, cell: object } | null
+            editingCell: null,
+
             // STATE - CANVAS
             canvasLoading: false,
 
@@ -95,16 +103,28 @@ const useProductionChainStore = create(
 
                     const chain = await response.json();
 
+                    const parseCellData = (raw) => {
+                        if (Array.isArray(raw)) return raw;
+                        if (typeof raw !== 'string') return [];
+                        try { return JSON.parse(raw) } catch { return [] }
+                    };
+
                     const parsedNodes = chain.nodes.map(n => ({
                         ...n,
-                        position: typeof n.position === 'string' ? JSON.parse(n.position) : n.position
+                        position: typeof n.position === 'string' ? JSON.parse(n.position) : n.position,
+                        cellData: parseCellData(n.cellData)
+                    }));
+
+                    const parsedEdges = (chain.edges || []).map(e => ({
+                        ...e,
+                        cellData: parseCellData(e.cellData)
                     }));
 
                     set({
                         selectedChainId: chainId,
                         selectedChain: { id: chain.id, name: chain.name, description: chain.description, isPublic: chain.isPublic },
                         nodes: parsedNodes,
-                        edges: chain.edges || [],
+                        edges: parsedEdges,
                         canvasLoading: false
                     });
 
@@ -403,6 +423,87 @@ const useProductionChainStore = create(
             },
 
             // ============================================================================
+            // CELL DATA - Import/édition des cellules de pipeline attachées à un nœud/liaison
+            // ============================================================================
+            // targetIds peut être vide (ouverture depuis le fond du canvas) — la modale laisse
+            // alors choisir librement les cibles parmi tous les nœuds/liaisons de la chaîne.
+            openCellPicker: (targetType, targetIds = []) => {
+                const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+                set({ cellPicker: { targetType, targetIds: ids } });
+            },
+
+            closeCellPicker: () => set({ cellPicker: null }),
+
+            openCellEditor: (targetType, targetId, cell) => set({ editingCell: { targetType, targetId, cell } }),
+            closeCellEditor: () => set({ editingCell: null }),
+
+            // Fusionne `cells` (snapshots sans id, cf. chainCellPickerModal) dans chaque cible —
+            // un id + une date d'attache sont générés à l'attache, jamais côté picker, pour que
+            // coller la même sélection sur plusieurs cibles ne collisionne pas sur le même id.
+            attachCellsToTargets: async (targetType, targetIds, cells) => {
+                if (!cells || cells.length === 0) return { data: [] };
+                const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+                const state = get();
+                const collection = targetType === 'node' ? state.nodes : state.edges;
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+
+                const results = await Promise.all(ids.map(targetId => {
+                    const target = collection.find(t => t.id === targetId);
+                    if (!target) return Promise.resolve({ error: 'Target not found' });
+                    const existing = Array.isArray(target.cellData) ? target.cellData : [];
+                    const stamped = cells.map(cell => ({
+                        ...cell,
+                        id: crypto.randomUUID(),
+                        attachedAt: new Date().toISOString()
+                    }));
+                    return updateFn(targetId, { cellData: [...existing, ...stamped] });
+                }));
+
+                return { data: results };
+            },
+
+            // newData remplace intégralement le contenu de la cellule (pas un merge) — permet à
+            // l'éditeur de vider un champ, comme PipelineCellEditor.onSave côté fiche technique.
+            updateAttachedCell: async (targetType, targetId, cellId, newData) => {
+                const state = get();
+                const collection = targetType === 'node' ? state.nodes : state.edges;
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+                const target = collection.find(t => t.id === targetId);
+                if (!target) return { error: 'Target not found' };
+
+                const existing = Array.isArray(target.cellData) ? target.cellData : [];
+                const cellData = existing.map(cell => cell.id === cellId
+                    ? { ...cell, data: newData }
+                    : cell);
+
+                return updateFn(targetId, { cellData });
+            },
+
+            removeAttachedCell: async (targetType, targetId, cellId) => {
+                const state = get();
+                const collection = targetType === 'node' ? state.nodes : state.edges;
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+                const target = collection.find(t => t.id === targetId);
+                if (!target) return { error: 'Target not found' };
+
+                const existing = Array.isArray(target.cellData) ? target.cellData : [];
+                return updateFn(targetId, { cellData: existing.filter(cell => cell.id !== cellId) });
+            },
+
+            // Copie une ou plusieurs cellules déjà attachées (menu contextuel "Copier") — on ne
+            // garde que le contenu réimportable, l'id/attachedAt sont régénérés au collage.
+            copyCells: (cells) => {
+                const normalized = cells.map(({ id, attachedAt, ...rest }) => ({ ...rest }));
+                set({ cellClipboard: normalized });
+            },
+
+            pasteCells: async (targetType, targetIds) => {
+                const state = get();
+                if (state.cellClipboard.length === 0) return { data: [] };
+                return state.attachCellsToTargets(targetType, targetIds, state.cellClipboard);
+            },
+
+            // ============================================================================
             // UI - Selection & Forms
             // ============================================================================
             selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
@@ -459,7 +560,9 @@ const useProductionChainStore = create(
                     selectedChainId: null,
                     selectedChain: null,
                     nodes: [],
-                    edges: []
+                    edges: [],
+                    cellPicker: null,
+                    editingCell: null
                 });
             },
 
@@ -474,6 +577,9 @@ const useProductionChainStore = create(
                     selectedEdgeId: null,
                     showEdgeForm: false,
                     edgeFormData: null,
+                    cellPicker: null,
+                    cellClipboard: [],
+                    editingCell: null,
                     chainLoading: false,
                     canvasLoading: false,
                     chainError: null

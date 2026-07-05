@@ -29,6 +29,8 @@ import ChainEdgeContextMenu from './ChainEdgeContextMenu';
 import ChainPaneContextMenu from './ChainPaneContextMenu';
 import ChainEdgeFormModal from './ChainEdgeFormModal';
 import ChainFormModal from './ChainFormModal';
+import ChainCellPickerModal from './ChainCellPickerModal';
+import ChainCellEditorModal from './ChainCellEditorModal';
 import ConfirmModal from '../shared/ConfirmModal';
 import { Download, Upload, RotateCcw, FileImage, Edit2 } from 'lucide-react';
 
@@ -93,7 +95,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 reviewId: node.reviewId,
                 color: node.color || '#10b981',
                 selected: store.selectedNodeId === node.id,
-                reviewOrphaned: node.reviewOrphaned
+                reviewOrphaned: node.reviewOrphaned,
+                cellCount: Array.isArray(node.cellData) ? node.cellData.length : 0
             },
             position: node.position || { x: 0, y: 0 },
             type: 'reviewProduct'
@@ -116,7 +119,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 sourceHandle: edge.sourceHandle,
                 targetHandle: edge.targetHandle,
                 onEndpointHandleChange: handleEdgeEndpointChange,
-                onEndpointReconnect: handleEdgeEndpointReconnect
+                onEndpointReconnect: handleEdgeEndpointReconnect,
+                cellCount: Array.isArray(edge.cellData) ? edge.cellData.length : 0
             }
         }));
 
@@ -455,6 +459,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         x={contextMenu.x}
                         y={contextMenu.y}
                         onClose={closeContextMenu}
+                        readOnly={readOnly}
                     />
                 )}
             </>}
@@ -465,6 +470,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 {showRenameModal && store.selectedChain && (
                     <ChainFormModal chain={store.selectedChain} onClose={() => setShowRenameModal(false)} />
                 )}
+                {store.cellPicker && <ChainCellPickerModal />}
+                {store.editingCell && <ChainCellEditorModal />}
                 <ConfirmModal
                     open={!!deleteConfirm}
                     title={deleteConfirm?.type === 'node' ? 'Retirer ce produit' : 'Supprimer cette transformation'}

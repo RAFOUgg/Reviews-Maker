@@ -4,6 +4,31 @@
 
 import { isValidReviewType } from '../utils/reviewTypeMap.js'
 
+// Cellules de pipeline attachées à un nœud/liaison (cf. schema.prisma ChainNode/ChainEdge.cellData) —
+// validation légère : structure attendue côté client, on ne fait que borner la taille pour éviter
+// les abus (payload énorme) et vérifier que c'est bien un tableau d'objets sérialisables.
+const MAX_ATTACHED_CELLS = 200
+const MAX_CELL_DATA_BYTES = 300_000
+
+const validateCellData = (cellData) => {
+    if (cellData === undefined) return null
+    if (!Array.isArray(cellData)) return "cellData must be an array"
+    if (cellData.length > MAX_ATTACHED_CELLS) return `cellData cannot contain more than ${MAX_ATTACHED_CELLS} cells`
+    if (cellData.some(c => typeof c !== "object" || c === null || Array.isArray(c))) {
+        return "Each attached cell must be an object"
+    }
+    let serialized
+    try {
+        serialized = JSON.stringify(cellData)
+    } catch {
+        return "cellData is not serializable"
+    }
+    if (serialized.length > MAX_CELL_DATA_BYTES) {
+        return "cellData payload is too large"
+    }
+    return null
+}
+
 const validateChainCreation = (req, res, next) => {
     const { name, description, isPublic } = req.body
 
@@ -72,7 +97,7 @@ const validateChainNodeCreation = (req, res, next) => {
 }
 
 const validateChainNodeUpdate = (req, res, next) => {
-    const { position, color, reviewType, reviewId } = req.body
+    const { position, color, reviewType, reviewId, cellData } = req.body
 
     if (position !== undefined) {
         if (position && (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number")) {
@@ -84,6 +109,11 @@ const validateChainNodeUpdate = (req, res, next) => {
         if (color && (typeof color !== "string" || !/#[0-9A-F]{6}/i.test(color))) {
             return res.status(400).json({ error: "Color must be a valid hex color code" })
         }
+    }
+
+    const cellDataError = validateCellData(cellData)
+    if (cellDataError) {
+        return res.status(400).json({ error: cellDataError })
     }
 
     // reviewId peut être explicitement `null` (détacher un lien cassé) ou une nouvelle
@@ -102,7 +132,7 @@ const validateChainNodeUpdate = (req, res, next) => {
 }
 
 const validateChainEdgeCreation = (req, res, next) => {
-    const { sourceNodeId, targetNodeId, technique, notes } = req.body
+    const { sourceNodeId, targetNodeId, technique, notes, cellData } = req.body
 
     if (!sourceNodeId || typeof sourceNodeId !== "string" || sourceNodeId.trim().length === 0) {
         return res.status(400).json({ error: "Source node ID is required" })
@@ -124,11 +154,16 @@ const validateChainEdgeCreation = (req, res, next) => {
         return res.status(400).json({ error: "Notes must be less than 500 characters" })
     }
 
+    const cellDataError = validateCellData(cellData)
+    if (cellDataError) {
+        return res.status(400).json({ error: cellDataError })
+    }
+
     next()
 }
 
 const validateChainEdgeUpdate = (req, res, next) => {
-    const { technique, notes } = req.body
+    const { technique, notes, cellData } = req.body
 
     if (technique !== undefined) {
         if (technique && (typeof technique !== "string" || technique.length > 200)) {
@@ -140,6 +175,11 @@ const validateChainEdgeUpdate = (req, res, next) => {
         if (notes && (typeof notes !== "string" || notes.length > 500)) {
             return res.status(400).json({ error: "Notes must be less than 500 characters" })
         }
+    }
+
+    const cellDataError = validateCellData(cellData)
+    if (cellDataError) {
+        return res.status(400).json({ error: cellDataError })
     }
 
     next()

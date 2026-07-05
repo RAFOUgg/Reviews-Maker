@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Layers } from 'lucide-react';
 import { TYPE_META } from '../../utils/reviewTypeMeta';
 import { getImageUrl } from '../../utils/imageUtils';
 
@@ -57,6 +57,32 @@ const ReviewNode = ({ data, selected }) => {
             {data.reviewOrphaned && (
                 <div className="node-orphan-badge" title="La review liée à ce produit a été supprimée">
                     <AlertTriangle size={11} strokeWidth={2.5} />
+                </div>
+            )}
+
+            {data.cellCount > 0 && (
+                <div
+                    className="node-cell-badge"
+                    title={`${data.cellCount} cellule${data.cellCount > 1 ? 's' : ''} de pipeline attachée${data.cellCount > 1 ? 's' : ''}`}
+                    style={{
+                        position: 'absolute',
+                        bottom: -4,
+                        right: -4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        padding: '1px 5px',
+                        borderRadius: 999,
+                        background: 'rgba(16, 185, 129, 0.9)',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        lineHeight: '14px',
+                        border: '1px solid rgba(255,255,255,0.6)'
+                    }}
+                >
+                    <Layers size={9} strokeWidth={2.5} />
+                    {data.cellCount}
                 </div>
             )}
 

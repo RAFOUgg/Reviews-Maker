@@ -8,6 +8,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
+import { Download, Clipboard, Copy } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
 const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
@@ -70,6 +71,28 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
+    const attachedCells = Array.isArray(node?.cellData) ? node.cellData : [];
+
+    const handleImportCells = () => {
+        store.openCellPicker('node', [nodeId]);
+        onClose();
+    };
+
+    const handleCopyAllCells = () => {
+        store.copyCells(attachedCells);
+        onClose();
+    };
+
+    const handlePasteCells = () => {
+        store.pasteCells('node', [nodeId]);
+        onClose();
+    };
+
+    const handleEditCell = (cell) => {
+        store.openCellEditor('node', nodeId, cell);
+        onClose();
+    };
+
     return (
         <div ref={menuRef} className="context-menu" style={{ left: `${pos.left}px`, top: `${pos.top}px` }}>
             {!readOnly && (
@@ -94,6 +117,33 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                     <button className="context-menu-item" onClick={handleCenterView}>
                         🎯 Centrer la vue sur ce nœud
                     </button>
+                    <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    <button className="context-menu-item" onClick={handleImportCells}>
+                        <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Importer des cellules de pipeline...
+                    </button>
+                    {attachedCells.length > 0 && (
+                        <button className="context-menu-item" onClick={handleCopyAllCells}>
+                            <Copy size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                            Copier les {attachedCells.length} cellule{attachedCells.length > 1 ? 's' : ''} attachée{attachedCells.length > 1 ? 's' : ''}
+                        </button>
+                    )}
+                    {store.cellClipboard.length > 0 && (
+                        <button className="context-menu-item" onClick={handlePasteCells}>
+                            <Clipboard size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                            Coller {store.cellClipboard.length} cellule{store.cellClipboard.length > 1 ? 's' : ''} ici
+                        </button>
+                    )}
+                    {attachedCells.length > 0 && (
+                        <>
+                            <div style={{ padding: '4px 12px', fontSize: '11px', color: '#888' }}>Cellules attachées</div>
+                            {attachedCells.map(cell => (
+                                <button key={cell.id} className="context-menu-item" onClick={() => handleEditCell(cell)} title="Éditer / retirer cette cellule">
+                                    ✏️ {cell.pipelineLabel} — {cell.cellLabel}
+                                </button>
+                            ))}
+                        </>
+                    )}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                     <button className="context-menu-item danger" onClick={handleRemove}>
                         🗑️ Retirer du graphe

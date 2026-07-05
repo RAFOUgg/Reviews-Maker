@@ -1604,6 +1604,11 @@ model ChainNode {
   position String // JSON: {x: number, y: number}
   color    String @default("#10b981")
 
+  // Cellules de pipeline (culture/curing/separation/extraction) importées depuis une fiche
+  // technique et attachées à ce nœud — snapshot au moment de l'import, pas une référence live.
+  // JSON: Array<{ id, sourceReviewId, sourceReviewType, sourceLabel, pipelineType, pipelineLabel, timestamp, cellLabel, data, attachedAt }>
+  cellData String @default("[]")
+
   sourceEdges ChainEdge[] @relation("chainSourceNode")
   targetEdges ChainEdge[] @relation("chainTargetNode")
 
@@ -1639,6 +1644,10 @@ model ChainEdge {
   waypointY    Float?
   sourceHandle String?
   targetHandle String?
+
+  // Même mécanisme que ChainNode.cellData — une liaison peut aussi porter des cellules de
+  // pipeline (ex: les jours de curing propres à cette transformation).
+  cellData String @default("[]")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

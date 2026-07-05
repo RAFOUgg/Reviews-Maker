@@ -9,10 +9,12 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useReactFlow } from 'reactflow';
-import { RotateCcw } from 'lucide-react';
+import { RotateCcw, Download } from 'lucide-react';
+import useProductionChainStore from '../../store/useProductionChainStore';
 
-const ChainPaneContextMenu = ({ x, y, onClose }) => {
+const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
     const { fitView } = useReactFlow();
+    const store = useProductionChainStore();
     const menuRef = useRef(null);
 
     useEffect(() => {
@@ -25,6 +27,13 @@ const ChainPaneContextMenu = ({ x, y, onClose }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
+    const handleImportBulk = () => {
+        // Aucune cible pré-sélectionnée — la modale laisse choisir librement parmi tous les
+        // nœuds/liaisons de la chaîne (import groupé "vers plusieurs bulles/liaisons").
+        store.openCellPicker('node', []);
+        onClose();
+    };
+
     return (
         <div ref={menuRef} className="context-menu" style={{ left: `${x}px`, top: `${y}px` }}>
             <button
@@ -34,6 +43,12 @@ const ChainPaneContextMenu = ({ x, y, onClose }) => {
                 <RotateCcw className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
                 Centrer / Réinitialiser le zoom
             </button>
+            {!readOnly && (
+                <button className="context-menu-item" onClick={handleImportBulk}>
+                    <Download className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
+                    Importer des cellules vers plusieurs bulles/liaisons...
+                </button>
+            )}
         </div>
     );
 };
