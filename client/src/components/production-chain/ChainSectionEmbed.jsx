@@ -52,7 +52,22 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reviewId, reviewType]);
 
-    if (!reviewId) return null;
+    // Pas encore de brouillon sauvegardé (nom pas encore renseigné, autosave pas encore
+    // déclenché) — un ChainNode a besoin d'un reviewId réel. Bouton visible mais désactivé
+    // plutôt que silencieusement absent, pour que ce ne soit pas pris pour un bug.
+    if (!reviewId) {
+        return (
+            <button
+                type="button"
+                disabled
+                title="Enregistrez d'abord un brouillon (donnez un nom à la fiche) pour accéder à la chaîne de production"
+                className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm bg-white/5 border border-white/10 text-white/30 cursor-not-allowed"
+            >
+                <GitBranch className="w-4 h-4" />
+                Créer une chaîne de production
+            </button>
+        );
+    }
 
     const handleClose = () => {
         setOpen(false);

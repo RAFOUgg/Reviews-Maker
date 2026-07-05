@@ -26,7 +26,9 @@
       "Bash(node --check routes/library.js)",
       "Bash(node --check routes/flower-reviews.js)",
       "Bash(node --check scripts/backfill-cultivar-links.js)",
-      "Bash(node scripts/backfill-cultivar-links.js)"
+      "Bash(node scripts/backfill-cultivar-links.js)",
+      "Bash(node \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit/capture.mjs\" \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")",
+      "Bash(node _mobile_audit_capture.mjs \"c:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/6fb926d7-2c08-472b-b309-136271cc2c0c/scratchpad/mobile-audit\")"
     ]
   }
 }
