@@ -72,6 +72,48 @@ function formatWeeksRange(min, max) {
     return min === max ? `${min} sem` : `${min}-${max} sem`
 }
 
+// Libellé lisible pour une entrée de `linkedReferences` (cf. server-new/utils/cultivarReferences.js)
+function formatRefText(field, ref) {
+    if (field === 'type') return CULTIVAR_TYPES.find(t => t.id === ref.value)?.label || ref.value
+    if (field === 'indicaRatio') return `${ref.value}% Indica`
+    if (field === 'thc' || field === 'cbd') {
+        const range = formatPctRange(ref.min, ref.max)
+        return range ? `${range}${ref.source === 'lab_tested' ? ' 🧪' : ''}` : null
+    }
+    if (field === 'floweringWeeks') return `${Math.round(ref.value)} sem`
+    if (field === 'yield') return `${ref.value} ${YIELD_UNIT_LABELS[ref.unit] || ref.unit || ''}`
+    return String(ref.value)
+}
+
+// Bloc lecture affiché à la place d'un input manuel quand des sources liées existent pour ce
+// champ (review Fleur / nœud PhenoHunt) — avec bascule "Remplacer manuellement" en secours.
+function LinkedFieldNote({ field, refs, onOverride }) {
+    if (!refs?.length) return null
+    return (
+        <div className="flex items-start justify-between gap-2 px-3 py-2.5 rounded-xl bg-green-500/5 border border-green-500/20">
+            <div className="text-xs text-white/70 space-y-1 min-w-0">
+                {refs.map((ref, i) => {
+                    const text = formatRefText(field, ref)
+                    if (!text) return null
+                    return (
+                        <p key={i} className="truncate">
+                            <span className="text-white">{text}</span>
+                            <span className="text-white/40"> — {ref.origin.label}{ref.origin.date ? ` · ${formatTreeDate(ref.origin.date)}` : ''}</span>
+                        </p>
+                    )
+                })}
+            </div>
+            <button
+                type="button"
+                onClick={onOverride}
+                className="text-xs text-white/40 hover:text-white/70 whitespace-nowrap flex-shrink-0"
+            >
+                🔓 Remplacer
+            </button>
+        </div>
+    )
+}
+
 export default function CultivarsTab({ userTier = 'producer' }) {
     const toast = useToast()
     const navigate = useNavigate()
@@ -84,6 +126,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     const [searchQuery, setSearchQuery] = useState('')
     const [isCreating, setIsCreating] = useState(false)
     const [editingCultivar, setEditingCultivar] = useState(null)
+    // Champs pour lesquels on affiche l'input manuel malgré des références liées (reviews/nœuds
+    // PhenoHunt) — initialisé dans openEdit() à partir des colonnes déjà remplies à la main,
+    // et modifiable via le bouton "Remplacer manuellement" de LinkedFieldNote.
+    const [manualOverrides, setManualOverrides] = useState(new Set())
     const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
     // Reviews Fleurs importables comme cultivars (bibliothèque vide malgré des reviews/arbres
     // existants — la bibliothèque de cultivars est une table à part, jamais peuplée
@@ -226,10 +272,25 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         })
         setIsCreating(false)
         setEditingCultivar(null)
+        setManualOverrides(new Set())
     }
 
     // Ouvrir édition
     const openEdit = (cultivar) => {
+        // Un champ démarre en mode "input manuel" soit parce qu'il a déjà une valeur manuelle en
+        // base (elle prime de toute façon sur les références liées côté API), soit parce qu'il
+        // n'a aucune référence liée à afficher.
+        const initialOverrides = new Set()
+        if (cultivar.breeder) initialOverrides.add('breeder')
+        if (cultivar.type) initialOverrides.add('type')
+        if (cultivar.indicaRatio !== null && cultivar.indicaRatio !== undefined) initialOverrides.add('indicaRatio')
+        if (cultivar.thcMin !== null && cultivar.thcMin !== undefined) initialOverrides.add('thc')
+        if (cultivar.cbdMin !== null && cultivar.cbdMin !== undefined) initialOverrides.add('cbd')
+        if (cultivar.labReportUrl) initialOverrides.add('labReportUrl')
+        if (cultivar.floweringMinWeeks !== null && cultivar.floweringMinWeeks !== undefined) initialOverrides.add('floweringWeeks')
+        if (cultivar.yieldValue !== null && cultivar.yieldValue !== undefined) initialOverrides.add('yield')
+        setManualOverrides(initialOverrides)
+
         setFormData({
             name: cultivar.name || '',
             breeder: cultivar.breeder || '',
@@ -248,6 +309,13 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         })
         setEditingCultivar(cultivar)
     }
+
+    // Références liées (reviews/nœuds PhenoHunt) du cultivar en cours d'édition — vide en création.
+    const linkedRefs = editingCultivar?.linkedReferences || {}
+    // Un champ s'affiche en lecture (bloc LinkedFieldNote) seulement s'il a des références liées
+    // ET que l'utilisateur n'a pas demandé à le remplacer manuellement.
+    const showManualInput = (field) => !linkedRefs[field]?.length || manualOverrides.has(field)
+    const overrideField = (field) => setManualOverrides(prev => new Set(prev).add(field))
 
     // Sauvegarder cultivar
     const saveCultivar = async () => {
@@ -307,7 +375,11 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
     // Rendu carte cultivar
     const renderCultivarCard = (cultivar, index) => {
-        const typeConfig = CULTIVAR_TYPES.find(t => t.id === cultivar.type)
+        // effective* = valeur manuelle si renseignée, sinon connue depuis une review/un nœud
+        // PhenoHunt lié (calculé côté API, cf. server-new/utils/cultivarReferences.js) — les
+        // cartes doivent rester correctes même pour un cultivar jamais rempli à la main.
+        const typeConfig = CULTIVAR_TYPES.find(t => t.id === (cultivar.effectiveType || cultivar.type))
+        const linkedCount = Object.values(cultivar.linkedReferences || {}).reduce((sum, arr) => sum + arr.length, 0)
 
         if (viewMode === 'list') {
             return (
@@ -377,7 +449,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         </div>
                         <div className="flex-1 min-w-0">
                             <h3 className="font-bold text-white truncate">{cultivar.name}</h3>
-                            <p className="text-sm text-white/50">{cultivar.breeder || 'Breeder inconnu'}</p>
+                            <p className="text-sm text-white/50">{cultivar.effectiveBreeder || cultivar.breeder || 'Breeder inconnu'}</p>
                         </div>
                         <span className={`px-2 py-1 rounded-lg bg-${typeConfig?.color || 'green'}-500/20 text-${typeConfig?.color || 'green'}-400 text-xs font-bold`}>
                             {typeConfig?.label}
@@ -392,27 +464,35 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         </div>
                     )}
 
+                    {/* Lié à des reviews/nœuds PhenoHunt — valeurs affichées ci-dessous incluent ces sources */}
+                    {linkedCount > 0 && (
+                        <div className="flex items-center gap-1.5 text-xs text-green-400/80 mb-3">
+                            <RefreshCw className="w-3.5 h-3.5" />
+                            <span>Lié à {linkedCount} source{linkedCount > 1 ? 's' : ''}</span>
+                        </div>
+                    )}
+
                     {/* Stats rapides */}
                     <div className="grid grid-cols-2 gap-2 text-xs mb-4">
-                        {formatPctRange(cultivar.thcMin, cultivar.thcMax) && (
-                            <div className="px-2 py-1 bg-white/5 rounded text-white/60" title={CANNABINOID_SOURCE_LABELS[cultivar.thcSource] || ''}>
-                                THC: {formatPctRange(cultivar.thcMin, cultivar.thcMax)}
-                                {cultivar.thcSource === 'lab_tested' ? ' 🧪' : ''}
+                        {formatPctRange(cultivar.effectiveThcMin, cultivar.effectiveThcMax) && (
+                            <div className="px-2 py-1 bg-white/5 rounded text-white/60" title={CANNABINOID_SOURCE_LABELS[cultivar.effectiveThcSource] || ''}>
+                                THC: {formatPctRange(cultivar.effectiveThcMin, cultivar.effectiveThcMax)}
+                                {cultivar.effectiveThcSource === 'lab_tested' ? ' 🧪' : ''}
                             </div>
                         )}
-                        {formatWeeksRange(cultivar.floweringMinWeeks, cultivar.floweringMaxWeeks) && (
+                        {formatWeeksRange(cultivar.effectiveFloweringMinWeeks, cultivar.effectiveFloweringMaxWeeks) && (
                             <div className="px-2 py-1 bg-white/5 rounded text-white/60">
-                                🌸 {formatWeeksRange(cultivar.floweringMinWeeks, cultivar.floweringMaxWeeks)}
+                                🌸 {formatWeeksRange(cultivar.effectiveFloweringMinWeeks, cultivar.effectiveFloweringMaxWeeks)}
                             </div>
                         )}
-                        {cultivar.yieldValue !== null && cultivar.yieldValue !== undefined && (
+                        {cultivar.effectiveYieldValue !== null && cultivar.effectiveYieldValue !== undefined && (
                             <div className="px-2 py-1 bg-white/5 rounded text-white/60">
-                                🌾 {cultivar.yieldValue} {YIELD_UNIT_LABELS[cultivar.yieldUnit] || ''}
+                                🌾 {cultivar.effectiveYieldValue} {YIELD_UNIT_LABELS[cultivar.effectiveYieldUnit] || ''}
                             </div>
                         )}
-                        {cultivar.indicaRatio !== null && cultivar.indicaRatio !== undefined && (
+                        {cultivar.effectiveIndicaRatio !== null && cultivar.effectiveIndicaRatio !== undefined && (
                             <div className="px-2 py-1 bg-white/5 rounded text-white/60">
-                                ⚖️ {cultivar.indicaRatio}% Indica
+                                ⚖️ {cultivar.effectiveIndicaRatio}% Indica
                             </div>
                         )}
                     </div>
@@ -742,26 +822,34 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
                                         <div>
                                             <label className="block text-sm text-white/60 mb-2">Breeder</label>
-                                            <input
-                                                type="text"
-                                                value={formData.breeder}
-                                                onChange={(e) => setFormData({ ...formData, breeder: e.target.value })}
-                                                placeholder="ex: 3rd Gen Family"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
+                                            {showManualInput('breeder') ? (
+                                                <input
+                                                    type="text"
+                                                    value={formData.breeder}
+                                                    onChange={(e) => setFormData({ ...formData, breeder: e.target.value })}
+                                                    placeholder="ex: 3rd Gen Family"
+                                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                />
+                                            ) : (
+                                                <LinkedFieldNote field="breeder" refs={linkedRefs.breeder} onOverride={() => overrideField('breeder')} />
+                                            )}
                                         </div>
 
                                         <div>
                                             <label className="block text-sm text-white/60 mb-2">Type</label>
-                                            <select
-                                                value={formData.type}
-                                                onChange={(e) => setFormData({ ...formData, type: e.target.value })}
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
-                                            >
-                                                {CULTIVAR_TYPES.filter(t => t.id !== 'all').map(t => (
-                                                    <option key={t.id} value={t.id} className="bg-[#1a1a2e]">{t.label}</option>
-                                                ))}
-                                            </select>
+                                            {showManualInput('type') ? (
+                                                <select
+                                                    value={formData.type}
+                                                    onChange={(e) => setFormData({ ...formData, type: e.target.value })}
+                                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                                >
+                                                    {CULTIVAR_TYPES.filter(t => t.id !== 'all').map(t => (
+                                                        <option key={t.id} value={t.id} className="bg-[#1a1a2e]">{t.label}</option>
+                                                    ))}
+                                                </select>
+                                            ) : (
+                                                <LinkedFieldNote field="type" refs={linkedRefs.type} onOverride={() => overrideField('type')} />
+                                            )}
                                         </div>
 
                                         <div className="md:col-span-2 lg:col-span-3">
@@ -789,132 +877,171 @@ export default function CultivarsTab({ userTier = 'producer' }) {
 
                                         <div className="md:col-span-2 lg:col-span-3">
                                             <label className="block text-sm text-white/60 mb-2">Ratio Indica/Sativa (%)</label>
-                                            <input
-                                                type="number" min="0" max="100"
-                                                value={formData.indicaRatio}
-                                                onChange={(e) => setFormData({ ...formData, indicaRatio: e.target.value })}
-                                                placeholder="ex: 70 (0 = Sativa pur, 100 = Indica pur)"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
+                                            {showManualInput('indicaRatio') ? (
+                                                <input
+                                                    type="number" min="0" max="100"
+                                                    value={formData.indicaRatio}
+                                                    onChange={(e) => setFormData({ ...formData, indicaRatio: e.target.value })}
+                                                    placeholder="ex: 70 (0 = Sativa pur, 100 = Indica pur)"
+                                                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                />
+                                            ) : (
+                                                <LinkedFieldNote field="indicaRatio" refs={linkedRefs.indicaRatio} onOverride={() => overrideField('indicaRatio')} />
+                                            )}
                                             <p className="text-xs text-white/40 mt-1">
                                                 Classification Indica/Sativa empirique/commerciale, pas une taxonomie scientifiquement validée — le chémotype (profil cannabinoïdes/terpènes) est l'indicateur rigoureux moderne.
                                             </p>
                                         </div>
 
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">THC min (%)</label>
-                                            <input
-                                                type="number" min="0" max="100" step="0.1"
-                                                value={formData.thcMin}
-                                                onChange={(e) => setFormData({ ...formData, thcMin: e.target.value })}
-                                                placeholder="ex: 18"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">THC max (%)</label>
-                                            <input
-                                                type="number" min="0" max="100" step="0.1"
-                                                value={formData.thcMax}
-                                                onChange={(e) => setFormData({ ...formData, thcMax: e.target.value })}
-                                                placeholder="ex: 24"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">Source THC</label>
-                                            <select
-                                                value={formData.thcSource}
-                                                onChange={(e) => setFormData({ ...formData, thcSource: e.target.value })}
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
-                                            >
-                                                <option value="breeder_claim" className="bg-[#1a1a2e]">Annoncé breeder</option>
-                                                <option value="lab_tested" className="bg-[#1a1a2e]">Analyse labo (COA)</option>
-                                            </select>
-                                        </div>
+                                        {showManualInput('thc') ? (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">THC min (%)</label>
+                                                    <input
+                                                        type="number" min="0" max="100" step="0.1"
+                                                        value={formData.thcMin}
+                                                        onChange={(e) => setFormData({ ...formData, thcMin: e.target.value })}
+                                                        placeholder="ex: 18"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">THC max (%)</label>
+                                                    <input
+                                                        type="number" min="0" max="100" step="0.1"
+                                                        value={formData.thcMax}
+                                                        onChange={(e) => setFormData({ ...formData, thcMax: e.target.value })}
+                                                        placeholder="ex: 24"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">Source THC</label>
+                                                    <select
+                                                        value={formData.thcSource}
+                                                        onChange={(e) => setFormData({ ...formData, thcSource: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                                    >
+                                                        <option value="breeder_claim" className="bg-[#1a1a2e]">Annoncé breeder</option>
+                                                        <option value="lab_tested" className="bg-[#1a1a2e]">Analyse labo (COA)</option>
+                                                    </select>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="md:col-span-2 lg:col-span-3">
+                                                <label className="block text-sm text-white/60 mb-2">THC</label>
+                                                <LinkedFieldNote field="thc" refs={linkedRefs.thc} onOverride={() => overrideField('thc')} />
+                                            </div>
+                                        )}
 
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">CBD min (%)</label>
-                                            <input
-                                                type="number" min="0" max="100" step="0.1"
-                                                value={formData.cbdMin}
-                                                onChange={(e) => setFormData({ ...formData, cbdMin: e.target.value })}
-                                                placeholder="ex: 0"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">CBD max (%)</label>
-                                            <input
-                                                type="number" min="0" max="100" step="0.1"
-                                                value={formData.cbdMax}
-                                                onChange={(e) => setFormData({ ...formData, cbdMax: e.target.value })}
-                                                placeholder="ex: 1"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">Source CBD</label>
-                                            <select
-                                                value={formData.cbdSource}
-                                                onChange={(e) => setFormData({ ...formData, cbdSource: e.target.value })}
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
-                                            >
-                                                <option value="breeder_claim" className="bg-[#1a1a2e]">Annoncé breeder</option>
-                                                <option value="lab_tested" className="bg-[#1a1a2e]">Analyse labo (COA)</option>
-                                            </select>
-                                        </div>
+                                        {showManualInput('cbd') ? (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">CBD min (%)</label>
+                                                    <input
+                                                        type="number" min="0" max="100" step="0.1"
+                                                        value={formData.cbdMin}
+                                                        onChange={(e) => setFormData({ ...formData, cbdMin: e.target.value })}
+                                                        placeholder="ex: 0"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">CBD max (%)</label>
+                                                    <input
+                                                        type="number" min="0" max="100" step="0.1"
+                                                        value={formData.cbdMax}
+                                                        onChange={(e) => setFormData({ ...formData, cbdMax: e.target.value })}
+                                                        placeholder="ex: 1"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">Source CBD</label>
+                                                    <select
+                                                        value={formData.cbdSource}
+                                                        onChange={(e) => setFormData({ ...formData, cbdSource: e.target.value })}
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                                    >
+                                                        <option value="breeder_claim" className="bg-[#1a1a2e]">Annoncé breeder</option>
+                                                        <option value="lab_tested" className="bg-[#1a1a2e]">Analyse labo (COA)</option>
+                                                    </select>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="md:col-span-2 lg:col-span-3">
+                                                <label className="block text-sm text-white/60 mb-2">CBD</label>
+                                                <LinkedFieldNote field="cbd" refs={linkedRefs.cbd} onOverride={() => overrideField('cbd')} />
+                                            </div>
+                                        )}
 
                                         <div className="md:col-span-2 lg:col-span-3">
                                             <label className="block text-sm text-white/60 mb-2">Lien du certificat d'analyse (COA)</label>
-                                            <input
-                                                type="url"
-                                                value={formData.labReportUrl}
-                                                onChange={(e) => setFormData({ ...formData, labReportUrl: e.target.value })}
-                                                placeholder="https://..."
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">Floraison min (semaines)</label>
-                                            <input
-                                                type="number" min="0"
-                                                value={formData.floweringMinWeeks}
-                                                onChange={(e) => setFormData({ ...formData, floweringMinWeeks: e.target.value })}
-                                                placeholder="ex: 8"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">Floraison max (semaines)</label>
-                                            <input
-                                                type="number" min="0"
-                                                value={formData.floweringMaxWeeks}
-                                                onChange={(e) => setFormData({ ...formData, floweringMaxWeeks: e.target.value })}
-                                                placeholder="ex: 9"
-                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
-                                            />
-                                        </div>
-                                        <div>
-                                            <label className="block text-sm text-white/60 mb-2">Rendement</label>
-                                            <div className="flex gap-2">
+                                            {showManualInput('labReportUrl') ? (
                                                 <input
-                                                    type="number" min="0" step="0.1"
-                                                    value={formData.yieldValue}
-                                                    onChange={(e) => setFormData({ ...formData, yieldValue: e.target.value })}
-                                                    placeholder="ex: 450"
+                                                    type="url"
+                                                    value={formData.labReportUrl}
+                                                    onChange={(e) => setFormData({ ...formData, labReportUrl: e.target.value })}
+                                                    placeholder="https://..."
                                                     className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
                                                 />
-                                                <select
-                                                    value={formData.yieldUnit}
-                                                    onChange={(e) => setFormData({ ...formData, yieldUnit: e.target.value })}
-                                                    className="px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
-                                                >
-                                                    <option value="g_m2" className="bg-[#1a1a2e]">g/m²</option>
-                                                    <option value="g_plant" className="bg-[#1a1a2e]">g/plant</option>
-                                                </select>
+                                            ) : (
+                                                <LinkedFieldNote field="labReportUrl" refs={linkedRefs.labReportUrl} onOverride={() => overrideField('labReportUrl')} />
+                                            )}
+                                        </div>
+
+                                        {showManualInput('floweringWeeks') ? (
+                                            <>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">Floraison min (semaines)</label>
+                                                    <input
+                                                        type="number" min="0"
+                                                        value={formData.floweringMinWeeks}
+                                                        onChange={(e) => setFormData({ ...formData, floweringMinWeeks: e.target.value })}
+                                                        placeholder="ex: 8"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-sm text-white/60 mb-2">Floraison max (semaines)</label>
+                                                    <input
+                                                        type="number" min="0"
+                                                        value={formData.floweringMaxWeeks}
+                                                        onChange={(e) => setFormData({ ...formData, floweringMaxWeeks: e.target.value })}
+                                                        placeholder="ex: 9"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div className="md:col-span-2">
+                                                <label className="block text-sm text-white/60 mb-2">Floraison</label>
+                                                <LinkedFieldNote field="floweringWeeks" refs={linkedRefs.floweringWeeks} onOverride={() => overrideField('floweringWeeks')} />
                                             </div>
+                                        )}
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Rendement</label>
+                                            {showManualInput('yield') ? (
+                                                <div className="flex gap-2">
+                                                    <input
+                                                        type="number" min="0" step="0.1"
+                                                        value={formData.yieldValue}
+                                                        onChange={(e) => setFormData({ ...formData, yieldValue: e.target.value })}
+                                                        placeholder="ex: 450"
+                                                        className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                                    />
+                                                    <select
+                                                        value={formData.yieldUnit}
+                                                        onChange={(e) => setFormData({ ...formData, yieldUnit: e.target.value })}
+                                                        className="px-3 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                                    >
+                                                        <option value="g_m2" className="bg-[#1a1a2e]">g/m²</option>
+                                                        <option value="g_plant" className="bg-[#1a1a2e]">g/plant</option>
+                                                    </select>
+                                                </div>
+                                            ) : (
+                                                <LinkedFieldNote field="yield" refs={linkedRefs.yield} onOverride={() => overrideField('yield')} />
+                                            )}
                                         </div>
 
                                         <div className="md:col-span-2 lg:col-span-3">

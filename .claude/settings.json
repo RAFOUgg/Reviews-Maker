@@ -19,7 +19,14 @@
       "Bash(powershell -Command 'Get-CimInstance Win32_Process -Filter \"Name='\\\\''node.exe'\\\\''\" | Where-Object { $_.CommandLine -like '\\\\''*server.js*'\\\\'' } | Select-Object -ExpandProperty ProcessId')",
       "PowerShell(Get-Process node -ErrorAction SilentlyContinue)",
       "Bash(node -e ' *)",
-      "Bash(curl -s http://localhost:3000/api/auth/email/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"admintest@example.com\",\"password\":\"TestPass123\"}')"
+      "Bash(curl -s http://localhost:3000/api/auth/email/login -X POST -H \"Content-Type: application/json\" -d '{\"email\":\"admintest@example.com\",\"password\":\"TestPass123\"}')",
+      "Bash(npx vite *)",
+      "Bash(node --check utils/cultivarSync.js)",
+      "Bash(node --check utils/cultivarReferences.js)",
+      "Bash(node --check routes/library.js)",
+      "Bash(node --check routes/flower-reviews.js)",
+      "Bash(node --check scripts/backfill-cultivar-links.js)",
+      "Bash(node scripts/backfill-cultivar-links.js)"
     ]
   }
 }

@@ -14,6 +14,7 @@ import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
+import { buildLinkedReferences, computeEffective, CULTIVAR_FLOWER_REVIEW_SELECT, CULTIVAR_GEN_NODE_SELECT } from '../utils/cultivarReferences.js'
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -708,12 +709,17 @@ function buildStructuredData(body, { partial } = { partial: false }) {
 }
 
 // Remappe un enregistrement Cultivar (colonnes réelles) vers la forme attendue par le frontend.
+// `linkedReferences`/`effective*` sont calculés à la lecture depuis les reviews/nœuds PhenoHunt
+// liés (cf. utils/cultivarReferences.js) — jamais stockés sur le Cultivar lui-même.
 function toApiShape(cultivar) {
+    const refs = buildLinkedReferences(cultivar);
     return {
         ...cultivar,
         genetics: cultivar.parentage,
         description: cultivar.notes || null,
         tags: cultivar.tags ? JSON.parse(cultivar.tags) : [],
+        linkedReferences: refs,
+        ...computeEffective(cultivar, refs),
     };
 }
 
@@ -742,6 +748,12 @@ router.get('/cultivars', requireAuth, asyncHandler(async (req, res) => {
     const rawCultivars = await prisma.cultivar.findMany({
         where,
         orderBy: { createdAt: 'desc' },
+        include: {
+            flowerReviews: {
+                select: { ...CULTIVAR_FLOWER_REVIEW_SELECT, review: { select: { holderName: true, createdAt: true } } },
+            },
+            genNodes: { select: CULTIVAR_GEN_NODE_SELECT },
+        },
     });
 
     res.json({ cultivars: rawCultivars.map(toApiShape) });
@@ -809,6 +821,12 @@ router.put('/cultivars/:id', requireAuth, asyncHandler(async (req, res) => {
             ...(description !== undefined && { notes: description || null }),
             ...buildStructuredData(req.body, { partial: true }),
             updatedAt: new Date(),
+        },
+        include: {
+            flowerReviews: {
+                select: { ...CULTIVAR_FLOWER_REVIEW_SELECT, review: { select: { holderName: true, createdAt: true } } },
+            },
+            genNodes: { select: CULTIVAR_GEN_NODE_SELECT },
         },
     });
 

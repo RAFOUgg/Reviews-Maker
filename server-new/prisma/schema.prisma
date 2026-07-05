@@ -547,19 +547,19 @@ model Cultivar {
   phenotype String? // Code phénotype (ex: "Pheno #3", "Clone A")
 
   // Cannabinoïdes — bornés 0-100, avec provenance (annoncé vs mesuré en labo)
-  thcMin     Float?
-  thcMax     Float?
-  thcSource  String? // "breeder_claim" | "lab_tested"
-  cbdMin     Float?
-  cbdMax     Float?
-  cbdSource  String? // "breeder_claim" | "lab_tested"
+  thcMin       Float?
+  thcMax       Float?
+  thcSource    String? // "breeder_claim" | "lab_tested"
+  cbdMin       Float?
+  cbdMax       Float?
+  cbdSource    String? // "breeder_claim" | "lab_tested"
   labReportUrl String? // Lien vers le certificat d'analyse (COA), même convention que FlowerReview.labReportUrl
 
   // Culture
   floweringMinWeeks Int?
   floweringMaxWeeks Int?
-  yieldValue Float? // Valeur numérique du rendement
-  yieldUnit  String? // "g_m2" | "g_plant" — jamais converti automatiquement entre les deux
+  yieldValue        Float? // Valeur numérique du rendement
+  yieldUnit         String? // "g_m2" | "g_plant" — jamais converti automatiquement entre les deux
 
   // Étiquettes libres
   tags String? // JSON: string[]
@@ -571,7 +571,8 @@ model Cultivar {
   notes String? // Notes privées de l'utilisateur (texte libre uniquement — ne plus y stocker de JSON structuré)
 
   // Relations
-  genNodes GenNode[] // Nœuds dans les arbres généalogiques
+  genNodes      GenNode[] // Nœuds dans les arbres généalogiques
+  flowerReviews FlowerReview[] @relation("flowerReviewCultivar") // Reviews Fleurs liées par nom (cf. FlowerReview.cultivarId)
 
   // Statistiques d'utilisation
   useCount Int @default(0) // Nombre de reviews utilisant ce cultivar
@@ -682,6 +683,13 @@ model FlowerReview {
   phenotypeCode String? // Code phénotype (ex: "Pheno #2")
   geneticTreeId String? // FK → GeneticTree (arbre généalogique associé)
   geneticTree   GeneticTree? @relation("flowerReviewTree", fields: [geneticTreeId], references: [id], onDelete: SetNull)
+
+  // Lien structurel vers la bibliothèque Cultivars — résolu par nom depuis `cultivars` (texte)
+  // au moment du save (cf. server-new/utils/cultivarSync.js resolveCultivarLink). Permet à la
+  // bibliothèque d'afficher les valeurs de cette review comme référence en lecture plutôt que
+  // de les faire retaper à la main.
+  cultivarId String?
+  cultivar   Cultivar? @relation("flowerReviewCultivar", fields: [cultivarId], references: [id], onDelete: SetNull)
 
   // ===== PIPELINE CULTURE (Producteurs) =====
   // Stocké comme JSON dans une table séparée PipelineStep
@@ -803,6 +811,7 @@ model FlowerReview {
   @@index([nomCommercial])
   @@index([variety])
   @@index([geneticTreeId])
+  @@index([cultivarId])
   @@map("flower_reviews")
 }
 
@@ -1524,11 +1533,11 @@ model GenEdge {
   childNode   GenNode @relation("childNode", fields: [childNodeId], references: [id], onDelete: Cascade)
 
   // Métadonnées de relation
-  relationshipType String  @default("parent") // "parent", "pollen_donor", "sibling", "clone", "mutation", "pairing"
+  relationshipType  String  @default("parent") // "parent", "pollen_donor", "sibling", "clone", "mutation", "pairing"
   pollinationMethod String? // "open", "controlled-manual", "isolation-selected-male", "pollination-bag",
-                             // "brush", "pollen-collection-storage", "male-flower-harvest",
-                             // "selfing-inversion", "chemical-feminization"
-  notes            String? // Notes supplémentaires
+  // "brush", "pollen-collection-storage", "male-flower-harvest",
+  // "selfing-inversion", "chemical-feminization"
+  notes             String? // Notes supplémentaires
 
   // Point de courbure optionnel (coordonnées canvas) permettant de décaler la liaison à la main
   // plutôt que de suivre une ligne droite systématique. Null = ligne droite par défaut.
