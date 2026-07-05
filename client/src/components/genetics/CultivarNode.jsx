@@ -7,7 +7,7 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { Leaf, Venus, Mars, CircleHelp, MessageSquare, AlertTriangle } from 'lucide-react';
+import { Leaf, Venus, Mars, CircleHelp, MessageSquare, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import { getImageUrl } from '../../utils/imageUtils';
 
 const SEX_CONFIG = {
@@ -77,6 +77,32 @@ const CultivarNode = ({ data, selected }) => {
             {data.sourceReviewOrphaned && (
                 <div className="node-orphan-badge" title="La review liée à ce nœud a été supprimée">
                     <AlertTriangle size={11} strokeWidth={2.5} />
+                </div>
+            )}
+
+            {data.mediaCount > 0 && (
+                <div
+                    className="node-media-badge"
+                    title={`${data.mediaCount} photo${data.mediaCount > 1 ? 's' : ''}/vidéo${data.mediaCount > 1 ? 's' : ''} attachée${data.mediaCount > 1 ? 's' : ''}`}
+                    style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        padding: '1px 5px',
+                        borderRadius: 999,
+                        background: 'rgba(245, 158, 11, 0.9)',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        lineHeight: '14px',
+                        border: '1px solid rgba(255,255,255,0.6)'
+                    }}
+                >
+                    <ImageIcon size={9} strokeWidth={2.5} />
+                    {data.mediaCount}
                 </div>
             )}
 

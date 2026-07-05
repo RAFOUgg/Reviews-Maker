@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
-import { Layers } from 'lucide-react';
+import { Layers, Image as ImageIcon } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
@@ -126,6 +126,12 @@ export default function ChainEdgeComponent({
                             <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-400" title={`${data.cellCount} cellule(s) de pipeline attachée(s)`}>
                                 <Layers size={9} strokeWidth={2.5} />
                                 {data.cellCount}
+                            </div>
+                        )}
+                        {data?.mediaCount > 0 && (
+                            <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400" title={`${data.mediaCount} photo(s)/vidéo(s) attachée(s)`}>
+                                <ImageIcon size={9} strokeWidth={2.5} />
+                                {data.mediaCount}
                             </div>
                         )}
                     </div>

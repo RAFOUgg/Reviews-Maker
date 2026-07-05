@@ -151,7 +151,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                     genetics: genetics || {},
                     notes: node.notes,
                     selected: store.selectedNodeId === node.id,
-                    sourceReviewOrphaned: node.sourceReviewOrphaned
+                    sourceReviewOrphaned: node.sourceReviewOrphaned,
+                    mediaCount: Array.isArray(node.media) ? node.media.length : 0
                 },
                 position: node.position || { x: 0, y: 0 },
                 type: 'cultivar'
@@ -252,7 +253,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                         onEndpointReconnect: handleEdgeEndpointReconnect,
                         onDropChildLink: handlePairingDropOnNode,
                         partnerA,
-                        partnerB
+                        partnerB,
+                        mediaCount: Array.isArray(edge.media) ? edge.media.length : 0
                     }
                 };
             });

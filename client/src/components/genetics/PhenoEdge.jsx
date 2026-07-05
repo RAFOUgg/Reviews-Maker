@@ -1,5 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow } from 'reactflow';
+import { Image as ImageIcon } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
@@ -154,6 +155,12 @@ export default function PhenoEdge({
                         {data?.pollinationMethod && POLLINATION_LABEL_BY_VALUE[data.pollinationMethod] && (
                             <div className="text-[10px] font-normal text-emerald-300/70 mt-0.5 whitespace-nowrap">
                                 {POLLINATION_LABEL_BY_VALUE[data.pollinationMethod]}
+                            </div>
+                        )}
+                        {data?.mediaCount > 0 && (
+                            <div className="flex items-center gap-1 text-[10px] font-normal text-amber-300/80 mt-0.5" title={`${data.mediaCount} photo(s)/vidéo(s) attachée(s)`}>
+                                <ImageIcon size={9} strokeWidth={2.5} />
+                                {data.mediaCount}
                             </div>
                         )}
                     </div>

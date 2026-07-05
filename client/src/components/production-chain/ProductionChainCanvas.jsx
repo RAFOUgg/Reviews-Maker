@@ -99,7 +99,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 color: node.color || '#10b981',
                 selected: store.selectedNodeId === node.id,
                 reviewOrphaned: node.reviewOrphaned,
-                cellCount: Array.isArray(node.cellData) ? node.cellData.length : 0
+                cellCount: Array.isArray(node.cellData) ? node.cellData.length : 0,
+                mediaCount: Array.isArray(node.media) ? node.media.length : 0
             },
             position: node.position || { x: 0, y: 0 },
             type: 'reviewProduct'
@@ -123,7 +124,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 targetHandle: edge.targetHandle,
                 onEndpointHandleChange: handleEdgeEndpointChange,
                 onEndpointReconnect: handleEdgeEndpointReconnect,
-                cellCount: Array.isArray(edge.cellData) ? edge.cellData.length : 0
+                cellCount: Array.isArray(edge.cellData) ? edge.cellData.length : 0,
+                mediaCount: Array.isArray(edge.media) ? edge.media.length : 0
             }
         }));
 

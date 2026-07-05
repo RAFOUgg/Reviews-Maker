@@ -9,7 +9,7 @@
 
 import React from 'react';
 import { Handle, Position } from 'reactflow';
-import { AlertTriangle, Layers } from 'lucide-react';
+import { AlertTriangle, Layers, Image as ImageIcon } from 'lucide-react';
 import { TYPE_META } from '../../utils/reviewTypeMeta';
 import { getImageUrl } from '../../utils/imageUtils';
 
@@ -83,6 +83,32 @@ const ReviewNode = ({ data, selected }) => {
                 >
                     <Layers size={9} strokeWidth={2.5} />
                     {data.cellCount}
+                </div>
+            )}
+
+            {data.mediaCount > 0 && (
+                <div
+                    className="node-media-badge"
+                    title={`${data.mediaCount} photo${data.mediaCount > 1 ? 's' : ''}/vidéo${data.mediaCount > 1 ? 's' : ''} attachée${data.mediaCount > 1 ? 's' : ''}`}
+                    style={{
+                        position: 'absolute',
+                        top: -4,
+                        right: -4,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 2,
+                        padding: '1px 5px',
+                        borderRadius: 999,
+                        background: 'rgba(245, 158, 11, 0.9)',
+                        color: '#fff',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        lineHeight: '14px',
+                        border: '1px solid rgba(255,255,255,0.6)'
+                    }}
+                >
+                    <ImageIcon size={9} strokeWidth={2.5} />
+                    {data.mediaCount}
                 </div>
             )}
 

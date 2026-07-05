@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from 'react';
 import { EdgeLabelRenderer, BaseEdge, useReactFlow, useStoreApi } from 'reactflow';
-import { Heart, Baby, Venus, Mars, CircleHelp } from 'lucide-react';
+import { Heart, Baby, Venus, Mars, CircleHelp, Image as ImageIcon } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect, findNodeAtPoint, nearestHandleSide } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
@@ -167,6 +167,12 @@ export default function PairingEdge({
                             <PartnerBadge partner={data?.partnerA} />
                             <span className="text-pink-300/50">×</span>
                             <PartnerBadge partner={data?.partnerB} />
+                            {data?.mediaCount > 0 && (
+                                <span className="flex items-center gap-0.5 text-amber-300/80 ml-1" title={`${data.mediaCount} photo(s)/vidéo(s) attachée(s)`}>
+                                    <ImageIcon size={9} strokeWidth={2.5} />
+                                    {data.mediaCount}
+                                </span>
+                            )}
                         </div>
                     </div>
                 )}
