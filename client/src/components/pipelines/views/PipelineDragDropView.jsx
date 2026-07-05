@@ -1097,6 +1097,8 @@ const PipelineDragDropView = ({
     presets = [],
     onSavePreset = () => { },
     // Préréglages retirés
+    // Contenu additionnel affiché à droite du titre "Pipeline X" (ex: ChainToggleButton)
+    headerExtra = null,
 }) => {
     // toast helper
     const toast = useToast();
@@ -2552,6 +2554,7 @@ const PipelineDragDropView = ({
                                 <span className="truncate">Pipeline {({ culture: 'Culture', curing: 'Curing', separation: 'Séparation', extraction: 'Extraction', recipe: 'Recette' }[type] || 'Pipeline')}</span>
                             </h3>
                             <div className="flex items-center gap-1.5 md:gap-2 flex-shrink-0">
+                                {headerExtra}
                                 {/* GrowBrain - relevés automatiques & IA de culture, réservé aux Producteurs */}
                                 {type === 'culture' && isProducteur && (
                                     <a

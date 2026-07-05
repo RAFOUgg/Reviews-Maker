@@ -3,6 +3,7 @@ import PipelineDragDropView from '../views/PipelineDragDropView';
 import { EXTRACTION_SIDEBAR_CONTENT } from '../../../config/extractionSidebarContent';
 import { EXTRACTION_PHASES } from '../../../config/pipelinePhases';
 import ChainSectionEmbed from '../../production-chain/ChainSectionEmbed';
+import ChainToggleButton from '../../production-chain/ChainToggleButton';
 import useProductionChainStore from '../../../store/useProductionChainStore';
 
 const ExtractionPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {
@@ -111,6 +112,7 @@ const ExtractionPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel,
                     onConfigChange={handleConfigChange}
                     onDataChange={handleDataChange}
                     onClearTimeline={handleClearTimeline}
+                    headerExtra={<ChainToggleButton reviewId={reviewId} reviewType="concentrate" />}
                 />
             )}
         </div>

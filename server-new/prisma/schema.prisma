@@ -546,6 +546,24 @@ model Cultivar {
   parentage String? // JSON: ["Parent1", "Parent2"] ou texte libre
   phenotype String? // Code phénotype (ex: "Pheno #3", "Clone A")
 
+  // Statut de génération/breeding — vocabulaire standard du secteur (F1/F2/S1/BX/IBL), distinct
+  // de `type` (Indica/Sativa, classification commerciale) : "landrace"|"p"|"f1"|"f2"|"f3plus"|
+  // "s1"|"s2plus"|"bx1"|"bx2plus"|"ibl". Nullable — beaucoup de cultivars catalogués n'ont pas
+  // cette information (graine achetée sans généalogie connue).
+  generationStatus String?
+  // Classification chimique (chémotype) — considérée plus rigoureuse scientifiquement que
+  // Indica/Sativa (cf. tooltip déjà existant dans CultivarsTab.jsx) : "thc-dominant"|"balanced"|
+  // "cbd-dominant"|"high-cbg". Complète `type`, ne le remplace pas (les deux classifications
+  // coexistent dans l'usage réel du secteur).
+  chemotype String?
+  // Variabilité phénotypique de la lignée — "unstable" (F2, forte ségrégation, recherche de
+  // phénotypes), "segregating" (F3-BX précoces, en cours de stabilisation), "stable" (IBL,
+  // reproduit vrai génération après génération).
+  phenotypeStability String?
+  // Objectif de sélection déclaré par l'utilisateur (vigueur, résistance, profil terpénique,
+  // rendement...) — notes de breeder en texte libre, distinct de `notes` (observations générales).
+  breedingGoal String?
+
   // Cannabinoïdes — bornés 0-100, avec provenance (annoncé vs mesuré en labo)
   thcMin       Float?
   thcMax       Float?

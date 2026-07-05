@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChefHat, Plus, X, ChevronDown, Cannabis } from 'lucide-react';
 import { LiquidCard, LiquidDivider } from '@/components/ui/LiquidUI';
 import ChainSectionEmbed from '../../../../components/production-chain/ChainSectionEmbed';
+import ChainToggleButton from '../../../../components/production-chain/ChainToggleButton';
 import useProductionChainStore from '../../../../store/useProductionChainStore';
 
 const UNITS = ['g', 'kg', 'ml', 'L', 'c. à soupe', 'c. à café', 'pincée', 'pcs', 'autre'];
@@ -129,11 +130,14 @@ const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, rev
                             <p className="text-sm text-white/50">Cannabiniques et standards</p>
                         </div>
                     </div>
-                    <button onClick={() => setShowIngredients(!showIngredients)} className="p-2 rounded-lg hover:bg-white/10 border border-white/10">
-                        <motion.div animate={{ rotate: showIngredients ? 180 : 0 }}>
-                            <ChevronDown className="w-5 h-5 text-white" />
-                        </motion.div>
-                    </button>
+                    <div className="flex items-center gap-2">
+                        <ChainToggleButton reviewId={reviewId} reviewType="edible" />
+                        <button onClick={() => setShowIngredients(!showIngredients)} className="p-2 rounded-lg hover:bg-white/10 border border-white/10">
+                            <motion.div animate={{ rotate: showIngredients ? 180 : 0 }}>
+                                <ChevronDown className="w-5 h-5 text-white" />
+                            </motion.div>
+                        </button>
+                    </div>
                 </div>
 
                 <LiquidDivider />

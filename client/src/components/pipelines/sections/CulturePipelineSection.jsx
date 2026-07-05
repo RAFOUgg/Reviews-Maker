@@ -6,6 +6,7 @@
 import React, { useRef } from 'react';
 import CulturePipelineDragDrop from '../legacy/CulturePipelineDragDrop';
 import ChainSectionEmbed from '../../production-chain/ChainSectionEmbed';
+import ChainToggleButton from '../../production-chain/ChainToggleButton';
 import useProductionChainStore from '../../../store/useProductionChainStore';
 
 const CulturePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {
@@ -87,6 +88,7 @@ const CulturePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, re
                         substrat: data.substrat,
                         lightType: data.lightType
                     }}
+                    headerExtra={<ChainToggleButton reviewId={reviewId} reviewType="flower" />}
                 />
             )}
         </div>

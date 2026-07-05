@@ -58,6 +58,37 @@ const CANNABINOID_SOURCE_LABELS = {
 
 const YIELD_UNIT_LABELS = { g_m2: 'g/m²', g_plant: 'g/plant' }
 
+// Vocabulaire standard du breeding cannabis (F1/F2/S1/BX/IBL) — cf. recherche méthodologique
+// (SeedFinder/Phylos/littérature breeding) ayant motivé ces champs, distincts de Indica/Sativa.
+const GENERATION_STATUS_OPTIONS = [
+    { value: 'landrace', label: 'Landrace (population native)' },
+    { value: 'p', label: 'Parentale (P)' },
+    { value: 'f1', label: 'F1 (croisement de 2 IBL)' },
+    { value: 'f2', label: 'F2 (croisement de 2 F1 — variance max)' },
+    { value: 'f3plus', label: 'F3+ (générations suivantes)' },
+    { value: 's1', label: 'S1 (autofécondée)' },
+    { value: 's2plus', label: 'S2+ (autofécondations suivantes)' },
+    { value: 'bx1', label: 'BX1 (1er backcross)' },
+    { value: 'bx2plus', label: 'BX2+ (backcross suivants)' },
+    { value: 'ibl', label: 'IBL (ligne stabilisée, reproduit vrai)' }
+]
+const GENERATION_STATUS_LABELS = Object.fromEntries(GENERATION_STATUS_OPTIONS.map(o => [o.value, o.label]))
+
+const CHEMOTYPE_OPTIONS = [
+    { value: 'thc-dominant', label: 'THC dominant' },
+    { value: 'balanced', label: 'Équilibré THC:CBD' },
+    { value: 'cbd-dominant', label: 'CBD dominant' },
+    { value: 'high-cbg', label: 'CBG élevé' }
+]
+const CHEMOTYPE_LABELS = Object.fromEntries(CHEMOTYPE_OPTIONS.map(o => [o.value, o.label]))
+
+const PHENOTYPE_STABILITY_OPTIONS = [
+    { value: 'unstable', label: 'Instable (forte ségrégation)' },
+    { value: 'segregating', label: 'En stabilisation' },
+    { value: 'stable', label: 'Stable (reproduit vrai)' }
+]
+const PHENOTYPE_STABILITY_LABELS = Object.fromEntries(PHENOTYPE_STABILITY_OPTIONS.map(o => [o.value, o.label]))
+
 function formatPctRange(min, max) {
     if (min === null || min === undefined) {
         if (max === null || max === undefined) return null
@@ -152,6 +183,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         labReportUrl: '',
         floweringMinWeeks: '', floweringMaxWeeks: '',
         yieldValue: '', yieldUnit: 'g_m2',
+        generationStatus: '', chemotype: '', phenotypeStability: '', breedingGoal: '',
         image: '',
         description: '',
         tags: []
@@ -303,6 +335,8 @@ export default function CultivarsTab({ userTier = 'producer' }) {
             labReportUrl: cultivar.labReportUrl || '',
             floweringMinWeeks: cultivar.floweringMinWeeks ?? '', floweringMaxWeeks: cultivar.floweringMaxWeeks ?? '',
             yieldValue: cultivar.yieldValue ?? '', yieldUnit: cultivar.yieldUnit || 'g_m2',
+            generationStatus: cultivar.generationStatus || '', chemotype: cultivar.chemotype || '',
+            phenotypeStability: cultivar.phenotypeStability || '', breedingGoal: cultivar.breedingGoal || '',
             image: cultivar.image || '',
             description: cultivar.description || '',
             tags: cultivar.tags || []
@@ -461,6 +495,34 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         <div className="flex items-center gap-2 text-sm text-white/60 mb-3">
                             <Dna className="w-4 h-4" />
                             <span className="truncate">{cultivar.genetics}</span>
+                        </div>
+                    )}
+
+                    {/* Statut de génération / chémotype — vocabulaire breeding, distinct du type Indica/Sativa */}
+                    {(cultivar.generationStatus || cultivar.chemotype) && (
+                        <div className="flex flex-wrap gap-1.5 mb-3">
+                            {cultivar.generationStatus && (
+                                <span className="px-2 py-0.5 bg-violet-500/20 text-violet-300 rounded text-xs font-semibold">
+                                    {GENERATION_STATUS_LABELS[cultivar.generationStatus]?.split(' (')[0] || cultivar.generationStatus}
+                                </span>
+                            )}
+                            {cultivar.chemotype && (
+                                <span className="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 rounded text-xs font-semibold">
+                                    {CHEMOTYPE_LABELS[cultivar.chemotype] || cultivar.chemotype}
+                                </span>
+                            )}
+                            {cultivar.phenotypeStability && (
+                                <span className="px-2 py-0.5 bg-white/10 text-white/60 rounded text-xs" title={PHENOTYPE_STABILITY_LABELS[cultivar.phenotypeStability]}>
+                                    {cultivar.phenotypeStability === 'stable' ? '✓ stable' : cultivar.phenotypeStability === 'unstable' ? '≈ instable' : '↻ en cours'}
+                                </span>
+                            )}
+                        </div>
+                    )}
+
+                    {/* Lignée dérivée du graphe PhenoHunt (GenNode.parentEdges) — "issu du croisement" */}
+                    {cultivar.lineage?.length > 0 && (
+                        <div className="text-xs text-white/50 mb-3 truncate" title={cultivar.lineage.map(l => l.parents.join(' × ')).join(', ')}>
+                            🧬 Issu de : {cultivar.lineage[0].parents.join(' × ')}
                         </div>
                     )}
 
@@ -860,6 +922,62 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                                 onChange={(e) => setFormData({ ...formData, genetics: e.target.value })}
                                                 placeholder="ex: Grape Ape x Grapefruit"
                                                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Statut de génération</label>
+                                            <select
+                                                value={formData.generationStatus}
+                                                onChange={(e) => setFormData({ ...formData, generationStatus: e.target.value })}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                            >
+                                                <option value="" className="bg-[#1a1a2e]">Non renseigné</option>
+                                                {GENERATION_STATUS_OPTIONS.map(o => (
+                                                    <option key={o.value} value={o.value} className="bg-[#1a1a2e]">{o.label}</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-white/40 mt-1">Vocabulaire standard du breeding (F1/F2/S1/BX/IBL), distinct du type Indica/Sativa.</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Chémotype</label>
+                                            <select
+                                                value={formData.chemotype}
+                                                onChange={(e) => setFormData({ ...formData, chemotype: e.target.value })}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                            >
+                                                <option value="" className="bg-[#1a1a2e]">Non renseigné</option>
+                                                {CHEMOTYPE_OPTIONS.map(o => (
+                                                    <option key={o.value} value={o.value} className="bg-[#1a1a2e]">{o.label}</option>
+                                                ))}
+                                            </select>
+                                            <p className="text-xs text-white/40 mt-1">Classification chimique, considérée plus rigoureuse qu'Indica/Sativa.</p>
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-sm text-white/60 mb-2">Variabilité phénotypique</label>
+                                            <select
+                                                value={formData.phenotypeStability}
+                                                onChange={(e) => setFormData({ ...formData, phenotypeStability: e.target.value })}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                                            >
+                                                <option value="" className="bg-[#1a1a2e]">Non renseigné</option>
+                                                {PHENOTYPE_STABILITY_OPTIONS.map(o => (
+                                                    <option key={o.value} value={o.value} className="bg-[#1a1a2e]">{o.label}</option>
+                                                ))}
+                                            </select>
+                                        </div>
+
+                                        <div className="md:col-span-2 lg:col-span-3">
+                                            <label className="block text-sm text-white/60 mb-2">Objectif de sélection</label>
+                                            <textarea
+                                                value={formData.breedingGoal}
+                                                onChange={(e) => setFormData({ ...formData, breedingGoal: e.target.value })}
+                                                placeholder="ex: Recherche de terpènes fruités, résistance au mildiou, vigueur..."
+                                                rows={2}
+                                                maxLength={500}
+                                                className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-green-500/50 resize-none"
                                             />
                                         </div>
 

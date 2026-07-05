@@ -116,6 +116,22 @@ export default function CustomTemplate({ config, reviewData, dimensions }) {
                     </div>
                 );
 
+            case 'categoryRatings': {
+                if (!val || typeof val !== 'object') return null;
+                const entries = Object.entries(val).filter(([, v]) => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))));
+                if (entries.length === 0) return null;
+                return (
+                    <div key={key} className="col-span-12 flex flex-wrap gap-2 justify-center">
+                        {entries.map(([catKey, catVal]) => (
+                            <div key={catKey} style={{ backgroundColor: colorWithOpacity(colors.accent, 12), borderRadius: '8px', padding: '6px 10px', textAlign: 'center' }}>
+                                <div style={{ fontSize: `${(typography.textSize || 14) - 3}px`, color: colors.textSecondary }}>{catKey}</div>
+                                <div style={{ fontSize: `${typography.textSize || 14}px`, fontWeight: '700', color: colors.accent }}>{parseFloat(catVal).toFixed(1)}</div>
+                            </div>
+                        ))}
+                    </div>
+                );
+            }
+
             case 'type':
             case 'category':
                 return val ? (

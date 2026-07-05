@@ -18,7 +18,8 @@ const CulturePipelineDragDrop = ({
     onConfigChange,
     onDataChange,
     onClearTimeline,
-    initialData = {}
+    initialData = {},
+    headerExtra = null
 }) => {
     // Convertir CULTURE_SIDEBAR_CONTENT (objet) vers format array pour PipelineDragDropView
     const sidebarArray = useMemo(() => {
@@ -55,6 +56,7 @@ const CulturePipelineDragDrop = ({
             onConfigChange={onConfigChange}
             onDataChange={onDataChange}
             onClearTimeline={onClearTimeline}
+            headerExtra={headerExtra}
         />
     )
 }

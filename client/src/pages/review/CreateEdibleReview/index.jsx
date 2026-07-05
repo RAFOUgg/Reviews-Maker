@@ -15,7 +15,6 @@ import { flattenEdibleFormData, createFormDataFromFlat, diffFlatData } from '../
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
 import RecipePipelineSection from './sections/RecipePipelineSection'
-import ChainToggleButton from '../../../components/production-chain/ChainToggleButton'
 import TasteSection from '../../../components/sections/TasteSection'
 import EffectsSection from '../../../components/sections/EffectsSection'
 
@@ -298,21 +297,6 @@ export default function CreateEdibleReview() {
                         transition={{ duration: 0.2 }}
                         className="space-y-6"
                     >
-                        <div className="flex items-center justify-between gap-3 mb-6">
-                            <div className="flex items-center gap-3">
-                                <span className="text-3xl">{sections[currentSection].icon}</span>
-                                <div>
-                                    <h2 className="text-xl font-semibold text-white">
-                                        {sections[currentSection].title}
-                                        {sections[currentSection].required && <span className="text-red-500 ml-2">*</span>}
-                                    </h2>
-                                </div>
-                            </div>
-                            {sections[currentSection].id === 'recipe' && (
-                                <ChainToggleButton reviewId={id} reviewType="edible" />
-                            )}
-                        </div>
-
                         {currentSection === 0 && (
                             <InfosGenerales
                                 formData={formData}

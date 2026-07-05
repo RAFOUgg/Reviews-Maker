@@ -36,7 +36,15 @@ export const CULTIVAR_GEN_NODE_SELECT = {
     id: true,
     genetics: true,
     updatedAt: true,
-    tree: { select: { name: true } }
+    tree: { select: { id: true, name: true } },
+    // Liaisons entrantes (ce nœud est l'ENFANT) — permet de dériver "issu du croisement X × Y"
+    // depuis le graphe PhenoHunt existant, sans dupliquer l'information sur le Cultivar lui-même.
+    parentEdges: {
+        select: {
+            relationshipType: true,
+            parentNode: { select: { cultivarName: true } }
+        }
+    }
 }
 
 function safeParseGenetics(raw) {
@@ -164,4 +172,24 @@ export function computeEffective(cultivar, refs) {
     }
 }
 
-export default { buildLinkedReferences, computeEffective, CULTIVAR_FLOWER_REVIEW_SELECT, CULTIVAR_GEN_NODE_SELECT }
+// Résumé de lignée dérivé du graphe PhenoHunt existant (GenNode.parentEdges) — pas une donnée
+// stockée sur le Cultivar : "issu du croisement X × Y" quand ce cultivar existe comme nœud avec
+// au moins un parent renseigné dans un arbre généalogique. Un même cultivar peut apparaître dans
+// plusieurs arbres (plusieurs clones/graines du même nom) — on renvoie une entrée par arbre.
+export function buildLineageSummary(cultivar) {
+    const entries = []
+    for (const node of cultivar.genNodes || []) {
+        const parents = (node.parentEdges || [])
+            .map(e => e.parentNode?.cultivarName)
+            .filter(Boolean)
+        if (parents.length === 0) continue
+        entries.push({
+            treeId: node.tree?.id || null,
+            treeName: node.tree?.name || 'Arbre PhenoHunt',
+            parents
+        })
+    }
+    return entries
+}
+
+export default { buildLinkedReferences, computeEffective, buildLineageSummary, CULTIVAR_FLOWER_REVIEW_SELECT, CULTIVAR_GEN_NODE_SELECT }

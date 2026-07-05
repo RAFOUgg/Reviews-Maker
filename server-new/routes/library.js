@@ -14,7 +14,7 @@ import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
-import { buildLinkedReferences, computeEffective, CULTIVAR_FLOWER_REVIEW_SELECT, CULTIVAR_GEN_NODE_SELECT } from '../utils/cultivarReferences.js'
+import { buildLinkedReferences, computeEffective, buildLineageSummary, CULTIVAR_FLOWER_REVIEW_SELECT, CULTIVAR_GEN_NODE_SELECT } from '../utils/cultivarReferences.js'
 
 const router = express.Router();
 const prisma = new PrismaClient();
@@ -656,6 +656,11 @@ router.delete('/data/:id', requireAuth, asyncHandler(async (req, res) => {
 
 const CANNABINOID_SOURCES = ['breeder_claim', 'lab_tested'];
 const YIELD_UNITS = ['g_m2', 'g_plant'];
+// Vocabulaire standard du breeding cannabis (F1/F2/S1/BX/IBL) — cf. utils/cultivarReferences.js
+// et la recherche méthodologique (SeedFinder/Phylos/littérature breeding) ayant motivé ces champs.
+const GENERATION_STATUSES = ['landrace', 'p', 'f1', 'f2', 'f3plus', 's1', 's2plus', 'bx1', 'bx2plus', 'ibl'];
+const CHEMOTYPES = ['thc-dominant', 'balanced', 'cbd-dominant', 'high-cbg'];
+const PHENOTYPE_STABILITIES = ['unstable', 'segregating', 'stable'];
 
 // Ramène une valeur dans [0, 100] ou null — jamais de valeur hors bornes physiques pour un %.
 function clampPct(v) {
@@ -704,6 +709,10 @@ function buildStructuredData(body, { partial } = { partial: false }) {
     if (has('indicaRatio')) data.indicaRatio = body.indicaRatio === '' || body.indicaRatio === null ? null : clampPct(body.indicaRatio);
     if (has('tags')) data.tags = Array.isArray(body.tags) && body.tags.length ? JSON.stringify(body.tags) : null;
     if (has('image')) data.image = body.image ? String(body.image).trim() : null;
+    if (has('generationStatus')) data.generationStatus = toEnumOrNull(body.generationStatus, GENERATION_STATUSES);
+    if (has('chemotype')) data.chemotype = toEnumOrNull(body.chemotype, CHEMOTYPES);
+    if (has('phenotypeStability')) data.phenotypeStability = toEnumOrNull(body.phenotypeStability, PHENOTYPE_STABILITIES);
+    if (has('breedingGoal')) data.breedingGoal = body.breedingGoal ? String(body.breedingGoal).trim().slice(0, 500) : null;
 
     return data;
 }
@@ -719,6 +728,7 @@ function toApiShape(cultivar) {
         description: cultivar.notes || null,
         tags: cultivar.tags ? JSON.parse(cultivar.tags) : [],
         linkedReferences: refs,
+        lineage: buildLineageSummary(cultivar),
         ...computeEffective(cultivar, refs),
     };
 }

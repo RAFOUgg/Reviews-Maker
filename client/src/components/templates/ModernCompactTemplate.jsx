@@ -128,7 +128,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         if (!items || items.length === 0) return null;
 
         return (
-            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
+            <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px` }}>
                 {items.map((item, i) => (
                     <span key={i} style={styles.tag}>{extractLabel(item)}</span>
                 ))}
