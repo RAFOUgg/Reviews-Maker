@@ -89,11 +89,11 @@ const EdgeFormModal = ({ onClose }) => {
                     <span>{isEdit ? 'Éditer la relation' : 'Créer une relation'}</span>
                 </div>
             }
-            size="md"
+            size="lg"
             glowColor="blue"
             footer={
                 <div className="flex gap-3">
-                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X} className="flex-1">
                         Annuler
                     </LiquidButton>
                     <LiquidButton
@@ -102,6 +102,7 @@ const EdgeFormModal = ({ onClose }) => {
                         disabled={loading || !formData.parentNodeId || !formData.childNodeId}
                         loading={loading}
                         icon={Save}
+                        className="flex-1"
                     >
                         {isEdit ? 'Mettre à jour' : 'Créer la relation'}
                     </LiquidButton>
@@ -115,26 +116,55 @@ const EdgeFormModal = ({ onClose }) => {
                     </LiquidCard>
                 )}
 
-                {/* Parent Selection */}
-                <LiquidSelect
-                    label={isPairing ? 'Premier partenaire *' : 'Cultivar parent *'}
-                    value={formData.parentNodeId || ''}
-                    onChange={(v) => handleChange('parentNodeId', v)}
-                    disabled={isEdit}
-                    options={[
-                        { value: '', label: 'Sélectionner un parent...' },
-                        ...store.nodes.map(node => ({
-                            value: node.id,
-                            label: node.cultivarName
-                        }))
-                    ]}
-                />
-                {parentNode && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: parentNode.color }} />
-                        <span className="text-sm text-white">{parentNode.cultivarName}</span>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        {/* Parent Selection */}
+                        <LiquidSelect
+                            label={isPairing ? 'Premier partenaire *' : 'Cultivar parent *'}
+                            value={formData.parentNodeId || ''}
+                            onChange={(v) => handleChange('parentNodeId', v)}
+                            disabled={isEdit}
+                            options={[
+                                { value: '', label: 'Sélectionner un parent...' },
+                                ...store.nodes.map(node => ({
+                                    value: node.id,
+                                    label: node.cultivarName
+                                }))
+                            ]}
+                        />
+                        {parentNode && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
+                                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: parentNode.color }} />
+                                <span className="text-sm text-white">{parentNode.cultivarName}</span>
+                            </div>
+                        )}
                     </div>
-                )}
+
+                    <div className="space-y-2">
+                        {/* Child Selection */}
+                        <LiquidSelect
+                            label={isPairing ? 'Second partenaire *' : 'Cultivar enfant *'}
+                            value={formData.childNodeId || ''}
+                            onChange={(v) => handleChange('childNodeId', v)}
+                            disabled={isEdit}
+                            options={[
+                                { value: '', label: 'Sélectionner un enfant...' },
+                                ...store.nodes
+                                    .filter(n => n.id !== formData.parentNodeId)
+                                    .map(node => ({
+                                        value: node.id,
+                                        label: node.cultivarName
+                                    }))
+                            ]}
+                        />
+                        {childNode && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
+                                <div className="w-4 h-4 rounded-full" style={{ backgroundColor: childNode.color }} />
+                                <span className="text-sm text-white">{childNode.cultivarName}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 {/* Relationship Type */}
                 <LiquidSelect
@@ -148,29 +178,6 @@ const EdgeFormModal = ({ onClose }) => {
                         Lie visuellement ces deux nœuds comme un couple parental : leurs enfants communs se
                         connecteront depuis le milieu de cette liaison plutôt que par deux lignes séparées.
                     </p>
-                )}
-
-                {/* Child Selection */}
-                <LiquidSelect
-                    label={isPairing ? 'Second partenaire *' : 'Cultivar enfant *'}
-                    value={formData.childNodeId || ''}
-                    onChange={(v) => handleChange('childNodeId', v)}
-                    disabled={isEdit}
-                    options={[
-                        { value: '', label: 'Sélectionner un enfant...' },
-                        ...store.nodes
-                            .filter(n => n.id !== formData.parentNodeId)
-                            .map(node => ({
-                                value: node.id,
-                                label: node.cultivarName
-                            }))
-                    ]}
-                />
-                {childNode && (
-                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
-                        <div className="w-4 h-4 rounded-full" style={{ backgroundColor: childNode.color }} />
-                        <span className="text-sm text-white">{childNode.cultivarName}</span>
-                    </div>
                 )}
 
                 {/* Méthode d'insémination/pollinisation — sans objet pour un lien de couple */}

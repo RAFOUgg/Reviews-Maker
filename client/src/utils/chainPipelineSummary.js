@@ -13,35 +13,36 @@
  * client/src/components/pipelines/sections/{Separation,Extraction}PipelineSection.jsx,
  * client/src/components/sections/CuringMaturationSection.jsx,
  * client/src/pages/review/CreateEdibleReview/sections/RecipePipelineSection.jsx.
+ *
+ * Les options (value/label) sont importées depuis les configs *SidebarContent.js — ce sont
+ * les mêmes qui alimentent les formulaires de création de review, pour ne jamais dériver
+ * (ex: ChainEdgeFormModal propose ces mêmes libellés dans son menu déroulant "Technique").
  */
 
-const SEPARATION_TYPE_LABELS = {
-    'ice-water': 'Ice-Water / Bubble Hash',
-    'dry-sift': 'Dry-Sift / Tamisage à sec',
-    'ice-o-lator': 'Ice-O-Lator',
-    'rosin-press': 'Pré-pressage (Rosin)',
-    manual: 'Manuel / Artisanal',
-    other: 'Autre méthode'
-}
+import { getSeparationFieldById } from '../config/separationSidebarContent'
+import { getExtractionFieldById } from '../config/extractionSidebarContent'
+import { getCuringFieldById } from '../config/curingSidebarContent'
 
-const EXTRACTION_METHOD_LABELS = {
-    'rosin-press': 'Rosin Press (sans solvant)',
-    'live-rosin': 'Live Rosin (fresh frozen)',
-    'cold-cure-rosin': 'Cold Cure Rosin',
-    bho: 'BHO (Butane Hash Oil)',
-    pho: 'PHO (Propane Hash Oil)',
-    co2: 'CO2 (supercritique)',
-    'live-resin': 'Live Resin (BHO fresh frozen)',
-    ethanol: 'Extraction à l\'éthanol',
-    'dry-ice-rosin': 'Dry Ice Rosin',
-    other: 'Autre méthode'
-}
+const SEPARATION_TYPE_OPTIONS = getSeparationFieldById('separationType')?.options || []
+const EXTRACTION_METHOD_OPTIONS = getExtractionFieldById('extractionMethod')?.options || []
+const CURING_TYPE_OPTIONS = getCuringFieldById('curingType')?.options || []
 
-const CURING_TYPE_LABELS = {
-    cold: 'Froid (<5°C)',
-    warm: 'Chaud (>5°C)',
-    room: 'Température ambiante',
-    controlled: 'Contrôlée (cave)'
+const toLabelMap = (options) => options.reduce((acc, o) => { acc[o.value] = o.label; return acc }, {})
+
+const SEPARATION_TYPE_LABELS = toLabelMap(SEPARATION_TYPE_OPTIONS)
+const EXTRACTION_METHOD_LABELS = toLabelMap(EXTRACTION_METHOD_OPTIONS)
+const CURING_TYPE_LABELS = toLabelMap(CURING_TYPE_OPTIONS)
+
+/**
+ * Options canoniques pour le champ "Technique" d'une liaison de chaîne, selon le type de la
+ * review DESTINATION — les mêmes value/label que le formulaire de création utilise pour cette
+ * étape de pipeline. Retourne [] quand le type n'a pas de vocabulaire de technique fixe (edible).
+ */
+export function getTechniqueOptionsForReviewType(reviewType) {
+    if (reviewType === 'hash') return SEPARATION_TYPE_OPTIONS
+    if (reviewType === 'concentrate') return EXTRACTION_METHOD_OPTIONS
+    if (reviewType === 'flower') return CURING_TYPE_OPTIONS
+    return []
 }
 
 function safeParse(value) {

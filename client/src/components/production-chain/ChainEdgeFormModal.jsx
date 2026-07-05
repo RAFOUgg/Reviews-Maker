@@ -4,10 +4,10 @@
  * Modelé sur EdgeFormModal.jsx (genetics), avec technique/date/notes au lieu de relationshipType.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidInput, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
-import { getPipelineSummaryForEdge } from '../../utils/chainPipelineSummary';
+import { getPipelineSummaryForEdge, getTechniqueOptionsForReviewType } from '../../utils/chainPipelineSummary';
 import { Save, X, ArrowDown, Sparkles } from 'lucide-react';
 
 const ChainEdgeFormModal = ({ onClose }) => {
@@ -16,6 +16,7 @@ const ChainEdgeFormModal = ({ onClose }) => {
     const [error, setError] = useState(null);
     const [pipelineSummary, setPipelineSummary] = useState(null);
     const [loadingSummary, setLoadingSummary] = useState(false);
+    const [customTechnique, setCustomTechnique] = useState(false);
 
     const formData = store.edgeFormData || {};
     const isEdit = formData.id !== undefined;
@@ -101,6 +102,25 @@ const ChainEdgeFormModal = ({ onClose }) => {
     const sourceNode = store.nodes.find(n => n.id === formData.sourceNodeId);
     const targetNode = store.nodes.find(n => n.id === formData.targetNodeId);
 
+    // Vocabulaire canonique du champ "technique" de la fiche destination (mêmes value/label que
+    // son propre pipeline : séparation pour hash, extraction pour concentré, curing pour fleur).
+    // Vide pour edible/aucune destination sélectionnée -> repli sur la saisie libre historique.
+    const techniqueOptions = useMemo(
+        () => getTechniqueOptionsForReviewType(targetNode?.reviewType),
+        [targetNode?.reviewType]
+    );
+    const matchedTechnique = techniqueOptions.find(o => o.label === formData.technique);
+    const showCustomTechniqueInput = techniqueOptions.length === 0 || (!!formData.technique && !matchedTechnique) || customTechnique;
+
+    const handleTechniqueSelectChange = (v) => {
+        if (v === '__custom__') {
+            setCustomTechnique(true);
+            return;
+        }
+        setCustomTechnique(false);
+        handleChange('technique', v);
+    };
+
     return (
         <LiquidModal
             isOpen={true}
@@ -111,11 +131,11 @@ const ChainEdgeFormModal = ({ onClose }) => {
                     <span>{isEdit ? 'Éditer la transformation' : 'Créer une transformation'}</span>
                 </div>
             }
-            size="md"
+            size="xl"
             glowColor="amber"
             footer={
                 <div className="flex gap-3">
-                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X} className="flex-1">
                         Annuler
                     </LiquidButton>
                     <LiquidButton
@@ -124,6 +144,7 @@ const ChainEdgeFormModal = ({ onClose }) => {
                         disabled={loading || !formData.sourceNodeId || !formData.targetNodeId}
                         loading={loading}
                         icon={Save}
+                        className="flex-1"
                     >
                         {isEdit ? 'Mettre à jour' : 'Créer la liaison'}
                     </LiquidButton>
@@ -137,29 +158,45 @@ const ChainEdgeFormModal = ({ onClose }) => {
                     </LiquidCard>
                 )}
 
-                <LiquidSelect
-                    label="Produit source *"
-                    value={formData.sourceNodeId || ''}
-                    onChange={(v) => handleChange('sourceNodeId', v)}
-                    disabled={isEdit}
-                    options={[
-                        { value: '', label: 'Sélectionner un produit source...' },
-                        ...store.nodes.map(node => ({ value: node.id, label: node.label }))
-                    ]}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <LiquidSelect
+                            label="Produit source *"
+                            value={formData.sourceNodeId || ''}
+                            onChange={(v) => handleChange('sourceNodeId', v)}
+                            disabled={isEdit}
+                            options={[
+                                { value: '', label: 'Sélectionner un produit source...' },
+                                ...store.nodes.map(node => ({ value: node.id, label: node.label }))
+                            ]}
+                        />
+                        {sourceNode && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
+                                <span className="text-sm text-white">{sourceNode.label}</span>
+                            </div>
+                        )}
+                    </div>
 
-                <LiquidSelect
-                    label="Produit destination *"
-                    value={formData.targetNodeId || ''}
-                    onChange={(v) => handleChange('targetNodeId', v)}
-                    disabled={isEdit}
-                    options={[
-                        { value: '', label: 'Sélectionner un produit destination...' },
-                        ...store.nodes
-                            .filter(n => n.id !== formData.sourceNodeId)
-                            .map(node => ({ value: node.id, label: node.label }))
-                    ]}
-                />
+                    <div className="space-y-2">
+                        <LiquidSelect
+                            label="Produit destination *"
+                            value={formData.targetNodeId || ''}
+                            onChange={(v) => handleChange('targetNodeId', v)}
+                            disabled={isEdit}
+                            options={[
+                                { value: '', label: 'Sélectionner un produit destination...' },
+                                ...store.nodes
+                                    .filter(n => n.id !== formData.sourceNodeId)
+                                    .map(node => ({ value: node.id, label: node.label }))
+                            ]}
+                        />
+                        {targetNode && (
+                            <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
+                                <span className="text-sm text-white">{targetNode.label}</span>
+                            </div>
+                        )}
+                    </div>
+                </div>
 
                 {sourceNode && targetNode && (
                     <LiquidCard className="p-4">
@@ -190,20 +227,47 @@ const ChainEdgeFormModal = ({ onClose }) => {
                     </LiquidCard>
                 )}
 
-                <LiquidInput
-                    label="Technique utilisée"
-                    value={formData.technique || ''}
-                    onChange={(e) => handleChange('technique', e.target.value)}
-                    placeholder="ex: Extraction rosin 90µ, Curing 30j..."
-                    maxLength={200}
-                />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        {techniqueOptions.length > 0 ? (
+                            <>
+                                <LiquidSelect
+                                    label="Technique utilisée"
+                                    value={showCustomTechniqueInput ? '__custom__' : (matchedTechnique?.label || '')}
+                                    onChange={handleTechniqueSelectChange}
+                                    options={[
+                                        { value: '', label: 'Sélectionner...' },
+                                        ...techniqueOptions.map(o => ({ value: o.label, label: o.label })),
+                                        { value: '__custom__', label: '✏️ Autre / saisie libre...' }
+                                    ]}
+                                />
+                                {showCustomTechniqueInput && (
+                                    <LiquidInput
+                                        value={formData.technique || ''}
+                                        onChange={(e) => handleChange('technique', e.target.value)}
+                                        placeholder="ex: Extraction rosin 90µ, Curing 30j..."
+                                        maxLength={200}
+                                    />
+                                )}
+                            </>
+                        ) : (
+                            <LiquidInput
+                                label="Technique utilisée"
+                                value={formData.technique || ''}
+                                onChange={(e) => handleChange('technique', e.target.value)}
+                                placeholder="ex: Extraction rosin 90µ, Curing 30j..."
+                                maxLength={200}
+                            />
+                        )}
+                    </div>
 
-                <LiquidInput
-                    type="date"
-                    label="Date de la manipulation"
-                    value={formData.date || ''}
-                    onChange={(e) => handleChange('date', e.target.value)}
-                />
+                    <LiquidInput
+                        type="date"
+                        label="Date de la manipulation"
+                        value={formData.date || ''}
+                        onChange={(e) => handleChange('date', e.target.value)}
+                    />
+                </div>
 
                 <LiquidTextarea
                     label="Notes sur cette transformation (optionnel)"

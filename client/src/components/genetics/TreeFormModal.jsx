@@ -71,11 +71,11 @@ const TreeFormModal = ({ isEdit, onClose }) => {
                     <span>{isEdit ? 'Éditer arbre' : 'Nouvel arbre généalogique'}</span>
                 </div>
             }
-            size="md"
+            size="lg"
             glowColor="green"
             footer={
                 <div className="flex gap-3">
-                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X} className="flex-1">
                         Annuler
                     </LiquidButton>
                     <LiquidButton
@@ -84,6 +84,7 @@ const TreeFormModal = ({ isEdit, onClose }) => {
                         disabled={loading || !formData.name}
                         loading={loading}
                         icon={Save}
+                        className="flex-1"
                     >
                         {isEdit ? 'Mettre à jour' : 'Créer l\'arbre'}
                     </LiquidButton>

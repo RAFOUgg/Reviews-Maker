@@ -48,11 +48,11 @@ const ChainFormModal = ({ chain, onClose }) => {
                     <span>Éditer la chaîne</span>
                 </div>
             }
-            size="md"
+            size="lg"
             glowColor="green"
             footer={
                 <div className="flex gap-3">
-                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X} className="flex-1">
                         Annuler
                     </LiquidButton>
                     <LiquidButton
@@ -61,6 +61,7 @@ const ChainFormModal = ({ chain, onClose }) => {
                         disabled={loading || !name}
                         loading={loading}
                         icon={Save}
+                        className="flex-1"
                     >
                         Mettre à jour
                     </LiquidButton>

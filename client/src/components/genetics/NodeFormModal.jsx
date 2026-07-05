@@ -176,11 +176,11 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                     <span>{isEdit ? 'Éditer cultivar' : 'Ajouter cultivar'}</span>
                 </div>
             }
-            size="lg"
+            size="xl"
             glowColor="green"
             footer={
                 <div className="flex gap-3">
-                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X}>
+                    <LiquidButton variant="ghost" onClick={onClose} disabled={loading} icon={X} className="flex-1">
                         Annuler
                     </LiquidButton>
                     <LiquidButton
@@ -189,6 +189,7 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                         disabled={loading || !formData.cultivarName}
                         loading={loading}
                         icon={Save}
+                        className="flex-1"
                     >
                         {isEdit ? 'Mettre à jour' : 'Ajouter'}
                     </LiquidButton>
@@ -243,48 +244,50 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                 <LiquidCard className="p-4 space-y-4">
                     <h4 className="text-sm font-semibold text-white">Informations génétiques de base</h4>
 
-                    <LiquidSelect
-                        label="Sexe"
-                        value={formData.genetics?.sex || 'unknown'}
-                        onChange={(v) => handleGeneticsChange('sex', v)}
-                        options={[
-                            { value: 'unknown', label: '❓ Inconnu / non sexé' },
-                            { value: 'female', label: '♀ Femelle' },
-                            { value: 'male', label: '♂ Mâle' }
-                        ]}
-                    />
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <LiquidSelect
+                            label="Sexe"
+                            value={formData.genetics?.sex || 'unknown'}
+                            onChange={(v) => handleGeneticsChange('sex', v)}
+                            options={[
+                                { value: 'unknown', label: '❓ Inconnu / non sexé' },
+                                { value: 'female', label: '♀ Femelle' },
+                                { value: 'male', label: '♂ Mâle' }
+                            ]}
+                        />
 
-                    <LiquidSelect
-                        label="Type"
-                        value={formData.genetics?.type || ''}
-                        onChange={(v) => handleGeneticsChange('type', v)}
-                        options={[
-                            { value: '', label: 'Sélectionner...' },
-                            { value: 'Indica', label: 'Indica' },
-                            { value: 'Sativa', label: 'Sativa' },
-                            { value: 'Hybride', label: 'Hybride' },
-                            { value: 'Ruderalis', label: 'Ruderalis' },
-                            { value: 'Chanvre', label: 'Chanvre (Hemp)' }
-                        ]}
-                    />
+                        <LiquidSelect
+                            label="Type"
+                            value={formData.genetics?.type || ''}
+                            onChange={(v) => handleGeneticsChange('type', v)}
+                            options={[
+                                { value: '', label: 'Sélectionner...' },
+                                { value: 'Indica', label: 'Indica' },
+                                { value: 'Sativa', label: 'Sativa' },
+                                { value: 'Hybride', label: 'Hybride' },
+                                { value: 'Ruderalis', label: 'Ruderalis' },
+                                { value: 'Chanvre', label: 'Chanvre (Hemp)' }
+                            ]}
+                        />
 
-                    <LiquidInput
-                        label="Breeder"
-                        value={formData.genetics?.breeder || ''}
-                        onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
-                        placeholder="ex: Exotic Genetix"
-                    />
+                        <LiquidInput
+                            label="Breeder"
+                            value={formData.genetics?.breeder || ''}
+                            onChange={(e) => handleGeneticsChange('breeder', e.target.value)}
+                            placeholder="ex: Exotic Genetix"
+                        />
 
-                    <LiquidInput
-                        type="number"
-                        min="0"
-                        max="100"
-                        label="Ratio Indica/Sativa (%)"
-                        value={formData.genetics?.ratio ?? ''}
-                        onChange={(e) => handleGeneticsChange('ratio', e.target.value)}
-                        placeholder="ex: 70 (0 = Sativa pur, 100 = Indica pur)"
-                        hint="Classification empirique/commerciale, pas une taxonomie botanique validée — le chémotype (profil terpénique/cannabinoïde) est aujourd'hui considéré plus fiable scientifiquement."
-                    />
+                        <LiquidInput
+                            type="number"
+                            min="0"
+                            max="100"
+                            label="Ratio Indica/Sativa (%)"
+                            value={formData.genetics?.ratio ?? ''}
+                            onChange={(e) => handleGeneticsChange('ratio', e.target.value)}
+                            placeholder="ex: 70 (0 = Sativa pur, 100 = Indica pur)"
+                            hint="Classification empirique/commerciale, pas une taxonomie botanique validée — le chémotype (profil terpénique/cannabinoïde) est aujourd'hui considéré plus fiable scientifiquement."
+                        />
+                    </div>
                 </LiquidCard>
 
                 {/* Sections de breeding avancées — repliables, pilotées par phenoNodeFields.js.
@@ -311,7 +314,16 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                                     {section.sectionHint && (
                                         <p className="text-white/40 text-xs -mt-2">{section.sectionHint}</p>
                                     )}
-                                    {section.fields.map(renderField)}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        {section.fields.map(field => (
+                                            <div
+                                                key={field.id}
+                                                className={field.type === 'textarea' ? 'sm:col-span-2' : ''}
+                                            >
+                                                {renderField(field)}
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </LiquidCard>
