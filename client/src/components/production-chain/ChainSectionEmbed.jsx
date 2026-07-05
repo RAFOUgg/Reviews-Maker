@@ -3,8 +3,8 @@
  *
  * Accès à la Chaîne de production directement depuis une section pipeline (Culture/Séparation/
  * Extraction/Recette) d'un formulaire de review — même esprit que Genetiques.jsx (PhenoHunt)
- * pour la fleur : bouton d'ouverture, choix créer vide / créer à partir de cette fiche / importer
- * dans une chaîne existante, puis canvas complet embarqué une fois lié.
+ * pour la fleur : bouton d'ouverture, choix importer dans une chaîne existante / créer une
+ * nouvelle chaîne avec ce produit / créer une chaîne vide, puis canvas complet embarqué une fois lié.
  *
  * Différence structurelle assumée avec PhenoHunt : il n'existe PAS de FK "productionChainId" sur
  * les reviews (ChainNode.reviewId n'est qu'un champ best-effort, cf. schema.prisma) — une review
@@ -13,7 +13,7 @@
  * référence réellement). Comportement volontairement identique à handleCreateEmptyTree côté PhenoHunt.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ReactFlowProvider } from 'reactflow';
 import { GitBranch, Plus, PackagePlus, Upload, X, ArrowLeft } from 'lucide-react';
 import { LiquidButton, LiquidCard } from '@/components/ui/LiquidUI';
@@ -23,8 +23,8 @@ import ProductAddSidebar from './ProductAddSidebar';
 
 const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) => {
     const store = useProductionChainStore();
+    const [statusLoading, setStatusLoading] = useState(true);
     const [open, setOpen] = useState(false);
-    const [loading, setLoading] = useState(false);
     const [busy, setBusy] = useState(false);
     const [linkedChains, setLinkedChains] = useState([]);
     const [selectedChainId, setSelectedChainId] = useState(null);
@@ -32,21 +32,27 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
     const [showImportPicker, setShowImportPicker] = useState(false);
     const [error, setError] = useState(null);
 
-    if (!reviewId) return null;
-
-    const handleOpen = async () => {
-        setOpen(true);
-        setLoading(true);
-        setError(null);
-        const [forReviewResult] = await Promise.all([
+    // Résout dès le montage si cette fiche appartient déjà à une chaîne — le bouton fermé doit
+    // afficher "Créer" ou "Ouvrir" sans attendre un clic (cf. retour utilisateur).
+    useEffect(() => {
+        if (!reviewId) return;
+        let cancelled = false;
+        setStatusLoading(true);
+        Promise.all([
             store.fetchChainsForReview(reviewType, reviewId),
             store.fetchChains()
-        ]);
-        const chains = forReviewResult?.data || [];
-        setLinkedChains(chains);
-        setSelectedChainId(chains[0]?.id || null);
-        setLoading(false);
-    };
+        ]).then(([forReviewResult]) => {
+            if (cancelled) return;
+            const chains = forReviewResult?.data || [];
+            setLinkedChains(chains);
+            setSelectedChainId(chains[0]?.id || null);
+            setStatusLoading(false);
+        });
+        return () => { cancelled = true };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [reviewId, reviewType]);
+
+    if (!reviewId) return null;
 
     const handleClose = () => {
         setOpen(false);
@@ -110,11 +116,25 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
         setBusy(false);
     };
 
+    // Bouton fermé — même convention visuelle que les autres actions "ouvrir un outil externe"
+    // du header de pipeline (ex: bouton GrowBrain dans PipelineDragDropView.jsx).
     if (!open) {
+        const isLinked = !statusLoading && linkedChains.length > 0;
+        const Icon = statusLoading ? GitBranch : (isLinked ? GitBranch : Plus);
+        const label = statusLoading
+            ? 'Chaîne de production…'
+            : (isLinked ? 'Ouvrir la chaîne de production' : 'Créer une chaîne de production');
+
         return (
-            <LiquidButton variant="outline" icon={GitBranch} onClick={handleOpen}>
-                Ouvrir la chaîne de production
-            </LiquidButton>
+            <button
+                type="button"
+                onClick={() => setOpen(true)}
+                disabled={statusLoading}
+                className="flex items-center gap-2 px-3 py-2 rounded-xl font-medium text-sm transition-all duration-200 bg-emerald-500/10 hover:bg-emerald-500/20 border border-emerald-500/40 text-emerald-300 hover:text-emerald-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+                <Icon className="w-4 h-4" />
+                {label}
+            </button>
         );
     }
 
@@ -136,9 +156,7 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
 
             {error && <p className="text-sm text-red-400">{error}</p>}
 
-            {loading ? (
-                <div className="py-8 text-center text-white/40 text-sm">Chargement...</div>
-            ) : showChoicePanel ? (
+            {showChoicePanel ? (
                 showImportPicker ? (
                     <div className="space-y-2">
                         <p className="text-sm text-white/60">Choisissez la chaîne à laquelle ajouter cette fiche :</p>
@@ -164,6 +182,32 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
                 ) : (
                     <div className="space-y-2">
                         <p className="text-sm text-white/60">Comment souhaitez-vous procéder avec cette fiche technique ?</p>
+                        {store.chains.length > 0 && (
+                            <button
+                                type="button"
+                                disabled={busy}
+                                onClick={() => setShowImportPicker(true)}
+                                className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:border-emerald-500/50 text-left transition-colors disabled:opacity-50"
+                            >
+                                <Upload className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
+                                <div>
+                                    <p className="text-sm font-semibold text-white">Importer dans une chaîne existante</p>
+                                    <p className="text-xs text-white/50">Ajoutez cette fiche à une chaîne déjà créée ({store.chains.length} chaîne{store.chains.length > 1 ? 's' : ''})</p>
+                                </div>
+                            </button>
+                        )}
+                        <button
+                            type="button"
+                            disabled={busy}
+                            onClick={handleCreateFromReview}
+                            className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:border-emerald-500/50 text-left transition-colors disabled:opacity-50"
+                        >
+                            <PackagePlus className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
+                            <div>
+                                <p className="text-sm font-semibold text-white">Créer une nouvelle chaîne avec ce produit</p>
+                                <p className="text-xs text-white/50">Utilisez cette fiche comme point de départ de la chaîne</p>
+                            </div>
+                        </button>
                         <button
                             type="button"
                             disabled={busy}
@@ -176,32 +220,6 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
                                 <p className="text-xs text-white/50">Commencez une nouvelle chaîne de production depuis zéro</p>
                             </div>
                         </button>
-                        <button
-                            type="button"
-                            disabled={busy}
-                            onClick={handleCreateFromReview}
-                            className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:border-emerald-500/50 text-left transition-colors disabled:opacity-50"
-                        >
-                            <PackagePlus className="w-5 h-5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                            <div>
-                                <p className="text-sm font-semibold text-white">Créer une chaîne à partir de cette fiche</p>
-                                <p className="text-xs text-white/50">Utilisez cette fiche comme point de départ de la chaîne</p>
-                            </div>
-                        </button>
-                        {store.chains.length > 0 && (
-                            <button
-                                type="button"
-                                disabled={busy}
-                                onClick={() => setShowImportPicker(true)}
-                                className="w-full flex items-start gap-3 px-4 py-3 rounded-xl border border-white/10 bg-white/5 hover:border-emerald-500/50 text-left transition-colors disabled:opacity-50"
-                            >
-                                <Upload className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
-                                <div>
-                                    <p className="text-sm font-semibold text-white">Importer cette fiche dans une chaîne existante</p>
-                                    <p className="text-xs text-white/50">Ajoutez cette fiche à une chaîne déjà créée ({store.chains.length} chaîne{store.chains.length > 1 ? 's' : ''})</p>
-                                </div>
-                            </button>
-                        )}
                         {linkedChains.length > 0 && (
                             <LiquidButton variant="ghost" size="sm" onClick={() => setForceChoicePanel(false)}>
                                 Annuler
