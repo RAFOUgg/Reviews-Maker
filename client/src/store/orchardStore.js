@@ -567,6 +567,13 @@ export const useOrchardStore = create(
                 activePreset: null
             }),
 
+            // Applique une configuration Orchard arbitraire (ex: template sauvegardé
+            // sélectionné depuis Bibliothèque > Templates) sans passer par un preset local.
+            applyConfig: (config) => set({
+                config: { ...DEFAULT_CONFIG, ...config },
+                activePreset: null
+            }),
+
             // Obtenir les templates et palettes disponibles
             getTemplates: () => get().templates,
             registerTemplate: (id, data) => set((state) => ({

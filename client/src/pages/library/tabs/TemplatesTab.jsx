@@ -50,60 +50,6 @@ const PREDEFINED_TEMPLATES = [
     },
 ]
 
-// Ancienne liste conservée en référence (ids ne correspondant à aucun template réel) :
-const _LEGACY_PREDEFINED_TEMPLATES = [
-    {
-        id: 'compact',
-        name: 'Compact',
-        description: 'Format concis avec les informations essentielles',
-        format: '1:1',
-        tier: 'free',
-        preview: '/templates/compact-preview.png',
-        sections: ['type', 'nom', 'cultivars', 'photo', 'curing', 'scores'],
-        icon: LayoutGrid
-    },
-    {
-        id: 'detailed',
-        name: 'Détaillé',
-        description: 'Format complet avec toutes les notes détaillées',
-        format: ['1:1', '16:9', '9:16', 'A4'],
-        tier: 'free',
-        preview: '/templates/detailed-preview.png',
-        sections: ['all-scores', 'curing', 'photos'],
-        icon: LayoutList
-    },
-    {
-        id: 'complete',
-        name: 'Complète',
-        description: 'Export exhaustif avec PipeLine et génétiques',
-        format: ['A4', '16:9'],
-        tier: 'free',
-        preview: '/templates/complete-preview.png',
-        sections: ['all', 'pipeline', 'genetics'],
-        icon: FileText
-    },
-    {
-        id: 'influencer',
-        name: 'Influenceur',
-        description: 'Format optimisé pour les réseaux sociaux',
-        format: '9:16',
-        tier: 'influencer',
-        preview: '/templates/influencer-preview.png',
-        sections: ['type', 'nom', 'photo', 'scores', 'effects'],
-        icon: Smartphone
-    },
-    {
-        id: 'custom',
-        name: 'Personnalisé',
-        description: 'Drag & drop complet avec zones personnalisables',
-        format: ['1:1', '9:16'],
-        tier: 'producer',
-        preview: '/templates/custom-preview.png',
-        sections: ['custom'],
-        icon: Settings2
-    }
-]
-
 const TIER_CONFIG = {
     free: { label: 'Gratuit', color: 'green', icon: null },
     influencer: { label: 'Influenceur', color: 'pink', icon: Sparkles },
@@ -112,6 +58,8 @@ const TIER_CONFIG = {
 
 export default function TemplatesTab({ userTier = 'amateur' }) {
     const toast = useToast()
+    const navigate = useNavigate()
+    const applyConfig = useOrchardStore((state) => state.applyConfig)
 
     const [subTab, setSubTab] = useState('templates')
     const [savedTemplates, setSavedTemplates] = useState([])
@@ -122,7 +70,8 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
     const [shareCode, setShareCode] = useState('')
     const [importCode, setImportCode] = useState('')
 
-    // Charger les templates sauvegardés
+    // Charger les templates sauvegardés — GET /api/library/templates renvoie un tableau
+    // brut (pas {templates, defaultId}), géré défensivement pour les deux formes.
     const fetchTemplates = useCallback(async () => {
         try {
             setLoading(true)
@@ -131,8 +80,8 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
             })
             if (response.ok) {
                 const data = await response.json()
-                setSavedTemplates(data.templates || [])
-                setDefaultTemplateId(data.defaultId)
+                setSavedTemplates(Array.isArray(data) ? data : (data.templates || []))
+                setDefaultTemplateId(Array.isArray(data) ? null : data.defaultId)
             }
         } catch (error) {
             toast.error('Erreur lors du chargement des templates')
@@ -140,6 +89,19 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
             setLoading(false)
         }
     }, [toast])
+
+    // "Utiliser" un template Orchard sauvegardé : charge sa config dans le store global
+    // Export Maker — la prochaine ouverture d'"Aperçu" sur une review l'utilisera.
+    const useTemplate = (template) => {
+        try {
+            const config = typeof template.config === 'string' ? JSON.parse(template.config) : template.config
+            applyConfig(config)
+            toast.success('Style appliqué — ouvrez "Aperçu" sur une review pour le voir')
+            navigate('/library?tab=reviews')
+        } catch {
+            toast.error('Configuration de template invalide')
+        }
+    }
 
     useEffect(() => {
         fetchTemplates()
@@ -389,7 +351,15 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
                         </p>
 
                         {/* Actions */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
+                            {template.templateType === 'orchard' && (
+                                <button
+                                    onClick={() => useTemplate(template)}
+                                    className="flex-1 py-2 px-3 rounded-lg text-sm font-medium bg-purple-600 text-white hover:bg-purple-700 transition-colors"
+                                >
+                                    Utiliser
+                                </button>
+                            )}
                             <button
                                 onClick={() => setAsDefault(template.id, false)}
                                 className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${isDefault

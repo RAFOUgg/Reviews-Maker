@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { safeParse } from '../../../utils/orchardHelpers';
 
 /**
  * ProductionChainMiniView - Vue interactive lecture seule de la chaîne de production
@@ -69,7 +70,16 @@ export default function ProductionChainMiniView({ reviewData, sectionFontSize = 
                 const chainRes = await fetch(`/api/production-chains/chains/${chains[0].id}`, { credentials: 'include' });
                 if (!chainRes.ok || cancelled) return;
                 const full = await chainRes.json();
-                if (!cancelled) setChain(full);
+                // GET /chains/:id renvoie cellData en JSON brut (comme position ailleurs dans
+                // l'app) — le parsing est normalement fait par useProductionChainStore.loadChain,
+                // qu'on ne peut pas utiliser ici (store global partagé entre plusieurs cartes).
+                if (!cancelled) {
+                    setChain({
+                        ...full,
+                        nodes: (full.nodes || []).map(n => ({ ...n, cellData: safeParse(n.cellData, []) })),
+                        edges: (full.edges || []).map(e => ({ ...e, cellData: safeParse(e.cellData, []) }))
+                    });
+                }
             } catch {
                 // pas de chaîne — vue simplement masquée
             }
