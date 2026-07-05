@@ -5,6 +5,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
+import { Image as ImageIcon } from 'lucide-react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
 const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isFamily, underlyingEdges }) => {
@@ -95,6 +96,13 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
         onClose();
     };
 
+    const mediaCount = Array.isArray(edge?.media) ? edge.media.length : 0;
+
+    const handleOpenMedia = () => {
+        store.openMediaModal('edge', edgeId);
+        onClose();
+    };
+
     const relationshipLabel = {
         'parent': '👨‍👩‍👧 Parent',
         'pollen_donor': '🌼 Donateur de pollen',
@@ -169,6 +177,10 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
                             🔀 Inverser la direction
                         </button>
                     )}
+                    <button className="context-menu-item" onClick={handleOpenMedia}>
+                        <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
+                    </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>
             )}

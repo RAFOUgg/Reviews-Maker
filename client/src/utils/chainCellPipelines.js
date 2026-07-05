@@ -41,11 +41,11 @@ export const REVIEW_TYPE_PIPELINES = {
     ]
 }
 
-// Catégories qui ne sont PAS des timelines de pipeline (pas d'upsert possible via
-// /api/review-pipeline-cells, pas de "cellule vide" à remplir depuis la chaîne) — juste un
-// instantané en lecture des données déjà présentes sur la fiche, sélectionnable pour comparaison
-// visuelle entre produits/nœuds.
-export const READONLY_CELL_CATEGORIES = new Set(['general', 'recipe'])
+// Catégories qui ne sont PAS des timelines de pipeline ET n'ont pas d'upsert dédié depuis la
+// chaîne (pas de "cellule vide" à remplir) — juste un instantané en lecture, sélectionnable pour
+// comparaison visuelle. 'general' EST éditable (cf. getGeneralFieldSchema + /api/review-general-
+// fields) ; seule 'recipe' (ingrédients/étapes, structure différente) reste en lecture seule.
+export const READONLY_CELL_CATEGORIES = new Set(['recipe'])
 
 const FIELD_LOOKUPS = {
     culture: getCultureFieldById,
@@ -327,33 +327,68 @@ function resolveGeneralFieldValue(reviewFlat, key) {
     return value
 }
 
+// Champs stockés en JSON (tableau de chaînes) plutôt qu'en score numérique — reflet exact de la
+// whitelist 'tags' côté server-new/routes/review-general-fields.js, pour rendre le bon type
+// d'input (texte séparé par virgules) dans l'éditeur plutôt qu'un champ numérique.
+const GENERAL_ARRAY_FIELD_KEYS = new Set([
+    'notesOdeursDominantes', 'notesOdeursSecondaires', 'notesDominantes', 'notesSecondaires', 'effetsChoisis'
+])
+
 /**
- * "Autres données" — un instantané en lecture des scores/valeurs déjà renseignés sur la fiche
- * (analytique, visuel, arômes, texture, effets), regroupés par section comme une cellule de
- * pipeline, pour comparer visuellement deux produits sur n'importe quelle donnée, pas seulement
- * les pipelines de fabrication.
+ * "Autres données" — les scores/valeurs de la fiche (analytique, visuel, arômes, texture,
+ * effets), regroupés par section comme une cellule de pipeline. Affiche TOUTES les sections
+ * (y compris vides) pour pouvoir aussi bien sélectionner ce qui existe déjà que compléter une
+ * section non renseignée — édité via /api/review-general-fields, pas une simple lecture.
  */
 export function getGeneralDataCells(reviewFlat, reviewType) {
     if (!reviewFlat) return []
     const sections = GENERAL_SECTIONS_BY_TYPE[reviewType] || []
-    return sections
-        .map(section => {
-            const fields = section.fields
-                .map(([key, label, unit]) => {
-                    const value = resolveGeneralFieldValue(reviewFlat, key)
-                    if (value === null) return null
-                    return { key, label, value: `${value}${unit || ''}` }
-                })
-                .filter(Boolean)
-            return {
-                timestamp: section.key,
-                cellLabel: section.label,
-                hasData: fields.length > 0,
-                fields,
-                data: Object.fromEntries(fields.map(f => [f.key, reviewFlat[f.key]]))
-            }
-        })
-        .filter(cell => cell.hasData)
+    return sections.map(section => {
+        const fields = section.fields
+            .map(([key, label, unit]) => {
+                const value = resolveGeneralFieldValue(reviewFlat, key)
+                if (value === null) return null
+                return { key, label, value: `${value}${unit || ''}` }
+            })
+            .filter(Boolean)
+        return {
+            timestamp: section.key,
+            cellLabel: section.label,
+            hasData: fields.length > 0,
+            fields,
+            data: Object.fromEntries(section.fields.map(([key]) => {
+                if (GENERAL_ARRAY_FIELD_KEYS.has(key)) {
+                    const parsed = safeParse(reviewFlat[key])
+                    return [key, Array.isArray(parsed) ? parsed.join(', ') : '']
+                }
+                return [key, reviewFlat[key] ?? '']
+            }))
+        }
+    })
+}
+
+/**
+ * Schéma de champs (au format PipelineCellEditor) pour éditer une section "Autres données" —
+ * un input par champ de la section, texte pour les champs "tags" (séparés par virgules),
+ * numérique pour les scores.
+ */
+export function getGeneralFieldSchema(reviewType, sectionKey) {
+    const section = (GENERAL_SECTIONS_BY_TYPE[reviewType] || []).find(s => s.key === sectionKey)
+    if (!section) return { sections: [] }
+    return {
+        sections: [{
+            id: sectionKey,
+            label: section.label,
+            collapsed: false,
+            fields: section.fields.map(([key, label, unit]) => ({
+                key,
+                label,
+                unit,
+                type: GENERAL_ARRAY_FIELD_KEYS.has(key) ? 'text' : 'number',
+                step: 0.1
+            }))
+        }]
+    }
 }
 
 /**

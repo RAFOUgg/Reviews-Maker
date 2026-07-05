@@ -42,6 +42,8 @@ const useGeneticsStore = create(
             treeFormData: null,
             // Nœud pour lequel le picker "Lier à une review existante" est ouvert (null = fermé)
             linkReviewPickerNodeId: null,
+            // mediaModalTarget : { targetType: 'node'|'edge', targetId: string } | null
+            mediaModalTarget: null,
 
             // ============================================================================
             // STATE - CANVAS
@@ -93,17 +95,29 @@ const useGeneticsStore = create(
 
                     const tree = await response.json();
 
+                    const parseMedia = (raw) => {
+                        if (Array.isArray(raw)) return raw;
+                        if (typeof raw !== 'string') return [];
+                        try { return JSON.parse(raw) } catch { return [] }
+                    };
+
                     // Parser les JSON fields
                     const parsedNodes = tree.nodes.map(n => ({
                         ...n,
                         position: typeof n.position === 'string' ? JSON.parse(n.position) : n.position,
-                        genetics: typeof n.genetics === 'string' ? JSON.parse(n.genetics) : n.genetics
+                        genetics: typeof n.genetics === 'string' ? JSON.parse(n.genetics) : n.genetics,
+                        media: parseMedia(n.media)
+                    }));
+
+                    const parsedEdges = (tree.edges || []).map(e => ({
+                        ...e,
+                        media: parseMedia(e.media)
                     }));
 
                     set({
                         selectedTreeId: treeId,
                         nodes: parsedNodes,
-                        edges: tree.edges || [],
+                        edges: parsedEdges,
                         canvasLoading: false,
                         mode: 'edit'
                     });
@@ -444,6 +458,16 @@ const useGeneticsStore = create(
             openLinkReviewPicker: (nodeId) => set({ linkReviewPickerNodeId: nodeId }),
             closeLinkReviewPicker: () => set({ linkReviewPickerNodeId: null }),
 
+            openMediaModal: (targetType, targetId) => set({ mediaModalTarget: { targetType, targetId } }),
+            closeMediaModal: () => set({ mediaModalTarget: null }),
+
+            // Persiste le tableau media complet (photos/vidéos) d'un nœud/liaison de l'arbre.
+            updateMedia: async (targetType, targetId, nextMedia) => {
+                const state = get();
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+                return updateFn(targetId, { media: nextMedia });
+            },
+
             updateNodeFormData: (updates) => {
                 set(state => ({
                     nodeFormData: { ...(state.nodeFormData || {}), ...updates }
@@ -545,7 +569,9 @@ const useGeneticsStore = create(
                     selectedEdgeId: null,
                     selectedTreeId: null,
                     nodes: [],
-                    edges: []
+                    edges: [],
+                    linkReviewPickerNodeId: null,
+                    mediaModalTarget: null
                 });
             },
 
@@ -564,6 +590,8 @@ const useGeneticsStore = create(
                     nodeFormData: null,
                     edgeFormData: null,
                     treeFormData: null,
+                    linkReviewPickerNodeId: null,
+                    mediaModalTarget: null,
                     canvasZoom: 1,
                     canvasPosition: { x: 0, y: 0 },
                     treeLoading: false,

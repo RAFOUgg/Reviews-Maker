@@ -32,6 +32,7 @@ import ChainEdgeFormModal from './ChainEdgeFormModal';
 import ChainFormModal from './ChainFormModal';
 import ChainCellPickerModal from './ChainCellPickerModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
+import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import ConfirmModal from '../shared/ConfirmModal';
 import { Download, Upload, RotateCcw, FileImage, Edit2 } from 'lucide-react';
 
@@ -474,6 +475,18 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 )}
                 {store.cellPicker && <ChainCellPickerModal />}
                 {store.editingCell && <ChainCellEditorModal />}
+                {store.mediaModalTarget && (() => {
+                    const { targetType, targetId } = store.mediaModalTarget;
+                    const target = (targetType === 'node' ? store.nodes : store.edges).find(t => t.id === targetId);
+                    if (!target) return null;
+                    return (
+                        <MediaAttachmentModal
+                            media={Array.isArray(target.media) ? target.media : []}
+                            onChange={(next) => store.updateMedia(targetType, targetId, next)}
+                            onClose={store.closeMediaModal}
+                        />
+                    );
+                })()}
                 <ConfirmModal
                     open={!!deleteConfirm}
                     title={deleteConfirm?.type === 'node' ? 'Retirer ce produit' : 'Supprimer cette transformation'}

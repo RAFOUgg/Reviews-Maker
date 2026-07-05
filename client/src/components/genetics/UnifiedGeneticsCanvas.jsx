@@ -34,6 +34,7 @@ import EdgeContextMenu from './EdgeContextMenu';
 import PaneContextMenu from './PaneContextMenu';
 import NodeFormModal from './NodeFormModal';
 import LinkExistingReviewModal from './LinkExistingReviewModal';
+import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import EdgeFormModal from './EdgeFormModal';
 import ConfirmModal from '../shared/ConfirmModal';
 
@@ -627,6 +628,18 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 {store.linkReviewPickerNodeId && (
                     <LinkExistingReviewModal />
                 )}
+                {store.mediaModalTarget && (() => {
+                    const { targetType, targetId } = store.mediaModalTarget;
+                    const target = (targetType === 'node' ? store.nodes : store.edges).find(t => t.id === targetId);
+                    if (!target) return null;
+                    return (
+                        <MediaAttachmentModal
+                            media={Array.isArray(target.media) ? target.media : []}
+                            onChange={(next) => store.updateMedia(targetType, targetId, next)}
+                            onClose={store.closeMediaModal}
+                        />
+                    );
+                })()}
                 <ConfirmModal
                     open={!!deleteConfirm}
                     title={deleteConfirm?.type === 'node' ? 'Supprimer ce cultivar' : 'Supprimer cette relation'}

@@ -102,6 +102,7 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                         position: true,
                         color: true,
                         cellData: true,
+                        media: true,
                         createdAt: true,
                         updatedAt: true
                     }
@@ -118,7 +119,8 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                         waypointY: true,
                         sourceHandle: true,
                         targetHandle: true,
-                        cellData: true
+                        cellData: true,
+                        media: true
                     }
                 }
             }
@@ -271,7 +273,7 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
                 }
             })
 
-            res.status(201).json({ ...node, position: JSON.parse(node.position), cellData: JSON.parse(node.cellData || "[]") })
+            res.status(201).json({ ...node, position: JSON.parse(node.position), cellData: JSON.parse(node.cellData || "[]"), media: JSON.parse(node.media || "[]") })
         } catch (error) {
             if (error.code === "P2002") {
                 return res.status(409).json({ error: "This review is already in the chain" })
@@ -298,11 +300,12 @@ router.put("/nodes/:nodeId", requireAuth, requireChainAccess, validateChainNodeU
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { position, color, reviewType, reviewId, cellData } = req.body
+        const { position, color, reviewType, reviewId, cellData, media } = req.body
         const data = {
             ...(position && { position: JSON.stringify(position) }),
             ...(color && { color }),
-            ...(cellData !== undefined && { cellData: JSON.stringify(cellData) })
+            ...(cellData !== undefined && { cellData: JSON.stringify(cellData) }),
+            ...(media !== undefined && { media: JSON.stringify(media) })
         }
 
         // reviewId === null : détache un lien cassé (garde label/image en cache, "Tout détacher").
@@ -346,7 +349,7 @@ router.put("/nodes/:nodeId", requireAuth, requireChainAccess, validateChainNodeU
                 where: { id: req.params.nodeId },
                 data
             })
-            res.json({ ...updated, position: JSON.parse(updated.position), cellData: JSON.parse(updated.cellData || "[]") })
+            res.json({ ...updated, position: JSON.parse(updated.position), cellData: JSON.parse(updated.cellData || "[]"), media: JSON.parse(updated.media || "[]") })
         } catch (error) {
             if (error.code === "P2002") {
                 return res.status(409).json({ error: "This review is already in the chain" })
@@ -398,7 +401,7 @@ router.post("/chains/:id/edges", requireAuth, requireChainAccess, validateChainE
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { sourceNodeId, targetNodeId, technique = null, date = null, notes = null, cellData } = req.body
+        const { sourceNodeId, targetNodeId, technique = null, date = null, notes = null, cellData, media } = req.body
 
         const [sourceNode, targetNode] = await Promise.all([
             prisma.chainNode.findUnique({ where: { id: sourceNodeId } }),
@@ -428,11 +431,12 @@ router.post("/chains/:id/edges", requireAuth, requireChainAccess, validateChainE
                     technique: technique?.trim() || null,
                     date: date ? new Date(date) : null,
                     notes: notes?.trim() || null,
-                    ...(cellData !== undefined && { cellData: JSON.stringify(cellData) })
+                    ...(cellData !== undefined && { cellData: JSON.stringify(cellData) }),
+                    ...(media !== undefined && { media: JSON.stringify(media) })
                 }
             })
 
-            res.status(201).json({ ...edge, cellData: JSON.parse(edge.cellData || "[]") })
+            res.status(201).json({ ...edge, cellData: JSON.parse(edge.cellData || "[]"), media: JSON.parse(edge.media || "[]") })
         } catch (error) {
             if (error.code === "P2002") {
                 return res.status(409).json({ error: "This relationship already exists" })
@@ -459,7 +463,7 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { technique, date, notes, sourceNodeId, targetNodeId, waypointX, waypointY, sourceHandle, targetHandle, cellData } = req.body
+        const { technique, date, notes, sourceNodeId, targetNodeId, waypointX, waypointY, sourceHandle, targetHandle, cellData, media } = req.body
 
         // Inverser la direction (ou reconnecter vers un autre nœud) : les deux nœuds doivent
         // appartenir à la même chaîne, l'échange ne doit pas créer de cycle ni dupliquer une
@@ -504,11 +508,12 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
                 ...(waypointY !== undefined && { waypointY }),
                 ...(sourceHandle !== undefined && { sourceHandle }),
                 ...(targetHandle !== undefined && { targetHandle }),
-                ...(cellData !== undefined && { cellData: JSON.stringify(cellData) })
+                ...(cellData !== undefined && { cellData: JSON.stringify(cellData) }),
+                ...(media !== undefined && { media: JSON.stringify(media) })
             }
         })
 
-        res.json({ ...updated, cellData: JSON.parse(updated.cellData || "[]") })
+        res.json({ ...updated, cellData: JSON.parse(updated.cellData || "[]"), media: JSON.parse(updated.media || "[]") })
     } catch (error) {
         res.status(500).json({ error: "Failed to update chain edge" })
     }

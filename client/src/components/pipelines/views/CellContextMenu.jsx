@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, ClipboardPaste, Trash2, Eraser, ChevronLeft, Check, X } from 'lucide-react';
+import { Copy, ClipboardPaste, Trash2, Eraser, ChevronLeft, Check, X, Image as ImageIcon } from 'lucide-react';
 
 function CellContextMenu({
     isOpen,
@@ -21,7 +21,8 @@ function CellContextMenu({
     onDeleteFields,
     onCopy,
     onPaste,
-    hasCopiedData
+    hasCopiedData,
+    onOpenMedia
 }) {
     const [showFieldList, setShowFieldList] = useState(false);
     const [selectedFieldsToDelete, setSelectedFieldsToDelete] = useState([]);
@@ -89,8 +90,9 @@ function CellContextMenu({
     const isBulk = targetCount > 1;
 
     const dataFields = cellData ? Object.keys(cellData).filter(k =>
-        !['timestamp', 'label', 'date', 'phase', 'week', 'day', 'hours', 'seconds', '_meta'].includes(k)
+        !['timestamp', 'label', 'date', 'phase', 'week', 'day', 'hours', 'seconds', '_meta', 'media'].includes(k)
     ) : [];
+    const mediaCount = Array.isArray(cellData?.media) ? cellData.media.length : 0;
 
     const getFieldDef = (fieldKey) => {
         for (const section of (sidebarContent || [])) {
@@ -174,6 +176,21 @@ function CellContextMenu({
                             <span className="ml-auto w-2 h-2 rounded-full bg-green-500" />
                         )}
                     </button>
+
+                    {!isBulk && onOpenMedia && (
+                        <button
+                            onClick={() => { onOpenMedia(cellTimestamp); onClose(); }}
+                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors text-white/80 hover:text-white"
+                        >
+                            <ImageIcon className="w-4 h-4 text-amber-400" />
+                            <span>Photos / Vidéos</span>
+                            {mediaCount > 0 && (
+                                <span className="ml-auto text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full">
+                                    {mediaCount}
+                                </span>
+                            )}
+                        </button>
+                    )}
 
                     <div className="h-px bg-white/10 my-2 mx-4" />
 

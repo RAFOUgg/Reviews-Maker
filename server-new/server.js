@@ -25,6 +25,8 @@ import cultivarsRoutes from './routes/cultivars.js'
 import geneticsRoutes from './routes/genetics.js'
 import productionChainsRoutes from './routes/production-chains.js'
 import reviewPipelineCellsRoutes from './routes/review-pipeline-cells.js'
+import reviewGeneralFieldsRoutes from './routes/review-general-fields.js'
+import mediaUploadRoutes from './routes/media-upload.js'
 import pipelinesRoutes from './routes/pipelines.js'
 import pipelineCultureRoutes from './routes/pipeline-culture.js'
 import flowerReviewsRoutes from './routes/flower-reviews.js'
@@ -88,6 +90,12 @@ const reviewImagesDir = path.resolve(__dirname, '../db/review_images')
 app.use('/api/images', express.static(reviewImagesDir))
 app.use('/images', express.static(reviewImagesDir))
 
+// Médias (photo/vidéo, jusqu'à 200 Mo) illustrant une cellule de pipeline ou un nœud/liaison de
+// canvas — répertoire séparé de db/review_images/ (cf. routes/media-upload.js).
+const pipelineMediaDir = path.resolve(__dirname, '../db/pipeline_media')
+app.use('/api/media', express.static(pipelineMediaDir))
+app.use('/media', express.static(pipelineMediaDir))
+
 // Set up middleware
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
@@ -115,6 +123,8 @@ app.use('/api/cultivars', cultivarsRoutes)
 app.use('/api/genetics', geneticsRoutes)
 app.use('/api/production-chains', productionChainsRoutes)
 app.use('/api/review-pipeline-cells', reviewPipelineCellsRoutes)
+app.use('/api/review-general-fields', reviewGeneralFieldsRoutes)
+app.use('/api/media-upload', mediaUploadRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
 app.use(pipelineCultureRoutes)
 app.use('/api/flower-reviews', flowerReviewsRoutes)

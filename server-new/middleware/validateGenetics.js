@@ -2,6 +2,31 @@
  * Middleware de validation pour les routes genetics
  */
 
+// Photos/vidéos attachées à un nœud/liaison (cf. schema.prisma GenNode/GenEdge.media) — même
+// validation que production-chains (utils/media-upload.js gère déjà l'upload du fichier, ici on
+// ne reçoit que les métadonnées url/type/caption).
+const MAX_MEDIA_ITEMS = 20
+const MAX_MEDIA_BYTES = 50_000
+
+const validateMedia = (media) => {
+    if (media === undefined) return null
+    if (!Array.isArray(media)) return "media must be an array"
+    if (media.length > MAX_MEDIA_ITEMS) return `media cannot contain more than ${MAX_MEDIA_ITEMS} items`
+    if (media.some(m => typeof m !== "object" || m === null || Array.isArray(m) || typeof m.url !== "string")) {
+        return "Each media item must be an object with a url"
+    }
+    let serialized
+    try {
+        serialized = JSON.stringify(media)
+    } catch {
+        return "media is not serializable"
+    }
+    if (serialized.length > MAX_MEDIA_BYTES) {
+        return "media payload is too large"
+    }
+    return null
+}
+
 const validateTreeCreation = (req, res, next) => {
     const { name, description, projectType, isPublic } = req.body;
 
@@ -114,7 +139,7 @@ const validateEdgeCreation = (req, res, next) => {
 };
 
 const validateEdgeUpdate = (req, res, next) => {
-    const { relationshipType, pollinationMethod, notes, parentNodeId, childNodeId } = req.body;
+    const { relationshipType, pollinationMethod, notes, parentNodeId, childNodeId, media } = req.body;
 
     // Validation relationshipType (optionnel)
     if (relationshipType !== undefined) {
@@ -155,6 +180,11 @@ const validateEdgeUpdate = (req, res, next) => {
     }
     if (waypointY !== undefined && waypointY !== null && typeof waypointY !== "number") {
         return res.status(400).json({ error: "waypointY must be a number or null" });
+    }
+
+    const mediaError = validateMedia(media);
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError });
     }
 
     next();
@@ -204,7 +234,7 @@ const validateTreeUpdate = (req, res, next) => {
 };
 
 const validateNodeUpdate = (req, res, next) => {
-    const { cultivarName, position, color, genetics, notes } = req.body;
+    const { cultivarName, position, color, genetics, notes, media } = req.body;
 
     // Validation cultivarName (optionnel)
     if (cultivarName !== undefined) {
@@ -242,6 +272,11 @@ const validateNodeUpdate = (req, res, next) => {
         if (notes && (typeof notes !== "string" || notes.length > 500)) {
             return res.status(400).json({ error: "Notes must be less than 500 characters" });
         }
+    }
+
+    const mediaError = validateMedia(media);
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError });
     }
 
     next();

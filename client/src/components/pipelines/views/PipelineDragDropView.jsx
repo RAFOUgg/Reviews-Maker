@@ -25,6 +25,7 @@ import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
 import { LiquidModal, LiquidTabs, LiquidToggle, useEscapeClose } from '@/components/ui/LiquidUI';
 import CellContextMenu from './CellContextMenu';
+import MediaAttachmentModal from '../../shared/MediaAttachmentModal';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
@@ -1211,6 +1212,7 @@ const PipelineDragDropView = ({
     // Cell context menu state
     const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
     const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
+    const [mediaModalTimestamp, setMediaModalTimestamp] = useState(null); // Cellule dont la galerie photo/vidéo est ouverte
 
     // Appui long (touch) - refs pour les timers
     const longPressTimerRef = useRef(null);
@@ -3334,6 +3336,17 @@ const PipelineDragDropView = ({
                     onCopy={handleCopyCellData}
                     onPaste={handlePasteCellData}
                     hasCopiedData={copiedCellData !== null}
+                    onOpenMedia={setMediaModalTimestamp}
+                />
+            )}
+
+            {/* Galerie photo/vidéo d'une cellule — illustre visuellement l'étape (200 Mo max/fichier) */}
+            {mediaModalTimestamp && (
+                <MediaAttachmentModal
+                    media={getCellData(mediaModalTimestamp)?.media || []}
+                    onChange={(next) => onDataChange(mediaModalTimestamp, 'media', next)}
+                    onClose={() => setMediaModalTimestamp(null)}
+                    title={`Photos / Vidéos — ${getCellData(mediaModalTimestamp)?.label || 'cellule'}`}
                 />
             )}
 

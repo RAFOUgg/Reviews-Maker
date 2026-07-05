@@ -29,6 +29,31 @@ const validateCellData = (cellData) => {
     return null
 }
 
+// Photos/vidéos attachées (cf. schema.prisma ChainNode/ChainEdge.media) — le fichier lui-même est
+// déjà uploadé via /api/media-upload avant cet appel, on ne reçoit ici que les métadonnées
+// (url/type/caption), donc un payload nécessairement petit même avec plusieurs pièces jointes.
+const MAX_MEDIA_ITEMS = 20
+const MAX_MEDIA_BYTES = 50_000
+
+const validateMedia = (media) => {
+    if (media === undefined) return null
+    if (!Array.isArray(media)) return "media must be an array"
+    if (media.length > MAX_MEDIA_ITEMS) return `media cannot contain more than ${MAX_MEDIA_ITEMS} items`
+    if (media.some(m => typeof m !== "object" || m === null || Array.isArray(m) || typeof m.url !== "string")) {
+        return "Each media item must be an object with a url"
+    }
+    let serialized
+    try {
+        serialized = JSON.stringify(media)
+    } catch {
+        return "media is not serializable"
+    }
+    if (serialized.length > MAX_MEDIA_BYTES) {
+        return "media payload is too large"
+    }
+    return null
+}
+
 const validateChainCreation = (req, res, next) => {
     const { name, description, isPublic } = req.body
 
@@ -97,7 +122,7 @@ const validateChainNodeCreation = (req, res, next) => {
 }
 
 const validateChainNodeUpdate = (req, res, next) => {
-    const { position, color, reviewType, reviewId, cellData } = req.body
+    const { position, color, reviewType, reviewId, cellData, media } = req.body
 
     if (position !== undefined) {
         if (position && (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number")) {
@@ -116,6 +141,11 @@ const validateChainNodeUpdate = (req, res, next) => {
         return res.status(400).json({ error: cellDataError })
     }
 
+    const mediaError = validateMedia(media)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
+    }
+
     // reviewId peut être explicitement `null` (détacher un lien cassé) ou une nouvelle
     // référence (changer la review liée) — dans ce dernier cas reviewType doit accompagner
     // reviewId pour que la route puisse revalider le type contre REVIEW_TYPE_TO_DB.
@@ -132,7 +162,7 @@ const validateChainNodeUpdate = (req, res, next) => {
 }
 
 const validateChainEdgeCreation = (req, res, next) => {
-    const { sourceNodeId, targetNodeId, technique, notes, cellData } = req.body
+    const { sourceNodeId, targetNodeId, technique, notes, cellData, media } = req.body
 
     if (!sourceNodeId || typeof sourceNodeId !== "string" || sourceNodeId.trim().length === 0) {
         return res.status(400).json({ error: "Source node ID is required" })
@@ -159,11 +189,16 @@ const validateChainEdgeCreation = (req, res, next) => {
         return res.status(400).json({ error: cellDataError })
     }
 
+    const mediaError = validateMedia(media)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
+    }
+
     next()
 }
 
 const validateChainEdgeUpdate = (req, res, next) => {
-    const { technique, notes, cellData } = req.body
+    const { technique, notes, cellData, media } = req.body
 
     if (technique !== undefined) {
         if (technique && (typeof technique !== "string" || technique.length > 200)) {
@@ -180,6 +215,11 @@ const validateChainEdgeUpdate = (req, res, next) => {
     const cellDataError = validateCellData(cellData)
     if (cellDataError) {
         return res.status(400).json({ error: cellDataError })
+    }
+
+    const mediaError = validateMedia(media)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
     }
 
     next()

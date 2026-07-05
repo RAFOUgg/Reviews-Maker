@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Clipboard, Copy } from 'lucide-react';
+import { Download, Clipboard, Copy, Image as ImageIcon } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
 // Techniques courantes proposées en raccourci — la valeur réelle reste du texte libre
@@ -79,6 +79,13 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
+    const mediaCount = Array.isArray(edge?.media) ? edge.media.length : 0;
+
+    const handleOpenMedia = () => {
+        store.openMediaModal('edge', edgeId);
+        onClose();
+    };
+
     return (
         <div ref={menuRef} className="context-menu" style={{ left: `${x}px`, top: `${y}px` }}>
             {!readOnly && (
@@ -105,6 +112,10 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
                     <button className="context-menu-item" onClick={handleImportCells}>
                         <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Importer des cellules de pipeline...
+                    </button>
+                    <button className="context-menu-item" onClick={handleOpenMedia}>
+                        <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
                     </button>
                     {attachedCells.length > 0 && (
                         <button className="context-menu-item" onClick={handleCopyAllCells}>

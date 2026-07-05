@@ -1525,6 +1525,10 @@ model GenNode {
   // ChainNode.reviewId) : nullable, best-effort, jamais garanti (nœuds créés à vide notamment).
   sourceReviewId String?
 
+  // Photos/vidéos illustrant ce nœud dans l'arbre — même mécanisme que ChainNode.media.
+  // JSON: Array<{ id, url, type: 'photo'|'video', filename, caption, uploadedAt }>
+  media String @default("[]")
+
   // Relations sortantes et entrantes
   childEdges  GenEdge[] @relation("parentNode")
   parentEdges GenEdge[] @relation("childNode")
@@ -1569,6 +1573,9 @@ model GenEdge {
   // n'est appliqué que si l'utilisateur l'a explicitement fixé.
   sourceHandle String?
   targetHandle String?
+
+  // Photos/vidéos illustrant cette relation — même mécanisme que GenNode.media.
+  media String @default("[]")
 
   // Metadata
   createdAt DateTime @default(now())
@@ -1627,6 +1634,10 @@ model ChainNode {
   // JSON: Array<{ id, sourceReviewId, sourceReviewType, sourceLabel, pipelineType, pipelineLabel, timestamp, cellLabel, data, attachedAt }>
   cellData String @default("[]")
 
+  // Photos/vidéos illustrant ce produit dans le canvas (cf. routes/media-upload.js, 200 Mo max).
+  // JSON: Array<{ id, url, type: 'photo'|'video', filename, caption, uploadedAt }>
+  media String @default("[]")
+
   sourceEdges ChainEdge[] @relation("chainSourceNode")
   targetEdges ChainEdge[] @relation("chainTargetNode")
 
@@ -1666,6 +1677,9 @@ model ChainEdge {
   // Même mécanisme que ChainNode.cellData — une liaison peut aussi porter des cellules de
   // pipeline (ex: les jours de curing propres à cette transformation).
   cellData String @default("[]")
+
+  // Même mécanisme que ChainNode.media — photos/vidéos illustrant cette transformation.
+  media String @default("[]")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

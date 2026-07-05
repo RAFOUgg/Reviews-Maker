@@ -378,7 +378,7 @@ const PipelineCellEditor = ({
                             </div>
                             <div className="flex gap-3">
                                 <LiquidButton
-                                    variant="secondary"
+                                    variant="outline"
                                     onClick={onClose}
                                 >
                                     Annuler

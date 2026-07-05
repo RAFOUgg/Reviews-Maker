@@ -6,6 +6,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
+import { Image as ImageIcon } from 'lucide-react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import { useToast } from '../shared/ToastContainer';
 
@@ -138,6 +139,13 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         }
     };
 
+    const mediaCount = Array.isArray(node?.media) ? node.media.length : 0;
+
+    const handleOpenMedia = () => {
+        store.openMediaModal('node', nodeId);
+        onClose();
+    };
+
     const handleDuplicate = async () => {
         const duplicatedNode = await store.addNode({
             cultivarName: `${node.cultivarName} (copie)`,
@@ -201,6 +209,10 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                     </button>
                     <button className="context-menu-item" onClick={handleDuplicate}>
                         📋 Dupliquer
+                    </button>
+                    <button className="context-menu-item" onClick={handleOpenMedia}>
+                        <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
                     </button>
                     <button className="context-menu-item" onClick={handleCenterView}>
                         🎯 Centrer la vue sur ce nœud

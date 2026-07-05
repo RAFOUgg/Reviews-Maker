@@ -38,6 +38,8 @@ const useProductionChainStore = create(
             cellClipboard: [],
             // editingCell : { targetType: 'node'|'edge', targetId: string, cell: object } | null
             editingCell: null,
+            // mediaModalTarget : { targetType: 'node'|'edge', targetId: string } | null
+            mediaModalTarget: null,
 
             // STATE - CANVAS
             canvasLoading: false,
@@ -128,12 +130,14 @@ const useProductionChainStore = create(
                     const parsedNodes = chain.nodes.map(n => ({
                         ...n,
                         position: typeof n.position === 'string' ? JSON.parse(n.position) : n.position,
-                        cellData: parseCellData(n.cellData)
+                        cellData: parseCellData(n.cellData),
+                        media: parseCellData(n.media)
                     }));
 
                     const parsedEdges = (chain.edges || []).map(e => ({
                         ...e,
-                        cellData: parseCellData(e.cellData)
+                        cellData: parseCellData(e.cellData),
+                        media: parseCellData(e.media)
                     }));
 
                     set({
@@ -542,6 +546,17 @@ const useProductionChainStore = create(
             openCellEditor: (targetType, targetId, cell) => set({ editingCell: { targetType, targetId, cell } }),
             closeCellEditor: () => set({ editingCell: null }),
 
+            openMediaModal: (targetType, targetId) => set({ mediaModalTarget: { targetType, targetId } }),
+            closeMediaModal: () => set({ mediaModalTarget: null }),
+
+            // Persiste le tableau media complet (photos/vidéos) d'un nœud/liaison — appelé par
+            // MediaAttachmentModal.onChange après chaque ajout/suppression/légende.
+            updateMedia: async (targetType, targetId, nextMedia) => {
+                const state = get();
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+                return updateFn(targetId, { media: nextMedia });
+            },
+
             // Fusionne `cells` (snapshots sans id, cf. chainCellPickerModal) dans chaque cible —
             // un id + une date d'attache sont générés à l'attache, jamais côté picker, pour que
             // coller la même sélection sur plusieurs cibles ne collisionne pas sur le même id.
@@ -667,7 +682,8 @@ const useProductionChainStore = create(
                     nodes: [],
                     edges: [],
                     cellPicker: null,
-                    editingCell: null
+                    editingCell: null,
+                    mediaModalTarget: null
                 });
             },
 
@@ -685,6 +701,7 @@ const useProductionChainStore = create(
                     cellPicker: null,
                     cellClipboard: [],
                     editingCell: null,
+                    mediaModalTarget: null,
                     chainLoading: false,
                     canvasLoading: false,
                     chainError: null,

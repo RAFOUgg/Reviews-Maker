@@ -191,6 +191,7 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         genetics: true,
                         notes: true,
                         sourceReviewId: true,
+                        media: true,
                         createdAt: true,
                         updatedAt: true
                     }
@@ -206,7 +207,8 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         waypointX: true,
                         waypointY: true,
                         sourceHandle: true,
-                        targetHandle: true
+                        targetHandle: true,
+                        media: true
                     }
                 },
                 _count: {
@@ -438,7 +440,8 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
         res.status(201).json({
             ...node,
             position: JSON.parse(node.position),
-            genetics: node.genetics ? JSON.parse(node.genetics) : null
+            genetics: node.genetics ? JSON.parse(node.genetics) : null,
+            media: node.media ? JSON.parse(node.media) : []
         });
     } catch (error) {
         res.status(500).json({ error: "Failed to create node" });
@@ -471,7 +474,8 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
             image,
             genetics,
             notes,
-            sourceReviewId
+            sourceReviewId,
+            media
         } = req.body;
 
         const updated = await prisma.genNode.update({
@@ -483,7 +487,8 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
                 ...(image !== undefined && { image: image || null }),
                 ...(genetics !== undefined && { genetics: genetics ? JSON.stringify(genetics) : null }),
                 ...(notes !== undefined && { notes: notes?.trim() || null }),
-                ...(sourceReviewId !== undefined && { sourceReviewId: sourceReviewId || null })
+                ...(sourceReviewId !== undefined && { sourceReviewId: sourceReviewId || null }),
+                ...(media !== undefined && { media: JSON.stringify(media) })
             }
         });
 
@@ -509,7 +514,8 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
         res.json({
             ...updated,
             position: JSON.parse(updated.position),
-            genetics: updated.genetics ? JSON.parse(updated.genetics) : null
+            genetics: updated.genetics ? JSON.parse(updated.genetics) : null,
+            media: updated.media ? JSON.parse(updated.media) : []
         });
     } catch (error) {
         res.status(500).json({ error: "Failed to update node" });
@@ -673,7 +679,7 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
                 }
             });
 
-            res.status(201).json(edge);
+            res.status(201).json({ ...edge, media: JSON.parse(edge.media || "[]") });
         } catch (error) {
             if (error.code === "P2002") {
                 // Unique constraint violation
@@ -708,7 +714,7 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
         }
 
         const VALID_HANDLES = ["top", "bottom", "left", "right"];
-        const { relationshipType, pollinationMethod, notes, waypointX, waypointY, sourceHandle, targetHandle, parentNodeId, childNodeId } = req.body;
+        const { relationshipType, pollinationMethod, notes, waypointX, waypointY, sourceHandle, targetHandle, parentNodeId, childNodeId, media } = req.body;
 
         if (sourceHandle !== undefined && sourceHandle !== null && !VALID_HANDLES.includes(sourceHandle)) {
             return res.status(400).json({ error: `Invalid sourceHandle. Must be one of: ${VALID_HANDLES.join(", ")}` });
@@ -763,11 +769,12 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
                     ...(sourceHandle !== undefined && { sourceHandle: sourceHandle || null }),
                     ...(targetHandle !== undefined && { targetHandle: targetHandle || null }),
                     ...(parentNodeId !== undefined && { parentNodeId }),
-                    ...(childNodeId !== undefined && { childNodeId })
+                    ...(childNodeId !== undefined && { childNodeId }),
+                    ...(media !== undefined && { media: JSON.stringify(media) })
                 }
             });
 
-            res.json(updated);
+            res.json({ ...updated, media: JSON.parse(updated.media || "[]") });
         } catch (error) {
             if (error.code === "P2002") {
                 return res.status(409).json({ error: "This relationship already exists" });

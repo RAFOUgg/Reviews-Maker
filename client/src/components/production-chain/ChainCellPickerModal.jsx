@@ -14,7 +14,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidTabs, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
-import { getPipelineDefsForReviewType, getCellsForPipelineDef, getFieldSchemaForPipeline, READONLY_CELL_CATEGORIES } from '../../utils/chainCellPipelines';
+import { getPipelineDefsForReviewType, getCellsForPipelineDef, getFieldSchemaForPipeline, getGeneralFieldSchema, READONLY_CELL_CATEGORIES } from '../../utils/chainCellPipelines';
 import PipelineCellEditor from '../pipelines/core/PipelineCellEditor';
 import { Download, CheckSquare, Square, Plus, Pencil, X, Loader2 } from 'lucide-react';
 
@@ -150,6 +150,38 @@ const ChainCellPickerModal = () => {
             setEditingCell(null);
         } catch (err) {
             setError(err.message || 'Échec de la sauvegarde de la cellule');
+        } finally {
+            setSavingCell(false);
+        }
+    };
+
+    const handleSaveGeneralField = async (editedData) => {
+        if (!sourceNode) return;
+        const { index, ...cleaned } = editedData;
+        setSavingCell(true);
+        setError(null);
+        try {
+            const res = await fetch(
+                `/api/review-general-fields/${sourceNode.reviewType}/${sourceNode.reviewId}`,
+                {
+                    method: 'PUT',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ fields: cleaned })
+                }
+            );
+            if (!res.ok) {
+                const body = await res.json().catch(() => ({}));
+                throw new Error(body.error || 'Échec de la sauvegarde');
+            }
+            const { fields: savedFields } = await res.json();
+
+            // Répercute immédiatement dans la fiche technique locale — les colonnes scalaires
+            // sont écrites côté serveur en simultané, pas seulement un snapshot dans le picker.
+            setReview(prev => ({ ...prev, ...savedFields }));
+            setEditingCell(null);
+        } catch (err) {
+            setError(err.message || 'Échec de la sauvegarde de la section');
         } finally {
             setSavingCell(false);
         }
@@ -407,8 +439,12 @@ const ChainCellPickerModal = () => {
                 onClose={() => setEditingCell(null)}
                 cellData={editingCell.data}
                 cellIndex={editingCell.timestamp}
-                fieldSchema={getFieldSchemaForPipeline(activePipelineDef.key)}
-                onSave={handleSaveSourceCell}
+                fieldSchema={
+                    activePipelineDef.key === 'general'
+                        ? getGeneralFieldSchema(sourceNode?.reviewType, editingCell.timestamp)
+                        : getFieldSchemaForPipeline(activePipelineDef.key)
+                }
+                onSave={activePipelineDef.key === 'general' ? handleSaveGeneralField : handleSaveSourceCell}
                 title={`${activePipelineDef.label} — ${editingCell.cellLabel}`}
             />
         )}
