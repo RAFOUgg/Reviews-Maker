@@ -22,22 +22,21 @@ const router = express.Router()
 router.get('/', requireAuth, asyncHandler(async (req, res) => {
     const { search, sortBy = 'name', order = 'asc' } = req.query
 
-    const where = {
-        userId: req.user.id,
-        ...(search && {
-            OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { breeder: { contains: search, mode: 'insensitive' } },
-            ]
-        })
-    }
-
+    // Filtrage insensible à la casse fait en JS, pas via Prisma `mode: 'insensitive'` — plante
+    // sur SQLite (piège déjà rencontré ailleurs sur ce projet, cf. library-cultivar-detection).
     const cultivars = await prisma.cultivar.findMany({
-        where,
+        where: { userId: req.user.id },
         orderBy: { [sortBy]: order }
     })
 
-    res.json(cultivars)
+    const filtered = search
+        ? cultivars.filter(c => {
+            const needle = search.toLowerCase()
+            return c.name?.toLowerCase().includes(needle) || c.breeder?.toLowerCase().includes(needle)
+        })
+        : cultivars
+
+    res.json(filtered)
 }))
 
 /**
@@ -51,22 +50,22 @@ router.get('/search', requireAuth, asyncHandler(async (req, res) => {
         return res.json([])
     }
 
+    // Cf. GET / ci-dessus : filtrage nom fait en JS, pas via Prisma `mode: 'insensitive'`.
     const cultivars = await prisma.cultivar.findMany({
-        where: {
-            userId: req.user.id,
-            name: { contains: q, mode: 'insensitive' }
-        },
+        where: { userId: req.user.id },
         select: {
             id: true,
             name: true,
             breeder: true,
             type: true
         },
-        take: 10,
         orderBy: { useCount: 'desc' } // Les plus utilisés en premier
     })
 
-    res.json(cultivars)
+    const needle = q.toLowerCase()
+    const matches = cultivars.filter(c => c.name?.toLowerCase().includes(needle)).slice(0, 10)
+
+    res.json(matches)
 }))
 
 /**

@@ -52,7 +52,8 @@ const SeparationPipelineSection = ({ data = {}, onChange, reviewId, reviewLabel,
                 step: item.step,
                 defaultValue: item.defaultValue,
                 tooltip: item.tooltip,
-                zones: item.zones
+                zones: item.zones,
+                librarySource: item.librarySource
             }))
         })).filter(section => section.items.length > 0);
     }, []);

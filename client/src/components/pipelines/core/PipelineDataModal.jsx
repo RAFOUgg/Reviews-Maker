@@ -6,6 +6,7 @@ import { MediaGallery } from '../../shared/MediaAttachmentModal';
 import usePresets from '../../../hooks/usePresets';
 import { GroupedPresetModal } from '../views/PipelineDragDropView';
 import { getUnitAlternates, toDisplayUnit, toCanonicalUnit } from '../../../utils/unitConversions';
+import CultivarAutocomplete from '../../forms/helpers/CultivarAutocomplete';
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -251,6 +252,23 @@ function PipelineDataModal({
                         onChange={(v) => handleChange(itemKey, v)}
                         options={options}
                     />
+                </FieldWrapper>
+            );
+        }
+
+        // AUTOCOMPLETE branché sur la bibliothèque de cultivars — évite de retaper à la main un
+        // nom déjà documenté ailleurs (Bibliothèque > Cultivars).
+        if (type === 'autocomplete' && item.librarySource === 'cultivars') {
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="flex flex-col gap-2">
+                        <label className="text-[13px] font-medium text-white/60 ml-1">{fieldLabel}</label>
+                        <CultivarAutocomplete
+                            value={value}
+                            onChange={(v) => handleChange(itemKey, v)}
+                            placeholder={item.placeholder}
+                        />
+                    </div>
                 </FieldWrapper>
             );
         }

@@ -156,7 +156,7 @@ export const EXTRACTION_SIDEBAR_CONTENT = {
                 icon: '🧬',
                 type: 'autocomplete',
                 tooltip: 'Variété(s) de cannabis utilisée(s)',
-                suggestions: []
+                librarySource: 'cultivars'
             },
             {
                 id: 'harvestDate',
