@@ -582,6 +582,26 @@ const useProductionChainStore = create(
                 return { data: results };
             },
 
+            // Crée une cellule attachée directement (sans passer par l'import depuis une fiche
+            // technique source) — utilisé par le bouton "Ajouter des données directement" du menu
+            // contextuel d'un nœud/liaison, quand on veut juste noter une donnée de pipeline sur
+            // place sans avoir de review dédiée à importer.
+            addDirectCell: async (targetType, targetId, cellPayload) => {
+                const state = get();
+                const collection = targetType === 'node' ? state.nodes : state.edges;
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+                const target = collection.find(t => t.id === targetId);
+                if (!target) return { error: 'Target not found' };
+
+                const existing = Array.isArray(target.cellData) ? target.cellData : [];
+                const newCell = {
+                    ...cellPayload,
+                    id: crypto.randomUUID(),
+                    attachedAt: new Date().toISOString()
+                };
+                return updateFn(targetId, { cellData: [...existing, newCell] });
+            },
+
             // newData remplace intégralement le contenu de la cellule (pas un merge) — permet à
             // l'éditeur de vider un champ, comme PipelineCellEditor.onSave côté fiche technique.
             updateAttachedCell: async (targetType, targetId, cellId, newData) => {

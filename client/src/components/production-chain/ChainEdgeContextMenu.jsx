@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Clipboard, Copy, Image as ImageIcon } from 'lucide-react';
+import { Download, Clipboard, Copy, Image as ImageIcon, Plus } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
 // Techniques courantes proposées en raccourci — la valeur réelle reste du texte libre
@@ -64,6 +64,11 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
+    const handleAddDirectCell = () => {
+        store.openCellEditor('edge', edgeId, { isNew: true, pipelineType: '', pipelineLabel: '', cellLabel: '', sourceLabel: 'Saisie manuelle', data: {} });
+        onClose();
+    };
+
     const handleCopyAllCells = () => {
         store.copyCells(attachedCells);
         onClose();
@@ -109,6 +114,10 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
                         🔀 Inverser la direction
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    <button className="context-menu-item" onClick={handleAddDirectCell}>
+                        <Plus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Ajouter des données directement...
+                    </button>
                     <button className="context-menu-item" onClick={handleImportCells}>
                         <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Importer des cellules de pipeline...
