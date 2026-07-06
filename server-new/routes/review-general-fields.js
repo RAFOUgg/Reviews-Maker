@@ -15,21 +15,21 @@ import { REVIEW_TYPE_TO_DB } from '../utils/reviewTypeMap.js'
 
 const FIELD_TYPES = {
     flower: {
-        thcPercent: 'float', cbdPercent: 'float', cbgPercent: 'float', cbcPercent: 'float', cbnPercent: 'float', thcvPercent: 'float',
+        thcPercent: 'float', thcaPercent: 'float', cbdPercent: 'float', cbdaPercent: 'float', cbgPercent: 'float', cbcPercent: 'float', cbnPercent: 'float', thcvPercent: 'float',
         couleurScore: 'float', densiteVisuelle: 'float', trichomesScore: 'float', pistilsScore: 'float', manucureScore: 'float', moisissureScore: 'float', grainesScore: 'float',
         notesOdeursDominantes: 'tags', notesOdeursSecondaires: 'tags', intensiteAromeScore: 'float', complexiteAromeScore: 'float', fideliteAromeScore: 'float',
         dureteScore: 'float', densiteTactileScore: 'float', elasticiteScore: 'float', collantScore: 'float', malleabiliteScore: 'float', friabiliteScore: 'float', viscositeScore: 'float', meltingScore: 'float', residuScore: 'float',
         effetsChoisis: 'tags', monteeScore: 'float', intensiteEffetScore: 'float', intensiteGoutScore: 'float', agressiviteScore: 'float'
     },
     hash: {
-        thcPercent: 'float', cbdPercent: 'float', cbgPercent: 'float', cbcPercent: 'float', cbnPercent: 'float', thcvPercent: 'float',
+        thcPercent: 'float', thcaPercent: 'float', cbdPercent: 'float', cbdaPercent: 'float', cbgPercent: 'float', cbcPercent: 'float', cbnPercent: 'float', thcvPercent: 'float',
         couleurTransparence: 'float', pureteVisuelle: 'float', densiteVisuelle: 'float', pistils: 'float', moisissure: 'float', graines: 'float',
         notesDominantes: 'tags', notesSecondaires: 'tags', intensiteAromatique: 'float', complexiteAromeScore: 'float', fideliteCultivars: 'float',
         durete: 'float', densiteTactile: 'float', collantScore: 'float', malleabiliteScore: 'float', textureMeltingScore: 'float', textureResiduScore: 'float',
         effetsChoisis: 'tags', monteeRapidite: 'float', intensiteEffets: 'float', intensite: 'float', agressivitePiquant: 'float'
     },
     concentrate: {
-        thcPercent: 'float', cbdPercent: 'float', cbgPercent: 'float', cbcPercent: 'float', cbnPercent: 'float', thcvPercent: 'float',
+        thcPercent: 'float', thcaPercent: 'float', cbdPercent: 'float', cbdaPercent: 'float', cbgPercent: 'float', cbcPercent: 'float', cbnPercent: 'float', thcvPercent: 'float',
         couleurTransparence: 'float', viscosite: 'float', pureteVisuelle: 'float', melting: 'float', residus: 'float', pistils: 'float', moisissure: 'float',
         notesDominantes: 'tags', notesSecondaires: 'tags', intensiteAromatique: 'float', complexiteAromeScore: 'float', fideliteCultivars: 'float',
         durete: 'float', densiteTactile: 'float', collantScore: 'float', textureMeltingScore: 'float', textureResiduScore: 'float',

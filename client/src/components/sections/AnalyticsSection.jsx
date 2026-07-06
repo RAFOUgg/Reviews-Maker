@@ -18,7 +18,9 @@ export default function AnalyticsSection({ productType, data: directData, onChan
 
     // Use thcPercent / cbdPercent keys to match the flattener & DB
     const [thc, setThc] = useState(String(data?.thcPercent ?? data?.thc ?? ''));
+    const [thca, setThca] = useState(String(data?.thcaPercent ?? ''));
     const [cbd, setCbd] = useState(String(data?.cbdPercent ?? data?.cbd ?? ''));
+    const [cbda, setCbda] = useState(String(data?.cbdaPercent ?? ''));
     const [cbg, setCbg] = useState(String(data?.cbgPercent ?? data?.cbg ?? ''));
     const [cbc, setCbc] = useState(String(data?.cbcPercent ?? data?.cbc ?? ''));
     const [uploadedFile, setUploadedFile] = useState(data?.certificateFile || null);
@@ -45,7 +47,9 @@ export default function AnalyticsSection({ productType, data: directData, onChan
         if (!hasValues) return;
         prevDataRef.current = data;
         setThc(String(data.thcPercent ?? data.thc ?? ''));
+        setThca(String(data.thcaPercent ?? ''));
         setCbd(String(data.cbdPercent ?? data.cbd ?? ''));
+        setCbda(String(data.cbdaPercent ?? ''));
         setCbg(String(data.cbgPercent ?? data.cbg ?? ''));
         setCbc(String(data.cbcPercent ?? data.cbc ?? ''));
         if (!data.certificateFile) setExistingCertUrl(data.labReportUrl || null);
@@ -60,7 +64,9 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     useEffect(() => {
         const payload = {
             thcPercent: thc ? parseFloat(thc) : null,
+            thcaPercent: thca ? parseFloat(thca) : null,
             cbdPercent: cbd ? parseFloat(cbd) : null,
+            cbdaPercent: cbda ? parseFloat(cbda) : null,
             cbgPercent: cbg ? parseFloat(cbg) : null,
             cbcPercent: cbc ? parseFloat(cbc) : null,
             certificateFile: uploadedFile,
@@ -78,7 +84,9 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             // remontage de section (navigation) déclenche l'autosave sans modification réelle.
             const incomingComparable = {
                 thcPercent: data?.thcPercent ?? (data?.thc != null ? parseFloat(data.thc) : null),
+                thcaPercent: data?.thcaPercent ?? null,
                 cbdPercent: data?.cbdPercent ?? (data?.cbd != null ? parseFloat(data.cbd) : null),
+                cbdaPercent: data?.cbdaPercent ?? null,
                 cbgPercent: data?.cbgPercent ?? (data?.cbg != null ? parseFloat(data.cbg) : null),
                 cbcPercent: data?.cbcPercent ?? (data?.cbc != null ? parseFloat(data.cbc) : null),
                 certificateFile: data?.certificateFile || null,
@@ -88,11 +96,11 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             };
             if (JSON.stringify(payload) === JSON.stringify(incomingComparable)) return;
             const hasIncoming = !!(data && Object.keys(data).length > 0);
-            const hasManual = !!(thc || cbd || cbg || cbc || uploadedFile || terpeneFile);
+            const hasManual = !!(thc || thca || cbd || cbda || cbg || cbc || uploadedFile || terpeneFile);
             if (!hasIncoming && !hasManual) return;
         }
         safeUpdate(payload);
-    }, [thc, cbd, cbg, cbc, uploadedFile, terpeneFile, existingCertUrl, existingTerpUrl]);
+    }, [thc, thca, cbd, cbda, cbg, cbc, uploadedFile, terpeneFile, existingCertUrl, existingTerpUrl]);
 
     const handleFileUpload = (e, type = 'cannabinoid') => {
         const file = e.target.files?.[0];
@@ -200,7 +208,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                     {/* THC */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white/60">
-                            THC <span className="text-purple-400">(Δ9-THC)</span>
+                            THC <span className="text-purple-400">(Δ9-THC, forme neutre)</span>
                         </label>
                         <div className="relative">
                             <input
@@ -215,16 +223,52 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                         </div>
                     </div>
 
+                    {/* THCA */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/60">
+                            THCA <span className="text-purple-300">(forme acide)</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={thca}
+                                onChange={(e) => handleNumberInput(e.target.value, setThca)}
+                                placeholder="0.0"
+                                disabled={!hasCertificate}
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
+                        </div>
+                    </div>
+
                     {/* CBD */}
                     <div className="space-y-2">
                         <label className="text-sm font-medium text-white/60">
-                            CBD <span className="text-green-400">(Cannabidiol)</span>
+                            CBD <span className="text-green-400">(forme neutre)</span>
                         </label>
                         <div className="relative">
                             <input
                                 type="text"
                                 value={cbd}
                                 onChange={(e) => handleNumberInput(e.target.value, setCbd)}
+                                placeholder="0.0"
+                                disabled={!hasCertificate}
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            />
+                            <span className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 text-sm">%</span>
+                        </div>
+                    </div>
+
+                    {/* CBDA */}
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/60">
+                            CBDA <span className="text-green-300">(forme acide)</span>
+                        </label>
+                        <div className="relative">
+                            <input
+                                type="text"
+                                value={cbda}
+                                onChange={(e) => handleNumberInput(e.target.value, setCbda)}
                                 placeholder="0.0"
                                 disabled={!hasCertificate}
                                 className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-green-500/50 focus:border-green-500/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
@@ -269,6 +313,13 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                         </div>
                     </div>
                 </div>
+
+                {(thca || cbda) && (
+                    <div className="text-xs text-white/50 px-1">
+                        {thca && <span>THC total calculé : <strong className="text-purple-300">{(((thc ? parseFloat(thc) : 0)) + (parseFloat(thca) * 0.877)).toFixed(2)}%</strong> (THC + THCA×0,877) &nbsp;</span>}
+                        {cbda && <span>CBD total calculé : <strong className="text-green-300">{(((cbd ? parseFloat(cbd) : 0)) + (parseFloat(cbda) * 0.877)).toFixed(2)}%</strong> (CBD + CBDA×0,877)</span>}
+                    </div>
+                )}
             </div>
 
             <LiquidDivider />
@@ -501,7 +552,7 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             </div>
 
             {/* Résumé */}
-            {(thc || cbd || cbg || cbc || uploadedFile || terpeneFile || existingCertUrl || existingTerpUrl) && (
+            {(thc || thca || cbd || cbda || cbg || cbc || uploadedFile || terpeneFile || existingCertUrl || existingTerpUrl) && (
                 <div className="p-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl border border-blue-500/20 space-y-2">
                     <h4 className="text-sm font-bold text-white flex items-center gap-2">
                         <Beaker className="w-4 h-4 text-blue-400" />
@@ -509,7 +560,9 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                     </h4>
                     <div className="text-sm text-white/60 space-y-1">
                         {thc && <p><span className="font-semibold text-purple-400">THC :</span> {thc}%</p>}
+                        {thca && <p><span className="font-semibold text-purple-300">THCA :</span> {thca}%</p>}
                         {cbd && <p><span className="font-semibold text-green-400">CBD :</span> {cbd}%</p>}
+                        {cbda && <p><span className="font-semibold text-green-300">CBDA :</span> {cbda}%</p>}
                         {cbg && <p><span className="font-semibold text-orange-400">CBG :</span> {cbg}%</p>}
                         {cbc && <p><span className="font-semibold text-cyan-400">CBC :</span> {cbc}%</p>}
                         {(uploadedFile || existingCertUrl) && (

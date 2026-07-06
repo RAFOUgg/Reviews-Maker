@@ -78,7 +78,8 @@ const CHEMOTYPE_OPTIONS = [
     { value: 'thc-dominant', label: 'THC dominant' },
     { value: 'balanced', label: 'Équilibré THC:CBD' },
     { value: 'cbd-dominant', label: 'CBD dominant' },
-    { value: 'high-cbg', label: 'CBG élevé' }
+    { value: 'high-cbg', label: 'CBG élevé' },
+    { value: 'negligible', label: 'Cannabinoïdes négligeables (chanvre industriel)' }
 ]
 const CHEMOTYPE_LABELS = Object.fromEntries(CHEMOTYPE_OPTIONS.map(o => [o.value, o.label]))
 

@@ -404,8 +404,8 @@ export const PURIFICATION_SIDEBAR_CONTENT = {
                 min: 100,
                 max: 160,
                 step: 1,
-                tooltip: 'Température de décarboxylation (110-140°C optimal)',
-                defaultValue: 120,
+                tooltip: 'Cinétique Wang et al. 2016 : >95% de conversion en 20 min à 110°C, sans franchir le seuil de dégradation (145°C)',
+                defaultValue: 110,
                 dependsOn: 'purificationMethod',
                 showIf: (data) => data.purificationMethod === 'decarboxylation'
             },
@@ -418,8 +418,8 @@ export const PURIFICATION_SIDEBAR_CONTENT = {
                 min: 15,
                 max: 180,
                 step: 5,
-                tooltip: 'Temps de maintien à température (30-90min typique)',
-                defaultValue: 60,
+                tooltip: 'À 110°C, >95% de conversion en 20-30 min (Wang et al. 2016) — préserve mieux les terpènes qu\'un protocole haute température',
+                defaultValue: 25,
                 dependsOn: 'purificationMethod',
                 showIf: (data) => data.purificationMethod === 'decarboxylation'
             },

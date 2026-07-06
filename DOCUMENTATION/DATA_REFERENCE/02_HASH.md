@@ -3,6 +3,8 @@
 > Page : `client/src/pages/review/CreateHashReview/index.jsx`. Modèle Prisma : `HashReview`. 9 sections : Infos générales → Pipeline Séparation → Analytiques → Visuel &amp; Technique → Odeurs → Texture → Goûts → Effets &amp; Expérience → Curing &amp; Maturation.
 >
 > Le hash (kief pressé, dry-sift, bubble hash/ice-o-lator) est le **plus ancien concentré de cannabis** : il s'obtient par simple **séparation mécanique** des trichomes (par tamisage à sec ou par agitation dans l'eau glacée qui fragilise puis détache les têtes glandulaires), **sans aucun solvant chimique** — à bien distinguer conceptuellement des concentrés du document 03 (Concentrés), qui eux impliquent souvent une extraction par solvant ou par pressage thermique.
+>
+> **Sourcing & principe non négociable** : `id` renvoyant au registre **[13_REGISTRE_SOURCES.md](13_REGISTRE_SOURCES.md)**. Comme pour tout document produit : `hashmaker`/`cultivarsUtilises` sont des identifiants déclaratifs, jamais des prédicteurs de composition — cf. document 01 note de tête, document 05 §3.
 
 ## 1. Informations générales
 

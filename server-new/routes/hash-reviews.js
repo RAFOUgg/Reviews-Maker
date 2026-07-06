@@ -207,7 +207,7 @@ async function validateHashReviewData(data, options = {}) {
     }
 
     // ===== SECTION 4: Analytics =====
-    const cannabinoids = ['thcPercent', 'cbdPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
+    const cannabinoids = ['thcPercent', 'thcaPercent', 'cbdPercent', 'cbdaPercent', 'cbgPercent', 'cbcPercent', 'cbnPercent', 'thcvPercent']
     cannabinoids.forEach(field => {
         if (data[field] !== undefined && data[field] !== null && data[field] !== '') {
             const val = parseFloat(data[field])

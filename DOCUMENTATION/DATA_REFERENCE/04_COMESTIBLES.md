@@ -1,6 +1,8 @@
 # COMESTIBLES — inventaire complet des champs, par section de formulaire
 
 > Page : `client/src/pages/review/CreateEdibleReview/index.jsx`. Modèle Prisma : `EdibleReview`. **Seulement 4 sections** (le type le plus léger structurellement — pas d'Analytiques, Visuel, Odeurs ni Texture dédiés, pas de Curing) : Infos générales → Recette &amp; Préparation → Goûts → Effets &amp; Expérience.
+>
+> **Sourcing & principe non négociable** : `id` renvoyant au registre **[13_REGISTRE_SOURCES.md](13_REGISTRE_SOURCES.md)**. `typeGenetiques`/`fabricant` restent des identifiants déclaratifs, jamais des prédicteurs de composition — cf. document 01 note de tête, document 05 §3. Le passage pharmacocinétique §4 (biodisponibilité orale, 11-OH-THC) est **T1** (`zgair2017`, synthèse « De 420 à 710 » chapitre X).
 
 ## 1. Informations générales
 

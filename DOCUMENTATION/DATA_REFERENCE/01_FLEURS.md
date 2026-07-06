@@ -3,6 +3,8 @@
 > Page : `client/src/pages/review/CreateFlowerReview/index.jsx`. Modèle Prisma : `FlowerReview`. 11 sections dans l'ordre réel d'affichage : Infos générales → Génétiques &amp; PhenoHunt* → Pipeline Culture* → Récolte → Analytiques → Visuel &amp; Technique → Odeurs → Texture → Goûts → Effets &amp; Expérience → Curing &amp; Maturation. (*sections réservées compte Producteur.)
 >
 > Les sections **Odeurs, Texture, Goûts, Effets&amp;Expérience, Analytiques** sont des composants **partagés** avec Hash/Concentré (et partiellement Comestible) — elles sont détaillées ici en intégralité une seule fois ; les documents 02/03/04 y renvoient et n'indiquent que les différences.
+>
+> **Sourcing & principe non négociable** (brief méthodologique `terpologie-knowledge-base-brief.md`) : les `id` cités renvoient au registre **[13_REGISTRE_SOURCES.md](13_REGISTRE_SOURCES.md)**. Rappel du réflexe n°2 du brief — **nom de cultivar/variété ≠ génotype ≠ effet** : les champs `cultivars`/`variety` de ce document sont des identifiants déclaratifs, jamais des prédicteurs fiables de composition chimique ou d'effet (cf. document 05 §3, `sawler2015`) ; tout rattachement scientifique doit passer par le chémotype/l'analytique mesurée, pas par le nom.
 
 ## 1. Informations générales
 
@@ -130,7 +132,7 @@ Champs Fleur : `durete`/`hardness`, `densiteTactile`/`density`, `collant`/`stick
 - **physical.negative** : Bouche sèche, Yeux secs, Étourdissements, Fatigue intense, Somnolence excessive
 - **therapeutic** : Anti-stress, Anti-anxiété, Anti-dépression, Aide au sommeil, Anti-nausée, Anti-migraines, Anti-spasmes, Augmentation appétit, Focus
 
-**⚠️ Nuance scientifique importante** : ces effets sont du **reporting subjectif auto-déclaré**, cohérent avec la pratique de la plupart des bases de données grand public (Leafly, AllBud) — mais à ne jamais présenter comme une allégation thérapeutique validée. Le tableau du document [07_MARCHE_MONDIAL.md](07_MARCHE_MONDIAL.md) §4 rappelle les seules indications avec un vrai niveau de preuve clinique (spasticité SEP, épilepsie réfractaire, nausées chimio, stimulation d'appétit) — la plupart des effets listés ici (anti-stress, créatif, énergisant...) relèvent du ressenti communautaire, pas d'un consensus médical.
+**⚠️ Tier T5 — quarantaine au sens du brief** : ces effets sont du **reporting subjectif auto-déclaré** (`evidence_tier = T5`, cohérent avec la pratique de la plupart des bases de données grand public type Leafly/AllBud, explicitement classées T5 par le brief méthodologique) — n'entrent **jamais comme un fait établi** en base, seulement comme un ressenti communautaire agrégé, et ne doivent surtout pas être présentés comme une allégation thérapeutique validée. Le tableau du document [07_MARCHE_MONDIAL.md](07_MARCHE_MONDIAL.md) §4 rappelle les seules indications avec un vrai niveau de preuve clinique T1 (spasticité SEP, épilepsie réfractaire, nausées chimio, stimulation d'appétit) — la plupart des effets listés ici (anti-stress, créatif, énergisant...) relèvent du ressenti communautaire, pas d'un consensus médical. Rappel du réflexe non négociable du brief : **jamais rattacher un effet à un nom de cultivar** — seulement, au mieux, à un chémotype/profil terpénique mesuré (`contested` de toute façon pour la part terpénique, cf. document 05 §7 entourage effect).
 
 ### Onset & Intensité
 `ONSET_LEVELS` (1-10, de "Très lente 30+min" à "Instantanée &lt;30sec"), `INTENSITY_LEVELS` (1-10, "Très faible" à "Extrême"), `duration` (`5-15min` à `24h+`).

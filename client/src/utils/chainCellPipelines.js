@@ -246,7 +246,7 @@ export function summarizeCellFields(pipelineType, entry) {
 const GENERAL_SECTIONS_BY_TYPE = {
     flower: [
         { key: 'analytics', label: 'Analytique', fields: [
-            ['thcPercent', 'THC', '%'], ['cbdPercent', 'CBD', '%'], ['cbgPercent', 'CBG', '%'],
+            ['thcPercent', 'THC', '%'], ['thcaPercent', 'THCA', '%'], ['cbdPercent', 'CBD', '%'], ['cbdaPercent', 'CBDA', '%'], ['cbgPercent', 'CBG', '%'],
             ['cbcPercent', 'CBC', '%'], ['cbnPercent', 'CBN', '%'], ['thcvPercent', 'THCV', '%']
         ] },
         { key: 'visual', label: 'Visuel', fields: [
@@ -269,7 +269,7 @@ const GENERAL_SECTIONS_BY_TYPE = {
     ],
     hash: [
         { key: 'analytics', label: 'Analytique', fields: [
-            ['thcPercent', 'THC', '%'], ['cbdPercent', 'CBD', '%'], ['cbgPercent', 'CBG', '%'],
+            ['thcPercent', 'THC', '%'], ['thcaPercent', 'THCA', '%'], ['cbdPercent', 'CBD', '%'], ['cbdaPercent', 'CBDA', '%'], ['cbgPercent', 'CBG', '%'],
             ['cbcPercent', 'CBC', '%'], ['cbnPercent', 'CBN', '%'], ['thcvPercent', 'THCV', '%']
         ] },
         { key: 'visual', label: 'Visuel', fields: [
@@ -291,7 +291,7 @@ const GENERAL_SECTIONS_BY_TYPE = {
     ],
     concentrate: [
         { key: 'analytics', label: 'Analytique', fields: [
-            ['thcPercent', 'THC', '%'], ['cbdPercent', 'CBD', '%'], ['cbgPercent', 'CBG', '%'],
+            ['thcPercent', 'THC', '%'], ['thcaPercent', 'THCA', '%'], ['cbdPercent', 'CBD', '%'], ['cbdaPercent', 'CBDA', '%'], ['cbgPercent', 'CBG', '%'],
             ['cbcPercent', 'CBC', '%'], ['cbnPercent', 'CBN', '%'], ['thcvPercent', 'THCV', '%']
         ] },
         { key: 'visual', label: 'Visuel', fields: [

@@ -45,6 +45,7 @@ export const PHENO_NODE_SECTIONS = [
                 { value: 'BX2', label: 'BX2 (Rétrocroisement 2)' },
                 { value: 'BX3', label: 'BX3 (Rétrocroisement 3)' },
                 { value: 'S1', label: 'S1 (Selfing)' },
+                { value: 'IBL', label: 'IBL (lignée stabilisée, reproduit vrai)' },
                 { value: 'other', label: 'Autre' }
             ]},
             { id: 'seedType', label: 'Type de graine', type: 'select', options: [

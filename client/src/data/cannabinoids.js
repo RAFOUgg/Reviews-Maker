@@ -144,7 +144,7 @@ export const CANNABINOIDS = [
         color: '#FF7F50'
     },
     {
-        id: 'thca',
+        id: 'thcva',
         label: 'THCVA (Acide tétrahydrocannabivarinoïque)',
         shortLabel: 'THCVA',
         unit: '%',

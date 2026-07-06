@@ -33,6 +33,10 @@ export default function EffectsSection({ productType, data: directData, onChange
     const [profilsEffets, setProfilsEffets] = useState(effectsData?.profilsEffets || []);
     const [effetsSecondaires, setEffetsSecondaires] = useState(effectsData?.effetsSecondaires || []);
     const [usagesPreferes, setUsagesPreferes] = useState(effectsData?.usagesPreferes || []);
+    // Comestible uniquement : le statut alimentaire au moment de la prise influence matériellement
+    // le dosage ressenti — un repas riche en graisses multiplie par 2-3 la biodisponibilité orale
+    // du THC (Zgair et al. 2017, Sci. Rep. 7:14542), cf. document DATA_REFERENCE/08_TECHNOLOGIES.md §5
+    const [foodIntakeStatus, setFoodIntakeStatus] = useState(effectsData?.foodIntakeStatus || 'unknown');
     const [filterProfils, setFilterProfils] = useState('tous');
     const [expandExperience, setExpandExperience] = useState(false);
 
@@ -54,7 +58,8 @@ export default function EffectsSection({ productType, data: directData, onChange
             dureeEffetsCategorie,
             profilsEffets,
             effetsSecondaires,
-            usagesPreferes
+            usagesPreferes,
+            ...(isEdible ? { foodIntakeStatus } : {})
         };
 
         // If initial mount and there's no incoming data, skip sending defaults
@@ -77,7 +82,8 @@ export default function EffectsSection({ productType, data: directData, onChange
                 dureeEffetsCategorie: effectsData?.dureeEffetsCategorie || 'moyenne',
                 profilsEffets: effectsData?.profilsEffets || [],
                 effetsSecondaires: effectsData?.effetsSecondaires || [],
-                usagesPreferes: effectsData?.usagesPreferes || []
+                usagesPreferes: effectsData?.usagesPreferes || [],
+                ...(isEdible ? { foodIntakeStatus: effectsData?.foodIntakeStatus || 'unknown' } : {})
             };
             if (JSON.stringify(payload) === JSON.stringify(incomingComparable)) return;
             const hasIncoming = effectsData && Object.keys(effectsData).length > 0;
@@ -89,7 +95,7 @@ export default function EffectsSection({ productType, data: directData, onChange
         }
 
         updateHandler(payload);
-    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes]);
+    }, [onset, intensity, duration, selectedEffects, methodeConsommation, dosageUtilise, dosageUnite, dureeEffetsHeures, dureeEffetsMinutes, debutEffets, dureeEffetsCategorie, profilsEffets, effetsSecondaires, usagesPreferes, foodIntakeStatus]);
 
     const toggleMultiSelect = (key, value) => {
         if (key === 'profilsEffets') {
@@ -231,6 +237,18 @@ export default function EffectsSection({ productType, data: directData, onChange
                             </select>
                         </div>
                     </div>
+
+                    {isEdible && (
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium text-white/80">🍽️ Prise à jeun / avec repas</label>
+                            <select value={foodIntakeStatus} onChange={(e) => setFoodIntakeStatus(e.target.value)} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white focus:ring-2 focus:ring-cyan-500/50 outline-none">
+                                <option value="unknown" className="bg-gray-900">Non renseigné</option>
+                                <option value="fasted" className="bg-gray-900">À jeun</option>
+                                <option value="fed" className="bg-gray-900">Avec repas</option>
+                            </select>
+                            <p className="text-xs text-white/40">Un repas riche en graisses multiplie par 2 à 3 la biodisponibilité orale du THC — influence directement l'intensité et le délai ressentis.</p>
+                        </div>
+                    )}
 
                     {/* 'Effets secondaires' selection removed from Expérience d'utilisation as requested */}
 

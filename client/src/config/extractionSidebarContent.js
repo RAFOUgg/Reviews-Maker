@@ -30,6 +30,7 @@ export const EXTRACTION_SIDEBAR_CONTENT = {
                     { value: 'rosin-press', label: 'Rosin Press (sans solvant)' },
                     { value: 'live-rosin', label: 'Live Rosin (fresh frozen)' },
                     { value: 'cold-cure-rosin', label: 'Cold Cure Rosin' },
+                    { value: 'naked-press', label: 'Naked Press (sans sac filtrant, HashCru)' },
                     { value: 'bho', label: 'BHO (Butane Hash Oil)' },
                     { value: 'pho', label: 'PHO (Propane Hash Oil)' },
                     { value: 'co2', label: 'CO2 (supercritique)' },
@@ -187,10 +188,10 @@ export const EXTRACTION_SIDEBAR_CONTENT = {
                 type: 'slider',
                 unit: '°C',
                 min: 40,
-                max: 220,
+                max: 150,
                 step: 1,
-                tooltip: 'Température des plaques de presse (40-80°C = cold press, 80-120°C = standard)',
-                defaultValue: 80,
+                tooltip: 'Hash/dry-sift : cold press 60-77°C, hot press 77-93°C. Fleur/trim : cold press 82-93°C, hot press 93-104°C (plage vérifiée 2026-07-06). Au-delà de ~110°C, on sort de la pratique normale de pressage.',
+                defaultValue: 85,
                 dependsOn: 'rosin_enabled',
                 showIf: (data) => data.rosin_enabled === true
             },
@@ -500,8 +501,8 @@ export const EXTRACTION_SIDEBAR_CONTENT = {
                 min: 100,
                 max: 160,
                 step: 5,
-                tooltip: 'Température de décarboxylation',
-                defaultValue: 120,
+                tooltip: 'Cinétique Wang et al. 2016 : >95% de conversion en 20 min à 110°C sans franchir le seuil de dégradation (145°C, apparition de CBN/Δ8-THC). 90 min à 140°C convertit plus vite mais dégrade davantage les terpènes.',
+                defaultValue: 110,
                 showIf: (data) => data.decarboxylation === true
             },
             {
@@ -513,8 +514,8 @@ export const EXTRACTION_SIDEBAR_CONTENT = {
                 min: 10,
                 max: 120,
                 step: 5,
-                tooltip: 'Durée de la décarboxylation',
-                defaultValue: 45,
+                tooltip: 'À 110°C, >95% de conversion en 20-30 min (Wang et al. 2016) — protocole basse température longue durée, préserve mieux les terpènes',
+                defaultValue: 25,
                 showIf: (data) => data.decarboxylation === true
             },
             {

@@ -1,6 +1,8 @@
 # CONCENTRÉS — inventaire complet des champs, par section de formulaire
 
 > Page : `client/src/pages/review/CreateConcentrateReview/index.jsx`. Modèle Prisma : `ConcentrateReview`. 9 sections : Infos générales → Pipeline Extraction → Analytiques → Visuel &amp; Technique → Odeurs → Texture → Goûts → Effets &amp; Expérience → Curing &amp; Maturation.
+>
+> **Sourcing & principe non négociable** : `id` renvoyant au registre **[13_REGISTRE_SOURCES.md](13_REGISTRE_SOURCES.md)**. `hashmaker`/`cultivarsUtilises` restent des identifiants déclaratifs, jamais des prédicteurs de composition — cf. document 01 note de tête, document 05 §3.
 
 ## 1. Informations générales
 

@@ -202,6 +202,9 @@ function validateEdibleReviewData(data, options = {}) {
     if (data.effectOnset && typeof data.effectOnset === 'string') {
         cleaned.effectOnset = data.effectOnset.trim()
     }
+    if (data.foodIntakeStatus && ['unknown', 'fasted', 'fed'].includes(data.foodIntakeStatus)) {
+        cleaned.foodIntakeStatus = data.foodIntakeStatus
+    }
     if (data.preferredUse) {
         if (typeof data.preferredUse === 'string') {
             try {

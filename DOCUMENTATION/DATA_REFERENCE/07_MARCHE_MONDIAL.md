@@ -1,6 +1,8 @@
 # Marché mondial du cannabis — état des lieux
 
-> ⚠️ Les ordres de grandeur (marché, prix, parts de marché) sont issus de connaissances générales du secteur (rapports type BDSA, Prohibition Partners, New Frontier Data, Grand View Research jusqu'à l'entraînement du modèle). Ils n'ont **pas** été revérifiés par recherche web en temps réel — à traiter comme des ordres de grandeur indicatifs pour cadrer une roadmap produit, pas comme des chiffres d'audit financier.
+> ⚠️ **Tier de preuve : hors échelle T1-T5** (cf. brief méthodologique `terpologie-knowledge-base-brief.md` §0 et registre **[13_REGISTRE_SOURCES.md](13_REGISTRE_SOURCES.md)**, entrée `marche_estimations`). Les ordres de grandeur (marché, prix, parts de marché) sont issus de connaissances générales du secteur (rapports type BDSA, Prohibition Partners, New Frontier Data, Grand View Research jusqu'à l'entraînement du modèle). Ils n'ont **pas** été revérifiés par recherche web en temps réel — à traiter comme des ordres de grandeur indicatifs pour cadrer une roadmap produit, **jamais comme des chiffres d'audit financier ni comme un fait T1/T2**. Si ces données doivent un jour entrer dans une base de traçabilité de production (par opposition à un simple cadrage produit), elles devront être remontées au niveau T2 en s'appuyant sur les sources normatives listées au brief §2 (EUDA/ex-EMCDDA, ANSM, WHO ECDD, EFSA) plutôt que sur cette estimation qualitative.
+>
+> ⚠️ **Volatilité à surveiller** (brief §5) : le statut légal des nouveaux cannabinoïdes de synthèse/semi-synthèse (HHC, THCP, etc.) et les seuils réglementaires par juridiction changent en continu — toute donnée réglementaire de ce document doit être **isolée par juridiction + date**, jamais présentée comme un fait stable dans le temps.
 
 ## 1. Segmentation du marché
 

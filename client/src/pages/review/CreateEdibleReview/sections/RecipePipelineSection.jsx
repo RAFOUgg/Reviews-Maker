@@ -15,7 +15,7 @@ import useProductionChainStore from '../../../../store/useProductionChainStore';
 const UNITS = ['g', 'kg', 'ml', 'L', 'c. à soupe', 'c. à café', 'pincée', 'pcs', 'autre'];
 const PREPARATION_ACTIONS = [
     'Mélanger', 'Chauffer', 'Refroidir', 'Cuire', 'Infuser',
-    'Broyer', 'Tamiser', 'Laisser reposer', 'Décarboyler', 'Extraire', 'Autre'
+    'Broyer', 'Tamiser', 'Laisser reposer', 'Décarboxyler', 'Extraire', 'Autre'
 ];
 
 const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, reviewImage }) => {

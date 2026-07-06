@@ -30,6 +30,7 @@ export const SEPARATION_SIDEBAR_CONTENT = {
                     { value: 'dry-sift', label: 'Dry-Sift / Tamisage à sec' },
                     { value: 'ice-o-lator', label: 'Ice-O-Lator' },
                     { value: 'rosin-press', label: 'Pré-pressage (Rosin)' },
+                    { value: 'electrostatic', label: 'Électrostatique / Triboélectrique' },
                     { value: 'manual', label: 'Manuel / Artisanal' },
                     { value: 'other', label: 'Autre méthode' }
                 ],
@@ -419,6 +420,141 @@ export const SEPARATION_SIDEBAR_CONTENT = {
                 defaultValue: false,
                 dependsOn: 'drysift_enabled',
                 showIf: (data) => data.drysift_enabled === true
+            }
+        ]
+    },
+
+    ELECTROSTATIC: {
+        icon: '⚡',
+        label: 'Électrostatique / Triboélectrique',
+        color: '#a855f7',
+        sectionHint: 'Technique de frontière (ex: "Teflon Tech"/"Electrostatic Separator" chez HashCru) — paramètres précis (kV, températures) non publiés publiquement par les fabricants à ce stade. Champ notes à privilégier tant que le protocole n\'est pas stabilisé.',
+        items: [
+            {
+                id: 'electrostatic_enabled',
+                label: 'Séparation électrostatique',
+                icon: '⚡',
+                type: 'toggle',
+                tooltip: 'Séparation par charge triboélectrique (plaques/tiges PTFE polarisées)',
+                defaultValue: false,
+                dependsOn: 'separationType',
+                showIf: (data) => data.separationType === 'electrostatic'
+            },
+            {
+                id: 'electrostaticMethod',
+                label: 'Procédé',
+                icon: '🔌',
+                type: 'select',
+                tooltip: 'Variante de séparation électrostatique utilisée',
+                options: [
+                    { value: 'teflon-tech', label: 'Teflon Tech (plaques/tiges PTFE)' },
+                    { value: 'electrostatic-separator', label: 'Electrostatic Separator' },
+                    { value: 'other', label: 'Autre / non nommé' }
+                ],
+                defaultValue: 'teflon-tech',
+                dependsOn: 'electrostatic_enabled',
+                showIf: (data) => data.electrostatic_enabled === true
+            },
+            {
+                id: 'electrostaticTemp',
+                label: 'Température',
+                icon: '🌡️',
+                type: 'slider',
+                unit: '°C',
+                min: -10,
+                max: 15,
+                step: 1,
+                tooltip: 'Procédé rapporté à basse température (0-10°C)',
+                defaultValue: 5,
+                dependsOn: 'electrostatic_enabled',
+                showIf: (data) => data.electrostatic_enabled === true
+            },
+            {
+                id: 'electrostaticNotes',
+                label: 'Détails du protocole',
+                icon: '📝',
+                type: 'textarea',
+                maxLength: 500,
+                tooltip: 'Tension (kV), équipement, durée — paramètres non standardisés publiquement, à documenter librement',
+                dependsOn: 'electrostatic_enabled',
+                showIf: (data) => data.electrostatic_enabled === true
+            }
+        ]
+    },
+
+    FINITION: {
+        icon: '🧹',
+        label: 'Finition (HashVac / Stalk removal)',
+        color: '#06b6d4',
+        sectionHint: 'Sous-étapes de finition rapportées par la communauté professionnelle (HashCru), applicables en aval d\'un ice-water ou d\'un dry-sift — pas des méthodes de séparation concurrentes.',
+        items: [
+            {
+                id: 'hashvac_enabled',
+                label: 'HashVac (séchage + raffinage sous vide)',
+                icon: '🌀',
+                type: 'toggle',
+                tooltip: 'Aspirateur + tamis fin pour sécher et raffiner le hash humide immédiatement après ice-water',
+                defaultValue: false
+            },
+            {
+                id: 'hashvacMeshMicrons',
+                label: 'Maille du tamis HashVac',
+                icon: '🎯',
+                type: 'select',
+                options: [
+                    { value: '45', label: '45µm' },
+                    { value: '70', label: '70µm (typique, nylon)' },
+                    { value: '90', label: '90µm' },
+                    { value: '120', label: '120µm' }
+                ],
+                defaultValue: '70',
+                dependsOn: 'hashvac_enabled',
+                showIf: (data) => data.hashvac_enabled === true
+            },
+            {
+                id: 'hashvacDuration',
+                label: 'Durée de séchage',
+                icon: '⏳',
+                type: 'number',
+                unit: 'min',
+                min: 1,
+                max: 240,
+                step: 1,
+                tooltip: 'Performance rapportée : activité de l\'eau (Aw) <0,6 en moins de 60 min',
+                defaultValue: 60,
+                dependsOn: 'hashvac_enabled',
+                showIf: (data) => data.hashvac_enabled === true
+            },
+            {
+                id: 'stalkRemoval_enabled',
+                label: 'Stalk removal (Headhunter SRS)',
+                icon: '🗡️',
+                type: 'toggle',
+                tooltip: 'Tamis de finition acier inoxydable 304 pour retirer les fragments de tige résiduels',
+                defaultValue: false
+            },
+            {
+                id: 'stalkRemovalDuration',
+                label: 'Durée par tamis',
+                icon: '⏱️',
+                type: 'number',
+                unit: 'min',
+                min: 0.5,
+                max: 5,
+                step: 0.5,
+                tooltip: 'Usage recommandé sous 2 min/tamis (feuille d\'acier fine)',
+                defaultValue: 2,
+                dependsOn: 'stalkRemoval_enabled',
+                showIf: (data) => data.stalkRemoval_enabled === true
+            },
+            {
+                id: 'finitionNotes',
+                label: 'Notes de finition',
+                icon: '📝',
+                type: 'textarea',
+                maxLength: 500,
+                dependsOn: 'hashvac_enabled',
+                showIf: (data) => data.hashvac_enabled === true || data.stalkRemoval_enabled === true
             }
         ]
     },

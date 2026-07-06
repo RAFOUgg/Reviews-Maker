@@ -739,8 +739,10 @@ model FlowerReview {
   poidsNet              Float? // Poids net après défoliation (g)
 
   // ===== DONNÉES ANALYTIQUES =====
-  thcPercent        Float? // Taux THC (%)
-  cbdPercent        Float? // Taux CBD (%)
+  thcPercent        Float? // Taux THC (%) — forme neutre (décarboxylée)
+  thcaPercent       Float? // Taux THCA (%) — forme acide précurseur, présente dans la plante non chauffée
+  cbdPercent        Float? // Taux CBD (%) — forme neutre (décarboxylée)
+  cbdaPercent       Float? // Taux CBDA (%) — forme acide précurseur
   cbgPercent        Float? // Taux CBG (%)
   cbcPercent        Float? // Taux CBC (%)
   cbnPercent        Float? // Taux CBN (%)
@@ -880,8 +882,10 @@ model HashReview {
   purificationPipelineGithubId String? // ID PipelineGithub pour purification
 
   // ===== DONNÉES ANALYTIQUES =====
-  thcPercent        Float? // Taux THC (%)
-  cbdPercent        Float? // Taux CBD (%)
+  thcPercent        Float? // Taux THC (%) — forme neutre (décarboxylée)
+  thcaPercent       Float? // Taux THCA (%) — forme acide précurseur
+  cbdPercent        Float? // Taux CBD (%) — forme neutre (décarboxylée)
+  cbdaPercent       Float? // Taux CBDA (%) — forme acide précurseur
   cbgPercent        Float? // Taux CBG (%)
   cbcPercent        Float? // Taux CBC (%)
   cbnPercent        Float? // Taux CBN (%)
@@ -998,8 +1002,10 @@ model ConcentrateReview {
   purificationPipelineGithubId String? // ID PipelineGithub pour purification
 
   // ===== DONNÉES ANALYTIQUES =====
-  thcPercent        Float? // Taux THC (%)
-  cbdPercent        Float? // Taux CBD (%)
+  thcPercent        Float? // Taux THC (%) — forme neutre (décarboxylée)
+  thcaPercent       Float? // Taux THCA (%) — forme acide précurseur
+  cbdPercent        Float? // Taux CBD (%) — forme neutre (décarboxylée)
+  cbdaPercent       Float? // Taux CBDA (%) — forme acide précurseur
   cbgPercent        Float? // Taux CBG (%)
   cbcPercent        Float? // Taux CBC (%)
   cbnPercent        Float? // Taux CBN (%)
@@ -1118,6 +1124,10 @@ model EdibleReview {
   effectDuration    String? // Durée précise HH:MM — même nom/format que FlowerReview
   effectOnset       String? // "immédiat", "différé" — même nom que FlowerReview
   preferredUse      String? // JSON: usages préférés — même nom que FlowerReview
+  // Statut alimentaire au moment de la prise — un repas riche en graisses multiplie par 2-3 la
+  // biodisponibilité orale du THC (Zgair et al. 2017, Sci. Rep. 7:14542) : "fasted" (à jeun) |
+  // "fed" (avec repas) | "unknown" (non renseigné, défaut)
+  foodIntakeStatus  String?
 
   // Timestamps
   createdAt DateTime @default(now())

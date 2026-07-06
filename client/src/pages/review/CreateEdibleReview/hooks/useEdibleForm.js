@@ -62,6 +62,7 @@ export function useEdibleForm(reviewId = null) {
                 dureeEffetsMinutes: effectMinutes ? String(parseInt(effectMinutes, 10)) : '',
                 debutEffets: ed.effectOnset ?? '',
                 usagesPreferes: parseArr(ed.preferredUse, []),
+                foodIntakeStatus: ed.foodIntakeStatus ?? 'unknown',
             }
 
             // recipe.ingredients/steps : jamais remis dans formData avant ce fix, donc

@@ -19,11 +19,12 @@ export const PIPELINE_STARTER_SETUPS = {
                     emoji: '🌡️',
                     description: 'Paramètres environnement standard DWC',
                     fields: [
-                        { key: 'temperature', value: 24 },
-                        { key: 'humidity', value: 60 },
-                        { key: 'co2Ppm', value: 800 },
-                        { key: 'ph', value: 5.9 },
-                        { key: 'ec', value: 1.6 },
+                        { key: 'temperatureDay', value: 24 },
+                        { key: 'humidityDay', value: 60 },
+                        { key: 'co2Enabled', value: true },
+                        { key: 'co2Level', value: 800 },
+                        { key: 'waterPH', value: 5.9 },
+                        { key: 'waterEC', value: 1.6 },
                     ]
                 },
                 {
@@ -50,11 +51,12 @@ export const PIPELINE_STARTER_SETUPS = {
                     emoji: '🌡️',
                     description: 'Paramètres optimaux coco',
                     fields: [
-                        { key: 'temperature', value: 23 },
-                        { key: 'humidity', value: 55 },
-                        { key: 'ph', value: 6.0 },
-                        { key: 'ec', value: 1.8 },
-                        { key: 'co2Ppm', value: 700 },
+                        { key: 'temperatureDay', value: 23 },
+                        { key: 'humidityDay', value: 55 },
+                        { key: 'waterPH', value: 6.0 },
+                        { key: 'waterEC', value: 1.8 },
+                        { key: 'co2Enabled', value: true },
+                        { key: 'co2Level', value: 700 },
                     ]
                 }
             ]
@@ -71,8 +73,8 @@ export const PIPELINE_STARTER_SETUPS = {
                     emoji: '🌍',
                     description: 'Substrat sol organique',
                     fields: [
-                        { key: 'medium', value: 'soil' },
-                        { key: 'ph', value: 6.5 },
+                        { key: 'substrateType', value: 'soil' },
+                        { key: 'waterPH', value: 6.5 },
                         { key: 'lightType', value: 'natural' },
                     ]
                 }
@@ -89,11 +91,11 @@ export const PIPELINE_STARTER_SETUPS = {
                     name: 'Serre standard',
                     emoji: '🌡️',
                     fields: [
-                        { key: 'temperature', value: 22 },
-                        { key: 'humidity', value: 65 },
+                        { key: 'temperatureDay', value: 22 },
+                        { key: 'humidityDay', value: 65 },
                         { key: 'lightType', value: 'mixed' },
-                        { key: 'medium', value: 'soil' },
-                        { key: 'ph', value: 6.3 },
+                        { key: 'substrateType', value: 'soil' },
+                        { key: 'waterPH', value: 6.3 },
                     ]
                 }
             ]
@@ -114,11 +116,12 @@ export const PIPELINE_STARTER_SETUPS = {
                     description: 'Paramètres ice water extraction 6 passes',
                     fields: [
                         { key: 'separationType', value: 'ice-water' },
+                        { key: 'icewater_enabled', value: true },
                         { key: 'waterTemperature', value: 4 },
                         { key: 'numberOfPasses', value: 3 },
                         { key: 'washDuration', value: 15 },
-                        { key: 'iceToBudRatio', value: 1 },
-                        { key: 'micronSizes', value: '25,45,73,90,120,160,190,220' },
+                        { key: 'ratioWater', value: 1 },
+                        { key: 'bagMicrons', value: ['220', '120', '73', '45', '25'] },
                     ]
                 }
             ]
@@ -135,9 +138,10 @@ export const PIPELINE_STARTER_SETUPS = {
                     emoji: '🔬',
                     fields: [
                         { key: 'separationType', value: 'dry-sift' },
+                        { key: 'drysift_enabled', value: true },
                         { key: 'numberOfPasses', value: 2 },
-                        { key: 'micronSizes', value: '73,120,160' },
-                        { key: 'materialTemperature', value: -4 },
+                        { key: 'screenMicrons', value: ['160', '120', '75'] },
+                        { key: 'ambientTemperature', value: -4 },
                     ]
                 }
             ]
@@ -146,15 +150,16 @@ export const PIPELINE_STARTER_SETUPS = {
             id: 'sep-kief-simple',
             name: 'Kief Simple',
             emoji: '🍃',
-            description: 'Collecte simple de kief — rapide',
-            config: { type: 'phases', separationType: 'kief' },
+            description: 'Collecte simple de kief — rapide (dry-sift, maille unique)',
+            config: { type: 'phases', separationType: 'dry-sift' },
             groupedPresets: [
                 {
                     name: 'Kief box standard',
                     emoji: '🍃',
                     fields: [
-                        { key: 'separationType', value: 'kief' },
-                        { key: 'micronSizes', value: '150' },
+                        { key: 'separationType', value: 'dry-sift' },
+                        { key: 'drysift_enabled', value: true },
+                        { key: 'screenMicrons', value: ['160'] },
                     ]
                 }
             ]
@@ -272,9 +277,8 @@ export const PIPELINE_STARTER_SETUPS = {
                     description: '18-20°C / 62-65% RH / Jars verre',
                     fields: [
                         { key: 'curingType', value: 'cold' },
-                        { key: 'targetTemp', value: 19 },
-                        { key: 'targetRh', value: 63 },
-                        { key: 'method', value: 'jars' },
+                        { key: 'temperature', value: 19 },
+                        { key: 'targetHumidity', value: 63 },
                         { key: 'containerType', value: 'glass' },
                         { key: 'burpingFrequency', value: 'daily' },
                     ]
@@ -286,16 +290,17 @@ export const PIPELINE_STARTER_SETUPS = {
             name: 'Cure Standard',
             emoji: '🌡️',
             description: 'Cure classique — 4-6 semaines, bon équilibre qualité/temps',
-            config: { type: 'phases', curingType: 'standard' },
+            config: { type: 'phases', curingType: 'room' },
             groupedPresets: [
                 {
                     name: 'Standard',
                     emoji: '🌡️',
                     description: '20-22°C / 60-65% RH',
                     fields: [
-                        { key: 'targetTemp', value: 21 },
-                        { key: 'targetRh', value: 62 },
-                        { key: 'method', value: 'jars' },
+                        { key: 'curingType', value: 'room' },
+                        { key: 'temperature', value: 21 },
+                        { key: 'targetHumidity', value: 62 },
+                        { key: 'containerType', value: 'glass' },
                         { key: 'burpingFrequency', value: 'daily' },
                     ]
                 }
@@ -306,16 +311,17 @@ export const PIPELINE_STARTER_SETUPS = {
             name: 'Grove Bags (auto-cure)',
             emoji: '🌿',
             description: 'Sacs terène — auto-régulation humidité, sans ouverture',
-            config: { type: 'phases', curingType: 'auto' },
+            config: { type: 'phases', curingType: 'room' },
             groupedPresets: [
                 {
                     name: 'Grove Bags',
                     emoji: '🌿',
                     fields: [
-                        { key: 'method', value: 'groove' },
-                        { key: 'targetTemp', value: 20 },
-                        { key: 'targetRh', value: 58 },
-                        { key: 'burpingFrequency', value: 'never' },
+                        { key: 'curingType', value: 'room' },
+                        { key: 'containerType', value: 'bag' },
+                        { key: 'temperature', value: 20 },
+                        { key: 'targetHumidity', value: 58 },
+                        { key: 'burpingFrequency', value: 'none' },
                     ]
                 }
             ]

@@ -416,9 +416,11 @@ export function flattenEdibleFormData(data) {
         if (data.gouts.saveursDominantes) flat.saveursDominantes = data.gouts.saveursDominantes
     }
 
-    // Section 4 - Effets (durée spécifique)
+    // Section 4 - Effets (durée spécifique + statut alimentaire, Comestible uniquement —
+    // impact ×2-3 documenté sur la biodisponibilité orale du THC, cf. document 08 §5)
     if (data.effets) {
         if (data.effets.dureeEffetsCategorie) flat.dureeEffets = data.effets.dureeEffetsCategorie
+        if (data.effets.foodIntakeStatus) flat.foodIntakeStatus = data.effets.foodIntakeStatus
     }
 
     // Traçabilité multi-source
