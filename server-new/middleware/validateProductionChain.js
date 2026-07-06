@@ -197,6 +197,92 @@ const validateChainEdgeCreation = (req, res, next) => {
     next()
 }
 
+// Contenu d'une carte épinglée (cf. schema.prisma ChainAnnotation.body) — même esprit que
+// validateCellData : un tableau borné de {label, value}, pas de structure imposée au-delà.
+const MAX_ANNOTATION_BODY_ITEMS = 50
+const MAX_ANNOTATION_BODY_BYTES = 20_000
+
+const validateAnnotationBody = (body) => {
+    if (body === undefined) return null
+    if (!Array.isArray(body)) return "body must be an array"
+    if (body.length > MAX_ANNOTATION_BODY_ITEMS) return `body cannot contain more than ${MAX_ANNOTATION_BODY_ITEMS} lines`
+    if (body.some(l => typeof l !== "object" || l === null || Array.isArray(l))) {
+        return "Each body line must be an object"
+    }
+    let serialized
+    try {
+        serialized = JSON.stringify(body)
+    } catch {
+        return "body is not serializable"
+    }
+    if (serialized.length > MAX_ANNOTATION_BODY_BYTES) {
+        return "body payload is too large"
+    }
+    return null
+}
+
+const validateChainAnnotationCreation = (req, res, next) => {
+    const { position, title, body, sourceLabel } = req.body
+
+    if (position) {
+        if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
+            return res.status(400).json({ error: "Position must be {x: number, y: number}" })
+        }
+    }
+
+    if (!title || typeof title !== "string" || title.trim().length === 0) {
+        return res.status(400).json({ error: "Valid title is required" })
+    }
+    if (title.length > 200) {
+        return res.status(400).json({ error: "Title must be less than 200 characters" })
+    }
+
+    if (sourceLabel !== undefined && sourceLabel !== null) {
+        if (typeof sourceLabel !== "string" || sourceLabel.length > 200) {
+            return res.status(400).json({ error: "sourceLabel must be less than 200 characters" })
+        }
+    }
+
+    const bodyError = validateAnnotationBody(body)
+    if (bodyError) {
+        return res.status(400).json({ error: bodyError })
+    }
+
+    next()
+}
+
+const validateChainAnnotationUpdate = (req, res, next) => {
+    const { position, title, body, sourceLabel } = req.body
+
+    if (position !== undefined) {
+        if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
+            return res.status(400).json({ error: "Position must be {x: number, y: number}" })
+        }
+    }
+
+    if (title !== undefined) {
+        if (typeof title !== "string" || title.trim().length === 0) {
+            return res.status(400).json({ error: "Title must be a non-empty string" })
+        }
+        if (title.length > 200) {
+            return res.status(400).json({ error: "Title must be less than 200 characters" })
+        }
+    }
+
+    if (sourceLabel !== undefined && sourceLabel !== null) {
+        if (typeof sourceLabel !== "string" || sourceLabel.length > 200) {
+            return res.status(400).json({ error: "sourceLabel must be less than 200 characters" })
+        }
+    }
+
+    const bodyError = validateAnnotationBody(body)
+    if (bodyError) {
+        return res.status(400).json({ error: bodyError })
+    }
+
+    next()
+}
+
 const validateChainEdgeUpdate = (req, res, next) => {
     const { technique, notes, cellData, media } = req.body
 
@@ -231,5 +317,7 @@ export {
     validateChainNodeCreation,
     validateChainNodeUpdate,
     validateChainEdgeCreation,
-    validateChainEdgeUpdate
+    validateChainEdgeUpdate,
+    validateChainAnnotationCreation,
+    validateChainAnnotationUpdate
 }

@@ -31,7 +31,13 @@ const CultivarNode = ({ data, selected }) => {
             className={`cultivar-node ${shapeClass} ${isSelected ? 'selected' : ''}`}
             style={{ '--accent-color': accentColor }}
         >
-            <Handle type="target" position={Position.Top} className="node-handle top" />
+            {/* Top/Bottom ont besoin d'un id explicite comme Left/Right — sans id, React Flow leur
+                assigne `null`, et avec plusieurs handles du même type ("source": left-source,
+                right-source, bottom ; "target": top, left-target, right-target) sur un même nœud,
+                la ligne de connexion tirée EN LIVE (avant de lâcher) retombe alors sur le premier
+                handle du bon type dans l'ordre du DOM (ici "left-source"/le handle Top lui-même)
+                au lieu du handle réellement saisi — la liaison semblait partir du mauvais côté. */}
+            <Handle type="target" id="top-target" position={Position.Top} className="node-handle top" />
             {/* Handles gauche/droite : liens horizontaux entre nœuds (ex: frères/sœurs, croisement
                 entre deux lignées) en plus du lien vertical parent→enfant haut/bas. Deux handles
                 superposés par côté (source + target) pour pouvoir tirer un lien DEPUIS ce point ou
@@ -106,7 +112,7 @@ const CultivarNode = ({ data, selected }) => {
                 </div>
             )}
 
-            <Handle type="source" position={Position.Bottom} className="node-handle bottom" />
+            <Handle type="source" id="bottom-source" position={Position.Bottom} className="node-handle bottom" />
         </div>
     );
 };

@@ -24,7 +24,11 @@ const ReviewNode = ({ data, selected }) => {
             className={`cultivar-node shape-rounded ${isSelected ? 'selected' : ''}`}
             style={{ '--accent-color': accentColor }}
         >
-            <Handle type="target" position={Position.Top} className="node-handle top" />
+            {/* Top/Bottom ont besoin d'un id explicite comme Left/Right — sinon React Flow leur
+                assigne `null`, et la ligne de connexion tirée EN LIVE (avant de lâcher) retombe sur
+                le premier handle du bon type dans l'ordre du DOM au lieu de celui réellement saisi
+                (cf. CultivarNode.jsx, même correctif). */}
+            <Handle type="target" id="top-target" position={Position.Top} className="node-handle top" />
             {/* Handles gauche/droite : mêmes conventions que CultivarNode.jsx, pour permettre une
                 disposition libre des chaînes larges (plusieurs entrées convergeant vers une étape) */}
             <Handle type="target" id="left-target" position={Position.Left} className="node-handle left" />
@@ -112,7 +116,7 @@ const ReviewNode = ({ data, selected }) => {
                 </div>
             )}
 
-            <Handle type="source" position={Position.Bottom} className="node-handle bottom" />
+            <Handle type="source" id="bottom-source" position={Position.Bottom} className="node-handle bottom" />
         </div>
     );
 };

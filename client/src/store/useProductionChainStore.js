@@ -29,6 +29,10 @@ const useProductionChainStore = create(
             selectedNodeId: null,
             selectedEdgeId: null,
 
+            // STATE - ANNOTATIONS (cartes épinglées librement sur le fond du canvas, glissées-
+            // déposées depuis le panneau latéral d'un nœud/liaison — cf. ChainAnnotation)
+            annotations: [],
+
             // STATE - UI
             showEdgeForm: false,
             edgeFormData: null,

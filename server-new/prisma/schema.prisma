@@ -1661,8 +1661,9 @@ model ProductionChain {
   isPublic    Boolean @default(false)
   shareCode   String? @unique
 
-  nodes ChainNode[]
-  edges ChainEdge[]
+  nodes       ChainNode[]
+  edges       ChainEdge[]
+  annotations ChainAnnotation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1751,5 +1752,31 @@ model ChainEdge {
   @@index([sourceNodeId])
   @@index([targetNodeId])
   @@map("chain_edges")
+}
+
+// Modèle ChainAnnotation (carte épinglée librement sur le fond du canvas — snapshot d'une donnée
+// déjà visible dans le panneau latéral d'un nœud/liaison, glissée-déposée pour rester affichée en
+// permanence sans avoir à re-sélectionner le nœud/la liaison d'origine. Même logique de snapshot
+// que ChainNode.cellData/ChainEdge.cellData : éditer ou supprimer cette carte ne touche jamais à
+// la fiche technique ni à la cellule d'origine — sourceLabel est purement indicatif.)
+model ChainAnnotation {
+  id      String          @id @default(uuid())
+  chainId String
+  chain   ProductionChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
+
+  position String // JSON: {x: number, y: number}
+
+  title String // ex: "Culture — S1", "Séparation"
+  // Lignes de contenu affichées sur la carte, snapshot au moment du glisser-déposer.
+  // JSON: Array<{ label: string, value: string }>
+  body String @default("[]")
+
+  sourceLabel String? // ex: "depuis Soyuz" — contexte affiché en petit, aucune FK vivante
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chainId])
+  @@map("chain_annotations")
 }
 

@@ -31,7 +31,9 @@ import {
     validateChainNodeCreation,
     validateChainNodeUpdate,
     validateChainEdgeCreation,
-    validateChainEdgeUpdate
+    validateChainEdgeUpdate,
+    validateChainAnnotationCreation,
+    validateChainAnnotationUpdate
 } from '../middleware/validateProductionChain.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { requireFeature } from '../middleware/permissions.js'
@@ -121,6 +123,15 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                         targetHandle: true,
                         cellData: true,
                         media: true
+                    }
+                },
+                annotations: {
+                    select: {
+                        id: true,
+                        position: true,
+                        title: true,
+                        body: true,
+                        sourceLabel: true
                     }
                 }
             }

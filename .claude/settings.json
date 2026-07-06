@@ -102,7 +102,9 @@
       "Bash(rm -f verify_groups_modal_tmp.js verify_groups_modal2_tmp.js 0*.png)",
       "Bash(pkill -f \"vite --port 5183\")",
       "Bash(pkill -f \"server-new/server.js\")",
-      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,5173 -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess\")"
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,5173 -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess\")",
+      "Bash(rm -f smoke-test-tmp.mjs)",
+      "Bash(rm -f \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/handle-\"*.png)"
     ]
   }
 }
