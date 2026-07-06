@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Save, X, Bookmark, Plus, Sparkles, LayoutGrid, Image as ImageIcon, Trash2 } from 'lucide-react';
-import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCheckbox, LiquidCard, LiquidBadge } from '../../ui/LiquidUI';
+import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard, LiquidBadge } from '../../ui/LiquidUI';
+import LiquidCheckbox from '../../ui/LiquidCheckbox';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { MediaGallery } from '../../shared/MediaAttachmentModal';
 import usePresets from '../../../hooks/usePresets';
