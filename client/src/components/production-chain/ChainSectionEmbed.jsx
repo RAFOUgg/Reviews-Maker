@@ -42,9 +42,14 @@ const ChainSectionEmbed = ({ reviewId, reviewType, reviewLabel, reviewImage }) =
 
     return (
         <LiquidCard className="p-4 space-y-4">
-            <div className="flex items-center gap-2">
-                <GitBranch className="w-4 h-4 text-emerald-400" />
-                <h4 className="text-sm font-semibold text-white">Chaîne de production</h4>
+            <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                    <GitBranch className="w-4 h-4 text-emerald-400" />
+                    <h4 className="text-sm font-semibold text-white">Chaîne de production</h4>
+                </div>
+                <LiquidButton variant="ghost" size="sm" icon={ArrowLeft} onClick={() => store.setLinkOpen(false)}>
+                    Revenir au pipeline
+                </LiquidButton>
             </div>
 
             {store.linkError && <p className="text-sm text-red-400">{store.linkError}</p>}
