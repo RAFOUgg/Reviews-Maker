@@ -1,317 +1,224 @@
 /**
- * Hook pour gérer les préréglages utilisateur
- * Synchronisation localStorage + API serveur
+ * Hook global pour les préréglages utilisateur (groupes/setups pipeline) et les projets.
+ *
+ * Remplace l'ancienne version instanciée par pipelineType (un fetch réseau par onglet
+ * pipeline ouvert) — charge tout une fois, expose des sélecteurs dérivés par pipelineType.
+ * Authentifié → source de vérité serveur (/api/presets, /api/projects), avec migration
+ * one-shot des anciennes clés localStorage. Anonyme → cache local unifié
+ * (cf. utils/presetLocalMigration.js), jamais perdu au passage vers ce nouveau hook.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import {
+    migrateLocalPresetsToServer,
+    consolidateAnonymousCache,
+    ANONYMOUS_CACHE_KEY
+} from '../utils/presetLocalMigration';
 
-// Empty fallback → relative URLs in production (nginx proxies /api → backend)
-const API_BASE = import.meta.env.VITE_API_URL || '';
-
-/**
- * Vérifier si l'utilisateur est authentifié
- * En vérifiant la présence d'un cookie de session
- */
 const checkAuth = async () => {
     try {
-        const response = await fetch(`${API_BASE}/api/auth/me`, {
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json'
-            }
-        });
-        return response.ok;
+        const res = await fetch('/api/auth/me', { credentials: 'include' });
+        if (!res.ok) return null;
+        const user = await res.json();
+        return user?.id || null;
     } catch {
-        return false;
+        return null;
     }
 };
 
-/**
- * Hook usePresets
- * Gère les préréglages de champs pipeline pour l'utilisateur connecté
- * 
- * @param {string} pipelineType - 'culture', 'curing', 'separation', 'extraction'
- * @returns {Object} - { presets, loading, createPreset, updatePreset, deletePreset, refreshPresets }
- */
-export const usePresets = (pipelineType = 'culture') => {
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [presets, setPresets] = useState({
-        field: [],      // Préréglages individuels de champs
-        grouped: [],    // Préréglages groupés
-        pipeline: []    // Préréglages de pipeline complète
-    });
-    const [loading, setLoading] = useState(false);
+function saveAnonymousCache(list) {
+    localStorage.setItem(ANONYMOUS_CACHE_KEY, JSON.stringify(list));
+}
+
+export function usePresets() {
+    const [userId, setUserId] = useState(undefined); // undefined = pas encore vérifié
+    const [presets, setPresets] = useState([]);
+    const [projects, setProjects] = useState([]);
+    const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    /**
-     * Charger les préréglages depuis le serveur ou localStorage
-     */
-    const loadPresets = useCallback(async () => {
+    const isAuthenticated = !!userId;
+
+    const loadAll = useCallback(async () => {
         setLoading(true);
         setError(null);
-
         try {
-            // Vérifier l'authentification
-            const authenticated = await checkAuth();
-            setIsAuthenticated(authenticated);
+            const uid = await checkAuth();
+            setUserId(uid);
 
-            if (authenticated) {
-                // Utilisateur connecté : charger depuis l'API
-                const response = await fetch(`${API_BASE}/api/presets?pipelineType=${pipelineType}`, {
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                });
-
-                if (response.ok) {
-                    const data = await response.json();
-
-                    // Grouper par type
-                    const grouped = {
-                        field: data.filter(p => p.type === 'field'),
-                        grouped: data.filter(p => p.type === 'grouped'),
-                        pipeline: data.filter(p => p.type === 'pipeline')
-                    };
-
-                    setPresets(grouped);
-
-                    // Synchroniser avec localStorage pour backup
-                    localStorage.setItem(`presets_${pipelineType}_server`, JSON.stringify(grouped));
-                } else {
-                    console.warn('❌ Erreur chargement préréglages serveur, fallback localStorage');
-                    loadFromLocalStorage();
-                }
+            if (uid) {
+                await migrateLocalPresetsToServer(uid);
+                const [presetsRes, projectsRes] = await Promise.all([
+                    fetch('/api/presets', { credentials: 'include' }),
+                    fetch('/api/projects', { credentials: 'include' })
+                ]);
+                setPresets(presetsRes.ok ? await presetsRes.json() : []);
+                setProjects(projectsRes.ok ? await projectsRes.json() : []);
             } else {
-                // Utilisateur non connecté : charger depuis localStorage uniquement
-                loadFromLocalStorage();
+                setPresets(consolidateAnonymousCache());
+                setProjects([]);
             }
         } catch (err) {
-            console.error('❌ Erreur chargement préréglages:', err);
-            setError(err.message);
-            loadFromLocalStorage();
+            setError(err.message || 'Erreur de chargement');
         } finally {
             setLoading(false);
         }
-    }, [pipelineType]);
+    }, []);
 
-    /**
-     * Fallback : charger depuis localStorage
-     */
-    const loadFromLocalStorage = () => {
-        try {
-            // Format legacy
-            const fieldPresets = JSON.parse(localStorage.getItem(`${pipelineType}_field_presets`) || '[]');
-            const groupedPresets = JSON.parse(localStorage.getItem(`pipeline-grouped-presets-${pipelineType}`) || '[]');
-            const pipelinePresets = JSON.parse(localStorage.getItem('pipeline-presets') || '[]');
+    useEffect(() => { loadAll(); }, [loadAll]);
 
-            setPresets({
-                field: fieldPresets,
-                grouped: groupedPresets,
-                pipeline: pipelinePresets
-            });
-        } catch (err) {
-            console.error('❌ Erreur lecture localStorage:', err);
-            setPresets({ field: [], grouped: [], pipeline: [] });
-        }
-    };
-
-    /**
-     * Créer un nouveau préréglage
-     */
     const createPreset = useCallback(async (type, data) => {
-        setError(null);
-
-        try {
-            if (isAuthenticated) {
-                // Sauvegarder sur le serveur
-                const response = await fetch(`${API_BASE}/api/presets`, {
-                    method: 'POST',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        ...data,
-                        type,
-                        pipelineType
-                    })
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur création préréglage');
-                }
-
-                const newPreset = await response.json();
-
-                // Mettre à jour l'état local
-                setPresets(prev => ({
-                    ...prev,
-                    [type]: [...prev[type], newPreset]
-                }));
-
-                return newPreset;
-            } else {
-                // Utilisateur non connecté : localStorage uniquement
-                const newPreset = {
-                    id: `local_${Date.now()}`,
-                    ...data,
-                    type,
-                    pipelineType,
-                    createdAt: new Date().toISOString(),
-                    updatedAt: new Date().toISOString(),
-                    useCount: 0
-                };
-
-                // Sauvegarder dans localStorage
-                const storageKey = type === 'field'
-                    ? `${pipelineType}_field_presets`
-                    : type === 'grouped'
-                        ? `pipeline-grouped-presets-${pipelineType}`
-                        : 'pipeline-presets';
-
-                const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-                existing.push(newPreset);
-                localStorage.setItem(storageKey, JSON.stringify(existing));
-
-                setPresets(prev => ({
-                    ...prev,
-                    [type]: [...prev[type], newPreset]
-                }));
-
-                return newPreset;
-            }
-        } catch (err) {
-            console.error('❌ Erreur création préréglage:', err);
-            setError(err.message);
-            throw err;
+        if (isAuthenticated) {
+            const res = await fetch('/api/presets', {
+                method: 'POST',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...data, type })
+            });
+            if (!res.ok) throw new Error('Erreur création préréglage');
+            const created = await res.json();
+            setPresets(prev => [created, ...prev]);
+            return created;
         }
-    }, [isAuthenticated, pipelineType]);
+        const now = new Date().toISOString();
+        const created = {
+            id: `local_${Date.now()}`,
+            type,
+            pipelineType: data.pipelineType || null,
+            name: data.name,
+            description: data.description || '',
+            emoji: data.emoji || null,
+            tags: data.tags || [],
+            projectId: null,
+            isArchived: false,
+            data: data.data,
+            useCount: 0,
+            lastUsedAt: null,
+            createdAt: now,
+            updatedAt: now
+        };
+        setPresets(prev => {
+            const next = [created, ...prev];
+            saveAnonymousCache(next);
+            return next;
+        });
+        return created;
+    }, [isAuthenticated]);
 
-    /**
-     * Mettre à jour un préréglage existant
-     */
     const updatePreset = useCallback(async (id, updates) => {
-        setError(null);
-
-        try {
-            if (isAuthenticated && !String(id).startsWith('local_')) {
-                // Mise à jour serveur
-                const response = await fetch(`${API_BASE}/api/presets/${id}`, {
-                    method: 'PUT',
-                    credentials: 'include',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(updates)
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur mise à jour préréglage');
-                }
-
-                const updated = await response.json();
-
-                // Mettre à jour l'état local
-                setPresets(prev => {
-                    const type = updated.type;
-                    return {
-                        ...prev,
-                        [type]: prev[type].map(p => p.id === id ? updated : p)
-                    };
-                });
-
-                return updated;
-            } else {
-                // Mise à jour localStorage
-                const preset = Object.values(presets).flat().find(p => p.id === id);
-                if (!preset) throw new Error('Préréglage introuvable');
-
-                const storageKey = preset.type === 'field'
-                    ? `${pipelineType}_field_presets`
-                    : preset.type === 'grouped'
-                        ? `pipeline-grouped-presets-${pipelineType}`
-                        : 'pipeline-presets';
-
-                const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-                const updated = existing.map(p =>
-                    p.id === id ? { ...p, ...updates, updatedAt: new Date().toISOString() } : p
-                );
-                localStorage.setItem(storageKey, JSON.stringify(updated));
-
-                setPresets(prev => ({
-                    ...prev,
-                    [preset.type]: prev[preset.type].map(p =>
-                        p.id === id ? { ...p, ...updates } : p
-                    )
-                }));
-
-                return { ...preset, ...updates };
-            }
-        } catch (err) {
-            console.error('❌ Erreur mise à jour préréglage:', err);
-            setError(err.message);
-            throw err;
+        if (isAuthenticated && !String(id).startsWith('local_')) {
+            const res = await fetch(`/api/presets/${id}`, {
+                method: 'PUT',
+                credentials: 'include',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(updates)
+            });
+            if (!res.ok) throw new Error('Erreur mise à jour préréglage');
+            const updated = await res.json();
+            setPresets(prev => prev.map(p => p.id === id ? updated : p));
+            return updated;
         }
-    }, [isAuthenticated, pipelineType, presets]);
+        let updatedRow = null;
+        setPresets(prev => {
+            const next = prev.map(p => {
+                if (p.id !== id) return p;
+                updatedRow = { ...p, ...updates, updatedAt: new Date().toISOString() };
+                return updatedRow;
+            });
+            saveAnonymousCache(next);
+            return next;
+        });
+        return updatedRow;
+    }, [isAuthenticated]);
 
-    /**
-     * Supprimer un préréglage
-     */
     const deletePreset = useCallback(async (id) => {
-        setError(null);
-
-        try {
-            if (isAuthenticated && !String(id).startsWith('local_')) {
-                // Suppression serveur
-                const response = await fetch(`${API_BASE}/api/presets/${id}`, {
-                    method: 'DELETE',
-                    credentials: 'include'
-                });
-
-                if (!response.ok) {
-                    throw new Error('Erreur suppression préréglage');
-                }
-            }
-
-            // Suppression locale (serveur + localStorage)
-            const preset = Object.values(presets).flat().find(p => p.id === id);
-            if (!preset) return;
-
-            const storageKey = preset.type === 'field'
-                ? `${pipelineType}_field_presets`
-                : preset.type === 'grouped'
-                    ? `pipeline-grouped-presets-${pipelineType}`
-                    : 'pipeline-presets';
-
-            const existing = JSON.parse(localStorage.getItem(storageKey) || '[]');
-            localStorage.setItem(storageKey, JSON.stringify(existing.filter(p => p.id !== id)));
-
-            setPresets(prev => ({
-                ...prev,
-                [preset.type]: prev[preset.type].filter(p => p.id !== id)
-            }));
-        } catch (err) {
-            console.error('❌ Erreur suppression préréglage:', err);
-            setError(err.message);
-            throw err;
+        if (isAuthenticated && !String(id).startsWith('local_')) {
+            const res = await fetch(`/api/presets/${id}`, { method: 'DELETE', credentials: 'include' });
+            if (!res.ok) throw new Error('Erreur suppression préréglage');
+            setPresets(prev => prev.filter(p => p.id !== id));
+            return;
         }
-    }, [isAuthenticated, pipelineType, presets]);
+        setPresets(prev => {
+            const next = prev.filter(p => p.id !== id);
+            saveAnonymousCache(next);
+            return next;
+        });
+    }, [isAuthenticated]);
 
-    // Charger les préréglages au montage et quand l'auth change
-    useEffect(() => {
-        loadPresets();
-    }, [loadPresets]);
+    /** À appeler chaque fois qu'un groupe/setup est réellement appliqué (drag&drop, assignation
+     * en masse, chargement côté Chaîne de production) — incrémente useCount côté serveur. */
+    const markUsed = useCallback(async (id) => {
+        if (!isAuthenticated || String(id).startsWith('local_')) {
+            setPresets(prev => {
+                const next = prev.map(p => p.id === id
+                    ? { ...p, useCount: (p.useCount || 0) + 1, lastUsedAt: new Date().toISOString() }
+                    : p);
+                if (!isAuthenticated) saveAnonymousCache(next);
+                return next;
+            });
+            return;
+        }
+        try {
+            const res = await fetch(`/api/presets/${id}/use`, { method: 'POST', credentials: 'include' });
+            if (res.ok) {
+                const updated = await res.json();
+                setPresets(prev => prev.map(p => p.id === id ? updated : p));
+            }
+        } catch {
+            // best-effort — ne bloque jamais l'application réelle du groupe si ce ping échoue
+        }
+    }, [isAuthenticated]);
+
+    const createProject = useCallback(async (data) => {
+        if (!isAuthenticated) throw new Error('Connectez-vous pour créer des projets');
+        const res = await fetch('/api/projects', {
+            method: 'POST',
+            credentials: 'include',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+        if (!res.ok) throw new Error('Erreur création projet');
+        const created = await res.json();
+        setProjects(prev => [created, ...prev]);
+        return created;
+    }, [isAuthenticated]);
+
+    const deleteProject = useCallback(async (id) => {
+        if (!isAuthenticated) return;
+        const res = await fetch(`/api/projects/${id}`, { method: 'DELETE', credentials: 'include' });
+        if (!res.ok) throw new Error('Erreur suppression projet');
+        setProjects(prev => prev.filter(p => p.id !== id));
+        setPresets(prev => prev.map(p => p.projectId === id ? { ...p, projectId: null } : p));
+    }, [isAuthenticated]);
+
+    // Sélecteurs dérivés — remplacent l'ancien pattern "un hook par pipelineType".
+    const getGroupsFor = useCallback((pipelineType) =>
+        presets.filter(p => p.type === 'grouped' && !p.isArchived && (!pipelineType || p.pipelineType === pipelineType)),
+    [presets]);
+
+    const getSetupsFor = useCallback((pipelineType) =>
+        presets.filter(p => p.type === 'setup' && !p.isArchived && (!pipelineType || p.pipelineType === pipelineType)),
+    [presets]);
+
+    const fieldPresets = useMemo(() => presets.filter(p => p.type === 'field' && !p.isArchived), [presets]);
 
     return {
         presets,
+        projects,
         loading,
         error,
+        isAuthenticated,
         createPreset,
         updatePreset,
         deletePreset,
-        refreshPresets: loadPresets
+        markUsed,
+        createProject,
+        deleteProject,
+        getGroupsFor,
+        getSetupsFor,
+        fieldPresets,
+        refreshPresets: loadAll
     };
-};
+}
 
 export default usePresets;

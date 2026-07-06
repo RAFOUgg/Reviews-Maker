@@ -42,7 +42,30 @@
       "Bash(cd \"c:\\\\Users\\\\Rafi\\\\Documents\\\\.0AMes-Logiciel\\\\Reviews-Maker\\\\client\" && ls -la | grep -i eslint; ls -la ..; cat package.json | grep -A5 '\"lint\"')",
       "Read(//c/Users/Rafi/Documents/.0AMes-Logiciel/**)",
       "Bash(node -e \"console.log\\(require\\('playwright/package.json'\\).version\\)\")",
-      "Bash(node -e \"require.resolve\\('playwright'\\)\")"
+      "Bash(node -e \"require.resolve\\('playwright'\\)\")",
+      "Bash(timeout 8 node server.js)",
+      "Bash(echo \"EXIT:$?\")",
+      "Bash(ssh vps-lafoncedalle *)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://terpologie.eu/api/health\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://terpologie.eu/\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\\\\n\" \"https://terpologie.eu/api/reviews/my\" -H \"Cookie: test=1\")",
+      "Bash(curl -sv \"https://terpologie.eu/api/reviews/my\")",
+      "Bash(curl -s -X POST http://localhost:3000/api/presets -H \"Content-Type: application/json\" -d '{\"name\":\"Test Groupe Séparation\",\"type\":\"grouped\",\"pipelineType\":\"separation\",\"emoji\":\"🧊\",\"tags\":[\"test\",\"récolte-été-2026\"],\"projectId\":1,\"data\":{\"fields\":[{\"key\":\"waterTemperature\",\"value\":2}]}}')",
+      "Bash(curl -s \"http://localhost:3000/api/presets\")",
+      "Bash(curl -s \"http://localhost:3000/api/presets?tag=test\")",
+      "Bash(curl -s \"http://localhost:3000/api/presets?q=s%C3%A9paration\")",
+      "Bash(node --input-type=module -e ' *)",
+      "Bash(node \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/check-encoding.mjs\")",
+      "Bash(node check-encoding-tmp.mjs)",
+      "Bash(rm -f check-encoding-tmp.mjs)",
+      "Bash(rm -f \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/check-encoding.mjs\")",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique\")",
+      "Bash(powershell -Command \"Stop-Process -Id 16992 -Force\")",
+      "Bash(node \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/smoke-test.mjs\")",
+      "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/smoke-test.mjs\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/client/smoke-test-tmp.mjs\")",
+      "Bash(node smoke-test-tmp.mjs)",
+      "Bash(git -C \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\" diff --stat)",
+      "Bash(git -C \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\" diff -- client/src/components/pipelines/views/PipelineDragDropView.jsx)"
     ]
   }
 }

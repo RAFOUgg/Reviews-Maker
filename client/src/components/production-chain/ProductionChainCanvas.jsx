@@ -10,7 +10,7 @@
  * d'implémentation pour la justification (éviter tout risque de régression sur PhenoHunt).
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     useNodesState,
@@ -23,8 +23,10 @@ import { toSvg } from 'html-to-image';
 import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReviewNode from './ReviewNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
+import ChainHoverPreview from './ChainHoverPreview';
 import ChainNodeContextMenu from './ChainNodeContextMenu';
 import ChainEdgeContextMenu from './ChainEdgeContextMenu';
 import ChainPaneContextMenu from './ChainPaneContextMenu';
@@ -34,7 +36,11 @@ import ChainCellPickerModal from './ChainCellPickerModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import ConfirmModal from '../shared/ConfirmModal';
-import { Download, Upload, RotateCcw, FileImage, Edit2 } from 'lucide-react';
+import { Download, Upload, RotateCcw, FileImage, Edit2, Layers, Image as ImageIcon } from 'lucide-react';
+
+// Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
+// pas clignoter au simple passage de la souris entre deux nœuds voisins.
+const HOVER_PREVIEW_DELAY = 300;
 
 const nodeTypes = {
     reviewProduct: ReviewNode
@@ -184,10 +190,73 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         }));
     }, [readOnly, store, setNodes]);
 
+    // React Flow expose l'id réel du handle utilisé ("left-source"/"right-target"/null pour
+    // top/bottom, non nommés) — à normaliser vers le vocabulaire top|bottom|left|right attendu
+    // par ChainEdge.sourceHandle/targetHandle (même vocabulaire que l'accroche manuelle glissée
+    // et que UnifiedGeneticsCanvas.handleConnect, cf. commentaire là-bas).
+    const normalizeHandleSide = useCallback((rawId, fallback) => {
+        if (!rawId) return fallback;
+        if (rawId.startsWith('left')) return 'left';
+        if (rawId.startsWith('right')) return 'right';
+        return fallback;
+    }, []);
+
     const handleConnect = useCallback(async (connection) => {
         if (readOnly) return;
         store.openEdgeForm(connection.source, connection.target);
-    }, [readOnly, store]);
+        store.updateEdgeFormData({
+            sourceHandle: normalizeHandleSide(connection.sourceHandle, 'bottom'),
+            targetHandle: normalizeHandleSide(connection.targetHandle, 'top')
+        });
+    }, [readOnly, store, normalizeHandleSide]);
+
+    // Aperçu au survol (nœud ou liaison) — affiché après un court délai pour éviter le
+    // clignotement, alimenté par store.reviewSummaryCache (chargé à la demande, une fois par
+    // reviewId). Pour une liaison, le résumé porte sur la review CIBLE (même convention que
+    // ChainEdgeFormModal/chainPipelineSummary.js : "la fiche destination documente sa fabrication").
+    const [hoverInfo, setHoverInfo] = useState(null); // { kind: 'node'|'edge', id, x, y } | null
+    const hoverTimerRef = useRef(null);
+
+    const clearHoverTimer = useCallback(() => {
+        if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+        }
+    }, []);
+
+    useEffect(() => clearHoverTimer, [clearHoverTimer]);
+
+    const scheduleHover = useCallback((kind, id, event, reviewId, reviewType) => {
+        clearHoverTimer();
+        const { clientX, clientY } = event;
+        hoverTimerRef.current = setTimeout(() => {
+            hoverTimerRef.current = null;
+            setHoverInfo({ kind, id, x: clientX, y: clientY });
+            if (reviewId) store.ensureReviewSummary(reviewId, reviewType);
+        }, HOVER_PREVIEW_DELAY);
+    }, [clearHoverTimer, store]);
+
+    const handleNodeMouseEnter = useCallback((event, node) => {
+        const n = store.nodes.find(nd => nd.id === node.id);
+        if (n) scheduleHover('node', node.id, event, n.reviewId, n.reviewType);
+    }, [store.nodes, scheduleHover]);
+
+    const handleNodeMouseLeave = useCallback(() => {
+        clearHoverTimer();
+        setHoverInfo(null);
+    }, [clearHoverTimer]);
+
+    const handleEdgeMouseEnter = useCallback((event, edge) => {
+        const e = store.edges.find(ed => ed.id === edge.id);
+        if (!e) return;
+        const targetNode = store.nodes.find(n => n.id === e.targetNodeId);
+        scheduleHover('edge', edge.id, event, targetNode?.reviewId, targetNode?.reviewType);
+    }, [store.edges, store.nodes, scheduleHover]);
+
+    const handleEdgeMouseLeave = useCallback(() => {
+        clearHoverTimer();
+        setHoverInfo(null);
+    }, [clearHoverTimer]);
 
     const handleNodeClick = useCallback((event, node) => {
         event.stopPropagation();
@@ -331,6 +400,28 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     }, [orphanedNodeIds, store]);
 
     const selectedNode = store.selectedNodeId ? store.nodes.find(n => n.id === store.selectedNodeId) : null;
+    const selectedEdge = store.selectedEdgeId ? store.edges.find(e => e.id === store.selectedEdgeId) : null;
+    const edgeSourceNode = selectedEdge ? store.nodes.find(n => n.id === selectedEdge.sourceNodeId) : null;
+    const edgeTargetNode = selectedEdge ? store.nodes.find(n => n.id === selectedEdge.targetNodeId) : null;
+
+    // Résumé pipeline du panneau de sélection : la propre review du nœud sélectionné, ou celle
+    // du nœud CIBLE d'une liaison sélectionnée (même convention que le hover ci-dessus).
+    const panelReviewId = selectedNode ? selectedNode.reviewId : edgeTargetNode?.reviewId;
+    const panelReviewType = selectedNode ? selectedNode.reviewType : edgeTargetNode?.reviewType;
+
+    useEffect(() => {
+        if (panelReviewId) store.ensureReviewSummary(panelReviewId, panelReviewType);
+    }, [panelReviewId, panelReviewType, store]);
+
+    const panelTargetType = selectedNode ? 'node' : 'edge';
+    const panelTargetId = selectedNode ? selectedNode.id : selectedEdge?.id;
+    const panelAttachedCells = selectedNode
+        ? (Array.isArray(selectedNode.cellData) ? selectedNode.cellData : [])
+        : (Array.isArray(selectedEdge?.cellData) ? selectedEdge.cellData : []);
+    const panelAttachedMedia = selectedNode
+        ? (Array.isArray(selectedNode.media) ? selectedNode.media : [])
+        : (Array.isArray(selectedEdge?.media) ? selectedEdge.media : []);
+    const panelSummary = panelReviewId ? store.reviewSummaryCache[panelReviewId] : null;
 
     useEffect(() => {
         if (chainId && chainId !== store.selectedChainId) {
@@ -350,6 +441,10 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             onNodeDragStop={handleNodeDragStop}
             onEdgeClick={handleEdgeClick}
             onEdgeContextMenu={handleEdgeContextMenu}
+            onNodeMouseEnter={handleNodeMouseEnter}
+            onNodeMouseLeave={handleNodeMouseLeave}
+            onEdgeMouseEnter={handleEdgeMouseEnter}
+            onEdgeMouseLeave={handleEdgeMouseLeave}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onCanvasClick={handleCanvasClick}

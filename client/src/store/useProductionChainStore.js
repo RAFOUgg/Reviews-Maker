@@ -8,6 +8,8 @@
 
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
+import { getPipelineSummaryForEdge } from '../utils/chainPipelineSummary';
+import { getPipelineFillSummary } from '../utils/chainCellPipelines';
 
 const API_BASE = '/api/production-chains';
 
@@ -40,6 +42,12 @@ const useProductionChainStore = create(
             editingCell: null,
             // mediaModalTarget : { targetType: 'node'|'edge', targetId: string } | null
             mediaModalTarget: null,
+
+            // STATE - REVIEW SUMMARY CACHE (résumé pipeline dérivé de la review liée à un nœud,
+            // pour le hover/panneau du canvas — clé par reviewId, pas par chaîne : une review est
+            // un objet global, le cache reste valide même en changeant de chaîne.
+            // reviewSummaryCache[reviewId] : { loading, fetched, error, pipelineSummary, fillSummary }
+            reviewSummaryCache: {},
 
             // STATE - CANVAS
             canvasLoading: false,
@@ -691,6 +699,58 @@ const useProductionChainStore = create(
             },
 
             // ============================================================================
+            // REVIEW SUMMARY CACHE (hover / panneau du canvas)
+            // ============================================================================
+            // Charge (une seule fois par reviewId) le résumé pipeline + statut de remplissage
+            // de la review liée à un nœud — utilisé aussi bien pour le hover d'un nœud que pour
+            // celui d'une liaison (dont la review "cible" documente sa propre fabrication, même
+            // convention que ChainEdgeFormModal/chainPipelineSummary.js).
+            ensureReviewSummary: async (reviewId, reviewType) => {
+                if (!reviewId) return;
+                const existing = get().reviewSummaryCache[reviewId];
+                if (existing && (existing.loading || existing.fetched)) return;
+
+                set(state => ({
+                    reviewSummaryCache: {
+                        ...state.reviewSummaryCache,
+                        [reviewId]: { loading: true, fetched: false, error: null, pipelineSummary: null, fillSummary: [] }
+                    }
+                }));
+
+                try {
+                    const res = await fetch(`/api/reviews/${reviewId}`, { credentials: 'include' });
+                    if (!res.ok) throw new Error('Fiche technique introuvable');
+                    const review = await res.json();
+                    const flat = {
+                        ...review,
+                        ...(review.flowerData || {}),
+                        ...(review.hashData || {}),
+                        ...(review.concentrateData || {}),
+                        ...(review.edibleData || {})
+                    };
+                    set(state => ({
+                        reviewSummaryCache: {
+                            ...state.reviewSummaryCache,
+                            [reviewId]: {
+                                loading: false,
+                                fetched: true,
+                                error: null,
+                                pipelineSummary: getPipelineSummaryForEdge(reviewType, flat),
+                                fillSummary: getPipelineFillSummary(flat, reviewType)
+                            }
+                        }
+                    }));
+                } catch (error) {
+                    set(state => ({
+                        reviewSummaryCache: {
+                            ...state.reviewSummaryCache,
+                            [reviewId]: { loading: false, fetched: true, error: error.message || 'Erreur de chargement', pipelineSummary: null, fillSummary: [] }
+                        }
+                    }));
+                }
+            },
+
+            // ============================================================================
             // MODE & STATE MANAGEMENT
             // ============================================================================
             clearSelection: () => {
@@ -722,6 +782,7 @@ const useProductionChainStore = create(
                     cellClipboard: [],
                     editingCell: null,
                     mediaModalTarget: null,
+                    reviewSummaryCache: {},
                     chainLoading: false,
                     canvasLoading: false,
                     chainError: null,

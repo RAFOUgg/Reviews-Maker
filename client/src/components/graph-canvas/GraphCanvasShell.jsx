@@ -11,6 +11,7 @@
  */
 
 import React, { useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './graphCanvas.css';
@@ -32,6 +33,10 @@ export default function GraphCanvasShell({
     onEdgeClick,
     onEdgeContextMenu,
     onPaneContextMenu,
+    onNodeMouseEnter,
+    onNodeMouseLeave,
+    onEdgeMouseEnter,
+    onEdgeMouseLeave,
     nodeTypes,
     edgeTypes,
     onCanvasClick,
@@ -46,6 +51,7 @@ export default function GraphCanvasShell({
     contextMenu = null,
     modals = null,
     fab = null,
+    floatingOverlay = null,
     className = '',
     minimapNodeColor,
     minimapMaskColor = 'rgba(7, 7, 15, 0.7)',
@@ -182,6 +188,10 @@ export default function GraphCanvasShell({
                 onEdgeClick={onEdgeClick}
                 onEdgeContextMenu={onEdgeContextMenu}
                 onPaneContextMenu={onPaneContextMenu}
+                onNodeMouseEnter={onNodeMouseEnter}
+                onNodeMouseLeave={onNodeMouseLeave}
+                onEdgeMouseEnter={onEdgeMouseEnter}
+                onEdgeMouseLeave={onEdgeMouseLeave}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 fitView
@@ -216,6 +226,7 @@ export default function GraphCanvasShell({
             {contextMenu}
             {modals}
             {fab}
+            {floatingOverlay}
         </div>
     );
 }

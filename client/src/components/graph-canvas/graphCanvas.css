@@ -429,6 +429,112 @@
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
+/* Chain hover preview (aperçu au survol nœud/liaison — Chaîne de production) */
+.chain-hover-preview {
+    position: fixed;
+    z-index: 1000;
+    pointer-events: none;
+    background-color: rgba(15, 23, 42, 0.96);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+    color: #cbd5e1;
+    font-size: 12px;
+    animation: chain-hover-preview-in 120ms ease-out;
+}
+
+@keyframes chain-hover-preview-in {
+    from { opacity: 0; transform: translateY(2px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.chain-hover-preview-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.chain-hover-preview-title {
+    font-weight: 600;
+    color: #f1f5f9;
+    font-size: 13px;
+}
+
+.chain-hover-preview-subtitle {
+    color: #94a3b8;
+    font-size: 11px;
+    margin-top: 2px;
+}
+
+.chain-hover-preview-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+    margin-top: 6px;
+    color: #fbbf24;
+    font-size: 11px;
+}
+
+.chain-hover-preview-date {
+    color: #94a3b8;
+}
+
+.chain-hover-preview-badges {
+    display: flex;
+    gap: 10px;
+    margin-top: 6px;
+    color: #6ee7b7;
+    font-size: 11px;
+}
+
+.chain-hover-preview-badges span {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+}
+
+.chain-hover-preview-loading {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 8px;
+    color: #94a3b8;
+    font-size: 11px;
+}
+
+.chain-hover-preview-pipeline {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chain-hover-preview-pipeline-label {
+    color: #10b981;
+    font-weight: 600;
+    font-size: 11px;
+    margin: 0 0 2px 0;
+}
+
+.chain-hover-preview-pipeline p {
+    margin: 0;
+    font-size: 11px;
+    color: #94a3b8;
+}
+
+.chain-hover-preview-fill {
+    margin-top: 6px;
+}
+
+.chain-hover-preview-fill-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #94a3b8;
+    padding: 1px 0;
+}
+
 /* Canvas Error States */
 .canvas-error {
     display: flex;

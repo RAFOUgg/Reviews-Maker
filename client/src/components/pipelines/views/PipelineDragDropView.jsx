@@ -19,7 +19,7 @@
  * - onGeneralDataChange: (field, value) => void
  */
 
-import { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { useToast } from '../../shared/ToastContainer';
@@ -31,6 +31,8 @@ import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
 import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
 import { UNIT_CONVERSIONS, roundDisplay } from '../../../utils/unitConversions';
+import { usePresets } from '../../../hooks/usePresets';
+import { toLegacyGroupShape, toLegacySetupShape } from '../../../utils/presetShapeAdapters';
 
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
@@ -113,10 +115,20 @@ function UnitAwareNumberInput({ field, value, onChange, displayUnit, onDisplayUn
 
 // Grouped preset modal - COMPLETE with proper field types, edit mode, emoji + bibliothèque de setups en onglet
 function GroupedPresetModal({
-    isOpen, onClose, onSave, groups, setGroups, sidebarContent, type,
+    isOpen, onClose, presetsApi, sidebarContent, type,
     timelineConfig, timelineData, cells = [], onLoadPreset, initialTopTab = 'groups'
 }) {
     const toast = useToast();
+    // Vue "à plat" (legacy) des groupes/setups du modèle unifié — évite de réécrire tout le
+    // reste de cette modale (rendu, drag&drop, recherche) qui manipule group.fields/emoji direct.
+    const groups = useMemo(
+        () => presetsApi.getGroupsFor(type).map(toLegacyGroupShape),
+        [presetsApi, type]
+    );
+    const savedSetups = useMemo(
+        () => presetsApi.getSetupsFor(type).map(p => toLegacySetupShape(p, groups)),
+        [presetsApi, type, groups]
+    );
     const [topTab, setTopTab] = useState(initialTopTab); // 'groups' | 'setups'
     const [mode, setMode] = useState('list'); // 'list' | 'create' | 'edit'
     const [editingGroup, setEditingGroup] = useState(null);
@@ -139,11 +151,6 @@ function GroupedPresetModal({
     const [setupDescription, setSetupDescription] = useState('');
     const [includeData, setIncludeData] = useState(false);
     const [groupAssignments, setGroupAssignments] = useState({});
-    const setupsStorageKey = `pipeline-setups-${type || 'unknown'}`;
-    const [savedSetups, setSavedSetups] = useState(() => {
-        try { return JSON.parse(localStorage.getItem(setupsStorageKey) || '[]'); }
-        catch { return []; }
-    });
     const builtinSetups = PIPELINE_STARTER_SETUPS[type] || [];
 
     // Close on Escape (topmost modal only)
@@ -158,7 +165,6 @@ function GroupedPresetModal({
             resetForm();
             setSetupsSubTab('mes');
             setSetupName(''); setSetupDescription(''); setIncludeData(false); setGroupAssignments({});
-            try { setSavedSetups(JSON.parse(localStorage.getItem(setupsStorageKey) || '[]')); } catch { setSavedSetups([]); }
         }
     }, [isOpen]);
 
@@ -201,28 +207,32 @@ function GroupedPresetModal({
         setMode('edit');
     };
 
-    // Sauvegarder le setup courant (config + groupes de préréglages) dans "Mes setups"
-    const handleSaveSetup = () => {
+    // Sauvegarder le setup courant (config + référence aux groupes existants) dans "Mes setups"
+    // — référence les groupes par id plutôt que d'en embarquer une copie complète : éditer un
+    // groupe met à jour tous les setups qui le référencent.
+    const handleSaveSetup = async () => {
         if (!setupName.trim()) return;
         const cleanAssignments = Object.fromEntries(
             Object.entries(groupAssignments).filter(([, ts]) => !!ts)
         );
-        const setup = {
-            id: Date.now(),
-            name: setupName.trim(),
-            description: setupDescription.trim(),
-            createdAt: new Date().toISOString(),
-            config: timelineConfig || {},
-            groupedPresets: groups || [],
-            groupAssignments: cleanAssignments,
-            data: includeData ? (timelineData || []) : []
-        };
-        const next = [...savedSetups, setup];
-        localStorage.setItem(setupsStorageKey, JSON.stringify(next));
-        setSavedSetups(next);
-        setSetupName(''); setSetupDescription(''); setGroupAssignments({}); setIncludeData(false);
-        setSetupsSubTab('mes');
-        toast.success(`"${setup.name}" sauvegardé !`);
+        try {
+            await presetsApi.createPreset('setup', {
+                name: setupName.trim(),
+                description: setupDescription.trim(),
+                pipelineType: type,
+                data: {
+                    config: timelineConfig || {},
+                    groupedPresetIds: groups.map(g => g.id),
+                    groupAssignments: cleanAssignments,
+                    data: includeData ? (timelineData || []) : []
+                }
+            });
+            setSetupName(''); setSetupDescription(''); setGroupAssignments({}); setIncludeData(false);
+            setSetupsSubTab('mes');
+            toast.success(`"${setupName.trim()}" sauvegardé !`);
+        } catch (err) {
+            toast.error('Erreur lors de la sauvegarde du setup');
+        }
     };
 
     const handleLoadSetup = (setup) => {
@@ -230,10 +240,8 @@ function GroupedPresetModal({
         onClose();
     };
 
-    const handleDeleteSetup = (id) => {
-        const next = savedSetups.filter(s => s.id !== id);
-        localStorage.setItem(setupsStorageKey, JSON.stringify(next));
-        setSavedSetups(next);
+    const handleDeleteSetup = async (id) => {
+        try { await presetsApi.deletePreset(id); } catch { toast.error('Erreur lors de la suppression'); }
     };
 
     if (!isOpen) return null;
@@ -532,7 +540,7 @@ function GroupedPresetModal({
         );
     };
 
-    const handleSaveGroup = () => {
+    const handleSaveGroup = async () => {
         if (!groupName.trim()) {
             toast.error('Donne un nom au groupe avant de l\'enregistrer');
             return;
@@ -546,53 +554,43 @@ function GroupedPresetModal({
             .map(key => `${key}__percentages`)
             .filter(k => fieldValues[k] !== undefined);
 
-        const group = {
-            id: editingGroup?.id || `group_${Date.now()}`,
-            name: groupName.trim(),
-            description: groupDescription.trim(),
-            emoji: groupEmoji,
-            fields: [...selectedFields, ...extraKeys].map(key => ({
-                key,
-                value: fieldValues[key] ?? ''
-            })),
-            createdAt: editingGroup?.createdAt || new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-        };
+        const fields = [...selectedFields, ...extraKeys].map(key => ({
+            key,
+            value: fieldValues[key] ?? ''
+        }));
 
-        let newGroups;
-        if (editingGroup) {
-            // Update existing
-            newGroups = groups.map(g => (g.id === editingGroup.id) ? group : g);
-        } else {
-            // Add new
-            newGroups = [...groups, group];
+        try {
+            if (editingGroup) {
+                await presetsApi.updatePreset(editingGroup.id, {
+                    name: groupName.trim(),
+                    description: groupDescription.trim(),
+                    emoji: groupEmoji,
+                    data: { fields }
+                });
+            } else {
+                await presetsApi.createPreset('grouped', {
+                    name: groupName.trim(),
+                    description: groupDescription.trim(),
+                    emoji: groupEmoji,
+                    pipelineType: type,
+                    data: { fields }
+                });
+            }
+            resetForm();
+            onClose();
+        } catch (err) {
+            toast.error('Erreur lors de la sauvegarde du groupe');
         }
-
-        // Mise à jour du state et localStorage
-        setGroups(newGroups);
-        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
-        localStorage.setItem(storageKey, JSON.stringify(newGroups));
-
-        // onSave est optionnel et ne devrait pas être setGroups pour éviter les doubles updates
-        if (onSave && onSave !== setGroups) {
-            onSave(newGroups);
-        }
-
-        // Fermer la modal après enregistrement
-        resetForm();
-        onClose();
     };
 
     const handleDeleteGroup = (groupId) => {
         setGroupToDelete(groupId);
     };
 
-    const confirmDeleteGroup = () => {
-        // Supprimer le groupe qui correspond à l'ID ou au nom
-        const newGroups = groups.filter(g => !(g.id === groupToDelete || g.name === groupToDelete));
-        setGroups(newGroups);
-        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
-        localStorage.setItem(storageKey, JSON.stringify(newGroups));
+    const confirmDeleteGroup = async () => {
+        if (groupToDelete) {
+            try { await presetsApi.deletePreset(groupToDelete); } catch { toast.error('Erreur lors de la suppression'); }
+        }
         setGroupToDelete(null);
     };
 
@@ -1140,28 +1138,13 @@ const PipelineDragDropView = ({
     const [isSelecting, setIsSelecting] = useState(false);
     const [selectionStartIdx, setSelectionStartIdx] = useState(null);
 
-    // Grouped presets state
-    const [groupedPresets, setGroupedPresets] = useState(() => {
-        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
-        const saved = localStorage.getItem(storageKey);
-        return saved ? JSON.parse(saved) : [];
-    });
-
-    // Recharger les préréglages quand le type change
-    useEffect(() => {
-        const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
-        const saved = localStorage.getItem(storageKey);
-        setGroupedPresets(saved ? JSON.parse(saved) : []);
-
-        // Nettoyer les anciennes clés si type est défini
-        if (type && type !== 'unknown') {
-            const oldKey = 'pipeline-grouped-presets-unknown';
-            if (localStorage.getItem(oldKey) !== null) {
-                console.log(`🧹 Nettoyage: suppression de ${oldKey}`);
-                localStorage.removeItem(oldKey);
-            }
-        }
-    }, [type]);
+    // Groupes/préréglages — modèle unifié serveur (cf. hooks/usePresets.js), une seule instance
+    // du hook pour tout le composant (évite un fetch réseau par onglet pipeline ouvert).
+    const presetsApi = usePresets();
+    const groupedPresets = useMemo(
+        () => presetsApi.getGroupsFor(type).map(toLegacyGroupShape),
+        [presetsApi, type]
+    );
 
     const [showGroupedPresetModal, setShowGroupedPresetModal] = useState(false);
     const [contextMenu, setContextMenu] = useState(null); // { item, position }
@@ -1862,6 +1845,7 @@ const PipelineDragDropView = ({
                     ? `✓ Groupe "${group.name}" appliqué sur ${targetCells.length} cellules (${fields.length} champs chacune)`
                     : `✓ Groupe "${group.name}" appliqué (${fields.length} champs)`;
                 toast && toast.success(message);
+                if (group.id) presetsApi.markUsed(group.id);
                 setDraggedContent(null);
                 return;
             }
@@ -2143,8 +2127,11 @@ const PipelineDragDropView = ({
         showToast(`✓ ${itemKey} assigné à toutes les cases`);
     };
 
-    // Appliquer un setup de pipeline (chargement) - remplace config, données et groupedPresets
-    const applyPipelinePreset = (preset) => {
+    // Appliquer un setup de pipeline (chargement) - remplace config, données et groupedPresets.
+    // Deux origines possibles pour `preset` : un Setup utilisateur (ses groupedPresets référencent
+    // déjà des groupes existants, par id) ou un template statique de pipelineStarterSetups.js (ses
+    // groupedPresets sont des définitions embarquées sans id, à créer dans la bibliothèque).
+    const applyPipelinePreset = async (preset) => {
         if (!preset) return;
         try {
             // Apply config keys
@@ -2153,20 +2140,26 @@ const PipelineDragDropView = ({
                 try { onConfigChange(k, v); } catch (e) { console.warn('applyPipelinePreset config error', e); }
             });
 
-            // Apply groupedPresets if present
+            // Créer dans la bibliothèque uniquement les groupes qui n'existent pas encore (templates
+            // statiques sans id, ou même nom déjà présent) — un Setup utilisateur référence des
+            // groupes déjà existants, rien à créer pour lui.
             if (Array.isArray(preset.groupedPresets) && preset.groupedPresets.length > 0) {
-                const mergedPresets = [...groupedPresets];
-                preset.groupedPresets.forEach(newGroup => {
-                    const existingIdx = mergedPresets.findIndex(g => g.name === newGroup.name);
-                    if (existingIdx >= 0) {
-                        mergedPresets[existingIdx] = newGroup;
-                    } else {
-                        mergedPresets.push(newGroup);
+                for (const newGroup of preset.groupedPresets) {
+                    const alreadyById = newGroup.id && groupedPresets.some(g => g.id === newGroup.id);
+                    const alreadyByName = groupedPresets.some(g => g.name === newGroup.name);
+                    if (alreadyById || alreadyByName) continue;
+                    try {
+                        await presetsApi.createPreset('grouped', {
+                            name: newGroup.name,
+                            description: newGroup.description || '',
+                            emoji: newGroup.emoji || '🌱',
+                            pipelineType: type,
+                            data: { fields: newGroup.fields || [] }
+                        });
+                    } catch (e) {
+                        console.warn('applyPipelinePreset: échec création groupe', e);
                     }
-                });
-                setGroupedPresets(mergedPresets);
-                const storageKey = `pipeline-grouped-presets-${type || 'unknown'}`;
-                localStorage.setItem(storageKey, JSON.stringify(mergedPresets));
+                }
             }
 
             // Apply group → cell assignments (auto-drop each assigned group's fields onto its target cell)
@@ -2201,6 +2194,11 @@ const PipelineDragDropView = ({
             });
 
             if (allChanges.length > 0) pushAction({ id: Date.now(), type: 'load-preset', changes: allChanges });
+            // Compteur d'usage — uniquement pour un vrai Setup enregistré (id numérique ou local_...),
+            // pas pour un template statique de pipelineStarterSetups.js (id = slug arbitraire).
+            if (typeof preset.id === 'number' || String(preset.id).startsWith('local_')) {
+                presetsApi.markUsed(preset.id);
+            }
             showToast(`✓ Setup "${preset.name}" appliqué`);
         } catch (e) {
             console.error('Erreur lors du chargement du setup', e);
@@ -3139,8 +3137,7 @@ const PipelineDragDropView = ({
             <GroupedPresetModal
                 isOpen={showGroupedPresetModal}
                 onClose={() => setShowGroupedPresetModal(false)}
-                groups={groupedPresets}
-                setGroups={setGroupedPresets}
+                presetsApi={presetsApi}
                 sidebarContent={sidebarContent}
                 type={type}
                 initialTopTab={groupedModalInitialTab}
@@ -3165,8 +3162,7 @@ const PipelineDragDropView = ({
                 droppedItem={droppedItem}
                 pipelineType={type}
                 onFieldDelete={handleFieldDelete}
-                groupedPresets={groupedPresets}
-                onGroupsChange={setGroupedPresets}
+                presetsApi={presetsApi}
                 onMediaChange={(next) => onDataChange(currentCellTimestamp, 'media', next)}
                 selectedCells={selectedCells}
                 // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode

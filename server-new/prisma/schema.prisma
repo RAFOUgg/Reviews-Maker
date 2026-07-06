@@ -106,6 +106,7 @@ model User {
   exportTemplates   ExportTemplate[]
   exportConfigs     ExportConfiguration[] @relation("userExportConfigs")
   presets           UserPreset[]
+  projects          Project[]
 
   @@index([email])
   @@index([discordId])
@@ -1483,23 +1484,51 @@ model ExportConfiguration {
   @@map("export_configurations")
 }
 
-// Modèle UserPreset (préréglages de champs pipeline pour l'utilisateur)
-model UserPreset {
-  id           Int      @id @default(autoincrement())
-  userId       String
-  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  name         String // Nom du préréglage
-  description  String? // Description optionnelle
-  type         String // "field" (champ individuel), "grouped" (groupe de champs), "pipeline" (pipeline complète)
-  pipelineType String // "culture", "curing", "separation", "extraction"
-  data         String // JSON: données du préréglage
-  useCount     Int      @default(0)
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+// Project : regroupement libre des groupes/préréglages par campagne/production
+// (ex: "Récolte Été 2026") — permet de trier/filtrer les UserPreset par projet.
+model Project {
+  id          Int      @id @default(autoincrement())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  description String?
+  color       String? // couleur de badge pour l'UI (hex), optionnelle
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  presets UserPreset[]
 
   @@index([userId])
-  @@index([userId, type])
-  @@index([userId, pipelineType])
+  @@map("projects")
+}
+
+// Modèle UserPreset (préréglages de champs pipeline pour l'utilisateur) — couvre les
+// champs individuels ("field"), les groupes de champs ("grouped") et les configurations
+// complètes de pipeline avec pré-assignations groupe↔cellule ("setup"). Utilisable aussi
+// bien depuis un pipeline (Culture/Curing/Séparation/Extraction) que depuis la Chaîne de
+// production, qui partage les mêmes schémas de champs (cf. chainCellPipelines.js).
+model UserPreset {
+  id           Int       @id @default(autoincrement())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String // Nom du préréglage
+  description  String? // Description optionnelle
+  type         String // "field" (champ individuel), "grouped" (groupe de champs), "pipeline" (réservé, inutilisé), "setup" (config complète + pré-assignations)
+  pipelineType String? // "culture" | "curing" | "separation" | "extraction" — nullable pour un futur préréglage "toutes pipelines"
+  emoji        String? // Icône affichée en liste, sans avoir à parser `data`
+  tags         String? // JSON: string[] — même convention que SavedData.tags
+  projectId    Int?
+  project      Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  isArchived   Boolean   @default(false) // suppression douce — ne jamais casser un Setup qui référence ce groupe
+  data         String // JSON: données du préréglage (voir presets.js pour le contrat exact par type)
+  useCount     Int       @default(0)
+  lastUsedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([userId, type, pipelineType])
+  @@index([userId, projectId])
   @@map("user_presets")
 }
 

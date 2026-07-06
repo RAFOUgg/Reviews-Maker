@@ -433,6 +433,29 @@ export function getRecipeCells(reviewFlat) {
 }
 
 /**
+ * Statut de remplissage ("3/30 jours renseignés") de chaque pipeline TIMELINE du type de review
+ * (culture/curing/séparation/extraction — pas 'general'/'recipe', qui ne sont pas des "étapes").
+ * Réutilise getAllCellsForPipeline (même comptage que la trame du picker), pour que le hover/
+ * panneau du canvas Chaîne de production affiche exactement le même statut que l'import de
+ * cellules, sans réimplémenter le comptage.
+ */
+export function getPipelineFillSummary(reviewFlat, reviewType) {
+    if (!reviewFlat) return []
+    return getPipelineDefsForReviewType(reviewType)
+        .filter(def => def.dataKey && def.configKey)
+        .map(def => {
+            const cells = getAllCellsForPipeline(reviewFlat, def)
+            return {
+                key: def.key,
+                label: def.label,
+                filled: cells.filter(c => c.hasData).length,
+                total: cells.length
+            }
+        })
+        .filter(summary => summary.total > 0)
+}
+
+/**
  * Point d'entrée unique du picker : dispatch selon la catégorie (timeline de pipeline vs
  * "Autres données" vs "Recette") — évite à ChainCellPickerModal de connaître ces distinctions.
  */

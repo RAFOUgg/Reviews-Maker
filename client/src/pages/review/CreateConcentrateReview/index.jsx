@@ -297,12 +297,11 @@ export default function CreateConcentrateReview() {
                 saving={saving}
                 wide={false}
             >
-                <AnimatePresence mode="wait">
+                <AnimatePresence>
                     <motion.div
                         key={currentSection}
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
                         transition={{ duration: 0.2 }}
                         className="space-y-6"
                     >

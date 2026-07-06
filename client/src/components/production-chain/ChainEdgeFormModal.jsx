@@ -87,7 +87,12 @@ const ChainEdgeFormModal = ({ onClose }) => {
                     targetNodeId: formData.targetNodeId,
                     technique: formData.technique || null,
                     date: formData.date || null,
-                    notes: formData.notes || null
+                    notes: formData.notes || null,
+                    // Renseigné par ProductionChainCanvas.handleConnect quand la liaison vient d'un
+                    // glisser-déposer de connexion natif React Flow (mémorise le côté du handle
+                    // réellement utilisé, cohérent avec l'accroche manuelle glissée après coup).
+                    sourceHandle: formData.sourceHandle || null,
+                    targetHandle: formData.targetHandle || null
                 });
             }
 

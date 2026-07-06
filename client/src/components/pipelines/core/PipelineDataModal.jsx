@@ -4,7 +4,6 @@ import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, L
 import LiquidCheckbox from '../../ui/LiquidCheckbox';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { MediaGallery } from '../../shared/MediaAttachmentModal';
-import usePresets from '../../../hooks/usePresets';
 import { GroupedPresetModal } from '../views/PipelineDragDropView';
 import { getUnitAlternates, toDisplayUnit, toCanonicalUnit } from '../../../utils/unitConversions';
 import CultivarAutocomplete from '../../forms/helpers/CultivarAutocomplete';
@@ -39,20 +38,18 @@ function PipelineDataModal({
     onFieldDelete,
     onDragOver = null,
     onDrop = null,
-    groupedPresets = [],
+    presetsApi = null,
     preConfiguredItems = {},
     selectedCells = [],  // Array of selected cell timestamps for apply-to-selection
     // New: show a button to set the timeline start-month from within the data modal
     showSetStartMonthButton = false,
     onOpenStartMonth = null,
-    onGroupsChange = null,
     onMediaChange = null
 }) {
     const [formData, setFormData] = useState({});
     const [confirmState, setConfirmState] = useState({ open: false, title: '', message: '', onConfirm: null });
     const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
     const [createGroupedPrefill, setCreateGroupedPrefill] = useState(null);
-    const [localGroupedPresets, setLocalGroupedPresets] = useState(groupedPresets);
     // Unité d'affichage choisie par champ (ex: 'temperature' -> '°F') — la valeur stockée dans
     // formData reste toujours dans l'unité canonique du champ (cf. utils/unitConversions.js).
     const [fieldDisplayUnits, setFieldDisplayUnits] = useState({});
@@ -61,13 +58,6 @@ function PipelineDataModal({
     const [isDragOver, setIsDragOver] = useState(false);
     // Filtre texte de la grille "Ajouter un champ" — utile dès qu'un pipeline a beaucoup de champs.
     const [fieldSearchQuery, setFieldSearchQuery] = useState('');
-
-    useEffect(() => {
-        setLocalGroupedPresets(groupedPresets);
-    }, [groupedPresets]);
-
-    // Hook pour gérer les préréglages (localStorage + serveur)
-    const { presets } = usePresets(pipelineType);
 
     useEffect(() => {
         const initialData = { ...cellData };
@@ -744,29 +734,20 @@ function PipelineDataModal({
         : availableFields;
     const availableFieldGroups = groupItemsBySection(filteredAvailableFields);
 
-    const allGroupedPresets = [
-        ...(presets.grouped || []).map(g => ({
-            id: g.id,
-            name: g.name,
-            fieldCount: g.data?.selectedFields?.length || Object.keys(g.data?.fields || {}).length || 0,
-            preview: g.data?.selectedFields ? g.data.selectedFields.slice(0, 3).join(', ') : Object.keys(g.data?.fields || {}).slice(0, 3).join(', '),
-            onLoad: () => applyPresetFields(g.data?.fields || {})
-        })),
-        ...(localGroupedPresets || []).map(g => ({
-            id: g.name,
-            name: g.name,
-            fieldCount: g.fields?.length || 0,
-            preview: (g.fields || []).slice(0, 3).map(f => f.key).join(', '),
-            onLoad: () => {
-                const merged = {};
-                (g.fields || []).forEach(f => {
-                    const key = f.key || f.id;
-                    if (key) merged[key] = f.value;
-                });
-                applyPresetFields(merged);
-            }
-        }))
-    ];
+    // Une seule source de vérité (le hook unifié) — corrige l'ancien bug d'affichage en double
+    // (fusion sans dédoublonnage d'un flux serveur + d'un flux localStorage séparés).
+    const allGroupedPresets = presetsApi ? presetsApi.getGroupsFor(pipelineType).map(g => ({
+        id: g.id,
+        name: g.name,
+        fieldCount: g.data?.fields?.length || 0,
+        preview: (g.data?.fields || []).slice(0, 3).map(f => f.key).join(', '),
+        onLoad: () => {
+            const merged = {};
+            (g.data?.fields || []).forEach(f => { if (f.key) merged[f.key] = f.value; });
+            applyPresetFields(merged);
+            presetsApi.markUsed(g.id);
+        }
+    })) : [];
 
     return (
         <>
@@ -934,68 +915,64 @@ function PipelineDataModal({
                                 )}
 
                                 {/* Groupes de préréglages */}
-                                <LiquidCard padding="sm">
-                                    <div className="flex items-center justify-between mb-3">
-                                        <div className="flex items-center gap-2">
-                                            <Bookmark className="w-4 h-4 text-emerald-400" />
-                                            <p className="text-sm font-semibold text-white">Groupes de préréglages</p>
+                                {presetsApi && (
+                                    <LiquidCard padding="sm">
+                                        <div className="flex items-center justify-between mb-3">
+                                            <div className="flex items-center gap-2">
+                                                <Bookmark className="w-4 h-4 text-emerald-400" />
+                                                <p className="text-sm font-semibold text-white">Groupes de préréglages</p>
+                                            </div>
+                                            <LiquidButton
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                icon={Plus}
+                                                onClick={() => { setCreateGroupedPrefill(null); setShowCreateGroupedModal(true); }}
+                                            >
+                                                Nouveau
+                                            </LiquidButton>
                                         </div>
-                                        <LiquidButton
-                                            type="button"
-                                            variant="outline"
-                                            size="sm"
-                                            icon={Plus}
-                                            onClick={() => { setCreateGroupedPrefill(null); setShowCreateGroupedModal(true); }}
-                                        >
-                                            Nouveau
-                                        </LiquidButton>
-                                    </div>
 
-                                    {allGroupedPresets.length === 0 ? (
-                                        <div className="text-center py-5 text-white/40 border border-dashed border-white/10 rounded-xl">
-                                            <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
-                                            <p className="text-xs mt-1">Créez un groupe pour réutiliser rapidement des configurations</p>
-                                        </div>
-                                    ) : (
-                                        <div className="space-y-2">
-                                            {allGroupedPresets.map(group => (
-                                                <div key={group.id} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between gap-3">
-                                                    <div className="flex-1 min-w-0">
-                                                        <p className="font-medium text-sm text-white truncate">{group.name}</p>
-                                                        <p className="text-xs text-white/40 mt-0.5 truncate">
-                                                            <LiquidBadge size="sm">{group.fieldCount} champ(s)</LiquidBadge>
-                                                            {group.preview && <span className="ml-2">{group.preview}</span>}
-                                                        </p>
+                                        {allGroupedPresets.length === 0 ? (
+                                            <div className="text-center py-5 text-white/40 border border-dashed border-white/10 rounded-xl">
+                                                <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
+                                                <p className="text-xs mt-1">Créez un groupe pour réutiliser rapidement des configurations</p>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-2">
+                                                {allGroupedPresets.map(group => (
+                                                    <div key={group.id} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between gap-3">
+                                                        <div className="flex-1 min-w-0">
+                                                            <p className="font-medium text-sm text-white truncate">{group.name}</p>
+                                                            <p className="text-xs text-white/40 mt-0.5 truncate">
+                                                                <LiquidBadge size="sm">{group.fieldCount} champ(s)</LiquidBadge>
+                                                                {group.preview && <span className="ml-2">{group.preview}</span>}
+                                                            </p>
+                                                        </div>
+                                                        <LiquidButton type="button" variant="outline" size="sm" onClick={group.onLoad}>
+                                                            Charger
+                                                        </LiquidButton>
                                                     </div>
-                                                    <LiquidButton type="button" variant="outline" size="sm" onClick={group.onLoad}>
-                                                        Charger
-                                                    </LiquidButton>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    )}
-                                </LiquidCard>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </LiquidCard>
+                                )}
                             </div>
                         </>
                     )}
                 </form>
             </LiquidModal>
 
-            <GroupedPresetModal
-                isOpen={showCreateGroupedModal}
-                onClose={() => { setShowCreateGroupedModal(false); setCreateGroupedPrefill(null); }}
-                onSave={() => {
-                    setShowCreateGroupedModal(false);
-                    setCreateGroupedPrefill(null);
-                }}
-                groups={localGroupedPresets}
-                setGroups={(newGroups) => {
-                    setLocalGroupedPresets(newGroups);
-                    if (typeof onGroupsChange === 'function') onGroupsChange(newGroups);
-                }}
-                sidebarContent={sidebarSections}
-                type={pipelineType}
-            />
+            {presetsApi && (
+                <GroupedPresetModal
+                    isOpen={showCreateGroupedModal}
+                    onClose={() => { setShowCreateGroupedModal(false); setCreateGroupedPrefill(null); }}
+                    presetsApi={presetsApi}
+                    sidebarContent={sidebarSections}
+                    type={pipelineType}
+                />
+            )}
             <ConfirmModal
                 open={confirmState.open}
                 title={confirmState.title}

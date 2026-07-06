@@ -38,6 +38,7 @@ import statsRoutes from './routes/stats.js'
 import pipelineGithubRoutes from './routes/pipeline-github.js'
 import usageRoutes from './routes/usage.js'
 import presetsRoutes from './routes/presets.js'
+import projectsRoutes from './routes/projects.js'
 import exportRoutes from './routes/export.js'
 import adminRoutes from './routes/admin.js'
 import debugRoutes from './routes/debug.js'
@@ -135,6 +136,7 @@ app.use('/api/stats', statsRoutes)
 app.use('/api/pipeline-github', pipelineGithubRoutes)
 app.use('/api/usage', usageRoutes)
 app.use('/api/presets', presetsRoutes)
+app.use('/api/projects', projectsRoutes)
 app.use('/api/export', exportRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/debug', debugRoutes)
