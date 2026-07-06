@@ -17,6 +17,10 @@ import CultivarAutocomplete from '../../forms/helpers/CultivarAutocomplete';
  * - Sinon: affiche tous les champs assignés à cette cellule, groupés par section
  */
 
+// Types de champs qui ont besoin de toute la largeur de la grille (2 colonnes) plutôt que de se
+// retrouver comprimés dans une seule colonne — textarea, listes/groupes multi-lignes.
+const WIDE_FIELD_TYPES = new Set(['textarea', 'records-list', 'subscore-group', 'multiselect', 'dimensions']);
+
 function PipelineDataModal({
     isOpen,
     onClose,
@@ -47,8 +51,6 @@ function PipelineDataModal({
     // Unité d'affichage choisie par champ (ex: 'temperature' -> '°F') — la valeur stockée dans
     // formData reste toujours dans l'unité canonique du champ (cf. utils/unitConversions.js).
     const [fieldDisplayUnits, setFieldDisplayUnits] = useState({});
-    // Ajout direct d'un champ (sans drag&drop ni groupe de préréglages)
-    const [fieldToAdd, setFieldToAdd] = useState('');
     // Highlight discret pendant un drag&drop sur le contenu — remplace l'ancienne zone en
     // pointillé toujours visible, le glisser-déposer depuis le panneau latéral reste actif.
     const [isDragOver, setIsDragOver] = useState(false);
@@ -74,7 +76,7 @@ function PipelineDataModal({
         sidebarSections.forEach(section => {
             if (section.items) {
                 section.items.forEach(item => {
-                    items.push({ ...item, sectionLabel: section.label });
+                    items.push({ ...item, sectionLabel: section.label, sectionIcon: section.icon });
                 });
             }
         });
@@ -105,7 +107,7 @@ function PipelineDataModal({
             const label = item.sectionLabel || 'Autres';
             if (!indexBySection.has(label)) {
                 indexBySection.set(label, groups.length);
-                groups.push({ label, items: [] });
+                groups.push({ label, icon: item.sectionIcon, items: [] });
             }
             groups[indexBySection.get(label)].items.push(item);
         });
@@ -155,7 +157,7 @@ function PipelineDataModal({
                 const key = item.id || item.key || item.type;
                 if (!key) return;
                 const hasData = formData[key] !== undefined && formData[key] !== null && formData[key] !== '';
-                if (!hasData) items.push({ ...item, key, sectionLabel: section.label });
+                if (!hasData) items.push({ ...item, key, sectionLabel: section.label, sectionIcon: section.icon });
             });
         });
         return items;
@@ -166,7 +168,6 @@ function PipelineDataModal({
         const field = findSidebarFieldByKey(key);
         const defaultValue = field?.defaultValue !== undefined ? field.defaultValue : (field?.type === 'multiselect' ? [] : '');
         handleChange(key, defaultValue);
-        setFieldToAdd('');
     };
 
     const handleRemoveField = (item) => {
@@ -725,17 +726,7 @@ function PipelineDataModal({
     const itemsToDisplay = getItemsToDisplay();
     const groupedItemsToDisplay = groupItemsBySection(itemsToDisplay);
     const availableFields = !droppedItem ? getAvailableFieldsToAdd() : [];
-    const availableFieldsBySection = availableFields.reduce((acc, item) => {
-        const label = item.sectionLabel || 'Autres';
-        (acc[label] = acc[label] || []).push(item);
-        return acc;
-    }, {});
-    const fieldToAddOptions = [
-        { value: '', label: availableFields.length === 0 ? 'Tous les champs sont déjà ajoutés' : 'Choisir un champ...' },
-        ...Object.entries(availableFieldsBySection).flatMap(([sectionLabel, items]) =>
-            items.map(item => ({ value: item.key, label: `${sectionLabel} — ${item.label || item.key}` }))
-        )
-    ];
+    const availableFieldGroups = groupItemsBySection(availableFields);
 
     const allGroupedPresets = [
         ...(presets.grouped || []).map(g => ({
@@ -766,7 +757,7 @@ function PipelineDataModal({
             <LiquidModal
                 isOpen={isOpen}
                 onClose={onClose}
-                size="xl"
+                size="wide"
                 glowColor="violet"
                 title={
                     <div>
@@ -819,24 +810,28 @@ function PipelineDataModal({
                             <p className="text-xs mt-1">Ajoutez un champ ci-dessous ou chargez un groupe de préréglages</p>
                         </div>
                     ) : (
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             {groupedItemsToDisplay.map(group => (
                                 <div key={group.label || 'defaut'} className="space-y-3">
                                     {group.label && !droppedItem && (
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-white/35 ml-1">{group.label}</p>
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-white/35 ml-1 flex items-center gap-1.5">
+                                            {group.icon && <span className="text-sm not-italic normal-case">{group.icon}</span>}
+                                            {group.label}
+                                        </p>
                                     )}
-                                    <div className="space-y-3">
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                         {group.items.map((item, idx) => {
                                             const rendered = renderField(item);
                                             const itemKey = item?.key || item?.type;
                                             if (!rendered) {
                                                 return (
-                                                    <div key={idx} className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl">
+                                                    <div key={idx} className="p-3 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs rounded-xl md:col-span-2">
                                                         ⚠️ Item {idx} ({itemKey}) n'a pas d'input compatible (type={item?.type})
                                                     </div>
                                                 );
                                             }
-                                            return <div key={itemKey || idx}>{rendered}</div>;
+                                            const isWide = WIDE_FIELD_TYPES.has(item?.type);
+                                            return <div key={itemKey || idx} className={isWide ? 'md:col-span-2' : ''}>{rendered}</div>;
                                         })}
                                     </div>
                                 </div>
@@ -855,31 +850,40 @@ function PipelineDataModal({
 
                     {!droppedItem && (
                         <>
-                            {/* Ajouter un champ */}
+                            {/* Ajouter un champ — grille de boutons icône+label groupés par section, cliquables directement */}
                             <LiquidCard padding="sm">
                                 <div className="flex items-center gap-2 mb-3">
                                     <Plus className="w-4 h-4 text-violet-400" />
                                     <p className="text-sm font-semibold text-white">Ajouter un champ</p>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <div className="flex-1">
-                                        <LiquidSelect
-                                            value={fieldToAdd}
-                                            onChange={setFieldToAdd}
-                                            options={fieldToAddOptions}
-                                            disabled={availableFields.length === 0}
-                                        />
+                                {availableFields.length === 0 ? (
+                                    <p className="text-sm text-white/40 text-center py-2">Tous les champs sont déjà ajoutés</p>
+                                ) : (
+                                    <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
+                                        {availableFieldGroups.map(group => (
+                                            <div key={group.label || 'defaut'}>
+                                                <p className="text-[11px] font-semibold uppercase tracking-wide text-white/30 mb-1.5 ml-0.5 flex items-center gap-1.5">
+                                                    {group.icon && <span className="text-sm not-italic normal-case">{group.icon}</span>}
+                                                    {group.label}
+                                                </p>
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                    {group.items.map(item => (
+                                                        <button
+                                                            key={item.key}
+                                                            type="button"
+                                                            title={item.tooltip || item.label}
+                                                            onClick={() => handleAddFieldDirectly(item.key)}
+                                                            className="flex items-center gap-2 px-3 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-violet-500/15 hover:border-violet-500/40 text-left transition-colors"
+                                                        >
+                                                            <span className="text-base leading-none flex-shrink-0">{item.icon || '▫️'}</span>
+                                                            <span className="text-xs text-white/80 truncate">{item.label || item.key}</span>
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        ))}
                                     </div>
-                                    <LiquidButton
-                                        type="button"
-                                        variant="primary"
-                                        icon={Plus}
-                                        disabled={!fieldToAdd}
-                                        onClick={() => handleAddFieldDirectly(fieldToAdd)}
-                                    >
-                                        Ajouter
-                                    </LiquidButton>
-                                </div>
+                                )}
                             </LiquidCard>
 
                             {/* Photos / Vidéos */}
