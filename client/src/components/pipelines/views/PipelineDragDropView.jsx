@@ -3017,29 +3017,33 @@ const PipelineDragDropView = ({
                                                     </span>
                                                 )}
 
-                                                {/* Vignette photo/vidéo attachée à la cellule */}
+                                                {/* Photo/vidéo attachée à la cellule — affichée en fond de case (pas juste un badge) */}
                                                 {hasData && Array.isArray(cellData?.media) && cellData.media.length > 0 && (
-                                                    <div
-                                                        className="absolute -top-1.5 -left-1.5 z-20 pointer-events-none"
-                                                        title={`${cellData.media.length} média(s) attaché(s)`}
-                                                    >
-                                                        {cellData.media[0].type === 'video' ? (
-                                                            <div className="w-5 h-5 rounded-full bg-black/70 border-2 border-[#0a0a12] shadow-lg flex items-center justify-center">
-                                                                <Film className="w-2.5 h-2.5 text-white" />
-                                                            </div>
-                                                        ) : (
-                                                            <img
-                                                                src={cellData.media[0].url}
-                                                                alt=""
-                                                                className="w-5 h-5 rounded-full object-cover border-2 border-[#0a0a12] shadow-lg"
-                                                            />
-                                                        )}
+                                                    <>
+                                                        <div className="absolute inset-0 rounded-lg overflow-hidden z-0">
+                                                            {cellData.media[0].type === 'video' ? (
+                                                                <div className="w-full h-full bg-black/60 flex items-center justify-center">
+                                                                    <Film className="w-5 h-5 text-white/70" />
+                                                                </div>
+                                                            ) : (
+                                                                <img
+                                                                    src={cellData.media[0].url}
+                                                                    alt=""
+                                                                    className="w-full h-full object-cover"
+                                                                />
+                                                            )}
+                                                            {/* Voile sombre pour garder le texte/emoji lisibles par-dessus la photo */}
+                                                            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
+                                                        </div>
                                                         {cellData.media.length > 1 && (
-                                                            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-violet-600 text-white rounded-full flex items-center justify-center text-[8px] font-bold border border-[#0a0a12]">
+                                                            <span
+                                                                className="absolute -top-1.5 -left-1.5 z-20 w-4 h-4 bg-violet-600 text-white rounded-full flex items-center justify-center text-[8px] font-bold border border-[#0a0a12] shadow-lg"
+                                                                title={`${cellData.media.length} média(s) attaché(s)`}
+                                                            >
                                                                 {cellData.media.length}
                                                             </span>
                                                         )}
-                                                    </div>
+                                                    </>
                                                 )}
                                                 {/* Indicateur visuel drop */}
                                                 {isHovered && draggedContent && (
