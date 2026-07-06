@@ -1057,9 +1057,6 @@ const PipelineDragDropView = ({
     onGeneralDataChange = () => { },
     // Marquee selection threshold in pixels
     marqueeThreshold = 6,
-    presets = [],
-    onSavePreset = () => { },
-    // Préréglages retirés
     // Contenu additionnel affiché à droite du titre "Pipeline X" (ex: ChainToggleButton)
     headerExtra = null,
 }) => {
@@ -1907,8 +1904,6 @@ const PipelineDragDropView = ({
         }
     };
 
-    // Toast feedback retiré (préréglages supprimés)
-
     // Handler context menu simplifié (centré, CDC)
     const handleItemContextMenu = (e, item) => {
         e.preventDefault();
@@ -2069,8 +2064,6 @@ const PipelineDragDropView = ({
     useEffect(() => {
         selectedCellsRef.current = selectedCells;
     }, [selectedCells]);
-
-    // Handlers configuration retirés (préréglages supprimés)
 
     // Copier la valeur depuis une case source vers la sélection / case courante
     const handleAssignFromSource = (itemKey, sourceTimestamp) => {
@@ -3179,8 +3172,6 @@ const PipelineDragDropView = ({
                 // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
                 showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
                 onOpenStartMonth={() => openStartMonthPicker('editor')} />
-
-            {/* Modal configuration préréglage complet retirée (CDC) */}
 
             {/* Tooltip au survol */}
             <PipelineCellTooltip

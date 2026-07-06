@@ -28,7 +28,6 @@ import reviewPipelineCellsRoutes from './routes/review-pipeline-cells.js'
 import reviewGeneralFieldsRoutes from './routes/review-general-fields.js'
 import mediaUploadRoutes from './routes/media-upload.js'
 import pipelinesRoutes from './routes/pipelines.js'
-import pipelineCultureRoutes from './routes/pipeline-culture.js'
 import flowerReviewsRoutes from './routes/flower-reviews.js'
 import hashReviewsRoutes from './routes/hash-reviews.js'
 import concentrateReviewsRoutes from './routes/concentrate-reviews.js'
@@ -126,7 +125,6 @@ app.use('/api/review-pipeline-cells', reviewPipelineCellsRoutes)
 app.use('/api/review-general-fields', reviewGeneralFieldsRoutes)
 app.use('/api/media-upload', mediaUploadRoutes)
 app.use('/api/pipelines', pipelinesRoutes)
-app.use(pipelineCultureRoutes)
 app.use('/api/flower-reviews', flowerReviewsRoutes)
 app.use('/api/hash-reviews', hashReviewsRoutes)
 app.use('/api/concentrate-reviews', concentrateReviewsRoutes)
