@@ -33,7 +33,9 @@ export function useHashForm(reviewId = null) {
 
             const analytics = {
                 thcPercent: hd.thcPercent ?? null,
+                thcaPercent: hd.thcaPercent ?? null,
                 cbdPercent: hd.cbdPercent ?? null,
+                cbdaPercent: hd.cbdaPercent ?? null,
                 cbgPercent: hd.cbgPercent ?? null,
                 cbcPercent: hd.cbcPercent ?? null,
                 cbnPercent: hd.cbnPercent ?? null,
@@ -41,6 +43,11 @@ export function useHashForm(reviewId = null) {
                 terpeneProfile: hd.terpeneProfile ? parseArr(hd.terpeneProfile, null) : null,
                 labReportUrl: hd.labReportUrl ?? null,
                 terpeneFileUrl: hd.terpeneFileUrl ?? null,
+                labName: hd.labName ?? null,
+                labMethod: hd.labMethod ?? null,
+                labAccredited: hd.labAccredited ?? false,
+                labAccreditationStandard: hd.labAccreditationStandard ?? null,
+                labAnalysisDate: hd.labAnalysisDate ?? null,
             }
 
             // OdorSection lit data.intensity / data.fidelity / data.complexity (props génériques

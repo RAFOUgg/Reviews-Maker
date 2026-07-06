@@ -572,6 +572,13 @@ model Cultivar {
   cbdMax       Float?
   cbdSource    String? // "breeder_claim" | "lab_tested"
   labReportUrl String? // Lien vers le certificat d'analyse (COA), même convention que FlowerReview.labReportUrl
+  // Métadonnées structurées du COA — traçabilité scientifique au-delà du simple lien de fichier
+  // (cf. DOCUMENTATION/DATA_REFERENCE/09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
+  labName                 String? // Nom du laboratoire ayant réalisé l'analyse
+  labMethod               String? // Méthode analytique déclarée: "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
+  labAccredited           Boolean? // Laboratoire accrédité (déclaratif)
+  labAccreditationStandard String? // Norme d'accréditation déclarée (ex: "ISO/IEC 17025")
+  labAnalysisDate         DateTime? // Date de l'analyse figurant sur le COA
 
   // Culture
   floweringMinWeeks Int?
@@ -751,6 +758,12 @@ model FlowerReview {
   terpeneProfile    String? // JSON: Profil terpénique complet (depuis PDF/image)
   labReportUrl      String? // URL du certificat d'analyse
   terpeneFileUrl    String? // URL/chemin certificat terpènes
+  // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
+  labName                  String? // Nom du laboratoire
+  labMethod                String? // "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
+  labAccredited            Boolean? // Laboratoire accrédité (déclaratif)
+  labAccreditationStandard String? // Norme déclarée (ex: "ISO/IEC 17025")
+  labAnalysisDate          DateTime? // Date de l'analyse figurant sur le COA
 
   // ===== EXPÉRIENCE D'UTILISATION =====
   consumptionMethod String? // "Combustion", "Vapeur", "Infusion"
@@ -893,6 +906,12 @@ model HashReview {
   otherCannabinoids String? // JSON: autres cannabinoïdes
   terpeneProfile    String? // JSON: profil terpénique
   labReportUrl      String? // URL/chemin certificat cannabinoïdes
+  // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
+  labName                  String? // Nom du laboratoire
+  labMethod                String? // "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
+  labAccredited            Boolean? // Laboratoire accrédité (déclaratif)
+  labAccreditationStandard String? // Norme déclarée (ex: "ISO/IEC 17025")
+  labAnalysisDate          DateTime? // Date de l'analyse figurant sur le COA
   terpeneFileUrl    String? // URL/chemin certificat terpènes
 
   // ===== VISUEL & TECHNIQUE =====
@@ -1014,6 +1033,12 @@ model ConcentrateReview {
   terpeneProfile    String? // JSON: profil terpénique
   labReportUrl      String? // URL/chemin certificat cannabinoïdes
   terpeneFileUrl    String? // URL/chemin certificat terpènes
+  // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
+  labName                  String? // Nom du laboratoire
+  labMethod                String? // "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
+  labAccredited            Boolean? // Laboratoire accrédité (déclaratif)
+  labAccreditationStandard String? // Norme déclarée (ex: "ISO/IEC 17025")
+  labAnalysisDate          DateTime? // Date de l'analyse figurant sur le COA
 
   // ===== VISUEL & TECHNIQUE =====
   couleurTransparence Float? // Couleur/Transparence /10

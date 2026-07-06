@@ -10,13 +10,19 @@ import React, { useState } from 'react';
 import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard, LiquidToggle } from '@/components/ui/LiquidUI';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import { PHENO_NODE_SECTIONS } from '../../config/phenoNodeFields';
-import { Save, X, ChevronDown } from 'lucide-react';
+import { computeInbreedingCoefficient } from '../../utils/inbreedingCoefficient';
+import { Save, X, ChevronDown, Lock, Unlock } from 'lucide-react';
 
 const NodeFormModal = ({ isEdit, onClose }) => {
     const store = useGeneticsStore();
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [openSections, setOpenSections] = useState(new Set());
+    // Coefficient de consanguinité : calculé automatiquement depuis l'arbre par défaut (cf.
+    // DOCUMENTATION/DATA_REFERENCE/05_GENETIQUE_GENEALOGIE.md §5) — l'utilisateur peut forcer une
+    // saisie manuelle (ex: nœud pas encore relié à ses parents dans l'arbre, ou valeur connue par
+    // ailleurs) via l'échappatoire "Remplacer manuellement".
+    const [overrideInbreeding, setOverrideInbreeding] = useState(false);
 
     const formData = store.nodeFormData || {};
 
@@ -48,9 +54,23 @@ const NodeFormModal = ({ isEdit, onClose }) => {
         setLoading(true);
         setError(null);
 
+        // Persiste le coefficient de consanguinité calculé automatiquement (sauf si l'utilisateur
+        // a explicitement choisi de le remplacer manuellement) — sans ceci, la valeur affichée
+        // dans le formulaire ne serait jamais réellement sauvegardée en base.
+        let submitData = formData;
+        if (isEdit && formData.id && !overrideInbreeding) {
+            const computed = computeInbreedingCoefficient(formData.id, store.nodes || [], store.edges || []);
+            if (computed.value !== null) {
+                submitData = {
+                    ...formData,
+                    genetics: { ...(formData.genetics || {}), inbreedingLevel: computed.value.toFixed(4) }
+                };
+            }
+        }
+
         try {
             if (isEdit) {
-                await store.updateNode(formData.id, formData);
+                await store.updateNode(submitData.id, submitData);
             } else {
                 const { _pendingParentId, _pendingParentIds, _pendingChildId, ...nodeData } = formData;
                 const result = await store.addNode(nodeData);
@@ -87,6 +107,44 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 
     const renderField = (field) => {
         const value = formData.genetics?.[field.id];
+
+        if (field.id === 'inbreedingLevel') {
+            const computable = isEdit && formData.id;
+            const computed = computable
+                ? computeInbreedingCoefficient(formData.id, store.nodes || [], store.edges || [])
+                : { value: null, reason: 'Disponible uniquement après création du nœud (une fois relié à ses parents dans l\'arbre).' };
+            const showManual = overrideInbreeding || computed.value === null;
+
+            return (
+                <div key={field.id} className="space-y-1">
+                    <div className="flex items-center justify-between">
+                        <label className="text-sm font-medium text-white/80">{field.label}</label>
+                        {computed.value !== null && (
+                            <button
+                                type="button"
+                                onClick={() => setOverrideInbreeding(v => !v)}
+                                className="text-xs text-white/50 hover:text-white/80 flex items-center gap-1"
+                            >
+                                {overrideInbreeding ? <><Unlock className="w-3 h-3" /> Revenir au calcul auto</> : <><Lock className="w-3 h-3" /> Remplacer manuellement</>}
+                            </button>
+                        )}
+                    </div>
+                    {!showManual ? (
+                        <div className="px-3 py-2 bg-white/5 border border-white/10 rounded-xl">
+                            <span className="text-white font-semibold">F = {(computed.value * 100).toFixed(2)}%</span>
+                            <span className="text-white/40 text-xs ml-2">(calculé automatiquement)</span>
+                        </div>
+                    ) : (
+                        <LiquidInput
+                            value={value ?? ''}
+                            onChange={(e) => handleGeneticsChange(field.id, e.target.value)}
+                            placeholder="ex: 0.25 (1/4) — coefficient de Wright, 0 à 1"
+                        />
+                    )}
+                    <p className="text-white/40 text-xs ml-1">{computed.reason}</p>
+                </div>
+            );
+        }
 
         if (field.type === 'select') {
             return (

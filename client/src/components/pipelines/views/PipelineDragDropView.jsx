@@ -30,6 +30,7 @@ import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKe
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
 import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
+import { UNIT_CONVERSIONS, roundDisplay } from '../../../utils/unitConversions';
 
 // Emojis disponibles pour les groupes
 const GROUP_EMOJIS = ['🌱', '🌿', '💧', '☀️', '🌡️', '📊', '⚗️', '🧪', '🔬', '💨', '🏠', '🌞', '🌙', '💡', '🔌', '📅', '⏱️', '📏', '🎯', '✨', '🚀', '💪', '🎨', '🔥', '❄️', '💎', '🌈', '🍃', '🌸', '🍀'];
@@ -55,49 +56,10 @@ const WIDE_FIELD_TYPES = ['dimensions', 'subscore-group', 'multiselect'];
 // Types calculés ou mesurés dynamiquement à l'usage : pas de valeur par défaut sensée à présettiser
 const NON_PRESETABLE_TYPES = ['computed', 'records-list'];
 
-// Conversions d'unités par unité de référence (celle déclarée dans la config du champ).
+// Conversions d'unités par unité de référence (celle déclarée dans la config du champ) — table
+// partagée dans utils/unitConversions.js (cf. DOCUMENTATION/DATA_REFERENCE/12_SAISIE_VALEURS_UNITES.md).
 // La valeur stockée dans le préréglage reste toujours dans l'unité de référence ; le sélecteur
 // ne fait que convertir l'affichage et la saisie.
-const UNIT_CONVERSIONS = {
-    '°C': [
-        { unit: '°C', toBase: v => v, fromBase: v => v },
-        { unit: '°F', toBase: v => (v - 32) / 1.8, fromBase: v => v * 1.8 + 32 },
-    ],
-    'g': [
-        { unit: 'g', toBase: v => v, fromBase: v => v },
-        { unit: 'kg', toBase: v => v * 1000, fromBase: v => v / 1000 },
-        { unit: 'oz', toBase: v => v * 28.3495, fromBase: v => v / 28.3495 },
-    ],
-    'PSI': [
-        { unit: 'PSI', toBase: v => v, fromBase: v => v },
-        { unit: 'bar', toBase: v => v * 14.5038, fromBase: v => v / 14.5038 },
-    ],
-    'L': [
-        { unit: 'L', toBase: v => v, fromBase: v => v },
-        { unit: 'mL', toBase: v => v / 1000, fromBase: v => v * 1000 },
-        { unit: 'gal', toBase: v => v * 3.78541, fromBase: v => v / 3.78541 },
-    ],
-    'mL': [
-        { unit: 'mL', toBase: v => v, fromBase: v => v },
-        { unit: 'L', toBase: v => v * 1000, fromBase: v => v / 1000 },
-    ],
-    'min': [
-        { unit: 'sec', toBase: v => v / 60, fromBase: v => v * 60 },
-        { unit: 'min', toBase: v => v, fromBase: v => v },
-        { unit: 'h', toBase: v => v * 60, fromBase: v => v / 60 },
-    ],
-    'sec': [
-        { unit: 'sec', toBase: v => v, fromBase: v => v },
-        { unit: 'min', toBase: v => v * 60, fromBase: v => v / 60 },
-    ],
-    'cm': [
-        { unit: 'cm', toBase: v => v, fromBase: v => v },
-        { unit: 'm', toBase: v => v * 100, fromBase: v => v / 100 },
-        { unit: 'in', toBase: v => v * 2.54, fromBase: v => v / 2.54 },
-    ],
-};
-
-const roundDisplay = (n) => (typeof n === 'number' && Number.isFinite(n) ? Math.round(n * 100) / 100 : n);
 
 // Input numérique avec sélecteur d'unité optionnel : la valeur affichée/saisie est convertie
 // à la volée, la valeur stockée reste toujours dans l'unité de référence du champ.

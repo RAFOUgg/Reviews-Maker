@@ -33,7 +33,9 @@ export function useConcentrateForm(reviewId = null) {
 
             const analytics = {
                 thcPercent: cd.thcPercent ?? null,
+                thcaPercent: cd.thcaPercent ?? null,
                 cbdPercent: cd.cbdPercent ?? null,
+                cbdaPercent: cd.cbdaPercent ?? null,
                 cbgPercent: cd.cbgPercent ?? null,
                 cbcPercent: cd.cbcPercent ?? null,
                 cbnPercent: cd.cbnPercent ?? null,
@@ -41,6 +43,11 @@ export function useConcentrateForm(reviewId = null) {
                 terpeneProfile: cd.terpeneProfile ? parseArr(cd.terpeneProfile, null) : null,
                 labReportUrl: cd.labReportUrl ?? null,
                 terpeneFileUrl: cd.terpeneFileUrl ?? null,
+                labName: cd.labName ?? null,
+                labMethod: cd.labMethod ?? null,
+                labAccredited: cd.labAccredited ?? false,
+                labAccreditationStandard: cd.labAccreditationStandard ?? null,
+                labAnalysisDate: cd.labAnalysisDate ?? null,
             }
 
             const odeurs = {

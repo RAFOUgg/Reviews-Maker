@@ -14,7 +14,9 @@ export function flattenCommonFormData(data) {
     // Section Analytics (commune à Fleur, Hash, Concentré)
     if (data.analytics) {
         if (data.analytics.thcPercent !== undefined) flat.thcPercent = data.analytics.thcPercent
+        if (data.analytics.thcaPercent !== undefined) flat.thcaPercent = data.analytics.thcaPercent
         if (data.analytics.cbdPercent !== undefined) flat.cbdPercent = data.analytics.cbdPercent
+        if (data.analytics.cbdaPercent !== undefined) flat.cbdaPercent = data.analytics.cbdaPercent
         if (data.analytics.cbgPercent !== undefined) flat.cbgPercent = data.analytics.cbgPercent
         if (data.analytics.cbcPercent !== undefined) flat.cbcPercent = data.analytics.cbcPercent
         // Legacy fallback
@@ -25,6 +27,12 @@ export function flattenCommonFormData(data) {
         if (data.analytics.terpeneProfile) flat.terpeneProfile = data.analytics.terpeneProfile
         if (data.analytics.certificateFile) flat.certificateFile = data.analytics.certificateFile
         if (data.analytics.terpeneFile) flat.terpeneFile = data.analytics.terpeneFile
+        // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6)
+        if (data.analytics.labName !== undefined) flat.labName = data.analytics.labName
+        if (data.analytics.labMethod !== undefined) flat.labMethod = data.analytics.labMethod
+        if (data.analytics.labAccredited !== undefined) flat.labAccredited = data.analytics.labAccredited
+        if (data.analytics.labAccreditationStandard !== undefined) flat.labAccreditationStandard = data.analytics.labAccreditationStandard
+        if (data.analytics.labAnalysisDate !== undefined) flat.labAnalysisDate = data.analytics.labAnalysisDate
     }
 
     // Section Odeurs

@@ -6,6 +6,7 @@ import ConfirmModal from '../../shared/ConfirmModal';
 import usePresets from '../../../hooks/usePresets';
 import { GroupedPresetModal } from '../views/PipelineDragDropView';
 import { useEscapeClose } from '../../ui/LiquidUI';
+import { getUnitAlternates, toDisplayUnit, toCanonicalUnit } from '../../../utils/unitConversions';
 
 /**
  * PipelineDataModal - Modal pour saisir les valeurs lors d'un drop
@@ -52,6 +53,9 @@ function PipelineDataModal({
     const [showCreateGroupedModal, setShowCreateGroupedModal] = useState(false);
     const [createGroupedPrefill, setCreateGroupedPrefill] = useState(null);
     const [localGroupedPresets, setLocalGroupedPresets] = useState(groupedPresets);
+    // Unité d'affichage choisie par champ (ex: 'temperature' -> '°F') — la valeur stockée dans
+    // formData reste toujours dans l'unité canonique du champ (cf. utils/unitConversions.js).
+    const [fieldDisplayUnits, setFieldDisplayUnits] = useState({});
 
     useEffect(() => {
         setLocalGroupedPresets(groupedPresets);
@@ -285,12 +289,24 @@ function PipelineDataModal({
             );
         }
 
-        // SLIDER - Afficher input range avec valeur affichée
+        // SLIDER - Afficher input range avec valeur affichée + sélecteur d'unité convertible
+        // (cf. DOCUMENTATION/DATA_REFERENCE/12_SAISIE_VALEURS_UNITES.md) si le champ a des unités
+        // alternatives connues (température, pression, masse, volume, durée) — la valeur stockée
+        // dans formData reste toujours dans l'unité canonique déclarée par le champ.
         if (type === 'slider' || type === 'stepper') {
-            const min = item.min || 0;
-            const max = item.max || 100;
-            const step = item.step || 1;
-            const unit = item.unit || '';
+            const canonicalUnit = item.unit || '';
+            const alternates = getUnitAlternates(canonicalUnit);
+            const activeUnit = fieldDisplayUnits[itemKey] || canonicalUnit;
+            const rawValue = value || item.defaultValue || item.min || 0;
+            const displayValue = toDisplayUnit(canonicalUnit, activeUnit, rawValue);
+            const min = alternates ? toDisplayUnit(canonicalUnit, activeUnit, item.min || 0) : (item.min || 0);
+            const max = alternates ? toDisplayUnit(canonicalUnit, activeUnit, item.max || 100) : (item.max || 100);
+            const step = alternates && activeUnit !== canonicalUnit ? 'any' : (item.step || 1);
+            const handleDisplayChange = (raw) => {
+                if (raw === '' || raw === undefined) { handleChange(itemKey, ''); return; }
+                const canonicalValue = alternates ? toCanonicalUnit(canonicalUnit, activeUnit, parseFloat(raw)) : parseFloat(raw);
+                handleChange(itemKey, canonicalValue);
+            };
             return (
                 <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
@@ -301,24 +317,36 @@ function PipelineDataModal({
                         <div className="flex items-center gap-3">
                             <input
                                 type="range"
-                                value={value || item.defaultValue || min}
-                                onChange={(e) => handleChange(itemKey, parseFloat(e.target.value))}
+                                value={displayValue === '' ? min : displayValue}
+                                onChange={(e) => handleDisplayChange(e.target.value)}
                                 min={min}
                                 max={max}
-                                step={step}
+                                step={step === 'any' ? (item.step || 1) : step}
                                 className="flex-1 h-2 bg-gray-200 dark:bg-gray-700 rounded-lg appearance-none cursor-pointer"
                             />
                             <input
                                 type="number"
-                                value={value || item.defaultValue || ''}
-                                onChange={(e) => handleChange(itemKey, e.target.value === '' ? '' : parseFloat(e.target.value))}
+                                value={displayValue}
+                                onChange={(e) => handleDisplayChange(e.target.value)}
                                 min={min}
                                 max={max}
                                 step={step}
                                 className="w-24 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100"
                                 placeholder={`${min}-${max}`}
                             />
-                            {unit && <span className="text-sm text-gray-600 dark:text-gray-400">{unit}</span>}
+                            {alternates ? (
+                                <select
+                                    value={activeUnit}
+                                    onChange={(e) => setFieldDisplayUnits(prev => ({ ...prev, [itemKey]: e.target.value }))}
+                                    className="px-2 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
+                                >
+                                    {alternates.map(u => (
+                                        <option key={u.unit} value={u.unit}>{u.unit}</option>
+                                    ))}
+                                </select>
+                            ) : (
+                                canonicalUnit && <span className="text-sm text-gray-600 dark:text-gray-400">{canonicalUnit}</span>
+                            )}
                         </div>
                         {item.suggestions && item.suggestions.length > 0 && (
                             <div className="flex flex-wrap gap-2 mt-2">
@@ -672,8 +700,12 @@ function PipelineDataModal({
             );
         }
 
-        // NUMBER
+        // NUMBER — avec sélecteur d'unité convertible si le champ a des unités alternatives connues
         if (type === 'number') {
+            const canonicalUnit = item.unit || '';
+            const alternates = getUnitAlternates(canonicalUnit);
+            const activeUnit = fieldDisplayUnits[itemKey] || canonicalUnit;
+            const displayValue = toDisplayUnit(canonicalUnit, activeUnit, value);
             return (
                 <FieldWrapper item={item} key={itemKey}>
                     <div className="space-y-2">
@@ -681,20 +713,34 @@ function PipelineDataModal({
                             {icon && <span className="mr-2">{icon}</span>}
                             {label}
                         </label>
-                        <input
-                            type="number"
-                            value={value || ''}
-                            onChange={(e) => {
-                                const val = e.target.value === '' ? '' : parseFloat(e.target.value);
-                                handleChange(itemKey, val);
-                            }}
-                            step={item.step || '0.1'}
-                            min={item.min}
-                            max={item.max}
-                            className="w-full px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
-                            placeholder={item.placeholder || `Ex: ${item.defaultValue || ''}`}
-                            required={droppedItem !== null}
-                        />
+                        <div className="flex items-center gap-2">
+                            <input
+                                type="number"
+                                value={displayValue}
+                                onChange={(e) => {
+                                    if (e.target.value === '') { handleChange(itemKey, ''); return; }
+                                    const raw = parseFloat(e.target.value);
+                                    handleChange(itemKey, alternates ? toCanonicalUnit(canonicalUnit, activeUnit, raw) : raw);
+                                }}
+                                step={alternates && activeUnit !== canonicalUnit ? 'any' : (item.step || '0.1')}
+                                min={alternates ? undefined : item.min}
+                                max={alternates ? undefined : item.max}
+                                className="flex-1 px-4 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-gray-500"
+                                placeholder={item.placeholder || `Ex: ${item.defaultValue || ''}`}
+                                required={droppedItem !== null}
+                            />
+                            {alternates && (
+                                <select
+                                    value={activeUnit}
+                                    onChange={(e) => setFieldDisplayUnits(prev => ({ ...prev, [itemKey]: e.target.value }))}
+                                    className="px-2 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
+                                >
+                                    {alternates.map(u => (
+                                        <option key={u.unit} value={u.unit}>{u.unit}</option>
+                                    ))}
+                                </select>
+                            )}
+                        </div>
                     </div>
                 </FieldWrapper>
             );

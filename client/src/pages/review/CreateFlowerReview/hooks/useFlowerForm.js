@@ -82,10 +82,19 @@ export function useFlowerForm(reviewId = null) {
             // ── Section 4: Analytics ──────────────────────────────────────────
             const analytics = {
                 thcPercent: fd.thcPercent ?? null,
+                thcaPercent: fd.thcaPercent ?? null,
                 cbdPercent: fd.cbdPercent ?? null,
+                cbdaPercent: fd.cbdaPercent ?? null,
                 cbgPercent: fd.cbgPercent ?? null,
                 cbcPercent: fd.cbcPercent ?? null,
                 terpeneProfile: fd.terpeneProfile ? parseArr(fd.terpeneProfile, null) : null,
+                labReportUrl: fd.labReportUrl ?? null,
+                terpeneFileUrl: fd.terpeneFileUrl ?? null,
+                labName: fd.labName ?? null,
+                labMethod: fd.labMethod ?? null,
+                labAccredited: fd.labAccredited ?? false,
+                labAccreditationStandard: fd.labAccreditationStandard ?? null,
+                labAnalysisDate: fd.labAnalysisDate ?? null,
             }
 
             // ── Section 6: Odeurs ─────────────────────────────────────────────

@@ -35,6 +35,14 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     const [showPreview, setShowPreview] = useState(false);
     const [previewType, setPreviewType] = useState(null); // 'cannabinoid' or 'terpene'
 
+    // Métadonnées structurées du COA — traçabilité au-delà du simple lien de fichier
+    // (cf. DOCUMENTATION/DATA_REFERENCE/09_LABORATOIRES_MATERIEL.md §6)
+    const [labName, setLabName] = useState(data?.labName || '');
+    const [labMethod, setLabMethod] = useState(data?.labMethod || '');
+    const [labAccredited, setLabAccredited] = useState(!!data?.labAccredited);
+    const [labAccreditationStandard, setLabAccreditationStandard] = useState(data?.labAccreditationStandard || '');
+    const [labAnalysisDate, setLabAnalysisDate] = useState(data?.labAnalysisDate ? String(data.labAnalysisDate).slice(0, 10) : '');
+
     const hasCertificate = !!uploadedFile || !!existingCertUrl;
 
     // Re-sync from props when data is loaded from API (edit mode)
@@ -54,6 +62,11 @@ export default function AnalyticsSection({ productType, data: directData, onChan
         setCbc(String(data.cbcPercent ?? data.cbc ?? ''));
         if (!data.certificateFile) setExistingCertUrl(data.labReportUrl || null);
         if (!data.terpeneFile) setExistingTerpUrl(data.terpeneFileUrl || null);
+        setLabName(data.labName || '');
+        setLabMethod(data.labMethod || '');
+        setLabAccredited(!!data.labAccredited);
+        setLabAccreditationStandard(data.labAccreditationStandard || '');
+        setLabAnalysisDate(data.labAnalysisDate ? String(data.labAnalysisDate).slice(0, 10) : '');
     }, [data]);
 
     // Synchroniser avec parent — emit thcPercent keys to match flattener.
@@ -75,7 +88,12 @@ export default function AnalyticsSection({ productType, data: directData, onChan
             // backend (qui ne touche labReportUrl que si un nouveau fichier arrive) reste cohérent
             // mais le formulaire local perdrait la référence au prochain re-render du parent.
             labReportUrl: existingCertUrl,
-            terpeneFileUrl: existingTerpUrl
+            terpeneFileUrl: existingTerpUrl,
+            labName: labName || null,
+            labMethod: labMethod || null,
+            labAccredited,
+            labAccreditationStandard: labAccreditationStandard || null,
+            labAnalysisDate: labAnalysisDate || null
         };
         if (isFirstRunRef.current) {
             isFirstRunRef.current = false;
@@ -92,15 +110,20 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                 certificateFile: data?.certificateFile || null,
                 terpeneFile: data?.terpeneFile || null,
                 labReportUrl: data?.certificateFile ? null : (data?.labReportUrl || null),
-                terpeneFileUrl: data?.terpeneFile ? null : (data?.terpeneFileUrl || null)
+                terpeneFileUrl: data?.terpeneFile ? null : (data?.terpeneFileUrl || null),
+                labName: data?.labName || null,
+                labMethod: data?.labMethod || null,
+                labAccredited: !!data?.labAccredited,
+                labAccreditationStandard: data?.labAccreditationStandard || null,
+                labAnalysisDate: data?.labAnalysisDate ? String(data.labAnalysisDate).slice(0, 10) : null
             };
             if (JSON.stringify(payload) === JSON.stringify(incomingComparable)) return;
             const hasIncoming = !!(data && Object.keys(data).length > 0);
-            const hasManual = !!(thc || thca || cbd || cbda || cbg || cbc || uploadedFile || terpeneFile);
+            const hasManual = !!(thc || thca || cbd || cbda || cbg || cbc || uploadedFile || terpeneFile || labName || labMethod || labAccredited || labAccreditationStandard || labAnalysisDate);
             if (!hasIncoming && !hasManual) return;
         }
         safeUpdate(payload);
-    }, [thc, thca, cbd, cbda, cbg, cbc, uploadedFile, terpeneFile, existingCertUrl, existingTerpUrl]);
+    }, [thc, thca, cbd, cbda, cbg, cbc, uploadedFile, terpeneFile, existingCertUrl, existingTerpUrl, labName, labMethod, labAccredited, labAccreditationStandard, labAnalysisDate]);
 
     const handleFileUpload = (e, type = 'cannabinoid') => {
         const file = e.target.files?.[0];
@@ -424,6 +447,72 @@ export default function AnalyticsSection({ productType, data: directData, onChan
                         </div>
                     </div>
                 )}
+            </div>
+
+            <LiquidDivider />
+
+            {/* Métadonnées structurées du COA — traçabilité au-delà du simple lien de fichier */}
+            <div className="space-y-4">
+                <h4 className="text-sm font-bold text-white/80">Métadonnées du laboratoire (optionnel)</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/60">Nom du laboratoire</label>
+                        <input
+                            type="text"
+                            value={labName}
+                            onChange={(e) => setLabName(e.target.value)}
+                            placeholder="ex: Labo XYZ"
+                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/60">Méthode analytique</label>
+                        <select
+                            value={labMethod}
+                            onChange={(e) => setLabMethod(e.target.value)}
+                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                        >
+                            <option value="" className="bg-[#1a1a2e]">Non renseigné</option>
+                            <option value="hplc" className="bg-[#1a1a2e]">HPLC-UV/DAD</option>
+                            <option value="gc-ms" className="bg-[#1a1a2e]">GC-MS / GC-FID</option>
+                            <option value="lc-ms-ms" className="bg-[#1a1a2e]">LC-MS/MS</option>
+                            <option value="nirs" className="bg-[#1a1a2e]">NIRS (proche infrarouge)</option>
+                            <option value="rmn" className="bg-[#1a1a2e]">RMN</option>
+                            <option value="icp-ms" className="bg-[#1a1a2e]">ICP-MS</option>
+                            <option value="other" className="bg-[#1a1a2e]">Autre</option>
+                        </select>
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/60">Date d'analyse</label>
+                        <input
+                            type="date"
+                            value={labAnalysisDate}
+                            onChange={(e) => setLabAnalysisDate(e.target.value)}
+                            className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium text-white/60 flex items-center gap-2">
+                            <input
+                                type="checkbox"
+                                checked={labAccredited}
+                                onChange={(e) => setLabAccredited(e.target.checked)}
+                                className="rounded border-white/20"
+                            />
+                            Laboratoire accrédité
+                        </label>
+                        {labAccredited && (
+                            <input
+                                type="text"
+                                value={labAccreditationStandard}
+                                onChange={(e) => setLabAccreditationStandard(e.target.value)}
+                                placeholder="ex: ISO/IEC 17025"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                            />
+                        )}
+                    </div>
+                </div>
+                <p className="text-xs text-white/40">Un COA n'a de valeur probante que si le laboratoire émetteur est accrédité (ex. ISO/IEC 17025) — cf. DOCUMENTATION/DATA_REFERENCE/09_LABORATOIRES_MATERIEL.md.</p>
             </div>
 
             {/* Upload profil terpénique - CDC REQUIS */}

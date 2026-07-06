@@ -302,6 +302,22 @@ function validateFlowerReviewData(data, options = {}) {
     if (data.labReportUrl && typeof data.labReportUrl === 'string') {
         cleaned.labReportUrl = data.labReportUrl.trim()
     }
+    if (data.labName && typeof data.labName === 'string') {
+        cleaned.labName = data.labName.trim()
+    }
+    if (data.labMethod && ['hplc', 'gc-ms', 'lc-ms-ms', 'nirs', 'rmn', 'icp-ms', 'other'].includes(data.labMethod)) {
+        cleaned.labMethod = data.labMethod
+    }
+    if (data.labAccredited !== undefined) {
+        cleaned.labAccredited = data.labAccredited === true || data.labAccredited === 'true'
+    }
+    if (data.labAccreditationStandard && typeof data.labAccreditationStandard === 'string') {
+        cleaned.labAccreditationStandard = data.labAccreditationStandard.trim()
+    }
+    if (data.labAnalysisDate) {
+        const d = new Date(data.labAnalysisDate)
+        if (!isNaN(d.getTime())) cleaned.labAnalysisDate = d
+    }
     if (data.otherCannabinoids) {
         if (typeof data.otherCannabinoids === 'string') {
             try { cleaned.otherCannabinoids = JSON.parse(data.otherCannabinoids) } catch { cleaned.otherCannabinoids = data.otherCannabinoids }
