@@ -896,7 +896,7 @@ function PipelineDataModal({
                                                     {group.icon && <span className="text-sm not-italic normal-case">{group.icon}</span>}
                                                     {group.label}
                                                 </p>
-                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2">
+                                                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                                                     {group.items.map(item => (
                                                         <button
                                                             key={item.key}
@@ -918,59 +918,64 @@ function PipelineDataModal({
                                 )}
                             </LiquidCard>
 
-                            {/* Photos / Vidéos */}
-                            {onMediaChange && (
-                                <LiquidCard padding="sm">
-                                    <div className="flex items-center gap-2 mb-3">
-                                        <ImageIcon className="w-4 h-4 text-amber-400" />
-                                        <p className="text-sm font-semibold text-white">Photos / Vidéos</p>
-                                    </div>
-                                    <MediaGallery media={cellData?.media || []} onChange={onMediaChange} compact />
-                                </LiquidCard>
-                            )}
-
-                            {/* Groupes de préréglages */}
-                            <LiquidCard padding="sm">
-                                <div className="flex items-center justify-between mb-3">
-                                    <div className="flex items-center gap-2">
-                                        <Bookmark className="w-4 h-4 text-emerald-400" />
-                                        <p className="text-sm font-semibold text-white">Groupes de préréglages</p>
-                                    </div>
-                                    <LiquidButton
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        icon={Plus}
-                                        onClick={() => { setCreateGroupedPrefill(null); setShowCreateGroupedModal(true); }}
-                                    >
-                                        Nouveau
-                                    </LiquidButton>
-                                </div>
-
-                                {allGroupedPresets.length === 0 ? (
-                                    <div className="text-center py-5 text-white/40 border border-dashed border-white/10 rounded-xl">
-                                        <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
-                                        <p className="text-xs mt-1">Créez un groupe pour réutiliser rapidement des configurations</p>
-                                    </div>
-                                ) : (
-                                    <div className="space-y-2">
-                                        {allGroupedPresets.map(group => (
-                                            <div key={group.id} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                    <p className="font-medium text-sm text-white truncate">{group.name}</p>
-                                                    <p className="text-xs text-white/40 mt-0.5 truncate">
-                                                        <LiquidBadge size="sm">{group.fieldCount} champ(s)</LiquidBadge>
-                                                        {group.preview && <span className="ml-2">{group.preview}</span>}
-                                                    </p>
-                                                </div>
-                                                <LiquidButton type="button" variant="outline" size="sm" onClick={group.onLoad}>
-                                                    Charger
-                                                </LiquidButton>
-                                            </div>
-                                        ))}
-                                    </div>
+                            {/* Photos/Vidéos + Groupes de préréglages côte à côte sur desktop — pas besoin de
+                                pleine largeur chacun, ça évite un long scroll vertical inutile. Empilé en
+                                dessous de md (téléphone/tablette portrait). */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+                                {/* Photos / Vidéos */}
+                                {onMediaChange && (
+                                    <LiquidCard padding="sm">
+                                        <div className="flex items-center gap-2 mb-3">
+                                            <ImageIcon className="w-4 h-4 text-amber-400" />
+                                            <p className="text-sm font-semibold text-white">Photos / Vidéos</p>
+                                        </div>
+                                        <MediaGallery media={cellData?.media || []} onChange={onMediaChange} compact />
+                                    </LiquidCard>
                                 )}
-                            </LiquidCard>
+
+                                {/* Groupes de préréglages */}
+                                <LiquidCard padding="sm">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <Bookmark className="w-4 h-4 text-emerald-400" />
+                                            <p className="text-sm font-semibold text-white">Groupes de préréglages</p>
+                                        </div>
+                                        <LiquidButton
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            icon={Plus}
+                                            onClick={() => { setCreateGroupedPrefill(null); setShowCreateGroupedModal(true); }}
+                                        >
+                                            Nouveau
+                                        </LiquidButton>
+                                    </div>
+
+                                    {allGroupedPresets.length === 0 ? (
+                                        <div className="text-center py-5 text-white/40 border border-dashed border-white/10 rounded-xl">
+                                            <p className="text-sm font-medium">📦 Aucun groupe préréglage</p>
+                                            <p className="text-xs mt-1">Créez un groupe pour réutiliser rapidement des configurations</p>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            {allGroupedPresets.map(group => (
+                                                <div key={group.id} className="p-3 rounded-xl border border-white/10 bg-white/5 flex items-center justify-between gap-3">
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="font-medium text-sm text-white truncate">{group.name}</p>
+                                                        <p className="text-xs text-white/40 mt-0.5 truncate">
+                                                            <LiquidBadge size="sm">{group.fieldCount} champ(s)</LiquidBadge>
+                                                            {group.preview && <span className="ml-2">{group.preview}</span>}
+                                                        </p>
+                                                    </div>
+                                                    <LiquidButton type="button" variant="outline" size="sm" onClick={group.onLoad}>
+                                                        Charger
+                                                    </LiquidButton>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </LiquidCard>
+                            </div>
                         </>
                     )}
                 </form>
