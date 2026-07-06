@@ -25,6 +25,7 @@ import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReviewNode from './ReviewNode';
+import ChainAnnotationNode from './ChainAnnotationNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
 import ChainHoverPreview from './ChainHoverPreview';
 import ChainNodeContextMenu from './ChainNodeContextMenu';
@@ -36,19 +37,42 @@ import ChainCellPickerModal from './ChainCellPickerModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import ConfirmModal from '../shared/ConfirmModal';
-import { Download, Upload, RotateCcw, FileImage, Edit2 } from 'lucide-react';
+import { Download, Upload, RotateCcw, FileImage, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 // Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
 // pas clignoter au simple passage de la souris entre deux nœuds voisins.
 const HOVER_PREVIEW_DELAY = 300;
 
+// Préférence de repli du panneau latéral droit, mémorisée entre sessions (même logique que
+// ProductAddSidebar.COLLAPSE_STORAGE_KEY côté gauche).
+const PANEL_COLLAPSE_STORAGE_KEY = 'chainInfoPanelCollapsed';
+
 const nodeTypes = {
-    reviewProduct: ReviewNode
+    reviewProduct: ReviewNode,
+    annotationCard: ChainAnnotationNode
 };
 
 const edgeTypes = {
     transformation: ChainEdgeComponent
 };
+
+// Lignes affichées sur une carte épinglée créée depuis le résumé pipeline du panneau latéral —
+// mêmes champs que le bloc "Données trouvées sur la fiche destination" (cf. JSX plus bas et
+// ChainEdgeFormModal.jsx), pour ne jamais désynchroniser les deux affichages.
+function pipelineSummaryBodyLines(pipelineSummary) {
+    if (!pipelineSummary) return [];
+    const lines = [];
+    if (pipelineSummary.technique) lines.push({ label: 'Méthode', value: pipelineSummary.technique });
+    if (pipelineSummary.materialType) lines.push({ label: 'Matière première', value: pipelineSummary.materialType });
+    if (pipelineSummary.materialState) lines.push({ label: 'État de la matière', value: pipelineSummary.materialState });
+    if (pipelineSummary.mesh) lines.push({ label: 'Maillage', value: pipelineSummary.mesh });
+    if (pipelineSummary.dosage || pipelineSummary.dosageUnit) {
+        lines.push({ label: 'Dosage', value: `${pipelineSummary.dosage ?? '?'} ${pipelineSummary.dosageUnit || ''}`.trim() });
+    }
+    if (pipelineSummary.stepCount > 0) lines.push({ label: 'Étapes enregistrées', value: String(pipelineSummary.stepCount) });
+    if (pipelineSummary.detail) lines.push({ label: 'Détail', value: pipelineSummary.detail });
+    return lines;
+}
 
 const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const store = useProductionChainStore();
@@ -64,6 +88,11 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const [exportingSvg, setExportingSvg] = useState(false);
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
+    const [panelCollapsed, setPanelCollapsed] = useState(() => localStorage.getItem(PANEL_COLLAPSE_STORAGE_KEY) === '1');
+
+    useEffect(() => {
+        localStorage.setItem(PANEL_COLLAPSE_STORAGE_KEY, panelCollapsed ? '1' : '0');
+    }, [panelCollapsed]);
 
     // Persistance du point de courbure d'une liaison glissée à la main — même pattern que
     // UnifiedGeneticsCanvas.jsx (PhenoHunt).
@@ -87,15 +116,11 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             : { targetNodeId: newNodeId, targetHandle: newHandleSide });
     }, [readOnly, store]);
 
-    // Synchroniser les nœuds et arêtes du store vers React Flow
+    // Synchroniser les nœuds, arêtes et cartes épinglées du store vers React Flow — les cartes
+    // épinglées (annotations) sont un second type de nœud React Flow (pas de Handle, pas de
+    // review associée) fusionné dans le même tableau `nodes` que les produits.
     useEffect(() => {
-        if (!store.nodes || store.nodes.length === 0) {
-            setNodes([]);
-            setEdges([]);
-            return;
-        }
-
-        const rfNodes = store.nodes.map(node => ({
+        const rfProductNodes = (store.nodes || []).map(node => ({
             id: node.id,
             data: {
                 label: node.label,
@@ -112,7 +137,19 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             type: 'reviewProduct'
         }));
 
-        const rfEdges = store.edges.map(edge => ({
+        const rfAnnotationNodes = (store.annotations || []).map(annotation => ({
+            id: annotation.id,
+            type: 'annotationCard',
+            position: annotation.position || { x: 0, y: 0 },
+            data: {
+                title: annotation.title,
+                body: annotation.body,
+                sourceLabel: annotation.sourceLabel,
+                onDelete: () => store.deleteAnnotation(annotation.id)
+            }
+        }));
+
+        const rfEdges = (store.edges || []).map(edge => ({
             id: edge.id,
             source: edge.sourceNodeId,
             target: edge.targetNodeId,
@@ -135,9 +172,9 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             }
         }));
 
-        setNodes(rfNodes);
+        setNodes([...rfProductNodes, ...rfAnnotationNodes]);
         setEdges(rfEdges);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect]);
+    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect]);
 
     // Drag & drop depuis ProductAddSidebar — un nœud référence toujours une review
     // existante, pas de création de nœud vide comme dans UnifiedGeneticsCanvas
@@ -158,16 +195,30 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             product = JSON.parse(jsonData);
         } catch { return; }
 
-        if (!product || !product.reviewId || !product.reviewType) return;
-
-        const alreadyExists = store.nodes.some(n => n.reviewId === product.reviewId && n.reviewType === product.reviewType);
-        if (alreadyExists) return;
+        if (!product) return;
 
         const reactFlowBounds = event.currentTarget.getBoundingClientRect();
         const position = {
             x: event.clientX - reactFlowBounds.left,
             y: event.clientY - reactFlowBounds.top,
         };
+
+        // Glissé depuis le panneau latéral d'un nœud/liaison (cellule attachée ou résumé pipeline)
+        // plutôt que depuis ProductAddSidebar — épingle une carte snapshot au point de dépôt.
+        if (product.kind === 'annotation') {
+            await store.addAnnotation({
+                title: product.title,
+                body: product.body || [],
+                sourceLabel: product.sourceLabel || null,
+                position
+            });
+            return;
+        }
+
+        if (!product.reviewId || !product.reviewType) return;
+
+        const alreadyExists = store.nodes.some(n => n.reviewId === product.reviewId && n.reviewType === product.reviewType);
+        if (alreadyExists) return;
 
         await store.addNode({
             reviewType: product.reviewType,
@@ -179,11 +230,15 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
     // Cf. UnifiedGeneticsCanvas.jsx (genetics) : React Flow passe en 3e argument TOUS les nœuds
     // déplacés lors d'une sélection multiple — ne persister que le nœud déclencheur du drag
-    // faisait revenir les autres à leur ancienne position au resync suivant du store.
+    // faisait revenir les autres à leur ancienne position au resync suivant du store. Les cartes
+    // épinglées (type 'annotationCard') se déplacent de la même façon mais persistent via
+    // updateAnnotation plutôt que updateNode.
     const handleNodeDragStop = useCallback(async (event, node, draggedNodes) => {
         if (readOnly) return;
         const movedNodes = Array.isArray(draggedNodes) && draggedNodes.length > 0 ? draggedNodes : [node];
-        await Promise.all(movedNodes.map(n => store.updateNode(n.id, { position: n.position })));
+        await Promise.all(movedNodes.map(n => n.type === 'annotationCard'
+            ? store.updateAnnotation(n.id, { position: n.position })
+            : store.updateNode(n.id, { position: n.position })));
         setNodes(nodes => nodes.map(n => {
             const moved = movedNodes.find(m => m.id === n.id);
             return moved ? { ...n, position: moved.position } : n;
@@ -260,12 +315,16 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
     const handleNodeClick = useCallback((event, node) => {
         event.stopPropagation();
+        // Une carte épinglée n'a ni review ni panneau associé — seule sa suppression (bouton
+        // dédié sur la carte) est possible, pas de sélection.
+        if (node.type === 'annotationCard') return;
         store.selectNode(node.id);
     }, [store]);
 
     const handleNodeContextMenu = useCallback((event, node) => {
         if (readOnly) return;
         event.preventDefault();
+        if (node.type === 'annotationCard') return;
         event.stopPropagation();
         setContextMenuType('node');
         setContextMenu({ x: event.clientX, y: event.clientY, nodeId: node.id });
@@ -422,6 +481,17 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         ? (Array.isArray(selectedNode.media) ? selectedNode.media : [])
         : (Array.isArray(selectedEdge?.media) ? selectedEdge.media : []);
     const panelSummary = panelReviewId ? store.reviewSummaryCache[panelReviewId] : null;
+    // Étiquette d'origine affichée sur une carte épinglée créée par glisser-déposer depuis ce
+    // panneau (cf. handleDrop plus bas) — purement indicative, aucune référence vivante.
+    const panelSubjectLabel = selectedNode
+        ? selectedNode.label
+        : (edgeSourceNode && edgeTargetNode ? `${edgeSourceNode.label} → ${edgeTargetNode.label}` : '');
+
+    const handleAnnotationDragStart = useCallback((event, title, body) => {
+        const payload = { kind: 'annotation', title, body, sourceLabel: panelSubjectLabel ? `depuis ${panelSubjectLabel}` : null };
+        event.dataTransfer.setData('application/json', JSON.stringify(payload));
+        event.dataTransfer.effectAllowed = 'copy';
+    }, [panelSubjectLabel]);
 
     useEffect(() => {
         if (chainId && chainId !== store.selectedChainId) {

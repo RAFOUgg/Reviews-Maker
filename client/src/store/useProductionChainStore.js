@@ -152,11 +152,18 @@ const useProductionChainStore = create(
                         media: parseCellData(e.media)
                     }));
 
+                    const parsedAnnotations = (chain.annotations || []).map(a => ({
+                        ...a,
+                        position: typeof a.position === 'string' ? JSON.parse(a.position) : a.position,
+                        body: parseCellData(a.body)
+                    }));
+
                     set({
                         selectedChainId: chainId,
                         selectedChain: { id: chain.id, name: chain.name, description: chain.description, isPublic: chain.isPublic },
                         nodes: parsedNodes,
                         edges: parsedEdges,
+                        annotations: parsedAnnotations,
                         canvasLoading: false
                     });
 
@@ -247,6 +254,7 @@ const useProductionChainStore = create(
                         selectedChainId: state.selectedChainId === chainId ? null : state.selectedChainId,
                         nodes: state.selectedChainId === chainId ? [] : state.nodes,
                         edges: state.selectedChainId === chainId ? [] : state.edges,
+                        annotations: state.selectedChainId === chainId ? [] : state.annotations,
                         chainLoading: false
                     }));
 
@@ -362,6 +370,103 @@ const useProductionChainStore = create(
                     return { success: true };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to delete node';
+                    set({ chainError: errorMsg, canvasLoading: false });
+                    return { error: errorMsg };
+                }
+            },
+
+            // ============================================================================
+            // ANNOTATIONS - Create/Update/Delete (cartes épinglées glissées-déposées depuis le
+            // panneau latéral d'un nœud/liaison — même triplet CRUD que NODES ci-dessus)
+            // ============================================================================
+            addAnnotation: async (annotationData) => {
+                const state = get();
+                if (!state.selectedChainId) {
+                    return { error: 'No chain selected' };
+                }
+
+                set({ canvasLoading: true, chainError: null });
+                try {
+                    const response = await fetch(`${API_BASE}/chains/${state.selectedChainId}/annotations`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...annotationData,
+                            position: annotationData.position || { x: 0, y: 0 }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to add annotation');
+                    }
+
+                    const newAnnotation = await response.json();
+
+                    set(state => ({
+                        annotations: [...state.annotations, newAnnotation],
+                        canvasLoading: false
+                    }));
+
+                    return { data: newAnnotation };
+                } catch (error) {
+                    const errorMsg = error.message || 'Failed to add annotation';
+                    set({ chainError: errorMsg, canvasLoading: false });
+                    return { error: errorMsg };
+                }
+            },
+
+            updateAnnotation: async (annotationId, updateData) => {
+                set({ canvasLoading: true, chainError: null });
+                try {
+                    const response = await fetch(`${API_BASE}/annotations/${annotationId}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to update annotation');
+                    }
+
+                    const updated = await response.json();
+
+                    set(state => ({
+                        annotations: state.annotations.map(a => a.id === annotationId ? updated : a),
+                        canvasLoading: false
+                    }));
+
+                    return { data: updated };
+                } catch (error) {
+                    const errorMsg = error.message || 'Failed to update annotation';
+                    set({ chainError: errorMsg, canvasLoading: false });
+                    return { error: errorMsg };
+                }
+            },
+
+            deleteAnnotation: async (annotationId) => {
+                set({ canvasLoading: true, chainError: null });
+                try {
+                    const response = await fetch(`${API_BASE}/annotations/${annotationId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete annotation: ${response.status}`);
+                    }
+
+                    set(state => ({
+                        annotations: state.annotations.filter(a => a.id !== annotationId),
+                        canvasLoading: false
+                    }));
+
+                    return { success: true };
+                } catch (error) {
+                    const errorMsg = error.message || 'Failed to delete annotation';
                     set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
                 }
@@ -768,6 +873,7 @@ const useProductionChainStore = create(
                     selectedChain: null,
                     nodes: [],
                     edges: [],
+                    annotations: [],
                     cellPicker: null,
                     editingCell: null,
                     mediaModalTarget: null
@@ -781,6 +887,7 @@ const useProductionChainStore = create(
                     selectedChain: null,
                     nodes: [],
                     edges: [],
+                    annotations: [],
                     selectedNodeId: null,
                     selectedEdgeId: null,
                     showEdgeForm: false,

@@ -538,6 +538,85 @@
     object-fit: cover;
 }
 
+/* Chain annotation card (carte épinglée glissée-déposée sur le fond du canvas — Chaîne de
+   production) — persistante, contrairement au hover preview ci-dessous. */
+.chain-annotation-card {
+    position: relative;
+    width: 200px;
+    padding: 10px 12px;
+    background: rgba(30, 41, 59, 0.92);
+    border: 1px solid rgba(217, 119, 6, 0.4);
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 6px 18px -4px rgba(0, 0, 0, 0.4);
+    cursor: grab;
+}
+
+.chain-annotation-delete {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(15, 23, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #94a3b8;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+    cursor: pointer;
+}
+
+.chain-annotation-card:hover .chain-annotation-delete {
+    opacity: 1;
+}
+
+.chain-annotation-delete:hover {
+    color: #f87171;
+}
+
+.chain-annotation-header {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #fbbf24;
+}
+
+.chain-annotation-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.chain-annotation-source {
+    font-size: 10px;
+    color: #94a3b8;
+    margin-top: 2px;
+}
+
+.chain-annotation-body {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.chain-annotation-line {
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    font-size: 11px;
+    color: #cbd5e1;
+    padding: 1px 0;
+}
+
+.chain-annotation-line-label {
+    color: #94a3b8;
+    flex-shrink: 0;
+}
+
 /* Chain hover preview (aperçu au survol nœud/liaison — Chaîne de production) */
 .chain-hover-preview {
     position: fixed;

@@ -20,6 +20,10 @@
  * PUT    /api/production-chains/edges/:edgeId                   - Modifier une arête
  * DELETE /api/production-chains/edges/:edgeId                   - Supprimer une arête
  *
+ * POST   /api/production-chains/chains/:id/annotations          - Épingler une carte sur le canvas
+ * PUT    /api/production-chains/annotations/:annotationId       - Modifier une carte épinglée
+ * DELETE /api/production-chains/annotations/:annotationId       - Supprimer une carte épinglée
+ *
  * GET    /api/production-chains/for-review/:reviewType/:reviewId - Chaîne(s) publiques/possédées contenant cette review
  */
 
@@ -550,6 +554,97 @@ router.delete("/edges/:edgeId", requireAuth, requireChainAccess, async (req, res
         res.json({ message: "Edge deleted successfully" })
     } catch (error) {
         res.status(500).json({ error: "Failed to delete chain edge" })
+    }
+})
+
+// =============================================================================
+// ANNOTATIONS ROUTES (cartes épinglées librement sur le fond du canvas)
+// =============================================================================
+
+router.post("/chains/:id/annotations", requireAuth, requireChainAccess, validateChainAnnotationCreation, async (req, res) => {
+    try {
+        const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
+
+        if (!chain) {
+            return res.status(404).json({ error: "Chain not found" })
+        }
+
+        if (chain.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const { position, title, body = [], sourceLabel = null } = req.body
+
+        const annotation = await prisma.chainAnnotation.create({
+            data: {
+                chainId: req.params.id,
+                position: JSON.stringify(position || { x: 0, y: 0 }),
+                title: title.trim(),
+                body: JSON.stringify(body),
+                sourceLabel: sourceLabel?.trim() || null
+            }
+        })
+
+        res.status(201).json({ ...annotation, position: JSON.parse(annotation.position), body: JSON.parse(annotation.body || "[]") })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to create annotation" })
+    }
+})
+
+router.put("/annotations/:annotationId", requireAuth, requireChainAccess, validateChainAnnotationUpdate, async (req, res) => {
+    try {
+        const annotation = await prisma.chainAnnotation.findUnique({
+            where: { id: req.params.annotationId },
+            include: { chain: true }
+        })
+
+        if (!annotation) {
+            return res.status(404).json({ error: "Annotation not found" })
+        }
+
+        if (annotation.chain.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const { position, title, body, sourceLabel } = req.body
+        const data = {
+            ...(position !== undefined && { position: JSON.stringify(position) }),
+            ...(title !== undefined && { title: title.trim() }),
+            ...(body !== undefined && { body: JSON.stringify(body) }),
+            ...(sourceLabel !== undefined && { sourceLabel: sourceLabel?.trim() || null })
+        }
+
+        const updated = await prisma.chainAnnotation.update({
+            where: { id: req.params.annotationId },
+            data
+        })
+
+        res.json({ ...updated, position: JSON.parse(updated.position), body: JSON.parse(updated.body || "[]") })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update annotation" })
+    }
+})
+
+router.delete("/annotations/:annotationId", requireAuth, requireChainAccess, async (req, res) => {
+    try {
+        const annotation = await prisma.chainAnnotation.findUnique({
+            where: { id: req.params.annotationId },
+            include: { chain: true }
+        })
+
+        if (!annotation) {
+            return res.status(404).json({ error: "Annotation not found" })
+        }
+
+        if (annotation.chain.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        await prisma.chainAnnotation.delete({ where: { id: req.params.annotationId } })
+
+        res.json({ message: "Annotation deleted successfully" })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete annotation" })
     }
 })
 
