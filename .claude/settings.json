@@ -75,7 +75,26 @@
       "Bash(powershell -Command ' *)",
       "Bash(node_modules/.bin/eslint --version)",
       "Bash(sleep 2; cat /tmp/server-dev.log 2>&1 | tail -40)",
-      "Bash(sleep 2; cat /tmp/client-dev.log 2>&1 | tail -30)"
+      "Bash(sleep 2; cat /tmp/client-dev.log 2>&1 | tail -30)",
+      "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,5173 -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -Unique\")",
+      "Bash(curl -s -o /dev/null -w \"backend:%{http_code}\\\\n\" http://localhost:3000/api/auth/me)",
+      "Bash(curl -s -o /dev/null -w \"frontend:%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -s http://localhost:3000/api/production-chains)",
+      "Bash(curl -s -c /tmp/cookies.txt http://localhost:3000/api/production-chains/chains)",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:3000/api/reviews)",
+      "Bash(python3 -c ' *)",
+      "Bash(chromium-cli --help)",
+      "Bash(node -e \"console.log\\(require.resolve\\('playwright'\\)\\)\")",
+      "Bash(curl -s -b /tmp/cookies.txt http://localhost:3000/api/reviews -o 'C:\\\\Users\\\\Rafi\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker\\\\eabae3c0-336f-4b82-9926-aa8a4db17926\\\\scratchpad/reviews.json')",
+      "Bash(rm -rf client/dist)",
+      "Bash(node \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_groups_modal.js\")",
+      "Bash(curl -s -b /tmp/cookies.txt \"http://localhost:3000/api/hash-reviews\")",
+      "Bash(curl -s -b /tmp/cookies.txt \"http://localhost:3000/api/flower-reviews\")",
+      "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_groups_modal.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_groups_modal_tmp.js\")",
+      "Bash(node verify_groups_modal_tmp.js)",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code}\\\\n\" http://127.0.0.1:5173/)",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:5173/)",
+      "Bash(curl -sS -o /dev/null -w \"%{http_code}\\\\n\" http://localhost:3000/)"
     ]
   }
 }

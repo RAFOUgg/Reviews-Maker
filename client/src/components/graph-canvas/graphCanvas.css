@@ -103,9 +103,17 @@
     justify-content: center;
 }
 
-/* Sexe inconnu / nœud Chaîne de production = carte arrondie classique */
+/* Sexe inconnu / nœud Chaîne de production = carte arrondie classique. Hauteur FIXE comme
+   shape-circle/shape-square (pas de hauteur "auto") : sans ça, un nœud dont le contenu varie
+   légèrement (ex: badges génétiques qui passent à 2 lignes selon le nombre de tags) change de
+   hauteur réellement rendue après la première mesure de React Flow, qui garde en cache la
+   position calculée de la poignée Bottom — la ligne de connexion tirée avant de lâcher part
+   alors d'un point qui ne correspond plus au bas visuel réel de la carte. */
 .cultivar-node.shape-rounded {
     border-radius: 16px;
+    width: 140px;
+    height: 140px;
+    justify-content: center;
 }
 
 .node-photo {

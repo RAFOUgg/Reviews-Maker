@@ -146,12 +146,21 @@ function GroupedPresetModal({
     // Bibliothèque de setups (onglet "Bibliothèque de setups") — masqué quand le contexte
     // (ex: création rapide depuis l'éditeur de cellule) ne fournit pas onLoadPreset
     const showSetupsTab = typeof onLoadPreset === 'function';
-    const [setupsSubTab, setSetupsSubTab] = useState('mes'); // 'mes' | 'templates' | 'nouveau'
+    const [setupsSubTab, setSetupsSubTab] = useState('mes'); // 'mes' | 'nouveau'
     const [setupName, setSetupName] = useState('');
     const [setupDescription, setSetupDescription] = useState('');
     const [includeData, setIncludeData] = useState(false);
     const [groupAssignments, setGroupAssignments] = useState({});
     const builtinSetups = PIPELINE_STARTER_SETUPS[type] || [];
+    // Chaque template de PIPELINE_STARTER_SETUPS n'embarque qu'un seul groupe de préréglages
+    // (sa "config" ne fixe que 1-2 champs triviaux) — du point de vue utilisateur, c'est un groupe
+    // par défaut, pas un vrai setup de pipeline complet. On les affiche donc directement dans
+    // l'onglet "Mes groupes" plutôt que dans une sous-section "Templates" séparée. Dédupliqué par
+    // nom contre les groupes déjà enregistrés pour ne pas re-proposer ce qui a déjà été ajouté.
+    const builtinTemplateGroups = builtinSetups
+        .map(s => s.groupedPresets?.[0])
+        .filter(Boolean)
+        .filter(gp => !groups.some(g => g.name === gp.name));
 
     // Close on Escape (topmost modal only)
     useEscapeClose(isOpen, onClose);
@@ -242,6 +251,25 @@ function GroupedPresetModal({
 
     const handleDeleteSetup = async (id) => {
         try { await presetsApi.deletePreset(id); } catch { toast.error('Erreur lors de la suppression'); }
+    };
+
+    // Ajoute un groupe par défaut (extrait des templates PIPELINE_STARTER_SETUPS) tel quel dans
+    // "Mes groupes" — contrairement à "Appliquer" un setup, ça ne touche pas la config de trame
+    // ni ne ferme la modale : l'utilisateur reste sur l'onglet Groupes et voit le nouveau groupe
+    // apparaître immédiatement dans sa liste, prêt à être ajusté ou glissé sur une case.
+    const handleAddBuiltinGroup = async (templateGroup) => {
+        try {
+            await presetsApi.createPreset('grouped', {
+                name: templateGroup.name,
+                description: templateGroup.description || '',
+                emoji: templateGroup.emoji || '🌱',
+                pipelineType: type,
+                data: { fields: templateGroup.fields || [] }
+            });
+            toast.success(`"${templateGroup.name}" ajouté à vos groupes`);
+        } catch (err) {
+            toast.error('Erreur lors de l\'ajout du groupe');
+        }
     };
 
     if (!isOpen) return null;
@@ -605,8 +633,10 @@ function GroupedPresetModal({
         return null;
     };
 
-    // Carte d'un setup sauvegardé/template dans l'onglet "Bibliothèque de setups"
-    const SetupCard = ({ setup, builtin = false }) => (
+    // Carte d'un setup sauvegardé dans l'onglet "Setups complets" (les templates statiques de
+    // PIPELINE_STARTER_SETUPS vivent désormais dans "Mes groupes" — cf. builtinTemplateGroups —
+    // donc cette carte n'a plus besoin de gérer un mode "builtin" sans suppression/métadonnées).
+    const SetupCard = ({ setup }) => (
         <div className="flex items-start gap-3 p-3 rounded-xl bg-white/5 border border-white/10 hover:border-purple-500/30 transition-colors">
             <span className="text-2xl flex-shrink-0">{setup.emoji || '⚙️'}</span>
             <div className="flex-1 min-w-0">
@@ -614,18 +644,13 @@ function GroupedPresetModal({
                 {setup.description && (
                     <div className="text-xs text-white/50 mt-0.5 line-clamp-2">{setup.description}</div>
                 )}
-                {!builtin && (
-                    <div className="text-xs text-white/30 mt-1">
-                        {setup.groupedPresets?.length || 0} groupe(s)
-                        {Object.keys(setup.groupAssignments || {}).length > 0 && (
-                            <> · {Object.keys(setup.groupAssignments).length} assigné(s) à une case</>
-                        )}
-                        {' · '}{new Date(setup.createdAt).toLocaleDateString('fr-FR')}
-                    </div>
-                )}
-                {builtin && setup.groupedPresets?.[0] && (
-                    <div className="text-xs text-purple-300/60 mt-1">{setup.groupedPresets[0].description}</div>
-                )}
+                <div className="text-xs text-white/30 mt-1">
+                    {setup.groupedPresets?.length || 0} groupe(s)
+                    {Object.keys(setup.groupAssignments || {}).length > 0 && (
+                        <> · {Object.keys(setup.groupAssignments).length} assigné(s) à une case</>
+                    )}
+                    {' · '}{new Date(setup.createdAt).toLocaleDateString('fr-FR')}
+                </div>
             </div>
             <div className="flex flex-col gap-1 flex-shrink-0">
                 <button
@@ -634,21 +659,19 @@ function GroupedPresetModal({
                 >
                     Appliquer
                 </button>
-                {!builtin && (
-                    <button
-                        onClick={() => handleDeleteSetup(setup.id)}
-                        className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded-lg transition-colors"
-                    >
-                        Suppr.
-                    </button>
-                )}
+                <button
+                    onClick={() => handleDeleteSetup(setup.id)}
+                    className="px-3 py-1 bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs rounded-lg transition-colors"
+                >
+                    Suppr.
+                </button>
             </div>
         </div>
     );
 
     return createPortal(
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm p-2 sm:p-4">
-            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] max-w-[98vw] max-h-[95vh] sm:max-h-[88vh] border border-white/10 flex flex-col overflow-hidden">
+            <div className="bg-[#0a0a12] rounded-2xl shadow-2xl w-full sm:w-[90vw] md:w-[800px] lg:w-[1000px] xl:w-[1150px] max-w-[98vw] max-h-[95vh] sm:max-h-[88vh] border border-white/10 flex flex-col overflow-hidden">
                 {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-white/10 flex-shrink-0">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
@@ -667,11 +690,18 @@ function GroupedPresetModal({
                         <LiquidTabs
                             tabs={[
                                 { id: 'groups', label: `Mes groupes${groups.length ? ` (${groups.length})` : ''}` },
-                                { id: 'setups', label: `Bibliothèque de setups${savedSetups.length ? ` (${savedSetups.length})` : ''}` }
+                                { id: 'setups', label: `Setups complets${savedSetups.length ? ` (${savedSetups.length})` : ''}` }
                             ]}
                             activeTab={topTab}
                             onChange={setTopTab}
                         />
+                        {topTab === 'setups' && (
+                            <p className="text-xs text-white/30 mt-2">
+                                Un <strong className="text-white/50">groupe</strong> est un jeu de valeurs réutilisable, à glisser sur n'importe quelle case.
+                                Un <strong className="text-white/50">setup</strong> restaure en plus toute la config de la trame et les groupes déjà
+                                placés sur des cases précises — utile pour rejouer un pipeline entier d'un coup.
+                            </p>
+                        )}
                     </div>
                 )}
 
@@ -744,6 +774,46 @@ function GroupedPresetModal({
                                         </div>
                                     </div>
                                 ))}
+                            </div>
+                        )}
+
+                        {builtinTemplateGroups.length > 0 && (
+                            <div className="mt-6">
+                                <h4 className="text-xs font-semibold text-white/50">
+                                    Groupes par défaut ({builtinTemplateGroups.length})
+                                </h4>
+                                <p className="text-xs text-white/30 mt-0.5 mb-3">
+                                    Modèles prêts à l'emploi pour ce pipeline — ajoutez-les tels quels, puis ajustez-les si besoin.
+                                </p>
+                                <div className="space-y-2">
+                                    {builtinTemplateGroups.map((gp, idx) => (
+                                        <div key={idx} className="flex items-start gap-3 p-3 bg-white/[0.02] rounded-xl border border-dashed border-white/15">
+                                            <span className="text-2xl flex-shrink-0">{gp.emoji || '🌱'}</span>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="font-semibold text-white text-sm truncate">{gp.name}</div>
+                                                {gp.description && (
+                                                    <div className="text-xs text-white/50 mt-0.5 truncate">{gp.description}</div>
+                                                )}
+                                                <div className="flex flex-wrap gap-1 mt-1.5">
+                                                    {(gp.fields || []).filter(f => !String(f.key).endsWith('__percentages')).slice(0, 5).map((f, i) => {
+                                                        const def = findFieldDef(f.key);
+                                                        return (
+                                                            <span key={i} className="text-xs px-2 py-0.5 bg-white/10 rounded">
+                                                                {def?.icon || '📌'} {def?.label || f.key}
+                                                            </span>
+                                                        );
+                                                    })}
+                                                </div>
+                                            </div>
+                                            <button
+                                                onClick={() => handleAddBuiltinGroup(gp)}
+                                                className="px-2.5 py-1.5 text-xs bg-purple-500/20 text-purple-300 hover:bg-purple-500/30 rounded-lg transition-colors flex-shrink-0"
+                                            >
+                                                + Ajouter
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
                             </div>
                         )}
                     </div>
@@ -832,14 +902,14 @@ function GroupedPresetModal({
                                             </button>
 
                                             {isExpanded && (
-                                                <div className="p-2 space-y-1 border-t border-white/10">
+                                                <div className="p-2 border-t border-white/10 grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-1.5 items-start">
                                                     {section.items.map(field => {
                                                         const isSelected = selectedFields.includes(field.id);
                                                         const isWide = isSelected && WIDE_FIELD_TYPES.includes(field.type);
                                                         return (
                                                             <div
                                                                 key={field.id}
-                                                                className={`rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'}`}
+                                                                className={`rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'} ${isWide ? 'lg:col-span-2 xl:col-span-3' : ''}`}
                                                             >
                                                                 <div className="flex items-center gap-2 p-2">
                                                                     <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
@@ -906,7 +976,6 @@ function GroupedPresetModal({
                             <LiquidTabs
                                 tabs={[
                                     { id: 'mes', label: `Mes setups${savedSetups.length ? ` (${savedSetups.length})` : ''}` },
-                                    { id: 'templates', label: `Templates${builtinSetups.length ? ` (${builtinSetups.length})` : ''}` },
                                     { id: 'nouveau', label: 'Sauvegarder' }
                                 ]}
                                 activeTab={setupsSubTab}
@@ -924,17 +993,6 @@ function GroupedPresetModal({
                                     </div>
                                     : <div className="space-y-2">
                                         {savedSetups.map(s => <SetupCard key={s.id} setup={s} />)}
-                                    </div>
-                            )}
-
-                            {setupsSubTab === 'templates' && (
-                                builtinSetups.length === 0
-                                    ? <div className="text-center py-10 text-white/40 text-sm">Aucun template pour ce type de pipeline.</div>
-                                    : <div className="space-y-2">
-                                        <p className="text-xs text-white/40 mb-1">
-                                            Ces templates appliquent une configuration + groupes de préréglages prédéfinis. Vous pouvez ensuite les ajuster.
-                                        </p>
-                                        {builtinSetups.map(s => <SetupCard key={s.id} setup={s} builtin />)}
                                     </div>
                             )}
 

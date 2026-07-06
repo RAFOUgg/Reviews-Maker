@@ -270,7 +270,16 @@ const useGeneticsStore = create(
             },
 
             updateNode: async (nodeId, updateData) => {
-                set({ canvasLoading: true, treeError: null });
+                // Mise à jour optimiste immédiate (avant l'appel réseau) — sans ça, si le composant
+                // canvas se re-synchronise pour une tout autre raison (ex: sélection qui change)
+                // pendant que la requête PUT est encore en vol, il reconstruit les nœuds React Flow
+                // à partir de l'ancienne position encore en store, ce qui fait visuellement "sauter"
+                // le nœud en arrière avant qu'il ne se replace une fois la réponse serveur arrivée.
+                set(state => ({
+                    nodes: state.nodes.map(n => n.id === nodeId ? { ...n, ...updateData } : n),
+                    canvasLoading: true,
+                    treeError: null
+                }));
                 try {
                     const response = await fetch(`${API_BASE}/nodes/${nodeId}`, {
                         method: 'PUT',

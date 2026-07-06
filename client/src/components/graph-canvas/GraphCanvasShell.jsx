@@ -233,7 +233,7 @@ export default function GraphCanvasShell({
             {contextMenu && createPortal(contextMenu, document.body)}
             {modals && createPortal(modals, document.body)}
             {fab}
-            {floatingOverlay}
+            {floatingOverlay && createPortal(floatingOverlay, document.body)}
         </div>
     );
 }

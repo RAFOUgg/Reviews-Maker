@@ -147,17 +147,28 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
     };
 
     const handleDuplicate = async () => {
+        // Duplique vraiment le nœud — pas juste son nom : la review liée, la photo et les
+        // médias doivent suivre, sinon le "duplicata" perd sa traçabilité (c'est le même
+        // phénotype, pas une fiche vierge repartant de zéro).
         const duplicatedNode = await store.addNode({
             cultivarName: `${node.cultivarName} (copie)`,
             cultivarId: node.cultivarId,
             position: { x: node.position.x + 100, y: node.position.y + 100 },
             color: node.color,
+            image: node.image,
             genetics: node.genetics,
-            notes: node.notes
+            notes: node.notes,
+            sourceReviewId: node.sourceReviewId
         });
 
         if (duplicatedNode.data) {
-            store.selectNode(duplicatedNode.data.id);
+            const newNodeId = duplicatedNode.data.id;
+            // La route de création ne persiste pas `media` (toujours "[]" à la création côté
+            // schéma) — un second appel en update est nécessaire pour reporter les photos/vidéos.
+            if (Array.isArray(node.media) && node.media.length > 0) {
+                await store.updateNode(newNodeId, { media: node.media });
+            }
+            store.selectNode(newNodeId);
         }
         onClose();
     };

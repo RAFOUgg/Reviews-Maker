@@ -89,7 +89,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     }
 
     // Local state pour le panneau métadonnées du nœud sélectionné
-    const [nodeEditMeta, setNodeEditMeta] = useState({ breeder: '', type: '', sex: 'unknown', relations: [], phenotypeCode: '' })
+    const [nodeEditMeta, setNodeEditMeta] = useState({ breeder: '', type: '', generation: '', sex: 'unknown', relations: [], phenotypeCode: '' })
     const nodeUpdateTimerRef = useRef(null)
 
     // Synchroniser le state local quand le nœud sélectionné change
@@ -99,6 +99,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
             setNodeEditMeta({
                 breeder: g.breeder || '',
                 type: g.type || '',
+                generation: g.generation || '',
                 sex: g.sex || 'unknown',
                 relations: Array.isArray(g.relations) ? g.relations : [],
                 phenotypeCode: g.phenotypeCode || selectedNode.data?.codePheno || ''
@@ -989,6 +990,30 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                     <option value="indica" className="bg-[#12121a] text-white">🌙 Indica</option>
                                     <option value="sativa" className="bg-[#12121a] text-white">☀️ Sativa</option>
                                     <option value="hybrid" className="bg-[#12121a] text-white">⚖️ Hybride</option>
+                                    <option value="ruderalis" className="bg-[#12121a] text-white">🌾 Ruderalis</option>
+                                    <option value="hemp" className="bg-[#12121a] text-white">🌿 Chanvre (Hemp)</option>
+                                </select>
+                            </div>
+
+                            <div className="space-y-2">
+                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Génération</label>
+                                <select
+                                    value={nodeEditMeta.generation}
+                                    onChange={(e) => handleNodeMetaUpdate({ generation: e.target.value })}
+                                    className="liquid-input liquid-select w-full text-sm"
+                                >
+                                    <option value="" className="bg-[#12121a] text-white">Non précisé</option>
+                                    <option value="P" className="bg-[#12121a] text-white">P (Parentale)</option>
+                                    <option value="F1" className="bg-[#12121a] text-white">F1</option>
+                                    <option value="F2" className="bg-[#12121a] text-white">F2</option>
+                                    <option value="F3" className="bg-[#12121a] text-white">F3</option>
+                                    <option value="F4" className="bg-[#12121a] text-white">F4</option>
+                                    <option value="BX1" className="bg-[#12121a] text-white">BX1 (Rétrocroisement 1)</option>
+                                    <option value="BX2" className="bg-[#12121a] text-white">BX2 (Rétrocroisement 2)</option>
+                                    <option value="BX3" className="bg-[#12121a] text-white">BX3 (Rétrocroisement 3)</option>
+                                    <option value="S1" className="bg-[#12121a] text-white">S1 (Selfing)</option>
+                                    <option value="IBL" className="bg-[#12121a] text-white">IBL (lignée stabilisée)</option>
+                                    <option value="other" className="bg-[#12121a] text-white">Autre</option>
                                 </select>
                             </div>
 
