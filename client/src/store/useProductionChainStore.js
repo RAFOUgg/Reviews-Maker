@@ -654,8 +654,11 @@ const useProductionChainStore = create(
             // ============================================================================
             // UI - Selection & Forms
             // ============================================================================
-            selectNode: (nodeId) => set({ selectedNodeId: nodeId }),
-            selectEdge: (edgeId) => set({ selectedEdgeId: edgeId }),
+            // Sélectionner l'un désélectionne systématiquement l'autre — sans ça, sélectionner une
+            // liaison puis un nœud (ou l'inverse) laissait les deux ids actifs en même temps, et le
+            // panneau latéral affichait les deux blocs (nœud + liaison) empilés simultanément.
+            selectNode: (nodeId) => set({ selectedNodeId: nodeId, selectedEdgeId: null }),
+            selectEdge: (edgeId) => set({ selectedEdgeId: edgeId, selectedNodeId: null }),
 
             /**
              * - openEdgeForm(sourceNodeId, targetNodeId) : création pré-remplie (connexion drag&drop)

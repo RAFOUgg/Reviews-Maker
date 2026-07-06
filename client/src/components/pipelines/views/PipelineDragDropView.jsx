@@ -906,10 +906,14 @@ function GroupedPresetModal({
                                                     {section.items.map(field => {
                                                         const isSelected = selectedFields.includes(field.id);
                                                         const isWide = isSelected && WIDE_FIELD_TYPES.includes(field.type);
+                                                        // Coché mais pas "wide" (select/number/date/toggle...) : réclame 2 colonnes sur
+                                                        // la grille 3-col plutôt qu'une seule — sinon le label se tronque dès qu'un
+                                                        // input de valeur apparaît à côté sur une colonne trop étroite.
+                                                        const isSelectedNarrow = isSelected && !isWide;
                                                         return (
                                                             <div
                                                                 key={field.id}
-                                                                className={`rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'} ${isWide ? 'lg:col-span-2 xl:col-span-3' : ''}`}
+                                                                className={`rounded transition-colors ${isSelected ? 'bg-purple-500/10' : 'hover:bg-white/5'} ${isWide ? 'lg:col-span-2 xl:col-span-3' : ''} ${isSelectedNarrow ? 'xl:col-span-2' : ''}`}
                                                             >
                                                                 <div className="flex items-center gap-2 p-2">
                                                                     <label className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">

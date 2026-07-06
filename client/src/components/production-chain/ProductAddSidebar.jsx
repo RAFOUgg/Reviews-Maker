@@ -7,8 +7,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, FileText } from 'lucide-react';
+import { RefreshCw, FileText, ChevronLeft, ChevronRight } from 'lucide-react';
 import { TYPE_META, ALL_REVIEW_TYPES, apiTypeToInternal } from '../../utils/reviewTypeMeta';
+
+// Préférence de repli mémorisée entre sessions — un utilisateur qui réduit ce panneau pour
+// gagner de la place sur le canvas s'attend à le retrouver réduit à sa prochaine visite.
+const COLLAPSE_STORAGE_KEY = 'chainProductSidebarCollapsed';
 
 const getFirstReviewImage = (review) => {
     const imgs = review?.images
@@ -22,6 +26,11 @@ const getFirstReviewImage = (review) => {
 export default function ProductAddSidebar({ existingReviewIds = [] }) {
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(false);
+    const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_STORAGE_KEY) === '1');
+
+    useEffect(() => {
+        localStorage.setItem(COLLAPSE_STORAGE_KEY, collapsed ? '1' : '0');
+    }, [collapsed]);
 
     useEffect(() => {
         let cancelled = false;
@@ -58,12 +67,25 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
     })).filter(g => g.items.length > 0);
 
     return (
-        <div className="w-72 flex-shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
-            <div className="px-4 py-3 border-b border-white/10 bg-white/5">
-                <h3 className="text-sm font-semibold text-white">Mes fiches techniques</h3>
-                <p className="text-xs text-white/40">Glissez un produit dans le graphe</p>
+        <div className={`${collapsed ? 'w-12' : 'w-72'} flex-shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col transition-[width] duration-200`}>
+            <div className={`px-3 py-3 border-b border-white/10 bg-white/5 flex items-center gap-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
+                {!collapsed && (
+                    <div className="min-w-0">
+                        <h3 className="text-sm font-semibold text-white truncate">Mes fiches techniques</h3>
+                        <p className="text-xs text-white/40 truncate">Glissez un produit dans le graphe</p>
+                    </div>
+                )}
+                <button
+                    type="button"
+                    onClick={() => setCollapsed(v => !v)}
+                    className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+                    title={collapsed ? 'Afficher mes fiches techniques' : 'Réduire le panneau'}
+                >
+                    {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                </button>
             </div>
 
+            {!collapsed && (
             <div className="flex-1 overflow-y-auto p-3 space-y-4">
                 {loading ? (
                     <div className="text-center py-8">
@@ -111,6 +133,7 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
                     })
                 )}
             </div>
+            )}
         </div>
     );
 }

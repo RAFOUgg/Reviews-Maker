@@ -392,14 +392,28 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
 }
 
+/* Panneau latéral droit (nœud/liaison sélectionné) : "docké" sur toute la hauteur du canvas
+   plutôt que la boîte flottante par défaut du <Panel position="top-right"> de react-flow (qui ne
+   se dimensionne que sur son contenu) — top/right/bottom/height en !important pour l'emporter
+   sur le style inline posé par react-flow selon la prop `position`. */
 .node-info-panel {
     background-color: rgba(30, 41, 59, 0.9) !important;
     border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    border-radius: 8px !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+    border-radius: 0 !important;
     padding: 16px !important;
-    max-width: 300px !important;
+    width: 320px !important;
+    max-width: 320px !important;
+    top: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    height: 100% !important;
+    margin: 0 !important;
     backdrop-filter: blur(10px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    box-shadow: -4px 0 16px rgba(0, 0, 0, 0.35) !important;
+    overflow-y: auto;
 }
 
 .node-info-panel .info-content {
@@ -880,6 +894,7 @@
     }
 
     .node-info-panel {
+        width: 80vw !important;
         max-width: 80vw !important;
     }
 
