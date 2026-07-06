@@ -1,10 +1,11 @@
 import React from 'react'
-import { Camera, X, Info } from 'lucide-react'
+import { Camera, ImagePlus, Film, X, Info } from 'lucide-react'
 import { LiquidCard, LiquidInput, LiquidDivider } from '@/components/ui/LiquidUI'
 import SourceLineageSelector from '@/components/forms/helpers/SourceLineageSelector'
 import FillMyselfButton from '@/components/forms/helpers/FillMyselfButton'
 import FillCompanyButton from '@/components/forms/helpers/FillCompanyButton'
 import UnknownValueButton from '@/components/ui/UnknownValueButton'
+import { isVideoMedia } from '@/utils/mediaFileHelpers'
 
 const CONCENTRATE_TYPES = [
     'Rosin',
@@ -123,44 +124,76 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                         </div>
                     </div>
 
-                    {/* Photos */}
+                    {/* Photos / Vidéos */}
                     <div>
                         <label className="block text-sm font-medium text-white mb-2">
-                            📷 Photos du produit (1-4) *
+                            📷 Photos / vidéos du produit (1-4) *
                         </label>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            {photos.map((photo, index) => (
-                                <div key={index} className="relative group">
-                                    <img
-                                        src={photo.preview || photo.url}
-                                        alt={`Photo ${index + 1}`}
-                                        className="w-full h-32 object-cover rounded-lg border border-white/10 shadow-md"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={() => removePhoto(index)}
-                                        className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg"
-                                    >
-                                        <X className="w-4 h-4" />
-                                    </button>
-                                </div>
-                            ))}
+                            {photos.map((photo, index) => {
+                                const isVideo = isVideoMedia(photo)
+                                return (
+                                    <div key={index} className="relative group">
+                                        {isVideo ? (
+                                            <video
+                                                src={photo.preview || photo.url}
+                                                className="w-full h-32 object-cover rounded-lg border border-white/10 shadow-md"
+                                                muted
+                                            />
+                                        ) : (
+                                            <img
+                                                src={photo.preview || photo.url}
+                                                alt={`Photo ${index + 1}`}
+                                                className="w-full h-32 object-cover rounded-lg border border-white/10 shadow-md"
+                                            />
+                                        )}
+                                        {isVideo && (
+                                            <span className="absolute bottom-2 left-2 bg-black/60 text-white p-1 rounded-full">
+                                                <Film className="w-3 h-3" />
+                                            </span>
+                                        )}
+                                        <button
+                                            type="button"
+                                            onClick={() => removePhoto(index)}
+                                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-all shadow-lg"
+                                        >
+                                            <X className="w-4 h-4" />
+                                        </button>
+                                    </div>
+                                )
+                            })}
                         </div>
                         {photos.length < 4 && (
-                            <label className="flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-cyan-500/50 bg-white/5 hover:bg-cyan-500/10 transition-all backdrop-blur-sm">
-                                <Camera className="w-6 h-6 text-white/40" />
-                                <span className="text-sm font-medium text-white/60">
-                                    Ajouter une photo ({photos.length}/4)
-                                </span>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handlePhotoUpload}
-                                    className="hidden"
-                                    multiple
-                                />
-                            </label>
+                            <div className="grid grid-cols-2 gap-3">
+                                <label className="flex items-center justify-center gap-2 px-3 py-3 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-cyan-500/50 bg-white/5 hover:bg-cyan-500/10 transition-all backdrop-blur-sm">
+                                    <Camera className="w-5 h-5 text-white/40 shrink-0" />
+                                    <span className="text-sm font-medium text-white/60 text-center">
+                                        Prendre une photo
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        capture="environment"
+                                        onChange={handlePhotoUpload}
+                                        className="hidden"
+                                    />
+                                </label>
+                                <label className="flex items-center justify-center gap-2 px-3 py-3 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-cyan-500/50 bg-white/5 hover:bg-cyan-500/10 transition-all backdrop-blur-sm">
+                                    <ImagePlus className="w-5 h-5 text-white/40 shrink-0" />
+                                    <span className="text-sm font-medium text-white/60 text-center">
+                                        Galerie ({photos.length}/4)
+                                    </span>
+                                    <input
+                                        type="file"
+                                        accept="image/*,video/*"
+                                        onChange={handlePhotoUpload}
+                                        className="hidden"
+                                        multiple
+                                    />
+                                </label>
+                            </div>
                         )}
+                        <p className="text-xs text-white/30 mt-1.5">200 Mo max par fichier</p>
                     </div>
                 </div>
             </LiquidCard>

@@ -1,5 +1,6 @@
 import React from 'react'
-import { Camera, X, ArrowRight } from 'lucide-react'
+import { Camera, ImagePlus, Film, X, ArrowRight } from 'lucide-react'
+import { isVideoMedia } from '../../utils/mediaFileHelpers'
 import LiquidInput from '../ui/LiquidInput'
 import LiquidSelect from '../ui/LiquidSelect'
 import LiquidSlider from '../ui/LiquidSlider'
@@ -28,31 +29,52 @@ function PhotoQuestion({ question, photos, onUpload, onRemove, onSkip }) {
     return (
         <QuestionShell label={question.label} hint={question.hint} onSkip={onSkip} skipLabel="Pas de photo pour l'instant">
             <div className="grid grid-cols-2 gap-3">
-                {(photos || []).map((photo, index) => (
-                    <div key={index} className="relative group">
-                        <img
-                            src={photo.preview || photo.url}
-                            alt={`Photo ${index + 1}`}
-                            className="w-full h-28 object-cover rounded-lg border border-white/10 shadow-md"
-                        />
-                        <button
-                            type="button"
-                            onClick={() => onRemove(index)}
-                            className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-lg"
-                        >
-                            <X className="w-3.5 h-3.5" />
-                        </button>
-                    </div>
-                ))}
+                {(photos || []).map((photo, index) => {
+                    const isVideo = isVideoMedia(photo)
+                    return (
+                        <div key={index} className="relative group">
+                            {isVideo ? (
+                                <video
+                                    src={photo.preview || photo.url}
+                                    className="w-full h-28 object-cover rounded-lg border border-white/10 shadow-md"
+                                    muted
+                                />
+                            ) : (
+                                <img
+                                    src={photo.preview || photo.url}
+                                    alt={`Photo ${index + 1}`}
+                                    className="w-full h-28 object-cover rounded-lg border border-white/10 shadow-md"
+                                />
+                            )}
+                            {isVideo && (
+                                <span className="absolute bottom-1.5 left-1.5 bg-black/60 text-white p-1 rounded-full">
+                                    <Film className="w-3 h-3" />
+                                </span>
+                            )}
+                            <button
+                                type="button"
+                                onClick={() => onRemove(index)}
+                                className="absolute top-1.5 right-1.5 bg-red-500 hover:bg-red-600 text-white p-1 rounded-full shadow-lg"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    )
+                })}
             </div>
             {(!photos || photos.length < 4) && (
-                <label className="flex items-center justify-center gap-2 px-4 py-4 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-violet-500/50 bg-white/5 hover:bg-violet-500/10 transition-all">
-                    <Camera className="w-5 h-5 text-white/40" />
-                    <span className="text-sm font-medium text-white/60">
-                        Ajouter une photo ({(photos || []).length}/4)
-                    </span>
-                    <input type="file" accept="image/*" onChange={onUpload} className="hidden" multiple={(photos || []).length < 3} />
-                </label>
+                <div className="grid grid-cols-2 gap-3">
+                    <label className="flex items-center justify-center gap-2 px-3 py-4 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-violet-500/50 bg-white/5 hover:bg-violet-500/10 transition-all">
+                        <Camera className="w-5 h-5 text-white/40 shrink-0" />
+                        <span className="text-sm font-medium text-white/60 text-center">Prendre une photo</span>
+                        <input type="file" accept="image/*" capture="environment" onChange={onUpload} className="hidden" />
+                    </label>
+                    <label className="flex items-center justify-center gap-2 px-3 py-4 border-2 border-dashed border-white/20 rounded-xl cursor-pointer hover:border-violet-500/50 bg-white/5 hover:bg-violet-500/10 transition-all">
+                        <ImagePlus className="w-5 h-5 text-white/40 shrink-0" />
+                        <span className="text-sm font-medium text-white/60 text-center">Galerie ({(photos || []).length}/4)</span>
+                        <input type="file" accept="image/*,video/*" onChange={onUpload} className="hidden" multiple />
+                    </label>
+                </div>
             )}
         </QuestionShell>
     )

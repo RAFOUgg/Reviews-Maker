@@ -36,19 +36,19 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 20 * 1024 * 1024,   // 20 MB par fichier
+        fileSize: 200 * 1024 * 1024,   // 200 Mo par fichier (photo ou vidéo)
         fieldSize: 100 * 1024 * 1024,  // 100 MB par champ texte (orchardConfig, pipeline JSON, etc.)
         fields: 1000,                   // max 1000 champs texte
         files: 10                       // max 10 fichiers
     },
     fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|pdf/
+        const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|mp4|webm|mov|m4v/
         const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-        const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf'
+        const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf' || file.mimetype.startsWith('video/')
         if (extname && mimetype) {
             cb(null, true)
         } else {
-            cb(new Error('Only image files (jpg, png, gif, webp) and PDF files are allowed'))
+            cb(new Error('Only image files (jpg, png, gif, webp), video files (mp4, webm, mov) and PDF files are allowed'))
         }
     }
 })
