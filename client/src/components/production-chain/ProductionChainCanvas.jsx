@@ -571,7 +571,16 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 )}
             </>}
             sidePanel={(selectedNode || selectedEdge) && (
-                <Panel position="top-right" className="node-info-panel">
+                <Panel position="top-right" className={`node-info-panel ${panelCollapsed ? 'collapsed' : ''}`}>
+                    <button
+                        type="button"
+                        className="node-info-panel-toggle"
+                        onClick={() => setPanelCollapsed(v => !v)}
+                        title={panelCollapsed ? 'Afficher le panneau' : 'Réduire le panneau'}
+                    >
+                        {panelCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
+                    </button>
+                    {!panelCollapsed && (
                     <div className="info-content">
                         {selectedNode && (
                             <>
@@ -615,7 +624,14 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         )}
 
                         {(panelSummary?.loading || panelSummary?.pipelineSummary || (panelSummary?.fillSummary?.length > 0)) && (
-                            <div className="info-pipeline">
+                            <div
+                                className="info-pipeline"
+                                draggable={!!panelSummary?.pipelineSummary}
+                                onDragStart={(e) => panelSummary?.pipelineSummary && handleAnnotationDragStart(
+                                    e, panelSummary.pipelineSummary.label, pipelineSummaryBodyLines(panelSummary.pipelineSummary)
+                                )}
+                                title={panelSummary?.pipelineSummary ? 'Glisser sur le canvas pour épingler cette donnée' : undefined}
+                            >
                                 {panelSummary.loading && <p>Chargement du pipeline...</p>}
                                 {!panelSummary.loading && panelSummary.pipelineSummary && (
                                     <p>
@@ -635,6 +651,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         {panelAttachedCells.length > 0 && (
                             <div className="info-cells">
                                 <p className="info-section-label">Cellules attachées</p>
+                                <p className="info-section-hint">Glissez une cellule sur le canvas pour l'épingler</p>
                                 {panelAttachedCells.map(cell => {
                                     const fields = summarizeCellFields(cell.pipelineType, cell.data);
                                     return (
@@ -642,8 +659,14 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                                             key={cell.id}
                                             type="button"
                                             className="info-cell-row"
+                                            draggable
+                                            onDragStart={(e) => handleAnnotationDragStart(
+                                                e,
+                                                `${cell.pipelineLabel} — ${cell.cellLabel}`,
+                                                fields.map(f => ({ label: f.label, value: f.value }))
+                                            )}
                                             onClick={() => store.openCellEditor(panelTargetType, panelTargetId, cell)}
-                                            title="Éditer cette cellule"
+                                            title="Cliquer pour éditer — glisser sur le canvas pour épingler"
                                         >
                                             <span className="info-cell-label">{cell.pipelineLabel} — {cell.cellLabel}</span>
                                             {fields.length > 0 && (
@@ -677,6 +700,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                             </div>
                         )}
                     </div>
+                    )}
                 </Panel>
             )}
             floatingOverlay={hoverInfo && (() => {
