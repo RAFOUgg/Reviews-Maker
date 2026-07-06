@@ -56,6 +56,8 @@ function PipelineDataModal({
     // Unité d'affichage choisie par champ (ex: 'temperature' -> '°F') — la valeur stockée dans
     // formData reste toujours dans l'unité canonique du champ (cf. utils/unitConversions.js).
     const [fieldDisplayUnits, setFieldDisplayUnits] = useState({});
+    // Ajout direct d'un champ (sans drag&drop ni groupe de préréglages)
+    const [fieldToAdd, setFieldToAdd] = useState('');
 
     useEffect(() => {
         setLocalGroupedPresets(groupedPresets);
@@ -145,6 +147,30 @@ function PipelineDataModal({
     const applyPresetFields = (fields = {}) => {
         if (!fields || Object.keys(fields).length === 0) return;
         setFormData(prev => ({ ...prev, ...fields }));
+    };
+
+    // Ajout direct d'un champ sans passer par le drag&drop ni par un groupe de préréglages —
+    // liste tous les champs disponibles dans les sections du panneau latéral qui ne sont pas
+    // déjà présents dans la cellule, pour un ajout en un clic.
+    const getAvailableFieldsToAdd = () => {
+        const items = [];
+        sidebarSections.forEach(section => {
+            (section.items || []).forEach(item => {
+                const key = item.id || item.key || item.type;
+                if (!key) return;
+                const hasData = formData[key] !== undefined && formData[key] !== null && formData[key] !== '';
+                if (!hasData) items.push({ ...item, key, sectionLabel: section.label });
+            });
+        });
+        return items;
+    };
+
+    const handleAddFieldDirectly = (key) => {
+        if (!key) return;
+        const field = findSidebarFieldByKey(key);
+        const defaultValue = field?.defaultValue !== undefined ? field.defaultValue : (field?.type === 'multiselect' ? [] : '');
+        handleChange(key, defaultValue);
+        setFieldToAdd('');
     };
 
     const FieldWrapper = ({ item, children }) => {
@@ -862,7 +888,7 @@ function PipelineDataModal({
                             {itemsToDisplay.length === 0 ? (
                                 <div className="text-center py-6 text-gray-500 dark:text-gray-400">
                                     <p className="text-base mb-1">Aucune donnée pour le moment</p>
-                                    <p className="text-sm">Glissez un élément depuis le panneau latéral, ou chargez un groupe ci-dessous</p>
+                                    <p className="text-sm">Ajoutez un champ directement ci-dessous, glissez un élément depuis le panneau latéral, ou chargez un groupe de préréglages</p>
                                 </div>
                             ) : (
                                 <div className="space-y-3">
@@ -888,6 +914,46 @@ function PipelineDataModal({
                                     </p>
                                 </div>
                             )}
+
+                            {/* Ajout direct d'un champ — sans drag&drop ni groupe de préréglages */}
+                            {!droppedItem && (() => {
+                                const availableFields = getAvailableFieldsToAdd();
+                                const bySection = availableFields.reduce((acc, item) => {
+                                    const label = item.sectionLabel || 'Autres';
+                                    (acc[label] = acc[label] || []).push(item);
+                                    return acc;
+                                }, {});
+                                return (
+                                    <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50/50 dark:bg-gray-800/30">
+                                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">➕ Ajouter un champ directement</p>
+                                        <div className="flex items-center gap-2">
+                                            <select
+                                                value={fieldToAdd}
+                                                onChange={(e) => setFieldToAdd(e.target.value)}
+                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100"
+                                                disabled={availableFields.length === 0}
+                                            >
+                                                <option value="">{availableFields.length === 0 ? 'Tous les champs sont déjà ajoutés' : 'Choisir un champ...'}</option>
+                                                {Object.entries(bySection).map(([sectionLabel, items]) => (
+                                                    <optgroup key={sectionLabel} label={sectionLabel}>
+                                                        {items.map(item => (
+                                                            <option key={item.key} value={item.key}>{item.label || item.key}</option>
+                                                        ))}
+                                                    </optgroup>
+                                                ))}
+                                            </select>
+                                            <button
+                                                type="button"
+                                                onClick={() => handleAddFieldDirectly(fieldToAdd)}
+                                                disabled={!fieldToAdd}
+                                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white text-sm font-medium rounded-lg transition-colors"
+                                            >
+                                                Ajouter
+                                            </button>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
 
                             {/* Zone drag & drop pour ajouter plus de champs */}
                             {!droppedItem && (
