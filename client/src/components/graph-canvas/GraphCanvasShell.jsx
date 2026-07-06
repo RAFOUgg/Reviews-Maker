@@ -223,8 +223,15 @@ export default function GraphCanvasShell({
                 {sidePanel}
             </ReactFlow>
 
-            {contextMenu}
-            {modals}
+            {/* Portalés vers document.body : ces menus/modales utilisent position:fixed avec des
+                coordonnées écran (clientX/clientY), mais le wrapper LiquidCard qui embarque ce
+                canvas (ChainSectionEmbed, Genetiques.jsx) pose un backdrop-filter — qui, comme
+                filter/transform/perspective, fait de cet ancêtre le containing block des
+                descendants position:fixed (spec CSS). Sans portail, "position:fixed" se
+                positionnait donc relativement à la carte plutôt qu'au viewport, décalant le menu
+                loin du point de clic réel au lieu de l'y ancrer. */}
+            {contextMenu && createPortal(contextMenu, document.body)}
+            {modals && createPortal(modals, document.body)}
             {fab}
             {floatingOverlay}
         </div>

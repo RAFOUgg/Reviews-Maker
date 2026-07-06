@@ -36,7 +36,7 @@ import ChainCellPickerModal from './ChainCellPickerModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import ConfirmModal from '../shared/ConfirmModal';
-import { Download, Upload, RotateCcw, FileImage, Edit2, Layers, Image as ImageIcon } from 'lucide-react';
+import { Download, Upload, RotateCcw, FileImage, Edit2 } from 'lucide-react';
 
 // Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
 // pas clignoter au simple passage de la souris entre deux nœuds voisins.
@@ -500,39 +500,150 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                     </Panel>
                 )}
             </>}
-            sidePanel={selectedNode && (
+            sidePanel={(selectedNode || selectedEdge) && (
                 <Panel position="top-right" className="node-info-panel">
                     <div className="info-content">
-                        <h4>{selectedNode.label}</h4>
-                        <p>Type: {selectedNode.reviewType}</p>
-                        {selectedNode.reviewOrphaned && (
-                            <p className="notes" style={{ color: '#fbbf24' }}>
-                                ⚠️ La review liée à ce produit a été supprimée
-                            </p>
+                        {selectedNode && (
+                            <>
+                                <h4>{selectedNode.label}</h4>
+                                <p>Type: {selectedNode.reviewType}</p>
+                                {selectedNode.reviewOrphaned && (
+                                    <p className="notes" style={{ color: '#fbbf24' }}>
+                                        ⚠️ La review liée à ce produit a été supprimée
+                                    </p>
+                                )}
+                                {!readOnly && (
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        {selectedNode.reviewId && !selectedNode.reviewOrphaned && (
+                                            <button
+                                                className="btn-edit"
+                                                onClick={() => navigate(`/edit/${selectedNode.reviewType}/${selectedNode.reviewId}`)}
+                                            >
+                                                Éditer la review
+                                            </button>
+                                        )}
+                                        {selectedNode.reviewId && (
+                                            <button
+                                                className="btn-edit"
+                                                onClick={() => store.updateNode(selectedNode.id, { reviewId: null })}
+                                            >
+                                                Détacher la review
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </>
                         )}
-                        {!readOnly && (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                {selectedNode.reviewId && !selectedNode.reviewOrphaned && (
-                                    <button
-                                        className="btn-edit"
-                                        onClick={() => navigate(`/edit/${selectedNode.reviewType}/${selectedNode.reviewId}`)}
-                                    >
-                                        Éditer la review
-                                    </button>
+
+                        {selectedEdge && (
+                            <>
+                                <h4>{edgeSourceNode?.label || '?'} → {edgeTargetNode?.label || '?'}</h4>
+                                {selectedEdge.technique && <p>Technique : {selectedEdge.technique}</p>}
+                                {selectedEdge.date && <p>Date : {new Date(selectedEdge.date).toLocaleDateString('fr-FR')}</p>}
+                                {selectedEdge.notes && <p className="notes">{selectedEdge.notes}</p>}
+                            </>
+                        )}
+
+                        {(panelSummary?.loading || panelSummary?.pipelineSummary || (panelSummary?.fillSummary?.length > 0)) && (
+                            <div className="info-pipeline">
+                                {panelSummary.loading && <p>Chargement du pipeline...</p>}
+                                {!panelSummary.loading && panelSummary.pipelineSummary && (
+                                    <p>
+                                        <strong>{panelSummary.pipelineSummary.label}</strong>
+                                        {panelSummary.pipelineSummary.technique ? ` — ${panelSummary.pipelineSummary.technique}` : ''}
+                                    </p>
                                 )}
-                                {selectedNode.reviewId && (
+                                {!panelSummary.loading && panelSummary.fillSummary?.map(f => (
+                                    <p key={f.key} className="info-fill-row">
+                                        <span>{f.label}</span>
+                                        <span>{f.filled}/{f.total}</span>
+                                    </p>
+                                ))}
+                            </div>
+                        )}
+
+                        {panelAttachedCells.length > 0 && (
+                            <div className="info-cells">
+                                <p className="info-section-label">Cellules attachées</p>
+                                {panelAttachedCells.map(cell => {
+                                    const fields = summarizeCellFields(cell.pipelineType, cell.data);
+                                    return (
+                                        <button
+                                            key={cell.id}
+                                            type="button"
+                                            className="info-cell-row"
+                                            onClick={() => store.openCellEditor(panelTargetType, panelTargetId, cell)}
+                                            title="Éditer cette cellule"
+                                        >
+                                            <span className="info-cell-label">{cell.pipelineLabel} — {cell.cellLabel}</span>
+                                            {fields.length > 0 && (
+                                                <span className="info-cell-fields">
+                                                    {fields.slice(0, 2).map(f => f.label).join(', ')}{fields.length > 2 ? `, +${fields.length - 2}` : ''}
+                                                </span>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        )}
+
+                        {panelAttachedMedia.length > 0 && (
+                            <div className="info-media-grid">
+                                {panelAttachedMedia.map(item => (
                                     <button
-                                        className="btn-edit"
-                                        onClick={() => store.updateNode(selectedNode.id, { reviewId: null })}
+                                        key={item.id}
+                                        type="button"
+                                        className="info-media-thumb"
+                                        onClick={() => store.openMediaModal(panelTargetType, panelTargetId)}
+                                        title={item.caption || 'Voir les photos/vidéos'}
                                     >
-                                        Détacher la review
+                                        {item.type === 'video' ? (
+                                            <video src={item.url} muted />
+                                        ) : (
+                                            <img src={item.url} alt={item.caption || ''} />
+                                        )}
                                     </button>
-                                )}
+                                ))}
                             </div>
                         )}
                     </div>
                 </Panel>
             )}
+            floatingOverlay={hoverInfo && (() => {
+                if (hoverInfo.kind === 'node') {
+                    const node = store.nodes.find(n => n.id === hoverInfo.id);
+                    if (!node) return null;
+                    return (
+                        <ChainHoverPreview
+                            x={hoverInfo.x}
+                            y={hoverInfo.y}
+                            kind="node"
+                            title={node.label}
+                            reviewType={node.reviewType}
+                            cellCount={Array.isArray(node.cellData) ? node.cellData.length : 0}
+                            mediaCount={Array.isArray(node.media) ? node.media.length : 0}
+                            summary={store.reviewSummaryCache[node.reviewId]}
+                        />
+                    );
+                }
+                const edge = store.edges.find(e => e.id === hoverInfo.id);
+                if (!edge) return null;
+                const sourceNode = store.nodes.find(n => n.id === edge.sourceNodeId);
+                const targetNode = store.nodes.find(n => n.id === edge.targetNodeId);
+                return (
+                    <ChainHoverPreview
+                        x={hoverInfo.x}
+                        y={hoverInfo.y}
+                        kind="edge"
+                        title={`${sourceNode?.label || '?'} → ${targetNode?.label || '?'}`}
+                        technique={edge.technique}
+                        date={edge.date}
+                        cellCount={Array.isArray(edge.cellData) ? edge.cellData.length : 0}
+                        mediaCount={Array.isArray(edge.media) ? edge.media.length : 0}
+                        summary={targetNode ? store.reviewSummaryCache[targetNode.reviewId] : null}
+                    />
+                );
+            })()}
             contextMenu={<>
                 {contextMenu && contextMenuType === 'node' && (
                     <ChainNodeContextMenu

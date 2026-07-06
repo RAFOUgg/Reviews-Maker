@@ -65,7 +65,17 @@
       "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/smoke-test.mjs\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/client/smoke-test-tmp.mjs\")",
       "Bash(node smoke-test-tmp.mjs)",
       "Bash(git -C \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\" diff --stat)",
-      "Bash(git -C \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\" diff -- client/src/components/pipelines/views/PipelineDragDropView.jsx)"
+      "Bash(git -C \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\" diff -- client/src/components/pipelines/views/PipelineDragDropView.jsx)",
+      "Bash(rm -f \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/smoke-\"*.png)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(curl -s \"http://localhost:3000/api/projects\")",
+      "Bash(grep -Hm1 ^description: c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/.claude/skills/*/SKILL.md)",
+      "Bash(ls c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/.claude/skills)",
+      "Bash(powershell -Command ' *)",
+      "Bash(node_modules/.bin/eslint --version)",
+      "Bash(sleep 2; cat /tmp/server-dev.log 2>&1 | tail -40)",
+      "Bash(sleep 2; cat /tmp/client-dev.log 2>&1 | tail -30)"
     ]
   }
 }
