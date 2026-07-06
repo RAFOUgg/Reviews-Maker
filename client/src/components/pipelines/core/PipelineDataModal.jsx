@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Save, X, Bookmark, Plus, Sparkles, LayoutGrid, Image as ImageIcon, Trash2 } from 'lucide-react';
+import { Save, X, Bookmark, Plus, Sparkles, LayoutGrid, Image as ImageIcon, Trash2, Search } from 'lucide-react';
 import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard, LiquidBadge } from '../../ui/LiquidUI';
 import LiquidCheckbox from '../../ui/LiquidCheckbox';
 import ConfirmModal from '../../shared/ConfirmModal';
@@ -20,6 +20,11 @@ import CultivarAutocomplete from '../../forms/helpers/CultivarAutocomplete';
 // Types de champs qui ont besoin de toute la largeur de la grille (2 colonnes) plutôt que de se
 // retrouver comprimés dans une seule colonne — textarea, listes/groupes multi-lignes.
 const WIDE_FIELD_TYPES = new Set(['textarea', 'records-list', 'subscore-group', 'multiselect', 'dimensions']);
+
+// Comparaison insensible à la casse ET aux accents (ex: "duree" doit trouver "Durée totale") —
+// simple recherche substring, pas besoin de fuzzy-matching pour une liste de quelques dizaines
+// de champs par pipeline.
+const normalizeSearchText = (s) => (s || '').toString().normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
 
 function PipelineDataModal({
     isOpen,
@@ -54,6 +59,8 @@ function PipelineDataModal({
     // Highlight discret pendant un drag&drop sur le contenu — remplace l'ancienne zone en
     // pointillé toujours visible, le glisser-déposer depuis le panneau latéral reste actif.
     const [isDragOver, setIsDragOver] = useState(false);
+    // Filtre texte de la grille "Ajouter un champ" — utile dès qu'un pipeline a beaucoup de champs.
+    const [fieldSearchQuery, setFieldSearchQuery] = useState('');
 
     useEffect(() => {
         setLocalGroupedPresets(groupedPresets);
@@ -68,6 +75,7 @@ function PipelineDataModal({
         delete initialData._meta;
 
         setFormData(initialData);
+        setFieldSearchQuery('');
     }, [cellData, timestamp, droppedItem, pipelineType]);
 
     // Obtenir tous les items disponibles depuis les sections
@@ -726,7 +734,15 @@ function PipelineDataModal({
     const itemsToDisplay = getItemsToDisplay();
     const groupedItemsToDisplay = groupItemsBySection(itemsToDisplay);
     const availableFields = !droppedItem ? getAvailableFieldsToAdd() : [];
-    const availableFieldGroups = groupItemsBySection(availableFields);
+    const filteredAvailableFields = fieldSearchQuery.trim()
+        ? availableFields.filter(item => {
+            const needle = normalizeSearchText(fieldSearchQuery);
+            return normalizeSearchText(item.label).includes(needle)
+                || normalizeSearchText(item.tooltip).includes(needle)
+                || normalizeSearchText(item.sectionLabel).includes(needle);
+        })
+        : availableFields;
+    const availableFieldGroups = groupItemsBySection(filteredAvailableFields);
 
     const allGroupedPresets = [
         ...(presets.grouped || []).map(g => ({
@@ -859,6 +875,20 @@ function PipelineDataModal({
                                 {availableFields.length === 0 ? (
                                     <p className="text-sm text-white/40 text-center py-2">Tous les champs sont déjà ajoutés</p>
                                 ) : (
+                                    <>
+                                        <div className="relative mb-3">
+                                            <Search className="w-4 h-4 text-white/30 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                                            <input
+                                                type="text"
+                                                value={fieldSearchQuery}
+                                                onChange={(e) => setFieldSearchQuery(e.target.value)}
+                                                placeholder="Rechercher un champ... (ex: température, durée, substrat)"
+                                                className="liquid-input w-full pl-9"
+                                            />
+                                        </div>
+                                        {filteredAvailableFields.length === 0 ? (
+                                            <p className="text-sm text-white/40 text-center py-4">Aucun champ ne correspond à "{fieldSearchQuery}"</p>
+                                        ) : (
                                     <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                         {availableFieldGroups.map(group => (
                                             <div key={group.label || 'defaut'}>
@@ -883,6 +913,8 @@ function PipelineDataModal({
                                             </div>
                                         ))}
                                     </div>
+                                        )}
+                                    </>
                                 )}
                             </LiquidCard>
 
