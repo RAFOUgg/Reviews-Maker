@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Save, BookmarkPlus, Bookmark, CheckSquare, Square } from 'lucide-react';
 import ConfirmModal from '../../shared/ConfirmModal';
+import { MediaGallery } from '../../shared/MediaAttachmentModal';
 import usePresets from '../../../hooks/usePresets';
 import { GroupedPresetModal } from '../views/PipelineDragDropView';
 import { useEscapeClose } from '../../ui/LiquidUI';
@@ -45,7 +46,8 @@ function PipelineDataModal({
     // New: show a button to set the timeline start-month from within the data modal
     showSetStartMonthButton = false,
     onOpenStartMonth = null,
-    onGroupsChange = null
+    onGroupsChange = null,
+    onMediaChange = null
 }) {
     const [formData, setFormData] = useState({});
     const [newPresetName, setNewPresetName] = useState('');
@@ -954,6 +956,14 @@ function PipelineDataModal({
                                     </div>
                                 );
                             })()}
+
+                            {/* Photos / Vidéos de la cellule — visible directement dans l'éditeur, sans modal séparée */}
+                            {!droppedItem && onMediaChange && (
+                                <div className="p-3 border border-gray-200 dark:border-gray-700 rounded-lg bg-gray-50/50 dark:bg-gray-800/30">
+                                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">📷 Photos / Vidéos</p>
+                                    <MediaGallery media={cellData?.media || []} onChange={onMediaChange} compact />
+                                </div>
+                            )}
 
                             {/* Zone drag & drop pour ajouter plus de champs */}
                             {!droppedItem && (

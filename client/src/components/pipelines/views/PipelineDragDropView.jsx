@@ -1036,7 +1036,7 @@ function GroupedPresetModal({
     );
 }
 
-import { ChevronDown, ChevronRight, Plus, Settings, Save, CheckSquare, Square, Check, Brain, ExternalLink } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Settings, Save, CheckSquare, Square, Check, Brain, ExternalLink, Film } from 'lucide-react';
 import PipelineDataModal from '../core/PipelineDataModal';
 import PipelineCellBadge from '../core/PipelineCellBadge';
 import CellEmojiOverlay from './CellEmojiOverlay';
@@ -3016,6 +3016,31 @@ const PipelineDragDropView = ({
                                                         {selectedCells.indexOf(cell.timestamp) + 1}
                                                     </span>
                                                 )}
+
+                                                {/* Vignette photo/vidéo attachée à la cellule */}
+                                                {hasData && Array.isArray(cellData?.media) && cellData.media.length > 0 && (
+                                                    <div
+                                                        className="absolute -top-1.5 -left-1.5 z-20 pointer-events-none"
+                                                        title={`${cellData.media.length} média(s) attaché(s)`}
+                                                    >
+                                                        {cellData.media[0].type === 'video' ? (
+                                                            <div className="w-5 h-5 rounded-full bg-black/70 border-2 border-[#0a0a12] shadow-lg flex items-center justify-center">
+                                                                <Film className="w-2.5 h-2.5 text-white" />
+                                                            </div>
+                                                        ) : (
+                                                            <img
+                                                                src={cellData.media[0].url}
+                                                                alt=""
+                                                                className="w-5 h-5 rounded-full object-cover border-2 border-[#0a0a12] shadow-lg"
+                                                            />
+                                                        )}
+                                                        {cellData.media.length > 1 && (
+                                                            <span className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-violet-600 text-white rounded-full flex items-center justify-center text-[8px] font-bold border border-[#0a0a12]">
+                                                                {cellData.media.length}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                )}
                                                 {/* Indicateur visuel drop */}
                                                 {isHovered && draggedContent && (
                                                     <div className="absolute inset-0 rounded-lg flex items-center justify-center z-20 pointer-events-none">
@@ -3145,6 +3170,7 @@ const PipelineDragDropView = ({
                 onFieldDelete={handleFieldDelete}
                 groupedPresets={groupedPresets}
                 onGroupsChange={setGroupedPresets}
+                onMediaChange={(next) => onDataChange(currentCellTimestamp, 'media', next)}
                 selectedCells={selectedCells}
                 // enable "Définir le mois" button inside the cell editor when editing first month cell in months mode
                 showSetStartMonthButton={resolveIntervalKey(timelineConfig.type) === 'mois' && cells.findIndex(c => c.timestamp === currentCellTimestamp) === 0}
