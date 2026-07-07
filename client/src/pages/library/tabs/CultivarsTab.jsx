@@ -163,13 +163,14 @@ export default function CultivarsTab({ userTier = 'producer' }) {
     // et modifiable via le bouton "Remplacer manuellement" de LinkedFieldNote.
     const [manualOverrides, setManualOverrides] = useState(new Set())
     const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
-    // Reviews Fleurs importables comme cultivars (bibliothèque vide malgré des reviews/arbres
-    // existants — la bibliothèque de cultivars est une table à part, jamais peuplée
-    // automatiquement) et suivi local des reviews déjà importées cette session (pas de lien
-    // Cultivar↔Review en base, donc pas de détection serveur possible).
+    // Reviews Fleurs sans cultivar lié — cas résiduel : `resolveCultivarLink` (backend) pose
+    // automatiquement FlowerReview.cultivarId à chaque sauvegarde de review, donc la grande
+    // majorité des reviews sont déjà représentées dans la bibliothèque sans action manuelle. Ce
+    // panneau ne sert plus qu'aux quelques reviews réellement orphelines (créées sans nom de
+    // cultivar renseigné, ou dont la résolution a échoué) — cf. filtre sur `flowerData.cultivarId`
+    // dans fetchData().
     const [myFlowerReviews, setMyFlowerReviews] = useState([])
     const [importingReviewId, setImportingReviewId] = useState(null)
-    const [importedReviewIds, setImportedReviewIds] = useState(new Set())
 
     // Formulaire cultivar
     const [formData, setFormData] = useState({
@@ -214,13 +215,14 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                 setCultivars(data.cultivars || [])
             }
 
-            // Reviews Fleurs de l'utilisateur — proposées en import rapide quand la bibliothèque
-            // de cultivars est vide (même pattern que PhenoHuntPage.jsx "Mes reviews Fleurs").
+            // Reviews Fleurs sans cultivar lié — proposées en import rapide (cf. déclaration de
+            // myFlowerReviews plus haut : cas résiduel, la plupart des reviews sont déjà liées
+            // automatiquement via resolveCultivarLink côté backend).
             const reviewsRes = await fetch('/api/reviews/my', { credentials: 'include' })
             if (reviewsRes.ok) {
                 const data = await reviewsRes.json()
                 const all = Array.isArray(data) ? data : (data.reviews || [])
-                setMyFlowerReviews(all.filter(r => r.type === 'Fleurs' || r.productType === 'flower'))
+                setMyFlowerReviews(all.filter(r => (r.type === 'Fleurs' || r.productType === 'flower') && !r.cultivarId))
             }
         } catch (error) {
             toast.error('Erreur lors du chargement')
@@ -229,9 +231,10 @@ export default function CultivarsTab({ userTier = 'producer' }) {
         }
     }, [toast])
 
-    // Importer une review Fleur comme entrée de bibliothèque — pré-remplit ce qu'on connaît déjà
-    // (nom, breeder, lignée, photo) ; l'utilisateur complète le reste (type/THC-CBD/etc.) ensuite
-    // via "Modifier" comme pour n'importe quel cultivar.
+    // Importer une review Fleur orpheline comme entrée de bibliothèque — pré-remplit ce qu'on
+    // connaît déjà (nom, breeder, lignée, photo) et pose son cultivarId côté serveur (sourceReviewId)
+    // pour que la review rejoigne le même mécanisme de lien que les nouvelles reviews ; l'utilisateur
+    // complète le reste (type/THC-CBD/etc.) ensuite via "Modifier" comme pour n'importe quel cultivar.
     const importReviewAsCultivar = async (review) => {
         setImportingReviewId(review.id)
         try {
@@ -247,13 +250,14 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                     // laisser vide plutôt que de mal-classer, l'utilisateur le complète via "Modifier".
                     type: null,
                     genetics: review.cultivars || '',
-                    image: images[0] || ''
+                    image: images[0] || '',
+                    sourceReviewId: review.id
                 })
             })
             if (response.ok) {
                 const saved = await response.json()
                 setCultivars(prev => [...prev, saved])
-                setImportedReviewIds(prev => new Set(prev).add(review.id))
+                setMyFlowerReviews(prev => prev.filter(r => r.id !== review.id))
                 toast.success(`"${saved.name}" ajouté à la bibliothèque`)
             } else {
                 toast.error('Erreur lors de l\'import')
@@ -1250,11 +1254,11 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         </LiquidCard>
                     ) : null}
 
-                    {/* Import rapide depuis les reviews Fleurs existantes — la bibliothèque de
-                        cultivars est une table à part, jamais peuplée automatiquement par les
-                        reviews ou les arbres PhenoHunt : sans ce raccourci, "Aucun cultivar"
-                        reste vrai indéfiniment même avec des fiches techniques déjà créées. */}
-                    {cultivars.length === 0 && myFlowerReviews.filter(r => !importedReviewIds.has(r.id)).length > 0 && (
+                    {/* Import manuel pour les reviews Fleurs restées orphelines (sans cultivar lié) —
+                        cas résiduel : les nouvelles reviews sont déjà liées automatiquement en base
+                        (resolveCultivarLink), ce panneau ne couvre que celles qui ont échappé à ce
+                        mécanisme (ex. review sans nom de cultivar renseigné à l'époque). */}
+                    {myFlowerReviews.length > 0 && (
                         <LiquidCard glow="none" padding="md">
                             <h3 className="text-sm font-semibold text-white mb-1 flex items-center gap-2">
                                 <Download className="w-4 h-4 text-green-400" />
@@ -1264,7 +1268,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 Ajoute une entrée de bibliothèque pré-remplie (nom, breeder, lignée, photo) à partir d'une review existante.
                             </p>
                             <div className="space-y-1.5 max-h-64 overflow-y-auto pr-1">
-                                {myFlowerReviews.filter(r => !importedReviewIds.has(r.id)).map(review => {
+                                {myFlowerReviews.map(review => {
                                     const images = parseImages(review.images)
                                     return (
                                         <div

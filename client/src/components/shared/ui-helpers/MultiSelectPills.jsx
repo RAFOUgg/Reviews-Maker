@@ -38,10 +38,10 @@ export default function MultiSelectPills({
 
         setLoading(true);
         try {
-            const endpoint = source === 'user-library' ? '/api/cultivars' : `/api/${source}`;
+            const endpoint = source === 'user-library' ? '/api/library/cultivars' : `/api/${source}`;
             const res = await fetch(endpoint, { credentials: 'include' });
             const data = await res.json();
-            setItems(data);
+            setItems(source === 'user-library' ? (data.cultivars || []) : data);
         } catch (error) {
             console.error('Erreur chargement items:', error);
         } finally {

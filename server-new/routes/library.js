@@ -774,12 +774,22 @@ router.get('/cultivars', requireAuth, asyncHandler(async (req, res) => {
  * Crée un nouveau cultivar
  */
 router.post('/cultivars', requireAuth, asyncHandler(async (req, res) => {
-    const { name, breeder, type, genetics, phenotype, description } = req.body;
+    const { name, breeder, type, genetics, phenotype, description, sourceReviewId } = req.body;
 
     if (!name) {
         return res.status(400).json({
             error: 'missing_fields',
             message: 'Le nom est requis',
+        });
+    }
+
+    const existing = await prisma.cultivar.findFirst({
+        where: { userId: req.user.id, name: name.trim() },
+    });
+    if (existing) {
+        return res.status(409).json({
+            error: 'cultivar_already_exists',
+            message: 'Un cultivar avec ce nom existe déjà dans votre bibliothèque',
         });
     }
 
@@ -795,6 +805,17 @@ router.post('/cultivars', requireAuth, asyncHandler(async (req, res) => {
             ...buildStructuredData(req.body),
         },
     });
+
+    // Rattache une review Fleur orpheline (sans cultivarId) au cultivar qu'on vient de créer pour
+    // elle — cas d'import manuel depuis CultivarsTab.jsx (carte "Importer depuis vos fiches
+    // techniques Fleurs"). Ignoré silencieusement si l'id ne correspond à rien/n'appartient pas à
+    // l'utilisateur : ne doit jamais faire échouer la création du cultivar.
+    if (sourceReviewId) {
+        await prisma.flowerReview.updateMany({
+            where: { reviewId: sourceReviewId, review: { authorId: req.user.id } },
+            data: { cultivarId: cultivar.id },
+        });
+    }
 
     res.status(201).json(toApiShape(cultivar));
 }));

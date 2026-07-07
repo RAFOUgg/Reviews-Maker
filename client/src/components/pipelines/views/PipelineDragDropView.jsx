@@ -1096,9 +1096,10 @@ function GroupedPresetModal({
     );
 }
 
-import { ChevronDown, ChevronRight, Plus, Settings, Save, CheckSquare, Square, Check, Brain, ExternalLink, Film } from 'lucide-react';
+import { ChevronDown, ChevronRight, Plus, Settings, Save, CheckSquare, Square, Check, Brain, ExternalLink } from 'lucide-react';
 import PipelineDataModal from '../core/PipelineDataModal';
 import PipelineCellBadge from '../core/PipelineCellBadge';
+import PipelineCellMediaPreview from '../core/PipelineCellMediaPreview';
 import CellEmojiOverlay from './CellEmojiOverlay';
 import PipelineCellTooltip from '../core/PipelineCellTooltip';
 import MassAssignModal from './MassAssignModal';
@@ -3070,21 +3071,12 @@ const PipelineDragDropView = ({
                                                     </span>
                                                 )}
 
-                                                {/* Photo/vidéo attachée à la cellule — affichée en fond de case (pas juste un badge) */}
+                                                {/* Photo/vidéo attachée à la cellule — affichée en fond de case (galerie scindée jusqu'à
+                                                    4 médias simultanés, rotation au-delà — cf. PipelineCellMediaPreview.jsx) */}
                                                 {hasData && Array.isArray(cellData?.media) && cellData.media.length > 0 && (
                                                     <>
                                                         <div className="absolute inset-0 rounded-lg overflow-hidden z-0">
-                                                            {cellData.media[0].type === 'video' ? (
-                                                                <div className="w-full h-full bg-black/60 flex items-center justify-center">
-                                                                    <Film className="w-5 h-5 text-white/70" />
-                                                                </div>
-                                                            ) : (
-                                                                <img
-                                                                    src={cellData.media[0].url}
-                                                                    alt=""
-                                                                    className="w-full h-full object-cover"
-                                                                />
-                                                            )}
+                                                            <PipelineCellMediaPreview media={cellData.media} />
                                                             {/* Voile sombre pour garder le texte/emoji lisibles par-dessus la photo */}
                                                             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
                                                         </div>

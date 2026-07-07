@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react'
 
 /**
- * Autocomplete texte branché sur la bibliothèque de cultivars de l'utilisateur (/api/cultivars) —
- * évite de retaper à la main un nom déjà documenté ailleurs (Bibliothèque > Cultivars). Fetch une
- * seule fois puis filtrage côté client (même approche que SourceLineageSelector.jsx), la valeur
- * stockée reste un simple texte (pas de FK), donc un nom hors bibliothèque reste saisissable.
+ * Autocomplete texte branché sur la bibliothèque de cultivars de l'utilisateur
+ * (/api/library/cultivars) — évite de retaper à la main un nom déjà documenté ailleurs
+ * (Bibliothèque > Cultivars). Fetch une seule fois puis filtrage côté client (même approche que
+ * SourceLineageSelector.jsx), la valeur stockée reste un simple texte (pas de FK), donc un nom
+ * hors bibliothèque reste saisissable.
  *
  * `onSelectCultivar` (optionnel) : reçoit le cultivar complet choisi dans la liste, en plus de
  * l'appel `onChange(name)` habituel — sert aux appelants qui veulent pré-remplir d'autres champs
@@ -18,9 +19,9 @@ export default function CultivarAutocomplete({ value = '', onChange, onSelectCul
 
     useEffect(() => {
         let cancelled = false
-        fetch('/api/cultivars', { credentials: 'include' })
-            .then(r => r.ok ? r.json() : [])
-            .then(data => { if (!cancelled) setCultivars(Array.isArray(data) ? data : []) })
+        fetch('/api/library/cultivars', { credentials: 'include' })
+            .then(r => r.ok ? r.json() : { cultivars: [] })
+            .then(data => { if (!cancelled) setCultivars(Array.isArray(data) ? data : (data.cultivars || [])) })
             .catch(() => {})
         return () => { cancelled = true }
     }, [])

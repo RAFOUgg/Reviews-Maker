@@ -263,7 +263,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     // Charger les cultivars de la bibliothèque
     const fetchLibraryCultivars = async () => {
         try {
-            const response = await fetch('/api/cultivars', { credentials: 'include' })
+            const response = await fetch('/api/library/cultivars', { credentials: 'include' })
             if (response.ok) {
                 const data = await response.json()
                 setLibraryCultivars(Array.isArray(data) ? data : data.cultivars || [])

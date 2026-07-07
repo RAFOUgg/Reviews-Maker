@@ -598,9 +598,6 @@ model Cultivar {
   genNodes      GenNode[] // Nœuds dans les arbres généalogiques
   flowerReviews FlowerReview[] @relation("flowerReviewCultivar") // Reviews Fleurs liées par nom (cf. FlowerReview.cultivarId)
 
-  // Statistiques d'utilisation
-  useCount Int @default(0) // Nombre de reviews utilisant ce cultivar
-
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

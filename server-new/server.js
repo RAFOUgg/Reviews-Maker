@@ -21,7 +21,6 @@ import legalRoutes from './routes/legal.js'
 import kycRoutes from './routes/kyc.js'
 import paymentRoutes from './routes/payment.js'
 import accountRoutes from './routes/account.js'
-import cultivarsRoutes from './routes/cultivars.js'
 import geneticsRoutes from './routes/genetics.js'
 import productionChainsRoutes from './routes/production-chains.js'
 import reviewPipelineCellsRoutes from './routes/review-pipeline-cells.js'
@@ -119,7 +118,6 @@ app.use('/api/legal', legalRoutes)
 app.use('/api/kyc', kycRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/account', accountRoutes)
-app.use('/api/cultivars', cultivarsRoutes)
 app.use('/api/genetics', geneticsRoutes)
 app.use('/api/production-chains', productionChainsRoutes)
 app.use('/api/review-pipeline-cells', reviewPipelineCellsRoutes)

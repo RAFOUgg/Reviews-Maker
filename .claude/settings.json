@@ -127,7 +127,8 @@
       "Bash(curl -sS -X PUT http://localhost:3000/api/production-chains/nodes/1f7ac67e-6d2e-48fc-bcfb-aef5a0992247 -H \"Content-Type: application/json\" -d '{\"position\":{\"x\":1400,\"y\":250}}')",
       "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
       "Bash(node --check routes/production-chains.js)",
-      "Bash(node --check middleware/validateProductionChain.js)"
+      "Bash(node --check middleware/validateProductionChain.js)",
+      "Bash(netstat -ano)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",

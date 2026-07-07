@@ -46,10 +46,10 @@ export default function PhenoHuntPage() {
 
         const loadCultivars = async () => {
             try {
-                const response = await fetch('/api/cultivars', { credentials: 'include' });
+                const response = await fetch('/api/library/cultivars', { credentials: 'include' });
                 if (response.ok) {
-                    const cultivars = await response.json();
-                    setCultivarLibrary(Array.isArray(cultivars) ? cultivars : []);
+                    const data = await response.json();
+                    setCultivarLibrary(Array.isArray(data) ? data : (data.cultivars || []));
                 }
             } catch (error) {
                 console.error('Erreur lors du chargement des cultivars:', error);
