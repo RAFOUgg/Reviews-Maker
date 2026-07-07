@@ -21,8 +21,10 @@ import {
     useReactFlow,
     MarkerType
 } from 'reactflow';
-import { Sprout, AlertTriangle } from 'lucide-react';
+import { Sprout, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
+import AnnotationNode from '../graph-canvas/AnnotationNode';
+import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import useResponsiveLayout from '../../hooks/useResponsiveLayout';
 import CultivarNode from './CultivarNode';
@@ -39,7 +41,8 @@ import EdgeFormModal from './EdgeFormModal';
 import ConfirmModal from '../shared/ConfirmModal';
 
 const nodeTypes = {
-    cultivar: CultivarNode
+    cultivar: CultivarNode,
+    annotationCard: AnnotationNode
 };
 
 const edgeTypes = {
@@ -64,6 +67,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane'
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
+    const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
 
     // Persistance du point de courbure d'une liaison glissée à la main (PhenoEdge/PairingEdge).
     // pos=null réinitialise la ligne droite (double-clic sur la poignée).
@@ -119,9 +123,26 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         }
     }, [readOnly, store]);
 
+    // Importer une photo/vidéo comme sa propre bulle sur l'arbre (MediaBubbleImportModal) —
+    // centrée sur le viewport actuel, même geste que ProductionChainCanvas.jsx.
+    const handleImportMediaBubble = useCallback(async ({ url, type }) => {
+        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        await store.addAnnotation({
+            title: type === 'video' ? '🎬 Vidéo' : '📷 Photo',
+            body: [],
+            mediaUrl: url,
+            mediaType: type,
+            position: center
+        });
+        setShowMediaBubbleImport(false);
+    }, [store, screenToFlowPosition]);
+
     // Synchroniser les nœuds et arêtes du store vers React Flow
     useEffect(() => {
-        if (!store.nodes || store.nodes.length === 0) {
+        // Ne PAS sortir tôt sur "aucun cultivar" — un arbre peut n'avoir que des bulles média
+        // épinglées (aucun individu créé pour autant), auquel cas les annotations doivent quand
+        // même s'afficher plutôt que d'être effacées par ce garde-fou.
+        if ((!store.nodes || store.nodes.length === 0) && (!store.annotations || store.annotations.length === 0)) {
             setNodes([]);
             setEdges([]);
             return;
@@ -259,9 +280,25 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 };
             });
 
-        setNodes(rfNodes);
+        // Cartes épinglées librement sur le canvas (note texte ou bulle média) — même principe que
+        // ProductionChainCanvas.jsx rfAnnotationNodes, cf. AnnotationNode.jsx pour le rendu partagé.
+        const rfAnnotationNodes = (store.annotations || []).map(annotation => ({
+            id: annotation.id,
+            type: 'annotationCard',
+            position: annotation.position || { x: 0, y: 0 },
+            data: {
+                title: annotation.title,
+                body: annotation.body,
+                sourceLabel: annotation.sourceLabel,
+                mediaUrl: annotation.mediaUrl,
+                mediaType: annotation.mediaType,
+                onDelete: () => store.deleteAnnotation(annotation.id)
+            }
+        }));
+
+        setNodes([...rfNodes, ...rfAnnotationNodes]);
         setEdges([...rfEdges, ...familyEdges]);
-    }, [store.nodes, store.edges, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
+    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {
@@ -327,7 +364,12 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
 
         const movedNodes = Array.isArray(draggedNodes) && draggedNodes.length > 0 ? draggedNodes : [node];
 
-        await Promise.all(movedNodes.map(n => store.updateNode(n.id, { position: n.position })));
+        // Les cartes épinglées (annotationCard, ex: bulle média) se déplacent comme n'importe quel
+        // nœud React Flow mais persistent via updateAnnotation, pas updateNode (id d'une table
+        // différente — cf. ProductionChainCanvas.jsx même pattern).
+        await Promise.all(movedNodes.map(n => n.type === 'annotationCard'
+            ? store.updateAnnotation(n.id, { position: n.position })
+            : store.updateNode(n.id, { position: n.position })));
 
         setNodes(nodes => nodes.map(n => {
             const moved = movedNodes.find(m => m.id === n.id);
@@ -514,19 +556,32 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             onDragOver={handleDragOver}
             onDrop={handleDrop}
             minimapNodeColor={(node) => node.data?.color || '#FF6B9D'}
-            toolbar={orphanedNodeIds.length > 0 && (
-                <Panel position="top-center" className="orphan-banner">
-                    <AlertTriangle size={14} />
-                    <span>
-                        {orphanedNodeIds.length} lien{orphanedNodeIds.length > 1 ? 's' : ''} cassé{orphanedNodeIds.length > 1 ? 's' : ''} (review supprimée)
-                    </span>
-                    {!readOnly && (
-                        <button type="button" onClick={() => setConfirmDetachAll(true)}>
-                            Tout détacher
+            toolbar={<>
+                {!readOnly && (
+                    <Panel position="top-left" className="canvas-toolbar">
+                        <button
+                            className="toolbar-btn secondary"
+                            onClick={() => setShowMediaBubbleImport(true)}
+                            title="Importer une photo/vidéo comme bulle sur l'arbre"
+                        >
+                            <ImageIcon size={14} /> Photo/Vidéo
                         </button>
-                    )}
-                </Panel>
-            )}
+                    </Panel>
+                )}
+                {orphanedNodeIds.length > 0 && (
+                    <Panel position="top-center" className="orphan-banner">
+                        <AlertTriangle size={14} />
+                        <span>
+                            {orphanedNodeIds.length} lien{orphanedNodeIds.length > 1 ? 's' : ''} cassé{orphanedNodeIds.length > 1 ? 's' : ''} (review supprimée)
+                        </span>
+                        {!readOnly && (
+                            <button type="button" onClick={() => setConfirmDetachAll(true)}>
+                                Tout détacher
+                            </button>
+                        )}
+                    </Panel>
+                )}
+            </>}
             // canvasLoading est aussi mis à true pour CHAQUE mutation en arrière-plan (déplacer un
             // nœud, ajouter une arête...), pas seulement le chargement initial de l'arbre. Ne
             // démonter le canvas (spinner plein écran) que lors du tout premier chargement, quand
@@ -629,6 +684,9 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 )}
                 {store.linkReviewPickerNodeId && (
                     <LinkExistingReviewModal />
+                )}
+                {showMediaBubbleImport && (
+                    <MediaBubbleImportModal onImport={handleImportMediaBubble} onClose={() => setShowMediaBubbleImport(false)} />
                 )}
                 {store.mediaModalTarget && (() => {
                     const { targetType, targetId } = store.mediaModalTarget;

@@ -285,11 +285,138 @@ const validateNodeUpdate = (req, res, next) => {
     next();
 };
 
+// Cartes épinglées librement sur le fond du canvas PhenoHunt (note texte ou "bulle média" photo/
+// vidéo) — même modèle que validateChainAnnotationCreation/Update (production-chains), sans les
+// champs de traçabilité pipeline (pipelineType/cellTimestamp/sourceReviewId/sourceReviewType) :
+// PhenoHunt n'a pas de cellules de pipeline attachées à ses nœuds/liaisons.
+const MAX_ANNOTATION_BODY_BYTES = 5_000
+
+const validateAnnotationBody = (body) => {
+    if (body === undefined) return null
+    if (!Array.isArray(body)) return "body must be an array"
+    if (body.some(line => typeof line !== "object" || line === null || Array.isArray(line))) {
+        return "Each body line must be an object"
+    }
+    let serialized
+    try {
+        serialized = JSON.stringify(body)
+    } catch {
+        return "body is not serializable"
+    }
+    if (serialized.length > MAX_ANNOTATION_BODY_BYTES) {
+        return "body payload is too large"
+    }
+    return null
+}
+
+const validateAnnotationTarget = (nodeId, edgeId) => {
+    if (nodeId !== undefined && nodeId !== null && typeof nodeId !== "string") {
+        return "nodeId must be a string"
+    }
+    if (edgeId !== undefined && edgeId !== null && typeof edgeId !== "string") {
+        return "edgeId must be a string"
+    }
+    if (nodeId && edgeId) {
+        return "An annotation cannot be attached to both a node and an edge"
+    }
+    return null
+}
+
+const validateMediaFields = (mediaUrl, mediaType) => {
+    if (mediaUrl === undefined && mediaType === undefined) return null
+    if (mediaUrl !== undefined && mediaUrl !== null && (typeof mediaUrl !== "string" || mediaUrl.length > 500)) {
+        return "mediaUrl must be a string less than 500 characters"
+    }
+    if (mediaType !== undefined && mediaType !== null && !["photo", "video"].includes(mediaType)) {
+        return "mediaType must be 'photo' or 'video'"
+    }
+    if (!!mediaUrl !== !!mediaType) {
+        return "mediaUrl and mediaType must be provided together"
+    }
+    return null
+}
+
+const validateAnnotationCreation = (req, res, next) => {
+    const { position, title, body, sourceLabel, nodeId, edgeId, mediaUrl, mediaType } = req.body
+
+    if (position) {
+        if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
+            return res.status(400).json({ error: "Position must be {x: number, y: number}" })
+        }
+    }
+
+    if (title !== undefined && title !== null && (typeof title !== "string" || title.length > 200)) {
+        return res.status(400).json({ error: "Title must be less than 200 characters" })
+    }
+
+    if (sourceLabel !== undefined && sourceLabel !== null) {
+        if (typeof sourceLabel !== "string" || sourceLabel.length > 200) {
+            return res.status(400).json({ error: "sourceLabel must be less than 200 characters" })
+        }
+    }
+
+    const targetError = validateAnnotationTarget(nodeId, edgeId)
+    if (targetError) {
+        return res.status(400).json({ error: targetError })
+    }
+
+    const bodyError = validateAnnotationBody(body)
+    if (bodyError) {
+        return res.status(400).json({ error: bodyError })
+    }
+
+    const mediaError = validateMediaFields(mediaUrl, mediaType)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
+    }
+
+    next()
+}
+
+const validateAnnotationUpdate = (req, res, next) => {
+    const { position, title, body, sourceLabel, nodeId, edgeId, mediaUrl, mediaType } = req.body
+
+    if (position !== undefined) {
+        if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
+            return res.status(400).json({ error: "Position must be {x: number, y: number}" })
+        }
+    }
+
+    if (title !== undefined && title !== null && (typeof title !== "string" || title.length > 200)) {
+        return res.status(400).json({ error: "Title must be less than 200 characters" })
+    }
+
+    if (sourceLabel !== undefined && sourceLabel !== null) {
+        if (typeof sourceLabel !== "string" || sourceLabel.length > 200) {
+            return res.status(400).json({ error: "sourceLabel must be less than 200 characters" })
+        }
+    }
+
+    const targetError = validateAnnotationTarget(nodeId, edgeId)
+    if (targetError) {
+        return res.status(400).json({ error: targetError })
+    }
+
+    const bodyError = validateAnnotationBody(body)
+    if (bodyError) {
+        return res.status(400).json({ error: bodyError })
+    }
+
+    const mediaError = validateMediaFields(mediaUrl, mediaType)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
+    }
+
+    next()
+}
+
 export {
     validateTreeCreation,
     validateTreeUpdate,
     validateNodeCreation,
     validateNodeUpdate,
     validateEdgeCreation,
-    validateEdgeUpdate
+    validateEdgeUpdate,
+    validateAnnotationCreation,
+    validateAnnotationUpdate
 };

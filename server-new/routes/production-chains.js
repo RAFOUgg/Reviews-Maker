@@ -141,7 +141,9 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                         sourceReviewId: true,
                         sourceReviewType: true,
                         pipelineType: true,
-                        cellTimestamp: true
+                        cellTimestamp: true,
+                        mediaUrl: true,
+                        mediaType: true
                     }
                 }
             }
@@ -581,7 +583,8 @@ router.post("/chains/:id/annotations", requireAuth, requireChainAccess, validate
 
         const {
             position, title, body = [], sourceLabel = null, nodeId = null, edgeId = null,
-            sourceReviewId = null, sourceReviewType = null, pipelineType = null, cellTimestamp = null
+            sourceReviewId = null, sourceReviewType = null, pipelineType = null, cellTimestamp = null,
+            mediaUrl = null, mediaType = null
         } = req.body
 
         // La cible (si fournie) doit appartenir à cette même chaîne — sinon une carte pourrait
@@ -612,7 +615,9 @@ router.post("/chains/:id/annotations", requireAuth, requireChainAccess, validate
                 sourceReviewId,
                 sourceReviewType,
                 pipelineType,
-                cellTimestamp
+                cellTimestamp,
+                mediaUrl,
+                mediaType
             }
         })
 
@@ -637,7 +642,7 @@ router.put("/annotations/:annotationId", requireAuth, requireChainAccess, valida
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp } = req.body
+        const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp, mediaUrl, mediaType } = req.body
 
         if (nodeId) {
             const node = await prisma.chainNode.findUnique({ where: { id: nodeId } })
@@ -666,7 +671,9 @@ router.put("/annotations/:annotationId", requireAuth, requireChainAccess, valida
             ...(sourceReviewId !== undefined && { sourceReviewId }),
             ...(sourceReviewType !== undefined && { sourceReviewType }),
             ...(pipelineType !== undefined && { pipelineType }),
-            ...(cellTimestamp !== undefined && { cellTimestamp })
+            ...(cellTimestamp !== undefined && { cellTimestamp }),
+            ...(mediaUrl !== undefined && { mediaUrl }),
+            ...(mediaType !== undefined && { mediaType })
         }
 
         const updated = await prisma.chainAnnotation.update({

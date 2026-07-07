@@ -251,8 +251,24 @@ const validateOptionalShortString = (value, fieldName, maxLength = 100) => {
     return null
 }
 
+// mediaUrl/mediaType : "bulle média" (photo/vidéo importée directement sur le canvas) — mediaUrl
+// est l'URL déjà renvoyée par /api/media-upload ou la bibliothèque de photos de reviews, jamais
+// un nouvel upload ici. Les deux vont toujours de pair (l'un sans l'autre n'a pas de sens).
+const validateMediaFields = (mediaUrl, mediaType) => {
+    if (mediaUrl === undefined && mediaType === undefined) return null
+    const urlError = validateOptionalShortString(mediaUrl, "mediaUrl", 500)
+    if (urlError) return urlError
+    if (mediaType !== undefined && mediaType !== null && !["photo", "video"].includes(mediaType)) {
+        return "mediaType must be 'photo' or 'video'"
+    }
+    if (!!mediaUrl !== !!mediaType) {
+        return "mediaUrl and mediaType must be provided together"
+    }
+    return null
+}
+
 const validateChainAnnotationCreation = (req, res, next) => {
-    const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp } = req.body
+    const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp, mediaUrl, mediaType } = req.body
 
     if (position) {
         if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
@@ -288,11 +304,16 @@ const validateChainAnnotationCreation = (req, res, next) => {
         return res.status(400).json({ error: bodyError })
     }
 
+    const mediaError = validateMediaFields(mediaUrl, mediaType)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
+    }
+
     next()
 }
 
 const validateChainAnnotationUpdate = (req, res, next) => {
-    const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp } = req.body
+    const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp, mediaUrl, mediaType } = req.body
 
     if (position !== undefined) {
         if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
@@ -328,6 +349,11 @@ const validateChainAnnotationUpdate = (req, res, next) => {
     const bodyError = validateAnnotationBody(body)
     if (bodyError) {
         return res.status(400).json({ error: bodyError })
+    }
+
+    const mediaError = validateMediaFields(mediaUrl, mediaType)
+    if (mediaError) {
+        return res.status(400).json({ error: mediaError })
     }
 
     next()

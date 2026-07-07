@@ -549,35 +549,35 @@ model Cultivar {
   // de `type` (Indica/Sativa, classification commerciale) : "landrace"|"p"|"f1"|"f2"|"f3plus"|
   // "s1"|"s2plus"|"bx1"|"bx2plus"|"ibl". Nullable — beaucoup de cultivars catalogués n'ont pas
   // cette information (graine achetée sans généalogie connue).
-  generationStatus String?
+  generationStatus   String?
   // Classification chimique (chémotype) — considérée plus rigoureuse scientifiquement que
   // Indica/Sativa (cf. tooltip déjà existant dans CultivarsTab.jsx) : "thc-dominant"|"balanced"|
   // "cbd-dominant"|"high-cbg". Complète `type`, ne le remplace pas (les deux classifications
   // coexistent dans l'usage réel du secteur).
-  chemotype String?
+  chemotype          String?
   // Variabilité phénotypique de la lignée — "unstable" (F2, forte ségrégation, recherche de
   // phénotypes), "segregating" (F3-BX précoces, en cours de stabilisation), "stable" (IBL,
   // reproduit vrai génération après génération).
   phenotypeStability String?
   // Objectif de sélection déclaré par l'utilisateur (vigueur, résistance, profil terpénique,
   // rendement...) — notes de breeder en texte libre, distinct de `notes` (observations générales).
-  breedingGoal String?
+  breedingGoal       String?
 
   // Cannabinoïdes — bornés 0-100, avec provenance (annoncé vs mesuré en labo)
-  thcMin       Float?
-  thcMax       Float?
-  thcSource    String? // "breeder_claim" | "lab_tested"
-  cbdMin       Float?
-  cbdMax       Float?
-  cbdSource    String? // "breeder_claim" | "lab_tested"
-  labReportUrl String? // Lien vers le certificat d'analyse (COA), même convention que FlowerReview.labReportUrl
+  thcMin                   Float?
+  thcMax                   Float?
+  thcSource                String? // "breeder_claim" | "lab_tested"
+  cbdMin                   Float?
+  cbdMax                   Float?
+  cbdSource                String? // "breeder_claim" | "lab_tested"
+  labReportUrl             String? // Lien vers le certificat d'analyse (COA), même convention que FlowerReview.labReportUrl
   // Métadonnées structurées du COA — traçabilité scientifique au-delà du simple lien de fichier
   // (cf. DOCUMENTATION/DATA_REFERENCE/09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
-  labName                 String? // Nom du laboratoire ayant réalisé l'analyse
-  labMethod               String? // Méthode analytique déclarée: "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
-  labAccredited           Boolean? // Laboratoire accrédité (déclaratif)
+  labName                  String? // Nom du laboratoire ayant réalisé l'analyse
+  labMethod                String? // Méthode analytique déclarée: "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
+  labAccredited            Boolean? // Laboratoire accrédité (déclaratif)
   labAccreditationStandard String? // Norme d'accréditation déclarée (ex: "ISO/IEC 17025")
-  labAnalysisDate         DateTime? // Date de l'analyse figurant sur le COA
+  labAnalysisDate          DateTime? // Date de l'analyse figurant sur le COA
 
   // Culture
   floweringMinWeeks Int?
@@ -745,18 +745,18 @@ model FlowerReview {
   poidsNet              Float? // Poids net après défoliation (g)
 
   // ===== DONNÉES ANALYTIQUES =====
-  thcPercent        Float? // Taux THC (%) — forme neutre (décarboxylée)
-  thcaPercent       Float? // Taux THCA (%) — forme acide précurseur, présente dans la plante non chauffée
-  cbdPercent        Float? // Taux CBD (%) — forme neutre (décarboxylée)
-  cbdaPercent       Float? // Taux CBDA (%) — forme acide précurseur
-  cbgPercent        Float? // Taux CBG (%)
-  cbcPercent        Float? // Taux CBC (%)
-  cbnPercent        Float? // Taux CBN (%)
-  thcvPercent       Float? // Taux THCV (%)
-  otherCannabinoids String? // JSON: autres cannabinoïdes (mg/g ou %)
-  terpeneProfile    String? // JSON: Profil terpénique complet (depuis PDF/image)
-  labReportUrl      String? // URL du certificat d'analyse
-  terpeneFileUrl    String? // URL/chemin certificat terpènes
+  thcPercent               Float? // Taux THC (%) — forme neutre (décarboxylée)
+  thcaPercent              Float? // Taux THCA (%) — forme acide précurseur, présente dans la plante non chauffée
+  cbdPercent               Float? // Taux CBD (%) — forme neutre (décarboxylée)
+  cbdaPercent              Float? // Taux CBDA (%) — forme acide précurseur
+  cbgPercent               Float? // Taux CBG (%)
+  cbcPercent               Float? // Taux CBC (%)
+  cbnPercent               Float? // Taux CBN (%)
+  thcvPercent              Float? // Taux THCV (%)
+  otherCannabinoids        String? // JSON: autres cannabinoïdes (mg/g ou %)
+  terpeneProfile           String? // JSON: Profil terpénique complet (depuis PDF/image)
+  labReportUrl             String? // URL du certificat d'analyse
+  terpeneFileUrl           String? // URL/chemin certificat terpènes
   // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
   labName                  String? // Nom du laboratoire
   labMethod                String? // "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
@@ -894,24 +894,24 @@ model HashReview {
   purificationPipelineGithubId String? // ID PipelineGithub pour purification
 
   // ===== DONNÉES ANALYTIQUES =====
-  thcPercent        Float? // Taux THC (%) — forme neutre (décarboxylée)
-  thcaPercent       Float? // Taux THCA (%) — forme acide précurseur
-  cbdPercent        Float? // Taux CBD (%) — forme neutre (décarboxylée)
-  cbdaPercent       Float? // Taux CBDA (%) — forme acide précurseur
-  cbgPercent        Float? // Taux CBG (%)
-  cbcPercent        Float? // Taux CBC (%)
-  cbnPercent        Float? // Taux CBN (%)
-  thcvPercent       Float? // Taux THCV (%)
-  otherCannabinoids String? // JSON: autres cannabinoïdes
-  terpeneProfile    String? // JSON: profil terpénique
-  labReportUrl      String? // URL/chemin certificat cannabinoïdes
+  thcPercent               Float? // Taux THC (%) — forme neutre (décarboxylée)
+  thcaPercent              Float? // Taux THCA (%) — forme acide précurseur
+  cbdPercent               Float? // Taux CBD (%) — forme neutre (décarboxylée)
+  cbdaPercent              Float? // Taux CBDA (%) — forme acide précurseur
+  cbgPercent               Float? // Taux CBG (%)
+  cbcPercent               Float? // Taux CBC (%)
+  cbnPercent               Float? // Taux CBN (%)
+  thcvPercent              Float? // Taux THCV (%)
+  otherCannabinoids        String? // JSON: autres cannabinoïdes
+  terpeneProfile           String? // JSON: profil terpénique
+  labReportUrl             String? // URL/chemin certificat cannabinoïdes
   // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
   labName                  String? // Nom du laboratoire
   labMethod                String? // "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
   labAccredited            Boolean? // Laboratoire accrédité (déclaratif)
   labAccreditationStandard String? // Norme déclarée (ex: "ISO/IEC 17025")
   labAnalysisDate          DateTime? // Date de l'analyse figurant sur le COA
-  terpeneFileUrl    String? // URL/chemin certificat terpènes
+  terpeneFileUrl           String? // URL/chemin certificat terpènes
 
   // ===== VISUEL & TECHNIQUE =====
   couleurTransparence Float? // Couleur/transparence /10
@@ -1020,18 +1020,18 @@ model ConcentrateReview {
   purificationPipelineGithubId String? // ID PipelineGithub pour purification
 
   // ===== DONNÉES ANALYTIQUES =====
-  thcPercent        Float? // Taux THC (%) — forme neutre (décarboxylée)
-  thcaPercent       Float? // Taux THCA (%) — forme acide précurseur
-  cbdPercent        Float? // Taux CBD (%) — forme neutre (décarboxylée)
-  cbdaPercent       Float? // Taux CBDA (%) — forme acide précurseur
-  cbgPercent        Float? // Taux CBG (%)
-  cbcPercent        Float? // Taux CBC (%)
-  cbnPercent        Float? // Taux CBN (%)
-  thcvPercent       Float? // Taux THCV (%)
-  otherCannabinoids String? // JSON: autres cannabinoïdes
-  terpeneProfile    String? // JSON: profil terpénique
-  labReportUrl      String? // URL/chemin certificat cannabinoïdes
-  terpeneFileUrl    String? // URL/chemin certificat terpènes
+  thcPercent               Float? // Taux THC (%) — forme neutre (décarboxylée)
+  thcaPercent              Float? // Taux THCA (%) — forme acide précurseur
+  cbdPercent               Float? // Taux CBD (%) — forme neutre (décarboxylée)
+  cbdaPercent              Float? // Taux CBDA (%) — forme acide précurseur
+  cbgPercent               Float? // Taux CBG (%)
+  cbcPercent               Float? // Taux CBC (%)
+  cbnPercent               Float? // Taux CBN (%)
+  thcvPercent              Float? // Taux THCV (%)
+  otherCannabinoids        String? // JSON: autres cannabinoïdes
+  terpeneProfile           String? // JSON: profil terpénique
+  labReportUrl             String? // URL/chemin certificat cannabinoïdes
+  terpeneFileUrl           String? // URL/chemin certificat terpènes
   // Métadonnées structurées du COA (cf. 09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
   labName                  String? // Nom du laboratoire
   labMethod                String? // "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
@@ -1549,7 +1549,8 @@ model GeneticTree {
   // Relations
   nodes         GenNode[]
   edges         GenEdge[]
-  flowerReviews FlowerReview[] @relation("flowerReviewTree")
+  annotations   GenAnnotation[]
+  flowerReviews FlowerReview[]  @relation("flowerReviewTree")
 
   // Metadata
   createdAt DateTime @default(now())
@@ -1592,8 +1593,9 @@ model GenNode {
   media String @default("[]")
 
   // Relations sortantes et entrantes
-  childEdges  GenEdge[] @relation("parentNode")
-  parentEdges GenEdge[] @relation("childNode")
+  childEdges  GenEdge[]       @relation("parentNode")
+  parentEdges GenEdge[]       @relation("childNode")
+  annotations GenAnnotation[]
 
   // Metadata
   createdAt DateTime @default(now())
@@ -1638,6 +1640,8 @@ model GenEdge {
 
   // Photos/vidéos illustrant cette relation — même mécanisme que GenNode.media.
   media String @default("[]")
+
+  annotations GenAnnotation[]
 
   // Metadata
   createdAt DateTime @default(now())
@@ -1701,8 +1705,8 @@ model ChainNode {
   // JSON: Array<{ id, url, type: 'photo'|'video', filename, caption, uploadedAt }>
   media String @default("[]")
 
-  sourceEdges ChainEdge[] @relation("chainSourceNode")
-  targetEdges ChainEdge[] @relation("chainTargetNode")
+  sourceEdges ChainEdge[]       @relation("chainSourceNode")
+  targetEdges ChainEdge[]       @relation("chainTargetNode")
   annotations ChainAnnotation[]
 
   createdAt DateTime @default(now())
@@ -1779,7 +1783,7 @@ model ChainAnnotation {
   title String // ex: "Culture — S1", "Séparation"
   // Lignes de contenu affichées sur la carte, snapshot au moment du glisser-déposer.
   // JSON: Array<{ label: string, value: string }>
-  body String @default("[]")
+  body  String @default("[]")
 
   sourceLabel String? // ex: "depuis Soyuz" — contexte affiché en petit, indicatif seulement
 
@@ -1792,6 +1796,13 @@ model ChainAnnotation {
   pipelineType     String? // 'culture' | 'curing' | 'separation' | 'extraction' | 'general' | 'recipe'
   cellTimestamp    String? // id de la cellule d'origine sur la trame (ex: 'phase-1')
 
+  // "Bulle média" — variante de cette même carte épinglée où le contenu central est une photo/
+  // vidéo importée directement sur le canvas (upload ou "Ma bibliothèque") plutôt qu'un snapshot
+  // de données textuelles. Les deux usages restent le même modèle : title/body vides pour une
+  // bulle média pure, mediaUrl null pour une carte de données classique.
+  mediaUrl  String?
+  mediaType String? // 'photo' | 'video'
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1801,3 +1812,36 @@ model ChainAnnotation {
   @@map("chain_annotations")
 }
 
+// Modèle GenAnnotation — équivalent PhenoHunt de ChainAnnotation (même principe de carte épinglée
+// librement sur le canvas, mêmes deux usages note-texte/bulle-média), lié à GeneticTree/GenNode/
+// GenEdge au lieu de ProductionChain/ChainNode/ChainEdge. Duplication volontaire plutôt que
+// généralisation du modèle — cf. en-tête UnifiedGeneticsCanvas.jsx pour la justification déjà
+// posée sur ce projet (éviter tout risque de régression croisée entre les deux canvas).
+model GenAnnotation {
+  id     String      @id @default(uuid())
+  treeId String
+  tree   GeneticTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
+
+  nodeId String?
+  node   GenNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  edgeId String?
+  edge   GenEdge? @relation(fields: [edgeId], references: [id], onDelete: Cascade)
+
+  position String // JSON: {x: number, y: number}
+
+  title String @default("")
+  body  String @default("[]") // JSON: Array<{ label: string, value: string }>
+
+  sourceLabel String?
+
+  mediaUrl  String?
+  mediaType String? // 'photo' | 'video'
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([treeId])
+  @@index([nodeId])
+  @@index([edgeId])
+  @@map("gen_annotations")
+}

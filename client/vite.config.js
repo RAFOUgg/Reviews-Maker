@@ -46,6 +46,15 @@ export default defineConfig({
             '/images': {
                 target: 'http://localhost:3000',
                 changeOrigin: true
+            },
+            // Photos/vidéos de pipeline (routes/media-upload.js sert /media en statique côté
+            // serveur) — sans cette règle, l'upload réussit (passe par /api, déjà proxifié) mais
+            // la vignette affichée juste après pointe vers /media/... que Vite ne sait pas
+            // résoudre en dev : elle reste cassée, donnant l'impression que le média n'a pas
+            // été ajouté alors qu'il l'a bien été côté serveur.
+            '/media': {
+                target: 'http://localhost:3000',
+                changeOrigin: true
             }
         }
     },

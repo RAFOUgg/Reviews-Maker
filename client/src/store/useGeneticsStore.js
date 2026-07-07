@@ -27,6 +27,7 @@ const useGeneticsStore = create(
             // ============================================================================
             nodes: [], // Nœuds de l'arbre sélectionné
             edges: [], // Arêtes de l'arbre sélectionné
+            annotations: [], // Cartes épinglées librement sur le canvas (note texte ou bulle média)
             selectedNodeId: null,
             selectedEdgeId: null,
 
@@ -114,10 +115,17 @@ const useGeneticsStore = create(
                         media: parseMedia(e.media)
                     }));
 
+                    const parsedAnnotations = (tree.annotations || []).map(a => ({
+                        ...a,
+                        position: typeof a.position === 'string' ? JSON.parse(a.position) : a.position,
+                        body: typeof a.body === 'string' ? (JSON.parse(a.body || '[]')) : (a.body || [])
+                    }));
+
                     set({
                         selectedTreeId: treeId,
                         nodes: parsedNodes,
                         edges: parsedEdges,
+                        annotations: parsedAnnotations,
                         canvasLoading: false,
                         mode: 'edit'
                     });
@@ -215,6 +223,7 @@ const useGeneticsStore = create(
                         selectedTreeId: state.selectedTreeId === treeId ? null : state.selectedTreeId,
                         nodes: state.selectedTreeId === treeId ? [] : state.nodes,
                         edges: state.selectedTreeId === treeId ? [] : state.edges,
+                        annotations: state.selectedTreeId === treeId ? [] : state.annotations,
                         treeLoading: false
                     }));
 
@@ -437,6 +446,99 @@ const useGeneticsStore = create(
             },
 
             // ============================================================================
+            // ANNOTATIONS - Cartes épinglées librement sur le canvas (note texte ou bulle média)
+            // Miroir de useProductionChainStore.js addAnnotation/updateAnnotation/deleteAnnotation.
+            // ============================================================================
+            addAnnotation: async (annotationData) => {
+                const state = get();
+                if (!state.selectedTreeId) {
+                    return { error: 'No tree selected' };
+                }
+
+                set({ canvasLoading: true, treeError: null });
+                try {
+                    const response = await fetch(`${API_BASE}/trees/${state.selectedTreeId}/annotations`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            ...annotationData,
+                            position: annotationData.position || { x: 0, y: 0 }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || `Failed to add annotation: ${response.status}`);
+                    }
+
+                    const newAnnotation = await response.json();
+                    set(state => ({
+                        annotations: [...state.annotations, newAnnotation],
+                        canvasLoading: false
+                    }));
+
+                    return { data: newAnnotation };
+                } catch (error) {
+                    const errorMsg = error.message || 'Failed to add annotation';
+                    set({ treeError: errorMsg, canvasLoading: false });
+                    return { error: errorMsg };
+                }
+            },
+
+            updateAnnotation: async (annotationId, updateData) => {
+                set({ canvasLoading: true, treeError: null });
+                try {
+                    const response = await fetch(`${API_BASE}/annotations/${annotationId}`, {
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(updateData)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || `Failed to update annotation: ${response.status}`);
+                    }
+
+                    const updated = await response.json();
+                    set(state => ({
+                        annotations: state.annotations.map(a => a.id === annotationId ? updated : a),
+                        canvasLoading: false
+                    }));
+
+                    return { data: updated };
+                } catch (error) {
+                    const errorMsg = error.message || 'Failed to update annotation';
+                    set({ treeError: errorMsg, canvasLoading: false });
+                    return { error: errorMsg };
+                }
+            },
+
+            deleteAnnotation: async (annotationId) => {
+                try {
+                    const response = await fetch(`${API_BASE}/annotations/${annotationId}`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to delete annotation: ${response.status}`);
+                    }
+
+                    set(state => ({
+                        annotations: state.annotations.filter(a => a.id !== annotationId)
+                    }));
+
+                    return { success: true };
+                } catch (error) {
+                    const errorMsg = error.message || 'Failed to delete annotation';
+                    set({ treeError: errorMsg });
+                    return { error: errorMsg };
+                }
+            },
+
+            // ============================================================================
             // UI - Selection & Forms
             // ============================================================================
             selectNode: (nodeId) => {
@@ -579,6 +681,7 @@ const useGeneticsStore = create(
                     selectedTreeId: null,
                     nodes: [],
                     edges: [],
+                    annotations: [],
                     linkReviewPickerNodeId: null,
                     mediaModalTarget: null
                 });
@@ -590,6 +693,7 @@ const useGeneticsStore = create(
                     selectedTreeId: null,
                     nodes: [],
                     edges: [],
+                    annotations: [],
                     selectedNodeId: null,
                     selectedEdgeId: null,
                     mode: 'view',

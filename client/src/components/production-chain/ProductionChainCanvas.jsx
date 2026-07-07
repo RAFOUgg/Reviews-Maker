@@ -27,7 +27,7 @@ import useProductionChainStore from '../../store/useProductionChainStore';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import { findNodeAtPoint, findEdgeNearPoint } from '../graph-canvas/floatingEdgeUtils';
 import ReviewNode from './ReviewNode';
-import ChainAnnotationNode from './ChainAnnotationNode';
+import AnnotationNode from '../graph-canvas/AnnotationNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
 import ChainHoverPreview from './ChainHoverPreview';
 import ChainNodeContextMenu from './ChainNodeContextMenu';
@@ -41,8 +41,9 @@ import ChainCellPickerModal from './ChainCellPickerModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
 import ChainMediaPickerModal from './ChainMediaPickerModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
+import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import ConfirmModal from '../shared/ConfirmModal';
-import { Download, Upload, RotateCcw, FileImage, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Download, Upload, RotateCcw, FileImage, Edit2, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
 
 // Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
 // pas clignoter au simple passage de la souris entre deux nœuds voisins.
@@ -54,7 +55,7 @@ const PANEL_COLLAPSE_STORAGE_KEY = 'chainInfoPanelCollapsed';
 
 const nodeTypes = {
     reviewProduct: ReviewNode,
-    annotationCard: ChainAnnotationNode
+    annotationCard: AnnotationNode
 };
 
 const edgeTypes = {
@@ -94,6 +95,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const [exportingSvg, setExportingSvg] = useState(false);
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
+    const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
     const [panelCollapsed, setPanelCollapsed] = useState(() => localStorage.getItem(PANEL_COLLAPSE_STORAGE_KEY) === '1');
 
     // Sélection multiple (ctrl+clic / shift+clic) dans le panneau "Cellules attachées" — même
@@ -162,6 +164,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 title: annotation.title,
                 body: annotation.body,
                 sourceLabel: annotation.sourceLabel,
+                mediaUrl: annotation.mediaUrl,
+                mediaType: annotation.mediaType,
                 onDelete: () => store.deleteAnnotation(annotation.id)
             }
         }));
@@ -703,6 +707,21 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         event.dataTransfer.effectAllowed = 'copy';
     }, [panelSubjectLabel]);
 
+    // Importer une photo/vidéo comme sa propre bulle sur le canvas (MediaBubbleImportModal) —
+    // centrée sur le viewport actuel plutôt qu'un point de dépôt précis, comme le FAB mobile
+    // "individu inconnu" de UnifiedGeneticsCanvas.
+    const handleImportMediaBubble = useCallback(async ({ url, type }) => {
+        const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
+        await store.addAnnotation({
+            title: type === 'video' ? '🎬 Vidéo' : '📷 Photo',
+            body: [],
+            mediaUrl: url,
+            mediaType: type,
+            position: center
+        });
+        setShowMediaBubbleImport(false);
+    }, [store, screenToFlowPosition]);
+
     // Sélection multiple (ctrl+clic / shift+clic) des cellules attachées du panneau — remise à
     // zéro dès qu'on change de nœud/liaison sélectionné(e), pour ne pas garder une sélection qui
     // pointe vers les cellules d'un autre panneau.
@@ -824,6 +843,9 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                             </button>
                             <button className="toolbar-btn secondary" onClick={handleExportSVG} disabled={exportingSvg} title="Exporter en SVG">
                                 <FileImage size={14} /> {exportingSvg ? 'Export...' : 'SVG'}
+                            </button>
+                            <button className="toolbar-btn secondary" onClick={() => setShowMediaBubbleImport(true)} title="Importer une photo/vidéo comme bulle sur le canvas">
+                                <ImageIcon size={14} /> Photo/Vidéo
                             </button>
                         </div>
                     </Panel>
@@ -1066,6 +1088,9 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 )}
                 {showRenameModal && store.selectedChain && (
                     <ChainFormModal chain={store.selectedChain} onClose={() => setShowRenameModal(false)} />
+                )}
+                {showMediaBubbleImport && (
+                    <MediaBubbleImportModal onImport={handleImportMediaBubble} onClose={() => setShowMediaBubbleImport(false)} />
                 )}
                 {store.cellPicker && <ChainCellPickerModal />}
                 {store.mediaPicker && <ChainMediaPickerModal />}

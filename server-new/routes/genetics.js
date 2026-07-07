@@ -27,7 +27,9 @@ import {
     validateNodeCreation,
     validateNodeUpdate,
     validateEdgeCreation,
-    validateEdgeUpdate
+    validateEdgeUpdate,
+    validateAnnotationCreation,
+    validateAnnotationUpdate
 } from '../middleware/validateGenetics.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { requireFeature } from '../middleware/permissions.js'
@@ -209,6 +211,19 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                         sourceHandle: true,
                         targetHandle: true,
                         media: true
+                    }
+                },
+                annotations: {
+                    select: {
+                        id: true,
+                        nodeId: true,
+                        edgeId: true,
+                        position: true,
+                        title: true,
+                        body: true,
+                        sourceLabel: true,
+                        mediaUrl: true,
+                        mediaType: true
                     }
                 },
                 _count: {
@@ -814,5 +829,133 @@ router.delete("/edges/:edgeId", requireAuth, requireGeneticsAccess, async (req, 
         res.status(500).json({ error: "Failed to delete edge" });
     }
 });
+
+// =============================================================================
+// ANNOTATIONS ROUTES (cartes épinglées librement sur le fond du canvas — note texte ou "bulle
+// média" photo/vidéo). Miroir de production-chains.js ANNOTATIONS ROUTES, adapté à
+// GeneticTree/GenNode/GenEdge — cf. commentaire sur le modèle GenAnnotation (schema.prisma).
+// =============================================================================
+
+router.post("/trees/:id/annotations", requireAuth, requireGeneticsAccess, validateAnnotationCreation, async (req, res) => {
+    try {
+        const tree = await prisma.geneticTree.findUnique({ where: { id: req.params.id } })
+
+        if (!tree) {
+            return res.status(404).json({ error: "Tree not found" })
+        }
+        if (tree.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const { position, title = '', body = [], sourceLabel = null, nodeId = null, edgeId = null, mediaUrl = null, mediaType = null } = req.body
+
+        // La cible (si fournie) doit appartenir à ce même arbre — sinon une carte pourrait
+        // s'ancrer sur un nœud/liaison d'un autre arbre (et jamais y être visible ni supprimée
+        // par la cascade attendue).
+        if (nodeId) {
+            const node = await prisma.genNode.findUnique({ where: { id: nodeId } })
+            if (!node || node.treeId !== req.params.id) {
+                return res.status(400).json({ error: "Target node not found in this tree" })
+            }
+        }
+        if (edgeId) {
+            const edge = await prisma.genEdge.findUnique({ where: { id: edgeId } })
+            if (!edge || edge.treeId !== req.params.id) {
+                return res.status(400).json({ error: "Target edge not found in this tree" })
+            }
+        }
+
+        const annotation = await prisma.genAnnotation.create({
+            data: {
+                treeId: req.params.id,
+                nodeId,
+                edgeId,
+                position: JSON.stringify(position || { x: 0, y: 0 }),
+                title: title.trim(),
+                body: JSON.stringify(body),
+                sourceLabel: sourceLabel?.trim() || null,
+                mediaUrl,
+                mediaType
+            }
+        })
+
+        res.status(201).json({ ...annotation, position: JSON.parse(annotation.position), body: JSON.parse(annotation.body || "[]") })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to create annotation" })
+    }
+})
+
+router.put("/annotations/:annotationId", requireAuth, requireGeneticsAccess, validateAnnotationUpdate, async (req, res) => {
+    try {
+        const annotation = await prisma.genAnnotation.findUnique({
+            where: { id: req.params.annotationId },
+            include: { tree: true }
+        })
+
+        if (!annotation) {
+            return res.status(404).json({ error: "Annotation not found" })
+        }
+        if (annotation.tree.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const { position, title, body, sourceLabel, nodeId, edgeId, mediaUrl, mediaType } = req.body
+
+        if (nodeId) {
+            const node = await prisma.genNode.findUnique({ where: { id: nodeId } })
+            if (!node || node.treeId !== annotation.treeId) {
+                return res.status(400).json({ error: "Target node not found in this tree" })
+            }
+        }
+        if (edgeId) {
+            const edge = await prisma.genEdge.findUnique({ where: { id: edgeId } })
+            if (!edge || edge.treeId !== annotation.treeId) {
+                return res.status(400).json({ error: "Target edge not found in this tree" })
+            }
+        }
+
+        const data = {
+            ...(position !== undefined && { position: JSON.stringify(position) }),
+            ...(title !== undefined && { title: title.trim() }),
+            ...(body !== undefined && { body: JSON.stringify(body) }),
+            ...(sourceLabel !== undefined && { sourceLabel: sourceLabel?.trim() || null }),
+            ...(nodeId !== undefined && { nodeId, edgeId: null }),
+            ...(edgeId !== undefined && { edgeId, nodeId: null }),
+            ...(mediaUrl !== undefined && { mediaUrl }),
+            ...(mediaType !== undefined && { mediaType })
+        }
+
+        const updated = await prisma.genAnnotation.update({
+            where: { id: req.params.annotationId },
+            data
+        })
+
+        res.json({ ...updated, position: JSON.parse(updated.position), body: JSON.parse(updated.body || "[]") })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to update annotation" })
+    }
+})
+
+router.delete("/annotations/:annotationId", requireAuth, requireGeneticsAccess, async (req, res) => {
+    try {
+        const annotation = await prisma.genAnnotation.findUnique({
+            where: { id: req.params.annotationId },
+            include: { tree: true }
+        })
+
+        if (!annotation) {
+            return res.status(404).json({ error: "Annotation not found" })
+        }
+        if (annotation.tree.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        await prisma.genAnnotation.delete({ where: { id: req.params.annotationId } })
+
+        res.json({ message: "Annotation deleted successfully" })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete annotation" })
+    }
+})
 
 export default router
