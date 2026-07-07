@@ -5,8 +5,11 @@
 // Photos/vidéos attachées à un nœud/liaison (cf. schema.prisma GenNode/GenEdge.media) — même
 // validation que production-chains (utils/media-upload.js gère déjà l'upload du fichier, ici on
 // ne reçoit que les métadonnées url/type/caption).
-const MAX_MEDIA_ITEMS = 20
-const MAX_MEDIA_BYTES = 50_000
+// Relevé à 200 (au lieu de 20) — même raisonnement que validateProductionChain.js : le fichier
+// lui-même est déjà uploadé ailleurs, ce qu'on reçoit ici n'est que des métadonnées, aucune
+// raison de plafonner bas le nombre de photos/vidéos attachées.
+const MAX_MEDIA_ITEMS = 200
+const MAX_MEDIA_BYTES = 200_000
 
 const validateMedia = (media) => {
     if (media === undefined) return null

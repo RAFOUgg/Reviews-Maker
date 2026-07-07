@@ -83,6 +83,13 @@ export function formatReview(review, currentUser = null) {
         }
     }
 
+    // Certificats analytics (COA/terpènes) : stockés sur la sous-table Flower/Hash/Concentrate,
+    // jamais sur Edible (pas de champ dédié pour ce type). Remontés au niveau racine pour que
+    // l'agrégateur de fichiers (bibliothèque de médias du canvas chaîne de production) puisse les
+    // lire sans savoir sur quelle sous-table ils vivent.
+    formatted.labReportUrl = review.flowerData?.labReportUrl || review.hashData?.labReportUrl || review.concentrateData?.labReportUrl || null
+    formatted.terpeneFileUrl = review.flowerData?.terpeneFileUrl || review.hashData?.terpeneFileUrl || review.concentrateData?.terpeneFileUrl || null
+
     // Formater l'avatar de l'auteur si présent
     if (review.author) {
         let avatarUrl = null

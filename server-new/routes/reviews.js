@@ -105,15 +105,20 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
                     discordId: true
                 }
             },
-            // Include flowerData so we can surface the farm in library cards
+            // Include flowerData so we can surface the farm in library cards — labReportUrl/
+            // terpeneFileUrl aussi sélectionnés ici (et sur hash/concentrate ci-dessous) pour que
+            // formatReview() puisse les remonter à la racine (cf. reviewFormatter.js), utilisé par
+            // l'agrégateur de fichiers de la bibliothèque de médias (canvas chaîne de production).
             flowerData: {
                 select: {
-                    farm: true
+                    farm: true,
+                    labReportUrl: true,
+                    terpeneFileUrl: true
                 }
             },
             // Hash/Concentrate/Edible stockent leurs photos et sourceLineage sur leur propre sous-table
-            hashData: { select: { photos: true, sourceLineage: true } },
-            concentrateData: { select: { photos: true, sourceLineage: true } },
+            hashData: { select: { photos: true, sourceLineage: true, labReportUrl: true, terpeneFileUrl: true } },
+            concentrateData: { select: { photos: true, sourceLineage: true, labReportUrl: true, terpeneFileUrl: true } },
             edibleData: { select: { photos: true, sourceLineage: true } }
         },
         orderBy: { createdAt: 'desc' }

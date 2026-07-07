@@ -9,7 +9,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useReactFlow } from 'reactflow';
-import { RotateCcw, Download } from 'lucide-react';
+import { RotateCcw, Download, Image as ImageIcon } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
 const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
@@ -34,6 +34,11 @@ const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
         onClose();
     };
 
+    const handleImportMedia = () => {
+        store.openMediaPicker('node', []);
+        onClose();
+    };
+
     return (
         <div ref={menuRef} className="context-menu" style={{ left: `${x}px`, top: `${y}px` }}>
             <button
@@ -47,6 +52,12 @@ const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
                 <button className="context-menu-item" onClick={handleImportBulk}>
                     <Download className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
                     Importer des cellules vers plusieurs bulles/liaisons...
+                </button>
+            )}
+            {!readOnly && (
+                <button className="context-menu-item" onClick={handleImportMedia}>
+                    <ImageIcon className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
+                    Importer des photos/vidéos des reviews de la chaîne...
                 </button>
             )}
         </div>

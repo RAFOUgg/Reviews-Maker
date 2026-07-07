@@ -41,7 +41,11 @@ router.put('/:reviewType/:reviewId/:pipelineKey', requireAuth, async (req, res) 
         if (!data || typeof data !== 'object' || Array.isArray(data)) {
             return res.status(400).json({ error: 'data must be an object' })
         }
-        if (JSON.stringify(data).length > 20_000) {
+        // Relevé à 200KB (au lieu de 20KB) — un utilisateur qui attache beaucoup de photos/vidéos
+        // à une seule cellule (chacune référencée par une petite métadonnée url/type/caption, le
+        // fichier lui-même étant déjà uploadé via /api/media-upload) ne doit pas être bloqué par
+        // un plafond pensé pour des champs de formulaire classiques.
+        if (JSON.stringify(data).length > 200_000) {
             return res.status(400).json({ error: 'Cell data payload is too large' })
         }
 

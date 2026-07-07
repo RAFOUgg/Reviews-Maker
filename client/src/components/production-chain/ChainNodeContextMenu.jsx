@@ -85,6 +85,11 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
+    const handleImportMedia = () => {
+        store.openMediaPicker('node', [nodeId]);
+        onClose();
+    };
+
     const handleAddDirectCell = () => {
         store.openCellEditor('node', nodeId, { isNew: true, pipelineType: '', pipelineLabel: '', cellLabel: '', sourceLabel: 'Saisie manuelle', data: {} });
         onClose();
@@ -148,6 +153,10 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                     <button className="context-menu-item" onClick={handleOpenMedia}>
                         <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
+                    </button>
+                    <button className="context-menu-item" onClick={handleImportMedia}>
+                        <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Importer depuis les reviews de la chaîne...
                     </button>
                     {attachedCells.length > 0 && (
                         <button className="context-menu-item" onClick={handleCopyAllCells}>

@@ -32,8 +32,11 @@ const validateCellData = (cellData) => {
 // Photos/vidéos attachées (cf. schema.prisma ChainNode/ChainEdge.media) — le fichier lui-même est
 // déjà uploadé via /api/media-upload avant cet appel, on ne reçoit ici que les métadonnées
 // (url/type/caption), donc un payload nécessairement petit même avec plusieurs pièces jointes.
-const MAX_MEDIA_ITEMS = 20
-const MAX_MEDIA_BYTES = 50_000
+// Relevé à 200 (au lieu de 20) — le fichier lui-même est déjà uploadé ailleurs, ce qu'on reçoit
+// ici n'est que des métadonnées (url/type/caption) : aucune raison de plafonner bas le nombre de
+// photos/vidéos qu'un utilisateur peut attacher à une cellule/un nœud/une liaison.
+const MAX_MEDIA_ITEMS = 200
+const MAX_MEDIA_BYTES = 200_000
 
 const validateMedia = (media) => {
     if (media === undefined) return null

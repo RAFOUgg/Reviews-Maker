@@ -39,6 +39,7 @@ import ChainEdgeFormModal from './ChainEdgeFormModal';
 import ChainFormModal from './ChainFormModal';
 import ChainCellPickerModal from './ChainCellPickerModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
+import ChainMediaPickerModal from './ChainMediaPickerModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import ConfirmModal from '../shared/ConfirmModal';
 import { Download, Upload, RotateCcw, FileImage, Edit2, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -1067,6 +1068,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                     <ChainFormModal chain={store.selectedChain} onClose={() => setShowRenameModal(false)} />
                 )}
                 {store.cellPicker && <ChainCellPickerModal />}
+                {store.mediaPicker && <ChainMediaPickerModal />}
                 {store.editingCell && <ChainCellEditorModal />}
                 {store.mediaModalTarget && (() => {
                     const { targetType, targetId } = store.mediaModalTarget;

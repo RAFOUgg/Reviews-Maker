@@ -46,6 +46,10 @@ const useProductionChainStore = create(
             editingCell: null,
             // mediaModalTarget : { targetType: 'node'|'edge', targetId: string } | null
             mediaModalTarget: null,
+            // mediaPicker : { targetType: 'node'|'edge', targetIds: string[] } | null — import groupé
+            // de photos/vidéos déjà présentes dans les reviews des nœuds de CETTE chaîne (pas besoin
+            // de re-uploader), même triplet open/close que cellPicker.
+            mediaPicker: null,
 
             // STATE - REVIEW SUMMARY CACHE (résumé pipeline dérivé de la review liée à un nœud,
             // pour le hover/panneau du canvas — clé par reviewId, pas par chaîne : une review est
@@ -660,6 +664,12 @@ const useProductionChainStore = create(
 
             closeCellPicker: () => set({ cellPicker: null }),
 
+            openMediaPicker: (targetType, targetIds = []) => {
+                const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+                set({ mediaPicker: { targetType, targetIds: ids } });
+            },
+            closeMediaPicker: () => set({ mediaPicker: null }),
+
             openCellEditor: (targetType, targetId, cell) => set({ editingCell: { targetType, targetId, cell } }),
             closeCellEditor: () => set({ editingCell: null }),
 
@@ -694,6 +704,34 @@ const useProductionChainStore = create(
                         attachedAt: new Date().toISOString()
                     }));
                     return updateFn(targetId, { cellData: [...existing, ...stamped] });
+                }));
+
+                return { data: results };
+            },
+
+            // Fusionne des fichiers déjà hébergés (photos/vidéos trouvées sur une autre review via
+            // reviewFilesAggregator.js) dans le `media` de chaque cible — pas de ré-upload, juste
+            // une référence à l'URL déjà existante, même convention que attachCellsToTargets.
+            attachFilesToTargets: async (targetType, targetIds, files) => {
+                if (!files || files.length === 0) return { data: [] };
+                const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
+                const state = get();
+                const collection = targetType === 'node' ? state.nodes : state.edges;
+                const updateFn = targetType === 'node' ? state.updateNode : state.updateEdge;
+
+                const results = await Promise.all(ids.map(targetId => {
+                    const target = collection.find(t => t.id === targetId);
+                    if (!target) return Promise.resolve({ error: 'Target not found' });
+                    const existing = Array.isArray(target.media) ? target.media : [];
+                    const stamped = files.map(f => ({
+                        id: crypto.randomUUID(),
+                        url: f.url,
+                        filename: null,
+                        type: f.type === 'video' ? 'video' : 'photo',
+                        caption: f.reviewLabel ? `depuis ${f.reviewLabel}` : '',
+                        uploadedAt: new Date().toISOString()
+                    }));
+                    return updateFn(targetId, { media: [...existing, ...stamped] });
                 }));
 
                 return { data: results };
