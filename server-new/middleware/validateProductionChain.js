@@ -221,8 +221,35 @@ const validateAnnotationBody = (body) => {
     return null
 }
 
+// nodeId/edgeId : référence optionnelle vers l'élément sur lequel la carte a été déposée (jamais
+// les deux à la fois — une carte est ancrée à un seul type de cible, ou libre si aucun des deux).
+// L'existence réelle dans la chaîne courante est vérifiée par le handler de route (ici on ne
+// valide que la forme), même découpage que le reste du fichier (forme ici, cohérence métier là).
+const validateAnnotationTarget = (nodeId, edgeId) => {
+    if (nodeId !== undefined && nodeId !== null && typeof nodeId !== "string") {
+        return "nodeId must be a string"
+    }
+    if (edgeId !== undefined && edgeId !== null && typeof edgeId !== "string") {
+        return "edgeId must be a string"
+    }
+    if (nodeId && edgeId) {
+        return "An annotation cannot be attached to both a node and an edge"
+    }
+    return null
+}
+
+// Champs de traçabilité vers la cellule d'origine (cf. schema.prisma) — tous optionnels et
+// purement indicatifs (comme sourceLabel), une simple string bornée suffit.
+const validateOptionalShortString = (value, fieldName, maxLength = 100) => {
+    if (value === undefined || value === null) return null
+    if (typeof value !== "string" || value.length > maxLength) {
+        return `${fieldName} must be a string less than ${maxLength} characters`
+    }
+    return null
+}
+
 const validateChainAnnotationCreation = (req, res, next) => {
-    const { position, title, body, sourceLabel } = req.body
+    const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp } = req.body
 
     if (position) {
         if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
@@ -243,6 +270,16 @@ const validateChainAnnotationCreation = (req, res, next) => {
         }
     }
 
+    const targetError = validateAnnotationTarget(nodeId, edgeId)
+    if (targetError) {
+        return res.status(400).json({ error: targetError })
+    }
+
+    for (const [value, name] of [[sourceReviewId, "sourceReviewId"], [sourceReviewType, "sourceReviewType"], [pipelineType, "pipelineType"], [cellTimestamp, "cellTimestamp"]]) {
+        const error = validateOptionalShortString(value, name)
+        if (error) return res.status(400).json({ error })
+    }
+
     const bodyError = validateAnnotationBody(body)
     if (bodyError) {
         return res.status(400).json({ error: bodyError })
@@ -252,7 +289,7 @@ const validateChainAnnotationCreation = (req, res, next) => {
 }
 
 const validateChainAnnotationUpdate = (req, res, next) => {
-    const { position, title, body, sourceLabel } = req.body
+    const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp } = req.body
 
     if (position !== undefined) {
         if (typeof position !== "object" || typeof position.x !== "number" || typeof position.y !== "number") {
@@ -273,6 +310,16 @@ const validateChainAnnotationUpdate = (req, res, next) => {
         if (typeof sourceLabel !== "string" || sourceLabel.length > 200) {
             return res.status(400).json({ error: "sourceLabel must be less than 200 characters" })
         }
+    }
+
+    const targetError = validateAnnotationTarget(nodeId, edgeId)
+    if (targetError) {
+        return res.status(400).json({ error: targetError })
+    }
+
+    for (const [value, name] of [[sourceReviewId, "sourceReviewId"], [sourceReviewType, "sourceReviewType"], [pipelineType, "pipelineType"], [cellTimestamp, "cellTimestamp"]]) {
+        const error = validateOptionalShortString(value, name)
+        if (error) return res.status(400).json({ error })
     }
 
     const bodyError = validateAnnotationBody(body)

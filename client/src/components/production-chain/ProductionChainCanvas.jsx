@@ -17,6 +17,7 @@ import {
     useEdgesState,
     Panel,
     useReactFlow,
+    useStoreApi,
     MarkerType
 } from 'reactflow';
 import { toSvg } from 'html-to-image';
@@ -24,6 +25,7 @@ import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
+import { findNodeAtPoint, findEdgeNearPoint } from '../graph-canvas/floatingEdgeUtils';
 import ReviewNode from './ReviewNode';
 import ChainAnnotationNode from './ChainAnnotationNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
@@ -31,6 +33,8 @@ import ChainHoverPreview from './ChainHoverPreview';
 import ChainNodeContextMenu from './ChainNodeContextMenu';
 import ChainEdgeContextMenu from './ChainEdgeContextMenu';
 import ChainPaneContextMenu from './ChainPaneContextMenu';
+import ChainAnnotationContextMenu from './ChainAnnotationContextMenu';
+import CellDropMenu from './CellDropMenu';
 import ChainEdgeFormModal from './ChainEdgeFormModal';
 import ChainFormModal from './ChainFormModal';
 import ChainCellPickerModal from './ChainCellPickerModal';
@@ -77,18 +81,30 @@ function pipelineSummaryBodyLines(pipelineSummary) {
 const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const store = useProductionChainStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
+    const rfStoreApi = useStoreApi();
     const navigate = useNavigate();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
     const [contextMenu, setContextMenu] = useState(null);
-    const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane'
+    const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane' | 'annotation'
     const [deleteConfirm, setDeleteConfirm] = useState(null);
     const [importing, setImporting] = useState(false);
     const [exportingSvg, setExportingSvg] = useState(false);
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [panelCollapsed, setPanelCollapsed] = useState(() => localStorage.getItem(PANEL_COLLAPSE_STORAGE_KEY) === '1');
+
+    // Sélection multiple (ctrl+clic / shift+clic) dans le panneau "Cellules attachées" — même
+    // recette que PipelineDragDropView.jsx (handleSidebarItemClick/handleCellClick), pour glisser
+    // plusieurs cellules à la fois. Réinitialisée dès qu'on change de nœud/liaison sélectionné(e)
+    // (cf. useEffect plus bas, une fois panelTargetId calculé).
+    const [selectedCellIds, setSelectedCellIds] = useState([]);
+    const cellSelectionAnchorRef = useRef(null);
+    // cellDropMenu : { x, y, cells, originTargetType, originTargetId, dropPoint } | null — affiché
+    // uniquement quand un glisser-clic-droit de cellule(s) est relâché sur un AUTRE produit/liaison
+    // (cas où déplacer/copier/épingler sont tous les trois pertinents).
+    const [cellDropMenu, setCellDropMenu] = useState(null);
 
     useEffect(() => {
         localStorage.setItem(PANEL_COLLAPSE_STORAGE_KEY, panelCollapsed ? '1' : '0');
@@ -172,8 +188,30 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             }
         }));
 
+        // Ligne de rattachement pointillée entre une carte ancrée (nodeId/edgeId) et son produit —
+        // pour une carte ancrée à une liaison, on relie visuellement au nœud SOURCE de cette
+        // liaison (simplification : une vraie géométrie carte↔liaison n'a pas d'équivalent React
+        // Flow natif, un lien vers un nœud réel suffit à rendre le rattachement visible).
+        // Type d'arête natif 'straight' + non sélectionnable : pas de composant dédié nécessaire.
+        const annotationLinkEdges = (store.annotations || [])
+            .map(annotation => {
+                const targetNodeId = annotation.nodeId
+                    || (annotation.edgeId ? store.edges.find(e => e.id === annotation.edgeId)?.sourceNodeId : null);
+                if (!targetNodeId) return null;
+                return {
+                    id: `annotation-link-${annotation.id}`,
+                    source: targetNodeId,
+                    target: annotation.id,
+                    type: 'straight',
+                    selectable: false,
+                    focusable: false,
+                    style: { strokeDasharray: '4 4', stroke: 'rgba(148, 163, 184, 0.35)', strokeWidth: 1 }
+                };
+            })
+            .filter(Boolean);
+
         setNodes([...rfProductNodes, ...rfAnnotationNodes]);
-        setEdges(rfEdges);
+        setEdges([...rfEdges, ...annotationLinkEdges]);
     }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect]);
 
     // Drag & drop depuis ProductAddSidebar — un nœud référence toujours une review
@@ -182,6 +220,90 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         event.preventDefault();
         event.dataTransfer.dropEffect = 'copy';
     }, []);
+
+    // Hit-test au point de dépôt (coordonnées flow) — nœud produit → épingler/rattacher à ce
+    // produit, carte annotation déjà épinglée → fusionner dedans, arête → rattacher à cette
+    // transformation, sinon dépôt libre (comportement d'avant, carte flottante non ancrée).
+    // findNodeAtPoint parcourt nodeInternals (React Flow) donc voit indifféremment les nœuds
+    // produits ET les cartes annotation (les deux sont des nœuds RF) — le `type` les distingue.
+    const resolveDropTarget = useCallback((position) => {
+        const hitNode = findNodeAtPoint(rfStoreApi.getState().nodeInternals, position);
+        if (hitNode?.type === 'annotationCard') return { kind: 'annotation', id: hitNode.id };
+        if (hitNode?.type === 'reviewProduct') return { kind: 'node', id: hitNode.id };
+        const hitEdge = findEdgeNearPoint(store.edges, store.nodes, position, 30);
+        if (hitEdge) return { kind: 'edge', id: hitEdge.id };
+        return { kind: 'empty' };
+    }, [rfStoreApi, store.edges, store.nodes]);
+
+    // Traite le dépôt d'une ou plusieurs cellules de pipeline (glissées depuis "Cellules
+    // attachées") sur le canvas — logique commune au drop natif (clic gauche, action par défaut)
+    // et au menu du clic droit (action explicitement choisie via forcedAction).
+    //  - 'pin'  : épingle une note liée au point de dépôt (jamais destructif, cellData intact)
+    //  - 'copy' : attache une VRAIE copie de la cellule à la cible (cellData de la cible enrichi,
+    //             origine intacte)
+    //  - 'move' : réassigne la cellule à la cible (retirée de l'origine) — action par défaut au
+    //             clic gauche quand on dépose sur un AUTRE produit/liaison que l'origine
+    // Libellé d'origine ("depuis GMH") pour une note épinglée depuis une cellule glissée — dérivé
+    // de l'origine RÉELLE de la cellule (originTargetType/Id), pas de la sélection courante du
+    // panneau (qui peut avoir changé entre le début du drag et le dépôt).
+    const describeTarget = useCallback((targetType, targetId) => {
+        if (targetType === 'node') return store.nodes.find(n => n.id === targetId)?.label || null;
+        if (targetType === 'edge') {
+            const edge = store.edges.find(e => e.id === targetId);
+            const source = edge && store.nodes.find(n => n.id === edge.sourceNodeId);
+            const target = edge && store.nodes.find(n => n.id === edge.targetNodeId);
+            return source && target ? `${source.label} → ${target.label}` : null;
+        }
+        return null;
+    }, [store.nodes, store.edges]);
+
+    const processCellDrop = useCallback(async (cells, originTargetType, originTargetId, dropPosition, forcedAction = null) => {
+        if (!cells || cells.length === 0) return;
+        const target = resolveDropTarget(dropPosition);
+        const originLabel = describeTarget(originTargetType, originTargetId);
+
+        if (forcedAction === 'pin' || (!forcedAction && target.kind === 'empty')) {
+            await Promise.all(cells.map((cell, index) => {
+                const fields = summarizeCellFields(cell.pipelineType, cell.data);
+                return store.addAnnotation({
+                    title: `${cell.pipelineLabel} — ${cell.cellLabel}`,
+                    body: fields.map(f => ({ label: f.label, value: f.value })),
+                    sourceLabel: originLabel ? `depuis ${originLabel}` : null,
+                    sourceReviewId: cell.sourceReviewId || null,
+                    sourceReviewType: cell.sourceReviewType || null,
+                    pipelineType: cell.pipelineType || null,
+                    cellTimestamp: cell.timestamp || null,
+                    nodeId: target.kind === 'node' ? target.id : null,
+                    edgeId: target.kind === 'edge' ? target.id : null,
+                    position: target.kind === 'empty'
+                        ? { x: dropPosition.x + index * 30, y: dropPosition.y + index * 20 }
+                        : dropPosition
+                });
+            }));
+            return;
+        }
+
+        if (!forcedAction && target.kind === 'annotation') {
+            const existing = store.annotations.find(a => a.id === target.id);
+            if (existing) {
+                const extraLines = cells.flatMap(c => summarizeCellFields(c.pipelineType, c.data).map(f => ({ label: f.label, value: f.value })));
+                await store.updateAnnotation(existing.id, { body: [...(existing.body || []), ...extraLines] });
+            }
+            return;
+        }
+
+        if (target.kind !== 'node' && target.kind !== 'edge') return;
+
+        if (forcedAction === 'copy') {
+            await store.attachCellsToTargets(target.kind, [target.id], cells.map(({ id, attachedAt, ...rest }) => rest));
+            return;
+        }
+
+        // forcedAction === 'move', ou clic gauche par défaut sur une cible différente de l'origine
+        const sameOrigin = originTargetType === target.kind && originTargetId === target.id;
+        if (sameOrigin || !originTargetType) return;
+        await store.moveCellsToTarget(originTargetType, originTargetId, cells.map(c => c.id), target.kind, target.id);
+    }, [resolveDropTarget, describeTarget, store]);
 
     const handleDrop = useCallback(async (event) => {
         event.preventDefault();
@@ -207,13 +329,31 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         // pas du tout.
         const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
-        // Glissé depuis le panneau latéral d'un nœud/liaison (cellule attachée ou résumé pipeline)
-        // plutôt que depuis ProductAddSidebar — épingle une carte snapshot au point de dépôt.
+        // Glissé depuis "Cellules attachées" (une ou plusieurs, sélection ctrl/shift) — déplace,
+        // fusionne ou épingle selon ce qui se trouve sous le point de dépôt (cf. processCellDrop).
+        if (product.kind === 'cells') {
+            await processCellDrop(product.cells, product.originTargetType, product.originTargetId, position);
+            setSelectedCellIds([]);
+            return;
+        }
+
+        // Glissé depuis le résumé pipeline du panneau latéral (pas une cellule précise, pas
+        // d'origine réassignable) — épingle toujours une carte, liée à ce qui est sous le curseur.
         if (product.kind === 'annotation') {
+            const target = resolveDropTarget(position);
+            if (target.kind === 'annotation') {
+                const existing = store.annotations.find(a => a.id === target.id);
+                if (existing) {
+                    await store.updateAnnotation(existing.id, { body: [...(existing.body || []), ...(product.body || [])] });
+                }
+                return;
+            }
             await store.addAnnotation({
                 title: product.title,
                 body: product.body || [],
                 sourceLabel: product.sourceLabel || null,
+                nodeId: target.kind === 'node' ? target.id : null,
+                edgeId: target.kind === 'edge' ? target.id : null,
                 position
             });
             return;
@@ -230,7 +370,36 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             position,
             color: '#10b981'
         });
-    }, [readOnly, store]);
+    }, [readOnly, store, resolveDropTarget, processCellDrop, screenToFlowPosition]);
+
+    // Glisser-clic-droit une ou plusieurs cellules — l'API HTML5 Drag&Drop ne se déclenche
+    // jamais pour le bouton droit (le navigateur ouvre son propre menu contextuel à la place),
+    // donc ce geste est un mini-drag maison en Pointer Events, même squelette que
+    // useDraggableEndpoint.js (écoute pointermove/pointerup sur window, indifférent au bouton).
+    // Sur une cible réelle (produit/liaison), ouvre un menu de choix plutôt que d'agir tout de
+    // suite ; sur du vide ou une carte existante, une seule action a du sens, donc pas de menu.
+    const handleCellRightPointerDown = useCallback((event, cells, originTargetType, originTargetId) => {
+        if (event.button !== 2) return;
+        event.preventDefault();
+        event.stopPropagation();
+
+        // Empêche le menu contextuel natif du navigateur d'apparaître après ce geste — preventDefault
+        // sur pointerdown seul ne suffit pas, contextmenu se déclenche séparément au relâchement.
+        const suppressContextMenu = (e) => e.preventDefault();
+        window.addEventListener('contextmenu', suppressContextMenu, { once: true });
+
+        const handleUp = (upEvent) => {
+            window.removeEventListener('pointerup', handleUp);
+            const dropPoint = screenToFlowPosition({ x: upEvent.clientX, y: upEvent.clientY });
+            const target = resolveDropTarget(dropPoint);
+            if (target.kind === 'node' || target.kind === 'edge') {
+                setCellDropMenu({ x: upEvent.clientX, y: upEvent.clientY, cells, originTargetType, originTargetId, dropPoint });
+            } else {
+                processCellDrop(cells, originTargetType, originTargetId, dropPoint);
+            }
+        };
+        window.addEventListener('pointerup', handleUp);
+    }, [screenToFlowPosition, resolveDropTarget, processCellDrop]);
 
     // Cf. UnifiedGeneticsCanvas.jsx (genetics) : React Flow passe en 3e argument TOUS les nœuds
     // déplacés lors d'une sélection multiple — ne persister que le nœud déclencheur du drag
@@ -240,12 +409,44 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const handleNodeDragStop = useCallback(async (event, node, draggedNodes) => {
         if (readOnly) return;
         const movedNodes = Array.isArray(draggedNodes) && draggedNodes.length > 0 ? draggedNodes : [node];
-        await Promise.all(movedNodes.map(n => n.type === 'annotationCard'
-            ? store.updateAnnotation(n.id, { position: n.position })
-            : store.updateNode(n.id, { position: n.position })));
+
+        // Une carte ancrée (nodeId, ou edgeId d'une liaison connectée) doit suivre du même delta
+        // que le produit déplacé pour rester visuellement liée — sinon elle reste figée à sa
+        // propre position pendant que la ligne de rattachement (cf. sync effect plus haut) part
+        // désormais d'un endroit différent, ce qui recrée exactement le problème d'origine.
+        const annotationShifts = [];
+        for (const n of movedNodes) {
+            if (n.type === 'annotationCard') continue;
+            const before = store.nodes.find(sn => sn.id === n.id);
+            if (!before) continue;
+            const dx = n.position.x - (before.position?.x || 0);
+            const dy = n.position.y - (before.position?.y || 0);
+            if (dx === 0 && dy === 0) continue;
+
+            const connectedEdgeIds = store.edges.filter(e => e.sourceNodeId === n.id || e.targetNodeId === n.id).map(e => e.id);
+            for (const annotation of store.annotations) {
+                const anchored = annotation.nodeId === n.id || (annotation.edgeId && connectedEdgeIds.includes(annotation.edgeId));
+                if (!anchored) continue;
+                if (annotationShifts.some(s => s.id === annotation.id)) continue; // déjà décalée par un autre nœud du même geste
+                annotationShifts.push({
+                    id: annotation.id,
+                    position: { x: (annotation.position?.x || 0) + dx, y: (annotation.position?.y || 0) + dy }
+                });
+            }
+        }
+
+        await Promise.all([
+            ...movedNodes.map(n => n.type === 'annotationCard'
+                ? store.updateAnnotation(n.id, { position: n.position })
+                : store.updateNode(n.id, { position: n.position })),
+            ...annotationShifts.map(s => store.updateAnnotation(s.id, { position: s.position }))
+        ]);
+
         setNodes(nodes => nodes.map(n => {
             const moved = movedNodes.find(m => m.id === n.id);
-            return moved ? { ...n, position: moved.position } : n;
+            if (moved) return { ...n, position: moved.position };
+            const shifted = annotationShifts.find(s => s.id === n.id);
+            return shifted ? { ...n, position: shifted.position } : n;
         }));
     }, [readOnly, store, setNodes]);
 
@@ -328,8 +529,12 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const handleNodeContextMenu = useCallback((event, node) => {
         if (readOnly) return;
         event.preventDefault();
-        if (node.type === 'annotationCard') return;
         event.stopPropagation();
+        if (node.type === 'annotationCard') {
+            setContextMenuType('annotation');
+            setContextMenu({ x: event.clientX, y: event.clientY, annotationId: node.id });
+            return;
+        }
         setContextMenuType('node');
         setContextMenu({ x: event.clientX, y: event.clientY, nodeId: node.id });
     }, [readOnly]);
@@ -497,6 +702,55 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         event.dataTransfer.effectAllowed = 'copy';
     }, [panelSubjectLabel]);
 
+    // Sélection multiple (ctrl+clic / shift+clic) des cellules attachées du panneau — remise à
+    // zéro dès qu'on change de nœud/liaison sélectionné(e), pour ne pas garder une sélection qui
+    // pointe vers les cellules d'un autre panneau.
+    useEffect(() => {
+        setSelectedCellIds([]);
+        cellSelectionAnchorRef.current = null;
+    }, [panelTargetId]);
+
+    const handleCellClick = useCallback((event, cell) => {
+        const cellIds = panelAttachedCells.map(c => c.id);
+        const clickedIdx = cellIds.indexOf(cell.id);
+        if (clickedIdx === -1) return;
+        const isCtrl = event.ctrlKey || event.metaKey;
+        const isShift = event.shiftKey;
+
+        if (isShift && cellSelectionAnchorRef.current !== null) {
+            event.preventDefault();
+            const anchorIdx = cellSelectionAnchorRef.current;
+            const [start, end] = anchorIdx < clickedIdx ? [anchorIdx, clickedIdx] : [clickedIdx, anchorIdx];
+            const rangeIds = cellIds.slice(start, end + 1);
+            setSelectedCellIds(prev => isCtrl ? [...new Set([...prev, ...rangeIds])] : rangeIds);
+            return;
+        }
+
+        if (isCtrl) {
+            setSelectedCellIds(prev => prev.includes(cell.id) ? prev.filter(id => id !== cell.id) : [...prev, cell.id]);
+            cellSelectionAnchorRef.current = clickedIdx;
+            return;
+        }
+
+        setSelectedCellIds([]);
+        store.openCellEditor(panelTargetType, panelTargetId, cell);
+    }, [panelAttachedCells, panelTargetType, panelTargetId, store]);
+
+    // Cellule(s) réellement transportées par un glisser depuis le panneau : la sélection multiple
+    // si la cellule glissée en fait partie et qu'elle contient plus d'un élément, sinon elle seule.
+    const getCellsForDrag = useCallback((cell) => {
+        if (selectedCellIds.length > 1 && selectedCellIds.includes(cell.id)) {
+            return panelAttachedCells.filter(c => selectedCellIds.includes(c.id));
+        }
+        return [cell];
+    }, [selectedCellIds, panelAttachedCells]);
+
+    const handleCellDragStart = useCallback((event, cell) => {
+        const payload = { kind: 'cells', cells: getCellsForDrag(cell), originTargetType: panelTargetType, originTargetId: panelTargetId };
+        event.dataTransfer.setData('application/json', JSON.stringify(payload));
+        event.dataTransfer.effectAllowed = 'copyMove';
+    }, [getCellsForDrag, panelTargetType, panelTargetId]);
+
     useEffect(() => {
         if (chainId && chainId !== store.selectedChainId) {
             store.loadChain(chainId);
@@ -654,23 +908,27 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
                         {panelAttachedCells.length > 0 && (
                             <div className="info-cells">
-                                <p className="info-section-label">Cellules attachées</p>
-                                <p className="info-section-hint">Glissez une cellule sur le canvas pour l'épingler</p>
+                                <p className="info-section-label">
+                                    Cellules attachées{selectedCellIds.length > 1 ? ` — ${selectedCellIds.length} sélectionnées` : ''}
+                                </p>
+                                <p className="info-section-hint">
+                                    Ctrl/Maj+clic pour sélectionner plusieurs cellules — glissez (clic gauche = déplacer,
+                                    clic droit = choisir) sur le canvas pour les épingler ou les déplacer vers une autre bulle
+                                </p>
                                 {panelAttachedCells.map(cell => {
                                     const fields = summarizeCellFields(cell.pipelineType, cell.data);
+                                    const isSelected = selectedCellIds.includes(cell.id);
                                     return (
                                         <button
                                             key={cell.id}
                                             type="button"
-                                            className="info-cell-row"
+                                            className={`info-cell-row${isSelected ? ' selected' : ''}`}
                                             draggable
-                                            onDragStart={(e) => handleAnnotationDragStart(
-                                                e,
-                                                `${cell.pipelineLabel} — ${cell.cellLabel}`,
-                                                fields.map(f => ({ label: f.label, value: f.value }))
-                                            )}
-                                            onClick={() => store.openCellEditor(panelTargetType, panelTargetId, cell)}
-                                            title="Cliquer pour éditer — glisser sur le canvas pour épingler"
+                                            onDragStart={(e) => handleCellDragStart(e, cell)}
+                                            onPointerDown={(e) => { if (e.button === 2) handleCellRightPointerDown(e, getCellsForDrag(cell), panelTargetType, panelTargetId); }}
+                                            onContextMenu={(e) => e.preventDefault()}
+                                            onClick={(e) => handleCellClick(e, cell)}
+                                            title="Cliquer pour éditer (Ctrl/Maj pour sélectionner) — glisser sur le canvas"
                                         >
                                             <span className="info-cell-label">{cell.pipelineLabel} — {cell.cellLabel}</span>
                                             {fields.length > 0 && (
@@ -771,8 +1029,37 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         readOnly={readOnly}
                     />
                 )}
+                {contextMenu && contextMenuType === 'annotation' && !readOnly && (
+                    <ChainAnnotationContextMenu
+                        annotationId={contextMenu.annotationId}
+                        x={contextMenu.x}
+                        y={contextMenu.y}
+                        onClose={closeContextMenu}
+                    />
+                )}
             </>}
             modals={<>
+                {cellDropMenu && (
+                    <CellDropMenu
+                        x={cellDropMenu.x}
+                        y={cellDropMenu.y}
+                        count={cellDropMenu.cells.length}
+                        onClose={() => setCellDropMenu(null)}
+                        onMove={async () => {
+                            await processCellDrop(cellDropMenu.cells, cellDropMenu.originTargetType, cellDropMenu.originTargetId, cellDropMenu.dropPoint, 'move');
+                            setSelectedCellIds([]);
+                            setCellDropMenu(null);
+                        }}
+                        onCopy={async () => {
+                            await processCellDrop(cellDropMenu.cells, cellDropMenu.originTargetType, cellDropMenu.originTargetId, cellDropMenu.dropPoint, 'copy');
+                            setCellDropMenu(null);
+                        }}
+                        onPin={async () => {
+                            await processCellDrop(cellDropMenu.cells, cellDropMenu.originTargetType, cellDropMenu.originTargetId, cellDropMenu.dropPoint, 'pin');
+                            setCellDropMenu(null);
+                        }}
+                    />
+                )}
                 {store.showEdgeForm && (
                     <ChainEdgeFormModal onClose={store.closeEdgeForm} />
                 )}

@@ -124,7 +124,10 @@
       "Bash(curl -sS -X POST http://localhost:3000/api/production-chains/chains/49945d51-20d5-4d87-a656-c7bc304bed90/edges -H \"Content-Type: application/json\" -d '{\"sourceNodeId\":\"25dbe29d-61f6-4287-ad96-4ae7c861c0ca\",\"targetNodeId\":\"1f7ac67e-6d2e-48fc-bcfb-aef5a0992247\"}')",
       "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_edge_modal.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_edge_modal_tmp.js\")",
       "Bash(node verify_edge_modal_tmp.js)",
-      "Bash(curl -sS -X PUT http://localhost:3000/api/production-chains/nodes/1f7ac67e-6d2e-48fc-bcfb-aef5a0992247 -H \"Content-Type: application/json\" -d '{\"position\":{\"x\":1400,\"y\":250}}')"
+      "Bash(curl -sS -X PUT http://localhost:3000/api/production-chains/nodes/1f7ac67e-6d2e-48fc-bcfb-aef5a0992247 -H \"Content-Type: application/json\" -d '{\"position\":{\"x\":1400,\"y\":250}}')",
+      "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
+      "Bash(node --check routes/production-chains.js)",
+      "Bash(node --check middleware/validateProductionChain.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",

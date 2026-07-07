@@ -10,7 +10,8 @@
 
 import React, { useState, useRef } from 'react';
 import { LiquidModal, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI';
-import { Image as ImageIcon, Film, Upload, X, Trash2, Loader2 } from 'lucide-react';
+import { Image as ImageIcon, Film, Upload, X, Trash2, Loader2, Camera, FolderOpen, Library } from 'lucide-react';
+import ReviewPhotoLibraryPicker from './ReviewPhotoLibraryPicker';
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 Mo
 const ACCEPTED = 'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime';
@@ -29,7 +30,20 @@ function formatSize(bytes) {
 export const MediaGallery = ({ media = [], onChange, compact = false }) => {
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState(null);
-    const fileInputRef = useRef(null);
+    const [showLibraryPicker, setShowLibraryPicker] = useState(false);
+    const cameraInputRef = useRef(null);
+    const galleryInputRef = useRef(null);
+
+    const handlePickFromLibrary = (url) => {
+        onChange([...media, {
+            id: crypto.randomUUID(),
+            url,
+            filename: null, // référence une photo déjà hébergée par une autre review, pas un nouvel envoi
+            type: 'photo',
+            caption: '',
+            uploadedAt: new Date().toISOString()
+        }]);
+    };
 
     const handleFileSelected = async (e) => {
         const file = e.target.files?.[0];
@@ -91,23 +105,51 @@ export const MediaGallery = ({ media = [], onChange, compact = false }) => {
                 </div>
             )}
 
-            <input
-                ref={fileInputRef}
-                type="file"
-                accept={ACCEPTED}
-                onChange={handleFileSelected}
-                className="hidden"
-            />
-            <LiquidButton
-                variant="outline"
-                onClick={() => fileInputRef.current?.click()}
-                disabled={uploading}
-                loading={uploading}
-                icon={uploading ? Loader2 : Upload}
-                className="w-full"
-            >
-                {uploading ? 'Envoi en cours...' : 'Ajouter une photo ou vidéo (200 Mo max)'}
-            </LiquidButton>
+            {/* Deux inputs distincts plutôt qu'un seul : `capture` force l'ouverture directe de
+                l'appareil photo sur mobile (pas le choix habituel caméra/galerie du navigateur) —
+                indispensable pour proposer "Prendre une photo" comme option à part entière plutôt
+                que de dépendre du sélecteur natif, qui varie selon navigateur/OS. */}
+            <input ref={cameraInputRef} type="file" accept="image/*,video/*" capture="environment" onChange={handleFileSelected} className="hidden" />
+            <input ref={galleryInputRef} type="file" accept={ACCEPTED} onChange={handleFileSelected} className="hidden" />
+
+            <div className={`grid gap-2 ${compact ? 'grid-cols-1' : 'grid-cols-3'}`}>
+                <LiquidButton
+                    variant="outline"
+                    onClick={() => cameraInputRef.current?.click()}
+                    disabled={uploading}
+                    loading={uploading}
+                    icon={uploading ? Loader2 : Camera}
+                    className="w-full"
+                >
+                    Prendre une photo
+                </LiquidButton>
+                <LiquidButton
+                    variant="outline"
+                    onClick={() => galleryInputRef.current?.click()}
+                    disabled={uploading}
+                    loading={uploading}
+                    icon={uploading ? Loader2 : FolderOpen}
+                    className="w-full"
+                >
+                    Depuis la galerie
+                </LiquidButton>
+                <LiquidButton
+                    variant="outline"
+                    onClick={() => setShowLibraryPicker(true)}
+                    disabled={uploading}
+                    icon={Library}
+                    className="w-full"
+                >
+                    Ma bibliothèque
+                </LiquidButton>
+            </div>
+
+            {showLibraryPicker && (
+                <ReviewPhotoLibraryPicker
+                    onSelect={handlePickFromLibrary}
+                    onClose={() => setShowLibraryPicker(false)}
+                />
+            )}
 
             {media.length === 0 ? (
                 <p className="text-sm text-white/40 text-center py-4">Aucun média attaché.</p>

@@ -548,6 +548,14 @@
     background: rgba(255, 255, 255, 0.08);
 }
 
+/* Sélection multiple ctrl/shift+clic (cf. ProductionChainCanvas.handleCellClick) — même recette
+   visuelle (anneau + badge) que la sélection multiple de PipelineDragDropView.jsx. */
+.node-info-panel .info-cell-row.selected {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.6);
+    box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
+}
+
 .node-info-panel .info-cell-label {
     font-size: 12px;
     font-weight: 600;

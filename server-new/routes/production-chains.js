@@ -132,10 +132,16 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
                 annotations: {
                     select: {
                         id: true,
+                        nodeId: true,
+                        edgeId: true,
                         position: true,
                         title: true,
                         body: true,
-                        sourceLabel: true
+                        sourceLabel: true,
+                        sourceReviewId: true,
+                        sourceReviewType: true,
+                        pipelineType: true,
+                        cellTimestamp: true
                     }
                 }
             }
@@ -573,15 +579,40 @@ router.post("/chains/:id/annotations", requireAuth, requireChainAccess, validate
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { position, title, body = [], sourceLabel = null } = req.body
+        const {
+            position, title, body = [], sourceLabel = null, nodeId = null, edgeId = null,
+            sourceReviewId = null, sourceReviewType = null, pipelineType = null, cellTimestamp = null
+        } = req.body
+
+        // La cible (si fournie) doit appartenir à cette même chaîne — sinon une carte pourrait
+        // s'ancrer sur un nœud/liaison d'une autre chaîne (et jamais y être visible ni supprimée
+        // par la cascade attendue).
+        if (nodeId) {
+            const node = await prisma.chainNode.findUnique({ where: { id: nodeId } })
+            if (!node || node.chainId !== req.params.id) {
+                return res.status(400).json({ error: "Target node not found in this chain" })
+            }
+        }
+        if (edgeId) {
+            const edge = await prisma.chainEdge.findUnique({ where: { id: edgeId } })
+            if (!edge || edge.chainId !== req.params.id) {
+                return res.status(400).json({ error: "Target edge not found in this chain" })
+            }
+        }
 
         const annotation = await prisma.chainAnnotation.create({
             data: {
                 chainId: req.params.id,
+                nodeId,
+                edgeId,
                 position: JSON.stringify(position || { x: 0, y: 0 }),
                 title: title.trim(),
                 body: JSON.stringify(body),
-                sourceLabel: sourceLabel?.trim() || null
+                sourceLabel: sourceLabel?.trim() || null,
+                sourceReviewId,
+                sourceReviewType,
+                pipelineType,
+                cellTimestamp
             }
         })
 
@@ -606,12 +637,36 @@ router.put("/annotations/:annotationId", requireAuth, requireChainAccess, valida
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { position, title, body, sourceLabel } = req.body
+        const { position, title, body, sourceLabel, nodeId, edgeId, sourceReviewId, sourceReviewType, pipelineType, cellTimestamp } = req.body
+
+        if (nodeId) {
+            const node = await prisma.chainNode.findUnique({ where: { id: nodeId } })
+            if (!node || node.chainId !== annotation.chainId) {
+                return res.status(400).json({ error: "Target node not found in this chain" })
+            }
+        }
+        if (edgeId) {
+            const edge = await prisma.chainEdge.findUnique({ where: { id: edgeId } })
+            if (!edge || edge.chainId !== annotation.chainId) {
+                return res.status(400).json({ error: "Target edge not found in this chain" })
+            }
+        }
+
         const data = {
             ...(position !== undefined && { position: JSON.stringify(position) }),
             ...(title !== undefined && { title: title.trim() }),
             ...(body !== undefined && { body: JSON.stringify(body) }),
-            ...(sourceLabel !== undefined && { sourceLabel: sourceLabel?.trim() || null })
+            ...(sourceLabel !== undefined && { sourceLabel: sourceLabel?.trim() || null }),
+            // nodeId/edgeId : reassigner explicitement vers une autre cible (ou null pour détacher/
+            // rendre la carte libre) — permet le geste "déplacer une note épinglée vers une autre
+            // bulle". Toujours réassigner ensemble (jamais l'un sans l'autre) pour ne pas laisser
+            // une carte ancrée aux deux à la fois si un seul des deux champs était envoyé.
+            ...(nodeId !== undefined && { nodeId, edgeId: null }),
+            ...(edgeId !== undefined && { edgeId, nodeId: null }),
+            ...(sourceReviewId !== undefined && { sourceReviewId }),
+            ...(sourceReviewType !== undefined && { sourceReviewType }),
+            ...(pipelineType !== undefined && { pipelineType }),
+            ...(cellTimestamp !== undefined && { cellTimestamp })
         }
 
         const updated = await prisma.chainAnnotation.update({

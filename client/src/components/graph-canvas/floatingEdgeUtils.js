@@ -142,3 +142,57 @@ export function findNodeAtPoint(nodeInternals, point, excludeIds = []) {
     }
     return null;
 }
+
+/** Distance (coordonnées flow) entre `point` et le segment [a, b]. */
+function distanceToSegment(point, a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    const lengthSq = dx * dx + dy * dy;
+    if (lengthSq === 0) return Math.hypot(point.x - a.x, point.y - a.y);
+    let t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / lengthSq;
+    t = Math.max(0, Math.min(1, t));
+    const projX = a.x + t * dx;
+    const projY = a.y + t * dy;
+    return Math.hypot(point.x - projX, point.y - projY);
+}
+
+/**
+ * Liaison (ChainEdge — objet du store, pas un edge React Flow) dont le tracé passe le plus près
+ * de `point` (coordonnées flow), sous `thresholdPx`. Pas d'équivalent React Flow natif pour "hit
+ * test" une arête (contrairement à `findNodeAtPoint`/nodeInternals pour les nœuds) — approxime le
+ * tracé par les deux segments [source→waypoint] et [waypoint→target] si un point de courbure est
+ * défini (cf. ChainEdgeComponent), sinon par le segment direct source→target.
+ */
+export function findEdgeNearPoint(edges, nodes, point, thresholdPx = 24) {
+    let closest = null;
+    let closestDistance = thresholdPx;
+
+    for (const edge of edges) {
+        const source = nodes.find(n => n.id === edge.sourceNodeId);
+        const target = nodes.find(n => n.id === edge.targetNodeId);
+        if (!source || !target) continue;
+
+        const sourceCenter = {
+            x: (source.position?.x || 0) + (source.width ?? 140) / 2,
+            y: (source.position?.y || 0) + (source.height ?? 140) / 2
+        };
+        const targetCenter = {
+            x: (target.position?.x || 0) + (target.width ?? 140) / 2,
+            y: (target.position?.y || 0) + (target.height ?? 140) / 2
+        };
+
+        const distance = (edge.waypointX != null && edge.waypointY != null)
+            ? Math.min(
+                distanceToSegment(point, sourceCenter, { x: edge.waypointX, y: edge.waypointY }),
+                distanceToSegment(point, { x: edge.waypointX, y: edge.waypointY }, targetCenter)
+            )
+            : distanceToSegment(point, sourceCenter, targetCenter);
+
+        if (distance < closestDistance) {
+            closestDistance = distance;
+            closest = edge;
+        }
+    }
+
+    return closest;
+}

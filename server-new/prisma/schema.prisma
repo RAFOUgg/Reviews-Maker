@@ -1703,6 +1703,7 @@ model ChainNode {
 
   sourceEdges ChainEdge[] @relation("chainSourceNode")
   targetEdges ChainEdge[] @relation("chainTargetNode")
+  annotations ChainAnnotation[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -1744,6 +1745,8 @@ model ChainEdge {
   // Même mécanisme que ChainNode.media — photos/vidéos illustrant cette transformation.
   media String @default("[]")
 
+  annotations ChainAnnotation[]
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -1754,15 +1757,22 @@ model ChainEdge {
   @@map("chain_edges")
 }
 
-// Modèle ChainAnnotation (carte épinglée librement sur le fond du canvas — snapshot d'une donnée
-// déjà visible dans le panneau latéral d'un nœud/liaison, glissée-déposée pour rester affichée en
-// permanence sans avoir à re-sélectionner le nœud/la liaison d'origine. Même logique de snapshot
-// que ChainNode.cellData/ChainEdge.cellData : éditer ou supprimer cette carte ne touche jamais à
-// la fiche technique ni à la cellule d'origine — sourceLabel est purement indicatif.)
+// Modèle ChainAnnotation (carte épinglée sur le canvas — snapshot d'une donnée déjà visible dans
+// le panneau latéral d'un nœud/liaison, glissée-déposée pour rester affichée en permanence sans
+// avoir à re-sélectionner le nœud/la liaison d'origine. Contrairement à ChainNode.cellData, cette
+// carte PEUT porter une vraie référence (nodeId/edgeId) vers l'élément sur lequel elle a été
+// déposée — utilisée pour l'ancrer visuellement (ligne de rattachement, suivi si l'élément bouge)
+// et est supprimée en cascade si cet élément disparaît. Reste nullable : un dépôt sur le fond vide
+// du canvas produit toujours une carte libre, comme avant.)
 model ChainAnnotation {
   id      String          @id @default(uuid())
   chainId String
   chain   ProductionChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
+
+  nodeId String?
+  node   ChainNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  edgeId String?
+  edge   ChainEdge? @relation(fields: [edgeId], references: [id], onDelete: Cascade)
 
   position String // JSON: {x: number, y: number}
 
@@ -1771,12 +1781,23 @@ model ChainAnnotation {
   // JSON: Array<{ label: string, value: string }>
   body String @default("[]")
 
-  sourceLabel String? // ex: "depuis Soyuz" — contexte affiché en petit, aucune FK vivante
+  sourceLabel String? // ex: "depuis Soyuz" — contexte affiché en petit, indicatif seulement
+
+  // Référence vers la fiche technique + cellule de pipeline dont cette carte est un snapshot —
+  // permet au menu contextuel de la carte de proposer "Aller à la fiche technique" sans avoir à
+  // re-parcourir le panneau latéral. Comme sourceLabel, purement indicatif (aucune contrainte FK :
+  // la review peut appartenir à une autre table selon reviewType, et peut être supprimée).
+  sourceReviewId   String?
+  sourceReviewType String?
+  pipelineType     String? // 'culture' | 'curing' | 'separation' | 'extraction' | 'general' | 'recipe'
+  cellTimestamp    String? // id de la cellule d'origine sur la trame (ex: 'phase-1')
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([chainId])
+  @@index([nodeId])
+  @@index([edgeId])
   @@map("chain_annotations")
 }
 

@@ -760,6 +760,30 @@ const useProductionChainStore = create(
                 return state.attachCellsToTargets(targetType, targetIds, state.cellClipboard);
             },
 
+            // Réassigne une ou plusieurs cellules attachées d'une origine vers une autre cible
+            // ("glisser une cellule du panneau vers une autre bulle") — attache d'abord des copies
+            // à la destination (réutilise attachCellsToTargets, qui régénère id/attachedAt), puis
+            // retire les cellules d'origine seulement après succès. Si origin === dest (ids et
+            // types identiques), ne fait rien : éviterait de dupliquer puis auto-supprimer.
+            moveCellsToTarget: async (originType, originId, cellIds, destType, destId) => {
+                if (originType === destType && originId === destId) return { data: [] };
+                const state = get();
+                const originCollection = originType === 'node' ? state.nodes : state.edges;
+                const origin = originCollection.find(t => t.id === originId);
+                if (!origin) return { error: 'Origin not found' };
+
+                const originCells = Array.isArray(origin.cellData) ? origin.cellData : [];
+                const cellsToMove = originCells.filter(c => cellIds.includes(c.id));
+                if (cellsToMove.length === 0) return { data: [] };
+
+                const stripped = cellsToMove.map(({ id, attachedAt, ...rest }) => rest);
+                const attachResult = await state.attachCellsToTargets(destType, [destId], stripped);
+                if (attachResult.error) return attachResult;
+
+                await Promise.all(cellsToMove.map(c => state.removeAttachedCell(originType, originId, c.id)));
+                return { success: true };
+            },
+
             // ============================================================================
             // UI - Selection & Forms
             // ============================================================================
