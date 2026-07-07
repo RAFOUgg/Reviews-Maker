@@ -105,7 +105,10 @@ export function getPipelineSummaryForEdge(targetReviewType, targetReview) {
             detail: config?.batchSize ? `Batch : ${config.batchSize}g` : null,
             materialType: materialType ? (MATERIAL_TYPE_LABELS[materialType] || materialType) : null,
             materialState: materialState ? (MATERIAL_STATE_LABELS[materialState] || materialState) : null,
-            mesh: mesh ? mesh.map(m => `${m}µm`).join(', ') : null
+            mesh: mesh ? mesh.map(m => `${m}µm`).join(', ') : null,
+            // Déjà saisie sur la cellule "Date de séparation" (separationSidebarContent.js,
+            // id 'processingDate') — pré-remplit la date de la liaison plutôt que de la redemander.
+            date: findFieldInTimeline(data, 'processingDate')
         }
     }
 
@@ -118,7 +121,10 @@ export function getPipelineSummaryForEdge(targetReviewType, targetReview) {
             label: 'Extraction',
             technique: EXTRACTION_METHOD_LABELS[config?.extractionMethod] || config?.extractionMethod || null,
             stepCount: data.length,
-            detail: config?.batchSize ? `Batch : ${config.batchSize}g` : null
+            detail: config?.batchSize ? `Batch : ${config.batchSize}g` : null,
+            // Déjà saisie sur la cellule "Date d'extraction" (extractionSidebarContent.js, id
+            // 'processingDate') — pré-remplit la date de la liaison plutôt que de la redemander.
+            date: findFieldInTimeline(data, 'processingDate')
         }
     }
 

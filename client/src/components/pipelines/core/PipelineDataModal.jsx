@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Save, X, Bookmark, Plus, Sparkles, LayoutGrid, Image as ImageIcon, Trash2, Search } from 'lucide-react';
 import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard, LiquidBadge } from '../../ui/LiquidUI';
 import LiquidCheckbox from '../../ui/LiquidCheckbox';
+import LiquidToggle from '../../ui/LiquidToggle';
 import ConfirmModal from '../../shared/ConfirmModal';
 import { MediaGallery } from '../../shared/MediaAttachmentModal';
 import { GroupedPresetModal } from '../views/PipelineDragDropView';
@@ -310,7 +311,13 @@ function PipelineDataModal({
                                 max={max}
                                 step={step}
                                 placeholder={`${min}-${max}`}
-                                className="liquid-input w-20 text-center"
+                                // .liquid-input pose width:100% sans !important — sur une classe
+                                // Tailwind de même spécificité (w-20), c'est l'ordre d'import CSS qui
+                                // décide, et .liquid-input gagne ici. Un style inline (toujours
+                                // prioritaire) garde ce champ étroit à côté du slider au lieu de
+                                // s'étirer sur toute la largeur — l'effet "jauge" au lieu d'un input.
+                                style={{ width: '5rem' }}
+                                className="liquid-input text-center"
                             />
                             {alternates ? (
                                 <select
@@ -359,7 +366,8 @@ function PipelineDataModal({
                                 onChange={(e) => handleChange(itemKey, { ...freqValue, value: parseFloat(e.target.value) || 1 })}
                                 min="0.1"
                                 step="0.1"
-                                className="liquid-input w-20"
+                                style={{ width: '5rem' }}
+                                className="liquid-input"
                             />
                             <span className="text-sm text-white/50">fois par</span>
                             <select
@@ -606,7 +614,8 @@ function PipelineDataModal({
                                                     handleChange(`${itemKey}__percentages`, pctObj);
                                                 }}
                                                 placeholder="%"
-                                                className="liquid-input w-16 text-sm py-1"
+                                                style={{ width: '4rem' }}
+                                                className="liquid-input text-sm py-1"
                                             />
                                         )}
                                     </label>
@@ -669,6 +678,24 @@ function PipelineDataModal({
                                 </select>
                             )}
                         </div>
+                    </div>
+                </FieldWrapper>
+            );
+        }
+
+        // TOGGLE — absent jusqu'ici : sans ce cas, un champ "toggle" (ex: icewater_enabled)
+        // retombait sur le TEXT par défaut plus bas et affichait le booléen brut ("true"/"false")
+        // comme si c'était un input texte à remplir.
+        if (type === 'toggle') {
+            return (
+                <FieldWrapper item={item} key={itemKey}>
+                    <div className="flex items-center gap-3 p-2">
+                        <LiquidToggle
+                            checked={Boolean(value)}
+                            onChange={(v) => handleChange(itemKey, v)}
+                            label={fieldLabel}
+                            size="sm"
+                        />
                     </div>
                 </FieldWrapper>
             );

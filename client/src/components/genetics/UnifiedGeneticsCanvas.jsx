@@ -284,12 +284,12 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
 
         if (!cultivar || !cultivar.id) return;
 
-        // Calculate drop position relative to the React Flow canvas
-        const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-        const position = {
-            x: event.clientX - reactFlowBounds.left,
-            y: event.clientY - reactFlowBounds.top,
-        };
+        // screenToFlowPosition plutôt qu'une soustraction brute de clientX/clientY par le
+        // bounding rect — dès que le canvas est zoomé/pané (fitView au montage dès qu'il y a
+        // plus d'un nœud), des coordonnées écran stockées telles quelles atterrissent hors du
+        // viewport visible : le nœud est bien créé mais invisible (cf. même bug corrigé sur
+        // ProductionChainCanvas.jsx).
+        const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
         // Check if this cultivar already exists as a node
         const alreadyExists = store.nodes.some(n => n.cultivarId === cultivar.id);

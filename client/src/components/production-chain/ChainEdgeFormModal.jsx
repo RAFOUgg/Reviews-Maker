@@ -10,7 +10,7 @@ import useProductionChainStore from '../../store/useProductionChainStore';
 import { getPipelineSummaryForEdge, getTechniqueOptionsForReviewType } from '../../utils/chainPipelineSummary';
 import { getPipelineDefsForReviewType, getAllCellsForPipeline, getFieldSchemaForPipeline } from '../../utils/chainCellPipelines';
 import PipelineCellEditor from '../pipelines/core/PipelineCellEditor';
-import { Save, X, ArrowDown, Sparkles, Pencil, Plus, Loader2 } from 'lucide-react';
+import { Save, X, Sparkles, Pencil, Plus, Loader2 } from 'lucide-react';
 
 const ChainEdgeFormModal = ({ onClose }) => {
     const store = useProductionChainStore();
@@ -74,6 +74,11 @@ const ChainEdgeFormModal = ({ onClose }) => {
     useEffect(() => {
         if (!isEdit && pipelineSummary?.technique && !store.edgeFormData?.technique) {
             store.updateEdgeFormData({ technique: pipelineSummary.technique });
+        }
+        // Idem pour la date : déjà saisie sur la fiche destination (cellule "Date de
+        // séparation/extraction") — inutile de la redemander à la création de la liaison.
+        if (!isEdit && pipelineSummary?.date && !store.edgeFormData?.date) {
+            store.updateEdgeFormData({ date: pipelineSummary.date });
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [pipelineSummary]);
@@ -291,40 +296,43 @@ const ChainEdgeFormModal = ({ onClose }) => {
                     </div>
                 </div>
 
-                {sourceNode && targetNode && (
-                    <LiquidCard className="p-4">
-                        <p className="text-xs text-white/40 mb-2">Aperçu de la transformation</p>
-                        <div className="flex flex-col items-center gap-2">
-                            <span className="text-sm text-white">{sourceNode.label}</span>
-                            <ArrowDown className="w-4 h-4 text-amber-400" />
-                            <span className="text-sm text-white">{targetNode.label}</span>
-                        </div>
-                    </LiquidCard>
-                )}
-
                 {loadingSummary && (
                     <p className="text-xs text-white/40">Recherche des données de pipeline sur la fiche destination...</p>
                 )}
 
-                {pipelineSummary && (
-                    <LiquidCard className="p-4" style={{ background: 'rgba(16, 185, 129, 0.08)', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
-                        <p className="text-xs text-emerald-400 mb-2 flex items-center gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5" />
-                            Données trouvées sur la fiche destination — {pipelineSummary.label}
-                        </p>
-                        <div className="text-sm text-white space-y-1">
-                            {pipelineSummary.technique && <p>Méthode : <span className="text-white/70">{pipelineSummary.technique}</span></p>}
-                            {pipelineSummary.materialType && <p>Matière première : <span className="text-white/70">{pipelineSummary.materialType}</span></p>}
-                            {pipelineSummary.materialState && <p>État de la matière : <span className="text-white/70">{pipelineSummary.materialState}</span></p>}
-                            {pipelineSummary.mesh && <p>Maillage utilisé : <span className="text-white/70">{pipelineSummary.mesh}</span></p>}
-                            {(pipelineSummary.dosage || pipelineSummary.dosageUnit) && (
-                                <p>Dosage : <span className="text-white/70">{pipelineSummary.dosage ?? '?'} {pipelineSummary.dosageUnit || ''}</span></p>
+                {pipelineSummary && (() => {
+                    const rows = [
+                        pipelineSummary.technique && { label: 'Méthode', value: pipelineSummary.technique },
+                        pipelineSummary.materialType && { label: 'Matière première', value: pipelineSummary.materialType },
+                        pipelineSummary.materialState && { label: 'État de la matière', value: pipelineSummary.materialState },
+                        pipelineSummary.mesh && { label: 'Maillage utilisé', value: pipelineSummary.mesh },
+                        (pipelineSummary.dosage || pipelineSummary.dosageUnit) && { label: 'Dosage', value: `${pipelineSummary.dosage ?? '?'} ${pipelineSummary.dosageUnit || ''}`.trim() },
+                        pipelineSummary.date && { label: 'Date', value: new Date(pipelineSummary.date).toLocaleDateString('fr-FR') },
+                        pipelineSummary.stepCount > 0 && { label: 'Étapes enregistrées', value: String(pipelineSummary.stepCount) },
+                    ].filter(Boolean);
+                    return (
+                        <LiquidCard className="p-4" style={{ background: 'rgba(16, 185, 129, 0.08)', borderColor: 'rgba(16, 185, 129, 0.25)' }}>
+                            <p className="text-xs text-emerald-400 mb-3 flex items-center gap-1.5">
+                                <Sparkles className="w-3.5 h-3.5" />
+                                Données reprises de la fiche destination — {pipelineSummary.label}
+                            </p>
+                            {rows.length > 0 && (
+                                <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2">
+                                    {rows.map(row => (
+                                        <div key={row.label} className="flex items-baseline justify-between gap-3 sm:justify-start">
+                                            <dt className="text-xs text-white/40 flex-shrink-0">{row.label}</dt>
+                                            <dd className="text-sm text-white font-medium text-right sm:text-left truncate">{row.value}</dd>
+                                        </div>
+                                    ))}
+                                </dl>
                             )}
-                            {pipelineSummary.stepCount > 0 && <p>Étapes enregistrées : <span className="text-white/70">{pipelineSummary.stepCount}</span></p>}
-                            {pipelineSummary.detail && <p className="text-white/70">{pipelineSummary.detail}</p>}
-                        </div>
-                    </LiquidCard>
-                )}
+                            {pipelineSummary.detail && <p className="text-xs text-white/50 mt-3 pt-2 border-t border-white/10">{pipelineSummary.detail}</p>}
+                            <p className="text-[11px] text-emerald-300/60 mt-3">
+                                Technique et date ci-dessous sont pré-remplies à partir de ces données — modifiez-les si besoin.
+                            </p>
+                        </LiquidCard>
+                    );
+                })()}
 
                 {pipelineDef && (
                     <LiquidCard className="p-4">

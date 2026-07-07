@@ -76,7 +76,7 @@ function pipelineSummaryBodyLines(pipelineSummary) {
 
 const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const store = useProductionChainStore();
-    const { fitView } = useReactFlow();
+    const { fitView, screenToFlowPosition } = useReactFlow();
     const navigate = useNavigate();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
@@ -197,11 +197,15 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
         if (!product) return;
 
-        const reactFlowBounds = event.currentTarget.getBoundingClientRect();
-        const position = {
-            x: event.clientX - reactFlowBounds.left,
-            y: event.clientY - reactFlowBounds.top,
-        };
+        // screenToFlowPosition (pas une simple soustraction de clientX/clientY par le bounding
+        // rect) : le canvas est zoomé/pané dès qu'il ne contient pas exactement 1 nœud à l'origine
+        // (fitView s'exécute au montage), donc des coordonnées écran brutes stockées telles
+        // quelles comme position de nœud atterrissent hors du viewport visible dès que le zoom
+        // s'écarte de 1 — le nœud/l'annotation est bien créé(e) côté serveur (il disparaît de la
+        // sidebar / le panneau se comporte normalement) mais reste invisible tant qu'on ne fait
+        // pas un "fit view" manuel, ce qui donnait l'impression que le glisser-déposer ne marchait
+        // pas du tout.
+        const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
         // Glissé depuis le panneau latéral d'un nœud/liaison (cellule attachée ou résumé pipeline)
         // plutôt que depuis ProductAddSidebar — épingle une carte snapshot au point de dépôt.

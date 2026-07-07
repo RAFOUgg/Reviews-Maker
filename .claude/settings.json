@@ -104,7 +104,31 @@
       "Bash(pkill -f \"server-new/server.js\")",
       "Bash(powershell -Command \"Get-NetTCPConnection -LocalPort 3000,5173 -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess\")",
       "Bash(rm -f smoke-test-tmp.mjs)",
-      "Bash(rm -f \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/handle-\"*.png)"
+      "Bash(rm -f \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/daf684e3-ae1d-4e35-b2ee-2dc9c90e9fde/scratchpad/handle-\"*.png)",
+      "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_cell_editor.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_cell_editor_tmp.js\")",
+      "Bash(node verify_cell_editor_tmp.js)",
+      "Bash(rm -f verify_cell_editor_tmp.js *.png)",
+      "Bash(git checkout *)",
+      "Bash(curl -sS -b \"connect.sid=dummy\" http://localhost:3000/api/chains)",
+      "Bash(curl -sS http://localhost:3000/api/production-chains)",
+      "Bash(curl -sS http://localhost:3000/api/production-chains/chains)",
+      "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_chain_dnd.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_chain_dnd_tmp.js\")",
+      "Bash(node verify_chain_dnd_tmp.js)",
+      "Bash(rm -f \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_chain_dnd_tmp.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\"/2*.png)",
+      "Bash(curl -sS http://localhost:3000/api/production-chains/chains/49945d51-20d5-4d87-a656-c7bc304bed90)",
+      "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_chain2.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_chain2_tmp.js\")",
+      "Bash(node verify_chain2_tmp.js)",
+      "Bash(sed -i \"s/const node = page.locator\\('.react-flow__node'\\).first\\(\\);/const node = page.getByText\\('Audit Mobile', { exact: false }\\).first\\(\\);/\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_chain2_tmp.js\")",
+      "Bash(cd \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker\" && rm -f verify_chain2_tmp.js 3*.png)",
+      "Bash(curl -sS -X PUT http://localhost:3000/api/review-pipeline-cells/hash/3e9e301f-621c-42f0-8d2e-394425b41b01/separation -H \"Content-Type: application/json\" -d '{\"timestamp\":0,\"data\":{\"separationType\":\"ice-water\",\"processingDate\":\"2026-06-15\",\"numberOfPasses\":3}}')",
+      "Bash(curl -sS -X POST http://localhost:3000/api/production-chains/chains/49945d51-20d5-4d87-a656-c7bc304bed90/edges -H \"Content-Type: application/json\" -d '{\"sourceNodeId\":\"25dbe29d-61f6-4287-ad96-4ae7c861c0ca\",\"targetNodeId\":\"1f7ac67e-6d2e-48fc-bcfb-aef5a0992247\"}')",
+      "Bash(cp \"C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/143ae296-9762-4275-8aac-e64b4c6f0542/scratchpad/verify_edge_modal.js\" \"c:/Users/Rafi/Documents/.0AMes-Logiciel/Reviews-Maker/verify_edge_modal_tmp.js\")",
+      "Bash(node verify_edge_modal_tmp.js)",
+      "Bash(curl -sS -X PUT http://localhost:3000/api/production-chains/nodes/1f7ac67e-6d2e-48fc-bcfb-aef5a0992247 -H \"Content-Type: application/json\" -d '{\"position\":{\"x\":1400,\"y\":250}}')"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",
+      "C:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker"
     ]
   }
 }
