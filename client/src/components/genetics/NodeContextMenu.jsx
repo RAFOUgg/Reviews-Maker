@@ -152,7 +152,6 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         // phénotype, pas une fiche vierge repartant de zéro).
         const duplicatedNode = await store.addNode({
             cultivarName: `${node.cultivarName} (copie)`,
-            cultivarId: node.cultivarId,
             position: { x: node.position.x + 100, y: node.position.y + 100 },
             color: node.color,
             image: node.image,

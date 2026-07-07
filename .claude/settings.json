@@ -128,7 +128,12 @@
       "Bash(tasklist //FI \"IMAGENAME eq node.exe\")",
       "Bash(node --check routes/production-chains.js)",
       "Bash(node --check middleware/validateProductionChain.js)",
-      "Bash(netstat -ano)"
+      "Bash(netstat -ano)",
+      "Bash(node --check server-new/routes/library.js)",
+      "Bash(node --check server-new/routes/flower-reviews.js)",
+      "Bash(node --check server-new/routes/genetics.js)",
+      "Bash(node --check server-new/routes/reviews.js)",
+      "Bash(node --check server-new/server.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",

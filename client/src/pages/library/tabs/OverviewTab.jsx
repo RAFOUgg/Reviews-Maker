@@ -11,8 +11,9 @@ import { LiquidCard } from '@/components/ui/LiquidUI'
 import { motion } from 'framer-motion'
 import { parseImages } from '../../../utils/imageUtils'
 import useProductionChainStore from '../../../store/useProductionChainStore'
+import useGeneticsStore from '../../../store/useGeneticsStore'
 import {
-    FileText, TrendingUp, Eye, EyeOff, Leaf, GitBranch, Database,
+    FileText, TrendingUp, Eye, EyeOff, Dna, GitBranch, Database,
     Palette, BarChart3, Flower2, Hash, FlaskConical, Cookie,
     ArrowRight, Clock
 } from 'lucide-react'
@@ -90,9 +91,9 @@ const QuickAccessCard = ({ icon: Icon, label, description, color, locked, onClic
 export default function OverviewTab({ isProducer, username, onNavigate }) {
     const [stats, setStats] = useState(null)
     const [recentReviews, setRecentReviews] = useState([])
-    const [cultivarsCount, setCultivarsCount] = useState(null)
     const [loading, setLoading] = useState(true)
     const { chains, fetchChains } = useProductionChainStore()
+    const { trees, fetchTrees } = useGeneticsStore()
 
     const fetchOverview = useCallback(async () => {
         try {
@@ -122,12 +123,9 @@ export default function OverviewTab({ isProducer, username, onNavigate }) {
     useEffect(() => {
         if (isProducer) {
             fetchChains()
-            fetch('/api/library/cultivars', { credentials: 'include' })
-                .then(r => r.ok ? r.json() : null)
-                .then(data => data && setCultivarsCount((data.cultivars || []).length))
-                .catch(() => {})
+            fetchTrees()
         }
-    }, [isProducer, fetchChains])
+    }, [isProducer, fetchChains, fetchTrees])
 
     if (loading) {
         return (
@@ -191,7 +189,7 @@ export default function OverviewTab({ isProducer, username, onNavigate }) {
                         <span className="px-1.5 py-0.5 text-[10px] bg-amber-500/20 text-amber-400 rounded">PRO</span>
                     </h3>
                     <div className="grid grid-cols-2 gap-4">
-                        <StatCard icon={Leaf} label="Cultivars enregistrés" value={cultivarsCount ?? '—'} color="emerald" />
+                        <StatCard icon={Dna} label="Arbres généalogiques" value={trees?.length ?? 0} color="emerald" />
                         <StatCard icon={GitBranch} label="Chaînes de production" value={chains?.length ?? 0} color="emerald" />
                     </div>
                 </div>
@@ -289,9 +287,9 @@ export default function OverviewTab({ isProducer, username, onNavigate }) {
                         <>
                             <QuickAccessCard
                                 index={3}
-                                icon={Leaf}
-                                label="Cultivars & Génétiques"
-                                description="Bibliothèque de cultivars et arbres généalogiques"
+                                icon={Dna}
+                                label="Arbres Généalogiques"
+                                description="Construisez et explorez vos lignées généalogiques (PhenoHunt)"
                                 color="emerald"
                                 locked
                                 onClick={() => onNavigate('cultivars')}

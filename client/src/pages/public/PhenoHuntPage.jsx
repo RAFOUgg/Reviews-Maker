@@ -8,7 +8,7 @@ import TreeFormModal from '../../components/genetics/TreeFormModal';
 import ConfirmModal from '../../components/shared/ConfirmModal';
 import { LiquidCard, LiquidButton, LiquidInput, LiquidSkeleton } from '@/components/ui/LiquidUI';
 import {
-    Plus, Settings, Home, Leaf, FolderOpen, ChevronDown, ChevronRight,
+    Plus, Settings, Home, Leaf, ChevronDown, ChevronRight,
     GitBranch, Menu, X, Search, Trash2, Pencil, FileText, Dna,
     Link2, Download, Image as ImageIcon, Sprout
 } from 'lucide-react';
@@ -29,33 +29,16 @@ export default function PhenoHuntPage() {
     const [searchParams] = useSearchParams();
     const store = useGeneticsStore();
 
-    const [cultivarLibrary, setCultivarLibrary] = useState([]);
     const [userReviews, setUserReviews] = useState([]);
-    const [expandedGroups, setExpandedGroups] = useState(new Set());
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [treeSearch, setTreeSearch] = useState('');
-    const [cultivarSearch, setCultivarSearch] = useState('');
     const [reviewsOpen, setReviewsOpen] = useState(true);
-    const [cultivarsOpen, setCultivarsOpen] = useState(true);
     const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null, treeName: '', flowerReviews: 0 });
     const [exporting, setExporting] = useState(false);
 
-    // Charger les arbres, la bibliothèque de cultivars et les reviews fleurs de l'utilisateur
+    // Charger les arbres et les reviews fleurs de l'utilisateur
     useEffect(() => {
         store.fetchTrees();
-
-        const loadCultivars = async () => {
-            try {
-                const response = await fetch('/api/library/cultivars', { credentials: 'include' });
-                if (response.ok) {
-                    const data = await response.json();
-                    setCultivarLibrary(Array.isArray(data) ? data : (data.cultivars || []));
-                }
-            } catch (error) {
-                console.error('Erreur lors du chargement des cultivars:', error);
-            }
-        };
-        loadCultivars();
 
         const loadReviews = async () => {
             try {
@@ -103,12 +86,6 @@ export default function PhenoHuntPage() {
         await store.deleteTree(treeId);
     };
 
-    const toggleGroup = (groupName) => {
-        const next = new Set(expandedGroups);
-        next.has(groupName) ? next.delete(groupName) : next.add(groupName);
-        setExpandedGroups(next);
-    };
-
     // Extrait la première photo d'une review (même logique que Genetiques.jsx)
     const getFirstReviewImage = (review) => {
         const imgs = review?.images;
@@ -134,21 +111,6 @@ export default function PhenoHuntPage() {
         e.dataTransfer.setData('application/json', JSON.stringify(dragPayload));
         e.dataTransfer.effectAllowed = 'copy';
     };
-
-    // Cultivars filtrés (recherche) puis groupés pour la sidebar
-    const groupedCultivars = useMemo(() => {
-        const q = cultivarSearch.trim().toLowerCase();
-        const filtered = q
-            ? cultivarLibrary.filter(c => c.name?.toLowerCase().includes(q) || c.breeder?.toLowerCase().includes(q))
-            : cultivarLibrary;
-        const groups = {};
-        filtered.forEach(c => {
-            const group = c.group || 'Non classé';
-            if (!groups[group]) groups[group] = [];
-            groups[group].push(c);
-        });
-        return groups;
-    }, [cultivarLibrary, cultivarSearch]);
 
     const filteredTrees = useMemo(() => {
         const q = treeSearch.trim().toLowerCase();
@@ -394,79 +356,6 @@ export default function PhenoHuntPage() {
                                                             <span className="truncate text-sm text-white/70">{review.holderName || review.name || 'Sans nom'}</span>
                                                         </div>
                                                     </LiquidCard>
-                                                ))
-                                            )}
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Bibliothèque de cultivars */}
-                                <div>
-                                    <button
-                                        onClick={() => setCultivarsOpen(o => !o)}
-                                        className="w-full flex items-center gap-2 p-4 hover:bg-white/5 transition-colors text-white/70 text-xs uppercase font-semibold tracking-wider"
-                                    >
-                                        {cultivarsOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
-                                        <Leaf className="w-3.5 h-3.5 text-emerald-400/70" />
-                                        Bibliothèque cultivars ({cultivarLibrary.length})
-                                    </button>
-                                    {cultivarsOpen && (
-                                        <div className="px-4 pb-4 space-y-3">
-                                            {cultivarLibrary.length > 3 && (
-                                                <LiquidInput
-                                                    icon={Search}
-                                                    placeholder="Rechercher un cultivar..."
-                                                    value={cultivarSearch}
-                                                    onChange={(e) => setCultivarSearch(e.target.value)}
-                                                    className="!py-1.5 !pl-9 !text-xs"
-                                                />
-                                            )}
-                                            {Object.keys(groupedCultivars).length === 0 ? (
-                                                <p className="text-xs text-white/30 italic">
-                                                    {cultivarLibrary.length === 0 ? 'Aucun cultivar disponible' : 'Aucun résultat'}
-                                                </p>
-                                            ) : (
-                                                Object.entries(groupedCultivars).map(([groupName, cultivars]) => (
-                                                    <div key={groupName} className="space-y-1">
-                                                        <button
-                                                            onClick={() => toggleGroup(groupName)}
-                                                            className="w-full flex items-center gap-2 p-1.5 rounded-lg hover:bg-white/5 transition-colors text-white/60 text-xs font-medium"
-                                                        >
-                                                            {expandedGroups.has(groupName)
-                                                                ? <ChevronDown className="w-3.5 h-3.5" />
-                                                                : <ChevronRight className="w-3.5 h-3.5" />
-                                                            }
-                                                            <FolderOpen className="w-3.5 h-3.5 text-emerald-400/60" />
-                                                            {groupName} ({cultivars.length})
-                                                        </button>
-                                                        {expandedGroups.has(groupName) && (
-                                                            <div className="ml-5 space-y-1">
-                                                                {cultivars.map(c => (
-                                                                    <LiquidCard
-                                                                        key={c.id}
-                                                                        glow="none"
-                                                                        padding="sm"
-                                                                        draggable
-                                                                        onDragStart={(e) => handleDragStart(e, { ...c, _source: 'library' })}
-                                                                        className="cursor-grab active:cursor-grabbing hover:border-white/20 transition-colors"
-                                                                    >
-                                                                        <div className="flex items-center gap-2">
-                                                                            {c.image ? (
-                                                                                <img
-                                                                                    src={getImageUrl(c.image)}
-                                                                                    alt=""
-                                                                                    className="w-4 h-4 rounded-full object-cover flex-shrink-0"
-                                                                                    onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
-                                                                                />
-                                                                            ) : null}
-                                                                            <Leaf className="w-3 h-3 text-emerald-400/50 flex-shrink-0" style={c.image ? { display: 'none' } : undefined} />
-                                                                            <span className="truncate text-sm text-white/70">{c.name}</span>
-                                                                        </div>
-                                                                    </LiquidCard>
-                                                                ))}
-                                                            </div>
-                                                        )}
-                                                    </div>
                                                 ))
                                             )}
                                         </div>

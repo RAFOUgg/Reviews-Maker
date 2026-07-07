@@ -3,7 +3,7 @@
  *
  * Onglets:
  * - Groupe principal: Vue d'ensemble, Mes Reviews, Templates Export (incl. Filigranes), Statistiques
- * - Groupe PRO (producteur uniquement): Cultivars & Génétiques, Chaîne de production, Données Récurrentes
+ * - Groupe PRO (producteur uniquement): Arbres Généalogiques, Chaîne de production, Données Récurrentes
  * - Filtres par type de produit (Fleur, Hash, Concentré, Comestible)
  * - Vue Grid/List/Timeline pour les reviews
  * - Partage templates par code unique
@@ -24,7 +24,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
     Library, LayoutDashboard, FileText, Leaf, Palette, Database, BarChart3,
     Plus, Download, Upload,
-    ChevronRight, Brain, ExternalLink, GitBranch
+    ChevronRight, Brain, ExternalLink, GitBranch, Dna
 } from 'lucide-react'
 
 // Import des onglets
@@ -77,12 +77,12 @@ const TABS = [
     },
     {
         id: 'cultivars',
-        label: 'Cultivars & Génétiques',
-        mobileLabel: 'Cultivars',
-        icon: Leaf,
+        label: 'Arbres Généalogiques',
+        mobileLabel: 'Génétiques',
+        icon: Dna,
         producerOnly: true,
         group: 'pro',
-        description: 'Bibliothèque de cultivars et arbres généalogiques'
+        description: 'Construisez et explorez vos lignées généalogiques (PhenoHunt)'
     },
     {
         id: 'production-chain',

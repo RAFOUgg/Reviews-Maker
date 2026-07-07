@@ -31,11 +31,16 @@ const AnnotationNode = ({ data }) => {
                 >
                     <X size={11} />
                 </button>
-                <div className="media-bubble-fill nodrag nopan">
+                {/* Pas de nodrag ici : contrairement au bouton de suppression, cette zone couvre
+                    la quasi-totalité de la bulle — la marquer nodrag revenait à rendre la bulle
+                    quasi impossible à déplacer (seule une mince bordure restait draggable). Le
+                    drag natif du navigateur sur l'image (ghost image au clic-glissé) est coupé
+                    via draggable={false} sur <img>, pas via la classe React Flow. */}
+                <div className="media-bubble-fill">
                     {data.mediaType === 'video' ? (
                         <video src={data.mediaUrl} autoPlay loop muted playsInline />
                     ) : (
-                        <img src={data.mediaUrl} alt={data.title || ''} />
+                        <img src={data.mediaUrl} alt={data.title || ''} draggable={false} />
                     )}
                 </div>
                 <span className="node-sex-badge" title={data.mediaType === 'video' ? 'Vidéo' : 'Photo'}>
