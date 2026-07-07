@@ -8,16 +8,10 @@
 
 import React, { useState } from 'react';
 import { LiquidModal, LiquidButton, LiquidInput, LiquidSelect, LiquidTextarea, LiquidCard, LiquidToggle } from '@/components/ui/LiquidUI';
-import CultivarAutocomplete from '../forms/helpers/CultivarAutocomplete';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import { PHENO_NODE_SECTIONS } from '../../config/phenoNodeFields';
 import { computeInbreedingCoefficient } from '../../utils/inbreedingCoefficient';
 import { Save, X, ChevronDown, Lock, Unlock } from 'lucide-react';
-
-// Cultivar.type (bibliothèque, minuscules) -> genetics.type de ce formulaire (capitalisé,
-// vocabulaire historique du nœud) — seules les 3 valeurs communes se transposent, "cbd" n'a pas
-// d'équivalent direct dans la liste du nœud (Indica/Sativa/Hybride/Ruderalis/Chanvre).
-const CULTIVAR_TYPE_TO_NODE_TYPE = { indica: 'Indica', sativa: 'Sativa', hybrid: 'Hybride' };
 
 const NodeFormModal = ({ isEdit, onClose }) => {
     const store = useGeneticsStore();
@@ -45,22 +39,6 @@ const NodeFormModal = ({ isEdit, onClose }) => {
 
     const handleColorChange = (color) => {
         store.updateNodeFormData({ color });
-    };
-
-    // Suggestion depuis la bibliothèque (CultivarAutocomplete) — pré-remplit les champs encore
-    // vides en confort de saisie, jamais ceux déjà renseignés : contrairement à un vrai lien
-    // cultivarId, c'est juste un point de départ, l'utilisateur reste libre de tout modifier.
-    const handleSelectCultivar = (cultivar) => {
-        const genetics = formData.genetics || {};
-        store.updateNodeFormData({
-            image: formData.image || cultivar.image || '',
-            genetics: {
-                ...genetics,
-                breeder: genetics.breeder || cultivar.breeder || '',
-                type: genetics.type || CULTIVAR_TYPE_TO_NODE_TYPE[cultivar.type] || genetics.type || '',
-                ratio: genetics.ratio ?? (cultivar.indicaRatio ?? genetics.ratio ?? '')
-            }
-        });
     };
 
     const toggleSection = (sectionId) => {
@@ -284,15 +262,12 @@ const NodeFormModal = ({ isEdit, onClose }) => {
                 )}
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                    {/* Cultivar Name — autocomplétion sur la bibliothèque : une suggestion
-                        pré-remplit breeder/type/ratio ci-dessous s'ils sont encore vides, mais
-                        n'importe quel nom reste saisissable librement (pas de lien strict). */}
+                    {/* Cultivar Name */}
                     <div className="space-y-2">
                         <label className="block text-sm font-medium text-white">Nom du cultivar *</label>
-                        <CultivarAutocomplete
+                        <LiquidInput
                             value={formData.cultivarName || ''}
-                            onChange={(v) => handleChange('cultivarName', v)}
-                            onSelectCultivar={handleSelectCultivar}
+                            onChange={(e) => handleChange('cultivarName', e.target.value)}
                             placeholder="ex: Gorilla Glue #4"
                             required
                             maxLength={200}

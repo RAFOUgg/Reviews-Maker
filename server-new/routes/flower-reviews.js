@@ -14,7 +14,6 @@ import {
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { requireAuth } from '../middleware/auth.js'
-import { resolveCultivarLink } from '../utils/cultivarSync.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -646,10 +645,6 @@ router.post('/',
             }
         }
 
-        // Résoudre le lien structurel vers la bibliothèque de Cultivars (trouve/crée par nom,
-        // ne copie plus aucun champ — cf. utils/cultivarSync.js).
-        validation.cleaned.cultivarId = await resolveCultivarLink(req.user.id, validation.cleaned.cultivars)
-
         // Traiter les images uploadées
         const imageFiles = req.files?.images || []
         const imageFilenames = imageFiles.map(file => file.filename)
@@ -921,11 +916,6 @@ router.put('/:id',
                 validation.cleaned.geneticTreeId = treeExists ? rawTreeId : null
             }
         }
-
-        // Résoudre le lien structurel vers la bibliothèque de Cultivars — même valeur "effective"
-        // (nouveau texte sinon celui déjà en base) que celle utilisée plus bas pour Review.cultivars,
-        // pour qu'un autosave partiel qui ne touche pas ce champ ne délie pas le cultivar existant.
-        validation.cleaned.cultivarId = await resolveCultivarLink(req.user.id, validation.cleaned.cultivars || review.cultivars)
 
         // SPRINT 1: Check section-level permissions
         // Basic genetics fields (breeder, geneticType, indica/sativa%) are available to all users.

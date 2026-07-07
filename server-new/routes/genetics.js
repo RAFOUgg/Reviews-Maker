@@ -185,7 +185,6 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
                 nodes: {
                     select: {
                         id: true,
-                        cultivarId: true,
                         cultivarName: true,
                         position: true,
                         color: true,
@@ -374,7 +373,6 @@ router.get("/trees/:id/nodes", optionalAuth, async (req, res) => {
             where: { treeId: req.params.id },
             select: {
                 id: true,
-                cultivarId: true,
                 cultivarName: true,
                 position: true,
                 color: true,
@@ -413,7 +411,6 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
         }
 
         const {
-            cultivarId,
             cultivarName,
             position = { x: 0, y: 0 },
             color = "#FF6B9D",
@@ -434,7 +431,6 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
         const node = await prisma.genNode.create({
             data: {
                 treeId: req.params.id,
-                cultivarId: cultivarId || null,
                 cultivarName: cultivarName.trim(),
                 position: JSON.stringify(position),
                 color: color || "#FF6B9D",

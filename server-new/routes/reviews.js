@@ -112,10 +112,8 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
             flowerData: {
                 select: {
                     farm: true,
-                    breeder: true,
                     labReportUrl: true,
-                    terpeneFileUrl: true,
-                    cultivarId: true
+                    terpeneFileUrl: true
                 }
             },
             // Hash/Concentrate/Edible stockent leurs photos et sourceLineage sur leur propre sous-table
@@ -137,11 +135,6 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
         // cultivars is on the base Review model; farm comes from flowerData if not on base
         cultivars: review.cultivars || null,
         farm: review.flowerData?.farm || review.farm || null,
-        breeder: review.flowerData?.breeder || null,
-        // Cultivar déjà lié en base (posé automatiquement par resolveCultivarLink à la sauvegarde
-        // de la review) — utilisé par CultivarsTab.jsx pour ne proposer l'import manuel que pour
-        // les reviews réellement orphelines.
-        cultivarId: review.flowerData?.cultivarId || null,
         // Remonter sourceLineage depuis la sous-table (hash/concentrate/edible)
         sourceLineage: (() => {
             const raw = review.hashData?.sourceLineage || review.concentrateData?.sourceLineage || review.edibleData?.sourceLineage

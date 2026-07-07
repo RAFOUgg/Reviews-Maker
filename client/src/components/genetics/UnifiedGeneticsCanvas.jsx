@@ -170,7 +170,6 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                 id: node.id,
                 data: {
                     label: node.cultivarName,
-                    cultivarId: node.cultivarId,
                     image: node.image,
                     color: node.color || '#FF6B9D',
                     genetics: genetics || {},
@@ -332,19 +331,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
         // ProductionChainCanvas.jsx).
         const position = screenToFlowPosition({ x: event.clientX, y: event.clientY });
 
-        // Check if this cultivar already exists as a node
-        const alreadyExists = store.nodes.some(n => n.cultivarId === cultivar.id);
-        if (alreadyExists) return;
-
-        // cultivarId est une vraie clé étrangère vers la table Cultivar — ne la renseigner que
-        // pour les éléments venant réellement de la bibliothèque de cultivars. Les cartes de
-        // reviews utilisateur partagent le même format de drag mais leur `id` est un id de
-        // Review, pas de Cultivar : l'envoyer comme cultivarId casse la contrainte FK (500)
-        const isLibraryCultivar = cultivar._source === 'library';
-
         // Add the node via the store (backend API)
         await store.addNode({
-            cultivarId: isLibraryCultivar ? cultivar.id : null,
             cultivarName: cultivar.name || cultivar.cultivarName || 'Sans nom',
             image: cultivar.image || null,
             genetics: cultivar.genetics || null,
@@ -352,9 +340,9 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             position,
             color: '#10b981',
             // Relie la review en retour à cet arbre (côté backend) quand le nœud provient d'une
-            // fiche technique et non de la bibliothèque — sinon la review reste "sans arbre" pour
-            // toujours et le modal de création d'arbre réapparaît à chaque réédition.
-            sourceReviewId: !isLibraryCultivar ? cultivar.reviewId : null,
+            // fiche technique — sinon la review reste "sans arbre" pour toujours et le modal de
+            // création d'arbre réapparaît à chaque réédition.
+            sourceReviewId: cultivar.reviewId || null,
         });
     }, [readOnly, store]);
 
