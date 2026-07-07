@@ -164,19 +164,30 @@ const validateChainNodeUpdate = (req, res, next) => {
     next()
 }
 
+// Une extrémité valide est soit un id de nœud, soit un id de bulle (annotation) — jamais les
+// deux, jamais aucun. L'existence réelle en base (dans la bonne chaîne) est vérifiée plus tard
+// par resolveChainEdgeEndpoint (route), pas ici : cette validation ne porte que sur la forme.
+const isValidEndpointPair = (nodeId, annotationId) => {
+    const hasNode = typeof nodeId === "string" && nodeId.trim().length > 0
+    const hasAnnotation = typeof annotationId === "string" && annotationId.trim().length > 0
+    return hasNode !== hasAnnotation // XOR : exactement un des deux
+}
+
 const validateChainEdgeCreation = (req, res, next) => {
-    const { sourceNodeId, targetNodeId, technique, notes, cellData, media } = req.body
+    const { sourceNodeId, sourceAnnotationId, targetNodeId, targetAnnotationId, technique, notes, cellData, media } = req.body
 
-    if (!sourceNodeId || typeof sourceNodeId !== "string" || sourceNodeId.trim().length === 0) {
-        return res.status(400).json({ error: "Source node ID is required" })
+    if (!isValidEndpointPair(sourceNodeId, sourceAnnotationId)) {
+        return res.status(400).json({ error: "Source endpoint must be exactly one of: a node ID or an annotation ID" })
     }
 
-    if (!targetNodeId || typeof targetNodeId !== "string" || targetNodeId.trim().length === 0) {
-        return res.status(400).json({ error: "Target node ID is required" })
+    if (!isValidEndpointPair(targetNodeId, targetAnnotationId)) {
+        return res.status(400).json({ error: "Target endpoint must be exactly one of: a node ID or an annotation ID" })
     }
 
-    if (sourceNodeId === targetNodeId) {
-        return res.status(400).json({ error: "A node cannot be related to itself" })
+    const sourceId = sourceNodeId || sourceAnnotationId
+    const targetId = targetNodeId || targetAnnotationId
+    if (sourceId === targetId) {
+        return res.status(400).json({ error: "An element cannot be related to itself" })
     }
 
     if (technique && (typeof technique !== "string" || technique.length > 200)) {
@@ -360,7 +371,21 @@ const validateChainAnnotationUpdate = (req, res, next) => {
 }
 
 const validateChainEdgeUpdate = (req, res, next) => {
-    const { technique, notes, cellData, media } = req.body
+    const { technique, notes, cellData, media, sourceNodeId, sourceAnnotationId, targetNodeId, targetAnnotationId } = req.body
+
+    // Reconnexion (glisser l'extrémité d'une liaison existante vers un autre nœud/bulle) : les
+    // deux champs d'un même côté ne sont envoyés que si CE côté change (cf. ProductionChainCanvas
+    // handleEdgeEndpointReconnect) — seul le côté fourni doit respecter l'exclusion mutuelle.
+    if (sourceNodeId !== undefined || sourceAnnotationId !== undefined) {
+        if (!isValidEndpointPair(sourceNodeId, sourceAnnotationId)) {
+            return res.status(400).json({ error: "Source endpoint must be exactly one of: a node ID or an annotation ID" })
+        }
+    }
+    if (targetNodeId !== undefined || targetAnnotationId !== undefined) {
+        if (!isValidEndpointPair(targetNodeId, targetAnnotationId)) {
+            return res.status(400).json({ error: "Target endpoint must be exactly one of: a node ID or an annotation ID" })
+        }
+    }
 
     if (technique !== undefined) {
         if (technique && (typeof technique !== "string" || technique.length > 200)) {

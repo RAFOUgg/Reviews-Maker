@@ -68,7 +68,14 @@ function extractPipelineFiles(review) {
                 const media = Array.isArray(entry?.media) ? entry.media : [];
                 media.forEach((item, itemIdx) => {
                     if (!item?.url) return;
-                    const url = getImageUrl(item.url);
+                    // Contrairement à review.images (filenames bruts nécessitant le préfixage
+                    // /images/ de getImageUrl), les médias de pipeline sont déjà des chemins
+                    // complets et directement utilisables : /media/xxx (upload frais, cf.
+                    // server-new/routes/media-upload.js, servi par server.js sur /media, PAS
+                    // /images) ou /images/xxx (photo choisie depuis "Ma bibliothèque", déjà résolue
+                    // par ReviewPhotoLibraryPicker). Repasser par getImageUrl() ici double-préfixait
+                    // les chemins /media/ en /images//media/xxx — URL cassée, vignette illisible.
+                    const url = item.url;
                     files.push({
                         key: `${review.id}-${dataKey}-${entry?.timestamp ?? entryIdx}-${itemIdx}`,
                         reviewId: review.id,

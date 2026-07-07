@@ -133,7 +133,10 @@
       "Bash(node --check server-new/routes/flower-reviews.js)",
       "Bash(node --check server-new/routes/genetics.js)",
       "Bash(node --check server-new/routes/reviews.js)",
-      "Bash(node --check server-new/server.js)"
+      "Bash(node --check server-new/server.js)",
+      "Bash(export DATABASE_URL=\"file:C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/15740c7f-7c90-45b7-b97c-629b7bde91eb/scratchpad/migration-test/reviews.sqlite\")",
+      "Bash(node --check server-new/utils/chainEdgeEndpoints.js)",
+      "Bash(node --check server-new/middleware/validateProductionChain.js)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",

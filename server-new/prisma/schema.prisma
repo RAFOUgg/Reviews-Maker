@@ -1631,11 +1631,22 @@ model ChainEdge {
   chainId String
   chain   ProductionChain @relation(fields: [chainId], references: [id], onDelete: Cascade)
 
-  sourceNodeId String
-  sourceNode   ChainNode @relation("chainSourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  // Extrémité source : soit un nœud produit (sourceNodeId), soit une bulle épinglée — média ou
+  // carte de données (sourceAnnotationId) — jamais les deux à la fois. Idem côté cible. Une vraie
+  // contrainte FK polymorphique n'existant pas nativement en Prisma/SQL, la mutuelle exclusion et
+  // l'existence de l'extrémité choisie sont validées côté route (cf. utils/chainEdgeEndpoints.js),
+  // pas en base. sourceNodeId/targetNodeId restent la forme la plus courante (liaison produit↔produit)
+  // donc nullable seulement pour permettre l'alternative bulle, pas parce qu'une liaison peut être
+  // sans extrémité.
+  sourceNodeId       String?
+  sourceNode         ChainNode?       @relation("chainSourceNode", fields: [sourceNodeId], references: [id], onDelete: Cascade)
+  sourceAnnotationId String?
+  sourceAnnotation   ChainAnnotation? @relation("edgeSourceAnnotation", fields: [sourceAnnotationId], references: [id], onDelete: Cascade)
 
-  targetNodeId String
-  targetNode   ChainNode @relation("chainTargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+  targetNodeId       String?
+  targetNode         ChainNode?       @relation("chainTargetNode", fields: [targetNodeId], references: [id], onDelete: Cascade)
+  targetAnnotationId String?
+  targetAnnotation   ChainAnnotation? @relation("edgeTargetAnnotation", fields: [targetAnnotationId], references: [id], onDelete: Cascade)
 
   technique String? // ex: "Extraction rosin 90µ", "Curing 30j", "Décarboxylation"
   date      DateTime?
@@ -1655,15 +1666,19 @@ model ChainEdge {
   // Même mécanisme que ChainNode.media — photos/vidéos illustrant cette transformation.
   media String @default("[]")
 
-  annotations ChainAnnotation[]
+  annotations ChainAnnotation[] @relation("chainAnnotationAnchorEdge")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([sourceNodeId, targetNodeId])
+  // Pas de @@unique ici : avec 4 colonnes nullables (2 par côté), une contrainte d'unicité SQL
+  // laisserait passer des doublons entre deux extrémités "bulle" (NULL est distinct de NULL en
+  // SQL). Le refus des doublons est vérifié côté route (cf. production-chains.js).
   @@index([chainId])
   @@index([sourceNodeId])
   @@index([targetNodeId])
+  @@index([sourceAnnotationId])
+  @@index([targetAnnotationId])
   @@map("chain_edges")
 }
 
@@ -1681,8 +1696,17 @@ model ChainAnnotation {
 
   nodeId String?
   node   ChainNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  // Nom de relation explicite requis dès qu'il existe plus d'une relation entre ChainAnnotation et
+  // ChainEdge — depuis l'ajout de sourceAnnotationId/targetAnnotationId ci-dessous (une bulle peut
+  // désormais être elle-même l'extrémité d'une liaison, en plus de son ancrage visuel existant ici).
   edgeId String?
-  edge   ChainEdge? @relation(fields: [edgeId], references: [id], onDelete: Cascade)
+  edge   ChainEdge? @relation("chainAnnotationAnchorEdge", fields: [edgeId], references: [id], onDelete: Cascade)
+
+  // Liaisons (ChainEdge) dont cette bulle est l'extrémité source/cible — distinct de `edge`
+  // ci-dessus, qui est l'ancrage visuel pointillé (carte épinglée à côté d'un nœud/liaison), pas
+  // une vraie transformation.
+  edgeSources ChainEdge[] @relation("edgeSourceAnnotation")
+  edgeTargets ChainEdge[] @relation("edgeTargetAnnotation")
 
   position String // JSON: {x: number, y: number}
 
