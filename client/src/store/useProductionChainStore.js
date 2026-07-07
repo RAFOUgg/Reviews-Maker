@@ -727,8 +727,8 @@ const useProductionChainStore = create(
                         id: crypto.randomUUID(),
                         url: f.url,
                         filename: null,
-                        type: f.type === 'video' ? 'video' : 'photo',
-                        caption: f.reviewLabel ? `depuis ${f.reviewLabel}` : '',
+                        type: f.type === 'video' ? 'video' : f.type === 'pdf' ? 'pdf' : 'photo',
+                        caption: [f.label, f.reviewLabel ? `depuis ${f.reviewLabel}` : ''].filter(Boolean).join(' — '),
                         uploadedAt: new Date().toISOString()
                     }));
                     return updateFn(targetId, { media: [...existing, ...stamped] });

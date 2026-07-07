@@ -65,6 +65,23 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
         e.dataTransfer.effectAllowed = 'copy';
     };
 
+    // Glisser une photo/vidéo de l'onglet "Fichiers" directement sur le fond du canvas — épingle
+    // une bulle média (même payload `kind: 'annotation'` que ProductionChainCanvas.handleDrop
+    // traite déjà pour les résumés pipeline glissés depuis le panneau latéral d'un nœud/liaison).
+    // Les certificats (PDF) restent clic-seul (ouvrir dans un nouvel onglet) : ce ne sont pas des
+    // médias affichables en bulle.
+    const handleFileDragStart = (e, file) => {
+        const payload = {
+            kind: 'annotation',
+            title: file.reviewLabel || '',
+            body: [],
+            mediaUrl: file.url,
+            mediaType: file.type
+        };
+        e.dataTransfer.setData('application/json', JSON.stringify(payload));
+        e.dataTransfer.effectAllowed = 'copy';
+    };
+
     const existingSet = new Set(existingReviewIds);
     const grouped = ALL_REVIEW_TYPES.map(type => ({
         type,
@@ -208,9 +225,15 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
                                 <button
                                     key={file.key}
                                     type="button"
+                                    draggable={file.type !== 'pdf'}
+                                    onDragStart={file.type !== 'pdf' ? (e) => handleFileDragStart(e, file) : undefined}
                                     onClick={() => window.open(file.url, '_blank', 'noopener')}
-                                    title={file.label ? `${file.label} — ${file.reviewLabel}` : file.reviewLabel}
-                                    className="relative aspect-square rounded-lg border border-white/10 bg-white/5 overflow-hidden hover:border-emerald-500/50 transition-colors"
+                                    title={
+                                        file.type !== 'pdf'
+                                            ? `Glisser sur le canvas pour épingler — ${file.label ? `${file.label} — ` : ''}${file.reviewLabel}`
+                                            : (file.label ? `${file.label} — ${file.reviewLabel}` : file.reviewLabel)
+                                    }
+                                    className={`relative aspect-square rounded-lg border border-white/10 bg-white/5 overflow-hidden hover:border-emerald-500/50 transition-colors ${file.type !== 'pdf' ? 'cursor-grab active:cursor-grabbing' : ''}`}
                                 >
                                     {file.type === 'pdf' ? (
                                         <div className="w-full h-full flex flex-col items-center justify-center gap-1 p-2">

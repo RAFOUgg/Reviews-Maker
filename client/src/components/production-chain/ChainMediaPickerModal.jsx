@@ -1,11 +1,13 @@
 /**
  * ChainMediaPickerModal Component
  *
- * Import en masse de photos/vidéos déjà présentes sur les fiches techniques des produits de
+ * Import en masse de photos/vidéos/PDF déjà présents sur les fiches techniques des produits de
  * CETTE chaîne (pas besoin de re-uploader un fichier déjà hébergé) vers un ou plusieurs
  * nœuds/liaisons. Même moule que ChainCellPickerModal.jsx (sélection de fichiers à cocher, puis
- * des cibles), mais pas de notion de pipeline : tous les fichiers de toutes les reviews du canvas
- * sont chargés d'un coup dans une seule grille.
+ * des cibles), mais pas de notion de pipeline à naviguer : tous les fichiers de toutes les reviews
+ * du canvas sont chargés d'un coup dans une seule grille — y compris les photos/vidéos attachées
+ * aux cellules de pipeline (culture/curing/séparation/extraction) et les PDF d'analyse
+ * (COA/terpènes), pas seulement les photos générales de la fiche (cf. reviewFilesAggregator.js).
  *
  * Ouvert via store.openMediaPicker(targetType, targetIds).
  */
@@ -14,7 +16,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import { fetchReviewFilesFor } from '../../utils/reviewFilesAggregator';
-import { Download, CheckSquare, Square, X, Loader2, Film, Image as ImageIcon } from 'lucide-react';
+import { Download, CheckSquare, Square, X, Loader2, Film, Image as ImageIcon, FileText } from 'lucide-react';
 
 const ChainMediaPickerModal = () => {
     const store = useProductionChainStore();
@@ -50,7 +52,7 @@ const ChainMediaPickerModal = () => {
         let cancelled = false;
         setLoading(true);
         fetchReviewFilesFor(chainReviewIds)
-            .then(all => { if (!cancelled) setFiles(all.filter(f => f.type !== 'pdf')); })
+            .then(all => { if (!cancelled) setFiles(all); })
             .catch(err => !cancelled && setError(err.message || 'Erreur de chargement'))
             .finally(() => !cancelled && setLoading(false));
         return () => { cancelled = true };
@@ -181,11 +183,18 @@ const ChainMediaPickerModal = () => {
                                     >
                                         {file.type === 'video' ? (
                                             <video src={file.url} className="w-full h-full object-cover" muted />
+                                        ) : file.type === 'pdf' ? (
+                                            <div className="w-full h-full flex flex-col items-center justify-center gap-1 bg-white/5 px-1">
+                                                <FileText size={22} className="text-red-400" />
+                                                {file.label && (
+                                                    <span className="text-[9px] text-white/50 text-center leading-tight line-clamp-2">{file.label}</span>
+                                                )}
+                                            </div>
                                         ) : (
                                             <img src={file.url} alt={file.reviewLabel} className="w-full h-full object-cover" />
                                         )}
                                         <span className="absolute top-1 left-1 p-1 rounded bg-black/60 text-white/80">
-                                            {file.type === 'video' ? <Film size={11} /> : <ImageIcon size={11} />}
+                                            {file.type === 'video' ? <Film size={11} /> : file.type === 'pdf' ? <FileText size={11} /> : <ImageIcon size={11} />}
                                         </span>
                                         <span className="absolute inset-x-0 bottom-0 bg-black/60 text-white/80 text-[10px] px-1 py-0.5 truncate text-left">
                                             {file.reviewLabel}

@@ -127,14 +127,18 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     // centrée sur le viewport actuel, même geste que ProductionChainCanvas.jsx.
     const handleImportMediaBubble = useCallback(async ({ url, type }) => {
         const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-        await store.addAnnotation({
+        const result = await store.addAnnotation({
             title: type === 'video' ? '🎬 Vidéo' : '📷 Photo',
             body: [],
             mediaUrl: url,
             mediaType: type,
             position: center
         });
+        // Ne fermer la modale que si la bulle a réellement été créée — sinon (erreur serveur) la
+        // modale se refermait silencieusement sans que la photo n'apparaisse jamais sur l'arbre.
+        if (result?.error) return result;
         setShowMediaBubbleImport(false);
+        return result;
     }, [store, screenToFlowPosition]);
 
     // Synchroniser les nœuds et arêtes du store vers React Flow

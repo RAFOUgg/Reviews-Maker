@@ -94,7 +94,6 @@ model User {
   producerProfile   ProducerProfile?
   reportsSubmitted  Report[]              @relation("Reporter")
   reportsReceived   Report[]              @relation("ReportedUser")
-  cultivars         Cultivar[]
   geneticTrees      GeneticTree[]         @relation("userGeneticTrees")
   productionChains  ProductionChain[]     @relation("userProductionChains")
   savedTemplates    SavedTemplate[]
@@ -529,85 +528,6 @@ model AuditLog {
 // SYSTÈME REVIEWS FLEURS - Architecture MVP
 // ============================================
 
-// Bibliothèque de cultivars de l'utilisateur
-model Cultivar {
-  id     String @id @default(uuid())
-  userId String // Propriétaire du cultivar
-  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  // Informations cultivar
-  name        String // Nom du cultivar (ex: "Gorilla Glue #4")
-  breeder     String? // Breeder de la graine
-  type        String? // "Indica", "Sativa", "Hybride" — classification déclarative/commerciale
-  indicaRatio Int? // 0-100 (0 = Sativa pur, 100 = Indica pur) — quantifié, distinct de `type`
-
-  // Génétique
-  parentage String? // JSON: ["Parent1", "Parent2"] ou texte libre
-  phenotype String? // Code phénotype (ex: "Pheno #3", "Clone A")
-
-  // Statut de génération/breeding — vocabulaire standard du secteur (F1/F2/S1/BX/IBL), distinct
-  // de `type` (Indica/Sativa, classification commerciale) : "landrace"|"p"|"f1"|"f2"|"f3plus"|
-  // "s1"|"s2plus"|"bx1"|"bx2plus"|"ibl". Nullable — beaucoup de cultivars catalogués n'ont pas
-  // cette information (graine achetée sans généalogie connue).
-  generationStatus   String?
-  // Classification chimique (chémotype) — considérée plus rigoureuse scientifiquement que
-  // Indica/Sativa (cf. tooltip déjà existant dans CultivarsTab.jsx) : "thc-dominant"|"balanced"|
-  // "cbd-dominant"|"high-cbg". Complète `type`, ne le remplace pas (les deux classifications
-  // coexistent dans l'usage réel du secteur).
-  chemotype          String?
-  // Variabilité phénotypique de la lignée — "unstable" (F2, forte ségrégation, recherche de
-  // phénotypes), "segregating" (F3-BX précoces, en cours de stabilisation), "stable" (IBL,
-  // reproduit vrai génération après génération).
-  phenotypeStability String?
-  // Objectif de sélection déclaré par l'utilisateur (vigueur, résistance, profil terpénique,
-  // rendement...) — notes de breeder en texte libre, distinct de `notes` (observations générales).
-  breedingGoal       String?
-
-  // Cannabinoïdes — bornés 0-100, avec provenance (annoncé vs mesuré en labo)
-  thcMin                   Float?
-  thcMax                   Float?
-  thcSource                String? // "breeder_claim" | "lab_tested"
-  cbdMin                   Float?
-  cbdMax                   Float?
-  cbdSource                String? // "breeder_claim" | "lab_tested"
-  labReportUrl             String? // Lien vers le certificat d'analyse (COA), même convention que FlowerReview.labReportUrl
-  // Métadonnées structurées du COA — traçabilité scientifique au-delà du simple lien de fichier
-  // (cf. DOCUMENTATION/DATA_REFERENCE/09_LABORATOIRES_MATERIEL.md §6 / 11_TRACABILITE §3 item 7)
-  labName                  String? // Nom du laboratoire ayant réalisé l'analyse
-  labMethod                String? // Méthode analytique déclarée: "hplc"|"gc-ms"|"lc-ms-ms"|"nirs"|"rmn"|"icp-ms"|"other"
-  labAccredited            Boolean? // Laboratoire accrédité (déclaratif)
-  labAccreditationStandard String? // Norme d'accréditation déclarée (ex: "ISO/IEC 17025")
-  labAnalysisDate          DateTime? // Date de l'analyse figurant sur le COA
-
-  // Culture
-  floweringMinWeeks Int?
-  floweringMaxWeeks Int?
-  yieldValue        Float? // Valeur numérique du rendement
-  yieldUnit         String? // "g_m2" | "g_plant" — jamais converti automatiquement entre les deux
-
-  // Étiquettes libres
-  tags String? // JSON: string[]
-
-  // Photo (URL) — reprise sur le GenNode au moment du glisser-déposer sur l'arbre
-  image String?
-
-  // Notes personnelles
-  notes String? // Notes privées de l'utilisateur (texte libre uniquement — ne plus y stocker de JSON structuré)
-
-  // Relations
-  genNodes      GenNode[] // Nœuds dans les arbres généalogiques
-  flowerReviews FlowerReview[] @relation("flowerReviewCultivar") // Reviews Fleurs liées par nom (cf. FlowerReview.cultivarId)
-
-  // Timestamps
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  @@unique([userId, name]) // Un cultivar unique par nom et utilisateur
-  @@index([userId])
-  @@index([name])
-  @@map("cultivars")
-}
-
 // Étape d'un pipeline (culture, curing, etc.)
 model PipelineStep {
   id           String @id @default(uuid())
@@ -704,13 +624,6 @@ model FlowerReview {
   phenotypeCode String? // Code phénotype (ex: "Pheno #2")
   geneticTreeId String? // FK → GeneticTree (arbre généalogique associé)
   geneticTree   GeneticTree? @relation("flowerReviewTree", fields: [geneticTreeId], references: [id], onDelete: SetNull)
-
-  // Lien structurel vers la bibliothèque Cultivars — résolu par nom depuis `cultivars` (texte)
-  // au moment du save (cf. server-new/utils/cultivarSync.js resolveCultivarLink). Permet à la
-  // bibliothèque d'afficher les valeurs de cette review comme référence en lecture plutôt que
-  // de les faire retaper à la main.
-  cultivarId String?
-  cultivar   Cultivar? @relation("flowerReviewCultivar", fields: [cultivarId], references: [id], onDelete: SetNull)
 
   // ===== PIPELINE CULTURE (Producteurs) =====
   // Stocké comme JSON dans une table séparée PipelineStep
@@ -840,7 +753,6 @@ model FlowerReview {
   @@index([nomCommercial])
   @@index([variety])
   @@index([geneticTreeId])
-  @@index([cultivarId])
   @@map("flower_reviews")
 }
 
@@ -1566,8 +1478,6 @@ model GenNode {
   tree   GeneticTree @relation(fields: [treeId], references: [id], onDelete: Cascade)
 
   // Données du cultivar
-  cultivarId   String? // Référence optionnelle à un Cultivar existant
-  cultivar     Cultivar? @relation(fields: [cultivarId], references: [id], onDelete: SetNull)
   cultivarName String // Nom du cultivar (copie pour performance)
 
   // Visualisation
@@ -1599,7 +1509,6 @@ model GenNode {
   updatedAt DateTime @updatedAt
 
   @@index([treeId])
-  @@index([cultivarId])
   @@map("gen_nodes")
 }
 

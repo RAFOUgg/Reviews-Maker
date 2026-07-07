@@ -349,7 +349,11 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             if (target.kind === 'annotation') {
                 const existing = store.annotations.find(a => a.id === target.id);
                 if (existing) {
-                    await store.updateAnnotation(existing.id, { body: [...(existing.body || []), ...(product.body || [])] });
+                    // Glisser une photo/vidéo (onglet Fichiers) directement sur une bulle média déjà
+                    // épinglée la remplace ; une note texte (résumé pipeline) continue de s'accumuler.
+                    await store.updateAnnotation(existing.id, product.mediaUrl
+                        ? { mediaUrl: product.mediaUrl, mediaType: product.mediaType }
+                        : { body: [...(existing.body || []), ...(product.body || [])] });
                 }
                 return;
             }
@@ -357,6 +361,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 title: product.title,
                 body: product.body || [],
                 sourceLabel: product.sourceLabel || null,
+                mediaUrl: product.mediaUrl || null,
+                mediaType: product.mediaType || null,
                 nodeId: target.kind === 'node' ? target.id : null,
                 edgeId: target.kind === 'edge' ? target.id : null,
                 position
@@ -712,14 +718,18 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     // "individu inconnu" de UnifiedGeneticsCanvas.
     const handleImportMediaBubble = useCallback(async ({ url, type }) => {
         const center = screenToFlowPosition({ x: window.innerWidth / 2, y: window.innerHeight / 2 });
-        await store.addAnnotation({
+        const result = await store.addAnnotation({
             title: type === 'video' ? '🎬 Vidéo' : '📷 Photo',
             body: [],
             mediaUrl: url,
             mediaType: type,
             position: center
         });
+        // Ne fermer la modale que si la bulle a réellement été créée — sinon (erreur serveur) la
+        // modale se refermait silencieusement sans que la photo n'apparaisse jamais sur le canvas.
+        if (result?.error) return result;
         setShowMediaBubbleImport(false);
+        return result;
     }, [store, screenToFlowPosition]);
 
     // Sélection multiple (ctrl+clic / shift+clic) des cellules attachées du panneau — remise à

@@ -10,7 +10,7 @@
 
 import React, { useState, useRef } from 'react';
 import { LiquidModal, LiquidButton, LiquidInput } from '@/components/ui/LiquidUI';
-import { Image as ImageIcon, Film, Upload, X, Trash2, Loader2, Camera, FolderOpen, Library } from 'lucide-react';
+import { Image as ImageIcon, Film, FileText, Upload, X, Trash2, Loader2, Camera, FolderOpen, Library } from 'lucide-react';
 import ReviewPhotoLibraryPicker from './ReviewPhotoLibraryPicker';
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 Mo
@@ -160,11 +160,22 @@ export const MediaGallery = ({ media = [], onChange, compact = false }) => {
                             <div className="aspect-video bg-black/30 flex items-center justify-center relative">
                                 {item.type === 'video' ? (
                                     <video src={item.url} controls className="w-full h-full object-contain" />
+                                ) : item.type === 'pdf' ? (
+                                    <a
+                                        href={item.url}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="flex flex-col items-center justify-center gap-1 w-full h-full text-white/70 hover:text-white"
+                                        title="Ouvrir le PDF"
+                                    >
+                                        <FileText size={28} className="text-red-400" />
+                                        <span className="text-[10px]">Ouvrir le PDF</span>
+                                    </a>
                                 ) : (
                                     <img src={item.url} alt={item.caption || ''} className="w-full h-full object-cover" />
                                 )}
                                 <span className="absolute top-1 left-1 p-1 rounded bg-black/50 text-white/80">
-                                    {item.type === 'video' ? <Film size={11} /> : <ImageIcon size={11} />}
+                                    {item.type === 'video' ? <Film size={11} /> : item.type === 'pdf' ? <FileText size={11} /> : <ImageIcon size={11} />}
                                 </span>
                                 <button
                                     type="button"

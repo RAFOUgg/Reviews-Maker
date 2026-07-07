@@ -48,11 +48,27 @@ const MediaBubbleImportModal = ({ onImport, onClose }) => {
                 throw new Error(body.error || 'Échec de l\'envoi');
             }
             const uploaded = await res.json();
-            onImport({ url: uploaded.url, type: uploaded.type });
+            // onImport (fourni par le canvas) crée réellement la bulle côté serveur — attendre son
+            // retour et afficher l'erreur ici plutôt que de fermer la modale à l'aveugle : sans ce
+            // garde-fou, un échec de création (ex: session expirée) refermait silencieusement la
+            // modale sans que la photo n'apparaisse jamais sur le canvas.
+            const result = await onImport({ url: uploaded.url, type: uploaded.type });
+            if (result?.error) {
+                setError(result.error);
+            }
         } catch (err) {
             setError(err.message || 'Échec de l\'envoi');
         } finally {
             setUploading(false);
+        }
+    };
+
+    const handleLibrarySelect = async (url) => {
+        setShowLibraryPicker(false);
+        setError(null);
+        const result = await onImport({ url, type: 'photo' });
+        if (result?.error) {
+            setError(result.error);
         }
     };
 
@@ -124,7 +140,7 @@ const MediaBubbleImportModal = ({ onImport, onClose }) => {
 
             {showLibraryPicker && (
                 <ReviewPhotoLibraryPicker
-                    onSelect={(url) => onImport({ url, type: 'photo' })}
+                    onSelect={handleLibrarySelect}
                     onClose={() => setShowLibraryPicker(false)}
                 />
             )}

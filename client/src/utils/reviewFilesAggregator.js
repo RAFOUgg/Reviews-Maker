@@ -14,6 +14,77 @@ function isVideoUrl(url) {
     return /\.(mp4|webm|mov|avi|m4v)(\?|$)/i.test(url || '');
 }
 
+function safeParseArray(value) {
+    if (!value) return [];
+    if (Array.isArray(value)) return value;
+    if (typeof value !== 'string') return [];
+    try {
+        const parsed = JSON.parse(value);
+        return Array.isArray(parsed) ? parsed : [];
+    } catch {
+        return [];
+    }
+}
+
+// Sous-table (flowerData/hashData/concentrateData) → trames à cellules qui peuvent porter des
+// médias attachés (cf. PipelineCellMediaPreview.jsx / MediaAttachmentModal.jsx), mêmes clés que
+// REVIEW_TYPE_PIPELINES dans chainCellPipelines.js. L'edible n'a pas de timeline (recette only),
+// donc pas d'entrée ici.
+const PIPELINE_MEDIA_SOURCES = {
+    flowerData: [
+        { dataKey: 'cultureTimelineData', label: 'Culture' },
+        { dataKey: 'curingTimelineData', label: 'Curing' }
+    ],
+    hashData: [
+        { dataKey: 'separationTimelineData', label: 'Séparation' },
+        { dataKey: 'curingTimelineData', label: 'Curing' }
+    ],
+    concentrateData: [
+        { dataKey: 'extractionTimelineData', label: 'Extraction' },
+        { dataKey: 'curingTimelineData', label: 'Curing' }
+    ]
+};
+
+/**
+ * Médias attachés aux cellules de pipeline (culture/curing/séparation/extraction) d'une review —
+ * distinct de `review.images` (photos générales de la fiche). Chaque entrée de timeline porte son
+ * propre tableau `media` (cf. entry.media dans PipelineDragDropView.jsx handleDataChange), à plat,
+ * pas nichée sous `entry.data`.
+ * @param {object} review - Review avec ses sous-tables incluses (flowerData/hashData/concentrateData),
+ * comme retourné par GET /api/reviews/:id.
+ */
+function extractPipelineFiles(review) {
+    const label = review.cultivars || review.name || review.holderName || 'Sans nom';
+    const reviewType = review.type || review.reviewType;
+    const files = [];
+
+    Object.entries(PIPELINE_MEDIA_SOURCES).forEach(([subTableKey, sources]) => {
+        const subTable = review[subTableKey];
+        if (!subTable) return;
+
+        sources.forEach(({ dataKey, label: pipelineLabel }) => {
+            const entries = safeParseArray(subTable[dataKey]);
+            entries.forEach((entry, entryIdx) => {
+                const media = Array.isArray(entry?.media) ? entry.media : [];
+                media.forEach((item, itemIdx) => {
+                    if (!item?.url) return;
+                    const url = getImageUrl(item.url);
+                    files.push({
+                        key: `${review.id}-${dataKey}-${entry?.timestamp ?? entryIdx}-${itemIdx}`,
+                        reviewId: review.id,
+                        reviewType,
+                        reviewLabel: `${label} — ${pipelineLabel}`,
+                        url,
+                        type: item.type === 'video' || isVideoUrl(url) ? 'video' : 'photo'
+                    });
+                });
+            });
+        });
+    });
+
+    return files;
+}
+
 /**
  * @param {object} review - Review déjà flattenée par le backend (formatReview) : `images` déjà
  * fusionné depuis la bonne sous-table, `labReportUrl`/`terpeneFileUrl` remontés à la racine.
@@ -62,6 +133,8 @@ export function extractReviewFiles(review) {
             label: 'Certificat terpènes'
         });
     }
+
+    files.push(...extractPipelineFiles(review));
 
     return files;
 }

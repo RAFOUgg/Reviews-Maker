@@ -1,0 +1,150 @@
+-- DropIndex
+DROP INDEX "cultivars_userId_name_key";
+
+-- DropIndex
+DROP INDEX "cultivars_name_idx";
+
+-- DropIndex
+DROP INDEX "cultivars_userId_idx";
+
+-- DropTable
+PRAGMA foreign_keys=off;
+DROP TABLE "cultivars";
+PRAGMA foreign_keys=on;
+
+-- RedefineTables
+PRAGMA defer_foreign_keys=ON;
+PRAGMA foreign_keys=OFF;
+CREATE TABLE "new_flower_reviews" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "reviewId" TEXT NOT NULL,
+    "nomCommercial" TEXT NOT NULL,
+    "farm" TEXT,
+    "varietyType" TEXT,
+    "breeder" TEXT,
+    "variety" TEXT,
+    "geneticType" TEXT,
+    "indicaPercent" INTEGER,
+    "sativaPercent" INTEGER,
+    "parentage" TEXT,
+    "phenotypeCode" TEXT,
+    "geneticTreeId" TEXT,
+    "culturePipelineId" TEXT,
+    "culturePipelineGithubId" TEXT,
+    "cultureTimelineConfig" TEXT,
+    "cultureTimelineData" TEXT,
+    "cultureMode" TEXT,
+    "cultureSpaceType" TEXT,
+    "cultureSubstrat" TEXT,
+    "cultureStartDate" DATETIME,
+    "cultureEndDate" DATETIME,
+    "cultureDuration" INTEGER,
+    "cultureSeason" TEXT,
+    "trichomesTranslucides" REAL,
+    "trichomesLaiteux" REAL,
+    "trichomesAmbres" REAL,
+    "modeRecolte" TEXT,
+    "poidsBrut" REAL,
+    "poidsNet" REAL,
+    "thcPercent" REAL,
+    "thcaPercent" REAL,
+    "cbdPercent" REAL,
+    "cbdaPercent" REAL,
+    "cbgPercent" REAL,
+    "cbcPercent" REAL,
+    "cbnPercent" REAL,
+    "thcvPercent" REAL,
+    "otherCannabinoids" TEXT,
+    "terpeneProfile" TEXT,
+    "labReportUrl" TEXT,
+    "terpeneFileUrl" TEXT,
+    "labName" TEXT,
+    "labMethod" TEXT,
+    "labAccredited" BOOLEAN,
+    "labAccreditationStandard" TEXT,
+    "labAnalysisDate" DATETIME,
+    "consumptionMethod" TEXT,
+    "dosage" REAL,
+    "dosageUnit" TEXT,
+    "effectDuration" TEXT,
+    "effectProfiles" TEXT,
+    "sideEffects" TEXT,
+    "effectOnset" TEXT,
+    "effectLength" TEXT,
+    "preferredUse" TEXT,
+    "couleurScore" REAL,
+    "couleurNuancier" TEXT,
+    "densiteVisuelle" REAL,
+    "trichomesScore" REAL,
+    "pistilsScore" REAL,
+    "manucureScore" REAL,
+    "moisissureScore" REAL,
+    "grainesScore" REAL,
+    "notesOdeursDominantes" TEXT,
+    "notesOdeursSecondaires" TEXT,
+    "aromesInhalation" TEXT,
+    "saveurBouche" TEXT,
+    "intensiteAromeScore" REAL,
+    "complexiteAromeScore" REAL,
+    "fideliteAromeScore" REAL,
+    "dureteScore" REAL,
+    "densiteTactileScore" REAL,
+    "elasticiteScore" REAL,
+    "collantScore" REAL,
+    "malleabiliteScore" REAL,
+    "friabiliteScore" REAL,
+    "viscositeScore" REAL,
+    "meltingScore" REAL,
+    "residuScore" REAL,
+    "intensiteGoutScore" REAL,
+    "agressiviteScore" REAL,
+    "dryPuffNotes" TEXT,
+    "inhalationNotes" TEXT,
+    "expirationNotes" TEXT,
+    "monteeScore" REAL,
+    "intensiteEffetScore" REAL,
+    "effetsChoisis" TEXT,
+    "effetsFiltre" TEXT,
+    "curingPipelineId" TEXT,
+    "curingPipelineGithubId" TEXT,
+    "curingTimelineConfig" TEXT,
+    "curingTimelineData" TEXT,
+    "curingTemperature" REAL,
+    "curingHumidity" REAL,
+    "curingDuration" INTEGER,
+    "curingType" TEXT,
+    "curingInterval" TEXT,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "flower_reviews_reviewId_fkey" FOREIGN KEY ("reviewId") REFERENCES "reviews" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "flower_reviews_geneticTreeId_fkey" FOREIGN KEY ("geneticTreeId") REFERENCES "genetic_trees" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+);
+INSERT INTO "new_flower_reviews" ("agressiviteScore", "aromesInhalation", "breeder", "cbcPercent", "cbdPercent", "cbdaPercent", "cbgPercent", "cbnPercent", "collantScore", "complexiteAromeScore", "consumptionMethod", "couleurNuancier", "couleurScore", "createdAt", "cultureDuration", "cultureEndDate", "cultureMode", "culturePipelineGithubId", "culturePipelineId", "cultureSeason", "cultureSpaceType", "cultureStartDate", "cultureSubstrat", "cultureTimelineConfig", "cultureTimelineData", "curingDuration", "curingHumidity", "curingInterval", "curingPipelineGithubId", "curingPipelineId", "curingTemperature", "curingTimelineConfig", "curingTimelineData", "curingType", "densiteTactileScore", "densiteVisuelle", "dosage", "dosageUnit", "dryPuffNotes", "dureteScore", "effectDuration", "effectLength", "effectOnset", "effectProfiles", "effetsChoisis", "effetsFiltre", "elasticiteScore", "expirationNotes", "farm", "fideliteAromeScore", "friabiliteScore", "geneticTreeId", "geneticType", "grainesScore", "id", "indicaPercent", "inhalationNotes", "intensiteAromeScore", "intensiteEffetScore", "intensiteGoutScore", "labAccreditationStandard", "labAccredited", "labAnalysisDate", "labMethod", "labName", "labReportUrl", "malleabiliteScore", "manucureScore", "meltingScore", "modeRecolte", "moisissureScore", "monteeScore", "nomCommercial", "notesOdeursDominantes", "notesOdeursSecondaires", "otherCannabinoids", "parentage", "phenotypeCode", "pistilsScore", "poidsBrut", "poidsNet", "preferredUse", "residuScore", "reviewId", "sativaPercent", "saveurBouche", "sideEffects", "terpeneFileUrl", "terpeneProfile", "thcPercent", "thcaPercent", "thcvPercent", "trichomesAmbres", "trichomesLaiteux", "trichomesScore", "trichomesTranslucides", "updatedAt", "variety", "varietyType", "viscositeScore") SELECT "agressiviteScore", "aromesInhalation", "breeder", "cbcPercent", "cbdPercent", "cbdaPercent", "cbgPercent", "cbnPercent", "collantScore", "complexiteAromeScore", "consumptionMethod", "couleurNuancier", "couleurScore", "createdAt", "cultureDuration", "cultureEndDate", "cultureMode", "culturePipelineGithubId", "culturePipelineId", "cultureSeason", "cultureSpaceType", "cultureStartDate", "cultureSubstrat", "cultureTimelineConfig", "cultureTimelineData", "curingDuration", "curingHumidity", "curingInterval", "curingPipelineGithubId", "curingPipelineId", "curingTemperature", "curingTimelineConfig", "curingTimelineData", "curingType", "densiteTactileScore", "densiteVisuelle", "dosage", "dosageUnit", "dryPuffNotes", "dureteScore", "effectDuration", "effectLength", "effectOnset", "effectProfiles", "effetsChoisis", "effetsFiltre", "elasticiteScore", "expirationNotes", "farm", "fideliteAromeScore", "friabiliteScore", "geneticTreeId", "geneticType", "grainesScore", "id", "indicaPercent", "inhalationNotes", "intensiteAromeScore", "intensiteEffetScore", "intensiteGoutScore", "labAccreditationStandard", "labAccredited", "labAnalysisDate", "labMethod", "labName", "labReportUrl", "malleabiliteScore", "manucureScore", "meltingScore", "modeRecolte", "moisissureScore", "monteeScore", "nomCommercial", "notesOdeursDominantes", "notesOdeursSecondaires", "otherCannabinoids", "parentage", "phenotypeCode", "pistilsScore", "poidsBrut", "poidsNet", "preferredUse", "residuScore", "reviewId", "sativaPercent", "saveurBouche", "sideEffects", "terpeneFileUrl", "terpeneProfile", "thcPercent", "thcaPercent", "thcvPercent", "trichomesAmbres", "trichomesLaiteux", "trichomesScore", "trichomesTranslucides", "updatedAt", "variety", "varietyType", "viscositeScore" FROM "flower_reviews";
+DROP TABLE "flower_reviews";
+ALTER TABLE "new_flower_reviews" RENAME TO "flower_reviews";
+CREATE UNIQUE INDEX "flower_reviews_reviewId_key" ON "flower_reviews"("reviewId");
+CREATE INDEX "flower_reviews_reviewId_idx" ON "flower_reviews"("reviewId");
+CREATE INDEX "flower_reviews_nomCommercial_idx" ON "flower_reviews"("nomCommercial");
+CREATE INDEX "flower_reviews_variety_idx" ON "flower_reviews"("variety");
+CREATE INDEX "flower_reviews_geneticTreeId_idx" ON "flower_reviews"("geneticTreeId");
+CREATE TABLE "new_gen_nodes" (
+    "id" TEXT NOT NULL PRIMARY KEY,
+    "treeId" TEXT NOT NULL,
+    "cultivarName" TEXT NOT NULL,
+    "position" TEXT NOT NULL,
+    "color" TEXT NOT NULL DEFAULT '#FF6B9D',
+    "image" TEXT,
+    "genetics" TEXT,
+    "notes" TEXT,
+    "sourceReviewId" TEXT,
+    "media" TEXT NOT NULL DEFAULT '[]',
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" DATETIME NOT NULL,
+    CONSTRAINT "gen_nodes_treeId_fkey" FOREIGN KEY ("treeId") REFERENCES "genetic_trees" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+);
+INSERT INTO "new_gen_nodes" ("color", "createdAt", "cultivarName", "genetics", "id", "image", "media", "notes", "position", "sourceReviewId", "treeId", "updatedAt") SELECT "color", "createdAt", "cultivarName", "genetics", "id", "image", "media", "notes", "position", "sourceReviewId", "treeId", "updatedAt" FROM "gen_nodes";
+DROP TABLE "gen_nodes";
+ALTER TABLE "new_gen_nodes" RENAME TO "gen_nodes";
+CREATE INDEX "gen_nodes_treeId_idx" ON "gen_nodes"("treeId");
+PRAGMA foreign_keys=ON;
+PRAGMA defer_foreign_keys=OFF;
