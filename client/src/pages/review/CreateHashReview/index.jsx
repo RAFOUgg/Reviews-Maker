@@ -10,7 +10,7 @@ import WizardFlow from '../../../components/wizard/WizardFlow'
 import { getHashWizardQuestions } from '../../../components/wizard/schemas/hashWizardQuestions'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-import { flattenHashFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
+import { flattenHashFormData, createFormDataFromFlat, diffFlatData, hasAttachedPipelineMedia } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -127,8 +127,11 @@ export default function CreateHashReview() {
             // Cf. CreateFlowerReview/index.jsx : ne jamais auto-créer silencieusement une toute
             // nouvelle review sans nom (sinon un "Brouillon" fantôme apparaît en bibliothèque dès
             // qu'une autre section est touchée avant le nom) — un save explicite ou l'update d'une
-            // review déjà créée passent toujours.
-            if (!id && silent && !flatData.nomCommercial?.trim()) {
+            // review déjà créée passent toujours. Exception : si une photo a déjà été attachée à
+            // une cellule de pipeline (ex: "Pipeline Séparation" avant même de remplir le nom), le
+            // fichier est déjà uploadé côté serveur — bloquer la création silencieuse ferait perdre
+            // cette photo au rechargement puisque la review elle-même n'existerait jamais.
+            if (!id && silent && !flatData.nomCommercial?.trim() && photos.length === 0 && !hasAttachedPipelineMedia(flatData)) {
                 setSaving(false)
                 return undefined
             }

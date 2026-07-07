@@ -10,7 +10,7 @@ import WizardFlow from '../../../components/wizard/WizardFlow'
 import { getConcentrateWizardQuestions } from '../../../components/wizard/schemas/concentrateWizardQuestions'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-import { flattenConcentrateFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
+import { flattenConcentrateFormData, createFormDataFromFlat, diffFlatData, hasAttachedPipelineMedia } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -127,7 +127,11 @@ export default function CreateConcentrateReview() {
             // nouvelle review sans nom (sinon un "Brouillon" fantôme apparaît en bibliothèque dès
             // qu'une autre section est touchée avant le nom) — un save explicite ou l'update d'une
             // review déjà créée passent toujours.
-            if (!id && silent && !flatData.nomCommercial?.trim()) {
+            // Exception : une photo déjà uploadée (photo principale ou cellule de pipeline
+            // Extraction/Purification) est un fichier réel côté serveur — bloquer la création
+            // silencieuse la ferait perdre pour de bon au rechargement, la review elle-même
+            // n'existant jamais.
+            if (!id && silent && !flatData.nomCommercial?.trim() && photos.length === 0 && !hasAttachedPipelineMedia(flatData)) {
                 setSaving(false)
                 return undefined
             }

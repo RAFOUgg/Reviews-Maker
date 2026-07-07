@@ -10,7 +10,7 @@ import WizardFlow from '../../../components/wizard/WizardFlow'
 import { getEdibleWizardQuestions } from '../../../components/wizard/schemas/edibleWizardQuestions'
 
 const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
-import { flattenEdibleFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
+import { flattenEdibleFormData, createFormDataFromFlat, diffFlatData, hasAttachedPipelineMedia } from '../../../utils/formDataFlattener'
 
 // Import sections
 import InfosGenerales from './sections/InfosGenerales'
@@ -118,7 +118,11 @@ export default function CreateEdibleReview() {
             // nouvelle review sans nom (sinon un "Brouillon" fantôme apparaît en bibliothèque dès
             // qu'une autre section est touchée avant le nom) — un save explicite ou l'update d'une
             // review déjà créée passent toujours.
-            if (!id && silent && !flatData.nomProduit?.trim()) {
+            // Exception : une photo déjà uploadée (photo principale ou cellule de pipeline
+            // Préparation/Recette) est un fichier réel côté serveur — bloquer la création
+            // silencieuse la ferait perdre pour de bon au rechargement, la review elle-même
+            // n'existant jamais.
+            if (!id && silent && !flatData.nomProduit?.trim() && photos.length === 0 && !hasAttachedPipelineMedia(flatData)) {
                 setSaving(false)
                 return undefined
             }

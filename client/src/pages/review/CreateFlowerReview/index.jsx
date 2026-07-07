@@ -8,7 +8,7 @@ const OrchardPanel = lazy(() => import('../../../components/shared/orchard/Orcha
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
-import { flattenFlowerFormData, createFormDataFromFlat, diffFlatData } from '../../../utils/formDataFlattener'
+import { flattenFlowerFormData, createFormDataFromFlat, diffFlatData, hasAttachedPipelineMedia } from '../../../utils/formDataFlattener'
 import WizardFlow from '../../../components/wizard/WizardFlow'
 import { getFlowerWizardQuestions } from '../../../components/wizard/schemas/flowerWizardQuestions'
 
@@ -215,7 +215,10 @@ export default function CreateFlowerReview() {
             // jamais sauvegardée (id absent) — un clic explicite sur "Sauvegarder" passe toujours
             // (choix assumé par l'utilisateur), et les updates d'une review déjà créée aussi
             // (retirer ce garde là a explicitement causé des pertes de données par le passé).
-            if (!id && silent && !flatData.nomCommercial?.trim()) {
+            // Exception : une photo déjà uploadée (photo principale ou cellule de pipeline Culture)
+            // est un fichier réel côté serveur — bloquer la création silencieuse la ferait perdre
+            // pour de bon au rechargement, puisque la review elle-même n'existerait jamais.
+            if (!id && silent && !flatData.nomCommercial?.trim() && photos.length === 0 && !hasAttachedPipelineMedia(flatData)) {
                 setSaving(false)
                 return undefined
             }

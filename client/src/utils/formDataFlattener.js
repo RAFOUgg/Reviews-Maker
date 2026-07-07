@@ -453,6 +453,29 @@ export function flattenEdibleFormData(data) {
  * @param {Object} flatData - Données aplaties actuelles
  * @param {Object|null} previousFlatData - Snapshot de la dernière sauvegarde réussie (null = premier save)
  */
+/**
+ * true si au moins une cellule de pipeline (culture/curing/séparation/extraction/purification...)
+ * porte une photo/vidéo attachée — utilisé pour ne pas bloquer la création silencieuse d'une
+ * toute nouvelle review tant que "Nom commercial" est vide (cf. handleSave des 4 pages
+ * CreateXReview) : sans ce garde-fou, glisser une photo sur une cellule de pipeline AVANT de
+ * remplir le nom faisait perdre la photo au rechargement, la review n'ayant jamais été créée.
+ * Les champs de pipeline suivent tous la convention de nommage `*TimelineData` une fois aplatis
+ * (cf. flattenHashFormData/flattenConcentrateFormData/flattenFlowerFormData ci-dessus).
+ */
+export function hasAttachedPipelineMedia(flatData) {
+    return Object.entries(flatData).some(([key, value]) => {
+        if (!key.endsWith('TimelineData') || !value) return false
+        let cells
+        try {
+            cells = typeof value === 'string' ? JSON.parse(value) : value
+        } catch {
+            return false
+        }
+        if (!Array.isArray(cells)) return false
+        return cells.some(cell => Array.isArray(cell?.media) && cell.media.length > 0)
+    })
+}
+
 export function diffFlatData(flatData, previousFlatData) {
     if (!previousFlatData) return { ...flatData }
 
