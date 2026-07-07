@@ -7,6 +7,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidInput, LiquidTextarea, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 import { getPipelineSummaryForEdge, getTechniqueOptionsForReviewType } from '../../utils/chainPipelineSummary';
 import { getPipelineDefsForReviewType, getAllCellsForPipeline, getFieldSchemaForPipeline } from '../../utils/chainCellPipelines';
 import PipelineCellEditor from '../pipelines/core/PipelineCellEditor';
@@ -148,11 +149,11 @@ const ChainEdgeFormModal = ({ onClose }) => {
 
         try {
             if (!formData.sourceNodeId || !formData.targetNodeId) {
-                throw new Error('Veuillez sélectionner un produit source et un produit destination');
+                throw new Error('Veuillez sélectionner une source et une destination');
             }
 
             if (formData.sourceNodeId === formData.targetNodeId) {
-                throw new Error('La source et la destination ne peuvent pas être le même produit');
+                throw new Error('La source et la destination ne peuvent pas être le même élément');
             }
 
             if (isEdit) {
@@ -162,9 +163,21 @@ const ChainEdgeFormModal = ({ onClose }) => {
                     notes: formData.notes || null
                 });
             } else {
+                // formData.sourceNodeId/targetNodeId restent des ids génériques en état local
+                // (le dropdown liste indifféremment des nœuds et des bulles) — on ne choisit la
+                // bonne paire de clés (xxxNodeId vs xxxAnnotationId) qu'à la soumission, une fois
+                // le type de chaque extrémité connu.
+                const sourceResolved = resolveChainEndpoint(store, formData.sourceNodeId);
+                const targetResolved = resolveChainEndpoint(store, formData.targetNodeId);
+                if (!sourceResolved || !targetResolved) {
+                    throw new Error('Source ou destination introuvable');
+                }
+
                 await store.addEdge({
-                    sourceNodeId: formData.sourceNodeId,
-                    targetNodeId: formData.targetNodeId,
+                    sourceNodeId: sourceResolved.kind === 'node' ? sourceResolved.id : null,
+                    sourceAnnotationId: sourceResolved.kind === 'annotation' ? sourceResolved.id : null,
+                    targetNodeId: targetResolved.kind === 'node' ? targetResolved.id : null,
+                    targetAnnotationId: targetResolved.kind === 'annotation' ? targetResolved.id : null,
                     technique: formData.technique || null,
                     date: formData.date || null,
                     notes: formData.notes || null,
@@ -184,15 +197,16 @@ const ChainEdgeFormModal = ({ onClose }) => {
         }
     };
 
-    const sourceNode = store.nodes.find(n => n.id === formData.sourceNodeId);
-    const targetNode = store.nodes.find(n => n.id === formData.targetNodeId);
+    const sourceEndpoint = resolveChainEndpoint(store, formData.sourceNodeId);
+    const targetEndpoint = resolveChainEndpoint(store, formData.targetNodeId);
 
     // Vocabulaire canonique du champ "technique" de la fiche destination (mêmes value/label que
     // son propre pipeline : séparation pour hash, extraction pour concentré, curing pour fleur).
-    // Vide pour edible/aucune destination sélectionnée -> repli sur la saisie libre historique.
+    // Vide pour edible/bulle/aucune destination sélectionnée -> repli sur la saisie libre historique
+    // (getTechniqueOptionsForReviewType(null) renvoie déjà [] sans changement de logique nécessaire).
     const techniqueOptions = useMemo(
-        () => getTechniqueOptionsForReviewType(targetNode?.reviewType),
-        [targetNode?.reviewType]
+        () => getTechniqueOptionsForReviewType(targetEndpoint?.reviewType),
+        [targetEndpoint?.reviewType]
     );
     const matchedTechnique = techniqueOptions.find(o => o.label === formData.technique);
     const showCustomTechniqueInput = techniqueOptions.length === 0 || (!!formData.technique && !matchedTechnique) || customTechnique;
@@ -259,38 +273,42 @@ const ChainEdgeFormModal = ({ onClose }) => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                         <LiquidSelect
-                            label="Produit source *"
+                            label="Source *"
                             value={formData.sourceNodeId || ''}
                             onChange={(v) => handleChange('sourceNodeId', v)}
                             disabled={isEdit}
                             options={[
-                                { value: '', label: 'Sélectionner un produit source...' },
-                                ...store.nodes.map(node => ({ value: node.id, label: node.label }))
+                                { value: '', label: 'Sélectionner une source...' },
+                                ...store.nodes.map(node => ({ value: node.id, label: node.label })),
+                                ...store.annotations.map(a => ({ value: a.id, label: `${a.mediaUrl ? '🖼️' : '📌'} ${a.title || (a.mediaUrl ? 'Bulle média' : 'Carte de données')}` }))
                             ]}
                         />
-                        {sourceNode && (
+                        {sourceEndpoint && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
-                                <span className="text-sm text-white">{sourceNode.label}</span>
+                                <span className="text-sm text-white">{sourceEndpoint.label}</span>
                             </div>
                         )}
                     </div>
 
                     <div className="space-y-2">
                         <LiquidSelect
-                            label="Produit destination *"
+                            label="Destination *"
                             value={formData.targetNodeId || ''}
                             onChange={(v) => handleChange('targetNodeId', v)}
                             disabled={isEdit}
                             options={[
-                                { value: '', label: 'Sélectionner un produit destination...' },
+                                { value: '', label: 'Sélectionner une destination...' },
                                 ...store.nodes
                                     .filter(n => n.id !== formData.sourceNodeId)
-                                    .map(node => ({ value: node.id, label: node.label }))
+                                    .map(node => ({ value: node.id, label: node.label })),
+                                ...store.annotations
+                                    .filter(a => a.id !== formData.sourceNodeId)
+                                    .map(a => ({ value: a.id, label: `${a.mediaUrl ? '🖼️' : '📌'} ${a.title || (a.mediaUrl ? 'Bulle média' : 'Carte de données')}` }))
                             ]}
                         />
-                        {targetNode && (
+                        {targetEndpoint && (
                             <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5">
-                                <span className="text-sm text-white">{targetNode.label}</span>
+                                <span className="text-sm text-white">{targetEndpoint.label}</span>
                             </div>
                         )}
                     </div>

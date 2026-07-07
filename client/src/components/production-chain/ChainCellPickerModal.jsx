@@ -14,6 +14,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidSelect, LiquidTabs, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 import { getPipelineDefsForReviewType, getCellsForPipelineDef, getFieldSchemaForPipeline, getGeneralFieldSchema, READONLY_CELL_CATEGORIES } from '../../utils/chainCellPipelines';
 import PipelineCellEditor from '../pipelines/core/PipelineCellEditor';
 import { Download, CheckSquare, Square, Plus, Pencil, X, Loader2 } from 'lucide-react';
@@ -409,8 +410,8 @@ const ChainCellPickerModal = () => {
                                 <div className="space-y-1 max-h-40 overflow-y-auto">
                                     {store.edges.map(edge => {
                                         const isSelected = selectedEdgeIds.has(edge.id);
-                                        const src = store.nodes.find(n => n.id === edge.sourceNodeId);
-                                        const tgt = store.nodes.find(n => n.id === edge.targetNodeId);
+                                        const src = resolveChainEndpoint(store, edge.sourceId ?? edge.sourceNodeId);
+                                        const tgt = resolveChainEndpoint(store, edge.targetId ?? edge.targetNodeId);
                                         return (
                                             <button
                                                 type="button"

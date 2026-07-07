@@ -15,6 +15,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { LiquidModal, LiquidButton, LiquidCard } from '@/components/ui/LiquidUI';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 import { fetchReviewFilesFor } from '../../utils/reviewFilesAggregator';
 import { Download, CheckSquare, Square, X, Loader2, Film, Image as ImageIcon, FileText } from 'lucide-react';
 
@@ -241,8 +242,8 @@ const ChainMediaPickerModal = () => {
                                 <div className="space-y-1 max-h-40 overflow-y-auto">
                                     {store.edges.map(edge => {
                                         const isSelected = selectedEdgeIds.has(edge.id);
-                                        const src = store.nodes.find(n => n.id === edge.sourceNodeId);
-                                        const tgt = store.nodes.find(n => n.id === edge.targetNodeId);
+                                        const src = resolveChainEndpoint(store, edge.sourceId ?? edge.sourceNodeId);
+                                        const tgt = resolveChainEndpoint(store, edge.targetId ?? edge.targetNodeId);
                                         return (
                                             <button
                                                 type="button"

@@ -474,26 +474,22 @@ router.post("/chains/:id/edges", requireAuth, requireChainAccess, validateChainE
             return res.status(400).json({ error: "This relationship would create a cycle" })
         }
 
-        try {
-            const edge = await prisma.chainEdge.create({
-                data: {
-                    chainId: req.params.id,
-                    sourceNodeId: source.kind === 'node' ? source.id : null,
-                    sourceAnnotationId: source.kind === 'annotation' ? source.id : null,
-                    targetNodeId: target.kind === 'node' ? target.id : null,
-                    targetAnnotationId: target.kind === 'annotation' ? target.id : null,
-                    technique: technique?.trim() || null,
-                    date: date ? new Date(date) : null,
-                    notes: notes?.trim() || null,
-                    ...(cellData !== undefined && { cellData: JSON.stringify(cellData) }),
-                    ...(media !== undefined && { media: JSON.stringify(media) })
-                }
-            })
+        const edge = await prisma.chainEdge.create({
+            data: {
+                chainId: req.params.id,
+                sourceNodeId: source.kind === 'node' ? source.id : null,
+                sourceAnnotationId: source.kind === 'annotation' ? source.id : null,
+                targetNodeId: target.kind === 'node' ? target.id : null,
+                targetAnnotationId: target.kind === 'annotation' ? target.id : null,
+                technique: technique?.trim() || null,
+                date: date ? new Date(date) : null,
+                notes: notes?.trim() || null,
+                ...(cellData !== undefined && { cellData: JSON.stringify(cellData) }),
+                ...(media !== undefined && { media: JSON.stringify(media) })
+            }
+        })
 
-            res.status(201).json(normalizeEdge({ ...edge, cellData: JSON.parse(edge.cellData || "[]"), media: JSON.parse(edge.media || "[]") }))
-        } catch (error) {
-            throw error
-        }
+        res.status(201).json(normalizeEdge({ ...edge, cellData: JSON.parse(edge.cellData || "[]"), media: JSON.parse(edge.media || "[]") }))
     } catch (error) {
         res.status(500).json({ error: "Failed to create chain edge" })
     }
@@ -514,37 +510,57 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        const { technique, date, notes, sourceNodeId, targetNodeId, waypointX, waypointY, sourceHandle, targetHandle, cellData, media } = req.body
+        const {
+            technique, date, notes,
+            sourceNodeId, sourceAnnotationId, targetNodeId, targetAnnotationId,
+            waypointX, waypointY, sourceHandle, targetHandle, cellData, media
+        } = req.body
 
-        // Inverser la direction (ou reconnecter vers un autre nœud) : les deux nœuds doivent
-        // appartenir à la même chaîne, l'échange ne doit pas créer de cycle ni dupliquer une
-        // liaison déjà existante (contrainte @@unique([sourceNodeId, targetNodeId])).
-        if (sourceNodeId !== undefined || targetNodeId !== undefined) {
-            const newSource = sourceNodeId !== undefined ? sourceNodeId : edge.sourceNodeId
-            const newTarget = targetNodeId !== undefined ? targetNodeId : edge.targetNodeId
+        const sourceChanging = sourceNodeId !== undefined || sourceAnnotationId !== undefined
+        const targetChanging = targetNodeId !== undefined || targetAnnotationId !== undefined
 
-            const [sourceExists, targetExists] = await Promise.all([
-                prisma.chainNode.findFirst({ where: { id: newSource, chainId: edge.chainId } }),
-                prisma.chainNode.findFirst({ where: { id: newTarget, chainId: edge.chainId } })
-            ])
-            if (!sourceExists || !targetExists) {
-                return res.status(400).json({ error: "Source/target node not found in this chain" })
+        let newSourceData = null
+        let newTargetData = null
+
+        // Reconnexion (glisser l'extrémité d'une liaison existante vers un autre nœud/bulle) :
+        // les deux côtés doivent appartenir à la même chaîne, l'échange ne doit pas créer de
+        // cycle ni dupliquer une liaison déjà existante (app-level, cf. schema.prisma ChainEdge
+        // pour le retrait du @@unique désormais impossible avec 4 colonnes nullables).
+        if (sourceChanging || targetChanging) {
+            const source = sourceChanging
+                ? await resolveChainEdgeEndpoint(prisma, { nodeId: sourceNodeId, annotationId: sourceAnnotationId }, edge.chainId)
+                : { kind: edge.sourceNodeId ? 'node' : 'annotation', id: edge.sourceNodeId ?? edge.sourceAnnotationId }
+            const target = targetChanging
+                ? await resolveChainEdgeEndpoint(prisma, { nodeId: targetNodeId, annotationId: targetAnnotationId }, edge.chainId)
+                : { kind: edge.targetNodeId ? 'node' : 'annotation', id: edge.targetNodeId ?? edge.targetAnnotationId }
+
+            if (source.error) return res.status(400).json({ error: source.error })
+            if (target.error) return res.status(400).json({ error: target.error })
+
+            if (source.id === target.id) {
+                return res.status(400).json({ error: "An element cannot be related to itself" })
             }
 
             const otherEdges = await prisma.chainEdge.findMany({
                 where: { chainId: edge.chainId, id: { not: edge.id } },
-                select: { sourceNodeId: true, targetNodeId: true }
+                select: { sourceNodeId: true, sourceAnnotationId: true, targetNodeId: true, targetAnnotationId: true }
             })
+            const normalizedEdges = otherEdges.map(e => ({
+                source: e.sourceNodeId ?? e.sourceAnnotationId,
+                target: e.targetNodeId ?? e.targetAnnotationId
+            }))
 
-            const duplicate = otherEdges.some(e => e.sourceNodeId === newSource && e.targetNodeId === newTarget)
+            const duplicate = normalizedEdges.some(e => e.source === source.id && e.target === target.id)
             if (duplicate) {
-                return res.status(400).json({ error: "A transformation already exists between these two products" })
+                return res.status(400).json({ error: "A transformation already exists between these two elements" })
             }
 
-            const normalizedEdges = otherEdges.map(e => ({ source: e.sourceNodeId, target: e.targetNodeId }))
-            if (wouldCreateCycle(normalizedEdges, newSource, newTarget)) {
+            if (wouldCreateCycle(normalizedEdges, source.id, target.id)) {
                 return res.status(400).json({ error: "This would create a cycle in the chain" })
             }
+
+            newSourceData = source
+            newTargetData = target
         }
 
         const updated = await prisma.chainEdge.update({
@@ -553,8 +569,14 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
                 ...(technique !== undefined && { technique: technique?.trim() || null }),
                 ...(date !== undefined && { date: date ? new Date(date) : null }),
                 ...(notes !== undefined && { notes: notes?.trim() || null }),
-                ...(sourceNodeId !== undefined && { sourceNodeId }),
-                ...(targetNodeId !== undefined && { targetNodeId }),
+                ...(newSourceData && {
+                    sourceNodeId: newSourceData.kind === 'node' ? newSourceData.id : null,
+                    sourceAnnotationId: newSourceData.kind === 'annotation' ? newSourceData.id : null
+                }),
+                ...(newTargetData && {
+                    targetNodeId: newTargetData.kind === 'node' ? newTargetData.id : null,
+                    targetAnnotationId: newTargetData.kind === 'annotation' ? newTargetData.id : null
+                }),
                 ...(waypointX !== undefined && { waypointX }),
                 ...(waypointY !== undefined && { waypointY }),
                 ...(sourceHandle !== undefined && { sourceHandle }),
@@ -564,7 +586,7 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
             }
         })
 
-        res.json({ ...updated, cellData: JSON.parse(updated.cellData || "[]"), media: JSON.parse(updated.media || "[]") })
+        res.json(normalizeEdge({ ...updated, cellData: JSON.parse(updated.cellData || "[]"), media: JSON.parse(updated.media || "[]") }))
     } catch (error) {
         res.status(500).json({ error: "Failed to update chain edge" })
     }

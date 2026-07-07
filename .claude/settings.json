@@ -136,7 +136,11 @@
       "Bash(node --check server-new/server.js)",
       "Bash(export DATABASE_URL=\"file:C:/Users/Rafi/AppData/Local/Temp/claude/c--Users-Rafi-Documents--0AMes-Logiciel-Reviews-Maker/15740c7f-7c90-45b7-b97c-629b7bde91eb/scratchpad/migration-test/reviews.sqlite\")",
       "Bash(node --check server-new/utils/chainEdgeEndpoints.js)",
-      "Bash(node --check server-new/middleware/validateProductionChain.js)"
+      "Bash(node --check server-new/middleware/validateProductionChain.js)",
+      "Bash(node --check server-new/routes/production-chains.js)",
+      "Bash(node --check src/components/graph-canvas/AnnotationNode.jsx)",
+      "Bash(node --check src/utils/chainEndpoint.js)",
+      "Bash(git fetch *)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",

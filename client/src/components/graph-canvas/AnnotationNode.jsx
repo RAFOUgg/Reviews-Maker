@@ -3,9 +3,14 @@
  *
  * Carte épinglée librement sur le fond du canvas — partagée par les deux domaines (Chaîne de
  * production ET PhenoHunt, cf. GraphCanvasShell.jsx pour le principe de mutualisation du
- * mécanique commun). Contrairement à un nœud produit/cultivar, ce n'est pas relié par des
- * arêtes : pas de Handle, pas de sélection/panneau associé — juste une note visuelle libre,
- * déplaçable (drag React Flow natif du nœud) et supprimable indépendamment via son propre bouton.
+ * mécanique commun). Déplaçable (drag React Flow natif du nœud) et supprimable indépendamment
+ * via son propre bouton, dans les deux domaines.
+ *
+ * Connectable par liaison (Handles) uniquement si `data.connectable` est vrai — pour l'instant
+ * seule ProductionChainCanvas.jsx pose ce flag (ChainEdge sait référencer une bulle comme
+ * extrémité depuis l'ajout de sourceAnnotationId/targetAnnotationId). PhenoHunt réutilise le même
+ * composant mais son modèle GenEdge ne référence que des GenNode : ne jamais rendre les Handles
+ * par défaut, sous peine d'exposer une action de connexion qui casserait côté PhenoHunt.
  *
  * Deux usages qui ne se ressemblent volontairement PAS : une note texte (glissée-déposée depuis
  * un résumé pipeline/cellule attachée, `data.body` rempli — habillage carte compacte historique)
@@ -15,7 +20,21 @@
  */
 
 import React from 'react';
+import { Handle, Position } from 'reactflow';
 import { Pin, X, Image as ImageIcon, Film } from 'lucide-react';
+
+// Mêmes Handles (ids/positions) que ReviewNode.jsx — condition sur `connectable` pour que seule
+// ProductionChainCanvas (qui pose ce flag) puisse initier une liaison depuis une bulle.
+const ConnectHandles = () => (
+    <>
+        <Handle type="target" id="top-target" position={Position.Top} className="node-handle top" />
+        <Handle type="target" id="left-target" position={Position.Left} className="node-handle left" />
+        <Handle type="source" id="left-source" position={Position.Left} className="node-handle left" />
+        <Handle type="target" id="right-target" position={Position.Right} className="node-handle right" />
+        <Handle type="source" id="right-source" position={Position.Right} className="node-handle right" />
+        <Handle type="source" id="bottom-source" position={Position.Bottom} className="node-handle bottom" />
+    </>
+);
 
 const AnnotationNode = ({ data }) => {
     const body = Array.isArray(data.body) ? data.body : [];
@@ -23,6 +42,7 @@ const AnnotationNode = ({ data }) => {
     if (data.mediaUrl) {
         return (
             <div className="cultivar-node shape-rounded media-bubble-node" style={{ '--accent-color': '#f59e0b' }}>
+                {data.connectable && <ConnectHandles />}
                 <button
                     type="button"
                     className="chain-annotation-delete nodrag nopan"
@@ -53,6 +73,7 @@ const AnnotationNode = ({ data }) => {
 
     return (
         <div className="chain-annotation-card">
+            {data.connectable && <ConnectHandles />}
             <button
                 type="button"
                 className="chain-annotation-delete nodrag nopan"

@@ -25,6 +25,7 @@ import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
+import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 import { findNodeAtPoint, findEdgeNearPoint } from '../graph-canvas/floatingEdgeUtils';
 import ReviewNode from './ReviewNode';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
@@ -126,13 +127,17 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         store.updateEdge(edgeId, patch);
     }, [store]);
 
-    // Reconnexion réelle d'une extrémité de liaison vers un AUTRE nœud (change sourceNodeId ou
-    // targetNodeId) — le backend revalide l'absence de cycle et de doublon.
+    // Reconnexion réelle d'une extrémité de liaison vers un AUTRE nœud OU bulle (change
+    // sourceNodeId/sourceAnnotationId ou targetNodeId/targetAnnotationId selon le type de la
+    // nouvelle cible) — le backend revalide l'absence de cycle et de doublon.
     const handleEdgeEndpointReconnect = useCallback((edgeId, end, newNodeId, newHandleSide) => {
         if (readOnly) return;
-        store.updateEdge(edgeId, end === 'source'
-            ? { sourceNodeId: newNodeId, sourceHandle: newHandleSide }
-            : { targetNodeId: newNodeId, targetHandle: newHandleSide });
+        const resolved = resolveChainEndpoint(store, newNodeId);
+        if (!resolved) return;
+        const idPatch = end === 'source'
+            ? { sourceNodeId: resolved.kind === 'node' ? resolved.id : null, sourceAnnotationId: resolved.kind === 'annotation' ? resolved.id : null, sourceHandle: newHandleSide }
+            : { targetNodeId: resolved.kind === 'node' ? resolved.id : null, targetAnnotationId: resolved.kind === 'annotation' ? resolved.id : null, targetHandle: newHandleSide };
+        store.updateEdge(edgeId, idPatch);
     }, [readOnly, store]);
 
     // Synchroniser les nœuds, arêtes et cartes épinglées du store vers React Flow — les cartes
@@ -166,14 +171,19 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 sourceLabel: annotation.sourceLabel,
                 mediaUrl: annotation.mediaUrl,
                 mediaType: annotation.mediaType,
+                connectable: true,
                 onDelete: () => store.deleteAnnotation(annotation.id)
             }
         }));
 
         const rfEdges = (store.edges || []).map(edge => ({
             id: edge.id,
-            source: edge.sourceNodeId,
-            target: edge.targetNodeId,
+            // sourceId/targetId = le FK non-null du côté concerné (nœud produit ou bulle),
+            // normalisé côté serveur (cf. normalizeEdge dans routes/production-chains.js) — React
+            // Flow n'a pas besoin de connaître le type de l'extrémité, juste un id présent parmi
+            // les nœuds passés à setNodes (rfProductNodes + rfAnnotationNodes ci-dessus).
+            source: edge.sourceId ?? edge.sourceNodeId,
+            target: edge.targetId ?? edge.targetNodeId,
             type: 'transformation',
             selected: store.selectedEdgeId === edge.id,
             markerEnd: { type: MarkerType.ArrowClosed },
@@ -200,8 +210,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         // Type d'arête natif 'straight' + non sélectionnable : pas de composant dédié nécessaire.
         const annotationLinkEdges = (store.annotations || [])
             .map(annotation => {
-                const targetNodeId = annotation.nodeId
-                    || (annotation.edgeId ? store.edges.find(e => e.id === annotation.edgeId)?.sourceNodeId : null);
+                const anchorEdge = annotation.edgeId ? store.edges.find(e => e.id === annotation.edgeId) : null;
+                const targetNodeId = annotation.nodeId || (anchorEdge ? (anchorEdge.sourceId ?? anchorEdge.sourceNodeId) : null);
                 if (!targetNodeId) return null;
                 return {
                     id: `annotation-link-${annotation.id}`,
@@ -255,12 +265,12 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         if (targetType === 'node') return store.nodes.find(n => n.id === targetId)?.label || null;
         if (targetType === 'edge') {
             const edge = store.edges.find(e => e.id === targetId);
-            const source = edge && store.nodes.find(n => n.id === edge.sourceNodeId);
-            const target = edge && store.nodes.find(n => n.id === edge.targetNodeId);
+            const source = edge && resolveChainEndpoint(store, edge.sourceId ?? edge.sourceNodeId);
+            const target = edge && resolveChainEndpoint(store, edge.targetId ?? edge.targetNodeId);
             return source && target ? `${source.label} → ${target.label}` : null;
         }
         return null;
-    }, [store.nodes, store.edges]);
+    }, [store.nodes, store.edges, store.annotations, store]);
 
     const processCellDrop = useCallback(async (cells, originTargetType, originTargetId, dropPosition, forcedAction = null) => {
         if (!cells || cells.length === 0) return;
@@ -680,8 +690,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
     const selectedNode = store.selectedNodeId ? store.nodes.find(n => n.id === store.selectedNodeId) : null;
     const selectedEdge = store.selectedEdgeId ? store.edges.find(e => e.id === store.selectedEdgeId) : null;
-    const edgeSourceNode = selectedEdge ? store.nodes.find(n => n.id === selectedEdge.sourceNodeId) : null;
-    const edgeTargetNode = selectedEdge ? store.nodes.find(n => n.id === selectedEdge.targetNodeId) : null;
+    const edgeSourceNode = selectedEdge ? resolveChainEndpoint(store, selectedEdge.sourceId ?? selectedEdge.sourceNodeId) : null;
+    const edgeTargetNode = selectedEdge ? resolveChainEndpoint(store, selectedEdge.targetId ?? selectedEdge.targetNodeId) : null;
 
     // Résumé pipeline du panneau de sélection : la propre review du nœud sélectionné, ou celle
     // du nœud CIBLE d'une liaison sélectionnée (même convention que le hover ci-dessus).
@@ -1017,8 +1027,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 }
                 const edge = store.edges.find(e => e.id === hoverInfo.id);
                 if (!edge) return null;
-                const sourceNode = store.nodes.find(n => n.id === edge.sourceNodeId);
-                const targetNode = store.nodes.find(n => n.id === edge.targetNodeId);
+                const sourceNode = resolveChainEndpoint(store, edge.sourceId ?? edge.sourceNodeId);
+                const targetNode = resolveChainEndpoint(store, edge.targetId ?? edge.targetNodeId);
                 return (
                     <ChainHoverPreview
                         x={hoverInfo.x}

@@ -7,6 +7,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Download, Clipboard, Copy, Image as ImageIcon, Plus } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 
 // Techniques courantes proposées en raccourci — la valeur réelle reste du texte libre
 // (ChainEdge.technique), ces options ne sont qu'un pré-remplissage rapide.
@@ -18,8 +19,8 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
     const [showTypeMenu, setShowTypeMenu] = useState(false);
 
     const edge = store.edges.find(e => e.id === edgeId);
-    const sourceNode = edge ? store.nodes.find(n => n.id === edge.sourceNodeId) : null;
-    const targetNode = edge ? store.nodes.find(n => n.id === edge.targetNodeId) : null;
+    const sourceNode = edge ? resolveChainEndpoint(store, edge.sourceId ?? edge.sourceNodeId) : null;
+    const targetNode = edge ? resolveChainEndpoint(store, edge.targetId ?? edge.targetNodeId) : null;
 
     useEffect(() => {
         const handleClickOutside = (e) => {
@@ -51,8 +52,10 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
     // supprimer et la recréer (même geste que EdgeContextMenu.jsx côté PhenoHunt).
     const handleReverseDirection = () => {
         store.updateEdge(edgeId, {
-            sourceNodeId: edge.targetNodeId,
-            targetNodeId: edge.sourceNodeId
+            sourceNodeId: edge.targetNodeId ?? null,
+            sourceAnnotationId: edge.targetAnnotationId ?? null,
+            targetNodeId: edge.sourceNodeId ?? null,
+            targetAnnotationId: edge.sourceAnnotationId ?? null
         });
         onClose();
     };

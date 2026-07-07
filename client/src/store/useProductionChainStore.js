@@ -842,8 +842,13 @@ const useProductionChainStore = create(
                         showEdgeForm: true,
                         edgeFormData: {
                             id: edge.id,
-                            sourceNodeId: edge.sourceNodeId || '',
-                            targetNodeId: edge.targetNodeId || '',
+                            // formData.sourceNodeId/targetNodeId sont volontairement des ids
+                            // génériques (cf. ChainEdgeFormModal) — utiliser sourceId/targetId
+                            // normalisés (backend) plutôt que sourceNodeId/targetNodeId bruts,
+                            // sinon une extrémité ancrée à une bulle (sourceAnnotationId,
+                            // sourceNodeId null) arriverait vide dans le formulaire d'édition.
+                            sourceNodeId: (edge.sourceId ?? edge.sourceNodeId) || '',
+                            targetNodeId: (edge.targetId ?? edge.targetNodeId) || '',
                             technique: edge.technique || '',
                             date: edge.date ? edge.date.substring(0, 10) : '',
                             notes: edge.notes || ''
