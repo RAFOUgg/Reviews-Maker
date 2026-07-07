@@ -5,8 +5,13 @@ import React, { useState, useEffect, useRef } from 'react'
  * évite de retaper à la main un nom déjà documenté ailleurs (Bibliothèque > Cultivars). Fetch une
  * seule fois puis filtrage côté client (même approche que SourceLineageSelector.jsx), la valeur
  * stockée reste un simple texte (pas de FK), donc un nom hors bibliothèque reste saisissable.
+ *
+ * `onSelectCultivar` (optionnel) : reçoit le cultivar complet choisi dans la liste, en plus de
+ * l'appel `onChange(name)` habituel — sert aux appelants qui veulent pré-remplir d'autres champs
+ * (breeder/type/ratio) en confort de saisie, SANS verrouiller quoi que ce soit : l'utilisateur
+ * reste libre de tout modifier ensuite (suggestion, pas un lien strict vers le cultivar).
  */
-export default function CultivarAutocomplete({ value = '', onChange, placeholder = '' }) {
+export default function CultivarAutocomplete({ value = '', onChange, onSelectCultivar, placeholder = '', required = false, maxLength }) {
     const [cultivars, setCultivars] = useState([])
     const [open, setOpen] = useState(false)
     const containerRef = useRef(null)
@@ -41,6 +46,8 @@ export default function CultivarAutocomplete({ value = '', onChange, placeholder
                 onChange={(e) => { onChange(e.target.value); setOpen(true) }}
                 onFocus={() => setOpen(true)}
                 placeholder={placeholder || 'Nom du cultivar...'}
+                required={required}
+                maxLength={maxLength}
                 className="liquid-input w-full"
             />
             {open && filtered.length > 0 && (
@@ -49,7 +56,7 @@ export default function CultivarAutocomplete({ value = '', onChange, placeholder
                         <button
                             key={c.id}
                             type="button"
-                            onClick={() => { onChange(c.name); setOpen(false) }}
+                            onClick={() => { onChange(c.name); onSelectCultivar?.(c); setOpen(false) }}
                             className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left hover:bg-white/10 transition-colors"
                         >
                             <span className="text-sm text-white truncate">{c.name}</span>

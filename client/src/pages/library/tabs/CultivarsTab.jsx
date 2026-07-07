@@ -437,6 +437,11 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                     <span className={`px-2 py-0.5 rounded bg-${typeConfig?.color || 'green'}-500/20 text-${typeConfig?.color || 'green'}-400`}>
                                         {typeConfig?.label}
                                     </span>
+                                    {linkedCount === 0 && (
+                                        <span className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-400 text-xs" title="Aucune review ne documente cette génétique">
+                                            Génétique externe
+                                        </span>
+                                    )}
                                 </div>
                             </div>
 
@@ -527,11 +532,21 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                         </div>
                     )}
 
-                    {/* Lié à des reviews/nœuds PhenoHunt — valeurs affichées ci-dessous incluent ces sources */}
-                    {linkedCount > 0 && (
+                    {/* Lié à des reviews/nœuds PhenoHunt — valeurs affichées ci-dessous incluent ces sources.
+                        Sinon, badge distinct : cette entrée n'est backée par aucune review (création manuelle
+                        "Génétique externe"), pour ne jamais la confondre avec un cultivar réellement cultivé. */}
+                    {linkedCount > 0 ? (
                         <div className="flex items-center gap-1.5 text-xs text-green-400/80 mb-3">
                             <RefreshCw className="w-3.5 h-3.5" />
                             <span>Lié à {linkedCount} source{linkedCount > 1 ? 's' : ''}</span>
+                        </div>
+                    ) : (
+                        <div
+                            className="flex items-center gap-1.5 text-xs text-amber-400/80 mb-3"
+                            title="Aucune review ne documente cette génétique — créée manuellement comme parent externe/landrace"
+                        >
+                            <Tag className="w-3.5 h-3.5" />
+                            <span>Génétique externe (sans review)</span>
                         </div>
                     )}
 
@@ -851,8 +866,9 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 variant="primary"
                                 size="sm"
                                 icon={Plus}
+                                title="Pour une génétique que vous ne cultivez pas vous-même (parent externe, graine achetée) — vos propres cultivars apparaissent automatiquement depuis vos reviews Fleurs"
                             >
-                                Ajouter
+                                Génétique externe
                             </LiquidButton>
                         </div>
                     </div>
@@ -866,10 +882,16 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                 exit={{ opacity: 0, height: 0 }}
                             >
                                 <LiquidCard glow="green" padding="lg">
-                                    <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+                                    <h3 className={`text-lg font-bold text-white flex items-center gap-2 ${editingCultivar ? 'mb-6' : 'mb-1'}`}>
                                         <Flower2 className="w-5 h-5 text-green-400" />
-                                        {editingCultivar ? 'Modifier le cultivar' : 'Nouveau cultivar'}
+                                        {editingCultivar ? 'Modifier le cultivar' : 'Nouvelle génétique externe'}
                                     </h3>
+                                    {!editingCultivar && (
+                                        <p className="text-sm text-white/40 mb-6">
+                                            Pour une génétique que vous ne cultivez pas vous-même (parent externe, landrace, graine achetée jamais reviewée).
+                                            Vos propres cultivars n'ont pas besoin d'être ajoutés ici : ils apparaissent automatiquement dès qu'une review Fleur les mentionne.
+                                        </p>
+                                    )}
 
                                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                                         <div>
@@ -1221,7 +1243,7 @@ export default function CultivarsTab({ userTier = 'producer' }) {
                                         variant="primary"
                                         icon={Plus}
                                     >
-                                        Ajouter un cultivar
+                                        Ajouter une génétique externe
                                     </LiquidButton>
                                 )}
                             </div>
