@@ -412,6 +412,10 @@ export function flattenEdibleFormData(data) {
     if (data.recipe) {
         if (data.recipe.ingredients) flat.ingredients = data.recipe.ingredients
         if (data.recipe.steps) flat.etapesPreparation = data.recipe.steps
+        // Bilan matière du produit fini — pas de colonne dédiée sur EdibleReview, persisté dans
+        // extraData comme orchardPreset/orchardConfig (cf. server-new/routes/edible-reviews.js).
+        if (data.recipe.finalWeight) flat.recipeFinalWeight = data.recipe.finalWeight
+        if (data.recipe.servings) flat.recipeServings = data.recipe.servings
     }
     // Compatibilité ancienne structure (si un appelant utilise encore 'recette'/'etapes')
     if (data.recette) {

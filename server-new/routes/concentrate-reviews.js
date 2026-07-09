@@ -519,7 +519,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
     const review = await prisma.review.findUnique({
         where: { id: reviewId },
-        include: { author: { select: { id: true, username: true, avatar: true } } }
+        include: { author: { select: { id: true, username: true, avatar: true, producerProfile: { select: { isVerified: true, businessType: true } } } } }
     })
 
     if (!review) {

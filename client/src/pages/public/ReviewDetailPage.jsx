@@ -6,6 +6,7 @@ import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
 import OrchardCardRenderer from '../../components/gallery/OrchardCardRenderer'
 import ProductionChainCanvas from '../../components/production-chain/ProductionChainCanvas'
 import { apiTypeToInternal } from '../../utils/reviewTypeMeta'
+import { getLotCode } from '../../utils/lotCode'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
@@ -151,6 +152,15 @@ export default function ReviewDetailPage() {
                             </LiquidButton>
                         </div>
                     )}
+                </div>
+
+                {/* Identifiant de lot — dérivé de l'id de la review (cf. utils/lotCode.js), jamais
+                    stocké séparément. Simple référence de confort, pas un numéro réglementaire. */}
+                <div
+                    className="flex items-center gap-2 mb-6 -mt-4 text-white/40 text-xs font-mono"
+                    title="Identifiant interne Reviews-Maker — pas un numéro de traçabilité officiel"
+                >
+                    <span>{getLotCode(review.id)}</span>
                 </div>
 
                 {/* Lien vers l'arbre généalogique lié (PhenoHunt), si présent et visible */}

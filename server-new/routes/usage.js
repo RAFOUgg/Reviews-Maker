@@ -98,16 +98,23 @@ router.get('/exports/today', requireAuth, asyncHandler(async (req, res) => {
 }));
 
 // POST /api/usage/exports/increment - Incrémente le compteur d'exports
+// Figement (Chantier 6 traçabilité) : si reviewId + snapshotData sont fournis (rapport de
+// traçabilité), on stocke une copie des données réellement rendues + leur hash, pour pouvoir
+// attester plus tard que cet export correspondait à la review telle qu'elle était à cette date.
+// Un export image classique (png/jpeg sans snapshot) reste un simple compteur comme avant —
+// aucune contrainte, snapshotData/contentHash restent optionnels sur le modèle.
 router.post('/exports/increment', requireAuth, asyncHandler(async (req, res) => {
     const userId = req.user.id;
-    const { format, quality } = req.body;
+    const { format, quality, reviewId, snapshotData, contentHash } = req.body;
 
-    // Créer un enregistrement d'export
-    await prisma.export.create({
+    const created = await prisma.export.create({
         data: {
             userId,
             format: format || 'png',
             quality: quality || 'standard',
+            reviewId: reviewId || null,
+            snapshotData: snapshotData ? JSON.stringify(snapshotData) : null,
+            contentHash: contentHash || null,
             createdAt: new Date()
         }
     });
@@ -125,7 +132,28 @@ router.post('/exports/increment', requireAuth, asyncHandler(async (req, res) => 
         }
     });
 
-    res.json({ count });
+    res.json({ count, exportId: created.id });
+}));
+
+// GET /api/usage/exports/:id - Récupère un export figé (Chantier 6) pour vérification :
+// le client recalcule le hash des données actuelles de la review et le compare à contentHash
+// pour savoir si l'export "a dérivé" depuis la review source. Accessible au propriétaire
+// uniquement (un export figé est un document privé, pas une review publique).
+router.get('/exports/:id', requireAuth, asyncHandler(async (req, res) => {
+    const record = await prisma.export.findUnique({ where: { id: req.params.id } });
+
+    if (!record || record.userId !== req.user.id) {
+        return res.status(404).json({ error: 'Export not found' });
+    }
+
+    res.json({
+        id: record.id,
+        reviewId: record.reviewId,
+        format: record.format,
+        contentHash: record.contentHash,
+        snapshotData: record.snapshotData ? JSON.parse(record.snapshotData) : null,
+        createdAt: record.createdAt
+    });
 }));
 
 export default router;

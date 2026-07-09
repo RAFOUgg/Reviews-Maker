@@ -1320,6 +1320,13 @@ model Export {
   quality   String // "standard", "high", "ultra"
   createdAt DateTime @default(now())
 
+  // Figement (Chantier 6 traçabilité) : copie des données réellement rendues au moment de l'export,
+  // pour pouvoir attester plus tard "cet export correspondait à la review telle qu'elle était à cette
+  // date" même si la review a changé depuis. Optionnels : seuls les exports du rapport de traçabilité
+  // les renseignent, un export image classique (png/jpeg) reste un simple compteur d'usage comme avant.
+  snapshotData String? // JSON: reviewData adapté (buildExportReviewData) tel que rendu à l'export
+  contentHash  String? // sha256(snapshotData), recalculable côté client pour détecter une dérive
+
   @@index([userId])
   @@index([createdAt])
   @@index([userId, createdAt])

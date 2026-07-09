@@ -23,6 +23,8 @@ const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, rev
     const [config, setConfig] = useState({
         ingredients: data.ingredients || [],
         steps: data.steps || [],
+        finalWeight: data.finalWeight || '',
+        servings: data.servings || '',
         ...data
     });
 
@@ -100,8 +102,22 @@ const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, rev
         }));
     };
 
+    const updateYield = (key, value) => {
+        setConfig(prev => ({ ...prev, [key]: value }));
+    };
+
     const cannabinicIngredients = config.ingredients.filter(i => i.type === 'cannabinique');
     const standardIngredients = config.ingredients.filter(i => i.type === 'standard');
+
+    // Bilan matière du produit fini — les ingrédients donnent déjà le poids ENTRANT par ingrédient,
+    // il manquait le poids SORTANT (après cuisson/refroidissement) pour vérifier le dosage réel par
+    // portion (à jeun/avec repas modifie déjà la biodisponibilité, cf. foodIntakeStatus — encore plus
+    // de raisons de connaître le poids réel par portion plutôt que de le déduire des seuls ingrédients).
+    const finalWeightNum = parseFloat(config.finalWeight);
+    const servingsNum = parseFloat(config.servings);
+    const weightPerServing = (finalWeightNum > 0 && servingsNum > 0)
+        ? (finalWeightNum / servingsNum).toFixed(1)
+        : null;
 
     if (linkOpen) {
         return (
@@ -346,14 +362,45 @@ const RecipePipelineSection = ({ data = {}, onChange, reviewId, reviewLabel, rev
                 </AnimatePresence>
             </LiquidCard>
 
-            {/* Résumé */}
+            {/* Résumé + bilan matière du produit fini */}
             <div className="p-5 bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-xl border-2 border-orange-500/30">
                 <h4 className="text-sm font-bold text-white mb-3">📋 Résumé recette</h4>
-                <div className="space-y-2 text-sm text-white/70">
+                <div className="space-y-2 text-sm text-white/70 mb-4">
                     <p><strong className="text-white">Ingrédients cannabiniques:</strong> {cannabinicIngredients.length}</p>
                     <p><strong className="text-white">Ingrédients standards:</strong> {standardIngredients.length}</p>
                     <p><strong className="text-white">Étapes de préparation:</strong> {config.steps.length}</p>
                 </div>
+
+                <LiquidDivider />
+
+                <h4 className="text-sm font-bold text-white mt-4 mb-3">⚖️ Bilan matière — produit fini</h4>
+                <div className="grid grid-cols-2 gap-3">
+                    <div>
+                        <label className="block text-xs text-white/60 mb-1">Poids produit fini (g)</label>
+                        <input
+                            type="number"
+                            placeholder="Pesée après cuisson/refroidissement"
+                            value={config.finalWeight}
+                            onChange={(e) => updateYield('finalWeight', e.target.value)}
+                            className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white placeholder-white/30"
+                        />
+                    </div>
+                    <div>
+                        <label className="block text-xs text-white/60 mb-1">Nombre de portions</label>
+                        <input
+                            type="number"
+                            placeholder="Valeur libre"
+                            value={config.servings}
+                            onChange={(e) => updateYield('servings', e.target.value)}
+                            className="w-full px-3 py-2 bg-[#1a1a2e] border border-white/20 rounded-lg text-sm text-white placeholder-white/30"
+                        />
+                    </div>
+                </div>
+                {weightPerServing && (
+                    <p className="text-sm text-white/70 mt-3">
+                        <strong className="text-white">Poids par portion :</strong> {weightPerServing} g (calculé automatiquement)
+                    </p>
+                )}
             </div>
         </div>
     );

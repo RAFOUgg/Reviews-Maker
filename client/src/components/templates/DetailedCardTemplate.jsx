@@ -17,6 +17,27 @@ import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
+import { QRCodeSVG } from 'qrcode.react';
+import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
+
+const BUSINESS_TYPE_LABELS = {
+    farm: 'Ferme',
+    laboratory: 'Laboratoire',
+    extractor: 'Extracteur',
+    manufacturer: 'Fabricant',
+    distributor: 'Distributeur',
+    other: 'Producteur',
+};
+
+const LAB_METHOD_LABELS = {
+    hplc: 'HPLC',
+    'gc-ms': 'GC-MS',
+    'lc-ms-ms': 'LC-MS/MS',
+    nirs: 'NIRS',
+    rmn: 'RMN',
+    'icp-ms': 'ICP-MS',
+    other: 'Autre méthode',
+};
 
 const TIMELINE_PIPELINES = [
     { type: 'culture', name: 'Culture', icon: '🌱', dataKey: 'cultureTimelineData', configKey: 'cultureTimelineConfig' },
@@ -82,7 +103,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         (contentModules?.farm && reviewData.farm) ||
         (contentModules?.hashmaker && reviewData.hashmaker) ||
         (contentModules?.phenotypeCode && reviewData.phenotypeCode) ||
-        (contentModules?.parentage && reviewData.parentage);
+        (contentModules?.parentage && reviewData.parentage) ||
+        reviewData.producerVerified;
 
     // Composants réutilisables
     const Section = ({ title, icon, children, className = '' }) => {
@@ -677,6 +699,17 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 {contentModules.cbdLevel && reviewData.cbdLevel && <InfoCard label="CBD" value={`${reviewData.cbdLevel}%`} icon="💊" />}
                                 {contentModules.dureeEffet && reviewData.dureeEffet && <InfoCard label="Durée effets" value={reviewData.dureeEffet} icon="⏱️" />}
                             </div>
+                            {/* Métadonnées COA — saisies en formulaire (labName/labMethod/labAccredited)
+                                mais jamais rendues dans un export avant ce fix (cf. audit traçabilité) */}
+                            {(contentModules.thcLevel || contentModules.cbdLevel) && (reviewData.labName || reviewData.labMethod || reviewData.labAccredited) && (
+                                <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: 'rgba(139,92,246,0.08)', borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}`, fontSize: `${typography.textSize - 1}px`, color: colors.textSecondary || '#9ca3af' }}>
+                                    🔬 {[
+                                        reviewData.labName,
+                                        reviewData.labMethod && LAB_METHOD_LABELS[reviewData.labMethod] || reviewData.labMethod,
+                                        reviewData.labAccredited && `accrédité${reviewData.labAccreditationStandard ? ` ${reviewData.labAccreditationStandard}` : ''}`,
+                                    ].filter(Boolean).join(' · ')}
+                                </div>
+                            )}
                         </Section>}
 
                         {/* Provenance */}
@@ -688,6 +721,25 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 {contentModules.hashmaker && reviewData.hashmaker && <InfoCard label="Hash Maker" value={reviewData.hashmaker} icon="👨‍🔬" />}
                                 {contentModules.phenotypeCode && reviewData.phenotypeCode && <InfoCard label="Phénotype" value={reviewData.phenotypeCode} icon="🔬" />}
                             </div>
+                            {/* Badge de confiance — ProducerProfile.isVerified/businessType, jusqu'ici
+                                jamais affiché en dehors de la page compte de l'auteur (Chantier 5). */}
+                            {reviewData.producerVerified && (
+                                <div style={{
+                                    marginTop: `${spacing.gap}px`,
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '5px',
+                                    padding: '3px 9px',
+                                    borderRadius: '999px',
+                                    background: colorWithOpacity('#22c55e', 15),
+                                    border: `1px solid ${colorWithOpacity('#22c55e', 35)}`,
+                                    fontSize: `${typography.textSize - 2}px`,
+                                    color: '#22c55e',
+                                    fontWeight: '600',
+                                }}>
+                                    ✓ Producteur vérifié{BUSINESS_TYPE_LABELS[reviewData.producerBusinessType] ? ` · ${BUSINESS_TYPE_LABELS[reviewData.producerBusinessType]}` : ''}
+                                </div>
+                            )}
                             {/* Parentage / Lignée */}
                             {contentModules.parentage && reviewData.parentage && (() => {
                                 const p = reviewData.parentage;
@@ -921,6 +973,33 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         </div>
                     )}
                 </div>
+
+                {/* Identifiant de lot — répond au constat le plus fondamental de l'étude de marché
+                    traçabilité (aucun système du marché comparé ne fonctionne sans identifiant
+                    unique de lot). Dérivé de l'id de la review, jamais stocké séparément — voir
+                    client/src/utils/lotCode.js pour le design et l'avertissement sur sa portée
+                    (identifiant de confort interne, pas un tag réglementaire). */}
+                {reviewData.id && (
+                    <div
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            marginTop: `${spacing.element}px`,
+                            paddingTop: `${spacing.element}px`,
+                            borderTop: `1px solid ${colorWithOpacity(colors.textSecondary, 15)}`,
+                        }}
+                        title="Identifiant interne Reviews-Maker — pas un numéro de traçabilité officiel"
+                    >
+                        <div style={{ background: '#fff', padding: '3px', borderRadius: '4px', lineHeight: 0, flexShrink: 0 }}>
+                            <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={40} level="M" />
+                        </div>
+                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
+                            <div style={{ fontFamily: 'monospace', fontWeight: '600', color: colors.textPrimary }}>{getLotCode(reviewData.id)}</div>
+                            <div style={{ fontSize: `${fontSize.small - 2}px`, opacity: 0.7 }}>Identifiant interne — non réglementaire</div>
+                        </div>
+                    </div>
+                )}
 
                 {/* Section Debug - Visible si URL contient ?debug=1 */}
                 {typeof window !== 'undefined' && window.location.search.includes('debug=1') && (

@@ -21,7 +21,20 @@ const CANNABINOID_LABELS = {
     thcv: 'THCV',
 }
 
-export default function CannabinoidChart({ thc, cbd, cbg, cbc, cbn, thcv, labReportUrl, compact = false }) {
+const LAB_METHOD_LABELS = {
+    hplc: 'HPLC',
+    'gc-ms': 'GC-MS',
+    'lc-ms-ms': 'LC-MS/MS',
+    nirs: 'NIRS',
+    rmn: 'RMN',
+    'icp-ms': 'ICP-MS',
+    other: 'Autre méthode',
+}
+
+export default function CannabinoidChart({
+    thc, cbd, cbg, cbc, cbn, thcv, labReportUrl, compact = false,
+    labName, labMethod, labAccredited, labAccreditationStandard,
+}) {
     const entries = [
         { key: 'thc', value: thc },
         { key: 'cbd', value: cbd },
@@ -112,9 +125,19 @@ export default function CannabinoidChart({ thc, cbd, cbg, cbc, cbn, thcv, labRep
                     display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
+                    flexWrap: 'wrap',
                 }}>
                     <span style={{ fontSize: '10px' }}>🔬</span>
-                    Rapport labo vérifié
+                    {/* Détail réel du COA quand il est renseigné (labName/labMethod/labAccredited
+                        saisis en formulaire mais jamais rendus dans un export avant ce fix) — repli
+                        sur la mention générique sinon, jamais de sur-affirmation non déclarée. */}
+                    {labName || labMethod || labAccredited
+                        ? [
+                            labName,
+                            labMethod && (LAB_METHOD_LABELS[labMethod] || labMethod),
+                            labAccredited && `accrédité${labAccreditationStandard ? ` ${labAccreditationStandard}` : ''}`,
+                        ].filter(Boolean).join(' · ')
+                        : 'Rapport labo'}
                 </div>
             )}
         </div>

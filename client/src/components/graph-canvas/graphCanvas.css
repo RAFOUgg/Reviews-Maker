@@ -87,6 +87,28 @@
         inset 0 -1px 1px rgba(0, 0, 0, 0.2);
 }
 
+/* Filtres/recherche du canevas Chaîne de production — grisé (jamais masqué, cf. commentaire
+   ProductionChainCanvas.jsx sur nodeVisibility/edgeVisibility) plutôt qu'un simple opacity inline,
+   pour pouvoir aussi désactiver l'ombre/le sheen coûteux visuellement sur un nœud grisé. */
+.cultivar-node.chain-node-dimmed {
+    opacity: 0.18;
+    box-shadow: none;
+    pointer-events: auto; /* reste cliquable — cf. décision "griser, jamais masquer" */
+}
+
+.cultivar-node.chain-node-dimmed:hover {
+    transform: none;
+}
+
+.cultivar-node.chain-node-search-active {
+    border-color: #34d399;
+    box-shadow:
+        0 0 0 3px rgba(52, 211, 153, 0.45),
+        0 8px 28px rgba(52, 211, 153, 0.35),
+        inset 0 1px 1px rgba(255, 255, 255, 0.12),
+        inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+}
+
 /* Femelle = rond */
 .cultivar-node.shape-circle {
     border-radius: 50%;
@@ -201,6 +223,78 @@
 .genetics-type {
     background: color-mix(in srgb, var(--accent-color, #FF6B9D) 25%, transparent);
     color: #f1f5f9;
+}
+
+/* Palier de zoom 'near' (Lot 4, Chaîne de production) : résumé de la cellule pipeline la plus
+   récente, sous le label — tronqué sur une ligne pour ne jamais pousser la hauteur du nœud (fixe,
+   cf. .cultivar-node.shape-rounded) au-delà de ce qu'elle peut absorber visuellement. */
+.node-latest-cell {
+    font-size: 9px;
+    color: #94a3b8;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 116px;
+}
+
+/* Palier 'far' : les badges de comptage (cellules/médias) deviennent de simples pastilles de
+   présence — un chiffre est illisible à ce niveau de zoom et inutile pour une vue d'ensemble. */
+.node-dot-badge {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.node-dot-badge-cell {
+    bottom: -2px;
+    right: -2px;
+    background: rgba(16, 185, 129, 0.9);
+}
+
+.node-dot-badge-media {
+    top: -2px;
+    right: -2px;
+    background: rgba(245, 158, 11, 0.9);
+}
+
+/* Palier 'near' : vraie vignette média (première photo/vidéo attachée) à la place du badge de
+   comptage — même position/gabarit que .node-media-badge pour ne jamais faire varier la mise en
+   page du nœud selon le palier de zoom. */
+.node-media-thumb {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    width: 22px;
+    height: 22px;
+    border-radius: 6px;
+    overflow: hidden;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+}
+
+.node-media-thumb img,
+.node-media-thumb video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Palier 'far' d'une liaison de transformation (Lot 4) : pastille de présence à la place du
+   libellé technique/date complet, illisible à ce niveau de zoom sur une chaîne dense. */
+.chain-edge-dot-badge {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #d97706;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+}
+
+.chain-edge-dot-badge.search-active {
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52, 211, 153, 0.45);
 }
 
 .node-notes {
@@ -390,6 +484,77 @@
     padding: 12px !important;
     backdrop-filter: blur(10px) !important;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Barre de recherche/filtres du canevas Chaîne de production (ChainCanvasToolbar) — même recette
+   visuelle que .canvas-toolbar, positionnée en haut au centre pour ne jamais chevaucher les
+   actions (top-left) ni le panneau latéral (top-right). */
+.chain-filter-bar {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background-color: rgba(30, 41, 59, 0.9) !important;
+    border: 1px solid rgba(59, 130, 246, 0.3) !important;
+    border-radius: 8px !important;
+    padding: 8px 12px !important;
+    backdrop-filter: blur(10px) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    max-width: min(560px, 80vw);
+}
+
+.chain-filter-search {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+}
+
+.chain-filter-search input {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-size: 12px;
+    color: #e2e8f0;
+}
+
+.chain-filter-search input:focus {
+    outline: none;
+    border-color: rgba(52, 211, 153, 0.5);
+}
+
+.chain-filter-search button {
+    display: flex;
+    align-items: center;
+    color: #94a3b8;
+    padding: 2px;
+    border-radius: 4px;
+}
+
+.chain-filter-search button:hover {
+    color: #e2e8f0;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.chain-filter-search-count {
+    font-size: 11px;
+    color: #94a3b8;
+    white-space: nowrap;
+}
+
+.chain-filter-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.chain-filter-sep {
+    width: 1px;
+    height: 16px;
+    background: rgba(255, 255, 255, 0.15);
+    margin: 0 2px;
 }
 
 /* Panneau latéral droit (nœud/liaison sélectionné) : "docké" sur toute la hauteur du canvas
@@ -588,6 +753,187 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+}
+
+/* Journal d'événements (cf. ProductionChainCanvas.jsx panelEvents, server-new/utils/chainAuditLog.js)
+   — liste chronologique en lecture seule, pas de drag/clic (contrairement à .info-cell-row) : un
+   événement journalisé est un fait passé, pas une donnée à réassigner. */
+.node-info-panel .info-events {
+    margin-top: 4px;
+}
+
+.node-info-panel .info-event-row {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.03);
+    border-left: 2px solid rgba(148, 163, 184, 0.35);
+    border-radius: 4px;
+    padding: 4px 8px;
+    margin-bottom: 3px;
+}
+
+.node-info-panel .info-event-label {
+    font-size: 12px;
+    color: #cbd5e1;
+}
+
+.node-info-panel .info-event-date {
+    font-size: 10px;
+    color: #64748b;
+}
+
+.node-info-panel .info-event-description,
+.node-info-panel .info-event-equipment {
+    font-size: 11px;
+    color: #94a3b8;
+    margin-top: 1px;
+}
+
+/* Constat dérivé du moteur de règles (cf. utils/chainEventRules.js) — jamais persisté, recalculé à
+   l'affichage. Distinct visuellement de la description libre (fond ambré, pas juste du texte). */
+.node-info-panel .info-event-flag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    color: #fbbf24;
+    background: rgba(251, 191, 36, 0.12);
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-top: 3px;
+    width: fit-content;
+}
+
+/* Événement manuel qualifié (cf. ChainEventForm.jsx) — la bordure gauche porte la gravité, même
+   convention de couleur que les badges existants (ambre = avertissement, rouge = critique). */
+.node-info-panel .info-event-row.severity-warning {
+    border-left-color: #f59e0b;
+}
+
+.node-info-panel .info-event-row.severity-critical {
+    border-left-color: #ef4444;
+    background: rgba(239, 68, 68, 0.06);
+}
+
+.node-info-panel .info-section-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.node-info-panel .info-section-label-row .info-section-label {
+    margin: 10px 0 4px 0 !important;
+}
+
+.node-info-panel .info-event-add-btn {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    font-size: 11px;
+    color: #94a3b8;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.node-info-panel .info-event-add-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #e2e8f0;
+}
+
+/* Formulaire de journalisation manuelle (ChainEventForm.jsx) */
+.chain-event-form {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 8px;
+}
+
+.chain-event-form-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+    font-weight: 600;
+    color: #cbd5e1;
+}
+
+.chain-event-form-header button {
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+}
+
+.chain-event-form input[type="text"],
+.chain-event-form textarea,
+.chain-event-form select,
+.chain-event-form input[type="datetime-local"] {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    color: #e2e8f0;
+}
+
+.chain-event-form textarea {
+    resize: vertical;
+}
+
+.chain-event-form-row {
+    display: flex;
+    gap: 6px;
+}
+
+.chain-event-form-row > * {
+    flex: 1;
+    min-width: 0;
+}
+
+.chain-event-form-row label {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: 10px;
+    color: #64748b;
+}
+
+.chain-event-form-error {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 11px;
+    color: #f87171;
+}
+
+.chain-event-form-submit {
+    background: rgba(16, 185, 129, 0.2);
+    border: 1px solid rgba(16, 185, 129, 0.5);
+    color: #6ee7b7;
+    border-radius: 6px;
+    padding: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.15s ease;
+}
+
+.chain-event-form-submit:hover:not(:disabled) {
+    background: rgba(16, 185, 129, 0.3);
+}
+
+.chain-event-form-submit:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Chain annotation card (carte épinglée glissée-déposée sur le fond du canvas — Chaîne de

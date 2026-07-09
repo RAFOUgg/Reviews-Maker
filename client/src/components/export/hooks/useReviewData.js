@@ -211,6 +211,13 @@ export default function useReviewData(reviewData) {
                 cbn: resolveReviewField('cbn'),
                 thcv: resolveReviewField('thcv'),
                 labReportUrl: resolveReviewField('labReportUrl'),
+                // Métadonnées COA structurées — colonnes plates, jamais rendues dans un export avant
+                // ce fix (saisies en formulaire, visibles nulle part côté consommateur du produit).
+                labName: reviewData.labName ?? null,
+                labMethod: reviewData.labMethod ?? null,
+                labAccredited: reviewData.labAccredited ?? null,
+                labAccreditationStandard: reviewData.labAccreditationStandard ?? null,
+                labAnalysisDate: reviewData.labAnalysisDate ?? null,
             },
             visual: resolveReviewField('visual'),
             texture: resolveReviewField('texture'),

@@ -55,6 +55,10 @@ export default function GraphCanvasShell({
     className = '',
     minimapNodeColor,
     minimapMaskColor = 'rgba(7, 7, 15, 0.7)',
+    // Virtualisation React Flow : ne monte dans le DOM que les nœuds/arêtes dans le viewport.
+    // Désactivé par défaut pour ne rien changer à UnifiedGeneticsCanvas (PhenoHunt), qui ne passe
+    // pas ce prop — seule la Chaîne de production l'active (chaînes potentiellement plus denses).
+    onlyRenderVisibleElements = false,
 }) {
     // ── Appui long tactile → menus contextuels ──────────────────────────────────────────────
     // Générique et partagé par les deux domaines (PhenoHunt et Chaîne de production) : le clic
@@ -194,6 +198,7 @@ export default function GraphCanvasShell({
                 onEdgeMouseLeave={onEdgeMouseLeave}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
+                onlyRenderVisibleElements={onlyRenderVisibleElements}
                 fitView
                 // Tactile (audit Chantier D) — panOnDrag/zoomOnPinch/preventScrolling sont déjà
                 // les valeurs par défaut de reactflow v11 (posées ici explicitement pour que le

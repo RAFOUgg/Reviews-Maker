@@ -199,6 +199,12 @@ function normalizeReviewData(reviewData) {
     if (!normalized.author && normalized.ownerName) {
         normalized.author = normalized.ownerName;
     } else if (typeof normalized.author === 'object') {
+        // Préserver la confiance producteur (Chantier 5) avant d'aplatir l'auteur en simple
+        // chaîne — sinon `author.producerProfile` est perdu avant d'atteindre exportDataAdapter.js
+        if (normalized.author.producerProfile) {
+            normalized.producerVerified = normalized.author.producerProfile.isVerified;
+            normalized.producerBusinessType = normalized.author.producerProfile.businessType;
+        }
         normalized.author = normalized.author.username || normalized.author.name || 'Anonyme';
     }
 

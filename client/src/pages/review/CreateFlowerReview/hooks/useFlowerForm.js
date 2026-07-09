@@ -188,6 +188,12 @@ export function useFlowerForm(reviewId = null) {
                 // Flat FlowerReview fields at top-level (for compatibility with
                 // legacy code that still reads fd.xxx directly)
                 ...fd,
+                // fd.id est l'id propre de la ligne FlowerReview (table d'extension), pas celui de
+                // la Review de base — le spread ci-dessus l'écrasait silencieusement, cassant tout
+                // ce qui dépend de l'id de review réel en aval (QR/lot Chantier 8, recherche de
+                // chaîne de production par reviewId...). id/reviewId gardent la valeur de la Review.
+                id: baseReview.id,
+                reviewId: baseReview.id,
                 // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
                 // These MUST come after ...fd to override fd.densiteVisuelle etc.
                 colorRating: fd.couleurScore ?? 0,

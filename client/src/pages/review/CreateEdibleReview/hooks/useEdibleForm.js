@@ -67,9 +67,13 @@ export function useEdibleForm(reviewId = null) {
 
             // recipe.ingredients/steps : jamais remis dans formData avant ce fix, donc
             // RecipePipelineSection s'affichait toujours vide au rechargement d'une review existante
+            // finalWeight/servings : pas de colonne dédiée, persistés dans extraData comme
+            // orchardPreset (cf. server-new/routes/edible-reviews.js).
             const recipe = {
                 ingredients: parseArr(ed.ingredients, []),
                 steps: parseArr(ed.etapesPreparation, []),
+                finalWeight: extraData.recipeFinalWeight || '',
+                servings: extraData.recipeServings || '',
             }
 
             setFormData({

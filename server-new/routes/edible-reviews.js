@@ -258,6 +258,8 @@ router.post('/', requireAuth, upload.array('images', 4), asyncHandler(async (req
                 ...(bodyData.orchardConfig ? { orchardConfig: bodyData.orchardConfig } : {}),
                 ...(bodyData.orchardCustomLayout ? { orchardCustomLayout: bodyData.orchardCustomLayout } : {}),
                 ...(bodyData.orchardLayoutMode ? { orchardLayoutMode: bodyData.orchardLayoutMode } : {}),
+                ...(bodyData.recipeFinalWeight ? { recipeFinalWeight: bodyData.recipeFinalWeight } : {}),
+                ...(bodyData.recipeServings ? { recipeServings: bodyData.recipeServings } : {}),
             })
         }
     })
@@ -287,7 +289,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
     const review = await prisma.review.findUnique({
         where: { id: reviewId },
-        include: { author: { select: { id: true, username: true, avatar: true } } }
+        include: { author: { select: { id: true, username: true, avatar: true, producerProfile: { select: { isVerified: true, businessType: true } } } } }
     })
 
     if (!review) {
@@ -357,6 +359,8 @@ router.put('/:id', requireAuth, upload.array('images', 4), asyncHandler(async (r
                 if (bodyData.orchardConfig) updated.orchardConfig = bodyData.orchardConfig
                 if (bodyData.orchardCustomLayout) updated.orchardCustomLayout = bodyData.orchardCustomLayout
                 if (bodyData.orchardLayoutMode) updated.orchardLayoutMode = bodyData.orchardLayoutMode
+                if (bodyData.recipeFinalWeight) updated.recipeFinalWeight = bodyData.recipeFinalWeight
+                if (bodyData.recipeServings) updated.recipeServings = bodyData.recipeServings
                 return JSON.stringify(updated)
             })()
         }

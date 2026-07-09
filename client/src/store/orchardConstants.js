@@ -187,5 +187,13 @@ export const DEFAULT_TEMPLATES = {
         layout: 'story',
         defaultRatio: '9:16',
         supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
+    },
+    traceabilityReport: {
+        id: 'traceabilityReport',
+        name: 'Rapport de Traçabilité',
+        description: 'Lot, confiance producteur/labo, bilan matière, chaîne de production et journal d\'événements',
+        layout: 'traceabilityReport',
+        defaultRatio: 'A4',
+        supportedRatios: ['A4']
     }
 };

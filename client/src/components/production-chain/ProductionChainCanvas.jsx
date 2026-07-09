@@ -10,7 +10,7 @@
  * d'implémentation pour la justification (éviter tout risque de régression sur PhenoHunt).
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     useNodesState,
@@ -26,11 +26,16 @@ import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import { resolveChainEndpoint } from '../../utils/chainEndpoint';
+import { evaluateChainEventRules } from '../../utils/chainEventRules';
+import { getLotCode } from '../../utils/lotCode';
 import { findNodeAtPoint, findEdgeNearPoint } from '../graph-canvas/floatingEdgeUtils';
+import { ALL_REVIEW_TYPES } from '../../utils/reviewTypeMeta';
 import ReviewNode from './ReviewNode';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
 import ChainHoverPreview from './ChainHoverPreview';
+import ChainCanvasToolbar from './ChainCanvasToolbar';
+import ChainEventForm from './ChainEventForm';
 import ChainNodeContextMenu from './ChainNodeContextMenu';
 import ChainEdgeContextMenu from './ChainEdgeContextMenu';
 import ChainPaneContextMenu from './ChainPaneContextMenu';
@@ -44,7 +49,7 @@ import ChainMediaPickerModal from './ChainMediaPickerModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import ConfirmModal from '../shared/ConfirmModal';
-import { Download, Upload, RotateCcw, FileImage, Edit2, ChevronLeft, ChevronRight, Image as ImageIcon } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 // Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
 // pas clignoter au simple passage de la souris entre deux nœuds voisins.
@@ -81,6 +86,44 @@ function pipelineSummaryBodyLines(pipelineSummary) {
     return lines;
 }
 
+// Ligne de résumé "cellule la plus récente" affichée au palier de zoom rapproché (Lot 4) — on ne
+// garde que le premier champ rempli pour rester lisible sur une carte de 140px de large, trié par
+// attachedAt décroissant (même convention de tri que le panneau latéral "Cellules attachées").
+function latestCellSummaryLine(cellData) {
+    if (!Array.isArray(cellData) || cellData.length === 0) return null;
+    const sorted = [...cellData].sort((a, b) => new Date(b?.attachedAt || 0) - new Date(a?.attachedAt || 0));
+    const fields = summarizeCellFields(sorted[0]?.pipelineType, sorted[0]?.data);
+    return fields.length > 0 ? `${fields[0].label} : ${fields[0].value}` : null;
+}
+
+// Libellés lisibles des actions journalisées côté serveur (cf. server-new/utils/chainAuditLog.js) —
+// une seule table de correspondance, tenue à jour avec les `action` réellement écrits dans
+// production-chains.js. Une action inconnue (nouvelle valeur pas encore ajoutée ici) retombe sur
+// elle-même plutôt que de planter — échappatoire libre, cf. principe du document
+// 11_TRACABILITE_ET_EXTENSIBILITE.md.
+const CHAIN_EVENT_LABELS = {
+    'chain_node.create': 'Produit ajouté à la chaîne',
+    'chain_node.relink': 'Review liée changée',
+    'chain_node.unlink': 'Review détachée',
+    'chain_node.cells_update': 'Cellules pipeline mises à jour',
+    'chain_node.media_update': 'Médias mis à jour',
+    'chain_node.delete': 'Produit retiré de la chaîne',
+    'chain_edge.create': 'Liaison de transformation créée',
+    'chain_edge.update': 'Détails de la transformation modifiés',
+    'chain_edge.reconnect': 'Liaison reconnectée à un autre produit',
+    'chain_edge.cells_update': 'Cellules pipeline mises à jour',
+    'chain_edge.media_update': 'Médias mis à jour',
+    'chain_edge.delete': 'Liaison supprimée',
+    'chain_annotation.create': 'Note épinglée',
+    'chain_annotation.delete': 'Note supprimée'
+};
+
+function formatChainEventDate(iso) {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
 const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const store = useProductionChainStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
@@ -97,7 +140,109 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
+    const [showEventForm, setShowEventForm] = useState(false);
     const [panelCollapsed, setPanelCollapsed] = useState(() => localStorage.getItem(PANEL_COLLAPSE_STORAGE_KEY) === '1');
+
+    // Filtres d'affichage (type de produit + attributs) et recherche — état de vue éphémère, pas
+    // une donnée persistée, cohérent avec contextMenu/hoverInfo déjà en state local plutôt qu'en
+    // store zustand. On grise (jamais on ne masque) les nœuds/liaisons non retenus : ils restent
+    // dans les tableaux `nodes`/`edges` de React Flow, cliquables, à leur place — retirer un nœud
+    // du tableau casserait toute arête qui le référence encore comme source/target.
+    const [typeFilter, setTypeFilter] = useState(() => new Set(ALL_REVIEW_TYPES));
+    const [attributeFilter, setAttributeFilter] = useState({ hasMedia: false, hasCells: false });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeMatchIndex, setActiveMatchIndex] = useState(0);
+
+    const handleToggleType = useCallback((type) => {
+        setTypeFilter(prev => {
+            const next = new Set(prev);
+            if (next.has(type)) next.delete(type); else next.add(type);
+            return next;
+        });
+    }, []);
+
+    const handleToggleAttribute = useCallback((key) => {
+        setAttributeFilter(prev => ({ ...prev, [key]: !prev[key] }));
+    }, []);
+
+    const handleSearchChange = useCallback((value) => {
+        setSearchTerm(value);
+        setActiveMatchIndex(0);
+    }, []);
+
+    const searchActive = searchTerm.trim().length > 0;
+    const searchLower = searchTerm.trim().toLowerCase();
+
+    // Visibilité par nœud produit : type + attributs (médias/cellules propres au nœud) + recherche
+    // (sur le label). Calculée à partir des données du store (pas des nœuds React Flow), pour ne
+    // dépendre que de ce qui a réellement changé.
+    const nodeVisibility = useMemo(() => {
+        const map = new Map();
+        for (const node of (store.nodes || [])) {
+            const typeOk = typeFilter.has(node.reviewType);
+            const mediaOk = !attributeFilter.hasMedia || (Array.isArray(node.media) && node.media.length > 0);
+            const cellsOk = !attributeFilter.hasCells || (Array.isArray(node.cellData) && node.cellData.length > 0);
+            const searchOk = !searchActive || (node.label || '').toLowerCase().includes(searchLower);
+            map.set(node.id, typeOk && mediaOk && cellsOk && searchOk);
+        }
+        return map;
+    }, [store.nodes, typeFilter, attributeFilter, searchActive, searchLower]);
+
+    // Visibilité par liaison : hérite du filtre de TYPE de ses deux extrémités (une transformation
+    // impliquant un produit filtré n'a pas de sens à montrer isolément) ; les attributs et la
+    // recherche, eux, sont évalués sur les données propres de la liaison (pas d'héritage) — une
+    // liaison a ses propres médias/cellules/technique.
+    const edgeVisibility = useMemo(() => {
+        const map = new Map();
+        for (const edge of (store.edges || [])) {
+            const sourceId = edge.sourceId ?? edge.sourceNodeId;
+            const targetId = edge.targetId ?? edge.targetNodeId;
+            const sourceNode = store.nodes.find(n => n.id === sourceId);
+            const targetNode = store.nodes.find(n => n.id === targetId);
+            const typeOk = (!sourceNode || typeFilter.has(sourceNode.reviewType)) && (!targetNode || typeFilter.has(targetNode.reviewType));
+            const mediaOk = !attributeFilter.hasMedia || (Array.isArray(edge.media) && edge.media.length > 0);
+            const cellsOk = !attributeFilter.hasCells || (Array.isArray(edge.cellData) && edge.cellData.length > 0);
+            const searchOk = !searchActive || (edge.technique || '').toLowerCase().includes(searchLower);
+            map.set(edge.id, typeOk && mediaOk && cellsOk && searchOk);
+        }
+        return map;
+    }, [store.nodes, store.edges, typeFilter, attributeFilter, searchActive, searchLower]);
+
+    // Résultats de recherche ordonnés (nœuds par label, puis liaisons par technique) — permet la
+    // navigation précédent/suivant et le centrage sur le résultat actif.
+    const searchMatches = useMemo(() => {
+        if (!searchActive) return [];
+        const nodeMatches = (store.nodes || [])
+            .filter(n => (n.label || '').toLowerCase().includes(searchLower))
+            .map(n => ({ kind: 'node', id: n.id, fitNodeIds: [n.id] }));
+        const edgeMatches = (store.edges || [])
+            .filter(e => (e.technique || '').toLowerCase().includes(searchLower))
+            .map(e => ({
+                kind: 'edge',
+                id: e.id,
+                fitNodeIds: [e.sourceId ?? e.sourceNodeId, e.targetId ?? e.targetNodeId].filter(Boolean)
+            }));
+        return [...nodeMatches, ...edgeMatches];
+    }, [searchActive, searchLower, store.nodes, store.edges]);
+
+    const clampedMatchIndex = searchMatches.length > 0 ? activeMatchIndex % searchMatches.length : 0;
+    const activeMatch = searchMatches[clampedMatchIndex] || null;
+
+    const handleNextMatch = useCallback(() => {
+        setActiveMatchIndex(i => (searchMatches.length > 0 ? (i + 1) % searchMatches.length : 0));
+    }, [searchMatches.length]);
+
+    const handlePrevMatch = useCallback(() => {
+        setActiveMatchIndex(i => (searchMatches.length > 0 ? (i - 1 + searchMatches.length) % searchMatches.length : 0));
+    }, [searchMatches.length]);
+
+    // Centrage sur le résultat actif — se redéclenche à chaque changement de résultat actif ou de
+    // jeu de résultats (nouvelle recherche).
+    useEffect(() => {
+        if (!activeMatch?.fitNodeIds?.length) return;
+        fitView({ nodes: activeMatch.fitNodeIds.map(id => ({ id })), duration: 400, padding: 0.3 });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeMatch?.id, activeMatch?.kind]);
 
     // Sélection multiple (ctrl+clic / shift+clic) dans le panneau "Cellules attachées" — même
     // recette que PipelineDragDropView.jsx (handleSidebarItemClick/handleCellClick), pour glisser
@@ -155,7 +300,15 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 selected: store.selectedNodeId === node.id,
                 reviewOrphaned: node.reviewOrphaned,
                 cellCount: Array.isArray(node.cellData) ? node.cellData.length : 0,
-                mediaCount: Array.isArray(node.media) ? node.media.length : 0
+                mediaCount: Array.isArray(node.media) ? node.media.length : 0,
+                dimmed: nodeVisibility.get(node.id) === false,
+                searchActive: activeMatch?.kind === 'node' && activeMatch.id === node.id,
+                // Contenu enrichi affiché uniquement au palier de zoom 'near' (cf. useChainZoomTier
+                // dans ReviewNode.jsx) — calculé ici pour tous les nœuds (coût négligeable), pas
+                // seulement ceux visibles de près, pour ne pas complexifier ce useEffect.
+                previewMediaUrl: Array.isArray(node.media) && node.media[0] ? node.media[0].url : null,
+                previewMediaType: Array.isArray(node.media) && node.media[0] ? node.media[0].type : null,
+                latestCellSummary: latestCellSummaryLine(node.cellData)
             },
             position: node.position || { x: 0, y: 0 },
             type: 'reviewProduct'
@@ -199,7 +352,10 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 onEndpointHandleChange: handleEdgeEndpointChange,
                 onEndpointReconnect: handleEdgeEndpointReconnect,
                 cellCount: Array.isArray(edge.cellData) ? edge.cellData.length : 0,
-                mediaCount: Array.isArray(edge.media) ? edge.media.length : 0
+                mediaCount: Array.isArray(edge.media) ? edge.media.length : 0,
+                dimmed: edgeVisibility.get(edge.id) === false,
+                searchActive: activeMatch?.kind === 'edge' && activeMatch.id === edge.id,
+                latestCellSummary: latestCellSummaryLine(edge.cellData)
             }
         }));
 
@@ -227,7 +383,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
         setNodes([...rfProductNodes, ...rfAnnotationNodes]);
         setEdges([...rfEdges, ...annotationLinkEdges]);
-    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect]);
+    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, nodeVisibility, edgeVisibility, activeMatch]);
 
     // Drag & drop depuis ProductAddSidebar — un nœud référence toujours une review
     // existante, pas de création de nœud vide comme dans UnifiedGeneticsCanvas
@@ -710,6 +866,12 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const panelAttachedMedia = selectedNode
         ? (Array.isArray(selectedNode.media) ? selectedNode.media : [])
         : (Array.isArray(selectedEdge?.media) ? selectedEdge.media : []);
+    // Journal filtré sur l'entité sélectionnée (cf. store.fetchChainEvents, réutilise AuditLog) —
+    // entityType suit la convention posée côté serveur (chainNode/chainEdge), pas panelTargetType
+    // ('node'/'edge') qui reste un vocabulaire purement frontend.
+    const panelEvents = (store.events || []).filter(e =>
+        e.entityType === (panelTargetType === 'node' ? 'chainNode' : 'chainEdge') && e.entityId === panelTargetId
+    );
     const panelSummary = panelReviewId ? store.reviewSummaryCache[panelReviewId] : null;
     // Étiquette d'origine affichée sur une carte épinglée créée par glisser-déposer depuis ce
     // panneau (cf. handleDrop plus bas) — purement indicative, aucune référence vivante.
@@ -748,6 +910,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     useEffect(() => {
         setSelectedCellIds([]);
         cellSelectionAnchorRef.current = null;
+        setShowEventForm(false);
     }, [panelTargetId]);
 
     const handleCellClick = useCallback((event, cell) => {
@@ -815,6 +978,10 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             onEdgeMouseLeave={handleEdgeMouseLeave}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
+            onlyRenderVisibleElements
+            // MiniMap colorée par type de produit — jusqu'ici monochrome par défaut, peu utile pour
+            // se repérer dans une chaîne dense.
+            minimapNodeColor={(node) => node.data?.color || '#10b981'}
             onCanvasClick={handleCanvasClick}
             onPaneContextMenu={handlePaneContextMenu}
             onDragOver={handleDragOver}
@@ -841,35 +1008,27 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         )}
                     </Panel>
                 )}
-                {!readOnly && (
-                    <Panel position="top-left" className="canvas-toolbar">
-                        <div className="flex items-center gap-2">
-                            <button className="toolbar-btn secondary" onClick={() => setShowRenameModal(true)} title="Renommer la chaîne">
-                                <Edit2 size={14} /> Renommer
-                            </button>
-                            <button className="toolbar-btn secondary" onClick={() => fitView()} title="Réinitialiser le zoom">
-                                <RotateCcw size={14} /> Zoom
-                            </button>
-                            <button
-                                className="toolbar-btn secondary"
-                                onClick={handleImportLineage}
-                                disabled={importing}
-                                title="Importer depuis la traçabilité existante (sourceLineage)"
-                            >
-                                <Upload size={14} /> {importing ? 'Import...' : 'Importer traçabilité'}
-                            </button>
-                            <button className="toolbar-btn secondary" onClick={handleExportJSON} title="Exporter en JSON">
-                                <Download size={14} /> JSON
-                            </button>
-                            <button className="toolbar-btn secondary" onClick={handleExportSVG} disabled={exportingSvg} title="Exporter en SVG">
-                                <FileImage size={14} /> {exportingSvg ? 'Export...' : 'SVG'}
-                            </button>
-                            <button className="toolbar-btn secondary" onClick={() => setShowMediaBubbleImport(true)} title="Importer une photo/vidéo comme bulle sur le canvas">
-                                <ImageIcon size={14} /> Photo/Vidéo
-                            </button>
-                        </div>
-                    </Panel>
-                )}
+                <ChainCanvasToolbar
+                    readOnly={readOnly}
+                    onRename={() => setShowRenameModal(true)}
+                    onFitView={() => fitView()}
+                    onImportLineage={handleImportLineage}
+                    importing={importing}
+                    onExportJSON={handleExportJSON}
+                    onExportSVG={handleExportSVG}
+                    exportingSvg={exportingSvg}
+                    onShowMediaBubbleImport={() => setShowMediaBubbleImport(true)}
+                    typeFilter={typeFilter}
+                    onToggleType={handleToggleType}
+                    attributeFilter={attributeFilter}
+                    onToggleAttribute={handleToggleAttribute}
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    matchCount={searchMatches.length}
+                    activeMatchIndex={clampedMatchIndex}
+                    onNextMatch={handleNextMatch}
+                    onPrevMatch={handlePrevMatch}
+                />
             </>}
             sidePanel={(selectedNode || selectedEdge) && (
                 <Panel position="top-right" className={`node-info-panel ${panelCollapsed ? 'collapsed' : ''}`}>
@@ -887,6 +1046,11 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                             <>
                                 <h4>{selectedNode.label}</h4>
                                 <p>Type: {selectedNode.reviewType}</p>
+                                {selectedNode.reviewId && (
+                                    <p className="notes" style={{ fontFamily: 'monospace', fontSize: 11, opacity: 0.6 }} title="Identifiant interne Reviews-Maker — pas un numéro de traçabilité officiel">
+                                        {getLotCode(selectedNode.reviewId)}
+                                    </p>
+                                )}
                                 {selectedNode.reviewOrphaned && (
                                     <p className="notes" style={{ color: '#fbbf24' }}>
                                         ⚠️ La review liée à ce produit a été supprimée
@@ -1004,6 +1168,50 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                                 ))}
                             </div>
                         )}
+
+                        <div className="info-events">
+                            <div className="info-section-label-row">
+                                <p className="info-section-label">Journal</p>
+                                {!readOnly && !showEventForm && (
+                                    <button type="button" className="info-event-add-btn" onClick={() => setShowEventForm(true)} title="Journaliser un événement">
+                                        <Plus size={12} /> Événement
+                                    </button>
+                                )}
+                            </div>
+
+                            {showEventForm && (
+                                <ChainEventForm
+                                    chainId={store.selectedChainId}
+                                    entityType={panelTargetType === 'node' ? 'chainNode' : 'chainEdge'}
+                                    entityId={panelTargetId}
+                                    onClose={() => setShowEventForm(false)}
+                                />
+                            )}
+
+                            {panelEvents.map(event => {
+                                const isManual = event.action === 'manual.event';
+                                // Constats dérivés (moteur de règles) — jamais persistés, recalculés
+                                // à chaque affichage à partir de la donnée brute de l'événement.
+                                const derivedFlags = isManual ? evaluateChainEventRules(event) : [];
+                                return (
+                                    <div key={event.id} className={`info-event-row${isManual ? ` severity-${event.metadata?.severity || 'info'}` : ''}`}>
+                                        <span className="info-event-label">
+                                            {isManual ? event.metadata?.title : (CHAIN_EVENT_LABELS[event.action] || event.action)}
+                                        </span>
+                                        {isManual && event.metadata?.description && (
+                                            <span className="info-event-description">{event.metadata.description}</span>
+                                        )}
+                                        {isManual && event.metadata?.equipmentLabel && (
+                                            <span className="info-event-equipment">Équipement : {event.metadata.equipmentLabel}</span>
+                                        )}
+                                        {derivedFlags.map(flag => (
+                                            <span key={flag} className="info-event-flag">{flag}</span>
+                                        ))}
+                                        <span className="info-event-date">{formatChainEventDate(event.createdAt)}</span>
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                     )}
                 </Panel>

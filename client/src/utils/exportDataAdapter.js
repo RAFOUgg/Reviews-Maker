@@ -51,6 +51,13 @@ export function buildExportReviewData(reviewData) {
     setOrDelete(adapted, 'cbnLevel', reviewData.cbnPercent);
     setOrDelete(adapted, 'thcvLevel', reviewData.thcvPercent);
 
+    // Confiance producteur — ProducerProfile.isVerified/businessType, jusqu'ici lus uniquement côté
+    // compte (page Account, admin), jamais exposés sur une review/export (Chantier 5 de la roadmap
+    // traçabilité). `author.producerProfile` doit être inclus par la route qui a fourni `reviewData`
+    // (cf. flower/hash/concentrate/edible-reviews.js, GET /:id) — absent sinon, pas une erreur.
+    setOrDelete(adapted, 'producerVerified', pick(reviewData.producerVerified, reviewData.author?.producerProfile?.isVerified));
+    setOrDelete(adapted, 'producerBusinessType', pick(reviewData.producerBusinessType, reviewData.author?.producerProfile?.businessType));
+
     // Génétique / provenance
     setOrDelete(adapted, 'strainType', pick(reviewData.varietyType, reviewData.strainType));
     setOrDelete(adapted, 'indicaRatio', pick(reviewData.indicaPercent, reviewData.indicaRatio));

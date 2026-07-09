@@ -9,6 +9,8 @@
  * GET    /api/production-chains/chains                          - Lister les chaînes de l'utilisateur
  * POST   /api/production-chains/chains                          - Créer une nouvelle chaîne
  * GET    /api/production-chains/chains/:id                      - Récupérer une chaîne
+ * GET    /api/production-chains/chains/:id/events                - Journal d'événements (AuditLog) de la chaîne
+ * POST   /api/production-chains/chains/:id/events                - Journaliser un événement manuel (incident, équipement...)
  * PUT    /api/production-chains/chains/:id                      - Modifier une chaîne
  * DELETE /api/production-chains/chains/:id                      - Supprimer une chaîne
  *
@@ -44,6 +46,7 @@ import { requireFeature } from '../middleware/permissions.js'
 import { wouldCreateCycle } from '../utils/graphCycle.js'
 import { REVIEW_TYPE_TO_DB } from '../utils/reviewTypeMap.js'
 import { resolveChainEdgeEndpoint } from '../utils/chainEdgeEndpoints.js'
+import { logChainEvent } from '../utils/chainAuditLog.js'
 
 const router = express.Router()
 const requireChainAccess = requireFeature('production_chain')
@@ -195,6 +198,127 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
     }
 })
 
+// Journal d'événements de la chaîne (cf. utils/chainAuditLog.js) — AuditLog n'a pas de colonne
+// chainId, donc on récupère d'abord les ids de nœuds/liaisons/annotations de CETTE chaîne, puis on
+// filtre AuditLog sur ces entityId. Même règle d'accès que GET /chains/:id (lecture publique ou
+// propriétaire uniquement).
+router.get("/chains/:id/events", optionalAuth, async (req, res) => {
+    try {
+        const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
+
+        if (!chain) {
+            return res.status(404).json({ error: "Chain not found" })
+        }
+
+        if (!chain.isPublic && chain.userId !== req.user?.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const [nodes, edges, annotations] = await Promise.all([
+            prisma.chainNode.findMany({ where: { chainId: req.params.id }, select: { id: true } }),
+            prisma.chainEdge.findMany({ where: { chainId: req.params.id }, select: { id: true } }),
+            prisma.chainAnnotation.findMany({ where: { chainId: req.params.id }, select: { id: true } })
+        ])
+
+        const entityIds = [
+            ...nodes.map(n => n.id),
+            ...edges.map(e => e.id),
+            ...annotations.map(a => a.id)
+        ]
+
+        if (entityIds.length === 0) {
+            return res.json([])
+        }
+
+        const events = await prisma.auditLog.findMany({
+            where: {
+                entityType: { in: ['chainNode', 'chainEdge', 'chainAnnotation'] },
+                entityId: { in: entityIds }
+            },
+            orderBy: { createdAt: 'desc' },
+            take: 500
+        })
+
+        res.json(events.map(e => ({ ...e, metadata: JSON.parse(e.metadata || "{}") })))
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch chain events" })
+    }
+})
+
+// Journalisation manuelle d'un événement (ex: "le frigo est resté ouvert 4min31s") — jusqu'ici le
+// journal (cf. GET .../events ci-dessus) n'était rempli qu'automatiquement par les mutations de
+// nœuds/liaisons/annotations. Aucun champ n'est validé de façon bloquante côté serveur au-delà du
+// titre (cf. principe "jamais de contrainte serveur bloquante",
+// DOCUMENTATION/DATA_REFERENCE/11_TRACABILITE_ET_EXTENSIBILITE.md) — severity/équipement restent du
+// texte libre, une valeur non prévue par l'UI reste acceptée.
+router.post("/chains/:id/events", requireAuth, requireChainAccess, async (req, res) => {
+    try {
+        const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
+
+        if (!chain) {
+            return res.status(404).json({ error: "Chain not found" })
+        }
+
+        if (chain.userId !== req.user.id) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const {
+            entityType, entityId, title, description = null,
+            severity = null, startedAt = null, endedAt = null,
+            equipmentId = null, equipmentLabel = null
+        } = req.body
+
+        if (!title || !title.trim()) {
+            return res.status(400).json({ error: "title is required" })
+        }
+        if (entityType !== 'chainNode' && entityType !== 'chainEdge') {
+            return res.status(400).json({ error: "entityType must be 'chainNode' or 'chainEdge'" })
+        }
+
+        // L'entité ciblée doit appartenir à CETTE chaîne — même garde-fou que les cartes épinglées
+        // (éviter de journaliser un événement sur un nœud/liaison d'une autre chaîne).
+        const entityExists = entityType === 'chainNode'
+            ? await prisma.chainNode.findFirst({ where: { id: entityId, chainId: req.params.id } })
+            : await prisma.chainEdge.findFirst({ where: { id: entityId, chainId: req.params.id } })
+
+        if (!entityExists) {
+            return res.status(400).json({ error: "Target entity not found in this chain" })
+        }
+
+        // equipmentId (optionnel) référence une entrée SavedData (bibliothèque "Matériel",
+        // cf. client/src/pages/library/tabs/DataTab.jsx) — pas de FK Prisma (SavedData n'a pas de
+        // vocation à être verrouillée par une relation), juste une vérification applicative
+        // d'appartenance à l'utilisateur courant, même pattern que reviewId sur ChainNode.
+        if (equipmentId) {
+            const equipment = await prisma.savedData.findFirst({ where: { id: equipmentId, userId: req.user.id } })
+            if (!equipment) {
+                return res.status(400).json({ error: "Invalid equipment reference" })
+            }
+        }
+
+        await logChainEvent(prisma, {
+            userId: req.user.id,
+            action: 'manual.event',
+            entityType,
+            entityId,
+            metadata: {
+                title: title.trim(),
+                description: description?.trim() || null,
+                severity,
+                startedAt,
+                endedAt,
+                equipmentId,
+                equipmentLabel: equipmentLabel?.trim() || null
+            }
+        })
+
+        res.status(201).json({ message: "Event logged" })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to log event" })
+    }
+})
+
 router.put("/chains/:id", requireAuth, requireChainAccess, validateChainUpdate, async (req, res) => {
     try {
         const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
@@ -310,6 +434,14 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
                 }
             })
 
+            await logChainEvent(prisma, {
+                userId: req.user.id,
+                action: 'chain_node.create',
+                entityType: 'chainNode',
+                entityId: node.id,
+                metadata: { chainId: req.params.id, reviewType, reviewId, label: node.label }
+            })
+
             res.status(201).json({ ...node, position: JSON.parse(node.position), cellData: JSON.parse(node.cellData || "[]"), media: JSON.parse(node.media || "[]") })
         } catch (error) {
             if (error.code === "P2002") {
@@ -386,6 +518,37 @@ router.put("/nodes/:nodeId", requireAuth, requireChainAccess, validateChainNodeU
                 where: { id: req.params.nodeId },
                 data
             })
+
+            // On ne journalise jamais un simple déplacement/changement de couleur (bruit cosmétique,
+            // pas un événement de production) — seulement les changements qui reflètent une vraie
+            // action physique/documentaire : relier/détacher une review, attacher des cellules ou
+            // des médias.
+            if (reviewId !== undefined) {
+                await logChainEvent(prisma, {
+                    userId: req.user.id,
+                    action: reviewId === null ? 'chain_node.unlink' : 'chain_node.relink',
+                    entityType: 'chainNode',
+                    entityId: node.id,
+                    metadata: { chainId: node.chainId, label: updated.label }
+                })
+            } else if (cellData !== undefined) {
+                await logChainEvent(prisma, {
+                    userId: req.user.id,
+                    action: 'chain_node.cells_update',
+                    entityType: 'chainNode',
+                    entityId: node.id,
+                    metadata: { chainId: node.chainId, label: node.label, cellCount: Array.isArray(cellData) ? cellData.length : 0 }
+                })
+            } else if (media !== undefined) {
+                await logChainEvent(prisma, {
+                    userId: req.user.id,
+                    action: 'chain_node.media_update',
+                    entityType: 'chainNode',
+                    entityId: node.id,
+                    metadata: { chainId: node.chainId, label: node.label, mediaCount: Array.isArray(media) ? media.length : 0 }
+                })
+            }
+
             res.json({ ...updated, position: JSON.parse(updated.position), cellData: JSON.parse(updated.cellData || "[]"), media: JSON.parse(updated.media || "[]") })
         } catch (error) {
             if (error.code === "P2002") {
@@ -412,6 +575,16 @@ router.delete("/nodes/:nodeId", requireAuth, requireChainAccess, async (req, res
         if (node.chain.userId !== req.user.id) {
             return res.status(403).json({ error: "Forbidden" })
         }
+
+        // Journalisé AVANT la suppression (pas de FK vers ChainNode sur AuditLog — le label est
+        // donc capturé en clair dans metadata, seul moyen de rester lisible une fois le nœud parti).
+        await logChainEvent(prisma, {
+            userId: req.user.id,
+            action: 'chain_node.delete',
+            entityType: 'chainNode',
+            entityId: node.id,
+            metadata: { chainId: node.chainId, label: node.label }
+        })
 
         // Les arêtes seront supprimées en cascade via Prisma
         await prisma.chainNode.delete({ where: { id: req.params.nodeId } })
@@ -487,6 +660,14 @@ router.post("/chains/:id/edges", requireAuth, requireChainAccess, validateChainE
                 ...(cellData !== undefined && { cellData: JSON.stringify(cellData) }),
                 ...(media !== undefined && { media: JSON.stringify(media) })
             }
+        })
+
+        await logChainEvent(prisma, {
+            userId: req.user.id,
+            action: 'chain_edge.create',
+            entityType: 'chainEdge',
+            entityId: edge.id,
+            metadata: { chainId: req.params.id, technique: edge.technique, date: edge.date }
         })
 
         res.status(201).json(normalizeEdge({ ...edge, cellData: JSON.parse(edge.cellData || "[]"), media: JSON.parse(edge.media || "[]") }))
@@ -586,6 +767,46 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
             }
         })
 
+        // Même principe que la mise à jour d'un nœud : pas de bruit pour un simple déplacement de
+        // poignée (waypoint/handle) — seuls les changements qui documentent la transformation elle-
+        // même sont journalisés.
+        if (technique !== undefined || date !== undefined || notes !== undefined) {
+            await logChainEvent(prisma, {
+                userId: req.user.id,
+                action: 'chain_edge.update',
+                entityType: 'chainEdge',
+                entityId: edge.id,
+                metadata: { chainId: edge.chainId, technique: updated.technique, date: updated.date }
+            })
+        }
+        if (newSourceData || newTargetData) {
+            await logChainEvent(prisma, {
+                userId: req.user.id,
+                action: 'chain_edge.reconnect',
+                entityType: 'chainEdge',
+                entityId: edge.id,
+                metadata: { chainId: edge.chainId, technique: updated.technique }
+            })
+        }
+        if (cellData !== undefined) {
+            await logChainEvent(prisma, {
+                userId: req.user.id,
+                action: 'chain_edge.cells_update',
+                entityType: 'chainEdge',
+                entityId: edge.id,
+                metadata: { chainId: edge.chainId, technique: edge.technique, cellCount: Array.isArray(cellData) ? cellData.length : 0 }
+            })
+        }
+        if (media !== undefined) {
+            await logChainEvent(prisma, {
+                userId: req.user.id,
+                action: 'chain_edge.media_update',
+                entityType: 'chainEdge',
+                entityId: edge.id,
+                metadata: { chainId: edge.chainId, technique: edge.technique, mediaCount: Array.isArray(media) ? media.length : 0 }
+            })
+        }
+
         res.json(normalizeEdge({ ...updated, cellData: JSON.parse(updated.cellData || "[]"), media: JSON.parse(updated.media || "[]") }))
     } catch (error) {
         res.status(500).json({ error: "Failed to update chain edge" })
@@ -606,6 +827,14 @@ router.delete("/edges/:edgeId", requireAuth, requireChainAccess, async (req, res
         if (edge.chain.userId !== req.user.id) {
             return res.status(403).json({ error: "Forbidden" })
         }
+
+        await logChainEvent(prisma, {
+            userId: req.user.id,
+            action: 'chain_edge.delete',
+            entityType: 'chainEdge',
+            entityId: edge.id,
+            metadata: { chainId: edge.chainId, technique: edge.technique }
+        })
 
         await prisma.chainEdge.delete({ where: { id: req.params.edgeId } })
 
@@ -669,6 +898,19 @@ router.post("/chains/:id/annotations", requireAuth, requireChainAccess, validate
                 mediaUrl,
                 mediaType
             }
+        })
+
+        // Une bulle épinglée est aujourd'hui l'échappatoire libre naturelle pour noter un événement
+        // qui n'a pas encore de type structuré (cf. principe "toujours une échappatoire libre",
+        // DOCUMENTATION/DATA_REFERENCE/11_TRACABILITE_ET_EXTENSIBILITE.md) — vaut la peine d'être
+        // journalisée à la création, contrairement à ses modifications ultérieures (surtout des
+        // déplacements sur le canvas, pas des événements en soi).
+        await logChainEvent(prisma, {
+            userId: req.user.id,
+            action: 'chain_annotation.create',
+            entityType: 'chainAnnotation',
+            entityId: annotation.id,
+            metadata: { chainId: req.params.id, title: annotation.title }
         })
 
         res.status(201).json({ ...annotation, position: JSON.parse(annotation.position), body: JSON.parse(annotation.body || "[]") })
@@ -752,6 +994,14 @@ router.delete("/annotations/:annotationId", requireAuth, requireChainAccess, asy
             return res.status(403).json({ error: "Forbidden" })
         }
 
+        await logChainEvent(prisma, {
+            userId: req.user.id,
+            action: 'chain_annotation.delete',
+            entityType: 'chainAnnotation',
+            entityId: annotation.id,
+            metadata: { chainId: annotation.chainId, title: annotation.title }
+        })
+
         await prisma.chainAnnotation.delete({ where: { id: req.params.annotationId } })
 
         res.json({ message: "Annotation deleted successfully" })
@@ -797,6 +1047,49 @@ router.get("/for-review/:reviewType/:reviewId", optionalAuth, async (req, res) =
         res.json(visible)
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch chains for review" })
+    }
+})
+
+// Journal d'événements d'UNE review (Chantier 6 — rapport de traçabilité) : une review peut
+// apparaître dans plusieurs ChainNode (plusieurs chaînes, ou plusieurs nœuds d'une même chaîne) —
+// on agrège les événements de tous les nœuds correspondants, dans les chaînes visibles par
+// l'appelant (même règle d'accès que GET /for-review/:reviewType/:reviewId ci-dessus).
+router.get("/for-review/:reviewType/:reviewId/events", optionalAuth, async (req, res) => {
+    try {
+        const { reviewType, reviewId } = req.params
+
+        const nodes = await prisma.chainNode.findMany({
+            where: { reviewType, reviewId },
+            select: { id: true, chainId: true }
+        })
+
+        if (nodes.length === 0) {
+            return res.json([])
+        }
+
+        const chainIds = [...new Set(nodes.map(n => n.chainId))]
+        const chains = await prisma.productionChain.findMany({
+            where: { id: { in: chainIds } },
+            select: { id: true, isPublic: true, userId: true }
+        })
+        const visibleChainIds = new Set(
+            chains.filter(c => c.isPublic || c.userId === req.user?.id).map(c => c.id)
+        )
+
+        const entityIds = nodes.filter(n => visibleChainIds.has(n.chainId)).map(n => n.id)
+        if (entityIds.length === 0) {
+            return res.json([])
+        }
+
+        const events = await prisma.auditLog.findMany({
+            where: { entityType: 'chainNode', entityId: { in: entityIds } },
+            orderBy: { createdAt: 'desc' },
+            take: 200
+        })
+
+        res.json(events.map(e => ({ ...e, metadata: JSON.parse(e.metadata || "{}") })))
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch events for review" })
     }
 })
 

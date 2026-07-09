@@ -4,6 +4,7 @@ import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
+import TraceabilityReportTemplate from '../templates/TraceabilityReportTemplate';
 import CustomTemplate from '../shared/config/CustomTemplate';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 
@@ -12,7 +13,8 @@ const TEMPLATES = {
     modernCompact: ModernCompactTemplate,
     detailedCard: DetailedCardTemplate,
     blogArticle: BlogArticleTemplate,
-    socialStory: SocialStoryTemplate
+    socialStory: SocialStoryTemplate,
+    traceabilityReport: TraceabilityReportTemplate
     ,
     custom: CustomTemplate
 };

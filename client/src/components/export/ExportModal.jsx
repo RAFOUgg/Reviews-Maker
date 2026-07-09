@@ -12,6 +12,9 @@ import {
     ACCOUNT_TYPES
 } from '../../config/exportConfig';
 import TemplateRenderer from './TemplateRenderer';
+import { buildExportReviewData } from '../../utils/exportDataAdapter';
+import { computeContentHash } from '../../utils/exportSnapshot';
+import { incrementExportCount } from '../../hooks/useUsageStats';
 
 // Ratio dimensions must match TemplateRenderer
 const RATIO_DIMS = {
@@ -143,6 +146,19 @@ export default function ExportModal({ onClose }) {
                     break;
                 default:
                     throw new Error('Format non supporté');
+            }
+
+            // Figement (Chantier 6) : seul le rapport de traçabilité fige ses données rendues —
+            // un export image classique reste un usage ponctuel, pas un document à faire attester
+            // plus tard. Best-effort : un échec ici ne doit jamais invalider l'export déjà téléchargé.
+            if (config?.template === 'traceabilityReport' && reviewData?.id) {
+                try {
+                    const snapshotData = buildExportReviewData(reviewData);
+                    const contentHash = await computeContentHash(snapshotData);
+                    await incrementExportCount(selectedFormat, 'standard', { reviewId: reviewData.id, snapshotData, contentHash });
+                } catch {
+                    // best-effort, cf. commentaire ci-dessus
+                }
             }
 
             setExportStatus('✅ Export réussi !');

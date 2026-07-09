@@ -12,16 +12,25 @@ import { Handle, Position } from 'reactflow';
 import { AlertTriangle, Layers, Image as ImageIcon } from 'lucide-react';
 import { TYPE_META } from '../../utils/reviewTypeMeta';
 import { getImageUrl } from '../../utils/imageUtils';
+import useChainZoomTier from './useChainZoomTier';
 
 const ReviewNode = ({ data, selected }) => {
     const meta = TYPE_META[data.reviewType] || TYPE_META.flower;
     const Icon = meta.icon;
     const accentColor = data.color || '#10b981';
     const isSelected = data.selected ?? selected;
+    // Niveau de détail selon le zoom (Lot 4) — 'far' (carte minimale), 'default' (rendu actuel,
+    // inchangé), 'near' (vignette média réelle + résumé de la cellule la plus récente). La carte
+    // garde une hauteur FIXE (.shape-rounded, cf. son commentaire) quel que soit le palier — on ne
+    // fait qu'ajouter/masquer du contenu à l'intérieur, jamais varier la taille du nœud lui-même,
+    // pour ne jamais déplacer la poignée Bottom mesurée par React Flow.
+    const zoomTier = useChainZoomTier();
+    const isFar = zoomTier === 'far';
+    const isNear = zoomTier === 'near';
 
     return (
         <div
-            className={`cultivar-node shape-rounded ${isSelected ? 'selected' : ''}`}
+            className={`cultivar-node shape-rounded ${isSelected ? 'selected' : ''} ${data.dimmed ? 'chain-node-dimmed' : ''} ${data.searchActive ? 'chain-node-search-active' : ''} chain-node-zoom-${zoomTier}`}
             style={{ '--accent-color': accentColor }}
         >
             {/* Top/Bottom ont besoin d'un id explicite comme Left/Right — sinon React Flow leur
@@ -51,12 +60,24 @@ const ReviewNode = ({ data, selected }) => {
                 </span>
             </div>
 
-            <div className="node-content">
-                <div className="node-label" title={data.label}>{data.label}</div>
-                <div className="node-genetics">
-                    <span className="genetics-type">{meta.label}</span>
+            {/* Palier 'far' : pas de texte (juste photo/icône + pastille couleur portée par
+                --accent-color sur la bordure) — illisible et encombrant sur une vue d'ensemble
+                dense, cf. décision Lot 4. */}
+            {!isFar && (
+                <div className="node-content">
+                    <div className="node-label" title={data.label}>{data.label}</div>
+                    <div className="node-genetics">
+                        <span className="genetics-type">{meta.label}</span>
+                    </div>
+                    {/* Palier 'near' uniquement : résumé de la cellule pipeline la plus récente —
+                        remplace le besoin de cliquer pour voir ne serait-ce que le premier champ. */}
+                    {isNear && data.latestCellSummary && (
+                        <div className="node-latest-cell" title={data.latestCellSummary}>
+                            {data.latestCellSummary}
+                        </div>
+                    )}
                 </div>
-            </div>
+            )}
 
             {data.reviewOrphaned && (
                 <div className="node-orphan-badge" title="La review liée à ce produit a été supprimée">
@@ -65,55 +86,77 @@ const ReviewNode = ({ data, selected }) => {
             )}
 
             {data.cellCount > 0 && (
-                <div
-                    className="node-cell-badge"
-                    title={`${data.cellCount} cellule${data.cellCount > 1 ? 's' : ''} de pipeline attachée${data.cellCount > 1 ? 's' : ''}`}
-                    style={{
-                        position: 'absolute',
-                        bottom: -4,
-                        right: -4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        padding: '1px 5px',
-                        borderRadius: 999,
-                        background: 'rgba(16, 185, 129, 0.9)',
-                        color: '#fff',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        lineHeight: '14px',
-                        border: '1px solid rgba(255,255,255,0.6)'
-                    }}
-                >
-                    <Layers size={9} strokeWidth={2.5} />
-                    {data.cellCount}
-                </div>
+                isFar ? (
+                    <div className="node-dot-badge node-dot-badge-cell" title={`${data.cellCount} cellule(s) de pipeline attachée(s)`} />
+                ) : (
+                    <div
+                        className="node-cell-badge"
+                        title={`${data.cellCount} cellule${data.cellCount > 1 ? 's' : ''} de pipeline attachée${data.cellCount > 1 ? 's' : ''}`}
+                        style={{
+                            position: 'absolute',
+                            bottom: -4,
+                            right: -4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            padding: '1px 5px',
+                            borderRadius: 999,
+                            background: 'rgba(16, 185, 129, 0.9)',
+                            color: '#fff',
+                            fontSize: 10,
+                            fontWeight: 600,
+                            lineHeight: '14px',
+                            border: '1px solid rgba(255,255,255,0.6)'
+                        }}
+                    >
+                        <Layers size={9} strokeWidth={2.5} />
+                        {data.cellCount}
+                    </div>
+                )
             )}
 
             {data.mediaCount > 0 && (
-                <div
-                    className="node-media-badge"
-                    title={`${data.mediaCount} photo${data.mediaCount > 1 ? 's' : ''}/vidéo${data.mediaCount > 1 ? 's' : ''} attachée${data.mediaCount > 1 ? 's' : ''}`}
-                    style={{
-                        position: 'absolute',
-                        top: -4,
-                        right: -4,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: 2,
-                        padding: '1px 5px',
-                        borderRadius: 999,
-                        background: 'rgba(245, 158, 11, 0.9)',
-                        color: '#fff',
-                        fontSize: 10,
-                        fontWeight: 600,
-                        lineHeight: '14px',
-                        border: '1px solid rgba(255,255,255,0.6)'
-                    }}
-                >
-                    <ImageIcon size={9} strokeWidth={2.5} />
-                    {data.mediaCount}
-                </div>
+                isFar ? (
+                    <div className="node-dot-badge node-dot-badge-media" title={`${data.mediaCount} photo(s)/vidéo(s) attachée(s)`} />
+                ) : isNear && data.previewMediaUrl ? (
+                    // Palier 'near' : vraie vignette (première photo/vidéo attachée) plutôt qu'un
+                    // simple chiffre — même position/gabarit que le badge de comptage pour ne rien
+                    // faire varier dans la mise en page du nœud.
+                    <div
+                        className="node-media-thumb"
+                        title={`${data.mediaCount} photo${data.mediaCount > 1 ? 's' : ''}/vidéo${data.mediaCount > 1 ? 's' : ''} attachée${data.mediaCount > 1 ? 's' : ''}`}
+                    >
+                        {data.previewMediaType === 'video' ? (
+                            <video src={data.previewMediaUrl} muted />
+                        ) : (
+                            <img src={getImageUrl(data.previewMediaUrl)} alt="" onError={(e) => { e.target.style.display = 'none'; }} />
+                        )}
+                    </div>
+                ) : (
+                    <div
+                        className="node-media-badge"
+                        title={`${data.mediaCount} photo${data.mediaCount > 1 ? 's' : ''}/vidéo${data.mediaCount > 1 ? 's' : ''} attachée${data.mediaCount > 1 ? 's' : ''}`}
+                        style={{
+                            position: 'absolute',
+                            top: -4,
+                            right: -4,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 2,
+                            padding: '1px 5px',
+                            borderRadius: 999,
+                            background: 'rgba(245, 158, 11, 0.9)',
+                            color: '#fff',
+                            fontSize: 10,
+                            fontWeight: 600,
+                            lineHeight: '14px',
+                            border: '1px solid rgba(255,255,255,0.6)'
+                        }}
+                    >
+                        <ImageIcon size={9} strokeWidth={2.5} />
+                        {data.mediaCount}
+                    </div>
+                )
             )}
 
             <Handle type="source" id="bottom-source" position={Position.Bottom} className="node-handle bottom" />

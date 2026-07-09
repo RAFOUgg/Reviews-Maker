@@ -801,7 +801,10 @@ router.get('/:id', asyncHandler(async (req, res) => {
                     id: true,
                     username: true,
                     avatar: true,
-                    discordId: true
+                    discordId: true,
+                    // Badge "producteur vérifié" en aval (export) — cf. Chantier 5 de la roadmap
+                    // traçabilité, jusqu'ici lu uniquement côté compte, jamais exposé sur une review.
+                    producerProfile: { select: { isVerified: true, businessType: true } }
                 }
             },
             flowerData: true // Include FlowerReview

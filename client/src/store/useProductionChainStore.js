@@ -60,6 +60,12 @@ const useProductionChainStore = create(
             // STATE - CANVAS
             canvasLoading: false,
 
+            // STATE - EVENTS (journal d'événements de la chaîne, cf. server-new/utils/chainAuditLog.js
+            // — réutilise AuditLog, pas une nouvelle table). Chargé une fois par chaîne (pas par
+            // nœud/liaison sélectionné) puis filtré côté panneau, même stratégie que `nodes`/`edges`.
+            events: [],
+            eventsLoading: false,
+
             // STATE - CHAIN SECTION LINK (toggle Pipeline <-> Chaîne de production dans les
             // formulaires de review — un seul embed actif à la fois par page, donc un état
             // global partagé évite le prop-drilling entre le bouton (dans le titre de section)
@@ -171,11 +177,63 @@ const useProductionChainStore = create(
                         canvasLoading: false
                     });
 
+                    get().fetchChainEvents(chainId);
+
                     return { data: chain };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to load chain';
                     set({ chainError: errorMsg, canvasLoading: false });
                     return { error: errorMsg };
+                }
+            },
+
+            // Chargé séparément de loadChain (pas dans la même réponse) — reste léger et
+            // n'affecte jamais canvasLoading (pas de flash spinner du canevas pour un panneau
+            // secondaire). Appelé une fois après loadChain, pas à chaque sélection de nœud/liaison —
+            // le panneau filtre ensuite `events` côté client par entityId.
+            fetchChainEvents: async (chainId) => {
+                set({ eventsLoading: true });
+                try {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}/events`, {
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch chain events: ${response.status}`);
+                    }
+
+                    const events = await response.json();
+                    set({ events, eventsLoading: false });
+                    return { data: events };
+                } catch (error) {
+                    set({ eventsLoading: false });
+                    return { error: error.message || 'Failed to fetch chain events' };
+                }
+            },
+
+            // Journalise un événement manuel (incident, action documentée hors CRUD automatique —
+            // ex: "chaîne du froid rompue") sur le nœud/liaison sélectionné. `payload` : { entityType:
+            // 'chainNode'|'chainEdge', entityId, title, description, severity, startedAt, endedAt,
+            // equipmentId, equipmentLabel }.
+            logManualEvent: async (chainId, payload) => {
+                try {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}/events`, {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to log event');
+                    }
+
+                    await get().fetchChainEvents(chainId);
+                    return { success: true };
+                } catch (error) {
+                    return { error: error.message || 'Failed to log event' };
                 }
             },
 
@@ -314,6 +372,10 @@ const useProductionChainStore = create(
                         get().updateChain(state.selectedChainId, { name: newNode.label });
                     }
 
+                    // Rafraîchit le journal en arrière-plan (pas attendu) — l'action produit elle-
+                    // même ne doit jamais être ralentie par la relecture du journal.
+                    get().fetchChainEvents(state.selectedChainId);
+
                     return { data: newNode };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to add node';
@@ -344,6 +406,11 @@ const useProductionChainStore = create(
                         canvasLoading: false
                     }));
 
+                    // Un simple déplacement/couleur ne produit aucune nouvelle entrée côté serveur
+                    // (cf. production-chains.js) — rafraîchir reste sans effet visible dans ce cas,
+                    // mais évite d'avoir à distinguer les deux ici.
+                    get().fetchChainEvents(get().selectedChainId);
+
                     return { data: updated };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to update node';
@@ -353,6 +420,7 @@ const useProductionChainStore = create(
             },
 
             deleteNode: async (nodeId) => {
+                const chainId = get().selectedChainId;
                 set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/nodes/${nodeId}`, {
@@ -370,6 +438,8 @@ const useProductionChainStore = create(
                         selectedNodeId: state.selectedNodeId === nodeId ? null : state.selectedNodeId,
                         canvasLoading: false
                     }));
+
+                    get().fetchChainEvents(chainId);
 
                     return { success: true };
                 } catch (error) {
@@ -413,6 +483,8 @@ const useProductionChainStore = create(
                         canvasLoading: false
                     }));
 
+                    get().fetchChainEvents(state.selectedChainId);
+
                     return { data: newAnnotation };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to add annotation';
@@ -452,6 +524,7 @@ const useProductionChainStore = create(
             },
 
             deleteAnnotation: async (annotationId) => {
+                const chainId = get().selectedChainId;
                 set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/annotations/${annotationId}`, {
@@ -467,6 +540,8 @@ const useProductionChainStore = create(
                         annotations: state.annotations.filter(a => a.id !== annotationId),
                         canvasLoading: false
                     }));
+
+                    get().fetchChainEvents(chainId);
 
                     return { success: true };
                 } catch (error) {
@@ -508,6 +583,8 @@ const useProductionChainStore = create(
                         edgeFormData: null
                     }));
 
+                    get().fetchChainEvents(state.selectedChainId);
+
                     return { data: newEdge };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to create edge';
@@ -540,6 +617,8 @@ const useProductionChainStore = create(
                         edgeFormData: null
                     }));
 
+                    get().fetchChainEvents(get().selectedChainId);
+
                     return { data: updated };
                 } catch (error) {
                     const errorMsg = error.message || 'Failed to update edge';
@@ -549,6 +628,7 @@ const useProductionChainStore = create(
             },
 
             deleteEdge: async (edgeId) => {
+                const chainId = get().selectedChainId;
                 set({ canvasLoading: true, chainError: null });
                 try {
                     const response = await fetch(`${API_BASE}/edges/${edgeId}`, {
@@ -565,6 +645,8 @@ const useProductionChainStore = create(
                         selectedEdgeId: state.selectedEdgeId === edgeId ? null : state.selectedEdgeId,
                         canvasLoading: false
                     }));
+
+                    get().fetchChainEvents(chainId);
 
                     return { success: true };
                 } catch (error) {

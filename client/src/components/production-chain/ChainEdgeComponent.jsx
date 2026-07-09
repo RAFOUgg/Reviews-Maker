@@ -4,6 +4,7 @@ import { Layers, Image as ImageIcon } from 'lucide-react';
 import { useEdgeEndpointParams, useFloatingNodeRect } from '../graph-canvas/floatingEdgeUtils';
 import { useDraggableEndpoint } from '../graph-canvas/useDraggableEndpoint';
 import DropTargetHighlight from '../graph-canvas/DropTargetHighlight';
+import useChainZoomTier from './useChainZoomTier';
 
 /**
  * ChainEdgeComponent - Edge personnalisé pour les liaisons de transformation entre deux fiches
@@ -62,6 +63,12 @@ export default function ChainEdgeComponent({
 
     const label = data?.technique || 'Transformation';
     const date = data?.date ? new Date(data.date).toLocaleDateString('fr-FR') : null;
+    const dimmed = !!data?.dimmed;
+    const searchActive = !!data?.searchActive;
+    // Niveau de détail selon le zoom (Lot 4) — mêmes paliers/raisonnement que ReviewNode.jsx.
+    const zoomTier = useChainZoomTier();
+    const isFar = zoomTier === 'far';
+    const isNear = zoomTier === 'near';
 
     const handleHandlePointerDown = useCallback((event) => {
         event.stopPropagation();
@@ -101,6 +108,7 @@ export default function ChainEdgeComponent({
                     stroke: selected ? '#f59e0b' : '#d97706',
                     strokeWidth: selected ? 2.5 : 2,
                     filter: selected ? 'drop-shadow(0 0 8px #f59e0b)' : 'none',
+                    opacity: dimmed ? 0.18 : 1,
                     transition: dragPos ? 'none' : 'all 200ms ease-in-out',
                 }}
                 markerEnd="url(#chain-arrowhead)"
@@ -116,25 +124,43 @@ export default function ChainEdgeComponent({
                         fontSize: '12px',
                         fontWeight: '600',
                         pointerEvents: 'all',
+                        opacity: dimmed ? 0.18 : 1,
                     }}
                     className="nodrag nopan"
                 >
-                    <div className="px-2 py-1 bg-slate-800/90 border border-amber-500/30 rounded text-amber-300 backdrop-blur-sm hover:bg-slate-700/90 hover:border-amber-400/50 transition-all cursor-pointer text-center">
-                        <div>{label}</div>
-                        {date && <div className="text-[10px] text-amber-400/70">{date}</div>}
-                        {data?.cellCount > 0 && (
-                            <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-400" title={`${data.cellCount} cellule(s) de pipeline attachée(s)`}>
-                                <Layers size={9} strokeWidth={2.5} />
-                                {data.cellCount}
-                            </div>
-                        )}
-                        {data?.mediaCount > 0 && (
-                            <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400" title={`${data.mediaCount} photo(s)/vidéo(s) attachée(s)`}>
-                                <ImageIcon size={9} strokeWidth={2.5} />
-                                {data.mediaCount}
-                            </div>
-                        )}
-                    </div>
+                    {isFar ? (
+                        // Palier 'far' : juste une pastille de présence si la liaison porte des
+                        // données — un libellé technique/date par arête devient illisible et
+                        // encombrant dès qu'une chaîne compte beaucoup de transformations.
+                        (data?.cellCount > 0 || data?.mediaCount > 0) && (
+                            <div
+                                className={`chain-edge-dot-badge ${searchActive ? 'search-active' : ''}`}
+                                title={label}
+                            />
+                        )
+                    ) : (
+                        <div className={`px-2 py-1 bg-slate-800/90 border rounded text-amber-300 backdrop-blur-sm hover:bg-slate-700/90 hover:border-amber-400/50 transition-all cursor-pointer text-center ${searchActive ? 'border-emerald-400 ring-2 ring-emerald-400/60' : 'border-amber-500/30'}`}>
+                            <div>{label}</div>
+                            {date && <div className="text-[10px] text-amber-400/70">{date}</div>}
+                            {data?.cellCount > 0 && (
+                                <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-400" title={`${data.cellCount} cellule(s) de pipeline attachée(s)`}>
+                                    <Layers size={9} strokeWidth={2.5} />
+                                    {data.cellCount}
+                                </div>
+                            )}
+                            {data?.mediaCount > 0 && (
+                                <div className="flex items-center justify-center gap-1 text-[10px] text-amber-400" title={`${data.mediaCount} photo(s)/vidéo(s) attachée(s)`}>
+                                    <ImageIcon size={9} strokeWidth={2.5} />
+                                    {data.mediaCount}
+                                </div>
+                            )}
+                            {isNear && data?.latestCellSummary && (
+                                <div className="text-[10px] text-slate-300 mt-0.5" title={data.latestCellSummary}>
+                                    {data.latestCellSummary}
+                                </div>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 {/* Poignée de courbure — visible au survol/sélection ou si déjà déplacée */}

@@ -29,11 +29,14 @@ export function useUsageStats() {
     return { stats, loading, error, refetch: fetchStats };
 }
 
-export async function incrementExportCount(format = 'png', quality = 'standard') {
+export async function incrementExportCount(format = 'png', quality = 'standard', snapshot = null) {
     try {
         const response = await axios.post('/api/usage/exports/increment', {
             format,
-            quality
+            quality,
+            // Figement (Chantier 6 traçabilité) : reviewId/snapshotData/contentHash, uniquement
+            // fournis par le rapport de traçabilité — cf. ExportModal.jsx.
+            ...(snapshot || {})
         }, {
             withCredentials: true
         });
