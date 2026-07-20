@@ -94,6 +94,11 @@ export const companyService = {
         })
     },
 
+    /** Liens de décision d'une invitation en attente, à transmettre si l'e-mail n'est pas parti. */
+    async getInviteLinks(memberId) {
+        return fetchAPI(`${API_BASE}/company/members/${memberId}/links`)
+    },
+
     async updateMember(memberId, role) {
         return fetchAPI(`${API_BASE}/company/members/${memberId}`, {
             method: 'PATCH',

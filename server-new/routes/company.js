@@ -195,6 +195,37 @@ router.post('/members/invite', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 /**
+ * GET /api/company/members/:id/links — liens de décision d'une invitation en attente.
+ *
+ * Filet de secours quand l'e-mail ne part pas (fournisseur non configuré, adresse invalide,
+ * message en spam) : le titulaire peut transmettre les liens lui-même. Réservé à qui gère déjà
+ * les membres, et limité aux invitations encore en attente — un jeton déjà utilisé n'est plus rendu.
+ */
+router.get('/members/:id/links', requireAuth, asyncHandler(async (req, res) => {
+    const context = await resolveCallerCompany(req.user.id)
+    if (!context || !canManageMembers(context.role)) {
+        throw Errors.FORBIDDEN()
+    }
+
+    const member = await prisma.companyMember.findFirst({
+        where: { id: req.params.id, producerProfileId: context.producerProfile.id, status: 'invited' }
+    })
+    if (!member) {
+        throw Errors.NOT_FOUND('Invitation')
+    }
+
+    const base = process.env.FRONTEND_URL || ''
+    res.json({
+        email: member.email,
+        // `null` signifie « cette partie s'est déjà prononcée » : son jeton a été consommé.
+        ownerLink: member.ownerToken ? `${base}/company/invite/${member.ownerToken}` : null,
+        inviteeLink: member.inviteToken ? `${base}/company/invite/${member.inviteToken}` : null,
+        ownerDecision: member.ownerDecision,
+        inviteeDecision: member.inviteeDecision,
+    })
+}))
+
+/**
  * Retrouve une invitation depuis l'un ou l'autre jeton, et indique quelle partie le présente.
  * @returns {{ member, party: 'invitee'|'owner' } | null}
  */

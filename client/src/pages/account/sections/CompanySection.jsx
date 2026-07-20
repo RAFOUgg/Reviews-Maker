@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidBadge } from '@/components/ui/LiquidUI'
-import { Building2, UserPlus, Trash2, ShieldCheck, ShieldAlert, LogOut } from 'lucide-react'
+import { Building2, UserPlus, Trash2, ShieldCheck, ShieldAlert, LogOut, Link as LinkIcon } from 'lucide-react'
 import { companyService } from '../../../services/apiService'
 import { useToast } from '../../../components/shared/ToastContainer'
 
@@ -93,6 +93,27 @@ export default function CompanySection() {
             toast.error(err.message || "L'invitation a échoué")
         } finally {
             setInviting(false)
+        }
+    }
+
+    // Secours quand l'e-mail n'arrive pas : le titulaire récupère les liens et les transmet
+    // lui-même (messagerie, oral…). Les deux accords restent requis.
+    const handleCopyLinks = async (memberId) => {
+        try {
+            const links = await companyService.getInviteLinks(memberId)
+            const parts = []
+            if (links.ownerLink) parts.push(`Votre confirmation (titulaire) :\n${links.ownerLink}`)
+            if (links.inviteeLink) parts.push(`Lien pour ${links.email} :\n${links.inviteeLink}`)
+
+            if (!parts.length) {
+                toast.info('Les deux parties se sont déjà prononcées.')
+                return
+            }
+
+            await navigator.clipboard.writeText(parts.join('\n\n'))
+            toast.success('Liens copiés dans le presse-papiers')
+        } catch (err) {
+            toast.error(err.message || 'Impossible de récupérer les liens')
         }
     }
 
@@ -261,6 +282,16 @@ export default function CompanySection() {
                                     </div>
                                 ) : (
                                     <span className="text-sm text-white/60">{ROLE_LABELS[member.role]}</span>
+                                )}
+
+                                {canManageMembers && member.status === 'invited' && (
+                                    <button
+                                        onClick={() => handleCopyLinks(member.id)}
+                                        className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/10 transition-colors"
+                                        title="Copier les liens d'acceptation (si l'e-mail n'est pas arrivé)"
+                                    >
+                                        <LinkIcon className="w-4 h-4" />
+                                    </button>
                                 )}
 
                                 {canManageMembers && (
