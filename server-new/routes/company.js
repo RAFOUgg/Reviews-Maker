@@ -10,7 +10,7 @@ import crypto from 'crypto'
 import { prisma } from '../server.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { asyncHandler, Errors } from '../utils/errorHandler.js'
-import { sendCompanyInviteEmail } from '../services/email.js'
+import { sendCompanyInviteEmail, sendCompanyInviteOwnerEmail } from '../services/email.js'
 
 const router = express.Router()
 
@@ -53,6 +53,8 @@ router.get('/me', requireAuth, asyncHandler(async (req, res) => {
         select: {
             id: true, email: true, role: true, status: true,
             invitedAt: true, joinedAt: true,
+            // Double validation : permet d'afficher qui doit encore se prononcer.
+            ownerDecision: true, inviteeDecision: true,
             user: { select: { id: true, username: true, avatar: true } }
         },
         orderBy: { invitedAt: 'asc' }
@@ -100,74 +102,183 @@ router.post('/members/invite', requireAuth, asyncHandler(async (req, res) => {
         return res.status(409).json({ error: 'already_invited', message: 'Cette adresse a déjà une invitation ou un accès actif' })
     }
 
+    // Double validation : un jeton distinct par partie, chacun envoyé à sa propre adresse.
     const inviteToken = crypto.randomBytes(32).toString('hex')
+    const ownerToken = crypto.randomBytes(32).toString('hex')
+
+    // Le titulaire de l'entreprise (destinataire de la confirmation) n'est pas forcément le
+    // demandeur : un admin peut inviter, c'est bien le titulaire qui valide.
+    const ownerUser = await prisma.user.findUnique({
+        where: { id: context.producerProfile.userId },
+        select: { email: true, locale: true }
+    })
+
+    const freshInvite = {
+        role,
+        status: 'invited',
+        inviteToken,
+        ownerToken,
+        inviteeDecision: null,
+        ownerDecision: null,
+        inviteeDecidedAt: null,
+        ownerDecidedAt: null,
+        invitedByUserId: req.user.id,
+        invitedAt: new Date(),
+        revokedAt: null,
+        joinedAt: null,
+    }
 
     const member = existing
-        ? await prisma.companyMember.update({
-            where: { id: existing.id },
-            data: { role, status: 'invited', inviteToken, invitedByUserId: req.user.id, invitedAt: new Date(), revokedAt: null }
-        })
+        ? await prisma.companyMember.update({ where: { id: existing.id }, data: freshInvite })
         : await prisma.companyMember.create({
-            data: {
-                producerProfileId, email: normalizedEmail, role,
-                invitedByUserId: req.user.id, inviteToken, status: 'invited'
-            }
+            data: { producerProfileId, email: normalizedEmail, ...freshInvite }
         })
 
     const inviteLink = `${process.env.FRONTEND_URL}/company/invite/${inviteToken}`
+    const ownerLink = `${process.env.FRONTEND_URL}/company/invite/${ownerToken}`
+
+    // Un échec d'envoi ne doit pas annuler l'invitation déjà enregistrée : les liens restent
+    // valides et peuvent être renvoyés. On remonte cependant l'information au client.
+    const delivery = { invitee: true, owner: true }
+
     try {
         await sendCompanyInviteEmail(normalizedEmail, inviteLink, context.producerProfile.companyName, role, req.user.locale || 'fr')
     } catch (err) {
-        // L'invitation existe déjà en base (le titulaire peut renvoyer le lien manuellement) —
-        // un échec d'envoi ne doit pas faire échouer la création de l'invitation elle-même.
+        delivery.invitee = false
         console.error('sendCompanyInviteEmail failed:', err)
     }
 
-    res.status(201).json({ id: member.id, email: member.email, role: member.role, status: member.status })
+    try {
+        if (!ownerUser?.email) throw new Error('titulaire sans adresse email')
+        await sendCompanyInviteOwnerEmail(
+            ownerUser.email, ownerLink, context.producerProfile.companyName,
+            normalizedEmail, role, ownerUser.locale || 'fr'
+        )
+    } catch (err) {
+        delivery.owner = false
+        console.error('sendCompanyInviteOwnerEmail failed:', err)
+    }
+
+    res.status(201).json({
+        id: member.id, email: member.email, role: member.role, status: member.status,
+        awaiting: 'both',
+        delivery,
+    })
 }))
 
-// GET /api/company/invite/:token — détails de l'invitation, accessible sans être connecté (pour
-// afficher "Entreprise X vous invite..." avant login/register).
-router.get('/invite/:token', optionalAuth, asyncHandler(async (req, res) => {
-    const member = await prisma.companyMember.findUnique({
-        where: { inviteToken: req.params.token },
-        include: { producerProfile: { select: { companyName: true, businessType: true } } }
+/**
+ * Retrouve une invitation depuis l'un ou l'autre jeton, et indique quelle partie le présente.
+ * @returns {{ member, party: 'invitee'|'owner' } | null}
+ */
+async function findByAnyToken(token) {
+    const asInvitee = await prisma.companyMember.findUnique({
+        where: { inviteToken: token },
+        include: { producerProfile: { select: { companyName: true, businessType: true, userId: true } } }
     })
+    if (asInvitee) return { member: asInvitee, party: 'invitee' }
 
-    if (!member || member.status !== 'invited') {
+    const asOwner = await prisma.companyMember.findUnique({
+        where: { ownerToken: token },
+        include: { producerProfile: { select: { companyName: true, businessType: true, userId: true } } }
+    })
+    if (asOwner) return { member: asOwner, party: 'owner' }
+
+    return null
+}
+
+// GET /api/company/invite/:token — détails, accessible sans être connecté (pour afficher
+// "Entreprise X vous invite..." avant login/register). Le jeton détermine la partie concernée.
+router.get('/invite/:token', optionalAuth, asyncHandler(async (req, res) => {
+    const found = await findByAnyToken(req.params.token)
+    if (!found || !['invited', 'active'].includes(found.member.status)) {
         throw Errors.NOT_FOUND('Invitation')
     }
+
+    const { member, party } = found
+    const myDecision = party === 'owner' ? member.ownerDecision : member.inviteeDecision
+    const otherDecision = party === 'owner' ? member.inviteeDecision : member.ownerDecision
 
     res.json({
         companyName: member.producerProfile.companyName,
         businessType: member.producerProfile.businessType,
         role: member.role,
-        email: member.email
+        email: member.email,
+        // Ce que le client doit afficher : qui je suis dans cette invitation, où en sont les deux
+        // décisions, et si le rattachement est déjà effectif.
+        party,
+        myDecision,
+        otherDecision,
+        status: member.status,
+        // L'invité doit être connecté pour accepter (on rattache son compte) ; le titulaire non,
+        // la possession du jeton envoyé à son adresse suffit à confirmer sa propre demande.
+        requiresLogin: party === 'invitee',
     })
 }))
 
-// POST /api/company/invite/:token/accept — le caller doit être connecté ; le token est la preuve
-// de possession de l'invitation (pas de vérification d'égalité d'email, un compte OAuth peut ne
-// pas avoir le même email que celui invité).
-router.post('/invite/:token/accept', requireAuth, asyncHandler(async (req, res) => {
-    const member = await prisma.companyMember.findUnique({ where: { inviteToken: req.params.token } })
+/**
+ * POST /api/company/invite/:token/decide  { decision: 'accept' | 'refuse' }
+ *
+ * Enregistre la décision de la partie qui présente le jeton. Le rattachement n'est effectué que
+ * lorsque les DEUX ont accepté ; un seul refus met fin à la demande.
+ */
+router.post('/invite/:token/decide', optionalAuth, asyncHandler(async (req, res) => {
+    const { decision } = req.body || {}
+    if (!['accept', 'refuse'].includes(decision)) {
+        throw Errors.MISSING_FIELD('decision')
+    }
 
-    if (!member || member.status !== 'invited') {
+    const found = await findByAnyToken(req.params.token)
+    if (!found || found.member.status !== 'invited') {
         throw Errors.NOT_FOUND('Invitation')
     }
 
-    // Un compte ne peut pas être son propre employé, ni rejoindre s'il possède déjà une entreprise.
-    const ownProfile = await prisma.producerProfile.findUnique({ where: { userId: req.user.id } })
-    if (ownProfile && ownProfile.id === member.producerProfileId) {
-        throw Errors.FORBIDDEN()
+    const { member, party } = found
+    const value = decision === 'accept' ? 'accepted' : 'refused'
+
+    // Côté invité, accepter suppose un compte : c'est lui qu'on rattache à l'entreprise.
+    if (party === 'invitee' && !req.user) {
+        return res.status(401).json({
+            error: 'authentication_required',
+            message: 'Connectez-vous pour accepter cette invitation'
+        })
     }
 
-    const updated = await prisma.companyMember.update({
-        where: { id: member.id },
-        data: { userId: req.user.id, status: 'active', joinedAt: new Date(), inviteToken: null }
-    })
+    if (party === 'invitee' && decision === 'accept') {
+        // Un compte ne peut pas être son propre employé.
+        const ownProfile = await prisma.producerProfile.findUnique({ where: { userId: req.user.id } })
+        if (ownProfile && ownProfile.id === member.producerProfileId) {
+            throw Errors.FORBIDDEN()
+        }
+    }
 
-    res.json({ id: updated.id, role: updated.role, status: updated.status })
+    const data = party === 'owner'
+        ? { ownerDecision: value, ownerDecidedAt: new Date(), ownerToken: null }
+        : { inviteeDecision: value, inviteeDecidedAt: new Date(), inviteToken: null, userId: req.user.id }
+
+    // Décisions résultantes après cette écriture.
+    const ownerDecision = party === 'owner' ? value : member.ownerDecision
+    const inviteeDecision = party === 'invitee' ? value : member.inviteeDecision
+
+    if (value === 'refused') {
+        // Un refus suffit à clore la demande ; les deux jetons sont invalidés.
+        Object.assign(data, { status: 'refused', inviteToken: null, ownerToken: null })
+    } else if (ownerDecision === 'accepted' && inviteeDecision === 'accepted') {
+        // Les deux ont accepté : le rattachement devient effectif.
+        Object.assign(data, { status: 'active', joinedAt: new Date(), inviteToken: null, ownerToken: null })
+    }
+
+    const updated = await prisma.companyMember.update({ where: { id: member.id }, data })
+
+    res.json({
+        id: updated.id,
+        role: updated.role,
+        status: updated.status,
+        party,
+        myDecision: value,
+        otherDecision: party === 'owner' ? updated.inviteeDecision : updated.ownerDecision,
+        // `active` = les deux ont accepté ; sinon on attend encore l'autre partie.
+        linked: updated.status === 'active',
+    })
 }))
 
 // PATCH /api/company/members/:id — { role } — owner/admin uniquement, un admin ne peut pas

@@ -261,6 +261,21 @@ async function sendPasswordResetEmail(email, resetLink, locale = 'fr') {
 const ROLE_LABELS_FR = { admin: 'Administrateur', editor: 'Éditeur', viewer: 'Lecteur' };
 const ROLE_LABELS_EN = { admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
 
+// Boutons Accepter / Refuser communs aux deux e-mails de la double validation.
+function decisionButtons(link, locale) {
+    const accept = locale === 'fr' ? 'Accepter' : 'Accept';
+    const refuse = locale === 'fr' ? 'Refuser' : 'Decline';
+    return `
+      <p>
+        <a href="${link}?decision=accept" style="background: #16A34A; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block; margin-right: 8px;">${accept}</a>
+        <a href="${link}?decision=refuse" style="background: #4B5563; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">${refuse}</a>
+      </p>`;
+}
+
+/**
+ * E-mail à la personne invitée. Le rattachement n'aura lieu que si le titulaire confirme aussi
+ * de son côté : on le dit explicitement pour éviter l'impression d'un accès immédiat.
+ */
 async function sendCompanyInviteEmail(email, inviteLink, companyName, role, locale = 'fr') {
     const roleLabel = (locale === 'fr' ? ROLE_LABELS_FR : ROLE_LABELS_EN)[role] || role;
 
@@ -273,30 +288,59 @@ async function sendCompanyInviteEmail(email, inviteLink, companyName, role, loca
       <h2>Invitation d'entreprise</h2>
       <p>Bonjour,</p>
       <p><strong>${companyName}</strong> vous invite à rejoindre son espace Reviews-Maker en tant que <strong>${roleLabel}</strong>.</p>
-      <p><a href="${inviteLink}" style="background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Voir l'invitation</a></p>
-      <p style="color: #888; font-size: 14px;">Si vous ne vous attendiez pas à cette invitation, ignorez simplement cet email.</p>
+      ${decisionButtons(inviteLink, locale)}
+      <p style="color: #888; font-size: 14px;">Votre rattachement ne prendra effet qu'une fois la demande également confirmée par le titulaire du compte entreprise.</p>
+      <p style="color: #888; font-size: 14px;">Si vous ne vous attendiez pas à cette invitation, vous pouvez la refuser ou ignorer cet email.</p>
       <p>L'équipe Reviews-Maker</p>
     `
         : `
       <h2>Company invitation</h2>
       <p>Hello,</p>
       <p><strong>${companyName}</strong> invites you to join its Reviews-Maker workspace as <strong>${roleLabel}</strong>.</p>
-      <p><a href="${inviteLink}" style="background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">View invitation</a></p>
-      <p style="color: #888; font-size: 14px;">If you weren't expecting this invitation, simply ignore this email.</p>
+      ${decisionButtons(inviteLink, locale)}
+      <p style="color: #888; font-size: 14px;">Your membership only takes effect once the company account holder has also confirmed the request.</p>
+      <p style="color: #888; font-size: 14px;">If you weren't expecting this invitation, you can decline it or ignore this email.</p>
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject,
-        html,
-    });
+    const { data, error } = await getResend().emails.send({ from: FROM_EMAIL, to: email, subject, html });
+    if (error) throw new Error(`Échec envoi email: ${error.message}`);
+    return data;
+}
 
-    if (error) {
-        throw new Error(`Échec envoi email: ${error.message}`);
-    }
+/**
+ * E-mail de confirmation au titulaire : il valide sa propre demande. C'est le garde-fou contre
+ * un ajout de membre effectué depuis une session détournée — l'accès à sa boîte est requis.
+ */
+async function sendCompanyInviteOwnerEmail(ownerEmail, confirmLink, companyName, inviteeEmail, role, locale = 'fr') {
+    const roleLabel = (locale === 'fr' ? ROLE_LABELS_FR : ROLE_LABELS_EN)[role] || role;
 
+    const subject = locale === 'fr'
+        ? `Confirmez l'ajout de ${inviteeEmail} à ${companyName}`
+        : `Confirm adding ${inviteeEmail} to ${companyName}`;
+
+    const html = locale === 'fr'
+        ? `
+      <h2>Confirmation d'ajout d'un membre</h2>
+      <p>Bonjour,</p>
+      <p>Une demande d'ajout de <strong>${inviteeEmail}</strong> à l'entreprise <strong>${companyName}</strong>, en tant que <strong>${roleLabel}</strong>, vient d'être effectuée depuis votre compte.</p>
+      ${decisionButtons(confirmLink, locale)}
+      <p style="color: #888; font-size: 14px;">Le rattachement ne sera effectif que si vous confirmez ici ET que la personne accepte de son côté.</p>
+      <p style="color: #d97706; font-size: 14px;"><strong>Vous n'êtes pas à l'origine de cette demande ?</strong> Refusez-la et changez votre mot de passe.</p>
+      <p>L'équipe Reviews-Maker</p>
+    `
+        : `
+      <h2>Confirm new member</h2>
+      <p>Hello,</p>
+      <p>A request to add <strong>${inviteeEmail}</strong> to <strong>${companyName}</strong> as <strong>${roleLabel}</strong> was just made from your account.</p>
+      ${decisionButtons(confirmLink, locale)}
+      <p style="color: #888; font-size: 14px;">Membership only takes effect if you confirm here AND the person accepts on their side.</p>
+      <p style="color: #d97706; font-size: 14px;"><strong>Didn't request this?</strong> Decline it and change your password.</p>
+      <p>The Reviews-Maker Team</p>
+    `;
+
+    const { data, error } = await getResend().emails.send({ from: FROM_EMAIL, to: ownerEmail, subject, html });
+    if (error) throw new Error(`Échec envoi email: ${error.message}`);
     return data;
 }
 
@@ -304,6 +348,7 @@ export {
     sendVerificationCode,
     sendWelcomeEmail,
     sendCompanyInviteEmail,
+    sendCompanyInviteOwnerEmail,
     sendSubscriptionConfirmation,
     sendModerationNotification,
     sendPasswordResetEmail,

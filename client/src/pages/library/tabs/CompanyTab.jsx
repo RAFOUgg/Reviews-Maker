@@ -169,7 +169,7 @@ export default function CompanyTab({ onNavigate }) {
                     {pendingMembers.map(member => (
                         <div key={member.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-white/[0.06] bg-white/[0.02]">
                             <p className="text-white/50 text-sm truncate">{member.email}</p>
-                            <LiquidBadge variant="warning" size="sm">Invitation envoyée</LiquidBadge>
+                            <LiquidBadge variant="warning" size="sm">En attente des accords</LiquidBadge>
                         </div>
                     ))}
                 </div>

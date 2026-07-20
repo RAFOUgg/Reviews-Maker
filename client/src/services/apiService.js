@@ -82,8 +82,16 @@ export const companyService = {
         return fetchAPI(`${API_BASE}/company/invite/${token}`)
     },
 
-    async acceptInvite(token) {
-        return fetchAPI(`${API_BASE}/company/invite/${token}/accept`, { method: 'POST' })
+    /**
+     * Double validation : le même endpoint sert au titulaire et à l'invité, le jeton détermine
+     * qui se prononce. Le rattachement n'a lieu que si les deux acceptent.
+     * @param {'accept'|'refuse'} decision
+     */
+    async decideInvite(token, decision) {
+        return fetchAPI(`${API_BASE}/company/invite/${token}/decide`, {
+            method: 'POST',
+            body: JSON.stringify({ decision })
+        })
     },
 
     async updateMember(memberId, role) {

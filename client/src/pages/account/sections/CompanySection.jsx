@@ -25,8 +25,24 @@ const ROLE_LABELS = {
 }
 
 const STATUS_BADGES = {
-    invited: { variant: 'warning', label: 'Invitation envoyée' },
+    invited: { variant: 'warning', label: 'En attente' },
     active: { variant: 'success', label: 'Actif' },
+    refused: { variant: 'danger', label: 'Refusée' },
+}
+
+/**
+ * Qui doit encore se prononcer. Le rattachement exige l'accord du titulaire ET de l'invité :
+ * afficher « Invitation envoyée » masquait le fait que le titulaire devait aussi confirmer.
+ */
+function pendingLabel(member) {
+    if (member.status !== 'invited') return null
+
+    const ownerOk = member.ownerDecision === 'accepted'
+    const inviteeOk = member.inviteeDecision === 'accepted'
+
+    if (ownerOk && !inviteeOk) return 'En attente de la personne invitée'
+    if (!ownerOk && inviteeOk) return 'En attente de votre confirmation par e-mail'
+    return 'En attente des deux confirmations'
 }
 
 export default function CompanySection() {
@@ -204,6 +220,9 @@ export default function CompanySection() {
                                     </p>
                                     {member.user?.username && (
                                         <p className="text-xs text-white/40">{member.email}</p>
+                                    )}
+                                    {pendingLabel(member) && (
+                                        <p className="text-xs text-amber-400/80 mt-0.5">{pendingLabel(member)}</p>
                                     )}
                                 </div>
 

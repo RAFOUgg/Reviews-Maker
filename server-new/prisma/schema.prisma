@@ -516,13 +516,25 @@ model CompanyMember {
   email  String // email d'invitation — sert aussi à retrouver l'invitation avant qu'un compte soit lié
 
   role   String @default("viewer") // admin | editor | viewer (owner = producerProfile.userId, jamais stocké ici)
-  status String @default("invited") // invited | active | revoked
+  // invited = en attente d'au moins une des deux décisions ; active = les deux ont accepté ;
+  // refused = l'une des deux parties a refusé ; revoked = accès retiré après coup.
+  status String @default("invited") // invited | active | refused | revoked
 
   invitedByUserId String
-  inviteToken     String?   @unique
   invitedAt       DateTime  @default(now())
   joinedAt        DateTime?
   revokedAt       DateTime?
+
+  // Double validation : le rattachement n'a lieu que si le titulaire ET l'invité acceptent.
+  // Côté titulaire, cela confirme que la demande vient bien de lui (une session compromise ne
+  // suffit pas à s'adjoindre un compte) ; côté invité, que son compte rejoint bien l'entreprise.
+  // Chaque partie reçoit un e-mail portant son propre jeton, invalidé dès la décision prise.
+  inviteToken      String?   @unique // jeton de l'invité
+  ownerToken       String?   @unique // jeton du titulaire
+  inviteeDecision  String? // null (en attente) | accepted | refused
+  ownerDecision    String? // null (en attente) | accepted | refused
+  inviteeDecidedAt DateTime?
+  ownerDecidedAt   DateTime?
 
   @@unique([producerProfileId, email])
   @@index([producerProfileId])
