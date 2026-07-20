@@ -57,7 +57,14 @@ export default function CompanyInvitePage() {
             // Le tier effectif change dès que le rattachement est effectif.
             if (res.linked) await checkAuth()
         } catch (err) {
-            setError(err.message || 'La décision n’a pas pu être enregistrée.')
+            // Les codes du serveur sont techniques et en anglais : on les traduit en explication
+            // utilisable, plutôt que d'afficher « You do not have permission to access this resource ».
+            const messages = {
+                forbidden: `Vous ne pouvez pas accepter cette invitation depuis ce compte. Elle est destinée à ${invite.email}.`,
+                not_found: 'Cette invitation n’est plus valide : elle a expiré ou a déjà été traitée.',
+                authentication_required: 'Connectez-vous avec le compte invité pour accepter.',
+            }
+            setError(messages[err.code] || err.message || 'La décision n’a pas pu être enregistrée.')
         } finally {
             setSubmitting(false)
         }
@@ -114,6 +121,35 @@ export default function CompanyInvitePage() {
 
     const isOwner = invite.party === 'owner'
     const alreadyDecided = Boolean(invite.myDecision)
+
+    // Le titulaire a ouvert le lien destiné à son employé : on l'explique au lieu de le laisser
+    // buter sur un refus du serveur.
+    if (invite.blockedReason === 'owner_cannot_be_employee') {
+        return card(
+            <>
+                <div className="flex items-center gap-3 mb-4">
+                    <ShieldAlert className="w-8 h-8 text-amber-400" />
+                    <h1 className="text-xl font-bold text-white">Ce lien n’est pas pour vous</h1>
+                </div>
+                <p className="text-white/60 mb-4">
+                    Vous êtes le titulaire de <strong>{invite.companyName}</strong> : vous ne pouvez pas
+                    être votre propre employé. Ce lien est destiné à <strong>{invite.email}</strong>,
+                    qui doit l’ouvrir depuis son propre compte.
+                </p>
+                <div className="p-3 rounded-xl border border-white/10 bg-white/[0.03] mb-6">
+                    <p className="text-xs text-white/50">
+                        Votre part de la validation se fait avec l’autre lien, celui reçu à votre
+                        adresse — {invite.otherDecision === 'accepted'
+                            ? 'et vous l’avez déjà acceptée.'
+                            : 'intitulé « Confirmez l’ajout de… ».'}
+                    </p>
+                </div>
+                <LiquidButton onClick={() => navigate('/account?tab=company')} fullWidth>
+                    Retour à la gestion de l’équipe
+                </LiquidButton>
+            </>
+        )
+    }
 
     // L'invité doit être connecté : accepter rattache son compte à l'entreprise.
     if (invite.requiresLogin && !isAuthenticated) {

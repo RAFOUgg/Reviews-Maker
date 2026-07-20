@@ -257,7 +257,20 @@ router.get('/invite/:token', optionalAuth, asyncHandler(async (req, res) => {
     const myDecision = party === 'owner' ? member.ownerDecision : member.inviteeDecision
     const otherDecision = party === 'owner' ? member.inviteeDecision : member.ownerDecision
 
+    // La session courante peut-elle réellement se prononcer sur ce lien ? Le dire ici évite de
+    // laisser l'utilisateur cliquer pour ne récolter qu'un 403 sans explication.
+    let blockedReason = null
+    if (party === 'invitee' && req.user) {
+        const ownProfile = await prisma.producerProfile.findUnique({ where: { userId: req.user.id } })
+        if (ownProfile && ownProfile.id === member.producerProfileId) {
+            // Le titulaire ne peut pas être son propre employé : l'autoriser reviendrait à lui
+            // laisser approuver les deux côtés seul, ce qui viderait la double validation de son sens.
+            blockedReason = 'owner_cannot_be_employee'
+        }
+    }
+
     res.json({
+        blockedReason,
         companyName: member.producerProfile.companyName,
         businessType: member.producerProfile.businessType,
         role: member.role,
