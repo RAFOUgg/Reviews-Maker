@@ -4,8 +4,9 @@
  */
 
 import express from 'express'
-import { prisma } from '../server.js'
+import { prisma, sessionStore } from '../server.js'
 import { requireAuth } from '../middleware/auth.js'
+import { forgetTrackedSession } from '../middleware/sessionTracking.js'
 import { hashPassword, verifyPassword } from '../services/password.js'
 import { setupTOTP, verifyTOTPToken } from '../services/totp.js'
 
@@ -204,6 +205,194 @@ router.post('/2fa/disable', requireAuth, async (req, res) => {
     } catch (error) {
         console.error('POST /2fa/disable error:', error);
         res.status(500).json({ error: 'Failed to disable 2FA' });
+    }
+});
+
+// ==================== PRÉFÉRENCES ====================
+
+// Seules ces clés sont acceptées : une préférence inconnue envoyée par un client modifié ne doit
+// pas se retrouver stockée. `defaultVisibility` est la valeur initiale du champ de visibilité dans
+// les formulaires de review — pas une contrainte serveur (publier reste soumis à requirePublishingAllowed).
+const ALLOWED_PREFERENCES = {
+    showNotifications: 'boolean',
+    autoSaveDrafts: 'boolean',
+    allowSocialSharing: 'boolean',
+    showDetailedStats: 'boolean',
+    defaultVisibility: 'visibility',
+};
+
+const DEFAULT_PREFERENCES = {
+    showNotifications: true,
+    autoSaveDrafts: true,
+    allowSocialSharing: false,
+    showDetailedStats: true,
+    defaultVisibility: 'private',
+};
+
+function parsePreferences(raw) {
+    if (!raw) return { ...DEFAULT_PREFERENCES };
+    try {
+        return { ...DEFAULT_PREFERENCES, ...JSON.parse(raw) };
+    } catch {
+        return { ...DEFAULT_PREFERENCES };
+    }
+}
+
+// GET /api/user/settings/preferences
+router.get('/preferences', requireAuth, async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { preferences: true }
+        });
+        res.json(parsePreferences(user?.preferences));
+    } catch (error) {
+        console.error('GET /preferences error:', error);
+        res.status(500).json({ error: 'Failed to fetch preferences' });
+    }
+});
+
+// PUT /api/user/settings/preferences
+router.put('/preferences', requireAuth, async (req, res) => {
+    try {
+        const current = await prisma.user.findUnique({
+            where: { id: req.user.id },
+            select: { preferences: true }
+        });
+
+        const merged = parsePreferences(current?.preferences);
+
+        for (const [key, kind] of Object.entries(ALLOWED_PREFERENCES)) {
+            if (!(key in req.body)) continue;
+            const value = req.body[key];
+
+            if (kind === 'boolean' && typeof value === 'boolean') {
+                merged[key] = value;
+            } else if (kind === 'visibility' && ['private', 'public'].includes(value)) {
+                merged[key] = value;
+            } else {
+                return res.status(400).json({ error: `Valeur invalide pour ${key}` });
+            }
+        }
+
+        await prisma.user.update({
+            where: { id: req.user.id },
+            data: { preferences: JSON.stringify(merged) }
+        });
+
+        res.json(merged);
+    } catch (error) {
+        console.error('PUT /preferences error:', error);
+        res.status(500).json({ error: 'Failed to update preferences' });
+    }
+});
+
+// ==================== SESSIONS ====================
+
+/** Rend un user-agent lisible : « Chrome sur Windows ». Volontairement grossier — il ne s'agit que
+ *  d'aider l'utilisateur à reconnaître ses propres appareils, pas de faire du profilage exact. */
+function describeDevice(userAgent) {
+    if (!userAgent) return 'Appareil inconnu';
+
+    const browser = /Edg\//.test(userAgent) ? 'Edge'
+        : /OPR\//.test(userAgent) ? 'Opera'
+            : /Chrome\//.test(userAgent) ? 'Chrome'
+                : /Safari\//.test(userAgent) ? 'Safari'
+                    : /Firefox\//.test(userAgent) ? 'Firefox'
+                        : 'Navigateur inconnu';
+
+    const os = /Windows/.test(userAgent) ? 'Windows'
+        : /Android/.test(userAgent) ? 'Android'
+            : /iPhone|iPad|iOS/.test(userAgent) ? 'iOS'
+                : /Mac OS X|Macintosh/.test(userAgent) ? 'macOS'
+                    : /Linux/.test(userAgent) ? 'Linux'
+                        : null;
+
+    return os ? `${browser} sur ${os}` : browser;
+}
+
+/** Détruit une session dans le magasin (source d'autorité). Résout même en cas d'échec : la ligne
+ *  miroir doit être retirée dans tous les cas, sinon l'UI afficherait une session fantôme. */
+function destroyStoredSession(sid) {
+    return new Promise((resolve) => {
+        if (!sessionStore?.destroy) return resolve();
+        sessionStore.destroy(sid, (err) => {
+            if (err) console.error('[sessions] destruction impossible:', sid, err.message);
+            resolve();
+        });
+    });
+}
+
+// GET /api/user/settings/sessions
+router.get('/sessions', requireAuth, async (req, res) => {
+    try {
+        const sessions = await prisma.session.findMany({
+            where: { userId: req.user.id, expiresAt: { gt: new Date() } },
+            orderBy: { lastSeenAt: 'desc' }
+        });
+
+        res.json(sessions.map(s => ({
+            id: s.id,
+            device: describeDevice(s.userAgent),
+            ipAddress: s.ipAddress,
+            lastSeenAt: s.lastSeenAt,
+            createdAt: s.createdAt,
+            current: s.sid === req.sessionID
+        })));
+    } catch (error) {
+        console.error('GET /sessions error:', error);
+        res.status(500).json({ error: 'Failed to fetch sessions' });
+    }
+});
+
+// DELETE /api/user/settings/sessions/:id — révoque une session précise
+router.delete('/sessions/:id', requireAuth, async (req, res) => {
+    try {
+        // Filtré sur userId : on ne peut révoquer que ses propres sessions.
+        const target = await prisma.session.findFirst({
+            where: { id: req.params.id, userId: req.user.id }
+        });
+        if (!target) {
+            return res.status(404).json({ error: 'Session introuvable' });
+        }
+        if (target.sid === req.sessionID) {
+            return res.status(400).json({
+                error: 'current_session',
+                message: 'Utilisez la déconnexion pour fermer la session courante.'
+            });
+        }
+
+        await destroyStoredSession(target.sid);
+        forgetTrackedSession(target.sid);
+        await prisma.session.delete({ where: { id: target.id } });
+
+        res.json({ success: true });
+    } catch (error) {
+        console.error('DELETE /sessions/:id error:', error);
+        res.status(500).json({ error: 'Failed to revoke session' });
+    }
+});
+
+// POST /api/user/settings/sessions/revoke-others — déconnecte tous les autres appareils
+router.post('/sessions/revoke-others', requireAuth, async (req, res) => {
+    try {
+        const others = await prisma.session.findMany({
+            where: { userId: req.user.id, sid: { not: req.sessionID } }
+        });
+
+        for (const session of others) {
+            await destroyStoredSession(session.sid);
+            forgetTrackedSession(session.sid);
+        }
+
+        await prisma.session.deleteMany({
+            where: { userId: req.user.id, sid: { not: req.sessionID } }
+        });
+
+        res.json({ success: true, revoked: others.length });
+    } catch (error) {
+        console.error('POST /sessions/revoke-others error:', error);
+        res.status(500).json({ error: 'Failed to revoke sessions' });
     }
 });
 

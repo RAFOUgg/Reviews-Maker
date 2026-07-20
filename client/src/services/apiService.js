@@ -34,6 +34,35 @@ export const accountService = {
 }
 
 /**
+ * Réglages du compte : préférences d'usage et sessions de connexion.
+ */
+export const settingsService = {
+    async getPreferences() {
+        return fetchAPI(`${API_BASE}/user/settings/preferences`)
+    },
+
+    /** Accepte un objet partiel : seules les clés fournies sont modifiées. */
+    async updatePreferences(patch) {
+        return fetchAPI(`${API_BASE}/user/settings/preferences`, {
+            method: 'PUT',
+            body: JSON.stringify(patch)
+        })
+    },
+
+    async getSessions() {
+        return fetchAPI(`${API_BASE}/user/settings/sessions`)
+    },
+
+    async revokeSession(id) {
+        return fetchAPI(`${API_BASE}/user/settings/sessions/${id}`, { method: 'DELETE' })
+    },
+
+    async revokeOtherSessions() {
+        return fetchAPI(`${API_BASE}/user/settings/sessions/revoke-others`, { method: 'POST' })
+    }
+}
+
+/**
  * Service entreprise / sous-comptes employés.
  * Les droits (`canManageMembers`, `myRole`) sont décidés et renvoyés par le serveur.
  */

@@ -44,6 +44,7 @@ import adminRoutes from './routes/admin.js'
 import debugRoutes from './routes/debug.js'
 import permissionsRoutes from './routes/permissions.js'
 import { requireAuth, optionalAuth, logAuthRequest } from './middleware/auth.js'
+import { trackSession } from './middleware/sessionTracking.js'
 import { notFoundHandler, errorHandler } from './utils/errorHandler.js'
 
 // Import config
@@ -110,6 +111,8 @@ app.use(cors({
 app.use(session(sessionOptions))
 app.use(passport.initialize())
 app.use(passport.session())
+// Après passport : le suivi a besoin de req.user pour rattacher la session à son propriétaire.
+app.use(trackSession)
 app.use(logAuthRequest)
 
 // API Routes
@@ -197,4 +200,8 @@ app.listen(PORT, () => {
     console.log(`\n✅ Ready to accept requests!\n`)
 })
 
-export { prisma }
+// Le magasin de sessions est exporté pour permettre la révocation (destruction d'une session par
+// son identifiant depuis les routes de sécurité du compte).
+const sessionStore = sessionOptions.store
+
+export { prisma, sessionStore }

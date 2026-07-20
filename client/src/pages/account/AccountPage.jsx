@@ -25,7 +25,7 @@ import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
 import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
 import SubscriptionManager from '../../components/account/SubscriptionManager'
-import { accountService, paymentService } from '../../services/apiService'
+import { accountService, paymentService, settingsService } from '../../services/apiService'
 import ConfirmDialog from '../../components/shared/ConfirmDialog'
 import { useToast } from '../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../hooks/useAccountFeatures'
@@ -67,6 +67,16 @@ const AccountPage = () => {
 
   const toast = useToast()
 
+  // Préférences chargées depuis le serveur : en cas d'échec on garde les valeurs par défaut
+  // plutôt que d'afficher des interrupteurs vides.
+  useEffect(() => {
+    let active = true
+    settingsService.getPreferences()
+      .then(prefs => { if (active) setPreferences(prefs) })
+      .catch(() => { /* valeurs par défaut conservées */ })
+    return () => { active = false }
+  }, [])
+
   // Permet d'ouvrir directement un onglet via l'URL (ex: /account?tab=subscription)
   useEffect(() => {
     try {
@@ -81,16 +91,15 @@ const AccountPage = () => {
     }
   }, [])
 
-  const [preferences, setPreferences] = useState(() => {
-    const saved = localStorage.getItem('userPreferences')
-    return saved ? JSON.parse(saved) : {
-      defaultVisibility: 'private',
-      showNotifications: true,
-      autoSaveDrafts: true,
-      allowSocialSharing: false,
-      showDetailedStats: true,
-      privateProfile: false
-    }
+  // Les préférences vivent côté serveur : en localStorage elles étaient perdues au changement
+  // d'appareil. `privateProfile` a été retiré — c'était un doublon factice de `publicProfile`,
+  // le vrai réglage éditable dans l'onglet Profil.
+  const [preferences, setPreferences] = useState({
+    defaultVisibility: 'private',
+    showNotifications: true,
+    autoSaveDrafts: true,
+    allowSocialSharing: false,
+    showDetailedStats: true
   })
 
   const handleLanguageChange = async (newLang) => {
@@ -111,14 +120,20 @@ const AccountPage = () => {
     }
   }
 
-  const handlePreferenceChange = (key, value) => {
-    setPreferences(prev => {
-      const updated = { ...prev, [key]: value }
-      localStorage.setItem('userPreferences', JSON.stringify(updated))
+  const handlePreferenceChange = async (key, value) => {
+    // Optimiste : le toggle réagit immédiatement, on rétablit si le serveur refuse.
+    const previous = preferences
+    setPreferences(prev => ({ ...prev, [key]: value }))
+
+    try {
+      const saved = await settingsService.updatePreferences({ [key]: value })
+      setPreferences(saved)
       setIsSaved(true)
       setTimeout(() => setIsSaved(false), 2000)
-      return updated
-    })
+    } catch (err) {
+      setPreferences(previous)
+      toast.error(err.message || 'Préférence non enregistrée')
+    }
   }
 
   const handleLogout = async () => {
@@ -205,7 +220,9 @@ const AccountPage = () => {
         <div className="absolute top-[40%] right-[20%] w-[30%] h-[30%] bg-violet-500/5 rounded-full blur-[80px] animate-pulse" style={{ animationDuration: '12s', animationDelay: '4s' }} />
       </div>
 
-      <div className="relative z-10 max-w-5xl mx-auto">
+      {/* La page était bornée à max-w-5xl : sur un écran large, les deux tiers restaient vides et
+          les formulaires s'étiraient en une seule colonne étroite. On laisse respirer jusqu'en 7xl. */}
+      <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header - Apple style with avatar */}
         <div className="mb-8 flex items-center gap-4">
           <LiquidAvatar
@@ -401,22 +418,9 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
           <p className="text-sm text-white/40">{t('account.statsDesc') || 'Afficher les statistiques détaillées'}</p>
         </LiquidCard>
 
-        {/* Privacy */}
-        <LiquidCard glow="red" padding="md">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-red-500/20 flex items-center justify-center">
-                <Lock size={16} className="text-red-400" />
-              </div>
-              <span className="font-semibold text-white">{t('account.privacy') || 'Profil privé'}</span>
-            </div>
-            <LiquidToggle
-              checked={preferences.privateProfile}
-              onChange={(checked) => handlePreferenceChange('privateProfile', checked)}
-            />
-          </div>
-          <p className="text-sm text-white/40">{t('account.privacyDesc') || 'Rendre mon profil privé'}</p>
-        </LiquidCard>
+        {/* La visibilité du profil n'est volontairement pas ici : elle est éditée dans l'onglet
+            Profil (champ `publicProfile`, réellement appliqué). Le doublon qui existait à cet
+            endroit n'était relié à rien et laissait croire que le profil devenait privé. */}
       </div>
     </div>
   )
@@ -539,7 +543,10 @@ function SecuritySection({ t, user, onStatusChange }) {
       <h3 className="text-2xl font-bold mb-6 text-white">{t('account.security') || 'Sécurité'}</h3>
       <p className="text-white/50 mb-6">Gérez votre mot de passe et les paramètres de sécurité de votre compte.</p>
 
-      <div className="space-y-6">
+      {/* Deux colonnes dès xl : les trois cartes tiennent côte à côte au lieu de s'empiler sur
+          toute la hauteur. `items-start` évite qu'une carte courte soit étirée à la hauteur de sa
+          voisine. */}
+      <div className="grid gap-6 xl:grid-cols-2 items-start">
         {/* Change Password */}
         <LiquidCard glow="purple" padding="lg">
           <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
@@ -641,29 +648,140 @@ function SecuritySection({ t, user, onStatusChange }) {
           )}
         </LiquidCard>
 
-        {/* Active Sessions */}
-        <LiquidCard glow="cyan" padding="lg">
-          <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-            <User size={18} className="text-cyan-400" />
-            Sessions actives
-          </h4>
-          <p className="text-white/40 text-sm mb-4">Gérez vos sessions de connexion actives</p>
-          <div className="space-y-2 mb-4">
-            <div className="flex items-center justify-between p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-white/70 text-sm">Appareil actuel</span>
-              </div>
-              <LiquidBadge variant="success" size="sm">Maintenant</LiquidBadge>
-            </div>
-          </div>
-          <LiquidButton variant="outline" glow="red" fullWidth>
-            Déconnecter tous les autres appareils
-          </LiquidButton>
-        </LiquidCard>
+        {/* La liste des sessions occupe toute la largeur : en demi-colonne elle laissait un grand
+            vide à droite sous la carte 2FA, plus courte. */}
+        <div className="xl:col-span-2">
+          <ActiveSessionsCard />
+        </div>
       </div>
     </div>
   )
+}
+
+/**
+ * Sessions de connexion réelles.
+ *
+ * Remplace une liste qui était écrite en dur et un bouton de déconnexion sans effet — un bouton de
+ * sécurité qui ne fait rien est pire que pas de bouton, l'utilisateur croit son compte protégé.
+ */
+function ActiveSessionsCard() {
+  const toast = useToast()
+  const [sessions, setSessions] = useState(null)
+  const [busy, setBusy] = useState(false)
+
+  const load = async () => {
+    try {
+      setSessions(await settingsService.getSessions())
+    } catch {
+      setSessions([])
+      toast.error('Impossible de charger les sessions')
+    }
+  }
+
+  useEffect(() => { load() }, [])
+
+  const handleRevokeOthers = async () => {
+    setBusy(true)
+    try {
+      const { revoked } = await settingsService.revokeOtherSessions()
+      toast.success(
+        revoked > 0
+          ? `${revoked} session${revoked > 1 ? 's' : ''} déconnectée${revoked > 1 ? 's' : ''}`
+          : 'Aucune autre session active'
+      )
+      await load()
+    } catch (err) {
+      toast.error(err.message || 'Déconnexion impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const handleRevokeOne = async (id) => {
+    setBusy(true)
+    try {
+      await settingsService.revokeSession(id)
+      toast.success('Session déconnectée')
+      await load()
+    } catch (err) {
+      toast.error(err.message || 'Déconnexion impossible')
+    } finally {
+      setBusy(false)
+    }
+  }
+
+  const otherCount = sessions?.filter(s => !s.current).length ?? 0
+
+  return (
+    <LiquidCard glow="cyan" padding="lg">
+      <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+        <User size={18} className="text-cyan-400" />
+        Sessions actives
+      </h4>
+      <p className="text-white/40 text-sm mb-4">
+        Appareils actuellement connectés à votre compte
+      </p>
+
+      {sessions === null ? (
+        <p className="text-white/40 text-sm py-4">Chargement…</p>
+      ) : (
+        <div className="space-y-2 mb-4">
+          {sessions.map(session => (
+            <div
+              key={session.id}
+              className="flex items-center justify-between gap-3 p-3 bg-white/[0.04] rounded-xl border border-white/[0.06]"
+            >
+              <div className="flex items-center gap-2 min-w-0">
+                <div className={`w-2 h-2 rounded-full flex-shrink-0 ${session.current ? 'bg-green-400 animate-pulse' : 'bg-white/30'}`} />
+                <div className="min-w-0">
+                  <p className="text-white/80 text-sm truncate">{session.device}</p>
+                  <p className="text-white/35 text-xs truncate">
+                    {session.ipAddress || 'IP inconnue'} · {formatRelativeTime(session.lastSeenAt)}
+                  </p>
+                </div>
+              </div>
+
+              {session.current ? (
+                <LiquidBadge variant="success" size="sm">Cet appareil</LiquidBadge>
+              ) : (
+                <button
+                  onClick={() => handleRevokeOne(session.id)}
+                  disabled={busy}
+                  className="text-xs text-red-400 hover:text-red-300 hover:underline disabled:opacity-40 flex-shrink-0"
+                >
+                  Déconnecter
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <LiquidButton
+        variant="outline"
+        glow="red"
+        fullWidth
+        onClick={handleRevokeOthers}
+        disabled={busy || otherCount === 0}
+      >
+        {otherCount === 0
+          ? 'Aucun autre appareil connecté'
+          : `Déconnecter les ${otherCount} autres appareils`}
+      </LiquidButton>
+    </LiquidCard>
+  )
+}
+
+/** « il y a 5 min » — repère suffisant pour reconnaître une session, sans dépendance de date. */
+function formatRelativeTime(date) {
+  const seconds = Math.floor((Date.now() - new Date(date).getTime()) / 1000)
+  if (seconds < 60) return "à l'instant"
+  const minutes = Math.floor(seconds / 60)
+  if (minutes < 60) return `il y a ${minutes} min`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `il y a ${hours} h`
+  const days = Math.floor(hours / 24)
+  return days === 1 ? 'hier' : `il y a ${days} jours`
 }
 
 export default AccountPage

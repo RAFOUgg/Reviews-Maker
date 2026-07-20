@@ -64,6 +64,10 @@ model User {
 
   // Préférences utilisateur
   locale                String  @default("fr") // "fr", "en", "es", "de"
+  // Préférences d'usage (JSON) : notifications, sauvegarde auto, visibilité par défaut des
+  // nouvelles reviews, etc. Étaient stockées en localStorage et donc perdues d'un appareil à
+  // l'autre. La visibilité du profil n'est PAS ici : c'est le champ `publicProfile` plus haut.
+  preferences           String?
   theme                 String  @default("violet-lean")
   defaultExportTemplate String? // ID du template préféré
 
@@ -117,6 +121,10 @@ model User {
 }
 
 // Modèle Session (authentification)
+// Sessions de connexion, pour les afficher à l'utilisateur et lui permettre de les révoquer.
+// Le magasin de sessions réel reste connect-sqlite3 (db/sessions.db) : cette table en est le
+// miroir consultable (le magasin ne sait pas répondre à « quelles sessions pour cet utilisateur »).
+// La révocation agit sur les deux : destruction dans le magasin + suppression de la ligne ici.
 model Session {
   id        String   @id @default(uuid())
   sid       String   @unique
@@ -124,9 +132,15 @@ model Session {
   expiresAt DateTime
   createdAt DateTime @default(now())
 
+  // Métadonnées d'affichage : « Chrome sur Windows, Paris, il y a 5 min »
+  userAgent  String?
+  ipAddress  String?
+  lastSeenAt DateTime @default(now())
+
   // Relations
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([userId])
   @@map("sessions")
 }
 
