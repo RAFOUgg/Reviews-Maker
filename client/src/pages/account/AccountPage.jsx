@@ -53,7 +53,7 @@ const getTabSections = (accountType, hasCompany) => {
 const AccountPage = () => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { user, accountType, checkAuth } = useStore()
+  const { user, accountType, checkAuth, logout } = useStore()
   const { isProducteur } = useAccountFeatures()
 
   const isProfileComplete = user?.birthdate && user?.country
@@ -137,12 +137,10 @@ const AccountPage = () => {
   }
 
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' })
-      navigate('/auth/login')
-    } catch (error) {
-      console.error('Logout failed:', error)
-    }
+    // L'action du store purge `user`/`accountType` en plus d'appeler l'API : un fetch brut
+    // laissait l'utilisateur en mémoire, et PrivateRoute redonnait accès à /account.
+    await logout()
+    navigate('/login')
   }
 
   const visibilityOptions = [
@@ -188,7 +186,7 @@ const AccountPage = () => {
               </div>
 
               <LiquidButton
-                onClick={() => navigate('/choose-account')}
+                onClick={() => navigate('/age-verification')}
                 variant="primary"
                 glow="purple"
                 fullWidth

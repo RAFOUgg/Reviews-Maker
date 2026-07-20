@@ -7,7 +7,18 @@ import { Shield } from 'lucide-react'
  * Redirige vers /login si pas d'utilisateur
  */
 export function PrivateRoute({ children, requiredRole = null }) {
-    const { user } = useStore()
+    const { user, authChecked } = useStore()
+
+    // Tant que checkAuth() n'a pas résolu, `!user` ne veut pas dire "non connecté" mais
+    // "pas encore vérifié" : rediriger ici éjecterait vers /login un utilisateur qui a une
+    // session valide (ex: ouverture d'un lien direct dans un nouvel onglet).
+    if (!authChecked) {
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#07070f]">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />
+            </div>
+        )
+    }
 
     // Si pas d'utilisateur, rediriger vers login
     if (!user) {

@@ -166,7 +166,13 @@ function App() {
                                     <Route path="/library" element={<LibraryPage />} />
                                     <Route path="/library/production-chains/:chainId" element={<ProductionChainEditorPage />} />
                                     <Route path="/gallery" element={<GalleryPage />} />
-                                    <Route path="/account" element={<AccountPage />} />
+                                    {/* Protégée : sans session, AccountPage lit `user` à null et
+                                        conclut à tort "profil incomplet" au lieu de renvoyer au login. */}
+                                    <Route path="/account" element={
+                                        <PrivateRoute>
+                                            <AccountPage />
+                                        </PrivateRoute>
+                                    } />
                                     <Route path="/manage-subscription" element={<Navigate to="/account?tab=subscription" replace />} />
                                     <Route path="/phenohunt" element={<PhenoHuntPage />} />
                                     <Route path="/liquid-preview" element={<LiquidPreview />} />
