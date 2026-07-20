@@ -2,6 +2,7 @@ import express from 'express'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
 import { formatReviews } from '../utils/reviewFormatter.js'
+import { resolveAccess, companyScopeFilter } from '../services/access.js'
 
 const router = express.Router()
 
@@ -9,8 +10,9 @@ const router = express.Router()
 router.get('/me/reviews', asyncHandler(async (req, res) => {
     requireAuthOrThrow(req)
 
+    const access = await resolveAccess(req.user)
     const reviews = await prisma.review.findMany({
-        where: { authorId: req.user.id },
+        where: companyScopeFilter(access, 'authorId'),
         orderBy: { createdAt: 'desc' },
         include: {
             author: {

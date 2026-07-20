@@ -12,6 +12,7 @@ import express from 'express'
 import { prisma } from '../server.js'
 import { requireAuth } from '../middleware/auth.js'
 import { REVIEW_TYPE_TO_DB } from '../utils/reviewTypeMap.js'
+import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 
 const FIELD_TYPES = {
     flower: {
@@ -62,7 +63,7 @@ router.put('/:reviewType/:reviewId', requireAuth, async (req, res) => {
         if (!review || review.type !== REVIEW_TYPE_TO_DB[reviewType]) {
             return res.status(404).json({ error: 'Review not found' })
         }
-        if (review.authorId !== req.user.id) {
+        if (!(await canModifyFor(req, review, 'authorId'))) {
             return res.status(403).json({ error: 'You can only edit your own reviews' })
         }
 

@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
 import { canAccessFeature } from '../middleware/permissions.js';
 import { requireAuth } from '../middleware/auth.js';
-import { resolveAccess, companyScopeFilter, canModifyResource, owningCompanyId } from '../services/access.js';
+import { resolveAccess, companyScopeFilter, canModifyResource, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js';
 import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -575,7 +575,7 @@ router.post('/exports', requireAuth, uploadExport.single('file'), asyncHandler(a
     if (reviewId) {
         review = await prisma.review.findUnique({ where: { id: reviewId } })
         if (!review) return res.status(404).json({ error: 'review_not_found', message: 'Review not found' })
-        if (review.authorId !== req.user.id && !review.isPublic) {
+        if (!(await canReadFor(req, review, 'authorId'))) {
             return res.status(403).json({ error: 'forbidden', message: 'Cannot save export for a private review you do not own' })
         }
     }

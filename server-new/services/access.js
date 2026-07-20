@@ -11,6 +11,7 @@
  */
 import { prisma } from '../server.js'
 import { getUserAccountType, ACCOUNT_TYPES } from './account.js'
+import { Errors } from '../utils/errorHandler.js'
 
 // Ce qu'un rôle permet d'écrire au sein de l'entreprise. `owner` = titulaire du ProducerProfile.
 const ROLE_CAPABILITIES = {
@@ -206,6 +207,21 @@ export async function canReadFor(req, resource, ownerField = 'userId') {
 
     if (resource[ownerField] === access.userId) return true
     return Boolean(resource.producerProfileId && access.company?.id === resource.producerProfileId)
+}
+
+/**
+ * Équivalent de `requireOwnershipOrThrow` conscient de l'entreprise, pour les reviews.
+ *
+ * L'ancien helper comparait `review.authorId` à l'utilisateur courant : un collègue habilité était
+ * donc refusé sur une review pourtant détenue par sa société. On lui substitue la même règle que
+ * partout ailleurs — créateur, ou membre de l'entreprise propriétaire avec droit d'écriture.
+ *
+ * @throws {APIError} NOT_OWNER si l'utilisateur n'a pas le droit de modifier
+ */
+export async function requireReviewWriteOrThrow(req, review) {
+    if (!req.user) throw Errors.UNAUTHORIZED()
+    if (await canModifyFor(req, review, 'authorId')) return
+    throw Errors.NOT_OWNER('review')
 }
 
 /**

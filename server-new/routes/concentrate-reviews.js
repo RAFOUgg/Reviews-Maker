@@ -8,7 +8,7 @@ import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } fro
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
-import { requirePublishingAllowed } from '../services/access.js'
+import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -475,6 +475,9 @@ router.post('/', requireAuth, upload.fields([
     const review = await prisma.review.create({
         data: {
             authorId: userId,
+            // Rattachement entreprise : la review appartient à la société, pas au seul
+            // rédacteur — elle reste accessible à l'équipe même s'il la quitte.
+            producerProfileId: owningCompanyId(await resolveAccess(req.user)),
             type: 'concentrate',
             holderName: cleanedData.nomCommercial,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
@@ -556,7 +559,7 @@ router.put('/:id', requireAuth, upload.fields([
     if (!review) {
         return res.status(404).json({ error: 'Review not found' })
     }
-    if (review.authorId !== userId) {
+    if (!(await canModifyFor(req, review, 'authorId'))) {
         return res.status(403).json({ error: 'Forbidden' })
     }
 
@@ -661,7 +664,7 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
     if (!review) {
         return res.status(404).json({ error: 'Review not found' })
     }
-    if (review.authorId !== userId) {
+    if (!(await canModifyFor(req, review, 'authorId'))) {
         return res.status(403).json({ error: 'Forbidden' })
     }
 

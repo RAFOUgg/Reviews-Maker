@@ -417,7 +417,7 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
             return res.status(400).json({ error: "Invalid review reference" })
         }
 
-        if (review.authorId !== req.user.id) {
+        if (!(await canModifyFor(req, review, 'authorId'))) {
             return res.status(403).json({ error: "You can only add your own reviews to a chain" })
         }
 
@@ -505,7 +505,7 @@ router.put("/nodes/:nodeId", requireAuth, requireChainAccess, validateChainNodeU
             if (!review || review.type !== REVIEW_TYPE_TO_DB[reviewType]) {
                 return res.status(400).json({ error: "Invalid review reference" })
             }
-            if (review.authorId !== req.user.id) {
+            if (!(await canModifyFor(req, review, 'authorId'))) {
                 return res.status(403).json({ error: "You can only link your own reviews" })
             }
 

@@ -13,7 +13,7 @@ import {
     canAccessSection
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
-import { requirePublishingAllowed } from '../services/access.js'
+import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requirePublishingAllowed, requireReviewWriteOrThrow, resolveAccess } from '../services/access.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -680,6 +680,9 @@ router.post('/',
             images: JSON.stringify(imageFilenames),
             mainImage: imageFilenames[0] || null,
             authorId: req.user.id,
+            // Rattachement entreprise : la review appartient à la société, pas au seul
+            // rédacteur — elle reste accessible à l'équipe même s'il la quitte.
+            producerProfileId: owningCompanyId(await resolveAccess(req.user)),
             isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : false,
             // Store cultivars and farm on base Review for library card queries
             cultivars: validation.cleaned.cultivars || null,
@@ -828,7 +831,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
     const isAuthenticated = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
     const currentUser = isAuthenticated ? req.user : null
 
-    if (!review.isPublic && (!isAuthenticated || !currentUser || review.authorId !== currentUser.id)) {
+    if (!(await canReadFor(req, review, 'authorId'))) {
         throw Errors.FORBIDDEN()
     }
 
@@ -898,7 +901,7 @@ router.put('/:id',
         }
 
         // Vérifier ownership
-        await requireOwnershipOrThrow(review.authorId, req, 'review')
+        await requireReviewWriteOrThrow(req, review)
 
         // Vérifier que c'est bien une review Fleurs
         if (review.type !== 'Fleurs') {
@@ -1121,7 +1124,7 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
     }
 
     // Vérifier ownership
-    await requireOwnershipOrThrow(review.authorId, req, 'review')
+    await requireReviewWriteOrThrow(req, review)
 
     // Supprimer dans une transaction (cascade: FlowerReview sera supprimé automatiquement via onDelete: Cascade)
     await prisma.$transaction(async (tx) => {

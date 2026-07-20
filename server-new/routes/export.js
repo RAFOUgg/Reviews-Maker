@@ -18,6 +18,7 @@
 import express from 'express'
 import { asyncHandler, Errors } from '../utils/errorHandler.js'
 import { prisma } from '../server.js'
+import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 import {
     requireAuth,
     requireExportFormat,
@@ -55,7 +56,7 @@ router.post('/preview',
         }
 
         // Can only preview own reviews or public reviews
-        if (review.authorId !== req.user.id && !review.isPublic) {
+        if (!(await canReadFor(req, review, 'authorId'))) {
             throw Errors.FORBIDDEN('Cannot preview private review of another user')
         }
 
@@ -107,7 +108,7 @@ router.post('/:format',
         }
 
         // Permission check: can only export own reviews or public reviews
-        if (review.authorId !== req.user.id && !review.isPublic) {
+        if (!(await canReadFor(req, review, 'authorId'))) {
             throw Errors.FORBIDDEN('Cannot export private review of another user')
         }
 

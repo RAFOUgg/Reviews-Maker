@@ -11,6 +11,7 @@ import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
 import { EXPORT_LIMITS } from '../middleware/permissions.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
+import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requireReviewWriteOrThrow, resolveAccess } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -94,8 +95,10 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
 
 // GET /api/reviews/my - Récupérer les reviews de l'utilisateur connecté
 router.get('/my', requireAuth, asyncHandler(async (req, res) => {
+    // Les siennes + celles de son entreprise : une review appartient à la société qui l'a produite.
+    const access = await resolveAccess(req.user)
     const reviews = await prisma.review.findMany({
-        where: { authorId: req.user.id },
+        where: companyScopeFilter(access, 'authorId'),
         include: {
             author: {
                 select: {
@@ -196,7 +199,7 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     const isAuthenticated = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
     const currentUser = isAuthenticated ? req.user : null
 
-    if (!review.isPublic && (!isAuthenticated || !currentUser || review.authorId !== currentUser.id)) {
+    if (!(await canReadFor(req, review, 'authorId'))) {
         console.error('🚫 Access forbidden:', {
             isPublic: review.isPublic,
             isAuthenticated,
@@ -378,7 +381,7 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
     }
 
     // Vérifier ownership du review (utilisateur courant doit être l'auteur)
-    await requireOwnershipOrThrow(review.authorId, req, 'review')
+    await requireReviewWriteOrThrow(req, review)
 
     const {
         holderName,
@@ -626,7 +629,7 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
     }
 
     // Vérifier ownership du review
-    await requireOwnershipOrThrow(review.authorId, req, 'review')
+    await requireReviewWriteOrThrow(req, review)
 
     // Supprimer les images associées
     const imageFilenames = extractImageFilenames(review)
@@ -662,7 +665,7 @@ router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
     }
 
     // Vérifier ownership du review
-    await requireOwnershipOrThrow(review.authorId, req, 'review')
+    await requireReviewWriteOrThrow(req, review)
 
     // Mettre à jour la visibilité
     const updatedReview = await prisma.review.update({
@@ -701,7 +704,7 @@ router.patch('/:id/preview', requireAuth, asyncHandler(async (req, res) => {
     const review = await prisma.review.findUnique({ where: { id } })
     if (!review) throw Errors.REVIEW_NOT_FOUND()
 
-    await requireOwnershipOrThrow(review.authorId, req, 'review')
+    await requireReviewWriteOrThrow(req, review)
 
     // Decode base64 et sauvegarder comme fichier
     const matches = previewDataUrl.match(/^data:image\/(\w+);base64,(.+)$/s)
@@ -907,12 +910,18 @@ router.get('/:id/likes', optionalAuth, async (req, res) => {
 })
 
 // Multer error handler (LIMIT_FILE_SIZE, LIMIT_FIELD_VALUE, etc.)
+// Erreurs d'upload multer uniquement.
+//
+// Ce gestionnaire renvoyait auparavant `400 { error: err.message }` pour TOUTE erreur du routeur :
+// un refus d'accès (403 `forbidden`) ressortait donc en 400 avec le message à la place du code,
+// rendant impossible toute réaction fine côté client. Les erreurs non liées à l'upload sont
+// désormais transmises au gestionnaire global, qui préserve statut et code.
 router.use((err, req, res, next) => {
-    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'Image trop grande (max 20 MB)' })
-    if (err?.code === 'LIMIT_FIELD_VALUE') return res.status(413).json({ error: 'Données trop volumineuses (champ dépasse 10 MB)' })
-    if (err?.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ error: 'Fichier inattendu : ' + err.field })
-    if (err) return res.status(400).json({ error: err.message || 'Erreur upload' })
-    next()
+    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'file_too_large', message: 'Image trop grande (max 20 MB)' })
+    if (err?.code === 'LIMIT_FIELD_VALUE') return res.status(413).json({ error: 'field_too_large', message: 'Données trop volumineuses (champ dépasse 10 MB)' })
+    if (err?.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ error: 'unexpected_file', message: 'Fichier inattendu : ' + err.field })
+    if (err?.name === 'MulterError') return res.status(400).json({ error: 'upload_error', message: err.message })
+    next(err)
 })
 
 export default router

@@ -2,6 +2,7 @@ import express from 'express'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
 import { requireAuth } from '../middleware/auth.js'
+import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 
 const router = express.Router()
 
@@ -54,7 +55,7 @@ router.post('/', requireAuth, asyncHandler(async (req, res) => {
         throw Errors.NOT_FOUND('Review not found')
     }
 
-    if (review.authorId !== req.user.id) {
+    if (!(await canModifyFor(req, review, 'authorId'))) {
         throw Errors.FORBIDDEN('You do not own this review')
     }
 
