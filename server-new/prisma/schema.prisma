@@ -294,10 +294,18 @@ model Review {
   derivedHashReviews        HashReview[]          @relation("hashFromFlower")
   derivedConcentrateReviews ConcentrateReview[]   @relation("concentrateFromFlower")
 
+
+  // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
+  // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
+  // (cf. services/access.js). `userId` reste le créateur, pour la traçabilité.
+  producerProfileId String?
+  producerProfile   ProducerProfile? @relation(fields: [producerProfileId], references: [id], onDelete: SetNull)
+
   @@index([authorId])
   @@index([type])
   @@index([createdAt])
   @@index([isPublic])
+  @@index([producerProfileId])
   @@map("reviews")
 }
 
@@ -482,6 +490,13 @@ model ProducerProfile {
   updatedAt DateTime @updatedAt
 
   members CompanyMember[]
+
+  // Ressources appartenant à l'entreprise plutôt qu'à une personne : elles restent accessibles
+  // à l'équipe même si l'employé qui les a créées quitte la société.
+  savedData        SavedData[]
+  geneticTrees     GeneticTree[]
+  productionChains ProductionChain[]
+  reviews          Review[]
 
   @@map("producer_profiles")
 }
@@ -1234,9 +1249,17 @@ model SavedData {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+
+  // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
+  // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
+  // (cf. services/access.js). `userId` reste le créateur, pour la traçabilité.
+  producerProfileId String?
+  producerProfile   ProducerProfile? @relation(fields: [producerProfileId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([dataType])
   @@index([category])
+  @@index([producerProfileId])
   @@map("saved_data")
 }
 
@@ -1529,9 +1552,17 @@ model GeneticTree {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+
+  // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
+  // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
+  // (cf. services/access.js). `userId` reste le créateur, pour la traçabilité.
+  producerProfileId String?
+  producerProfile   ProducerProfile? @relation(fields: [producerProfileId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([projectType])
   @@index([isPublic])
+  @@index([producerProfileId])
   @@map("genetic_trees")
 }
 
@@ -1642,8 +1673,16 @@ model ProductionChain {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+
+  // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
+  // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
+  // (cf. services/access.js). `userId` reste le créateur, pour la traçabilité.
+  producerProfileId String?
+  producerProfile   ProducerProfile? @relation(fields: [producerProfileId], references: [id], onDelete: SetNull)
+
   @@index([userId])
   @@index([isPublic])
+  @@index([producerProfileId])
   @@map("production_chains")
 }
 

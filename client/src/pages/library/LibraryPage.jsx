@@ -24,7 +24,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import {
     Library, LayoutDashboard, FileText, Leaf, Palette, Database, BarChart3,
     Plus, Download, Upload,
-    ChevronRight, Brain, ExternalLink, GitBranch, Dna
+    ChevronRight, Brain, ExternalLink, GitBranch, Dna, Building2
 } from 'lucide-react'
 
 // Import des onglets
@@ -35,6 +35,7 @@ import TemplatesTab from './tabs/TemplatesTab'
 import DataTab from './tabs/DataTab'
 import StatsTab from './tabs/StatsTab'
 import ProductionChainTab from './tabs/ProductionChainTab'
+import CompanyTab from './tabs/CompanyTab'
 
 // Configuration des onglets. `group` détermine le placement dans la sidebar :
 // 'main' en haut, 'pro' regroupé sous un séparateur "PRO" (producteur uniquement).
@@ -74,6 +75,17 @@ const TABS = [
         all: true,
         group: 'main',
         description: 'Statistiques de votre bibliothèque'
+    },
+    {
+        id: 'company',
+        label: 'Entreprise',
+        mobileLabel: 'Équipe',
+        icon: Building2,
+        producerOnly: true,
+        group: 'pro',
+        // N'apparaît que si le compte appartient réellement à une entreprise (titulaire ou employé).
+        requiresCompany: true,
+        description: 'Votre équipe et les données partagées'
     },
     {
         id: 'cultivars',
@@ -121,7 +133,11 @@ export default function LibraryPage() {
     }, [user, navigate])
 
     // Déterminer les onglets disponibles selon le type de compte
-    const availableTabs = TABS.filter(t => t.all || (t.producerOnly && isProducer))
+    // `access.company` vient du serveur (/api/auth/me) : titulaire d'un ProducerProfile ou employé actif.
+    const hasCompany = Boolean(user?.access?.company)
+    const availableTabs = TABS
+        .filter(t => t.all || (t.producerOnly && isProducer))
+        .filter(t => !t.requiresCompany || hasCompany)
     const mainTabs = availableTabs.filter(t => t.group === 'main')
     const proTabs = availableTabs.filter(t => t.group === 'pro')
 
@@ -132,6 +148,8 @@ export default function LibraryPage() {
                 return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={setActiveTab} />
             case 'reviews':
                 return <ReviewsTab />
+            case 'company':
+                return isProducer ? <CompanyTab onNavigate={setActiveTab} /> : null
             case 'cultivars':
                 return isProducer ? <CultivarsTab /> : null
             case 'templates':

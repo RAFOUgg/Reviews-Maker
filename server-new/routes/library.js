@@ -10,6 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
 import { canAccessFeature } from '../middleware/permissions.js';
 import { requireAuth } from '../middleware/auth.js';
+import { resolveAccess, companyScopeFilter, canModifyResource, owningCompanyId } from '../services/access.js';
 import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -436,17 +437,18 @@ router.delete('/watermarks/:id', requireAuth, asyncHandler(async (req, res) => {
  */
 router.get('/data', requireAuth, asyncHandler(async (req, res) => {
     const { dataType, category, search } = req.query;
+    const access = await resolveAccess(req.user);
 
+    // Ses propres données + celles de son entreprise (référentiel partagé : substrats, engrais,
+    // matériel… doivent être identiques pour toute l'équipe).
     const where = {
-        userId: req.user.id,
-        ...(dataType && { dataType }),
-        ...(category && { category }),
-        ...(search && {
-            OR: [
-                { name: { contains: search, mode: 'insensitive' } },
-                { description: { contains: search, mode: 'insensitive' } },
-            ],
-        }),
+        AND: [
+            companyScopeFilter(access),
+            {
+                ...(dataType && { dataType }),
+                ...(category && { category }),
+            },
+        ],
     };
 
     const data = await prisma.savedData.findMany({
@@ -457,7 +459,21 @@ router.get('/data', requireAuth, asyncHandler(async (req, res) => {
         ],
     });
 
-    const parsed = data.map(d => ({ ...d, data: d.data ? JSON.parse(d.data) : null }));
+    // La recherche est filtrée en JS : `mode: 'insensitive'` n'est pas supporté par le connecteur
+    // SQLite de Prisma et fait planter la requête.
+    const needle = search ? String(search).toLowerCase() : null;
+    const filtered = needle
+        ? data.filter(d =>
+            d.name?.toLowerCase().includes(needle) ||
+            d.description?.toLowerCase().includes(needle))
+        : data;
+
+    const parsed = filtered.map(d => ({
+        ...d,
+        data: d.data ? JSON.parse(d.data) : null,
+        // Permet à l'UI de distinguer une donnée d'entreprise d'une donnée personnelle.
+        isCompanyOwned: Boolean(d.producerProfileId),
+    }));
     res.json(parsed);
 }));
 
@@ -475,9 +491,15 @@ router.post('/data', requireAuth, asyncHandler(async (req, res) => {
         });
     }
 
+    const access = await resolveAccess(req.user);
+    if (access.company && !access.company.canWrite) {
+        return res.status(403).json({ error: 'read_only_member', message: 'Votre rôle est en lecture seule' });
+    }
+
     const savedData = await prisma.savedData.create({
         data: {
-            userId: req.user.id,
+            userId: req.user.id, // créateur conservé pour la traçabilité
+            producerProfileId: owningCompanyId(access), // la donnée appartient à l'entreprise
             dataType,
             name,
             description: description || null,
@@ -495,11 +517,16 @@ router.post('/data', requireAuth, asyncHandler(async (req, res) => {
  * Met à jour une donnée sauvegardée existante
  */
 router.put('/data/:id', requireAuth, asyncHandler(async (req, res) => {
+    const access = await resolveAccess(req.user);
     const existing = await prisma.savedData.findFirst({
-        where: { id: req.params.id, userId: req.user.id },
+        where: { AND: [{ id: req.params.id }, companyScopeFilter(access)] },
     });
     if (!existing) {
         return res.status(404).json({ error: 'not_found', message: 'Donnée non trouvée' });
+    }
+    // Visible ne veut pas dire modifiable : un lecteur consulte le référentiel sans y toucher.
+    if (!canModifyResource(access, existing)) {
+        return res.status(403).json({ error: 'read_only_member', message: 'Votre rôle ne permet pas de modifier cette donnée' });
     }
 
     const { dataType, name, description, data, category, tags } = req.body;
@@ -629,17 +656,18 @@ router.delete('/exports/:id', requireAuth, asyncHandler(async (req, res) => {
  * Supprime une donnée sauvegardée
  */
 router.delete('/data/:id', requireAuth, asyncHandler(async (req, res) => {
+    const access = await resolveAccess(req.user);
     const existing = await prisma.savedData.findFirst({
-        where: {
-            id: req.params.id,
-            userId: req.user.id,
-        },
+        where: { AND: [{ id: req.params.id }, companyScopeFilter(access)] },
     });
     if (!existing) {
         return res.status(404).json({
             error: 'not_found',
             message: 'Donnée non trouvée',
         });
+    }
+    if (!canModifyResource(access, existing)) {
+        return res.status(403).json({ error: 'read_only_member', message: 'Votre rôle ne permet pas de supprimer cette donnée' });
     }
 
     await prisma.savedData.delete({

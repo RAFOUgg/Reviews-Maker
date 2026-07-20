@@ -33,6 +33,7 @@ import {
 } from '../middleware/validateGenetics.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { requireFeature } from '../middleware/permissions.js'
+import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 import { wouldCreateCycle } from '../utils/graphCycle.js'
 
 const router = express.Router()
@@ -83,8 +84,10 @@ router.get("/next-pheno-code/:prefix", requireAuth, async (req, res) => {
  */
 router.get("/trees", requireAuth, async (req, res) => {
     try {
+        // Les siens + ceux de son entreprise : les lignees maison sont un bien collectif.
+        const access = await resolveAccess(req.user);
         const trees = await prisma.geneticTree.findMany({
-            where: { userId: req.user.id },
+            where: companyScopeFilter(access),
             select: {
                 id: true,
                 name: true,
@@ -157,9 +160,15 @@ router.post("/trees", requireAuth, requireGeneticsAccess, validateTreeCreation, 
             return res.status(400).json({ error: "Tree name is required" });
         }
 
+        const access = await resolveAccess(req.user);
+        if (access.company && !access.company.canWrite) {
+            return res.status(403).json({ error: "read_only_member", message: "Votre role est en lecture seule" });
+        }
+
         const tree = await prisma.geneticTree.create({
             data: {
                 userId: req.user.id,
+                producerProfileId: owningCompanyId(access),
                 name: name.trim(),
                 description: description?.trim() || null,
                 projectType: projectType || "phenohunt",
@@ -236,7 +245,7 @@ router.get("/trees/:id", optionalAuth, async (req, res) => {
         }
 
         // Vérifier l'accès (public ou propriétaire)
-        if (!tree.isPublic && tree.userId !== req.user?.id) {
+        if (!(await canReadFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -294,7 +303,7 @@ router.put("/trees/:id", requireAuth, requireGeneticsAccess, validateTreeUpdate,
             return res.status(404).json({ error: "Tree not found" });
         }
 
-        if (tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -331,7 +340,7 @@ router.delete("/trees/:id", requireAuth, requireGeneticsAccess, async (req, res)
             return res.status(404).json({ error: "Tree not found" });
         }
 
-        if (tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -365,7 +374,7 @@ router.get("/trees/:id/nodes", optionalAuth, async (req, res) => {
         }
 
         // Vérifier l'accès
-        if (!tree.isPublic && tree.userId !== req.user?.id) {
+        if (!(await canReadFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -406,7 +415,7 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
             return res.status(404).json({ error: "Tree not found" });
         }
 
-        if (tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -474,7 +483,7 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
             return res.status(404).json({ error: "Node not found" });
         }
 
-        if (node.tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, node.tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -548,7 +557,7 @@ router.delete("/nodes/:nodeId", requireAuth, requireGeneticsAccess, async (req, 
             return res.status(404).json({ error: "Node not found" });
         }
 
-        if (node.tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, node.tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -583,7 +592,7 @@ router.get("/trees/:id/edges", optionalAuth, async (req, res) => {
         }
 
         // Vérifier l'accès
-        if (!tree.isPublic && tree.userId !== req.user?.id) {
+        if (!(await canReadFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -626,7 +635,7 @@ router.post("/trees/:id/edges", requireAuth, requireGeneticsAccess, validateEdge
             return res.status(404).json({ error: "Tree not found" });
         }
 
-        if (tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -720,7 +729,7 @@ router.put("/edges/:edgeId", requireAuth, requireGeneticsAccess, validateEdgeUpd
             return res.status(404).json({ error: "Edge not found" });
         }
 
-        if (edge.tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, edge.tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -812,7 +821,7 @@ router.delete("/edges/:edgeId", requireAuth, requireGeneticsAccess, async (req, 
             return res.status(404).json({ error: "Edge not found" });
         }
 
-        if (edge.tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, edge.tree))) {
             return res.status(403).json({ error: "Forbidden" });
         }
 
@@ -839,7 +848,7 @@ router.post("/trees/:id/annotations", requireAuth, requireGeneticsAccess, valida
         if (!tree) {
             return res.status(404).json({ error: "Tree not found" })
         }
-        if (tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, tree))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -891,7 +900,7 @@ router.put("/annotations/:annotationId", requireAuth, requireGeneticsAccess, val
         if (!annotation) {
             return res.status(404).json({ error: "Annotation not found" })
         }
-        if (annotation.tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, annotation.tree))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -942,7 +951,7 @@ router.delete("/annotations/:annotationId", requireAuth, requireGeneticsAccess, 
         if (!annotation) {
             return res.status(404).json({ error: "Annotation not found" })
         }
-        if (annotation.tree.userId !== req.user.id) {
+        if (!(await canModifyFor(req, annotation.tree))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 

@@ -138,6 +138,77 @@ export async function resolveAccess(user) {
 }
 
 /**
+ * Fragment de filtre Prisma pour lire une ressource : la sienne, ou celle de son entreprise.
+ *
+ * @param {object} access - contexte résolu par resolveAccess
+ * @param {string} ownerField - champ portant le créateur ('userId' ou 'authorId' selon le modèle)
+ * @returns {object} à étaler dans un `where` : { OR: [...] }
+ */
+export function companyScopeFilter(access, ownerField = 'userId') {
+    const mine = { [ownerField]: access.userId }
+
+    // Sans entreprise, la portée reste strictement personnelle : le comportement historique.
+    if (!access.company) return mine
+
+    return {
+        OR: [
+            mine,
+            { producerProfileId: access.company.id },
+        ],
+    }
+}
+
+/**
+ * L'entreprise à laquelle rattacher une ressource nouvellement créée. Par défaut tout ce qu'un
+ * membre produit appartient à la société — sinon les données partiraient avec l'employé.
+ */
+export function owningCompanyId(access) {
+    return access.company?.id || null
+}
+
+/**
+ * Peut-on modifier/supprimer cette ressource ?
+ *
+ * - son créateur : toujours (y compris un lecteur sur ses propres données) ;
+ * - une ressource d'entreprise : selon le rôle (un `viewer` consulte sans modifier).
+ */
+export function canModifyResource(access, resource, ownerField = 'userId') {
+    if (!resource) return false
+    if (resource[ownerField] === access.userId) return true
+
+    if (resource.producerProfileId && access.company?.id === resource.producerProfileId) {
+        return Boolean(access.company.canWrite)
+    }
+
+    return false
+}
+
+/**
+ * Variante de `canModifyResource` prenant la requête : résout et mémorise `req.access` au passage.
+ * Conçue pour remplacer en une ligne les gardes historiques `if (x.userId !== req.user.id)`, qui
+ * refusaient l'accès à un employé sur une ressource pourtant détenue par son entreprise.
+ */
+export async function canModifyFor(req, resource, ownerField = 'userId') {
+    const access = req.access || (await resolveAccess(req.user))
+    req.access = access
+    return canModifyResource(access, resource, ownerField)
+}
+
+/**
+ * Même logique pour la lecture : sa ressource, celle de son entreprise, ou une ressource publique.
+ */
+export async function canReadFor(req, resource, ownerField = 'userId') {
+    if (!resource) return false
+    if (resource.isPublic) return true
+
+    const access = req.access || (await resolveAccess(req.user))
+    req.access = access
+
+    if (resource[ownerField] === access.userId) return true
+    return Boolean(resource.producerProfileId && access.company?.id === resource.producerProfileId)
+}
+
+/**
  * Middleware : expose `req.access`. À monter sur les routes qui décident d'un droit, pour éviter
  * que chaque handler refasse les mêmes requêtes.
  */

@@ -47,9 +47,12 @@ export const useStore = create((set, get) => ({
     checkAuth: async () => {
         try {
             const user = await authService.getMe()
-            // Utiliser directement user.accountType fourni par le backend
-            // Le backend calcule déjà le type correct via getUserAccountType()
-            const accountType = user?.accountType || 'consumer'
+            // `access.accountType` est le tier EFFECTIF calculé par services/access.js : il tient
+            // compte de l'abonnement (un abonnement expiré ne doit plus rien ouvrir) et de
+            // l'héritage entreprise. `user.accountType` est la colonne brute, qui peut encore dire
+            // "producer" pour un compte dont l'abonnement est mort — s'y fier afficherait un menu
+            // PRO que l'API refuse ensuite en 403.
+            const accountType = user?.access?.accountType || user?.accountType || 'consumer'
             set({ user, isAuthenticated: true, accountType, authChecked: true })
 
             // Force permission resync on login to avoid stale local cache

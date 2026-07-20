@@ -43,6 +43,7 @@ import {
 } from '../middleware/validateProductionChain.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { requireFeature } from '../middleware/permissions.js'
+import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 import { wouldCreateCycle } from '../utils/graphCycle.js'
 import { REVIEW_TYPE_TO_DB } from '../utils/reviewTypeMap.js'
 import { resolveChainEdgeEndpoint } from '../utils/chainEdgeEndpoints.js'
@@ -66,8 +67,10 @@ const normalizeEdge = (edge) => ({
 
 router.get("/chains", requireAuth, requireChainAccess, async (req, res) => {
     try {
+        // Les siennes + celles de son entreprise : la tracabilite appartient a la societe.
+        const access = await resolveAccess(req.user)
         const chains = await prisma.productionChain.findMany({
-            where: { userId: req.user.id },
+            where: companyScopeFilter(access),
             select: {
                 id: true,
                 name: true,
@@ -91,9 +94,15 @@ router.post("/chains", requireAuth, requireChainAccess, validateChainCreation, a
     try {
         const { name, description, isPublic = false } = req.body
 
+        const access = await resolveAccess(req.user)
+        if (access.company && !access.company.canWrite) {
+            return res.status(403).json({ error: "read_only_member", message: "Votre role est en lecture seule" })
+        }
+
         const chain = await prisma.productionChain.create({
             data: {
                 userId: req.user.id,
+                producerProfileId: owningCompanyId(access),
                 name: name.trim(),
                 description: description?.trim() || null,
                 isPublic: isPublic || false
@@ -168,7 +177,7 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (!chain.isPublic && chain.userId !== req.user?.id) {
+        if (!(await canReadFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -210,7 +219,7 @@ router.get("/chains/:id/events", optionalAuth, async (req, res) => {
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (!chain.isPublic && chain.userId !== req.user?.id) {
+        if (!(await canReadFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -259,7 +268,7 @@ router.post("/chains/:id/events", requireAuth, requireChainAccess, async (req, r
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -327,7 +336,7 @@ router.put("/chains/:id", requireAuth, requireChainAccess, validateChainUpdate, 
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -356,7 +365,7 @@ router.delete("/chains/:id", requireAuth, requireChainAccess, async (req, res) =
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -380,7 +389,7 @@ router.post("/chains/:id/nodes", requireAuth, requireChainAccess, validateChainN
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -465,7 +474,7 @@ router.put("/nodes/:nodeId", requireAuth, requireChainAccess, validateChainNodeU
             return res.status(404).json({ error: "Node not found" })
         }
 
-        if (node.chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, node.chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -572,7 +581,7 @@ router.delete("/nodes/:nodeId", requireAuth, requireChainAccess, async (req, res
             return res.status(404).json({ error: "Node not found" })
         }
 
-        if (node.chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, node.chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -607,7 +616,7 @@ router.post("/chains/:id/edges", requireAuth, requireChainAccess, validateChainE
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -687,7 +696,7 @@ router.put("/edges/:edgeId", requireAuth, requireChainAccess, validateChainEdgeU
             return res.status(404).json({ error: "Edge not found" })
         }
 
-        if (edge.chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, edge.chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -824,7 +833,7 @@ router.delete("/edges/:edgeId", requireAuth, requireChainAccess, async (req, res
             return res.status(404).json({ error: "Edge not found" })
         }
 
-        if (edge.chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, edge.chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -856,7 +865,7 @@ router.post("/chains/:id/annotations", requireAuth, requireChainAccess, validate
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -930,7 +939,7 @@ router.put("/annotations/:annotationId", requireAuth, requireChainAccess, valida
             return res.status(404).json({ error: "Annotation not found" })
         }
 
-        if (annotation.chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, annotation.chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
@@ -990,7 +999,7 @@ router.delete("/annotations/:annotationId", requireAuth, requireChainAccess, asy
             return res.status(404).json({ error: "Annotation not found" })
         }
 
-        if (annotation.chain.userId !== req.user.id) {
+        if (!(await canModifyFor(req, annotation.chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
