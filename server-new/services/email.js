@@ -50,10 +50,27 @@ function getSmtp() {
 
 const FROM_EMAIL = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@reviews-maker.app';
 
-/** Quel transport est réellement exploitable, dans l'ordre de préférence. */
+/**
+ * Quel transport est réellement exploitable, dans l'ordre de préférence.
+ *
+ * Piège vécu : une configuration SMTP laissée en place « au cas où » l'emporte silencieusement sur
+ * une clé Resend valide, et tous les envois échouent sur une boîte inexistante. Quand les deux sont
+ * présents, on le signale explicitement plutôt que de laisser deviner.
+ */
 function activeTransport() {
-    if (process.env.SMTP_HOST) return 'smtp';
-    if (process.env.RESEND_API_KEY) return 'resend';
+    const hasSmtp = Boolean(process.env.SMTP_HOST);
+    const hasResend = Boolean(process.env.RESEND_API_KEY);
+
+    if (hasSmtp && hasResend && !activeTransport._warned) {
+        activeTransport._warned = true;
+        console.warn(
+            '[email] SMTP_HOST et RESEND_API_KEY sont tous deux configurés : SMTP est utilisé, ' +
+            'Resend est ignoré. Retirez la configuration inutilisée du .env pour lever l’ambiguïté.'
+        );
+    }
+
+    if (hasSmtp) return 'smtp';
+    if (hasResend) return 'resend';
     return null;
 }
 
@@ -87,13 +104,15 @@ async function deliver({ to, subject, html }) {
  */
 async function checkEmailTransport() {
     const transport = activeTransport();
-    if (!transport) return { transport: null, ok: false, error: 'aucun transport configuré', from: FROM_EMAIL };
+    const ambiguous = Boolean(process.env.SMTP_HOST && process.env.RESEND_API_KEY);
+
+    if (!transport) return { transport: null, ok: false, error: 'aucun transport configuré', from: FROM_EMAIL, ambiguous };
 
     try {
         if (transport === 'smtp') await getSmtp().verify();
-        return { transport, ok: true, from: FROM_EMAIL };
+        return { transport, ok: true, from: FROM_EMAIL, ambiguous };
     } catch (err) {
-        return { transport, ok: false, error: err.message, from: FROM_EMAIL };
+        return { transport, ok: false, error: err.message, from: FROM_EMAIL, ambiguous };
     }
 }
 

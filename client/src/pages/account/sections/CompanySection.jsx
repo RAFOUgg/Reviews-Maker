@@ -3,6 +3,7 @@ import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidBadge } from
 import { Building2, UserPlus, Trash2, ShieldCheck, ShieldAlert, LogOut, Link as LinkIcon } from 'lucide-react'
 import { companyService } from '../../../services/apiService'
 import { useToast } from '../../../components/shared/ToastContainer'
+import ConfirmModal from '../../../components/shared/ConfirmModal'
 
 /**
  * Gestion des sous-comptes employés d'une entreprise.
@@ -52,6 +53,9 @@ export default function CompanySection() {
     const [inviteEmail, setInviteEmail] = useState('')
     const [inviteRole, setInviteRole] = useState('viewer')
     const [inviting, setInviting] = useState(false)
+
+    // Confirmation destructive : { title, message, confirmLabel, onConfirm } ou null.
+    const [confirmAction, setConfirmAction] = useState(null)
 
     const load = async () => {
         try {
@@ -126,26 +130,38 @@ export default function CompanySection() {
         }
     }
 
-    const handleRevoke = async (memberId, email) => {
-        if (!window.confirm(`Révoquer l'accès de ${email} ?`)) return
-        try {
-            await companyService.removeMember(memberId)
-            toast.success('Accès révoqué')
-            await load()
-        } catch (err) {
-            toast.error(err.message || 'Révocation impossible')
-        }
+    const handleRevoke = (memberId, email) => {
+        setConfirmAction({
+            title: "Révoquer l'accès",
+            message: `${email} perdra immédiatement l'accès aux données de l'entreprise. Cette action est irréversible.`,
+            confirmLabel: 'Révoquer',
+            onConfirm: async () => {
+                try {
+                    await companyService.removeMember(memberId)
+                    toast.success('Accès révoqué')
+                    await load()
+                } catch (err) {
+                    toast.error(err.message || 'Révocation impossible')
+                }
+            },
+        })
     }
 
-    const handleLeave = async () => {
-        if (!window.confirm('Quitter cette entreprise ? Vous perdrez l’accès à ses données.')) return
-        try {
-            await companyService.leave()
-            toast.success('Vous avez quitté l’entreprise')
-            await load()
-        } catch (err) {
-            toast.error(err.message || 'Impossible de quitter l’entreprise')
-        }
+    const handleLeave = () => {
+        setConfirmAction({
+            title: 'Quitter cette entreprise',
+            message: 'Vous perdrez l’accès à ses données. Seul un administrateur pourra vous réinviter.',
+            confirmLabel: 'Quitter',
+            onConfirm: async () => {
+                try {
+                    await companyService.leave()
+                    toast.success('Vous avez quitté l’entreprise')
+                    await load()
+                } catch (err) {
+                    toast.error(err.message || 'Impossible de quitter l’entreprise')
+                }
+            },
+        })
     }
 
     if (loading) {
@@ -315,6 +331,21 @@ export default function CompanySection() {
                     Quitter cette entreprise
                 </LiquidButton>
             )}
+
+            <ConfirmModal
+                open={!!confirmAction}
+                variant="danger"
+                title={confirmAction?.title}
+                message={confirmAction?.message}
+                confirmLabel={confirmAction?.confirmLabel}
+                cancelLabel="Annuler"
+                onCancel={() => setConfirmAction(null)}
+                onConfirm={async () => {
+                    const action = confirmAction
+                    setConfirmAction(null)
+                    await action?.onConfirm()
+                }}
+            />
         </div>
     )
 }

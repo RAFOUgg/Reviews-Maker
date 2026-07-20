@@ -13,6 +13,10 @@ console.log('transport   :', status.transport || 'AUCUN')
 console.log('expéditeur  :', status.from)
 console.log('opérationnel:', status.ok ? 'oui' : 'non')
 if (status.error) console.log('erreur      :', status.error)
+if (status.ambiguous) {
+    console.log('\nATTENTION : SMTP et Resend sont tous deux configurés.')
+    console.log('SMTP est prioritaire — retirez la configuration inutilisée du .env.')
+}
 
 if (!status.ok) {
     console.log('\nRenseignez dans .env :')
