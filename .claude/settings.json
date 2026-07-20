@@ -8,6 +8,7 @@
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
       "Bash(timeout 300 ssh vps-lafoncedalle \"cd ~/Reviews-Maker && bash deploy.sh --vps 2>&1\")",
+      "Bash(bash deploy.sh *)",
       "Bash(timeout 25 npm run build)",
       "Bash(npx eslint *)",
       "Bash(npx esbuild *)",
@@ -140,7 +141,9 @@
       "Bash(node --check server-new/routes/production-chains.js)",
       "Bash(node --check src/components/graph-canvas/AnnotationNode.jsx)",
       "Bash(node --check src/utils/chainEndpoint.js)",
-      "Bash(git fetch *)"
+      "Bash(git fetch *)",
+      "Bash(node test_accept_flow.mjs)",
+      "Bash(rm test_accept_flow.mjs)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",

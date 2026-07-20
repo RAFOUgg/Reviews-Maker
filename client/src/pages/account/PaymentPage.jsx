@@ -5,6 +5,7 @@ import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
 import { ArrowLeft, Check } from 'lucide-react';
 import { useStore } from '../../store/useStore';
 import { paymentService } from '../../services/apiService';
+import PayPalSubscribeButton from '../../components/payment/PayPalSubscribeButton';
 
 const ACCOUNT_TYPES = {
     'influenceur': {
@@ -38,6 +39,9 @@ const ACCOUNT_TYPES = {
     }
 };
 
+// Types affichés (français) → types internes attendus par le backend.
+const PLAN_KEYS = { influenceur: 'influencer', producteur: 'producer' };
+
 export default function PaymentPage() {
     const { t } = useTranslation();
     const navigate = useNavigate();
@@ -45,12 +49,9 @@ export default function PaymentPage() {
     const accountType = searchParams.get('type');
     const { user, isAuthenticated, checkAuth } = useStore();
 
-    const [isLoading, setIsLoading] = useState(false);
+    const [config, setConfig] = useState(null);
+    const [isActivating, setIsActivating] = useState(false);
     const [error, setError] = useState('');
-    const paymentMethod = 'paypal'; // Uniquement PayPal disponible
-
-    // Déterminer si c'est un upgrade (user connecté) ou nouvelle inscription
-    const isUpgrade = isAuthenticated && user;
 
     useEffect(() => {
         if (!accountType || !ACCOUNT_TYPES[accountType]) {
@@ -58,35 +59,43 @@ export default function PaymentPage() {
         }
     }, [accountType, navigate]);
 
+    // S'abonner exige un compte : l'abonnement PayPal est rattaché à l'utilisateur côté serveur.
+    // On mémorise le plan visé pour revenir ici après inscription.
+    useEffect(() => {
+        if (accountType && ACCOUNT_TYPES[accountType] && !isAuthenticated) {
+            navigate(`/register?type=${accountType}&next=payment`);
+        }
+    }, [accountType, isAuthenticated, navigate]);
+
+    useEffect(() => {
+        let active = true;
+        paymentService.config()
+            .then(data => { if (active) setConfig(data); })
+            .catch(() => { if (active) setError("Impossible de charger la configuration de paiement."); });
+        return () => { active = false; };
+    }, []);
+
     const accountInfo = ACCOUNT_TYPES[accountType];
+    const planKey = PLAN_KEYS[accountType];
+    const planId = config?.plans?.[planKey]?.planId || null;
 
-    const handlePayment = async () => {
-        setIsLoading(true);
+    // L'abonnement est approuvé côté PayPal : on demande au serveur de le vérifier et d'accorder
+    // l'accès. Tant que cet appel n'a pas réussi, le compte reste inchangé.
+    const handleApproved = async (subscriptionId) => {
+        setIsActivating(true);
         setError('');
-
         try {
-            // TODO: Intégrer Stripe/Paypal réel
-            // Pour l'instant, simulation de paiement
-            await new Promise(resolve => setTimeout(resolve, 2000));
-
-            if (isUpgrade) {
-                // UPGRADE: utiliser le service centralisé (mapping des clés inclus)
-                await paymentService.upgrade(accountType, true);
-
-                // Rafraîchir les données utilisateur dans le store
-                await checkAuth();
-
-                // Rediriger vers la page compte avec message de succès
-                navigate('/account?upgraded=true');
-            } else {
-                // NOUVELLE INSCRIPTION: Rediriger vers register
-                navigate(`/register?type=${accountType}&paid=true`);
-            }
+            await paymentService.activate(subscriptionId);
+            await checkAuth();
+            navigate('/account?upgraded=true');
         } catch (err) {
-            console.error('Payment error:', err);
-            setError(err.message || 'Erreur lors du paiement. Veuillez réessayer.');
+            console.error('Activation error:', err);
+            setError(
+                err.message ||
+                "Votre paiement a été enregistré mais l'activation a échoué. Rendez-vous sur votre page Compte pour la relancer."
+            );
         } finally {
-            setIsLoading(false);
+            setIsActivating(false);
         }
     };
 
@@ -102,16 +111,14 @@ export default function PaymentPage() {
 
             <div className="max-w-7xl w-full relative z-10">
                 <div className="text-center mb-8">
-                    {!isUpgrade && (
-                        <LiquidButton
-                            variant="ghost"
-                            onClick={() => navigate('/choose-account')}
-                            className="mb-4"
-                        >
-                            <ArrowLeft className="w-5 h-5 mr-2" />
-                            Retour au choix de compte
-                        </LiquidButton>
-                    )}
+                    <LiquidButton
+                        variant="ghost"
+                        onClick={() => navigate('/choose-account')}
+                        className="mb-4"
+                    >
+                        <ArrowLeft className="w-5 h-5 mr-2" />
+                        Retour au choix de compte
+                    </LiquidButton>
                     <h1 className="text-4xl font-bold bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent mb-2">
                         Paiement
                     </h1>
@@ -151,19 +158,17 @@ export default function PaymentPage() {
                             ))}
                         </div>
 
+                        {/* Le montant réellement débité est celui du plan PayPal (source de vérité de
+                            la facturation) : on n'affiche pas de total recalculé ici, qui pourrait
+                            diverger de ce que PayPal présentera à la validation. */}
                         <div className="border-t border-white/10 pt-4 space-y-2">
-                            <div className="flex justify-between text-sm text-white/50">
-                                <span>Abonnement mensuel</span>
-                                <span>{accountInfo.price}€</span>
+                            <div className="flex justify-between text-lg font-bold text-white">
+                                <span>Total mensuel</span>
+                                <span className="text-purple-400">{accountInfo.price.toFixed(2)}€ TTC</span>
                             </div>
-                            <div className="flex justify-between text-sm text-white/50">
-                                <span>TVA (20%)</span>
-                                <span>{(accountInfo.price * 0.2).toFixed(2)}€</span>
-                            </div>
-                            <div className="flex justify-between text-lg font-bold text-white mt-4 pt-2 border-t border-white/10">
-                                <span>Total</span>
-                                <span className="text-purple-400">{(accountInfo.price * 1.2).toFixed(2)}€</span>
-                            </div>
+                            <p className="text-xs text-white/40">
+                                Sans engagement, résiliable à tout moment depuis votre page Compte.
+                            </p>
                         </div>
                     </LiquidCard>
 
@@ -188,13 +193,6 @@ export default function PaymentPage() {
                             </div>
                         </div>
 
-                        {/* Placeholder formulaire */}
-                        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 mb-6">
-                            <p className="text-sm text-amber-300">
-                                <strong>Note :</strong> Le système de paiement sera intégré prochainement (Stripe/PayPal).
-                            </p>
-                        </div>
-
                         {/* Error */}
                         {error && (
                             <div className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-xl">
@@ -202,27 +200,43 @@ export default function PaymentPage() {
                             </div>
                         )}
 
-                        {/* Bouton paiement */}
-                        <LiquidButton
-                            onClick={handlePayment}
-                            disabled={isLoading}
-                            variant="primary"
-                            glow="green"
-                            fullWidth
-                            size="lg"
-                        >
-                            {isLoading ? (
-                                <span className="flex items-center justify-center gap-2">
-                                    <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                                    </svg>
-                                    Traitement...
-                                </span>
-                            ) : (
-                                `Payer ${(accountInfo.price * 1.2).toFixed(2)}€`
-                            )}
-                        </LiquidButton>
+                        {isActivating ? (
+                            <div className="flex items-center justify-center gap-2 py-6 text-white/70">
+                                <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                                </svg>
+                                Activation de votre abonnement…
+                            </div>
+                        ) : !config ? (
+                            <p className="text-sm text-white/40 text-center py-6">Chargement…</p>
+                        ) : !config.configured || !planId ? (
+                            // Sans configuration PayPal exploitable, on le dit franchement plutôt que
+                            // d'afficher un bouton qui ne peut pas aboutir.
+                            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                                <p className="text-sm text-amber-300">
+                                    Le paiement en ligne est momentanément indisponible. Contactez-nous pour
+                                    activer votre abonnement.
+                                </p>
+                            </div>
+                        ) : (
+                            <>
+                                {config.environment === 'sandbox' && (
+                                    <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+                                        <p className="text-xs text-blue-300">
+                                            Mode test PayPal (sandbox) — aucun paiement réel ne sera débité.
+                                        </p>
+                                    </div>
+                                )}
+                                <PayPalSubscribeButton
+                                    clientId={config.clientId}
+                                    planId={planId}
+                                    userId={user?.id}
+                                    onApproved={handleApproved}
+                                    onError={() => setError("Le paiement PayPal a échoué. Aucun montant n'a été débité.")}
+                                />
+                            </>
+                        )}
 
                         <p className="text-xs text-white/40 text-center mt-4">
                             En continuant, vous acceptez nos{' '}

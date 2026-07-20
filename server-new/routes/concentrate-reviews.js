@@ -8,6 +8,7 @@ import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } fro
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
+import { requirePublishingAllowed } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -439,7 +440,7 @@ router.post('/', requireAuth, upload.fields([
     { name: 'images', maxCount: 4 },
     { name: 'certificateFile', maxCount: 1 },
     { name: 'terpeneFile', maxCount: 1 }
-]), asyncHandler(async (req, res) => {
+]), requirePublishingAllowed, asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -547,7 +548,7 @@ router.put('/:id', requireAuth, upload.fields([
     { name: 'images', maxCount: 4 },
     { name: 'certificateFile', maxCount: 1 },
     { name: 'terpeneFile', maxCount: 1 }
-]), asyncHandler(async (req, res) => {
+]), requirePublishingAllowed, asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 

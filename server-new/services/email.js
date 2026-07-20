@@ -258,9 +258,52 @@ async function sendPasswordResetEmail(email, resetLink, locale = 'fr') {
     return data;
 }
 
+const ROLE_LABELS_FR = { admin: 'Administrateur', editor: 'Éditeur', viewer: 'Lecteur' };
+const ROLE_LABELS_EN = { admin: 'Admin', editor: 'Editor', viewer: 'Viewer' };
+
+async function sendCompanyInviteEmail(email, inviteLink, companyName, role, locale = 'fr') {
+    const roleLabel = (locale === 'fr' ? ROLE_LABELS_FR : ROLE_LABELS_EN)[role] || role;
+
+    const subject = locale === 'fr'
+        ? `Invitation à rejoindre ${companyName} sur Reviews-Maker`
+        : `Invitation to join ${companyName} on Reviews-Maker`;
+
+    const html = locale === 'fr'
+        ? `
+      <h2>Invitation d'entreprise</h2>
+      <p>Bonjour,</p>
+      <p><strong>${companyName}</strong> vous invite à rejoindre son espace Reviews-Maker en tant que <strong>${roleLabel}</strong>.</p>
+      <p><a href="${inviteLink}" style="background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">Voir l'invitation</a></p>
+      <p style="color: #888; font-size: 14px;">Si vous ne vous attendiez pas à cette invitation, ignorez simplement cet email.</p>
+      <p>L'équipe Reviews-Maker</p>
+    `
+        : `
+      <h2>Company invitation</h2>
+      <p>Hello,</p>
+      <p><strong>${companyName}</strong> invites you to join its Reviews-Maker workspace as <strong>${roleLabel}</strong>.</p>
+      <p><a href="${inviteLink}" style="background: #8B5CF6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; display: inline-block;">View invitation</a></p>
+      <p style="color: #888; font-size: 14px;">If you weren't expecting this invitation, simply ignore this email.</p>
+      <p>The Reviews-Maker Team</p>
+    `;
+
+    const { data, error } = await getResend().emails.send({
+        from: FROM_EMAIL,
+        to: email,
+        subject,
+        html,
+    });
+
+    if (error) {
+        throw new Error(`Échec envoi email: ${error.message}`);
+    }
+
+    return data;
+}
+
 export {
     sendVerificationCode,
     sendWelcomeEmail,
+    sendCompanyInviteEmail,
     sendSubscriptionConfirmation,
     sendModerationNotification,
     sendPasswordResetEmail,

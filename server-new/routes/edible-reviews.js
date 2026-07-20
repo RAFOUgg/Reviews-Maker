@@ -8,6 +8,7 @@ import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } fro
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
+import { requirePublishingAllowed } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -225,7 +226,7 @@ function validateEdibleReviewData(data, options = {}) {
  * POST /api/edible-reviews
  * Créer une nouvelle EdibleReview
  */
-router.post('/', requireAuth, upload.array('images', 4), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, upload.array('images', 4), requirePublishingAllowed, asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -313,7 +314,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
  * PUT /api/edible-reviews/:id
  */
-router.put('/:id', requireAuth, upload.array('images', 4), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, upload.array('images', 4), requirePublishingAllowed, asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 

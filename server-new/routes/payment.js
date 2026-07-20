@@ -1,241 +1,296 @@
 /**
- * Routes pour gestion des paiements Stripe (Influenceur/Producteur)
+ * Abonnements pro (Influenceur / Producteur) via PayPal Subscriptions.
+ *
+ * Règle inviolable : le droit d'accès payant n'est accordé QUE d'après l'état renvoyé par l'API
+ * PayPal (appel serveur→serveur) ou par un webhook dont la signature a été vérifiée. Rien de ce que
+ * le navigateur envoie n'est cru — le client ne fournit qu'un identifiant d'abonnement à vérifier.
  */
 import express from 'express'
 import { requireAuth } from '../middleware/auth.js'
 import { prisma } from '../server.js'
-import { changeAccountType } from '../services/account.js'
+import { changeAccountType, ACCOUNT_TYPES } from '../services/account.js'
+import { asyncHandler } from '../utils/errorHandler.js'
+import {
+    isPaypalConfigured,
+    getPaypalEnv,
+    getPlanIdForAccountType,
+    getAccountTypeForPlanId,
+    getSubscription,
+    cancelSubscription,
+    verifyWebhookSignature,
+    isEntitlingStatus,
+} from '../services/paypal.js'
 
 const router = express.Router()
 
-/**
- * Parse les rôles depuis le champ JSON
- * @param {string} rolesJson - Champ User.roles
- * @returns {Array<string>}
- */
-function parseRoles(rolesJson) {
-    try {
-        // Handle undefined, null, or empty string
-        if (!rolesJson || rolesJson === '') {
-            return ['consumer'];
-        }
-
-        const parsed = JSON.parse(rolesJson);
-
-        // Ensure parsed.roles is an array
-        if (parsed && Array.isArray(parsed.roles) && parsed.roles.length > 0) {
-            return parsed.roles;
-        }
-
-        return ['consumer'];
-    } catch (error) {
-        return ['consumer'];
-    }
-}
-
-// Prix des abonnements (en centimes)
+// Tarifs affichés (centimes). La facturation réelle est portée par le plan PayPal ; ces valeurs ne
+// servent qu'à l'affichage et doivent rester alignées avec les plans configurés côté PayPal.
 const PRICES = {
-    influencer: 1599, // 15.99€
-    producer: 2999,   // 29.99€
+    influencer: 1599, // 15,99 €
+    producer: 2999,   // 29,99 €
+}
+
+const PAID_TYPES = ['influencer', 'producer']
+
+// Types français acceptés côté client → types internes.
+const TYPE_ALIASES = {
+    influenceur: 'influencer',
+    producteur: 'producer',
+    influencer: 'influencer',
+    producer: 'producer',
+}
+
+function normalizeAccountType(input) {
+    return TYPE_ALIASES[String(input || '').toLowerCase()] || null
 }
 
 /**
- * POST /api/payment/create-checkout
- * Créer une session Stripe Checkout
+ * Applique l'état PayPal d'un abonnement à l'utilisateur : accorde le tier payant si l'abonnement
+ * donne droit, le retire sinon. Idempotent — c'est le seul endroit qui accorde un tier payant.
  */
-router.post('/create-checkout', requireAuth, async (req, res) => {
-    try {
-        const { accountType } = req.body
-        const userId = req.user.id
-
-        // Validation
-        if (!['influencer', 'producer'].includes(accountType)) {
-            return res.status(400).json({ message: 'Type de compte invalide' })
-        }
-
-        // Récupération utilisateur
-        const user = await prisma.user.findUnique({ where: { id: userId } })
-        if (!user) {
-            return res.status(404).json({ message: 'Utilisateur introuvable' })
-        }
-
-        // TODO: Intégration Stripe SDK
-        // const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-        // const session = await stripe.checkout.sessions.create({
-        //     payment_method_types: ['card'],
-        //     line_items: [{
-        //         price_data: {
-        //             currency: 'eur',
-        //             product_data: { name: `Abonnement ${accountType}` },
-        //             unit_amount: PRICES[accountType],
-        //         },
-        //         quantity: 1,
-        //     }],
-        //     mode: 'subscription',
-        //     success_url: `${process.env.CLIENT_URL}/payment?success=true`,
-        //     cancel_url: `${process.env.CLIENT_URL}/payment?canceled=true`,
-        //     client_reference_id: userId,
-        // })
-        // res.json({ sessionId: session.id, url: session.url })
-
-        // Determine client URL: prefer env, fallback to request origin
-        const clientUrl = process.env.CLIENT_URL || `${req.protocol}://${req.get('host')}`
-
-        // Map backend account types to frontend query values (French)
-        const clientTypeMap = {
-            producer: 'producteur',
-            influencer: 'influenceur'
-        }
-
-        const clientType = clientTypeMap[accountType] || accountType
-
-        // MOCK pour développement - direct user to the frontend payment handler
-        res.json({
-            sessionId: 'mock_session_' + Date.now(),
-            url: `${clientUrl}/payment?type=${clientType}&mock_payment=success`,
-            message: 'MOCK: Paiement simulé (Stripe non configuré)'
-        })
-    } catch (error) {
-        console.error('❌ Payment error:', error)
-        res.status(500).json({ message: 'Erreur lors de la création du paiement' })
+async function syncSubscriptionState(userId, paypalSub) {
+    const accountType = getAccountTypeForPlanId(paypalSub.planId)
+    if (!accountType) {
+        // Un plan inconnu ne doit jamais accorder de droits : on le trace sans rien accorder.
+        console.error(`[paypal] Plan inconnu ${paypalSub.planId} sur l'abonnement ${paypalSub.id}`)
+        return { granted: false, reason: 'unknown_plan' }
     }
-})
+
+    const entitled = isEntitlingStatus(paypalSub.status)
+    const internalStatus = entitled ? 'active' : 'inactive'
+
+    await prisma.subscription.upsert({
+        where: { userId },
+        create: {
+            userId,
+            plan: accountType,
+            status: internalStatus,
+            paypalSubscriptionId: paypalSub.id,
+            paypalPlanId: paypalSub.planId,
+            paypalPayerEmail: paypalSub.payerEmail,
+            paypalStatus: paypalSub.status,
+            currentPeriodEnd: paypalSub.nextBillingTime ? new Date(paypalSub.nextBillingTime) : null,
+            lastSyncedAt: new Date(),
+        },
+        update: {
+            plan: accountType,
+            status: internalStatus,
+            paypalSubscriptionId: paypalSub.id,
+            paypalPlanId: paypalSub.planId,
+            paypalPayerEmail: paypalSub.payerEmail,
+            paypalStatus: paypalSub.status,
+            currentPeriodEnd: paypalSub.nextBillingTime ? new Date(paypalSub.nextBillingTime) : null,
+            canceledAt: paypalSub.status === 'CANCELLED' ? new Date() : undefined,
+            lastSyncedAt: new Date(),
+        },
+    })
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: {
+            subscriptionStatus: internalStatus,
+            subscriptionType: entitled ? accountType : null,
+            subscriptionEnd: paypalSub.nextBillingTime ? new Date(paypalSub.nextBillingTime) : null,
+        },
+    })
+
+    if (entitled) {
+        await changeAccountType(userId, accountType, {})
+    } else {
+        // Abonnement mort (annulé/expiré/suspendu) : retour au tier gratuit. Les données produites
+        // restent en base, seul l'accès aux features payantes est retiré.
+        await changeAccountType(userId, ACCOUNT_TYPES.CONSUMER, {})
+    }
+
+    return { granted: entitled, accountType }
+}
 
 /**
- * POST /api/payment/webhook
- * Webhook Stripe pour valider les paiements
+ * GET /api/payment/config
+ * Ce dont le client a besoin pour afficher le tunnel (jamais le secret).
  */
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
-    try {
-        // TODO: Vérifier signature Stripe
-        // const sig = req.headers['stripe-signature']
-        // const event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET)
-
-        // MOCK pour développement
-        console.log('📨 Webhook reçu (MOCK)')
-        res.json({ received: true })
-    } catch (error) {
-        console.error('❌ Webhook error:', error)
-        res.status(400).json({ message: 'Webhook invalide' })
-    }
+router.get('/config', (req, res) => {
+    res.json({
+        provider: 'paypal',
+        configured: isPaypalConfigured(),
+        environment: getPaypalEnv(),
+        clientId: process.env.PAYPAL_CLIENT_ID || null,
+        plans: {
+            influencer: { planId: getPlanIdForAccountType('influencer'), price: PRICES.influencer },
+            producer: { planId: getPlanIdForAccountType('producer'), price: PRICES.producer },
+        },
+    })
 })
 
 /**
  * GET /api/payment/status
- * Vérifier le statut d'abonnement
+ * État d'abonnement de l'utilisateur courant.
  */
-router.get('/status', requireAuth, async (req, res) => {
-    try {
-        const user = await prisma.user.findUnique({
-            where: { id: req.user.id },
-            select: {
-                accountType: true,
-                subscriptionStatus: true,
-                kycStatus: true,
-            },
-        })
+router.get('/status', requireAuth, asyncHandler(async (req, res) => {
+    const subscription = await prisma.subscription.findUnique({ where: { userId: req.user.id } })
 
-        res.json({ user })
-    } catch (error) {
-        console.error('❌ Status error:', error)
-        res.status(500).json({ message: 'Erreur lors de la récupération du statut' })
-    }
-})
+    res.json({
+        active: subscription?.status === 'active',
+        plan: subscription?.plan || null,
+        paypalStatus: subscription?.paypalStatus || null,
+        currentPeriodEnd: subscription?.currentPeriodEnd || null,
+        cancelAtPeriodEnd: subscription?.cancelAtPeriodEnd || false,
+    })
+}))
 
 /**
- * POST /api/subscription/upgrade
- * Upgrade un compte existant vers influenceur ou producteur
- * (Appelé après paiement simulé ou réel)
+ * POST /api/payment/subscription/activate  { subscriptionId }
+ * Appelé après approbation dans le popup PayPal. On re-interroge PayPal pour connaître l'état réel
+ * et on vérifie que l'abonnement nous appartient bien (custom_id == id utilisateur).
  */
-router.post('/upgrade', requireAuth, async (req, res) => {
-    try {
-        const { accountType, paymentCompleted } = req.body
-        const userId = req.user.id
-
-        // Validation du type de compte (accepte français et anglais)
-        const validTypes = ['influenceur', 'producteur', 'influencer', 'producer'];
-        if (!validTypes.includes(accountType)) {
-            return res.status(400).json({ error: 'Type de compte invalide. Utilisez "influenceur", "producteur", "influencer" ou "producer".' })
-        }
-
-        // Mapper vers anglais pour la logique interne
-        const typeMap = {
-            'influenceur': 'influencer',
-            'producteur': 'producer',
-            'influencer': 'influencer',
-            'producer': 'producer'
-        };
-        const englishType = typeMap[accountType];
-
-        // Vérifier que le paiement est confirmé
-        if (!paymentCompleted) {
-            return res.status(400).json({ error: 'Paiement non confirmé' })
-        }
-
-        // Récupérer l'utilisateur actuel
-        let user = null;
-        if (process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id') {
-            user = {
-                id: 'dev-test-user-id',
-                username: 'DevTestUser',
-                email: 'test@example.com',
-                roles: JSON.stringify({ roles: ['consumer'] })
-            };
-        } else {
-            user = await prisma.user.findUnique({ where: { id: userId } });
-        }
-        if (!user) {
-            return res.status(404).json({ error: 'Utilisateur introuvable' });
-        }
-
-        // Empêcher le downgrade (producteur ne peut pas devenir influenceur)
-        const currentType = parseRoles(user.roles).find(role => ['consumer', 'producer', 'influencer'].includes(role)) || 'consumer';
-        if (currentType === 'producer' && englishType === 'influencer') {
-            return res.status(400).json({ error: 'Impossible de rétrograder de Producteur vers Influenceur' })
-        }
-
-        // Idempotence: si l'utilisateur a déjà le rôle demandé, on s'assure que l'abonnement / profil sont corrects
-        if (currentType === englishType) {
-            console.log(`ℹ️ Upgrade request idempotent: user already has type ${englishType}. Ensuring subscription/profile.`)
-
-            // Activer l'abonnement si nécessaire
-            if (!(process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id')) {
-                await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
-            }
-
-            // Créer le profile producteur si nécessaire
-            if (englishType === 'producer' && !user.producerProfile) {
-                await prisma.producerProfile.create({ data: { userId, companyName: null, country: user.country || null, isVerified: false } })
-            }
-
-            return res.json({ success: true, message: `Compte déjà de type ${englishType}. Abonnement activé et profil vérifié.` })
-        }
-
-        // Utiliser la logique centralisée pour changer le type de compte
-        const updatedUser = await changeAccountType(userId, englishType, {})
-
-        // Mettre à jour le statut d'abonnement dans l'utilisateur/prisma (skip in dev)
-        if (!(process.env.NODE_ENV === 'development' && userId === 'dev-test-user-id')) {
-            await prisma.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
-        }
-
-        console.log(`✅ Upgrade réussi: ${user.username} → ${englishType}`)
-
-        // Retourner une version simplifiée de l'utilisateur
-        res.json({
-            success: true,
-            message: `Compte mis à niveau vers ${englishType} avec succès!`,
-            user: {
-                id: updatedUser.id,
-                username: updatedUser.username,
-                email: updatedUser.email,
-                roles: updatedUser.roles
-            }
-        })
-    } catch (error) {
-        console.error('❌ Upgrade error:', error)
-        res.status(500).json({ error: 'Erreur lors de la mise à niveau du compte' })
+router.post('/subscription/activate', requireAuth, asyncHandler(async (req, res) => {
+    if (!isPaypalConfigured()) {
+        return res.status(503).json({ error: 'paypal_not_configured', message: 'Paiement indisponible' })
     }
-})
+
+    const { subscriptionId } = req.body || {}
+    if (!subscriptionId) {
+        return res.status(400).json({ error: 'missing_subscription_id' })
+    }
+
+    // Un abonnement déjà rattaché à un autre compte ne peut pas être réutilisé pour s'octroyer
+    // des droits (rejeu de l'identifiant d'un tiers).
+    const claimedElsewhere = await prisma.subscription.findUnique({
+        where: { paypalSubscriptionId: String(subscriptionId) },
+    })
+    if (claimedElsewhere && claimedElsewhere.userId !== req.user.id) {
+        return res.status(409).json({ error: 'subscription_already_claimed' })
+    }
+
+    let paypalSub
+    try {
+        paypalSub = await getSubscription(subscriptionId)
+    } catch (error) {
+        console.error('[paypal] Lecture abonnement échouée:', error)
+        return res.status(502).json({ error: 'paypal_unreachable', message: 'PayPal injoignable, réessayez' })
+    }
+
+    // `custom_id` est fixé par le client au moment de la création — on le vérifie quand il est
+    // présent, mais l'appartenance repose surtout sur le contrôle d'unicité ci-dessus.
+    if (paypalSub.customId && paypalSub.customId !== req.user.id) {
+        return res.status(403).json({ error: 'subscription_owner_mismatch' })
+    }
+
+    if (!isEntitlingStatus(paypalSub.status)) {
+        return res.status(402).json({
+            error: 'subscription_not_active',
+            message: `Abonnement non actif (état PayPal: ${paypalSub.status})`,
+            paypalStatus: paypalSub.status,
+        })
+    }
+
+    const result = await syncSubscriptionState(req.user.id, paypalSub)
+    if (!result.granted) {
+        return res.status(400).json({ error: 'plan_not_recognized', message: 'Plan PayPal inconnu' })
+    }
+
+    res.json({ success: true, accountType: result.accountType })
+}))
+
+/**
+ * POST /api/payment/subscription/cancel
+ * Annule côté PayPal ; la perte effective des droits est ensuite appliquée par le webhook
+ * BILLING.SUBSCRIPTION.CANCELLED (et par le resync ci-dessous en secours).
+ */
+router.post('/subscription/cancel', requireAuth, asyncHandler(async (req, res) => {
+    const subscription = await prisma.subscription.findUnique({ where: { userId: req.user.id } })
+    if (!subscription?.paypalSubscriptionId) {
+        return res.status(404).json({ error: 'no_subscription' })
+    }
+
+    try {
+        await cancelSubscription(subscription.paypalSubscriptionId)
+    } catch (error) {
+        console.error('[paypal] Annulation échouée:', error)
+        return res.status(502).json({ error: 'paypal_unreachable', message: 'PayPal injoignable, réessayez' })
+    }
+
+    const fresh = await getSubscription(subscription.paypalSubscriptionId)
+    await syncSubscriptionState(req.user.id, fresh)
+
+    res.json({ success: true, paypalStatus: fresh.status })
+}))
+
+/**
+ * POST /api/payment/subscription/refresh
+ * Resynchronise depuis PayPal. Filet de sécurité si un webhook a été manqué.
+ */
+router.post('/subscription/refresh', requireAuth, asyncHandler(async (req, res) => {
+    const subscription = await prisma.subscription.findUnique({ where: { userId: req.user.id } })
+    if (!subscription?.paypalSubscriptionId) {
+        return res.status(404).json({ error: 'no_subscription' })
+    }
+
+    const fresh = await getSubscription(subscription.paypalSubscriptionId)
+    const result = await syncSubscriptionState(req.user.id, fresh)
+
+    res.json({ success: true, active: result.granted, paypalStatus: fresh.status })
+}))
+
+/**
+ * POST /api/payment/webhook
+ * Notifications PayPal. `req.body` est un Buffer : le parseur brut est monté sur ce chemin dans
+ * server.js, avant express.json(), pour préserver les octets sur lesquels porte la signature.
+ */
+router.post('/webhook', asyncHandler(async (req, res) => {
+    let event
+    try {
+        event = JSON.parse(req.body.toString('utf8'))
+    } catch {
+        return res.status(400).json({ error: 'invalid_payload' })
+    }
+
+    let verified = false
+    try {
+        verified = await verifyWebhookSignature(req.headers, event)
+    } catch (error) {
+        console.error('[paypal] Vérification webhook impossible:', error.message)
+        // 500 → PayPal réessaiera ; on préfère un rejeu à l'acceptation d'un événement non vérifié.
+        return res.status(500).json({ error: 'verification_failed' })
+    }
+
+    if (!verified) {
+        console.error('[paypal] Signature de webhook invalide, événement ignoré:', event.event_type)
+        return res.status(401).json({ error: 'invalid_signature' })
+    }
+
+    const relevant = [
+        'BILLING.SUBSCRIPTION.ACTIVATED',
+        'BILLING.SUBSCRIPTION.CANCELLED',
+        'BILLING.SUBSCRIPTION.SUSPENDED',
+        'BILLING.SUBSCRIPTION.EXPIRED',
+        'BILLING.SUBSCRIPTION.UPDATED',
+        'PAYMENT.SALE.COMPLETED',
+    ]
+
+    // Sur les événements d'abonnement, `resource.id` EST l'abonnement ; sur PAYMENT.SALE.COMPLETED
+    // (paiement récurrent encaissé), `resource.id` est la vente et l'abonnement est porté par
+    // `billing_agreement_id`.
+    const subscriptionId = event.event_type === 'PAYMENT.SALE.COMPLETED'
+        ? event.resource?.billing_agreement_id
+        : event.resource?.id
+
+    if (!relevant.includes(event.event_type) || !subscriptionId) {
+        return res.json({ received: true, ignored: true })
+    }
+
+    // On retrouve l'utilisateur par l'abonnement déjà enregistré, sinon par `custom_id`.
+    const known = await prisma.subscription.findUnique({ where: { paypalSubscriptionId: subscriptionId } })
+    const fresh = await getSubscription(subscriptionId)
+    const userId = known?.userId || fresh.customId
+
+    if (!userId) {
+        console.error(`[paypal] Webhook ${event.event_type} sans utilisateur identifiable (${subscriptionId})`)
+        return res.json({ received: true, unmatched: true })
+    }
+
+    await syncSubscriptionState(userId, fresh)
+    res.json({ received: true })
+}))
 
 export default router

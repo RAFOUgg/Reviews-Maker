@@ -92,6 +92,7 @@ model User {
   subscription      Subscription?
   influencerProfile InfluencerProfile?
   producerProfile   ProducerProfile?
+  companyMemberships CompanyMember[]
   reportsSubmitted  Report[]              @relation("Reporter")
   reportsReceived   Report[]              @relation("ReportedUser")
   geneticTrees      GeneticTree[]         @relation("userGeneticTrees")
@@ -394,12 +395,23 @@ model Subscription {
   cancelAtPeriodEnd  Boolean   @default(false)
   canceledAt         DateTime?
 
+  // PayPal (prestataire réellement utilisé ; les champs Stripe ci-dessus sont conservés pour ne pas
+  // casser les données historiques mais ne sont plus alimentés).
+  paypalSubscriptionId String? @unique
+  paypalPlanId         String?
+  paypalPayerEmail     String?
+  // Dernier statut brut renvoyé par PayPal (ACTIVE / SUSPENDED / CANCELLED / EXPIRED...) : sert de
+  // trace de diagnostic quand `status` interne et PayPal divergent.
+  paypalStatus         String?
+  lastSyncedAt         DateTime?
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([stripeCustomerId])
+  @@index([paypalSubscriptionId])
   @@index([status])
   @@map("subscriptions")
 }
@@ -455,7 +467,38 @@ model ProducerProfile {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  members CompanyMember[]
+
   @@map("producer_profiles")
+}
+
+// Sous-comptes employés d'une entreprise (ProducerProfile = l'entité "société"). Le titulaire du
+// ProducerProfile (son `userId`) est implicitement propriétaire ("owner") — pas de ligne ici pour lui,
+// seulement pour les employés invités. Chaque employé garde son propre compte User (login séparé),
+// rattaché ici avec un rôle. `userId` reste null tant que l'invitation n'a pas été acceptée (on ne
+// connaît que l'email invité jusque-là).
+model CompanyMember {
+  id                String   @id @default(uuid())
+  producerProfileId String
+  producerProfile   ProducerProfile @relation(fields: [producerProfileId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email  String // email d'invitation — sert aussi à retrouver l'invitation avant qu'un compte soit lié
+
+  role   String @default("viewer") // admin | editor | viewer (owner = producerProfile.userId, jamais stocké ici)
+  status String @default("invited") // invited | active | revoked
+
+  invitedByUserId String
+  inviteToken     String?   @unique
+  invitedAt       DateTime  @default(now())
+  joinedAt        DateTime?
+  revokedAt       DateTime?
+
+  @@unique([producerProfileId, email])
+  @@index([producerProfileId])
+  @@index([userId])
+  @@map("company_members")
 }
 
 // Signalements (modération)

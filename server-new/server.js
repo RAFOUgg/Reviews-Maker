@@ -21,6 +21,7 @@ import legalRoutes from './routes/legal.js'
 import kycRoutes from './routes/kyc.js'
 import paymentRoutes from './routes/payment.js'
 import accountRoutes from './routes/account.js'
+import companyRoutes from './routes/company.js'
 import geneticsRoutes from './routes/genetics.js'
 import productionChainsRoutes from './routes/production-chains.js'
 import reviewPipelineCellsRoutes from './routes/review-pipeline-cells.js'
@@ -96,6 +97,10 @@ app.use('/api/media', express.static(pipelineMediaDir))
 app.use('/media', express.static(pipelineMediaDir))
 
 // Set up middleware
+// Le webhook PayPal doit recevoir le corps BRUT : la signature est calculée sur les octets exacts,
+// un JSON reparsé/réordonné la casse. Ce montage doit précéder express.json() ci-dessous, sinon le
+// corps est déjà consommé et la vérification devient impossible (cf. routes/payment.js).
+app.use('/api/payment/webhook', express.raw({ type: 'application/json' }))
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 app.use(cors({
@@ -118,6 +123,7 @@ app.use('/api/legal', legalRoutes)
 app.use('/api/kyc', kycRoutes)
 app.use('/api/payment', paymentRoutes)
 app.use('/api/account', accountRoutes)
+app.use('/api/company', companyRoutes)
 app.use('/api/genetics', geneticsRoutes)
 app.use('/api/production-chains', productionChainsRoutes)
 app.use('/api/review-pipeline-cells', reviewPipelineCellsRoutes)

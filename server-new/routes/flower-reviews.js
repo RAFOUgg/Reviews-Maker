@@ -13,6 +13,7 @@ import {
     canAccessSection
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
+import { requirePublishingAllowed } from '../services/access.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -612,7 +613,10 @@ router.post('/',
         { name: 'images', maxCount: 4 }, // Photos produit (max 4)
         { name: 'certificateFile', maxCount: 1 }, // Certificat cannabinoïdes (optionnel)
         { name: 'terpeneFile', maxCount: 1 } // Certificat profil terpénique (optionnel)
-    ]), asyncHandler(async (req, res) => {
+    ]),
+    // Après multer : `isPublic` arrive en multipart, il n'est lisible qu'une fois le corps parsé.
+    requirePublishingAllowed,
+    asyncHandler(async (req, res) => {
         console.log('🌿 Creating FlowerReview with data:', JSON.stringify(req.body, null, 2))
         console.log('📎 Files uploaded:', req.files)
 
@@ -866,7 +870,9 @@ router.put('/:id',
         { name: 'images', maxCount: 4 },
         { name: 'certificateFile', maxCount: 1 },
         { name: 'terpeneFile', maxCount: 1 }
-    ]), asyncHandler(async (req, res) => {
+    ]),
+    requirePublishingAllowed,
+    asyncHandler(async (req, res) => {
         console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)
 
         // If attempting to publish via update, ensure user has active paid account

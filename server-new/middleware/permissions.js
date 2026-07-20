@@ -9,6 +9,7 @@
  */
 
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js';
+import { resolveAccess } from '../services/access.js';
 
 // Re-export ACCOUNT_TYPES for use in other modules
 export { ACCOUNT_TYPES };
@@ -498,14 +499,23 @@ export function requireFeature(feature, optionsGetter = null) {
             ? await optionsGetter(req)
             : {};
 
-        // Vérifier permission
-        const check = canAccessFeature(req.user, feature, options);
+        // Le tier réel tient compte de l'abonnement (un abonnement expiré ne doit plus rien ouvrir)
+        // et de l'héritage entreprise (un employé accède aux outils de la société qui l'emploie).
+        // `canAccessFeature` raisonnant sur un objet utilisateur, on lui présente le tier effectif.
+        const access = req.access || (await resolveAccess(req.user));
+        req.access = access;
+
+        const effectiveUser = access.accountType === getUserAccountType(req.user)
+            ? req.user
+            : { ...req.user, roles: JSON.stringify({ roles: [access.accountType] }) };
+
+        const check = canAccessFeature(effectiveUser, feature, options);
 
         if (!check.allowed) {
             return res.status(403).json({
                 error: 'feature_restricted',
                 message: check.reason,
-                accountType: check.accountType || getUserAccountType(req.user),
+                accountType: check.accountType || access.accountType,
                 upgradeRequired: check.upgradeRequired || null,
                 limit: check.limit,
                 current: check.current,

@@ -6,6 +6,7 @@ import { ACCOUNT_TYPES, getUserAccountType } from '../services/account.js'
 import { hashPassword, verifyPassword } from '../services/password.js'
 import { verifyUserTOTP } from '../services/totp.js'
 import { getUserLimits } from '../middleware/permissions.js'
+import { resolveAccess } from '../services/access.js'
 
 const router = express.Router()
 
@@ -108,7 +109,8 @@ router.get('/discord', (req, res, next) => {
 
 // POST /api/auth/email/signup - Création de compte email/password
 router.post('/email/signup', asyncHandler(async (req, res) => {
-    const { email, password, username, pseudo, accountType, isPaid } = req.body || {}
+    // `isPaid` était accepté ici et activait l'abonnement sur simple déclaration du client : retiré.
+    const { email, password, username, pseudo, accountType } = req.body || {}
     const finalUsername = username || pseudo // Accepter les deux noms de champ
 
     if (!email || !password) {
@@ -151,9 +153,13 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
 
     const passwordHash = await hashPassword(password)
 
-    // Définir subscriptionStatus en fonction du type de compte et du paiement
+    // Un tier payant ne peut JAMAIS être accordé à l'inscription : `accountType`/`isPaid` viennent du
+    // client et ne prouvent aucun paiement. Tout compte naît `consumer` ; l'upgrade est accordé
+    // exclusivement par le webhook PayPal (services/paypal.js → routes/payment.js). Le type souhaité
+    // est simplement renvoyé au client pour qu'il enchaîne sur le tunnel d'abonnement.
     const isPayingAccount = chosenType === ACCOUNT_TYPES.INFLUENCER || chosenType === ACCOUNT_TYPES.PRODUCER
-    const subscriptionStatus = (isPayingAccount && isPaid) ? 'active' : 'inactive'
+    const grantedType = isPayingAccount ? ACCOUNT_TYPES.CONSUMER : chosenType
+    const pendingUpgrade = isPayingAccount ? chosenType : null
 
     let user
     if (existing) {
@@ -162,9 +168,8 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
             data: {
                 passwordHash,
                 username: existing.username || finalUsername || normalizedEmail.split('@')[0],
-                accountType: chosenType, // Mettre à jour le type de compte
-                subscriptionStatus, // Activer l'abonnement si payé
-                roles: existing.roles || JSON.stringify({ roles: [chosenType] })
+                accountType: existing.accountType || grantedType,
+                roles: existing.roles || JSON.stringify({ roles: [grantedType] })
             }
         })
     } else {
@@ -173,9 +178,9 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
                 email: normalizedEmail,
                 username: finalUsername || normalizedEmail.split('@')[0],
                 passwordHash,
-                accountType: chosenType, // Définir le type de compte
-                subscriptionStatus, // Activer l'abonnement si payé
-                roles: JSON.stringify({ roles: [chosenType] })
+                accountType: grantedType,
+                subscriptionStatus: 'inactive',
+                roles: JSON.stringify({ roles: [grantedType] })
             }
         })
     }
@@ -187,7 +192,9 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
         })
     })
 
-    res.json(sanitizeUser(user))
+    // `pendingUpgrade` indique au client d'enchaîner sur le tunnel d'abonnement PayPal ; le compte
+    // reste `consumer` tant que le webhook n'a pas confirmé le paiement.
+    res.json({ ...sanitizeUser(user), pendingUpgrade })
 }))
 
 // POST /api/auth/email/login - Connexion email/password
@@ -426,11 +433,24 @@ router.get('/me', asyncHandler(async (req, res) => {
 
     const sanitized = sanitizeUser(req.user)
 
-    // Ajouter limites & features selon type de compte
-    const limits = getUserLimits(req.user)
+    // Le tier effectif (abonnement actif, héritage entreprise) peut différer des rôles inscrits sur
+    // le compte : on calcule les limites dessus, sinon l'UI ouvrirait des outils que l'API refuse.
+    const access = await resolveAccess(req.user)
+    const effectiveUser = access.accountType === getUserAccountType(req.user)
+        ? req.user
+        : { ...req.user, roles: JSON.stringify({ roles: [access.accountType] }) }
+
+    const limits = getUserLimits(effectiveUser)
 
     res.json({
         ...sanitized,
+        access: {
+            accountType: access.accountType,
+            subscriptionActive: access.subscriptionActive,
+            isVerifiedPro: access.isVerifiedPro,
+            canPublish: access.canPublish,
+            company: access.company,
+        },
         limits: {
             accountType: limits.accountType,
             daily: limits.limits.daily,

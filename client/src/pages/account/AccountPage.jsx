@@ -15,10 +15,12 @@ import {
   User,
   Calendar,
   Check,
-  Settings
+  Settings,
+  Building2
 } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidToggle, LiquidTabs, LiquidAvatar, LiquidBadge } from '@/components/ui/LiquidUI'
 import ProfileSection from './sections/ProfileSection'
+import CompanySection from './sections/CompanySection'
 import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
 import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
@@ -36,10 +38,13 @@ const SUPPORTED_LANGUAGES = [
 ]
 
 // Génère les onglets dynamiquement selon le type de compte
-const getTabSections = (accountType) => {
+const getTabSections = (accountType, hasCompany) => {
   return [
     { id: 'profile', label: 'Profil', icon: User },
     { id: 'subscription', label: 'Abonnement', icon: CreditCard },
+    // L'onglet Entreprise n'a de sens que pour qui possède ou rejoint une entreprise : un compte
+    // gratuit n'a rien à y gérer.
+    ...(hasCompany ? [{ id: 'company', label: 'Entreprise', icon: Building2 }] : []),
     { id: 'preferences', label: 'Préférences', icon: Settings },
     { id: 'security', label: 'Sécurité', icon: Lock }
   ]
@@ -52,6 +57,8 @@ const AccountPage = () => {
   const { isProducteur } = useAccountFeatures()
 
   const isProfileComplete = user?.birthdate && user?.country
+  // `access` est calculé côté serveur (/api/auth/me) : titulaire d'une entreprise ou employé invité.
+  const hasCompany = Boolean(user?.access?.company)
   const [activeTab, setActiveTab] = useState('profile')
   const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [language, setLanguage] = useState(() => i18n.language || 'fr')
@@ -220,7 +227,7 @@ const AccountPage = () => {
           {/* Tab Navigation - Using LiquidTabs */}
           <div className="p-4 pb-0">
             <LiquidTabs
-              tabs={getTabSections(accountType).map(tab => ({
+              tabs={getTabSections(accountType, hasCompany).map(tab => ({
                 id: tab.id,
                 label: tab.label,
                 icon: tab.icon
@@ -272,6 +279,10 @@ const AccountPage = () => {
                   </div>
                 )}
               </div>
+            )}
+
+            {activeTab === 'company' && (
+              <CompanySection />
             )}
 
             {activeTab === 'preferences' && (

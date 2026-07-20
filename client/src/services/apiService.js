@@ -34,56 +34,74 @@ export const accountService = {
 }
 
 /**
- * Service paiement (Stripe mock / checkout)
+ * Service entreprise / sous-comptes employés.
+ * Les droits (`canManageMembers`, `myRole`) sont décidés et renvoyés par le serveur.
  */
-export const paymentService = {
-    async createCheckout(accountType) {
-        // backend expects english keys for checkout endpoint: 'influencer'|'producer'
-        const mapping = {
-            producteur: 'producer',
-            producteur_fr: 'producer',
-            producteur_en: 'producer',
-            producteur_key: 'producer',
-            influenceur: 'influencer',
-            influenceur_fr: 'influencer',
-            influenceur_en: 'influencer',
-            // support direct english keys
-            producer: 'producer',
-            influencer: 'influencer'
-        }
+export const companyService = {
+    async me() {
+        return fetchAPI(`${API_BASE}/company/me`)
+    },
 
-        const normalized = mapping[accountType] || accountType
-
-        return fetchAPI(`${API_BASE}/payment/create-checkout`, {
+    async invite(email, role) {
+        return fetchAPI(`${API_BASE}/company/members/invite`, {
             method: 'POST',
-            body: JSON.stringify({ accountType: normalized })
+            body: JSON.stringify({ email, role })
         })
     },
 
-    async upgrade(accountType, paymentCompleted = false) {
-        // Normalize french/english keys to backend expected values
-        const mapping = {
-            producteur: 'producer',
-            producteur_fr: 'producer',
-            producteur_en: 'producer',
-            producteur_key: 'producer',
-            influenceur: 'influencer',
-            influenceur_fr: 'influencer',
-            influenceur_en: 'influencer',
-            producer: 'producer',
-            influencer: 'influencer'
-        }
+    async getInvite(token) {
+        return fetchAPI(`${API_BASE}/company/invite/${token}`)
+    },
 
-        const normalized = mapping[accountType] || accountType
+    async acceptInvite(token) {
+        return fetchAPI(`${API_BASE}/company/invite/${token}/accept`, { method: 'POST' })
+    },
 
-        return fetchAPI(`${API_BASE}/payment/upgrade`, {
+    async updateMember(memberId, role) {
+        return fetchAPI(`${API_BASE}/company/members/${memberId}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ role })
+        })
+    },
+
+    async removeMember(memberId) {
+        return fetchAPI(`${API_BASE}/company/members/${memberId}`, { method: 'DELETE' })
+    },
+
+    async leave() {
+        return fetchAPI(`${API_BASE}/company/leave`, { method: 'POST' })
+    }
+}
+
+/**
+ * Service abonnement (PayPal Subscriptions).
+ *
+ * Il n'existe volontairement aucune méthode capable d'accorder un tier payant : le droit d'accès est
+ * décidé côté serveur d'après l'état renvoyé par PayPal. `activate` ne fait que soumettre à
+ * vérification l'identifiant d'abonnement produit par le popup PayPal.
+ */
+export const paymentService = {
+    /** Client id public + ids de plans, pour initialiser le SDK PayPal côté navigateur. */
+    async config() {
+        return fetchAPI(`${API_BASE}/payment/config`)
+    },
+
+    async activate(subscriptionId) {
+        return fetchAPI(`${API_BASE}/payment/subscription/activate`, {
             method: 'POST',
-            body: JSON.stringify({ accountType: normalized, paymentCompleted })
+            body: JSON.stringify({ subscriptionId })
         })
     },
 
     async cancel() {
-        return fetchAPI(`${API_BASE}/payment/cancel`, {
+        return fetchAPI(`${API_BASE}/payment/subscription/cancel`, {
+            method: 'POST'
+        })
+    },
+
+    /** Resynchronise depuis PayPal si un webhook a été manqué. */
+    async refresh() {
+        return fetchAPI(`${API_BASE}/payment/subscription/refresh`, {
             method: 'POST'
         })
     },

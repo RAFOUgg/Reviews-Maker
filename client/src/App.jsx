@@ -44,6 +44,7 @@ const EmailVerificationPage = lazy(() => import('./pages/auth/EmailVerificationP
 const ForgotPasswordPage = lazy(() => import('./pages/auth/ForgotPasswordPage'))
 const ResetPasswordPage = lazy(() => import('./pages/auth/ResetPasswordPage'))
 const PaymentPage = lazy(() => import('./pages/account/PaymentPage'))
+const CompanyInvitePage = lazy(() => import('./pages/account/CompanyInvitePage'))
 const ManageSubscription = lazy(() => import('./pages/account/ManageSubscription'))
 const PhenoHuntPage = lazy(() => import('./pages/public/PhenoHuntPage'))
 const AdminPanel = lazy(() => import('./pages/admin/AdminPanel'))
@@ -187,6 +188,9 @@ function App() {
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/payment" element={<PaymentPage />} />
+                                {/* Consultable sans session : l'invité doit pouvoir voir qui l'invite
+                                    avant de se connecter ou de créer un compte. */}
+                                <Route path="/company/invite/:token" element={<CompanyInvitePage />} />
                                 <Route path="/verify-email" element={<EmailVerificationPage />} />
                                 <Route path="/forgot-password" element={<ForgotPasswordPage />} />
                                 <Route path="/reset-password" element={<ResetPasswordPage />} />
