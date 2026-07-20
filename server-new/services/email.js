@@ -1,23 +1,101 @@
 /**
- * Service d'envoi d'emails avec Resend
+ * Service d'envoi d'emails — deux transports possibles.
+ *
+ * 1. SMTP (nodemailer) : n'importe quelle boîte existante (domaine, Gmail, FAI…). Utilisé dès que
+ *    SMTP_HOST est renseigné.
+ * 2. Resend : API transactionnelle, utilisée si RESEND_API_KEY est présente.
+ *
+ * Aucun des deux n'est configuré ⇒ on lève une erreur explicite plutôt que d'échouer en silence.
+ * Tout passe par `deliver()` : les fonctions d'envoi ne connaissent pas le transport.
+ *
  * ESM module — utilise import au lieu de require (package.json: "type": "module")
  */
 
 import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
-// Lazily initialised: évite le crash au démarrage si RESEND_API_KEY est absente
+// Initialisations paresseuses : le serveur doit démarrer même sans configuration d'envoi.
 let _resend = null;
+let _smtp = null;
+
 function getResend() {
-    if (!process.env.RESEND_API_KEY) {
-        throw new Error('[email] RESEND_API_KEY non configurée. Ajoutez-la dans le fichier .env du serveur.');
-    }
-    if (!_resend) {
-        _resend = new Resend(process.env.RESEND_API_KEY);
-    }
+    if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
     return _resend;
 }
 
-const FROM_EMAIL = process.env.EMAIL_FROM || 'noreply@reviews-maker.app';
+function getSmtp() {
+    if (!_smtp) {
+        const port = Number(process.env.SMTP_PORT || 587);
+        _smtp = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port,
+            // Le port 465 impose TLS d'emblée ; 587 et 25 démarrent en clair puis passent en
+            // STARTTLS. `SMTP_SECURE` permet de forcer si le serveur sort de cette convention.
+            secure: process.env.SMTP_SECURE !== undefined
+                ? process.env.SMTP_SECURE === 'true'
+                : port === 465,
+            auth: process.env.SMTP_USER
+                ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASSWORD }
+                : undefined,
+            // Dernier recours : certains serveurs (FAI, auto-hébergés) présentent un certificat
+            // auto-signé ou expiré. À n'activer que si la connexion échoue pour cette raison —
+            // cela retire la vérification du certificat du serveur de mail.
+            ...(process.env.SMTP_TLS_REJECT_UNAUTHORIZED === 'false'
+                ? { tls: { rejectUnauthorized: false } }
+                : {}),
+        });
+    }
+    return _smtp;
+}
+
+const FROM_EMAIL = process.env.EMAIL_FROM || process.env.SMTP_USER || 'noreply@reviews-maker.app';
+
+/** Quel transport est réellement exploitable, dans l'ordre de préférence. */
+function activeTransport() {
+    if (process.env.SMTP_HOST) return 'smtp';
+    if (process.env.RESEND_API_KEY) return 'resend';
+    return null;
+}
+
+/**
+ * Point d'envoi unique. Les appelants décrivent le message, pas le moyen de l'acheminer.
+ * @param {{to: string, subject: string, html: string}} message
+ */
+async function deliver({ to, subject, html }) {
+    const transport = activeTransport();
+
+    if (!transport) {
+        throw new Error(
+            "[email] Aucun transport configuré : renseignez SMTP_HOST (+ SMTP_USER / SMTP_PASSWORD) " +
+            "ou RESEND_API_KEY dans le .env du serveur."
+        );
+    }
+
+    if (transport === 'smtp') {
+        // nodemailer lève de lui-même en cas d'échec, avec le message du serveur SMTP.
+        return getSmtp().sendMail({ from: FROM_EMAIL, to, subject, html });
+    }
+
+    const { data, error } = await getResend().emails.send({ from: FROM_EMAIL, to, subject, html });
+    if (error) throw new Error(`Échec envoi email: ${error.message}`);
+    return data;
+}
+
+/**
+ * Diagnostic : vérifie que le transport configuré répond, sans envoyer de message.
+ * @returns {Promise<{transport: string|null, ok: boolean, error?: string, from: string}>}
+ */
+async function checkEmailTransport() {
+    const transport = activeTransport();
+    if (!transport) return { transport: null, ok: false, error: 'aucun transport configuré', from: FROM_EMAIL };
+
+    try {
+        if (transport === 'smtp') await getSmtp().verify();
+        return { transport, ok: true, from: FROM_EMAIL };
+    } catch (err) {
+        return { transport, ok: false, error: err.message, from: FROM_EMAIL };
+    }
+}
 
 /**
  * Envoie un email de code de vérification (6 chiffres)
@@ -50,18 +128,7 @@ async function sendVerificationCode(email, code, locale = 'fr') {
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject,
-        html,
-    });
-
-    if (error) {
-        throw new Error(`Échec envoi email: ${error.message}`);
-    }
-
-    return data;
+    return deliver({ to: email, subject, html });
 }
 
 /**
@@ -103,18 +170,7 @@ async function sendWelcomeEmail(email, username, locale = 'fr') {
       <p>See you soon,<br>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject,
-        html,
-    });
-
-    if (error) {
-        throw new Error(`Échec envoi email: ${error.message}`);
-    }
-
-    return data;
+    return deliver({ to: email, subject, html });
 }
 
 /**
@@ -151,18 +207,7 @@ async function sendSubscriptionConfirmation(email, plan, locale = 'fr') {
       <p>Thank you for your trust,<br>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject,
-        html,
-    });
-
-    if (error) {
-        throw new Error(`Échec envoi email: ${error.message}`);
-    }
-
-    return data;
+    return deliver({ to: email, subject, html });
 }
 
 /**
@@ -197,18 +242,7 @@ async function sendModerationNotification(email, reason, status, locale = 'fr') 
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject,
-        html,
-    });
-
-    if (error) {
-        throw new Error(`Échec envoi email: ${error.message}`);
-    }
-
-    return data;
+    return deliver({ to: email, subject, html });
 }
 
 /**
@@ -244,18 +278,7 @@ async function sendPasswordResetEmail(email, resetLink, locale = 'fr') {
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({
-        from: FROM_EMAIL,
-        to: email,
-        subject,
-        html,
-    });
-
-    if (error) {
-        throw new Error(`Échec envoi email: ${error.message}`);
-    }
-
-    return data;
+    return deliver({ to: email, subject, html });
 }
 
 const ROLE_LABELS_FR = { admin: 'Administrateur', editor: 'Éditeur', viewer: 'Lecteur' };
@@ -303,9 +326,7 @@ async function sendCompanyInviteEmail(email, inviteLink, companyName, role, loca
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({ from: FROM_EMAIL, to: email, subject, html });
-    if (error) throw new Error(`Échec envoi email: ${error.message}`);
-    return data;
+    return deliver({ to: email, subject, html });
 }
 
 /**
@@ -339,12 +360,11 @@ async function sendCompanyInviteOwnerEmail(ownerEmail, confirmLink, companyName,
       <p>The Reviews-Maker Team</p>
     `;
 
-    const { data, error } = await getResend().emails.send({ from: FROM_EMAIL, to: ownerEmail, subject, html });
-    if (error) throw new Error(`Échec envoi email: ${error.message}`);
-    return data;
+    return deliver({ to: ownerEmail, subject, html });
 }
 
 export {
+    checkEmailTransport,
     sendVerificationCode,
     sendWelcomeEmail,
     sendCompanyInviteEmail,
