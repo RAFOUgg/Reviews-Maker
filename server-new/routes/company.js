@@ -95,6 +95,39 @@ router.post('/members/invite', requireAuth, asyncHandler(async (req, res) => {
     const normalizedEmail = String(email).trim().toLowerCase()
     const producerProfileId = context.producerProfile.id
 
+    // On ne s'invite pas soi-même : ni le titulaire (il EST l'entreprise, un membre le
+    // dupliquerait avec un rôle inférieur), ni le demandeur, ni un membre déjà rattaché.
+    const ownerUser = await prisma.user.findUnique({
+        where: { id: context.producerProfile.userId },
+        select: { id: true, email: true, locale: true }
+    })
+
+    if (ownerUser?.email && ownerUser.email.toLowerCase() === normalizedEmail) {
+        return res.status(400).json({
+            error: 'cannot_invite_owner',
+            message: 'Vous êtes déjà le titulaire de cette entreprise : inutile de vous y inviter.'
+        })
+    }
+
+    if (req.user.email && String(req.user.email).toLowerCase() === normalizedEmail) {
+        return res.status(400).json({
+            error: 'cannot_invite_self',
+            message: 'Vous ne pouvez pas vous inviter vous-même.'
+        })
+    }
+
+    // Un compte qui possède déjà sa propre entreprise ne peut pas devenir l'employé d'une autre.
+    const invitedUser = await prisma.user.findFirst({
+        where: { email: normalizedEmail },
+        select: { id: true, producerProfile: { select: { id: true } } }
+    })
+    if (invitedUser?.producerProfile) {
+        return res.status(400).json({
+            error: 'already_company_owner',
+            message: 'Ce compte est déjà titulaire de sa propre entreprise.'
+        })
+    }
+
     const existing = await prisma.companyMember.findUnique({
         where: { producerProfileId_email: { producerProfileId, email: normalizedEmail } }
     })
@@ -106,13 +139,8 @@ router.post('/members/invite', requireAuth, asyncHandler(async (req, res) => {
     const inviteToken = crypto.randomBytes(32).toString('hex')
     const ownerToken = crypto.randomBytes(32).toString('hex')
 
-    // Le titulaire de l'entreprise (destinataire de la confirmation) n'est pas forcément le
-    // demandeur : un admin peut inviter, c'est bien le titulaire qui valide.
-    const ownerUser = await prisma.user.findUnique({
-        where: { id: context.producerProfile.userId },
-        select: { email: true, locale: true }
-    })
-
+    // `ownerUser` est résolu plus haut : le titulaire (et non le demandeur, qui peut être un
+    // admin) est le destinataire de l'e-mail de confirmation.
     const freshInvite = {
         role,
         status: 'invited',

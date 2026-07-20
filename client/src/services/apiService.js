@@ -186,7 +186,21 @@ async function fetchAPI(url, options = {}) {
         )
     }
 
-    return response.json()
+    // Une réponse sans contenu (204, typique des DELETE) n'est pas du JSON : appeler .json()
+    // dessus lève une SyntaxError, et l'appelant croit alors à un échec alors que l'opération
+    // a bien eu lieu côté serveur.
+    if (response.status === 204 || response.headers.get('content-length') === '0') {
+        return null
+    }
+
+    const text = await response.text()
+    if (!text) return null
+
+    try {
+        return JSON.parse(text)
+    } catch {
+        throw new APIError('Réponse inattendue du serveur', response.status, 'invalid_json')
+    }
 }
 
 /**

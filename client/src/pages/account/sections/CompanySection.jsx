@@ -71,8 +71,22 @@ export default function CompanySection() {
 
         setInviting(true)
         try {
-            await companyService.invite(inviteEmail.trim(), inviteRole)
-            toast.success(`Invitation envoyée à ${inviteEmail.trim()}`)
+            const res = await companyService.invite(inviteEmail.trim(), inviteRole)
+
+            // Le serveur indique quel e-mail est réellement parti. Annoncer « Invitation envoyée »
+            // alors que l'envoi a échoué laisse attendre un message qui n'arrivera jamais.
+            const failed = []
+            if (res?.delivery?.invitee === false) failed.push('la personne invitée')
+            if (res?.delivery?.owner === false) failed.push('le titulaire')
+
+            if (failed.length) {
+                toast.warning(
+                    `Demande enregistrée, mais l'e-mail n'a pas pu être envoyé à ${failed.join(' ni ')}. Vérifiez la configuration d'envoi.`
+                )
+            } else {
+                toast.success(`Demande envoyée : ${inviteEmail.trim()} et vous devez maintenant l'accepter chacun par e-mail.`)
+            }
+
             setInviteEmail('')
             await load()
         } catch (err) {
