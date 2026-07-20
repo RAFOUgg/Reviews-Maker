@@ -206,11 +206,14 @@ export async function changeAccountType(userId, newType, options = {}) {
         newRoles.push(newType);
     }
 
-    // Mettre à jour l'utilisateur
+    // Mettre à jour l'utilisateur. La colonne `accountType` est écrite en même temps que `roles` :
+    // elle ne l'était pas, et divergeait donc durablement (un compte rétrogradé gardait
+    // `accountType: 'producer'` en base, ce que plusieurs écrans affichaient tel quel).
     const updatedUser = await prisma.user.update({
         where: { id: userId },
         data: {
             roles: stringifyRoles(newRoles),
+            accountType: newType,
         },
     });
 

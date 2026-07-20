@@ -11,6 +11,11 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
     const { accountType, user } = useStore()
     const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
 
+    // État réel de l'abonnement, calculé côté serveur (services/access.js). Le tier gratuit n'a
+    // par définition aucun abonnement : parler d'« actif » ou d'« inactif » n'y a pas de sens.
+    const subscriptionActive = Boolean(user?.access?.subscriptionActive)
+    const isFreePlan = !['producer', 'influencer'].includes(user?.access?.accountType || accountType)
+
     const getSubscriptionInfo = () => {
         // Normalize incoming accountType (backend uses English keys)
         const normalize = (t) => {
@@ -121,10 +126,25 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                     </div>
                 </div>
 
-                {/* Statut */}
+                {/* Statut réel. Cette ligne affichait « Abonnement actif » en dur, y compris sur un
+                    compte gratuit qui n'a aucun abonnement. */}
                 <div className="flex items-center gap-2 pt-4 border-t border-opacity-20 border-current">
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium">Abonnement actif</span>
+                    {isFreePlan ? (
+                        <>
+                            <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                            <span className="text-sm font-medium opacity-80">Aucun abonnement</span>
+                        </>
+                    ) : subscriptionActive ? (
+                        <>
+                            <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span className="text-sm font-medium">Abonnement actif</span>
+                        </>
+                    ) : (
+                        <>
+                            <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
+                            <span className="text-sm font-medium">Abonnement inactif</span>
+                        </>
+                    )}
                 </div>
             </div>
 
