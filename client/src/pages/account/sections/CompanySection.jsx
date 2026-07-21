@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
-import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidBadge } from '@/components/ui/LiquidUI'
-import { Building2, UserPlus, Trash2, ShieldCheck, ShieldAlert, LogOut, Link as LinkIcon } from 'lucide-react'
+import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidBadge, LiquidTabs } from '@/components/ui/LiquidUI'
+import { Building2, UserPlus, Trash2, ShieldCheck, ShieldAlert, LogOut, Link as LinkIcon, Scale, Users } from 'lucide-react'
 import { companyService } from '../../../services/apiService'
 import { useToast } from '../../../components/shared/ToastContainer'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
+import CompanyLegalSection from './CompanyLegalSection'
 
 /**
  * Gestion des sous-comptes employés d'une entreprise.
@@ -53,6 +54,8 @@ export default function CompanySection() {
     const [inviteEmail, setInviteEmail] = useState('')
     const [inviteRole, setInviteRole] = useState('viewer')
     const [inviting, setInviting] = useState(false)
+    // Deux volets : le dossier légal de la société, et l'équipe qui y travaille.
+    const [panel, setPanel] = useState('legal')
 
     // Confirmation destructive : { title, message, confirmLabel, onConfirm } ou null.
     const [confirmAction, setConfirmAction] = useState(null)
@@ -220,6 +223,27 @@ export default function CompanySection() {
                 )}
             </LiquidCard>
 
+            {/* Deux volets bien distincts : le dossier légal (qui est l'entreprise) puis l'équipe
+                (qui y travaille). Seul le titulaire modifie le premier — un employé, même
+                administrateur, n'engage pas juridiquement la société. */}
+            <div>
+                <LiquidTabs
+                    tabs={[
+                        { id: 'legal', label: 'Informations légales', icon: Scale },
+                        { id: 'team', label: `Équipe (${members.filter(m => m.status === 'active').length + 1})`, icon: Users },
+                    ]}
+                    activeTab={panel}
+                    onChange={setPanel}
+                />
+            </div>
+
+            {panel === 'legal' && (
+                <CompanyLegalSection canEdit={myRole === 'owner'} onSaved={load} />
+            )}
+
+            {panel === 'team' && (
+                <>
+
             {canManageMembers && (
                 <LiquidCard glow="purple" padding="lg">
                     <h3 className="text-lg font-semibold text-white flex items-center gap-2 mb-4">
@@ -330,6 +354,8 @@ export default function CompanySection() {
                     <LogOut className="w-4 h-4 mr-2" />
                     Quitter cette entreprise
                 </LiquidButton>
+            )}
+                </>
             )}
 
             <ConfirmModal

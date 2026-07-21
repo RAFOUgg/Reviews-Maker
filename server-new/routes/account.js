@@ -17,7 +17,7 @@ import {
     requestProducerVerification,
     ACCOUNT_TYPES,
 } from '../services/account.js';
-import { isValidSiretFormat, checkSiretExists } from '../services/sirene.js';
+import { isValidSiretFormat, checkSiretExists, computeVatNumber } from '../services/sirene.js';
 import { requireAuth } from '../middleware/auth.js';
 
 const router = express.Router();
@@ -410,7 +410,90 @@ router.get('/producer-profile', requireAuth, asyncHandler(async (req, res) => {
         verificationRejectionReason: producerProfile.verificationRejectionReason,
         verificationDoc: producerProfile.verificationDoc,
         sireneSnapshot: producerProfile.sireneSnapshot ? JSON.parse(producerProfile.sireneSnapshot) : null,
+
+        // Mentions légales
+        legalForm: producerProfile.legalForm,
+        legalFormCode: producerProfile.legalFormCode,
+        siren: producerProfile.siren,
+        vatNumber: producerProfile.vatNumber,
+        nafCode: producerProfile.nafCode,
+        shareCapital: producerProfile.shareCapital,
+        registeredAt: producerProfile.registeredAt,
+        addressLine: producerProfile.addressLine,
+        postalCode: producerProfile.postalCode,
+        city: producerProfile.city,
+        rcsCity: producerProfile.rcsCity,
+        legalRepresentative: producerProfile.legalRepresentative,
+        licenseNumber: producerProfile.licenseNumber,
     });
+}));
+
+// Champs du dossier légal modifiables par le titulaire. Liste blanche explicite : ni les statuts
+// de vérification ni le SIRET ne s'éditent ici (le SIRET passe par /verify-siret, qui contrôle sa
+// validité et interroge l'INSEE ; les statuts sont décidés par l'administration).
+const EDITABLE_LEGAL_FIELDS = [
+    'companyName', 'businessType', 'legalForm', 'legalFormCode', 'siren', 'vatNumber',
+    'nafCode', 'shareCapital', 'addressLine', 'postalCode', 'city', 'country',
+    'rcsCity', 'legalRepresentative', 'licenseNumber',
+];
+
+/**
+ * PUT /api/account/producer-profile/legal
+ * Enregistre les mentions légales de l'entreprise.
+ *
+ * Réservé au titulaire du ProducerProfile : un employé, même administrateur, n'engage pas
+ * juridiquement la société.
+ */
+router.put('/producer-profile/legal', requireAuth, asyncHandler(async (req, res) => {
+    const profile = await prisma.producerProfile.findUnique({ where: { userId: req.user.id } });
+    if (!profile) {
+        return res.status(404).json({
+            error: 'not_found',
+            message: 'Aucune entreprise associée à votre compte',
+        });
+    }
+
+    const data = {};
+    for (const field of EDITABLE_LEGAL_FIELDS) {
+        if (!(field in req.body)) continue;
+        const value = req.body[field];
+        // Une chaîne vide vaut « non renseigné » : on stocke null plutôt que du vide, sauf pour
+        // les deux champs obligatoires du modèle.
+        if (typeof value === 'string') {
+            const trimmed = value.trim();
+            data[field] = trimmed === '' ? (['companyName', 'country'].includes(field) ? profile[field] : null) : trimmed;
+        } else if (value === null) {
+            data[field] = null;
+        }
+    }
+
+    // Le SIRET est accepté ici pour que l'onglet Entreprise se suffise à lui-même, mais son format
+    // est contrôlé (14 chiffres + Luhn) — un SIRET fantaisiste ne doit pas entrer en base. SIREN et
+    // TVA en sont déduits : les laisser saisir à la main serait une source d'incohérence.
+    if (req.body.siret !== undefined) {
+        const raw = String(req.body.siret || '').replace(/\s/g, '');
+        if (raw === '') {
+            data.siret = null;
+        } else if (!isValidSiretFormat(raw)) {
+            return res.status(400).json({
+                error: 'invalid_siret',
+                message: 'SIRET invalide : 14 chiffres attendus, et la clé de contrôle ne correspond pas.',
+            });
+        } else {
+            data.siret = raw;
+            data.siren = raw.slice(0, 9);
+            data.vatNumber = computeVatNumber(raw.slice(0, 9));
+        }
+    }
+
+    if (req.body.registeredAt !== undefined) {
+        const parsed = req.body.registeredAt ? new Date(req.body.registeredAt) : null;
+        data.registeredAt = parsed && !isNaN(parsed.getTime()) ? parsed : null;
+    }
+
+    const updated = await prisma.producerProfile.update({ where: { id: profile.id }, data });
+
+    res.json({ success: true, profile: updated });
 }));
 
 /**

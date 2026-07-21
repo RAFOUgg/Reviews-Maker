@@ -485,6 +485,32 @@ model ProducerProfile {
   sireneSnapshot              String? // JSON du dernier résultat API recherche-entreprises (nom officiel, activité, statut)
   sireneCheckedAt             DateTime?
 
+  // ── Mentions légales de l'entreprise ────────────────────────────────────────────────────────
+  // Nécessaires dès qu'un compte pro publie commercialement : elles identifient la personne morale
+  // responsable des données publiées. La plupart sont pré-remplies depuis le SIRET via l'API
+  // recherche-entreprises ; celles que l'API ne fournit pas (capital, représentant, licence)
+  // restent saisies à la main.
+  legalForm           String? // Forme juridique en clair : SAS, SARL, EI…
+  legalFormCode       String? // Code INSEE « nature juridique » (ex : 5710), tel que renvoyé par l'API
+  siren               String? // 9 premiers chiffres du SIRET, conservé pour les mentions légales
+  vatNumber           String? // TVA intracommunautaire — calculable depuis le SIREN (clé mod 97)
+  nafCode             String? // Code APE/NAF de l'activité principale (ex : 01.19Z)
+  shareCapital        String? // Capital social, en texte : montants et devises varient trop pour un numérique
+  registeredAt        DateTime? // Date de création de l'entreprise
+
+  // Siège social
+  addressLine         String?
+  postalCode          String?
+  city                String?
+
+  // Registre & représentation
+  rcsCity             String? // Ville du greffe d'immatriculation (RCS)
+  legalRepresentative String? // Nom du représentant légal (gérant, président…)
+
+  // Spécifique au secteur : numéro d'autorisation/licence d'exploitation, quand la juridiction
+  // l'impose pour la culture ou la transformation.
+  licenseNumber       String?
+
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

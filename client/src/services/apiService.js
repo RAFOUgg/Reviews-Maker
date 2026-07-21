@@ -63,6 +63,46 @@ export const settingsService = {
 }
 
 /**
+ * Dossier légal de l'entreprise : identité juridique, siège, vérification SIRET/KYC.
+ * Réservé au titulaire — un employé n'engage pas juridiquement la société.
+ */
+export const companyLegalService = {
+    async get() {
+        return fetchAPI(`${API_BASE}/account/producer-profile`)
+    },
+
+    async save(fields) {
+        return fetchAPI(`${API_BASE}/account/producer-profile/legal`, {
+            method: 'PUT',
+            body: JSON.stringify(fields)
+        })
+    },
+
+    /** Contrôle le SIRET et renvoie les données officielles pré-remplissables (INSEE). */
+    async lookupSiret(siret) {
+        return fetchAPI(`${API_BASE}/account/verify-siret`, {
+            method: 'POST',
+            body: JSON.stringify({ siret })
+        })
+    },
+
+    /** Envoi du justificatif (Kbis, licence…) — multipart, pas de Content-Type imposé. */
+    async uploadDocument(file) {
+        const form = new FormData()
+        form.append('document', file)
+        return fetchAPI(`${API_BASE}/account/verification-document`, { method: 'POST', body: form })
+    },
+
+    /** Soumet le dossier à l'examen d'un administrateur. */
+    async requestVerification(payload) {
+        return fetchAPI(`${API_BASE}/account/request-verification`, {
+            method: 'POST',
+            body: JSON.stringify(payload)
+        })
+    }
+}
+
+/**
  * Service entreprise / sous-comptes employés.
  * Les droits (`canManageMembers`, `myRole`) sont décidés et renvoyés par le serveur.
  */
