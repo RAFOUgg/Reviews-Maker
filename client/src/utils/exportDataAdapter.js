@@ -79,7 +79,42 @@ function buildCategoryRatings(source, fields) {
     return Object.keys(cats).length > 0 ? cats : null;
 }
 
-function build(reviewData) {
+// Les formulaires Hash/Concentré/Comestible (et Fleur) structurent formData en SECTIONS
+// imbriquées avec des clés génériques (odeurs.intensity, texture.hardness, effets.onset…),
+// et ne remontent pas toujours les colonnes DB à la racine. On aplatit ces conteneurs vers
+// les noms canoniques que le registre attend. `analytics` porte déjà les noms DB (merge direct).
+const SECTION_FLATTEN = {
+    analytics: null, // clés déjà en noms DB (thcPercent, terpeneProfile, labName…)
+    visual: { colorRating: 'couleurScore', density: 'densiteVisuelle', transparency: 'couleurTransparence', purity: 'pureteVisuelle', trichomes: 'trichomesScore', mold: 'moisissureScore', seeds: 'grainesScore', pistils: 'pistilsScore', colors: 'couleurNuancier' },
+    texture: { hardness: 'dureteScore', density: 'densiteTactileScore', elasticity: 'elasticiteScore', stickiness: 'collantScore', malleability: 'malleabiliteScore', friability: 'friabiliteScore', viscosity: 'viscositeScore', melting: 'meltingScore', residue: 'residuScore' },
+    odeurs: { intensity: 'intensiteAromeScore', complexity: 'complexiteAromeScore', fidelity: 'fideliteAromeScore', dominantNotes: 'notesOdeursDominantes', secondaryNotes: 'notesOdeursSecondaires' },
+    gouts: { intensity: 'intensiteGoutScore', aggressiveness: 'agressiviteScore', dryPuffNotes: 'dryPuffNotes', inhalationNotes: 'inhalationNotes', exhalationNotes: 'expirationNotes' },
+    effets: { onset: 'monteeScore', intensity: 'intensiteEffetScore', effects: 'effetsChoisis', duration: 'dureeEffet', effectProfiles: 'effectProfiles', usagesPreferes: 'preferredUse', methodeConsommation: 'consumptionMethod', dosageUtilise: 'dosage' },
+    recipe: { ingredients: 'ingredients', steps: 'etapesPreparation' },
+};
+// Alias de conteneurs (le nom français `visuel` désigne la même section que `visual`)
+const SECTION_ALIASES = { visuel: 'visual' };
+
+function flattenSections(reviewData) {
+    const rd = { ...reviewData };
+    for (const [rawName, obj] of Object.entries(reviewData)) {
+        if (!obj || typeof obj !== 'object' || Array.isArray(obj)) continue;
+        const name = SECTION_ALIASES[rawName] || rawName;
+        if (!(name in SECTION_FLATTEN)) continue;
+        const map = SECTION_FLATTEN[name];
+        for (const [k, v] of Object.entries(obj)) {
+            if (v === undefined || v === null || v === '') continue;
+            const canonical = map ? (map[k] || k) : k; // analytics: garder tel quel
+            if (rd[canonical] === undefined || rd[canonical] === null || rd[canonical] === '') {
+                rd[canonical] = v;
+            }
+        }
+    }
+    return rd;
+}
+
+function build(reviewDataRaw) {
+    const reviewData = flattenSections(reviewDataRaw);
     const adapted = { ...reviewData };
     const fields = getFieldRegistry(reviewData.type);
 

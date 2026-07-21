@@ -17,6 +17,15 @@ import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
+import { CannabinoidGrid, GisementSections, getCannabinoidItems } from './sections/RegistrySections';
+
+// Groupes du "gisement" rendus génériquement depuis le registre (jamais affichés avant) :
+// récolte, culture, usage, labo, et les procédés propres aux Hash/Concentré/Comestible.
+const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'lab', 'separation', 'extraction', 'purification', 'recipe'];
+const GISEMENT_ICONS = {
+    harvest: '🌾', culture: '🌱', usage: '💨', lab: '🧪',
+    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯',
+};
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 
@@ -871,6 +880,25 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         })()}
                     </div>
                 </div>
+
+                {/* Cannabinoïdes — grille complète (majeurs + acides + mineurs) via le référentiel */}
+                {getCannabinoidItems(reviewData, contentModules).length > 0 && (
+                    <Section title="Cannabinoïdes" icon="🔬">
+                        <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+                    </Section>
+                )}
+
+                {/* Gisement complet piloté par le registre (récolte, culture, usage, labo, procédés…) */}
+                <GisementSections
+                    reviewData={reviewData}
+                    contentModules={contentModules}
+                    groups={GISEMENT_GROUPS}
+                    Section={Section}
+                    colors={colors}
+                    fontSize={fontSize}
+                    spacing={spacing}
+                    groupIcons={GISEMENT_ICONS}
+                />
 
                 {/* Pipelines (full width) */}
                 {(() => {

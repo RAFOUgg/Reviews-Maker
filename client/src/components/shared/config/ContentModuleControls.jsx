@@ -1,86 +1,30 @@
 import { useState, useMemo } from 'react';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useOrchardStore } from '../../../store/orchardStore';
-import { getModulesByProductType, getModuleSectionsByProductType } from '../../../utils/orchard/moduleMappings';
+import { getFieldRegistry, GROUPS, GROUP_LABELS } from '../../../utils/fieldRegistry';
 
-// ── Labels français pour chaque module (clé = field ID de moduleMappings) ────
-const FRENCH_LABELS = {
-    // Infos générales
-    nomCommercial: 'Nom commercial',
-    hashmaker: 'Hashmaker / Producteur',
-    laboratoire: 'Laboratoire',
-    cultivars: 'Cultivars',
-    cultivar: 'Cultivar',
-    cultivarsList: 'Liste des cultivars',
-    breeder: 'Breeder',
-    strainType: 'Type génétique',
-    genetics: 'Généalogie',
-    farm: 'Farm / Source',
-    mainImage: 'Photo principale',
-    images: 'Photos',
-    type: 'Type de produit',
-    // Pipelines production
-    pipelineSeparation: 'Pipeline Séparation',
-    pipelinePurification: 'Pipeline Purification',
-    pipelineExtraction: 'Pipeline Extraction',
-    pipelineCulture: 'Pipeline Culture',
-    fertilizationPipeline: 'Fertilisation',
-    substratMix: 'Substrat',
-    processing: 'Traitement',
-    yield: 'Rendement',
-    harvestDate: 'Date de récolte',
-    recipe: 'Recette',
-    ingredients: 'Ingrédients',
-    curing: 'Curing / Maturation',
-    // Analytiques
-    'analytics.thcLevel': 'THC (%)',
-    'analytics.cbdLevel': 'CBD (%)',
-    'analytics.terpeneProfile': 'Profil terpénique',
-    // Visuel – fleur
-    'visual.colorRating': 'Couleur / Nuancier',
-    'visual.trichomes': 'Trichomes',
-    'visual.density': 'Densité visuelle',
-    'visual.mold': 'Moisissures',
-    'visual.seeds': 'Graines',
-    // Visuel – hash / concentré (ajout)
-    'visual.transparency': 'Transparence',
-    'visual.viscosity': 'Viscosité',
-    // Odeurs
-    'odeurs.intensity': 'Intensité aromatique',
-    'odeurs.complexity': 'Complexité',
-    'odeurs.fidelity': 'Fidélité au cultivar',
-    'odeurs.dominantNotes': 'Notes dominantes',
-    'odeurs.secondaryNotes': 'Notes secondaires',
-    // Texture – fleur
-    'texture.hardness': 'Dureté',
-    'texture.density': 'Densité tactile',
-    'texture.elasticity': 'Élasticité',
-    'texture.stickiness': 'Collant',
-    // Texture – hash / concentré
-    'texture.malleability': 'Malléabilité',
-    'texture.friability': 'Friabilité',
-    'texture.melting': 'Melting',
-    'texture.residue': 'Résidus',
-    'texture.viscosity': 'Viscosité tactile',
-    // Effets
-    'effets.onset': 'Montée (rapidité)',
-    'effets.intensity': 'Intensité',
-    'effets.effects': 'Effets choisis',
-    'effets.duration': 'Durée des effets',
-    // Goûts
-    'gouts.intensity': 'Intensité gustative',
-    'gouts.aggressiveness': 'Agressivité / Piquant',
-    'gouts.dryPuffNotes': 'Dry puff / Tirage à sec',
-    'gouts.inhalationNotes': 'Inhalation',
-    'gouts.exhalationNotes': 'Expiration / Arrière-goût',
+// ═══════════════════════════════════════════════════════════════════════════════
+// Ce panneau pilote `config.contentModules[<clé canonique>]` — LES MÊMES clés que
+// lisent les templates (contentModules.thcLevel, .cultivar, .effects, .categoryRatings…).
+// Il dérive entièrement de fieldRegistry.js : plus de vocabulaire pointé fantôme
+// (analytics.thcLevel, texture.hardness) qui ne pilotait rien et comptait faux.
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const GROUP_ICONS = {
+    presentation: '🖼️', general: '📋', genetics: '🧬', culture: '🌱', harvest: '🌾',
+    analytics: '🔬', lab: '🧪', visual: '👁️', smell: '👃', texture: '✋', taste: '👅',
+    effects: '⚡', usage: '💨', curing: '🫙', separation: '🧊', extraction: '⚗️',
+    purification: '💧', recipe: '🍯', traceability: '🔗',
 };
 
+const GROUP_COLORS = {
+    presentation: 'slate', general: 'gray', genetics: 'violet', culture: 'lime',
+    harvest: 'amber', analytics: 'cyan', lab: 'blue', visual: 'purple', smell: 'green',
+    texture: 'orange', taste: 'yellow', effects: 'cyan', usage: 'pink', curing: 'emerald',
+    separation: 'blue', extraction: 'violet', purification: 'cyan', recipe: 'amber',
+    traceability: 'slate',
+};
 
-
-// Couleurs par catégorie
 const CATEGORY_COLORS = {
     purple: 'bg-purple-100 dark:bg-purple-900/30 border-purple-300 dark:border-purple-700 text-purple-700 dark:text-purple-300',
     blue: 'bg-blue-100 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700 text-blue-700 dark:text-blue-300',
@@ -92,231 +36,70 @@ const CATEGORY_COLORS = {
     gray: 'bg-gray-100 dark:bg-gray-800/50 border-gray-300 dark:border-gray-700 text-gray-700 dark:text-gray-300',
     emerald: 'bg-emerald-100 dark:bg-emerald-900/30 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300',
     amber: 'bg-amber-100 dark:bg-amber-900/30 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-300',
-    red: 'bg-red-100 dark:bg-red-900/30 border-red-300 dark:border-red-700 text-red-700 dark:text-red-300',
     violet: 'bg-violet-100 dark:bg-violet-900/30 border-violet-300 dark:border-violet-700 text-violet-700 dark:text-violet-300',
     lime: 'bg-lime-100 dark:bg-lime-900/30 border-lime-300 dark:border-lime-700 text-lime-700 dark:text-lime-300',
-    slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+    slate: 'bg-slate-100 dark:bg-slate-800/50 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300',
 };
 
-// DEPRECATED: `MODULE_CATEGORIES` (above) is obsolete —
-// keep it for compatibility but prefer sections defined in
-// `moduleMappings.js`. Build computed categories at runtime
-// so new review types / sections are reflected automatically.
-
-/**
- * Build categories from the canonical module sections for a given product type.
- * Returns an array of category objects: { key, name, description, color, modules }
- */
-function buildComputedCategories(productType) {
-    try {
-        const sections = getModuleSectionsByProductType(productType) || [];
-        return sections.map((s, idx) => {
-            const key = s.id || s.key || `section_${idx}`;
-            return {
-                key,
-                name: s.name || s.title || key,
-                description: s.description || s.desc || '',
-                color: s.color || 'gray',
-                modules: Array.isArray(s.modules) ? s.modules : (s.items || [])
-            };
-        });
-    } catch (e) {
-        // If moduleMappings lookup fails, return empty array (no fallback)
-        return [];
-    }
+// ── Détection de données réelle, via les `sources[]` du registre ─────────────────
+function isFilled(v) {
+    if (v === undefined || v === null || v === '') return false;
+    if (Array.isArray(v)) return v.length > 0;
+    if (typeof v === 'object') return Object.keys(v).length > 0;
+    return true;
 }
 
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// UTILITAIRE — VÉRIFIER SI UN MODULE A DES DONNÉES
-// ═══════════════════════════════════════════════════════════════════════════════
-
-/**
- * Checks if reviewData contains meaningful data for a given module field.
- * Supports dot-notation (e.g. 'visual.density') and top-level keys.
- */
-function moduleHasData(reviewData, moduleId) {
-    if (!reviewData) return false;
-
-    // Helper: check if a value is "filled" (not null/undefined/empty)
-    const isFilled = (v) => {
-        if (v === undefined || v === null || v === '') return false;
-        if (typeof v === 'number') return true;
-        if (typeof v === 'string') return v.trim().length > 0;
-        if (Array.isArray(v)) return v.length > 0;
-        if (typeof v === 'object') return Object.keys(v).length > 0;
-        return Boolean(v);
-    };
-
-    // Dot-notation: e.g. 'visual.density' → check reviewData.visual?.density
-    if (moduleId.includes('.')) {
-        const [section, field] = moduleId.split('.');
-        // Check nested path
-        if (reviewData[section] && typeof reviewData[section] === 'object') {
-            if (isFilled(reviewData[section][field])) return true;
-        }
-        // Also check flattened version (some normalizers flatten)
-        if (isFilled(reviewData[field])) return true;
-        // Check combined key (e.g. analytics.thcLevel → thcLevel, analyticsThcLevel)
-        const camelKey = section + field.charAt(0).toUpperCase() + field.slice(1);
-        if (isFilled(reviewData[camelKey])) return true;
-        return false;
+function fieldHasData(reviewData, field) {
+    if (!reviewData || !field) return false;
+    for (const s of field.sources) {
+        if (isFilled(reviewData[s])) return true;
+        if (reviewData.extraData && typeof reviewData.extraData === 'object' && isFilled(reviewData.extraData[s])) return true;
     }
-
-    // Top-level key
-    if (isFilled(reviewData[moduleId])) return true;
-
-    // Check in extraData
-    if (reviewData.extraData && typeof reviewData.extraData === 'object') {
-        if (isFilled(reviewData.extraData[moduleId])) return true;
+    // Un sous-score contribue à categoryRatings : présent si sa catégorie l'a reconstruit
+    if (field.cat && reviewData.categoryRatings && typeof reviewData.categoryRatings === 'object') {
+        const catObj = reviewData.categoryRatings[field.cat];
+        if (typeof catObj === 'number' && !isNaN(catObj)) return true;
+        if (catObj && typeof catObj === 'object' && isFilled(catObj[field.key])) return true;
     }
-
     return false;
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// COMPOSANT MODULE DRAGGABLE
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function SortableModule({ id, module, isVisible, onToggle, hasData = null, compact = false }) {
-    const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
-
-    const style = {
-        transform: CSS.Transform.toString(transform),
-        transition,
-        opacity: isDragging ? 0.5 : 1,
-        zIndex: isDragging ? 50 : 'auto'
-    };
-
-    if (!module) {
-        module = { name: id, icon: '📦', desc: 'Module personnalisé' };
-    }
-
-    if (compact) {
-        return (
-            <motion.div
-                ref={setNodeRef}
-                style={style}
-                whileHover={{ scale: 1.02 }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-60'}`}
-                onClick={onToggle}
-            >
-                {/* Data availability indicator */}
-                {hasData !== null && (
-                    <span
-                        className={`w-2 h-2 rounded-full flex-shrink-0 ${hasData ? 'bg-green-400' : 'bg-gray-500/40'}`}
-                        title={hasData ? 'Données disponibles' : 'Aucune donnée'}
-                    />
-                )}
-                <span className="text-sm">{module.icon}</span>
-                <span className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
-                    {module.name}
-                </span>
-                {isVisible && (
-                    <span className="ml-auto">✓</span>
-                )}
-            </motion.div>
-        );
-    }
-
+// ── Un module (toggle) ───────────────────────────────────────────────────────────
+function ModuleToggle({ field, isVisible, hasData, onToggle }) {
     return (
         <motion.div
-            ref={setNodeRef}
-            style={style}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={`flex items-center gap-3 p-3 rounded-xl transition-all shadow-sm ${isVisible ? 'bg-white dark:bg-gray-800 border-2 border-purple-300 dark:border-purple-700 shadow-purple-100 dark:shadow-purple-900/20' : 'bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700'} ${isDragging ? 'shadow-lg ring-2 ring-purple-500' : ''}`}
+            whileHover={{ scale: 1.02 }}
+            className={`flex items-center gap-2 px-3 py-2 rounded-lg cursor-pointer transition-all ${isVisible ? 'bg-purple-50 dark:bg-purple-900/20 border border-purple-300 dark:border-purple-700' : 'bg-gray-50 dark:bg-gray-800/50 border border-gray-200 dark:border-gray-700 opacity-70'}`}
+            onClick={onToggle}
+            title={hasData ? 'Données disponibles' : 'Aucune donnée pour cette review'}
         >
-            {/* Drag handle */}
-            <button
-                {...attributes}
-                {...listeners}
-                className="cursor-grab active:cursor-grabbing text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
-                title="Glisser pour réorganiser"
-            >
-                <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M7 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 2zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 7 14zm6-8a2 2 0 1 0-.001-4.001A2 2 0 0 0 13 6zm0 2a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 8zm0 6a2 2 0 1 0 .001 4.001A2 2 0 0 0 13 14z" />
-                </svg>
-            </button>
-
-            {/* Icon et label */}
-            <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2">
-                    {hasData !== null && (
-                        <span
-                            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${hasData ? 'bg-green-400 shadow-sm shadow-green-400/50' : 'bg-gray-500/30'}`}
-                            title={hasData ? 'Données disponibles' : 'Aucune donnée'}
-                        />
-                    )}
-                    <span className="text-lg flex-shrink-0">{module.icon}</span>
-                    <span className="font-medium text-gray-900 dark:text-white text-sm truncate">
-                        {module.name}
-                    </span>
-                </div>
-                {module.desc && (
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 truncate pl-7">
-                        {module.desc}
-                    </p>
-                )}
-            </div>
-
-            {/* Toggle */}
-            <button
-                onClick={onToggle}
-                className={`relative w-12 h-6 rounded-full transition-all flex-shrink-0 ${isVisible ? 'bg-gradient-to-r from-purple-600 to-pink-600' : 'bg-gray-300 dark:bg-gray-600'}`}
-                title={isVisible ? 'Désactiver' : 'Activer'}
-            >
-                <motion.span
-                    layout
-                    className="absolute top-0.5 w-5 h-5 bg-white rounded-full shadow-sm"
-                    animate={{ left: isVisible ? '1.625rem' : '0.125rem' }}
-                    transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                />
-            </button>
+            <span className={`w-2 h-2 rounded-full flex-shrink-0 ${hasData ? 'bg-green-400 shadow-sm shadow-green-400/50' : 'bg-gray-400/40'}`} />
+            <span className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">
+                {field.label}{field.unit ? <span className="opacity-50"> ({field.unit})</span> : null}
+            </span>
+            {isVisible && <span className="ml-auto text-purple-500 text-xs">✓</span>}
         </motion.div>
     );
 }
 
-// ═══════════════════════════════════════════════════════════════════════════════
-// COMPOSANT CATÉGORIE PLIABLE
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function CategorySection({ category, categoryKey, modules, contentModules, onToggle, expanded, onExpandToggle, reviewData }) {
-    const activeCount = category.modules.filter(m => contentModules[m]).length;
-    const totalCount = category.modules.length;
-    const dataCount = reviewData ? category.modules.filter(m => moduleHasData(reviewData, m)).length : null;
+// ── Une catégorie pliable ─────────────────────────────────────────────────────────
+function CategorySection({ category, contentModules, reviewData, onToggle, onToggleAll, expanded, onExpandToggle }) {
+    const activeCount = category.fields.filter((f) => contentModules[f.key]).length;
+    const totalCount = category.fields.length;
+    const dataCount = reviewData ? category.fields.filter((f) => fieldHasData(reviewData, f)).length : null;
     const colorClass = CATEGORY_COLORS[category.color] || CATEGORY_COLORS.gray;
-
-    const toggleAll = (enable) => {
-        category.modules.forEach(moduleName => {
-            if (enable && !contentModules[moduleName]) {
-                onToggle(moduleName);
-            } else if (!enable && contentModules[moduleName]) {
-                onToggle(moduleName);
-            }
-        });
-    };
 
     return (
         <div className={`rounded-xl border overflow-hidden ${colorClass}`}>
-            {/* Header */}
-            <button
-                onClick={onExpandToggle}
-                className="w-full flex items-center justify-between p-3 hover:bg-white/30 dark:hover:bg-black/20 transition-colors"
-            >
+            <button onClick={onExpandToggle} className="w-full flex items-center justify-between p-3 hover:bg-white/30 dark:hover:bg-black/20 transition-colors">
                 <div className="flex items-center gap-2">
-                    <motion.span
-                        animate={{ rotate: expanded ? 90 : 0 }}
-                        className="text-sm"
-                    >
-                        ▶
-                    </motion.span>
+                    <motion.span animate={{ rotate: expanded ? 90 : 0 }} className="text-sm">▶</motion.span>
+                    <span className="text-base">{category.icon}</span>
                     <span className="font-semibold text-sm">{category.name}</span>
                 </div>
                 <div className="flex items-center gap-2">
-                    <span className="text-xs opacity-75">{category.description}</span>
                     {dataCount !== null && (
-                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${dataCount > 0 ? 'bg-green-500/20 text-green-300' : 'bg-black/10 dark:bg-white/5 text-gray-400'}`}
+                        <span className={`px-1.5 py-0.5 rounded-full text-xs font-bold ${dataCount > 0 ? 'bg-green-500/20 text-green-500 dark:text-green-300' : 'bg-black/10 dark:bg-white/5 text-gray-400'}`}
                               title={`${dataCount} champ(s) avec données`}>
                             {dataCount > 0 ? `📊${dataCount}` : '∅'}
                         </span>
@@ -327,49 +110,24 @@ function CategorySection({ category, categoryKey, modules, contentModules, onTog
                 </div>
             </button>
 
-            {/* Content */}
             <AnimatePresence>
                 {expanded && (
-                    <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        transition={{ duration: 0.2 }}
-                        className="overflow-hidden"
-                    >
+                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                         <div className="p-3 pt-0 space-y-2">
-                            {/* Quick actions pour la catégorie */}
                             <div className="flex gap-2 mb-3">
-                                <button
-                                    onClick={() => toggleAll(true)}
-                                    className="flex-1 text-xs py-1.5 rounded-lg bg-white/50 dark:bg-black/30 hover:bg-white/70 dark:hover:bg-black/50 transition-colors font-medium"
-                                >
-                                    ✓ Tout activer
-                                </button>
-                                <button
-                                    onClick={() => toggleAll(false)}
-                                    className="flex-1 text-xs py-1.5 rounded-lg bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors font-medium"
-                                >
-                                    ✕ Tout désactiver
-                                </button>
+                                <button onClick={() => onToggleAll(category, true)} className="flex-1 text-xs py-1.5 rounded-lg bg-white/50 dark:bg-black/30 hover:bg-white/70 dark:hover:bg-black/50 transition-colors font-medium">✓ Tout activer</button>
+                                <button onClick={() => onToggleAll(category, false)} className="flex-1 text-xs py-1.5 rounded-lg bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors font-medium">✕ Tout désactiver</button>
                             </div>
-
-                            {/* Modules grid */}
                             <div className="grid grid-cols-2 gap-2">
-                                {category.modules.map(moduleName => {
-                                    const module = modules[moduleName] || { name: moduleName, icon: '📦' };
-                                    return (
-                                        <SortableModule
-                                            key={moduleName}
-                                            id={moduleName}
-                                            module={module}
-                                            isVisible={contentModules[moduleName]}
-                                            onToggle={() => onToggle(moduleName)}
-                                            hasData={reviewData ? moduleHasData(reviewData, moduleName) : null}
-                                            compact
-                                        />
-                                    );
-                                })}
+                                {category.fields.map((f) => (
+                                    <ModuleToggle
+                                        key={f.key}
+                                        field={f}
+                                        isVisible={!!contentModules[f.key]}
+                                        hasData={reviewData ? fieldHasData(reviewData, f) : false}
+                                        onToggle={() => onToggle(f.key)}
+                                    />
+                                ))}
                             </div>
                         </div>
                     </motion.div>
@@ -382,300 +140,134 @@ function CategorySection({ category, categoryKey, modules, contentModules, onTog
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
-
 export default function ContentModuleControls() {
     const config = useOrchardStore((state) => state.config);
     const reviewData = useOrchardStore((state) => state.reviewData);
     const toggleContentModule = useOrchardStore((state) => state.toggleContentModule);
-    const reorderModules = useOrchardStore((state) => state.reorderModules);
-    const setContentModules = useOrchardStore((state) => state.setContentModules);
 
-    const [viewMode, setViewMode] = useState('categories'); // 'categories' | 'list' | 'search'
     const [searchQuery, setSearchQuery] = useState('');
-    const [expandedCategories, setExpandedCategories] = useState({ essential: true });
+    const [expandedCategories, setExpandedCategories] = useState({ presentation: true, general: true });
 
-    const sensors = useSensors(
-        useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
-        useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
-    );
+    const productType = (reviewData && (reviewData.type || reviewData.productType || reviewData.typeProduit)) || 'flower';
 
-    // Helper to produce humanized labels when metadata is missing
-    const humanize = (id) => {
-        // 1. Check French labels map first (dot-notation keys included)
-        if (FRENCH_LABELS[id]) return FRENCH_LABELS[id];
-        // 2. For dot-notation like 'visual.density' → check sub-key too
-        if (id && id.includes('.')) {
-            const [, sub] = id.split('.');
-            if (FRENCH_LABELS[id]) return FRENCH_LABELS[id]; // already checked above
-            // fallback: humanize the sub-key
-            const s = (sub || id).replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
-            return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    // Catégories = groupes du registre, dans l'ordre GROUPS, filtrés au type de produit
+    const categories = useMemo(() => {
+        const fields = getFieldRegistry(productType);
+        const byGroup = {};
+        for (const f of fields) {
+            (byGroup[f.group] = byGroup[f.group] || []).push(f);
         }
-        // 3. CamelCase to words
-        const s = id.replace(/\./g, ' ').replace(/([a-z0-9])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ');
-        return s.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
-    };
+        return GROUPS
+            .filter((g) => byGroup[g] && byGroup[g].length > 0)
+            .map((g) => ({
+                key: g,
+                name: GROUP_LABELS[g] || g,
+                icon: GROUP_ICONS[g] || '📦',
+                color: GROUP_COLORS[g] || 'gray',
+                fields: byGroup[g],
+            }));
+    }, [productType]);
 
-    // Determine relevant modules based on current product type (from reviewData)
-    const productType = (reviewData && (reviewData.type || reviewData.productType || reviewData.typeProduit)) ? (reviewData.type || reviewData.productType || reviewData.typeProduit) : 'flower';
+    const allFields = useMemo(() => categories.flatMap((c) => c.fields), [categories]);
 
-    // Build a Set of modules allowed for this product type for fast lookups
-    const relevantModulesSet = useMemo(() => new Set(getModulesByProductType(productType)), [productType]);
+    const filteredFields = useMemo(() => {
+        if (!searchQuery.trim()) return [];
+        const q = searchQuery.toLowerCase();
+        return allFields.filter((f) => f.label.toLowerCase().includes(q) || f.key.toLowerCase().includes(q));
+    }, [searchQuery, allFields]);
 
-    // Build dynamic module metadata from canonical mappings when possible
-    const moduleMeta = useMemo(() => {
-        const meta = {};
+    const contentModules = config.contentModules || {};
+    const visibleCount = allFields.filter((f) => contentModules[f.key]).length;
+    const totalCount = allFields.length;
+    const dataCount = reviewData ? allFields.filter((f) => fieldHasData(reviewData, f)).length : null;
 
-        // Try to enrich metadata using canonical sections (labels/icons)
-        try {
-            const sections = getModuleSectionsByProductType(productType) || [];
-            // Build a quick map field -> section label
-            const fieldMap = {};
-            sections.forEach(sec => {
-                const fields = sec.fields || sec.modules || [];
-                fields.forEach(f => {
-                    fieldMap[f] = fieldMap[f] || { section: sec.label || sec.name || sec.id, sectionDesc: sec.access || '' };
-                });
-            });
+    const toggleCategory = (key) => setExpandedCategories((p) => ({ ...p, [key]: !p[key] }));
 
-            Array.from(relevantModulesSet).forEach(id => {
-                meta[id] = {
-                    name: humanize(id),
-                    icon: '📦',
-                    desc: fieldMap[id] ? `${fieldMap[id].section}` : ''
-                };
-            });
-        } catch (e) {
-            Array.from(relevantModulesSet).forEach(id => {
-                meta[id] = { name: humanize(id), icon: '📦', desc: '' };
-            });
-        }
-
-        return meta;
-    }, [productType, relevantModulesSet]);
-
-    // Filtrer les modules par recherche
-    const filteredModules = useMemo(() => {
-        if (!searchQuery.trim()) return config.moduleOrder;
-        const query = searchQuery.toLowerCase();
-        return config.moduleOrder.filter(moduleName => {
-            const module = moduleMeta[moduleName];
-            if (!module) return moduleName.toLowerCase().includes(query);
-            return (
-                module.name.toLowerCase().includes(query) ||
-                (module.desc && module.desc.toLowerCase().includes(query)) ||
-                moduleName.toLowerCase().includes(query)
-            );
+    const handleToggleAll = (category, enable) => {
+        category.fields.forEach((f) => {
+            const on = !!contentModules[f.key];
+            if (enable && !on) toggleContentModule(f.key);
+            else if (!enable && on) toggleContentModule(f.key);
         });
-    }, [config.moduleOrder, searchQuery, moduleMeta]);
-
-    // Build categories from moduleMappings sections for this product type first.
-    // This ensures any section added/edited in `moduleMappings.js` is reflected
-    // directly in the Export UI. We then merge remaining UI categories to show
-    // any modules not covered by explicit sections.
-    const computedCategories = useMemo(() => {
-        const sections = getModuleSectionsByProductType(productType) || [];
-
-        // Convert sections into category-like objects
-        const sectionCategories = sections.map(sec => ({
-            key: `sec_${sec.id}`,
-            name: sec.label || sec.name || sec.id,
-            description: sec.access === 'all' ? '' : (sec.access || ''),
-            color: 'gray',
-            modules: (sec.fields || []).filter(f => relevantModulesSet.has(f))
-        })).filter(c => c.modules && c.modules.length > 0);
-
-        // Only use sections defined for the product type — no legacy fallbacks.
-        return sectionCategories;
-    }, [productType, relevantModulesSet]);
-
-    const handleDragEnd = (event) => {
-        const { active, over } = event;
-        if (over && active.id !== over.id) {
-            const oldIndex = config.moduleOrder.indexOf(active.id);
-            const newIndex = config.moduleOrder.indexOf(over.id);
-            const newOrder = arrayMove(config.moduleOrder, oldIndex, newIndex);
-            reorderModules(newOrder);
-        }
     };
 
-
-    const toggleCategory = (catKey) => {
-        setExpandedCategories(prev => ({
-            ...prev,
-            [catKey]: !prev[catKey]
-        }));
+    const setAll = (enable) => {
+        allFields.forEach((f) => {
+            const on = !!contentModules[f.key];
+            if (enable && !on) toggleContentModule(f.key);
+            else if (!enable && on) toggleContentModule(f.key);
+        });
     };
-
-    const visibleCount = Object.keys(config.contentModules).filter(k => relevantModulesSet.has(k) && config.contentModules[k]).length;
-    const totalCount = Array.from(relevantModulesSet).filter(k => k && (config.contentModules.hasOwnProperty(k) || moduleMeta[k])).length;
-    const dataFilledCount = reviewData ? Array.from(relevantModulesSet).filter(k => moduleHasData(reviewData, k)).length : null;
-
-    // `moduleMeta` and `humanize` are defined earlier to provide runtime
-    // metadata for modules (labels/icons) with sensible fallbacks.
 
     return (
         <div className="space-y-4">
-            {/* Header avec stats */}
+            {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">
-                        📦 Modules de Contenu
-                    </h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                        Choisissez les éléments à afficher
-                    </p>
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">📦 Modules de Contenu</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Choisissez les éléments à afficher</p>
                 </div>
                 <div className="flex items-center gap-2">
-                    {dataFilledCount !== null && (
-                        <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-400 text-xs font-bold" title="Champs avec données">
-                            📊 {dataFilledCount}
-                        </span>
+                    {dataCount !== null && (
+                        <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-500 dark:text-green-400 text-xs font-bold" title="Champs avec données">📊 {dataCount}</span>
                     )}
-                    <span className="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-bold">
-                        {visibleCount}/{totalCount}
-                    </span>
+                    <span className="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-bold">{visibleCount}/{totalCount}</span>
                 </div>
             </div>
 
-            {/* Barre de recherche */}
+            {/* Recherche */}
             <div className="relative">
                 <input
                     type="text"
                     value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        if (e.target.value) setViewMode('search');
-                        else setViewMode('categories');
-                    }}
+                    onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="🔍 Rechercher un module..."
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                 />
                 {searchQuery && (
-                    <button
-                        onClick={() => { setSearchQuery(''); setViewMode('categories'); }}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                    >
-                        ✕
-                    </button>
+                    <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
                 )}
             </div>
 
-            {/* Toggle vue + Presets */}
-            <div className="flex gap-2">
-                <div className="flex-1 flex rounded-xl overflow-hidden border border-gray-200 dark:border-gray-700">
-                    <button
-                        onClick={() => setViewMode('categories')}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'categories' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                    >
-                        📂 Catégories
-                    </button>
-                    <button
-                        onClick={() => setViewMode('list')}
-                        className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${viewMode === 'list' ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700'}`}
-                    >
-                        📋 Liste
-                    </button>
-                </div>
-                {/* Presets removed — QUICK_PRESETS deleted (breaking change) */}
-            </div>
-
-            {/* Presets removed */}
-
-            {/* Vue par catégories */}
-            {viewMode === 'categories' && !searchQuery && (
-                <div className="space-y-3">
-                    {computedCategories.map((category) => {
-                        const catCopy = { ...category };
-                        return (
-                            <CategorySection
-                                key={category.key}
-                                category={catCopy}
-                                categoryKey={category.key}
-                                modules={moduleMeta}
-                                contentModules={config.contentModules}
-                                onToggle={toggleContentModule}
-                                expanded={expandedCategories[category.key] || false}
-                                onExpandToggle={() => toggleCategory(category.key)}
-                                reviewData={reviewData}
-                            />
-                        );
-                    })}
-                </div>
-            )}
-
-            {/* Vue liste avec drag & drop */}
-            {(viewMode === 'list' || viewMode === 'search') && (
+            {/* Résultats de recherche */}
+            {searchQuery ? (
                 <div className="space-y-2">
-                    <div className="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400 mb-3">
-                        <span>⚡ Glissez pour réorganiser</span>
-                        <span>{filteredModules.filter(m => relevantModulesSet.has(m)).length} modules</span>
+                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">{filteredFields.length} module(s)</div>
+                    <div className="grid grid-cols-2 gap-2">
+                        {filteredFields.map((f) => (
+                            <ModuleToggle key={f.key} field={f} isVisible={!!contentModules[f.key]} hasData={reviewData ? fieldHasData(reviewData, f) : false} onToggle={() => toggleContentModule(f.key)} />
+                        ))}
                     </div>
-
-                    <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={handleDragEnd}
-                    >
-                        <SortableContext
-                            items={filteredModules}
-                            strategy={verticalListSortingStrategy}
-                        >
-                            <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
-                                {filteredModules.filter(m => relevantModulesSet.has(m)).map((moduleName) => (
-                                    <SortableModule
-                                        key={moduleName}
-                                        id={moduleName}
-                                        module={moduleMeta[moduleName] || { name: humanize(moduleName), icon: '📦', desc: '' }}
-                                        isVisible={config.contentModules[moduleName]}
-                                        onToggle={() => toggleContentModule(moduleName)}
-                                        hasData={reviewData ? moduleHasData(reviewData, moduleName) : null}
-                                    />
-                                ))}
-                            </div>
-                        </SortableContext>
-                    </DndContext>
-
-                    {filteredModules.length === 0 && searchQuery && (
+                    {filteredFields.length === 0 && (
                         <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                             <span className="text-3xl mb-2 block">🔍</span>
-                            <p className="text-sm">Aucun module trouvé pour "{searchQuery}"</p>
+                            <p className="text-sm">Aucun module trouvé pour « {searchQuery} »</p>
                         </div>
                     )}
+                </div>
+            ) : (
+                /* Vue par catégories */
+                <div className="space-y-3">
+                    {categories.map((category) => (
+                        <CategorySection
+                            key={category.key}
+                            category={category}
+                            contentModules={contentModules}
+                            reviewData={reviewData}
+                            onToggle={toggleContentModule}
+                            onToggleAll={handleToggleAll}
+                            expanded={expandedCategories[category.key] || false}
+                            onExpandToggle={() => toggleCategory(category.key)}
+                        />
+                    ))}
                 </div>
             )}
 
             {/* Actions globales */}
             <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                        Array.from(relevantModulesSet).forEach(key => {
-                            if (!config.contentModules[key]) toggleContentModule(key);
-                        });
-                    }}
-                    className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:shadow-lg transition-all shadow-sm"
-                >
-                    ✓ Tout afficher
-                </motion.button>
-                <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => {
-                        Array.from(relevantModulesSet).forEach(key => {
-                            if (config.contentModules[key]) toggleContentModule(key);
-                        });
-                    }}
-                    className="flex-1 px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors"
-                >
-                    ✕ Tout masquer
-                </motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setAll(true)} className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:shadow-lg transition-all shadow-sm">✓ Tout afficher</motion.button>
+                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setAll(false)} className="flex-1 px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">✕ Tout masquer</motion.button>
             </div>
         </div>
     );
 }
-
-
-
-

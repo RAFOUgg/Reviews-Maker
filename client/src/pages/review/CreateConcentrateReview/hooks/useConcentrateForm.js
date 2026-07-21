@@ -156,6 +156,8 @@ export function useConcentrateForm(reviewId = null) {
                 cultivarsUtilises: cd.cultivarsUtilises || '',
                 parentFlowerReviewId: cd.parentFlowerReviewId || null,
                 sourceLineage: parseArr(cd.sourceLineage, []),
+                // Méthode d'extraction (rendue dans l'aperçu/export — cf. registre groupe 'extraction')
+                methodeExtraction: cd.methodeExtraction ?? null,
                 status: baseReview.status || 'draft',
                 orchardPreset: extraData.orchardPreset || null,
                 orchardConfig: extraData.orchardConfig || null,

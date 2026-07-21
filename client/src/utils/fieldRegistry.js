@@ -34,10 +34,33 @@ export const PRODUCT_TYPES = ['flower', 'hash', 'concentrate', 'edible'];
 export const CATEGORY_KEYS = ['visual', 'smell', 'texture', 'taste', 'effects'];
 
 export const GROUPS = [
-    'general', 'genetics', 'culture', 'harvest', 'analytics', 'lab',
+    'presentation', 'general', 'genetics', 'culture', 'harvest', 'analytics', 'lab',
     'visual', 'smell', 'texture', 'taste', 'effects', 'usage', 'curing',
     'separation', 'extraction', 'purification', 'recipe', 'traceability',
 ];
+
+// Libellés FR des groupes (pour l'UI du panneau Contenu et les entêtes d'export)
+export const GROUP_LABELS = {
+    presentation: 'Présentation',
+    general: 'Infos générales',
+    genetics: 'Génétique',
+    culture: 'Culture',
+    harvest: 'Récolte',
+    analytics: 'Analytiques',
+    lab: 'Analyse labo',
+    visual: 'Visuel',
+    smell: 'Odeurs',
+    texture: 'Texture',
+    taste: 'Goût',
+    effects: 'Effets',
+    usage: 'Usage',
+    curing: 'Maturation',
+    separation: 'Séparation',
+    extraction: 'Extraction',
+    purification: 'Purification',
+    recipe: 'Recette',
+    traceability: 'Traçabilité',
+};
 
 /**
  * Normalise un type de produit hétérogène (`Fleurs`, `flower`, `Hash`, `concentré`, `Comestible`…)
@@ -59,6 +82,13 @@ export function normalizeProductType(productType) {
 // templates consomment sont les entrées text/list/percent/rich (thcLevel, aromas, effects…).
 
 const REGISTRY = [
+    // ── PRESENTATION (modules d'affichage — clés lues telles quelles par les templates) ──
+    { key: 'mainImage', label: 'Photo principale', group: 'presentation', type: 'text', sources: ['mainImage', 'mainImageUrl', 'image', 'imageUrl'] },
+    { key: 'rating', label: 'Note globale', group: 'presentation', type: 'number', sources: ['computedOverall', 'rating', 'note'] },
+    { key: 'categoryRatings', label: 'Notes par catégorie', group: 'presentation', type: 'rich', sources: ['categoryRatings', 'ratings'] },
+    { key: 'author', label: 'Auteur', group: 'presentation', type: 'text', sources: ['author', 'ownerName'] },
+    { key: 'date', label: 'Date', group: 'presentation', type: 'date', sources: ['createdAt', 'date'] },
+
     // ── GENERAL ────────────────────────────────────────────────────────────────
     { key: 'title', label: 'Nom', group: 'general', type: 'text', sources: ['holderName', 'nomCommercial', 'nomProduit', 'title', 'name'] },
     { key: 'type', label: 'Type de produit', group: 'general', type: 'text', sources: ['type', 'category'] },
@@ -121,7 +151,7 @@ const REGISTRY = [
     { key: 'couleurScore', label: 'Couleur', group: 'visual', type: 'score', cat: 'visual', sources: ['couleurScore', 'couleur'] },
     { key: 'densiteVisuelle', label: 'Densité', group: 'visual', type: 'score', cat: 'visual', sources: ['densiteVisuelle', 'densite'] },
     { key: 'trichomesScore', label: 'Trichomes', group: 'visual', type: 'score', cat: 'visual', sources: ['trichomesScore', 'trichome'] },
-    { key: 'pistilsScore', label: 'Pistils', group: 'visual', type: 'score', cat: 'visual', sources: ['pistilsScore', 'pistil'] },
+    { key: 'pistilsScore', label: 'Pistils', group: 'visual', type: 'score', cat: 'visual', sources: ['pistilsScore', 'pistil', 'pistils'] },
     { key: 'manucureScore', label: 'Manucure', group: 'visual', type: 'score', cat: 'visual', sources: ['manucureScore', 'manucure'] },
     { key: 'moisissureScore', label: 'Absence moisissure', group: 'visual', type: 'score', cat: 'visual', sources: ['moisissureScore', 'moisissure'] },
     { key: 'grainesScore', label: 'Absence graines', group: 'visual', type: 'score', cat: 'visual', sources: ['grainesScore', 'graines'] },
@@ -138,12 +168,12 @@ const REGISTRY = [
 
     // ── TEXTURE (scores → categoryRatings.texture) ────────────────────────────────
     { key: 'dureteScore', label: 'Dureté', group: 'texture', type: 'score', cat: 'texture', sources: ['dureteScore', 'durete', 'toucheDensite'] },
-    { key: 'densiteTactileScore', label: 'Densité tactile', group: 'texture', type: 'score', cat: 'texture', sources: ['densiteTactileScore', 'densiteTexture'] },
+    { key: 'densiteTactileScore', label: 'Densité tactile', group: 'texture', type: 'score', cat: 'texture', sources: ['densiteTactileScore', 'densiteTexture', 'densiteTactile'] },
     { key: 'elasticiteScore', label: 'Élasticité', group: 'texture', type: 'score', cat: 'texture', sources: ['elasticiteScore', 'elasticite', 'toucheElasticite'] },
     { key: 'collantScore', label: 'Collant', group: 'texture', type: 'score', cat: 'texture', sources: ['collantScore', 'collant', 'toucheCollant'] },
     { key: 'malleabiliteScore', label: 'Malléabilité', group: 'texture', type: 'score', cat: 'texture', sources: ['malleabiliteScore', 'toucheMalleabilite'] },
     { key: 'friabiliteScore', label: 'Friabilité', group: 'texture', type: 'score', cat: 'texture', sources: ['friabiliteScore', 'friabilite', 'toucheFriabilite'] },
-    { key: 'viscositeScore', label: 'Viscosité', group: 'texture', type: 'score', cat: 'texture', sources: ['viscositeScore', 'toucheViscosite'] },
+    { key: 'viscositeScore', label: 'Viscosité', group: 'texture', type: 'score', cat: 'texture', sources: ['viscositeScore', 'toucheViscosite', 'viscosite'] },
     { key: 'meltingScore', label: 'Melting', group: 'texture', type: 'score', cat: 'texture', sources: ['meltingScore', 'textureMeltingScore', 'melting'] },
     { key: 'residuScore', label: 'Résidus', group: 'texture', type: 'score', cat: 'texture', sources: ['residuScore', 'textureResiduScore', 'residus'] },
 
@@ -155,7 +185,7 @@ const REGISTRY = [
     { key: 'exhalationNotes', label: 'Expiration', group: 'taste', type: 'list', sources: ['expirationNotes', 'exhalationNotes', 'expiration'] },
 
     // ── EFFECTS / EFFETS ──────────────────────────────────────────────────────────
-    { key: 'monteeScore', label: 'Montée', group: 'effects', type: 'score', cat: 'effects', sources: ['monteeScore', 'montee'] },
+    { key: 'monteeScore', label: 'Montée', group: 'effects', type: 'score', cat: 'effects', sources: ['monteeScore', 'montee', 'monteeRapidite'] },
     { key: 'intensiteEffetScore', label: 'Intensité effet', group: 'effects', type: 'score', cat: 'effects', sources: ['intensiteEffetScore', 'intensiteEffet', 'effectsIntensity', 'intensiteEffets'] },
     { key: 'effects', label: 'Effets ressentis', group: 'effects', type: 'list', sources: ['effetsChoisis', 'effects'] },
     { key: 'dureeEffet', label: 'Durée des effets', group: 'effects', type: 'text', sources: ['dureeEffets', 'effectDuration', 'effectLength', 'dureeEffet'] },
@@ -209,6 +239,22 @@ export function getAllFields() {
 /** Entrées d'un groupe pour un type de produit. */
 export function getFieldsByGroup(group, productType) {
     return getFieldRegistry(productType).filter((f) => f.group === group);
+}
+
+// Index clé/source → label, pour retrouver un libellé FR à partir d'un nom de colonne brut
+// (couleurScore, intensiteAromeScore, dureteScore…) rencontré dans categoryRatings.
+const LABEL_INDEX = (() => {
+    const idx = {};
+    for (const f of REGISTRY) {
+        if (idx[f.key] === undefined) idx[f.key] = f.label;
+        for (const s of f.sources) if (idx[s] === undefined) idx[s] = f.label;
+    }
+    return idx;
+})();
+
+/** Libellé FR d'un champ à partir de sa clé canonique OU d'un de ses noms sources. */
+export function getFieldLabel(key) {
+    return LABEL_INDEX[key];
 }
 
 export default {

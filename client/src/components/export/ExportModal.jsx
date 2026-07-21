@@ -13,6 +13,7 @@ import {
 } from '../../config/exportConfig';
 import TemplateRenderer from './TemplateRenderer';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
+import { serializeRenderToHtml, downloadHtml } from '../../utils/htmlExport';
 import { computeContentHash } from '../../utils/exportSnapshot';
 import { incrementExportCount } from '../../hooks/useUsageStats';
 
@@ -79,8 +80,12 @@ export default function ExportModal({ onClose }) {
     const user = useStore((state) => state.user);
     const authorName = reviewData?.ownerName || (reviewData?.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Export Maker'
 
-    // Déterminer le type de compte utilisateur
-    const accountType = user?.accountType?.type || ACCOUNT_TYPES.CONSUMER;
+    // Déterminer le type de compte utilisateur. `accountType` est stocké comme string
+    // ('producer', 'influencer'…) en base ; certains chemins historiques le passaient comme
+    // objet { type }. On gère les deux — sinon `.type` sur une string vaut undefined et TOUT
+    // compte retombait en CONSUMER, masquant les formats premium (HTML/SVG/CSV/JSON) à tous.
+    const rawAccountType = user?.accountType;
+    const accountType = (typeof rawAccountType === 'string' ? rawAccountType : rawAccountType?.type) || ACCOUNT_TYPES.CONSUMER;
     const accountFeatures = getAccountFeatures(accountType);
     const availableFormats = getExportFormatsForUI(accountType);
     const maxQuality = getMaxExportQuality(accountType);
@@ -143,6 +148,9 @@ export default function ExportModal({ onClose }) {
                     break;
                 case 'markdown':
                     await exportMarkdown();
+                    break;
+                case 'html':
+                    await exportHTML(allPages);
                     break;
                 default:
                     throw new Error('Format non supporté');
@@ -365,6 +373,17 @@ export default function ExportModal({ onClose }) {
         pdf.save(`review-${reviewData.title || 'export'}-${Date.now()}.pdf`);
         setExportProgress(100);
         console.log(`✅ Export PDF success (${pages.length} page(s))`);
+    };
+
+    const exportHTML = async (pages) => {
+        // Rendu HTML autonome (fidèle à la galerie). Le canvas natif porte déjà toute la fiche ;
+        // ses styles calculés sont à taille réelle (le scale d'aperçu vit sur le parent, pas capturé).
+        setExportStatus('🌐 Génération du HTML…');
+        const source = pages[0];
+        const title = reviewData.title || reviewData.holderName || 'Fiche Reviews-Maker';
+        const html = await serializeRenderToHtml(source, { title });
+        const safe = String(title).replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'fiche';
+        downloadHtml(html, `${safe}.html`);
     };
 
     const exportMarkdown = async () => {

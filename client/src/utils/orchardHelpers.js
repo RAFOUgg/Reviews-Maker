@@ -2,6 +2,7 @@
  * Orchard Helpers - Utilitaires centralisés pour le système Orchard Studio
  * Ces fonctions sont partagées entre tous les templates et renderers
  */
+import { getFieldLabel } from './fieldRegistry';
 
 /**
  * Parse une valeur JSON de manière sécurisée
@@ -316,7 +317,9 @@ export function extractCategoryRatings(categoryRatings, reviewData = null) {
                     .filter(([k, v]) => typeof v === 'number' || (typeof v === 'string' && !isNaN(parseFloat(v))))
                     .map(([k, v]) => ({
                         key: k,
-                        label: subLabels[k] || k,
+                        // Labels locaux (noms formData/legacy) puis fallback registre (noms DB
+                        // couleurScore/intensiteAromeScore/dureteScore…), enfin la clé brute.
+                        label: subLabels[k] || getFieldLabel(k) || k,
                         value: parseFloat(v)
                     }))
                     .filter(e => e.value > 0);
