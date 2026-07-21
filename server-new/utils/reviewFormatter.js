@@ -43,6 +43,56 @@ function safeJSONParse(value, defaultValue = null) {
 }
 
 /**
+ * Parse une valeur SEULEMENT si elle ressemble à du JSON (commence par [ ou {).
+ * Contrairement à safeJSONParse, ne transforme jamais une string simple en tableau —
+ * on veut aplatir des colonnes de sous-table sans corrompre les valeurs scalaires
+ * ("Blueberry" doit rester "Blueberry", pas devenir ["Blueberry"]).
+ */
+function parseIfJSON(value) {
+    if (typeof value !== 'string') return value
+    const t = value.trim()
+    if (t.startsWith('[') || t.startsWith('{')) {
+        try { return JSON.parse(t) } catch { return value }
+    }
+    return value
+}
+
+// Clés de sous-table à ne jamais remonter à la racine : elles écraseraient l'identité
+// de la Review parente ou dupliqueraient des métadonnées de ligne.
+const SUBREVIEW_PROTECTED_KEYS = new Set([
+    'id', 'reviewId', 'createdAt', 'updatedAt', 'authorId', 'type', 'holderName',
+    'isPublic', 'producerProfileId', 'review'
+])
+
+/**
+ * Aplatit les champs de la sous-table produit (FlowerReview/HashReview/ConcentrateReview/
+ * EdibleReview) à la racine de la Review, pour que les consommateurs (page de détail publique,
+ * galerie, Export Maker) lisent tout le sensoriel/analytique/culture sans connaître la
+ * sous-table. La clé imbriquée (`flowerData`, etc.) est CONSERVÉE telle quelle pour les
+ * consommateurs qui la lisent déjà (formulaires d'édition).
+ *
+ * Règles : une clé racine déjà remplie gagne (protège `farm`, `breeder` écrits sur Review) ;
+ * une clé racine vide/absente est peuplée depuis la sous-table ; les objets relationnels
+ * imbriqués (ex. `geneticTree`) ne sont pas aplatis ; les colonnes String qui contiennent
+ * du JSON sont parsées.
+ */
+function flattenSubReview(review) {
+    const sub = review.flowerData || review.hashData || review.concentrateData || review.edibleData
+    if (!sub || typeof sub !== 'object') return review
+
+    const out = { ...review }
+    for (const [k, v] of Object.entries(sub)) {
+        if (SUBREVIEW_PROTECTED_KEYS.has(k)) continue
+        // Relation imbriquée (objet non-array, non-Date) : rester dans la sous-table
+        if (v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof Date)) continue
+        if (out[k] === undefined || out[k] === null || out[k] === '') {
+            out[k] = parseIfJSON(v)
+        }
+    }
+    return out
+}
+
+/**
  * Formatte une review avec parsing des champs JSON
  * @param {object} review - Review brute de la base de données
  * @param {object|null} currentUser - Utilisateur courant (optionnel)
@@ -52,6 +102,9 @@ export function formatReview(review, currentUser = null) {
     if (!review) {
         return null
     }
+
+    // Aplatir la sous-table produit à la racine (garde la clé imbriquée pour compat)
+    review = flattenSubReview(review)
 
     // Parser les champs JSON
     const formatted = {
@@ -160,12 +213,32 @@ export function formatReview(review, currentUser = null) {
             const sum = sectionValues.reduce((a, b) => a + b, 0)
             computedOverall = Math.round((sum / sectionValues.length) * 10) / 10
         } else {
-            // fallback: try overallRating or note
-            const rawOverall = formatted.extraData && (formatted.extraData.overallRating || formatted.extraData.note) ? (formatted.extraData.overallRating || formatted.extraData.note) : (formatted.overallRating || formatted.note)
-            const n = rawOverall !== undefined && rawOverall !== null ? Number(rawOverall) : NaN
-            if (!isNaN(n)) {
-                // If on 0-5 scale
-                computedOverall = n <= 5 ? Math.round(n * 2 * 10) / 10 : Math.round(n * 10) / 10
+            // Fallback 1 : les formulaires n'écrivent PAS categoryRatings/ratings sur Review — la
+            // note se déduit des sous-scores /10 aplatis depuis la sous-table produit (couleurScore,
+            // intensiteAromeScore, dureteScore…). On agrège tout champ numérique dont la clé finit
+            // par « Score » (tous /10 au schéma) plus quelques scores /10 sans ce suffixe.
+            const SCORE_WHITELIST = new Set([
+                'densiteVisuelle', 'pureteVisuelle', 'densite', 'trichome', 'pistil', 'manucure',
+                'moisissure', 'graines', 'toucheDensite', 'toucheFriabilite', 'toucheElasticite'
+            ])
+            const scoreVals = []
+            for (const [k, v] of Object.entries(formatted)) {
+                if (typeof v !== 'number' || isNaN(v)) continue
+                if (k.endsWith('Score') || SCORE_WHITELIST.has(k)) {
+                    if (v >= 0 && v <= 10) scoreVals.push(v)
+                }
+            }
+            if (scoreVals.length > 0) {
+                const sum = scoreVals.reduce((a, b) => a + b, 0)
+                computedOverall = Math.round((sum / scoreVals.length) * 10) / 10
+            } else {
+                // Fallback 2 : note globale explicite (overallRating / note), 0-5 ou 0-10
+                const rawOverall = formatted.extraData && (formatted.extraData.overallRating || formatted.extraData.note) ? (formatted.extraData.overallRating || formatted.extraData.note) : (formatted.overallRating || formatted.note)
+                const n = rawOverall !== undefined && rawOverall !== null ? Number(rawOverall) : NaN
+                if (!isNaN(n)) {
+                    // If on 0-5 scale
+                    computedOverall = n <= 5 ? Math.round(n * 2 * 10) / 10 : Math.round(n * 10) / 10
+                }
             }
         }
 

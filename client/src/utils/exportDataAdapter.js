@@ -1,13 +1,21 @@
 /**
- * Export Data Adapter - Normalise les données brutes d'une review (Fleur/Hash/Concentré/Comestible)
- * vers les noms de champs génériques attendus par les templates Export Maker
- * (client/src/components/templates/*.jsx), qui ont toujours lu des alias legacy
- * (thcLevel, aromas, effects, terpenes, indicaRatio...) jamais alimentés par
- * les vrais modèles Prisma (thcPercent, effetsChoisis, terpeneProfile...).
+ * Export Data Adapter — Projette une review brute (Fleur/Hash/Concentré/Comestible) vers les
+ * clés canoniques attendues par les templates Export Maker (thcLevel, aromas, effects,
+ * terpenes, categoryRatings…), en dérivant du registre de champs unique (fieldRegistry.js).
  *
- * Point de branchement unique : TemplateRenderer.jsx, avant transmission aux templates.
+ * Deux origines de données convergent ici, toutes deux couvertes par les `sources[]` du
+ * registre :
+ *   - chemin public : review renvoyée par l'API, déjà APLATIE côté serveur
+ *     (reviewFormatter.flattenSubReview) → noms de colonnes DB (thcPercent, dureteScore…) ;
+ *   - chemin Orchard : état de formulaire normalisé (normalizeReviewData) → noms formData
+ *     (densite, durete, montee…).
+ *
+ * Le registre encapsule ce mapping ; ce fichier ne fait qu'appliquer les transformations de
+ * type et reconstruire categoryRatings à partir des sous-scores /10. Point de branchement
+ * unique : TemplateRenderer.jsx (+ ExportModal pour le figement de traçabilité).
  */
 import { asArray, safeParse } from './orchardHelpers';
+import { getFieldRegistry, normalizeProductType } from './fieldRegistry';
 
 function pick(...values) {
     for (const v of values) {
@@ -16,12 +24,36 @@ function pick(...values) {
     return undefined;
 }
 
-// Ecrit `key` seulement si `value` est une donnée réelle ; sinon supprime la clé
-// (au lieu de la laisser à `null`), pour que les checks `!== undefined` déjà
-// présents dans les templates masquent correctement le bloc au lieu d'afficher
-// des artefacts du type "null%" ou "0.0/10".
+// Applique la transformation de type d'une entrée de registre à une valeur brute.
+function coerce(type, raw) {
+    switch (type) {
+        case 'list':
+            return asArray(raw);
+        case 'rich':
+        case 'json':
+            return safeParse(raw);
+        case 'number':
+        case 'percent':
+        case 'score': {
+            const n = Number(raw);
+            return Number.isFinite(n) ? n : undefined;
+        }
+        case 'bool':
+            if (raw === true || raw === 'true') return true;
+            if (raw === false || raw === 'false') return false;
+            return undefined;
+        default: // text | url | date
+            return raw;
+    }
+}
+
+// Écrit `key` seulement si `value` est une donnée réelle ; sinon supprime la clé (au lieu de
+// null/[]), pour que les checks `!== undefined` / `.length` des templates masquent le bloc.
 function setOrDelete(target, key, value) {
-    if (value === undefined || value === null || value === '') {
+    if (
+        value === undefined || value === null || value === '' ||
+        (Array.isArray(value) && value.length === 0)
+    ) {
         delete target[key];
     } else {
         target[key] = value;
@@ -29,65 +61,81 @@ function setOrDelete(target, key, value) {
 }
 
 /**
- * Construit l'objet reviewData "adapté" consommé par les templates Export Maker.
- * @param {Object} reviewData - Review brute telle que renvoyée par l'API (déjà aplatie
- *   avec les champs FlowerReview/HashReview/ConcentrateReview/EdibleReview au niveau racine)
- * @returns {Object} reviewData enrichi des alias attendus par les templates
+ * Reconstruit categoryRatings { visual: {champ: note}, smell: {...}, ... } à partir des
+ * sous-scores /10 présents (couvre noms DB ET formData via les `sources[]` du registre).
+ * Reproduit le comportement de OrchardPanel.normalizeReviewData mais pour les deux origines.
  */
-export function buildExportReviewData(reviewData) {
-    if (!reviewData || typeof reviewData !== 'object') return reviewData;
+function buildCategoryRatings(source, fields) {
+    const cats = {};
+    for (const f of fields) {
+        if (f.type !== 'score' || !f.cat) continue;
+        const raw = pick(...f.sources.map((s) => source[s]));
+        const n = Number(raw);
+        if (Number.isFinite(n) && n > 0) {
+            if (!cats[f.cat]) cats[f.cat] = {};
+            cats[f.cat][f.key] = n;
+        }
+    }
+    return Object.keys(cats).length > 0 ? cats : null;
+}
 
+function build(reviewData) {
     const adapted = { ...reviewData };
+    const fields = getFieldRegistry(reviewData.type);
+
+    // Confiance producteur : la vraie source est author.producerProfile ; on la remonte à plat
+    // pour que le registre (source 'producerVerified') la trouve. `author.producerProfile` doit
+    // être inclus par la route (reviews.js / flower-reviews.js GET) — absent sinon, pas une erreur.
+    const pp = reviewData.author?.producerProfile;
+    if (pp) {
+        if (reviewData.producerVerified === undefined) reviewData.producerVerified = pp.isVerified;
+        if (reviewData.producerBusinessType === undefined) reviewData.producerBusinessType = pp.businessType;
+    }
 
     // Note globale — le backend calcule déjà une moyenne correcte dans computedOverall
-    // (reviewFormatter.js), les templates lisent `rating`.
+    // (reviewFormatter.js) ; les templates lisent `rating`.
     setOrDelete(adapted, 'rating', pick(reviewData.computedOverall, reviewData.rating));
 
-    // Cannabinoïdes (%THC/%CBD/...) — jamais lus depuis xxxPercent auparavant
-    setOrDelete(adapted, 'thcLevel', pick(reviewData.thcPercent, reviewData.thcLevel));
-    setOrDelete(adapted, 'cbdLevel', pick(reviewData.cbdPercent, reviewData.cbdLevel));
-    setOrDelete(adapted, 'cbgLevel', reviewData.cbgPercent);
-    setOrDelete(adapted, 'cbcLevel', reviewData.cbcPercent);
-    setOrDelete(adapted, 'cbnLevel', reviewData.cbnPercent);
-    setOrDelete(adapted, 'thcvLevel', reviewData.thcvPercent);
+    // Projeter chaque champ du registre vers sa clé canonique
+    for (const f of fields) {
+        const raw = pick(...f.sources.map((s) => reviewData[s]));
+        setOrDelete(adapted, f.key, coerce(f.type, raw));
+    }
 
-    // Confiance producteur — ProducerProfile.isVerified/businessType, jusqu'ici lus uniquement côté
-    // compte (page Account, admin), jamais exposés sur une review/export (Chantier 5 de la roadmap
-    // traçabilité). `author.producerProfile` doit être inclus par la route qui a fourni `reviewData`
-    // (cf. flower/hash/concentrate/edible-reviews.js, GET /:id) — absent sinon, pas une erreur.
-    setOrDelete(adapted, 'producerVerified', pick(reviewData.producerVerified, reviewData.author?.producerProfile?.isVerified));
-    setOrDelete(adapted, 'producerBusinessType', pick(reviewData.producerBusinessType, reviewData.author?.producerProfile?.businessType));
+    // cultivar : dernier recours sur le premier cultivar de la liste
+    if (adapted.cultivar === undefined && Array.isArray(adapted.cultivarsList) && adapted.cultivarsList.length) {
+        setOrDelete(adapted, 'cultivar', adapted.cultivarsList[0]);
+    }
 
-    // Génétique / provenance
-    setOrDelete(adapted, 'strainType', pick(reviewData.varietyType, reviewData.strainType));
-    setOrDelete(adapted, 'indicaRatio', pick(reviewData.indicaPercent, reviewData.indicaRatio));
-    setOrDelete(adapted, 'category', pick(reviewData.concentrateType, reviewData.category));
-    setOrDelete(adapted, 'parentage', safeParse(reviewData.parentage) ?? reviewData.parentage);
-
-    const cultivarsListRaw = pick(reviewData.cultivarsList, reviewData.cultivarsUtilises, reviewData.cultivars);
-    const cultivarsList = asArray(cultivarsListRaw);
-    setOrDelete(adapted, 'cultivarsList', cultivarsList);
-    setOrDelete(adapted, 'cultivar', pick(reviewData.variety, reviewData.cultivar, cultivarsList[0]));
-
-    // Odeurs / goûts / effets — noms de champs différents entre Fleur, Hash/Concentré et le
-    // legacy Review de base (voir schema.prisma FlowerReview vs HashReview/ConcentrateReview)
-    setOrDelete(adapted, 'aromas', asArray(pick(
-        reviewData.notesOdeursDominantes, reviewData.notesDominantes, reviewData.notesDominantesOdeur
-    )));
-    setOrDelete(adapted, 'secondaryAromas', asArray(pick(
-        reviewData.notesOdeursSecondaires, reviewData.notesSecondaires, reviewData.notesSecondairesOdeur
-    )));
-    setOrDelete(adapted, 'dryPuffNotes', asArray(pick(reviewData.dryPuffNotes, reviewData.dryPuff)));
-    setOrDelete(adapted, 'inhalationNotes', asArray(pick(reviewData.inhalationNotes, reviewData.inhalation)));
-    setOrDelete(adapted, 'exhalationNotes', asArray(pick(reviewData.expirationNotes, reviewData.expiration)));
-    setOrDelete(adapted, 'effects', asArray(pick(reviewData.effetsChoisis, reviewData.effects)));
-    setOrDelete(adapted, 'terpenes', asArray(pick(reviewData.terpeneProfile, reviewData.terpenes)));
-    setOrDelete(adapted, 'dureeEffet', pick(reviewData.dureeEffets, reviewData.effectDuration, reviewData.dureeEffet));
-
-    // Substrat de culture (Fleur) — cultureSubstrat est le champ réellement alimenté aujourd'hui
-    setOrDelete(adapted, 'substratMix', pick(reviewData.cultureSubstrat, reviewData.substratMix));
+    // categoryRatings : reconstruire depuis les sous-scores, sinon préserver l'existant
+    const rebuilt = buildCategoryRatings(reviewData, fields);
+    if (rebuilt) {
+        adapted.categoryRatings = rebuilt;
+    } else {
+        const existing = safeParse(reviewData.categoryRatings) ?? safeParse(reviewData.ratings);
+        if (existing && typeof existing === 'object') adapted.categoryRatings = existing;
+    }
 
     return adapted;
 }
 
+// Mémoïsation par référence d'entrée : TemplateRenderer recalcule à chaque render, mais tant
+// que la review ne change pas de référence, on renvoie le même objet adapté (stabilise la
+// mémoïsation en aval des templates). WeakMap → pas de fuite mémoire.
+const _cache = new WeakMap();
+
+/**
+ * Construit l'objet reviewData "adapté" consommé par les templates Export Maker.
+ * @param {Object} reviewData - Review brute (déjà aplatie par le serveur, ou état de formulaire normalisé)
+ * @returns {Object} reviewData enrichi des clés canoniques attendues par les templates
+ */
+export function buildExportReviewData(reviewData) {
+    if (!reviewData || typeof reviewData !== 'object') return reviewData;
+    if (_cache.has(reviewData)) return _cache.get(reviewData);
+    const out = build(reviewData);
+    _cache.set(reviewData, out);
+    return out;
+}
+
+export { normalizeProductType };
 export default buildExportReviewData;
