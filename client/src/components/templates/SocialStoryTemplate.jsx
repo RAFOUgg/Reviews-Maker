@@ -118,7 +118,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
             position: 'relative',
         }}>
             {/* ── HERO IMAGE ── */}
-            {contentModules.image && mainImage ? (
+            {contentModules.mainImage !== false && mainImage ? (
                 <div style={{ position: 'relative', width: '100%', flex: '0 0 38%', overflow: 'hidden' }}>
                     <img
                         src={mainImage}
@@ -149,7 +149,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     )}
                     {/* Logo top-right */}
                     {branding?.enabled && branding?.logoUrl && (
-                        <img src={branding.logoUrl} alt="Logo"
+                        <img src={branding.logoUrl} alt="Logo" className="orchard-branding"
                             style={{
                                 position: 'absolute', top: 16, right: 16,
                                 width: 44, height: 44, objectFit: 'contain',
@@ -279,7 +279,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 )}
 
                 {/* Tastes */}
-                {contentModules.tastes && tastes.length > 0 && !aromas.length && (
+                {contentModules.tastes !== false && tastes.length > 0 && !aromas.length && (
                     <div>
                         <div style={{ fontSize: 11, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                             👅 Goûts

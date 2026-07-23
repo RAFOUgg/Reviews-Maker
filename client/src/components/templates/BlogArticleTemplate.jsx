@@ -135,7 +135,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const renderBranding = () => {
         if (!branding?.enabled || !branding?.logoUrl) return null;
         return (
-            <div className="flex items-center gap-3 mt-8 pt-6" style={{ borderTop: `1px solid ${colorWithOpacity(colors.accent, 20)}` }}>
+            <div className="flex items-center gap-3 mt-8 pt-6 orchard-branding" style={{ borderTop: `1px solid ${colorWithOpacity(colors.accent, 20)}` }}>
                 <img src={branding.logoUrl} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', opacity: branding.opacity }} />
                 <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>Publié sur notre plateforme</span>
             </div>
@@ -215,7 +215,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 </header>
 
                 {/* Featured Image — or gallery */}
-                {contentModules.image && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
+                {contentModules.mainImage !== false && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
                     const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
                     if (showGallery) {
                         return (
@@ -324,7 +324,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Sensory Profile */}
-                {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) || (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
+                {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) || (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>🌸 Profil Sensoriel</h2>
                         {contentModules.aromas && aromas.length > 0 && (
@@ -339,25 +339,25 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 {renderTags(secondaryAromas)}
                             </div>
                         )}
-                        {contentModules.tastes && dryPuffNotes.length > 0 && (
+                        {contentModules.tastes !== false && dryPuffNotes.length > 0 && (
                             <div className="mb-4">
                                 <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>💨 Tirage à sec</h3>
                                 {renderTags(dryPuffNotes)}
                             </div>
                         )}
-                        {contentModules.tastes && inhalationNotes.length > 0 && (
+                        {contentModules.tastes !== false && inhalationNotes.length > 0 && (
                             <div className="mb-4">
                                 <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>🌬️ Inhalation</h3>
                                 {renderTags(inhalationNotes)}
                             </div>
                         )}
-                        {contentModules.tastes && exhalationNotes.length > 0 && (
+                        {contentModules.tastes !== false && exhalationNotes.length > 0 && (
                             <div className="mb-4">
                                 <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>↩️ Expiration / Arrière-goût</h3>
                                 {renderTags(exhalationNotes)}
                             </div>
                         )}
-                        {contentModules.tastes && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
+                        {contentModules.tastes !== false && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
                             <div>
                                 <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '12px' }}>Goûts</h3>
                                 {renderTags(tastes)}

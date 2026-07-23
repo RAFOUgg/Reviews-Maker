@@ -178,7 +178,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
         return (
             <div
-                className="absolute pointer-events-none"
+                className="absolute pointer-events-none orchard-branding"
                 style={{
                     ...positionMap[branding.position || 'bottom-right'],
                     opacity: branding.opacity || 0.8,
@@ -231,7 +231,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         return (
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                 {/* Image */}
-                {contentModules.image && (() => {
+                {contentModules.mainImage !== false && (() => {
                     if (!mainImage) {
                         return (
                             <div

@@ -88,6 +88,15 @@ export async function serializeRenderToHtml(node, opts = {}) {
     // Le clone porte le style du canvas ; on annule tout transform hérité de l'aperçu scalé
     clone.style.transform = 'none';
     clone.style.margin = '0';
+    // Le canvas d'aperçu a une hauteur fixe + overflow:hidden (ratio 16:9/A4) qui TRONQUE une
+    // fiche détaillée longue. Dans un document HTML autonome (scrollable), on laisse tout couler :
+    // hauteur auto + overflow visible sur le canvas racine ET son enfant direct (le template, en
+    // height:100%). On NE touche PAS les descendants profonds — leurs height:100% servent au layout
+    // en colonnes et les casser provoque des chevauchements.
+    // NB : on reproduit fidèlement le canvas (taille du ratio choisi). Les templates de type
+    // « carte » sont dimensionnés au ratio (overflow caché) ; pour une fiche longue et complète,
+    // choisir le ratio A4 avant l'export. On ne force PAS le débordement ici : neutraliser les
+    // hauteurs internes casse le layout en colonnes du template détaillé.
 
     const inner = clone.outerHTML;
     return `<!doctype html>

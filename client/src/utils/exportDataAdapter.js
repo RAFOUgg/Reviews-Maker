@@ -91,6 +91,13 @@ const SECTION_FLATTEN = {
     gouts: { intensity: 'intensiteGoutScore', aggressiveness: 'agressiviteScore', dryPuffNotes: 'dryPuffNotes', inhalationNotes: 'inhalationNotes', exhalationNotes: 'expirationNotes' },
     effets: { onset: 'monteeScore', intensity: 'intensiteEffetScore', effects: 'effetsChoisis', duration: 'dureeEffet', effectProfiles: 'effectProfiles', usagesPreferes: 'preferredUse', methodeConsommation: 'consumptionMethod', dosageUtilise: 'dosage' },
     recipe: { ingredients: 'ingredients', steps: 'etapesPreparation' },
+    // Conteneurs de pipeline : les clés sont déjà des noms DB, sauf le renommage `curingTimeline`
+    // (les hooks de formulaire renomment curingTimelineData → curingTimeline au chargement).
+    genetics: null,
+    culture: null,
+    separationPipeline: null,
+    extractionPipeline: null,
+    curing: { curingTimeline: 'curingTimelineData' },
 };
 // Alias de conteneurs (le nom français `visuel` désigne la même section que `visual`)
 const SECTION_ALIASES = { visuel: 'visual' };

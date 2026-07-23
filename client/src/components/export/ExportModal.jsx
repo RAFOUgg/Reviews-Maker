@@ -13,6 +13,7 @@ import {
 } from '../../config/exportConfig';
 import TemplateRenderer from './TemplateRenderer';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
+import { getFieldRegistry, GROUP_LABELS } from '../../utils/fieldRegistry';
 import { serializeRenderToHtml, downloadHtml } from '../../utils/htmlExport';
 import { computeContentHash } from '../../utils/exportSnapshot';
 import { incrementExportCount } from '../../hooks/useUsageStats';
@@ -151,6 +152,15 @@ export default function ExportModal({ onClose }) {
                     break;
                 case 'html':
                     await exportHTML(allPages);
+                    break;
+                case 'svg':
+                    await exportSVG(allPages);
+                    break;
+                case 'csv':
+                    await exportCSV();
+                    break;
+                case 'json':
+                    await exportJSON();
                     break;
                 default:
                     throw new Error('Format non supporté');
@@ -314,6 +324,49 @@ export default function ExportModal({ onClose }) {
         console.log(`✅ Export JPEG success (${results.length} page(s))`);
     };
 
+    const exportSVG = async (pages) => {
+        // html-to-image#toSvg produit un SVG contenant un <foreignObject> HTML (pas un vrai
+        // vectoriel éditable point par point) — c'est la seule voie SVG praticable pour un DOM
+        // riche (flex/grid/texte/images) sans réécrire chaque template en primitives SVG.
+        const { toSvg } = await import('html-to-image');
+        const results = [];
+
+        for (let i = 0; i < pages.length; i++) {
+            setExportStatus(`🎨 Génération SVG page ${i + 1}/${pages.length}...`);
+            setExportProgress(20 + Math.round((i / pages.length) * 60));
+
+            const { target, exportContainer, width, height } = prepareCapture(pages[i]);
+            await waitForRender(target);
+
+            try {
+                const dataUrl = await toSvg(target, {
+                    cacheBust: true,
+                    width, height,
+                    style: { width: `${width}px`, height: `${height}px`, transform: 'none' },
+                    fontEmbedCSS: true,
+                });
+                results.push(dataUrl);
+            } finally {
+                setTimeout(() => exportContainer.remove(), 500);
+            }
+        }
+
+        setExportProgress(90);
+        setExportStatus('💾 Téléchargement...');
+
+        for (let i = 0; i < results.length; i++) {
+            const link = document.createElement('a');
+            const suffix = results.length > 1 ? `-p${i + 1}` : '';
+            link.download = `review-${reviewData.title || 'export'}${suffix}-${Date.now()}.svg`;
+            link.href = results[i];
+            link.click();
+            if (results.length > 1) await new Promise(r => setTimeout(r, 300));
+        }
+
+        setExportProgress(100);
+        console.log(`✅ Export SVG success (${results.length} page(s))`);
+    };
+
     const exportPDF = async (pages) => {
         const { toPng } = await import('html-to-image');
         const { jsPDF } = await import('jspdf');
@@ -446,6 +499,58 @@ export default function ExportModal({ onClose }) {
         link.href = url;
         link.click();
         URL.revokeObjectURL(url);
+    };
+
+    /** Télécharge un Blob texte sous un nom donné (fabrique commune CSV/JSON). */
+    const downloadTextBlob = (content, mime, extension) => {
+        const blob = new Blob([content], { type: mime });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `review-${reviewData.title || reviewData.holderName || 'export'}-${Date.now()}.${extension}`;
+        link.href = url;
+        link.click();
+        URL.revokeObjectURL(url);
+    };
+
+    // Types de champs non exportables tels quels en CSV/JSON à plat : 'view' ne porte aucune
+    // donnée (juste un interrupteur d'affichage), 'rich'/'json' sont des objets imbriqués.
+    const FLAT_EXPORTABLE_TYPES = new Set(['text', 'number', 'percent', 'score', 'date', 'bool', 'url', 'list']);
+
+    const exportJSON = async () => {
+        setExportStatus('🔧 Génération JSON…');
+        const adapted = buildExportReviewData(reviewData);
+        const fields = getFieldRegistry(reviewData.type);
+        const payload = { exportedAt: new Date().toISOString(), source: 'Reviews-Maker Export Maker' };
+        for (const f of fields) {
+            if (f.type === 'view') continue;
+            const value = adapted[f.key];
+            if (value === undefined) continue;
+            payload[f.key] = value;
+        }
+        downloadTextBlob(JSON.stringify(payload, null, 2), 'application/json', 'json');
+        console.log('✅ Export JSON success');
+    };
+
+    const csvEscape = (value) => {
+        const s = Array.isArray(value) ? value.join(' | ') : (typeof value === 'object' ? JSON.stringify(value) : String(value));
+        return /[",\n;]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+
+    const exportCSV = async () => {
+        setExportStatus('📊 Génération CSV…');
+        const adapted = buildExportReviewData(reviewData);
+        const fields = getFieldRegistry(reviewData.type);
+        const rows = [['Groupe', 'Champ', 'Valeur']];
+        for (const f of fields) {
+            if (!FLAT_EXPORTABLE_TYPES.has(f.type)) continue;
+            const value = adapted[f.key];
+            if (value === undefined || value === null || value === '') continue;
+            rows.push([GROUP_LABELS[f.group] || f.group, f.label, value]);
+        }
+        // BOM UTF-8 pour qu'Excel n'affiche pas les accents comme des caractères mojibake.
+        const csv = '﻿' + rows.map(r => r.map(csvEscape).join(';')).join('\n');
+        downloadTextBlob(csv, 'text/csv;charset=utf-8', 'csv');
+        console.log('✅ Export CSV success');
     };
 
     return (

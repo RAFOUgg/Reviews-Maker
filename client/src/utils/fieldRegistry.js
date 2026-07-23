@@ -88,6 +88,10 @@ const REGISTRY = [
     { key: 'categoryRatings', label: 'Notes par catégorie', group: 'presentation', type: 'rich', sources: ['categoryRatings', 'ratings'] },
     { key: 'author', label: 'Auteur', group: 'presentation', type: 'text', sources: ['author', 'ownerName'] },
     { key: 'date', label: 'Date', group: 'presentation', type: 'date', sources: ['createdAt', 'date'] },
+    // Vues interactives (rendues par un code dédié du template ; togglables ici, opt-out par défaut)
+    { key: 'phenoHuntView', label: 'Arbre généalogique', group: 'presentation', type: 'view', sources: ['geneticTreeId', 'parentage'] },
+    { key: 'productionChainView', label: 'Chaîne de production', group: 'presentation', type: 'view', sources: ['parentFlowerReviewId', 'sourceLineage'] },
+    { key: 'pipelineInteractiveView', label: 'Pipelines détaillés', group: 'presentation', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
 
     // ── GENERAL ────────────────────────────────────────────────────────────────
     { key: 'title', label: 'Nom', group: 'general', type: 'text', sources: ['holderName', 'nomCommercial', 'nomProduit', 'title', 'name'] },

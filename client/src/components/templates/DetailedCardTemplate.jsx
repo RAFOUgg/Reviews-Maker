@@ -514,7 +514,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
         return (
             <div
-                className="absolute pointer-events-none"
+                className="absolute pointer-events-none orchard-branding"
                 style={{
                     ...positionMap[branding.position || 'bottom-right'],
                     opacity: branding.opacity || 0.8,
@@ -548,7 +548,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     style={{ flexShrink: 0 }}
                 >
                     {/* Image — single or gallery */}
-                    {contentModules.image && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
+                    {contentModules.mainImage !== false && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
                         const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
                         const galleryImages = reviewData.images || [];
                         if (showGallery) {
@@ -685,7 +685,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             || (contentModules.cultivarsList && cultivars.length > 0)
                             || (contentModules.effects && effects.length > 0);
                         const hasCol2 = (contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0))
-                            || (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))
+                            || (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))
                             || (contentModules.terpenes && terpenes.length > 0)
                             || (contentModules.substratMix && substrat.length > 0);
                         return (isPortrait || isSquare || !hasCol1 || !hasCol2) ? 'grid-cols-1' : 'grid-cols-2';
@@ -789,7 +789,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     <div>
                         {/* Profil sensoriel */}
                         {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) ||
-                            (contentModules.tastes && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
+                            (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
                                 <Section title="Profil Sensoriel" icon="🌸">
                                     {/* Primary aromas */}
                                     {contentModules.aromas && aromas.length > 0 && (
@@ -810,7 +810,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         </div>
                                     )}
                                     {/* Dry puff notes */}
-                                    {contentModules.tastes && dryPuffNotes.length > 0 && (
+                                    {contentModules.tastes !== false && dryPuffNotes.length > 0 && (
                                         <div style={{ marginBottom: `${spacing.gap}px` }}>
                                             <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>💨 Tirage à sec</div>
                                             <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
@@ -819,7 +819,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         </div>
                                     )}
                                     {/* Inhalation notes */}
-                                    {contentModules.tastes && inhalationNotes.length > 0 && (
+                                    {contentModules.tastes !== false && inhalationNotes.length > 0 && (
                                         <div style={{ marginBottom: `${spacing.gap}px` }}>
                                             <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>🌬️ Inhalation</div>
                                             <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
@@ -828,7 +828,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         </div>
                                     )}
                                     {/* Exhalation notes */}
-                                    {contentModules.tastes && exhalationNotes.length > 0 && (
+                                    {contentModules.tastes !== false && exhalationNotes.length > 0 && (
                                         <div>
                                             <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>↩️ Expiration / Arrière-goût</div>
                                             <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
@@ -837,7 +837,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         </div>
                                     )}
                                     {/* Fallback: generic tastes */}
-                                    {contentModules.tastes && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
+                                    {contentModules.tastes !== false && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
                                         <div>
                                             <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Goûts</div>
                                             <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
@@ -929,21 +929,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 {/* Vue interactive PhenoHunt (généalogie) — le composant gère lui-même son
                     titre et se masque entièrement si aucun arbre n'est lié (évite un
                     titre de section vide pendant/après le fetch async) */}
-                {contentModules.phenoHuntView && (
+                {contentModules.phenoHuntView !== false && (
                     <div style={{ marginBottom: `${spacing.section}px` }}>
                         <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
                     </div>
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
-                {contentModules.productionChainView && (
+                {contentModules.productionChainView !== false && (
                     <div style={{ marginBottom: `${spacing.section}px` }}>
                         <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
                     </div>
                 )}
 
                 {/* Vue interactive Pipelines (grilles cliquables) */}
-                {contentModules.pipelineInteractiveView && (() => {
+                {contentModules.pipelineInteractiveView !== false && (() => {
                     const activeTimelines = TIMELINE_PIPELINES.filter(t => reviewData[t.dataKey] && reviewData[t.configKey]);
                     if (activeTimelines.length === 0) return null;
                     return (
