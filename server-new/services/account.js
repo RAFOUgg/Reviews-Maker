@@ -96,6 +96,8 @@ export function getUserAccountType(user) {
         return ACCOUNT_TYPES.INFLUENCER;
     }
     if (roles.includes('admin')) return ACCOUNT_TYPES.ADMIN;
+    // Beta testeur : rôle producteur gratuit accordé pendant la bêta (cf. canUpgradeAccountType).
+    if (roles.includes('beta_tester')) return ACCOUNT_TYPES.BETA_TESTER;
     if (roles.includes('consumer')) return ACCOUNT_TYPES.CONSUMER;
 
     return ACCOUNT_TYPES.CONSUMER;
@@ -125,10 +127,21 @@ export function canUpgradeAccountType(user, targetType) {
         return { allowed: true };
     }
 
-    // Amateur peut upgrader vers Producteur ou Influenceur
+    // Amateur peut upgrader vers Producteur, Influenceur, ou s'inscrire comme Beta testeur (gratuit)
     if (currentType === ACCOUNT_TYPES.CONSUMER) {
-        if ([ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.INFLUENCER].includes(targetType)) {
+        if ([ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.INFLUENCER, ACCOUNT_TYPES.BETA_TESTER].includes(targetType)) {
             return { allowed: true };
+        }
+    }
+
+    // Beta testeur (rôle producteur gratuit) peut repasser Amateur, ou upgrader vers un vrai
+    // abonnement payant une fois la bêta terminée
+    if (currentType === ACCOUNT_TYPES.BETA_TESTER) {
+        if (targetType === ACCOUNT_TYPES.CONSUMER) {
+            return { allowed: true };
+        }
+        if ([ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.INFLUENCER].includes(targetType)) {
+            return { allowed: true, needsUpgrade: true };
         }
     }
 

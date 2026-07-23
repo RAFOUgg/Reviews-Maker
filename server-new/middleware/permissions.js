@@ -649,6 +649,8 @@ export function getUserLimits(user) {
     const formats = EXPORT_FORMATS[effectiveType] || EXPORT_FORMATS[ACCOUNT_TYPES.CONSUMER];
     const dpi = EXPORT_DPI[effectiveType] || EXPORT_DPI[ACCOUNT_TYPES.CONSUMER];
     const isAdmin = accountType === ACCOUNT_TYPES.ADMIN;
+    // Beta testeur = rôle Producteur gratuit pendant la bêta : mêmes features que Producteur.
+    const isBetaTester = accountType === ACCOUNT_TYPES.BETA_TESTER;
 
     return {
         accountType,
@@ -656,20 +658,20 @@ export function getUserLimits(user) {
         formats,
         dpi,
         features: {
-            customTemplates: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            highQualityExport: isAdmin || [
+            customTemplates: isAdmin || isBetaTester || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            highQualityExport: isAdmin || isBetaTester || [
                 ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ].includes(accountType),
-            advancedStats: isAdmin || [
+            advancedStats: isAdmin || isBetaTester || [
                 ACCOUNT_TYPES.INFLUENCER,
                 ACCOUNT_TYPES.PRODUCER,
                 ACCOUNT_TYPES.MERCHANT
             ].includes(accountType),
-            pipelines: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            genetics: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
-            branding: isAdmin || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            pipelines: isAdmin || isBetaTester || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            genetics: isAdmin || isBetaTester || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
+            branding: isAdmin || isBetaTester || [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT].includes(accountType),
         }
     };
 }

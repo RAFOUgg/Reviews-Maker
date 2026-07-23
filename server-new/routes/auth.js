@@ -130,7 +130,8 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
         'producteur': ACCOUNT_TYPES.PRODUCER,
         'consumer': ACCOUNT_TYPES.CONSUMER,
         'influencer': ACCOUNT_TYPES.INFLUENCER,
-        'producer': ACCOUNT_TYPES.PRODUCER
+        'producer': ACCOUNT_TYPES.PRODUCER,
+        'beta_tester': ACCOUNT_TYPES.BETA_TESTER
     };
 
     const chosenType = accountTypeMap[accountType] || ACCOUNT_TYPES.CONSUMER

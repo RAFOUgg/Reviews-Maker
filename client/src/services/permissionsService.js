@@ -6,7 +6,8 @@
 export const ACCOUNT_TYPES = {
     CONSUMER: 'consumer', // Amateur
     INFLUENCER: 'influencer',
-    PRODUCER: 'producer'
+    PRODUCER: 'producer',
+    BETA_TESTER: 'beta_tester' // Rôle producteur gratuit pendant la bêta
 };
 
 export const ACCOUNT_FEATURES = {
@@ -145,6 +146,45 @@ export const ACCOUNT_FEATURES = {
             // Autres
             analytics: 'pro',
             apiAccess: true // À venir
+        }
+    },
+
+    [ACCOUNT_TYPES.BETA_TESTER]: {
+        name: 'Beta Testeur',
+        price: 0,
+        features: {
+            // Beta testeur = rôle Producteur gratuit pendant la bêta (mêmes accès, sans abonnement)
+            exportFormats: ['png', 'jpeg', 'pdf', 'svg', 'csv', 'json', 'html', 'gif'],
+            exportQuality: 'ultra',
+            exportDailyLimit: -1,
+            exportGif: true,
+            forcedWatermark: false,
+            customWatermarks: -1,
+
+            templates: ['compact', 'detailed', 'complete', 'influencer', 'custom'],
+            customTemplates: true,
+            maxCustomTemplates: -1,
+            dragAndDrop: true,
+
+            maxPrivateReviews: -1,
+            maxPublicReviews: -1,
+            unlimitedLibrary: true,
+
+            pipelineCulture: true,
+            pipelineExtraction: true,
+            pipelineSeparation: true,
+            pipelineCuring: true,
+            pipelineConfigurable: true,
+
+            sections: ['info', 'visual', 'culture', 'extraction', 'separation', 'curing', 'aromas', 'tastes', 'effects', 'texture', 'analytics'],
+
+            geneticsSystem: true,
+
+            customFonts: true,
+            themeCustomization: 'full',
+
+            analytics: 'pro',
+            apiAccess: true
         }
     }
 };

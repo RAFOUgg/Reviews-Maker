@@ -1,13 +1,13 @@
 import React, { useState, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
-import { CheckCircle, Sparkles, TrendingUp, Building2, ArrowLeft } from 'lucide-react'
+import { CheckCircle, Sparkles, TrendingUp, Building2, Rocket, ArrowLeft } from 'lucide-react'
 import { useStore } from '../../store'
 import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
 
 export default function AccountChoicePage() {
     const navigate = useNavigate()
     const [searchParams] = useSearchParams()
-    const { accountType } = useStore()
+    const { accountType, checkAuth } = useStore()
 
     // Mode: 'signup' (création) ou 'upgrade' (changement plan)
     const mode = searchParams.get('mode') || 'signup'
@@ -19,9 +19,33 @@ export default function AccountChoicePage() {
     }, [isUpgrade, accountType])
 
     const [selectedType, setSelectedType] = useState(initial)
+    const [betaUpgradeLoading, setBetaUpgradeLoading] = useState(false)
+    const [betaUpgradeError, setBetaUpgradeError] = useState('')
 
     // Définition statique des types de comptes selon le CDC (cahier des charges)
     const accountTypes = [
+        {
+            type: 'beta_tester',
+            name: 'Beta Testeur',
+            subtitle: 'Rôle Producteur, gratuit pendant la bêta',
+            description: 'Testez gratuitement toutes les fonctionnalités Producteur pendant la phase bêta de Terpologie',
+            price: 0,
+            icon: Rocket,
+            gradient: ' ',
+            beta: true,
+            features: [
+                '🌿 Accès complet à TOUTES les fonctionnalités Producteur',
+                '⚙️ PipeLines configurables (Culture, Extraction, Séparation, Curing)',
+                '🧬 Système de génétique avec canvas (arbres généalogiques, PhénoHunt)',
+                '🔗 Chaîne de production (canevas interactif, bilan matière)',
+                '📦 Export TOUS formats (PNG/JPEG/PDF/SVG 300dpi + CSV/JSON/HTML)',
+                '📚 Bibliothèque illimitée, exports illimités',
+                '🚀 Aucun paiement, aucun SIRET requis pendant la bêta',
+            ],
+            limitations: [
+                'Réservé à la phase bêta : le rôle peut évoluer vers une offre payante à la sortie officielle',
+            ]
+        },
         {
             type: 'amateur',
             name: 'Amateur',
@@ -98,7 +122,7 @@ export default function AccountChoicePage() {
         },
     ];
 
-    const handleContinue = () => {
+    const handleContinue = async () => {
         localStorage.setItem('preferredAccountType', selectedType)
         localStorage.setItem('accountTypeSelected', 'true')
 
@@ -106,6 +130,28 @@ export default function AccountChoicePage() {
             // Mode UPGRADE: Changement de plan
             if (selectedType === accountType) {
                 navigate('/account')  // Même plan, retour
+            } else if (selectedType === 'beta_tester') {
+                // Gratuit : pas de tunnel de paiement, changement immédiat via l'API
+                setBetaUpgradeError('')
+                setBetaUpgradeLoading(true)
+                try {
+                    const response = await fetch('/api/account/change-type', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({ newType: 'beta_tester' })
+                    })
+                    const data = await response.json()
+                    if (!response.ok) {
+                        throw new Error(data.message || 'Impossible de passer en Beta Testeur')
+                    }
+                    await checkAuth()
+                    navigate('/account')
+                } catch (err) {
+                    setBetaUpgradeError(err.message || 'Une erreur est survenue')
+                } finally {
+                    setBetaUpgradeLoading(false)
+                }
             } else if (selectedType === 'amateur') {
                 navigate(`/payment?type=${selectedType}&mode=downgrade`)  // Downgrade
             } else {
@@ -116,7 +162,7 @@ export default function AccountChoicePage() {
             if (selectedType === 'influenceur' || selectedType === 'producteur') {
                 navigate(`/payment?type=${selectedType}`)  // Paiement → Inscription
             } else {
-                navigate(`/register?type=${selectedType}`)  // Inscription directe
+                navigate(`/register?type=${selectedType}`)  // Inscription directe (amateur ou beta_tester)
             }
         }
     }
@@ -176,6 +222,15 @@ export default function AccountChoicePage() {
                                     <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
                                         <LiquidBadge variant="warning" size="lg" className="animate-pulse">
                                             ⭐ POPULAIRE
+                                        </LiquidBadge>
+                                    </div>
+                                )}
+
+                                {/* Badge "Bêta" */}
+                                {accountType.beta && (
+                                    <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+                                        <LiquidBadge variant="success" size="lg" className="animate-pulse">
+                                            🚀 GRATUIT PENDANT LA BÊTA
                                         </LiquidBadge>
                                     </div>
                                 )}
@@ -303,24 +358,36 @@ export default function AccountChoicePage() {
                                 <strong className="text-amber-300 font-bold">💳 Abonnement :</strong> <span className="text-white">Le plan {accountTypes.find(t => t.type === selectedType)?.name} coûte {accountTypes.find(t => t.type === selectedType)?.price}€/mois. Vous pourrez activer l'abonnement après avoir complété votre profil et la vérification d'identité.</span>
                             </div>
                         )}
+
+                        {selectedType === 'beta_tester' && (
+                            <div className="bg-emerald-500/10 p-4 rounded-xl border border-emerald-500/20">
+                                <strong className="text-white">🚀 Compte Beta Testeur :</strong> Gratuit, sans SIRET ni paiement. Ce rôle donne un accès Producteur complet le temps de la bêta ; il pourra évoluer vers une offre payante à la sortie officielle.
+                            </div>
+                        )}
                     </div>
                 </LiquidCard>
 
                 {/* Bouton Continuer */}
                 <div className="mt-8 text-center">
+                    {betaUpgradeError && (
+                        <p className="mb-4 text-red-400 text-sm">{betaUpgradeError}</p>
+                    )}
                     <LiquidButton
                         onClick={handleContinue}
                         variant="primary"
                         size="xl"
                         glow="purple"
                         className="px-12"
+                        disabled={betaUpgradeLoading}
                     >
                         <span>
-                            {isUpgrade
-                                ? (selectedType === accountType
-                                    ? 'Garder ce plan'
-                                    : `Changer pour ${accountTypes.find(t => t.type === selectedType)?.name}`)
-                                : `Continuer avec ${accountTypes.find(t => t.type === selectedType)?.name}`
+                            {betaUpgradeLoading
+                                ? 'Activation en cours...'
+                                : isUpgrade
+                                    ? (selectedType === accountType
+                                        ? 'Garder ce plan'
+                                        : `Changer pour ${accountTypes.find(t => t.type === selectedType)?.name}`)
+                                    : `Continuer avec ${accountTypes.find(t => t.type === selectedType)?.name}`
                             }
                         </span>
                         <svg className="w-6 h-6 ml-3 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">

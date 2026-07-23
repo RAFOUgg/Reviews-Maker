@@ -44,8 +44,8 @@ export default function RegisterPage() {
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
 
-    // Types valides en français uniquement
-    const validTypes = ['amateur', 'influenceur', 'producteur'];
+    // Types valides : français pour les tiers historiques, 'beta_tester' pour le rôle gratuit de bêta
+    const validTypes = ['amateur', 'influenceur', 'producteur', 'beta_tester'];
 
     useEffect(() => {
         if (!accountType || !validTypes.includes(accountType)) {
@@ -127,6 +127,7 @@ export default function RegisterPage() {
         switch (accountType) {
             case 'influenceur': return 'Influenceur';
             case 'producteur': return 'Producteur';
+            case 'beta_tester': return 'Beta Testeur';
             default: return 'Amateur';
         }
     };
@@ -135,6 +136,7 @@ export default function RegisterPage() {
         switch (accountType) {
             case 'influenceur': return 'pink';
             case 'producteur': return 'cyan';
+            case 'beta_tester': return 'green';
             default: return 'purple';
         }
     };

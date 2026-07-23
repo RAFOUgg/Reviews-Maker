@@ -19,7 +19,8 @@ export function useAccountFeatures() {
     // isAdmin vient du tableau `roles` (rôle additif), jamais de `accountType` : un compte peut
     // être à la fois producteur ET admin, `accountType` reflète alors le tier payant réel.
     const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
-    const isProducer = isAdmin || ['producteur', 'producer'].includes(normalized)
+    // beta_tester = rôle producteur gratuit accordé pendant la bêta (cf. AccountChoicePage)
+    const isProducer = isAdmin || ['producteur', 'producer', 'beta_tester'].includes(normalized)
     const isInfluencer = isAdmin || ['influenceur', 'influencer'].includes(normalized)
     const isAmateur = !isAdmin && ['amateur', 'consumer'].includes(normalized)
 
@@ -88,7 +89,7 @@ export function useAccountLimits() {
     const { accountType, user } = useStore()
     const normalized = String(accountType || '').toLowerCase()
     const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
-    const isProducer = isAdmin || ['producteur', 'producer'].includes(normalized)
+    const isProducer = isAdmin || ['producteur', 'producer', 'beta_tester'].includes(normalized)
     const isInfluencer = isAdmin || ['influenceur', 'influencer'].includes(normalized)
 
     return {
@@ -186,6 +187,7 @@ export function getAccountTypeLabel(accountType) {
         producer: 'Producteur',
         influenceur: 'Influenceur',
         influencer: 'Influenceur',
+        beta_tester: 'Beta Testeur',
         admin: 'Administrateur',
     }
     return labels[normalized] || 'Inconnu'
@@ -199,6 +201,7 @@ export function getAccountTypeColor(accountType) {
         amateur: 'gray',
         producteur: 'blue',
         influenceur: 'purple',
+        beta_tester: 'green',
         admin: 'red',
     }
     return colors[accountType] || 'gray'
@@ -212,6 +215,7 @@ export function getAccountTypeEmoji(accountType) {
         amateur: '👤',
         producteur: '🌾',
         influenceur: '⭐',
+        beta_tester: '🚀',
         admin: '👨‍💼',
     }
     return emojis[accountType] || '❓'
