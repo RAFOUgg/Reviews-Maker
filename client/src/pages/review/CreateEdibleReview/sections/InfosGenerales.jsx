@@ -73,13 +73,22 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 <span className="flex items-center justify-between gap-2">
                                     Fabricant
                                     <span className="flex items-center gap-1.5">
-                                        <FillMyselfButton onFill={(name) => handleChange('fabricant', name)} />
-                                        <UnknownValueButton onClick={() => handleChange('fabricant', '')} />
+                                        <FillMyselfButton onFill={(name, userId) => {
+                                            handleChange('fabricant', name)
+                                            handleChange('fabricantLinkedUserId', userId)
+                                        }} />
+                                        <UnknownValueButton onClick={() => {
+                                            handleChange('fabricant', '')
+                                            handleChange('fabricantLinkedUserId', null)
+                                        }} />
                                     </span>
                                 </span>
                             }
                             value={formData.fabricant || ''}
-                            onChange={(e) => handleChange('fabricant', e.target.value)}
+                            onChange={(e) => {
+                                handleChange('fabricant', e.target.value)
+                                handleChange('fabricantLinkedUserId', null)
+                            }}
                             placeholder="Nom du fabricant"
                         />
 

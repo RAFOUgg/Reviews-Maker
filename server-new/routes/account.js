@@ -399,6 +399,7 @@ router.get('/producer-profile', requireAuth, asyncHandler(async (req, res) => {
     }
 
     res.json({
+        id: producerProfile.id,
         companyName: producerProfile.companyName,
         businessType: producerProfile.businessType,
         siret: producerProfile.siret,

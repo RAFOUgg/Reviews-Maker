@@ -170,18 +170,21 @@ export function owningCompanyId(access) {
 /**
  * Peut-on modifier/supprimer cette ressource ?
  *
- * - son créateur : toujours (y compris un lecteur sur ses propres données) ;
- * - une ressource d'entreprise : selon le rôle (un `viewer` consulte sans modifier).
+ * - ressource personnelle (jamais rattachée à une entreprise) : son créateur, toujours ;
+ * - ressource d'entreprise (`producerProfileId` renseigné) : l'appartenance actuelle à
+ *   l'entreprise prime sur le fait d'être le créateur d'origine, selon le rôle (un `viewer`
+ *   consulte sans modifier) — un membre révoqué ne garde donc plus d'accès en écriture sur ce
+ *   qu'il a produit pour la société, conformément à l'intention du schéma ("la ressource
+ *   appartient à la société et non à son seul créateur").
  */
 export function canModifyResource(access, resource, ownerField = 'userId') {
     if (!resource) return false
-    if (resource[ownerField] === access.userId) return true
 
-    if (resource.producerProfileId && access.company?.id === resource.producerProfileId) {
-        return Boolean(access.company.canWrite)
+    if (!resource.producerProfileId) {
+        return resource[ownerField] === access.userId
     }
 
-    return false
+    return access.company?.id === resource.producerProfileId && Boolean(access.company.canWrite)
 }
 
 /**
@@ -207,6 +210,23 @@ export async function canReadFor(req, resource, ownerField = 'userId') {
 
     if (resource[ownerField] === access.userId) return true
     return Boolean(resource.producerProfileId && access.company?.id === resource.producerProfileId)
+}
+
+/**
+ * Valide un lien de compte optionnel posé par FillMyselfButton/FillCompanyButton sur un champ texte
+ * libre (farm/hashmaker/fabricant) avant de le persister — sans ce contrôle, un client malveillant
+ * pourrait envoyer l'id de compte de n'importe quel tiers pour faire apparaître une mention cliquable
+ * vers lui sur SA review (même risque que l'IDOR corrigé sur GenNode.sourceReviewId). Un utilisateur
+ * ne peut lier que SON PROPRE id, ou l'id de l'entreprise dont il est membre actif (= `access.company.id`,
+ * qui couvre aussi bien un producteur solo que le titulaire/employé d'une société, cf. resolveAccess).
+ *
+ * @returns {{ userId: string|null, producerProfileId: string|null }}
+ */
+export function resolveIdentityLink(access, rawUserId, rawProducerProfileId) {
+    return {
+        userId: (rawUserId && rawUserId === access.userId) ? rawUserId : null,
+        producerProfileId: (rawProducerProfileId && rawProducerProfileId === access.company?.id) ? rawProducerProfileId : null,
+    }
 }
 
 /**

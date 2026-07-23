@@ -11,8 +11,9 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { AnimatePresence, motion } from 'framer-motion'
-import { Plus, Trash2, Edit, Dna, ExternalLink, RefreshCw } from 'lucide-react'
+import { Plus, Trash2, Edit, Dna, ExternalLink, RefreshCw, Building2 } from 'lucide-react'
 import useGeneticsStore from '../../../store/useGeneticsStore'
+import { useStore } from '../../../store/useStore'
 
 // Types de projet d'arbre généalogique — badge coloré en haut à droite de la carte, mappé sur
 // GeneticTree.projectType côté Prisma.
@@ -35,6 +36,7 @@ function formatTreeDate(iso) {
 export default function CultivarsTab() {
     const toast = useToast()
     const navigate = useNavigate()
+    const { user } = useStore()
     const [confirmDeleteTree, setConfirmDeleteTree] = useState({ open: false, treeId: null })
 
     const {
@@ -110,6 +112,13 @@ export default function CultivarsTab() {
                             {typeConfig.label}
                         </span>
                     </div>
+
+                    {tree.producerProfile?.companyName && (
+                        <div className="mb-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs font-medium">
+                            <Building2 className="w-3.5 h-3.5" />
+                            {tree.userId === user?.id ? tree.producerProfile.companyName : `Partagé par ${tree.producerProfile.companyName}`}
+                        </div>
+                    )}
 
                     {/* Stats rapides */}
                     <div className="grid grid-cols-2 gap-2 text-xs mb-4">

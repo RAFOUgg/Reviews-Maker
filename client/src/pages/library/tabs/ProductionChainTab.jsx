@@ -9,11 +9,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { GitBranch, Plus, Trash2, RefreshCw, Workflow, Edit } from 'lucide-react'
+import { GitBranch, Plus, Trash2, RefreshCw, Workflow, Edit, Building2 } from 'lucide-react'
 import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { useToast } from '../../../components/shared/ToastContainer'
 import useProductionChainStore from '../../../store/useProductionChainStore'
+import { useStore } from '../../../store/useStore'
 
 function formatChainDate(iso) {
     if (!iso) return null
@@ -27,6 +28,7 @@ function formatChainDate(iso) {
 export default function ProductionChainTab() {
     const navigate = useNavigate()
     const toast = useToast()
+    const { user } = useStore()
     const { chains, chainLoading, fetchChains, createChain, deleteChain } = useProductionChainStore()
 
     const [creating, setCreating] = useState(false)
@@ -122,6 +124,13 @@ export default function ProductionChainTab() {
                                         </span>
                                     </div>
 
+                                    {chain.producerProfile?.companyName && (
+                                        <div className="mb-3 inline-flex items-center gap-1.5 px-2 py-1 rounded-lg bg-emerald-500/15 text-emerald-300 text-xs font-medium">
+                                            <Building2 className="w-3.5 h-3.5" />
+                                            {chain.userId === user?.id ? chain.producerProfile.companyName : `Partagé par ${chain.producerProfile.companyName}`}
+                                        </div>
+                                    )}
+
                                     {/* Stats rapides — même grille que les cartes Cultivars/Arbres */}
                                     <div className="grid grid-cols-2 gap-2 text-xs mb-4">
                                         <div className="px-2 py-1 bg-white/5 rounded text-white/60">
@@ -166,7 +175,13 @@ export default function ProductionChainTab() {
             <ConfirmModal
                 open={confirmDelete.open}
                 title="Supprimer cette chaîne"
-                message="Supprimer cette chaîne de production ? Les fiches techniques liées ne seront pas supprimées."
+                message={(() => {
+                    const chain = chains.find(c => c.id === confirmDelete.chainId)
+                    const count = chain?._count?.nodes || 0
+                    return count > 0
+                        ? `Cette chaîne relie ${count} produit${count > 1 ? 's' : ''}. Les fiches techniques ne seront pas supprimées, seul le graphe qui les relie disparaît. Continuer ?`
+                        : 'Supprimer cette chaîne de production ? Les fiches techniques liées ne seront pas supprimées.'
+                })()}
                 confirmLabel="Supprimer"
                 onCancel={() => setConfirmDelete({ open: false, chainId: null })}
                 onConfirm={confirmDeleteNow}

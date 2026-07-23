@@ -90,27 +90,27 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relations
-  reviews           Review[]
-  sessions          Session[]
-  likes             ReviewLike[]
-  subscription      Subscription?
-  influencerProfile InfluencerProfile?
-  producerProfile   ProducerProfile?
+  reviews            Review[]
+  sessions           Session[]
+  likes              ReviewLike[]
+  subscription       Subscription?
+  influencerProfile  InfluencerProfile?
+  producerProfile    ProducerProfile?
   companyMemberships CompanyMember[]
-  reportsSubmitted  Report[]              @relation("Reporter")
-  reportsReceived   Report[]              @relation("ReportedUser")
-  geneticTrees      GeneticTree[]         @relation("userGeneticTrees")
-  productionChains  ProductionChain[]     @relation("userProductionChains")
-  savedTemplates    SavedTemplate[]
-  watermarks        Watermark[]
-  savedData         SavedData[]
-  stats             UserStats?
-  comments          ReviewComment[]
-  exports           Export[]
-  exportTemplates   ExportTemplate[]
-  exportConfigs     ExportConfiguration[] @relation("userExportConfigs")
-  presets           UserPreset[]
-  projects          Project[]
+  reportsSubmitted   Report[]              @relation("Reporter")
+  reportsReceived    Report[]              @relation("ReportedUser")
+  geneticTrees       GeneticTree[]         @relation("userGeneticTrees")
+  productionChains   ProductionChain[]     @relation("userProductionChains")
+  savedTemplates     SavedTemplate[]
+  watermarks         Watermark[]
+  savedData          SavedData[]
+  stats              UserStats?
+  comments           ReviewComment[]
+  exports            Export[]
+  exportTemplates    ExportTemplate[]
+  exportConfigs      ExportConfiguration[] @relation("userExportConfigs")
+  presets            UserPreset[]
+  projects           Project[]
 
   @@index([email])
   @@index([discordId])
@@ -294,7 +294,6 @@ model Review {
   derivedHashReviews        HashReview[]          @relation("hashFromFlower")
   derivedConcentrateReviews ConcentrateReview[]   @relation("concentrateFromFlower")
 
-
   // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
   // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
   // (cf. services/access.js). `userId` reste le créateur, pour la traçabilité.
@@ -419,7 +418,7 @@ model Subscription {
 
   // PayPal (prestataire réellement utilisé ; les champs Stripe ci-dessus sont conservés pour ne pas
   // casser les données historiques mais ne sont plus alimentés).
-  paypalSubscriptionId String? @unique
+  paypalSubscriptionId String?   @unique
   paypalPlanId         String?
   paypalPayerEmail     String?
   // Dernier statut brut renvoyé par PayPal (ACTIVE / SUSPENDED / CANCELLED / EXPIRED...) : sert de
@@ -490,18 +489,18 @@ model ProducerProfile {
   // responsable des données publiées. La plupart sont pré-remplies depuis le SIRET via l'API
   // recherche-entreprises ; celles que l'API ne fournit pas (capital, représentant, licence)
   // restent saisies à la main.
-  legalForm           String? // Forme juridique en clair : SAS, SARL, EI…
-  legalFormCode       String? // Code INSEE « nature juridique » (ex : 5710), tel que renvoyé par l'API
-  siren               String? // 9 premiers chiffres du SIRET, conservé pour les mentions légales
-  vatNumber           String? // TVA intracommunautaire — calculable depuis le SIREN (clé mod 97)
-  nafCode             String? // Code APE/NAF de l'activité principale (ex : 01.19Z)
-  shareCapital        String? // Capital social, en texte : montants et devises varient trop pour un numérique
-  registeredAt        DateTime? // Date de création de l'entreprise
+  legalForm     String? // Forme juridique en clair : SAS, SARL, EI…
+  legalFormCode String? // Code INSEE « nature juridique » (ex : 5710), tel que renvoyé par l'API
+  siren         String? // 9 premiers chiffres du SIRET, conservé pour les mentions légales
+  vatNumber     String? // TVA intracommunautaire — calculable depuis le SIREN (clé mod 97)
+  nafCode       String? // Code APE/NAF de l'activité principale (ex : 01.19Z)
+  shareCapital  String? // Capital social, en texte : montants et devises varient trop pour un numérique
+  registeredAt  DateTime? // Date de création de l'entreprise
 
   // Siège social
-  addressLine         String?
-  postalCode          String?
-  city                String?
+  addressLine String?
+  postalCode  String?
+  city        String?
 
   // Registre & représentation
   rcsCity             String? // Ville du greffe d'immatriculation (RCS)
@@ -509,7 +508,7 @@ model ProducerProfile {
 
   // Spécifique au secteur : numéro d'autorisation/licence d'exploitation, quand la juridiction
   // l'impose pour la culture ou la transformation.
-  licenseNumber       String?
+  licenseNumber String?
 
   // Timestamps
   createdAt DateTime @default(now())
@@ -533,7 +532,7 @@ model ProducerProfile {
 // rattaché ici avec un rôle. `userId` reste null tant que l'invitation n'a pas été acceptée (on ne
 // connaît que l'email invité jusque-là).
 model CompanyMember {
-  id                String   @id @default(uuid())
+  id                String          @id @default(uuid())
   producerProfileId String
   producerProfile   ProducerProfile @relation(fields: [producerProfileId], references: [id], onDelete: Cascade)
 
@@ -719,6 +718,15 @@ model FlowerReview {
   nomCommercial String // Nom commercial* (requis)
   farm          String? // Farm productrice
 
+  // Lien de compte optionnel derrière `farm`, posé par FillMyselfButton/FillCompanyButton — permet
+  // d'afficher une mention cliquable (UserMention) vers le vrai compte/entreprise. Référence
+  // applicative sans FK Prisma (même pattern que GenNode.sourceReviewId/ChainNode.reviewId) : au
+  // plus une des deux colonnes est renseignée, selon que le champ a été rempli avec l'identité
+  // personnelle ou celle de l'entreprise. Modifier le texte `farm` à la main réinitialise les deux
+  // à null côté client (le texte n'est alors plus garanti correspondre à ce compte).
+  farmLinkedUserId            String?
+  farmLinkedProducerProfileId String?
+
   // Type de variété
   varietyType String? // "indica", "sativa", "hybride indica-dominant", "sativa-dominant", "CBD-dominant"
 
@@ -875,11 +883,14 @@ model HashReview {
   review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   // ===== INFORMATIONS GÉNÉRALES =====
-  nomCommercial     String // Nom commercial* (requis)
-  hashmaker         String? // Hashmaker
-  laboratoire       String? // Laboratoire de production
-  cultivarsUtilises String? // JSON ou texte: cultivars utilisés
-  photos            String? // JSON: ["/images/hash-xxx.jpg"]
+  nomCommercial                    String // Nom commercial* (requis)
+  hashmaker                        String? // Hashmaker
+  // Lien de compte optionnel derrière `hashmaker`, cf. commentaire équivalent sur FlowerReview.farm.
+  hashmakerLinkedUserId            String?
+  hashmakerLinkedProducerProfileId String?
+  laboratoire                      String? // Laboratoire de production
+  cultivarsUtilises                String? // JSON ou texte: cultivars utilisés
+  photos                           String? // JSON: ["/images/hash-xxx.jpg"]
 
   // Lien vers la review fleur parente (matière première) — déprécié, voir sourceLineage
   parentFlowerReviewId String?
@@ -1007,12 +1018,15 @@ model ConcentrateReview {
   review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   // ===== INFORMATIONS GÉNÉRALES =====
-  nomCommercial     String // Nom commercial* (requis)
-  concentrateType   String? // Type de concentré (Rosin, BHO, PHO, CO2 Oil, Live Resin, etc.)
-  hashmaker         String? // Hashmaker
-  laboratoire       String? // Laboratoire de production
-  cultivarsUtilises String? // JSON ou texte: cultivars utilisés
-  photos            String? // JSON: ["/images/concentrate-xxx.jpg"]
+  nomCommercial                    String // Nom commercial* (requis)
+  concentrateType                  String? // Type de concentré (Rosin, BHO, PHO, CO2 Oil, Live Resin, etc.)
+  hashmaker                        String? // Hashmaker
+  // Lien de compte optionnel derrière `hashmaker`, cf. commentaire équivalent sur FlowerReview.farm.
+  hashmakerLinkedUserId            String?
+  hashmakerLinkedProducerProfileId String?
+  laboratoire                      String? // Laboratoire de production
+  cultivarsUtilises                String? // JSON ou texte: cultivars utilisés
+  photos                           String? // JSON: ["/images/concentrate-xxx.jpg"]
 
   // Lien vers la review fleur parente (matière première) — déprécié, voir sourceLineage
   parentFlowerReviewId String?
@@ -1133,12 +1147,15 @@ model EdibleReview {
   review   Review @relation(fields: [reviewId], references: [id], onDelete: Cascade)
 
   // ===== INFORMATIONS GÉNÉRALES =====
-  nomProduit     String // Nom du produit* (requis)
-  typeComestible String? // Type de comestible
-  fabricant      String? // Fabricant
-  typeGenetiques String? // Type de génétiques (OLD)
+  nomProduit                       String // Nom du produit* (requis)
+  typeComestible                   String? // Type de comestible
+  fabricant                        String? // Fabricant
+  // Lien de compte optionnel derrière `fabricant`, cf. commentaire équivalent sur FlowerReview.farm.
+  fabricantLinkedUserId            String?
+  fabricantLinkedProducerProfileId String?
+  typeGenetiques                   String? // Type de génétiques (OLD)
   // Traçabilité multi-source : JSON [{type:'flower'|'hash'|'concentrate', id, label, cultivars}, ...]
-  sourceLineage  String?
+  sourceLineage                    String?
 
   // NEW: GitHub-style pipeline recette
   recipePipelineGithubId String? // ID PipelineGithub pour recette
@@ -1286,7 +1303,6 @@ model SavedData {
   // Timestamps
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 
   // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
   // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
@@ -1590,7 +1606,6 @@ model GeneticTree {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-
   // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
   // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle
   // (cf. services/access.js). `userId` reste le créateur, pour la traçabilité.
@@ -1710,7 +1725,6 @@ model ProductionChain {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
 
   // Rattachement entreprise : quand renseigné, la ressource appartient à la société et non à son
   // seul créateur. Tous les membres actifs y accèdent ; la modification dépend de leur rôle

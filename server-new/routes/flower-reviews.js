@@ -13,7 +13,7 @@ import {
     canAccessSection
 } from '../middleware/permissions.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
-import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requirePublishingAllowed, requireReviewWriteOrThrow, resolveAccess } from '../services/access.js'
+import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requirePublishingAllowed, requireReviewWriteOrThrow, resolveAccess, resolveIdentityLink } from '../services/access.js'
 import { requireAuth } from '../middleware/auth.js'
 
 const router = express.Router()
@@ -123,6 +123,20 @@ function validateFlowerReviewData(data, options = {}) {
     // farm (optionnel)
     if (data.farm && typeof data.farm === 'string') {
         cleaned.farm = data.farm.trim()
+    }
+    // Lien de compte optionnel derrière `farm` (posé par FillMyselfButton/FillCompanyButton) — stash
+    // brut ici, résolu/validé dans le route handler (ownership : un utilisateur ne peut lier que SON
+    // PROPRE id ou celui de SA PROPRE entreprise, jamais un id arbitraire fourni par le client), même
+    // pattern que `_rawGeneticTreeId` ci-dessous.
+    if (data.farmLinkedUserId !== undefined) {
+        cleaned._rawFarmLinkedUserId = (data.farmLinkedUserId && typeof data.farmLinkedUserId === 'string')
+            ? data.farmLinkedUserId.trim() || null
+            : null
+    }
+    if (data.farmLinkedProducerProfileId !== undefined) {
+        cleaned._rawFarmLinkedProducerProfileId = (data.farmLinkedProducerProfileId && typeof data.farmLinkedProducerProfileId === 'string')
+            ? data.farmLinkedProducerProfileId.trim() || null
+            : null
     }
 
     // varietyType (optionnel - valeurs CDC: indica, sativa, hybride indica-dominant, etc.)
@@ -636,18 +650,37 @@ router.post('/',
             throw Errors.VALIDATION_ERROR(validation.errors)
         }
 
+        const access = await resolveAccess(req.user)
+
         // Résoudre geneticTreeId : vérifier existence + ownership avant d'assigner le FK scalaire,
         // sinon Prisma throw P2003 (contrainte FK) non catché si le tree est supprimé/périmé/d'un autre user.
+        // Company-aware (companyScopeFilter) : un arbre partagé par l'entreprise doit rester
+        // rattachable par n'importe quel membre, pas seulement son créateur d'origine — sinon la
+        // review est enregistrée sans lien généalogique, silencieusement.
         const rawTreeId = validation.cleaned._rawGeneticTreeId
         delete validation.cleaned._rawGeneticTreeId
         if (rawTreeId !== undefined) {
             if (rawTreeId === null) {
                 validation.cleaned.geneticTreeId = null
             } else {
-                const treeExists = await prisma.geneticTree.findFirst({ where: { id: rawTreeId, userId: req.user.id }, select: { id: true } })
+                const treeExists = await prisma.geneticTree.findFirst({ where: { id: rawTreeId, ...companyScopeFilter(access) }, select: { id: true } })
                 validation.cleaned.geneticTreeId = treeExists ? rawTreeId : null
             }
         }
+
+        // Résoudre le lien de compte optionnel derrière `farm` (cf. resolveIdentityLink) — un
+        // utilisateur ne peut lier que son propre id ou celui de son entreprise, jamais un id tiers.
+        if (validation.cleaned._rawFarmLinkedUserId !== undefined || validation.cleaned._rawFarmLinkedProducerProfileId !== undefined) {
+            const { userId, producerProfileId } = resolveIdentityLink(
+                access,
+                validation.cleaned._rawFarmLinkedUserId,
+                validation.cleaned._rawFarmLinkedProducerProfileId
+            )
+            validation.cleaned.farmLinkedUserId = userId
+            validation.cleaned.farmLinkedProducerProfileId = producerProfileId
+        }
+        delete validation.cleaned._rawFarmLinkedUserId
+        delete validation.cleaned._rawFarmLinkedProducerProfileId
 
         // Traiter les images uploadées
         const imageFiles = req.files?.images || []
@@ -682,7 +715,7 @@ router.post('/',
             authorId: req.user.id,
             // Rattachement entreprise : la review appartient à la société, pas au seul
             // rédacteur — elle reste accessible à l'équipe même s'il la quitte.
-            producerProfileId: owningCompanyId(await resolveAccess(req.user)),
+            producerProfileId: owningCompanyId(access),
             isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : false,
             // Store cultivars and farm on base Review for library card queries
             cultivars: validation.cleaned.cultivars || null,
@@ -916,18 +949,34 @@ router.put('/:id',
             throw Errors.VALIDATION_ERROR(validation.errors)
         }
 
+        const access = await resolveAccess(req.user)
+
         // Résoudre geneticTreeId : vérifier existence + ownership avant d'assigner le FK scalaire,
         // sinon Prisma throw P2003 (contrainte FK) non catché à chaque autosave si le tree est supprimé/périmé.
+        // Company-aware (companyScopeFilter), cf. commentaire équivalent sur POST ci-dessus.
         const rawTreeId = validation.cleaned._rawGeneticTreeId
         delete validation.cleaned._rawGeneticTreeId
         if (rawTreeId !== undefined) {
             if (rawTreeId === null) {
                 validation.cleaned.geneticTreeId = null
             } else {
-                const treeExists = await prisma.geneticTree.findFirst({ where: { id: rawTreeId, userId: req.user.id }, select: { id: true } })
+                const treeExists = await prisma.geneticTree.findFirst({ where: { id: rawTreeId, ...companyScopeFilter(access) }, select: { id: true } })
                 validation.cleaned.geneticTreeId = treeExists ? rawTreeId : null
             }
         }
+
+        // Résoudre le lien de compte optionnel derrière `farm`, cf. commentaire équivalent sur POST ci-dessus.
+        if (validation.cleaned._rawFarmLinkedUserId !== undefined || validation.cleaned._rawFarmLinkedProducerProfileId !== undefined) {
+            const { userId, producerProfileId } = resolveIdentityLink(
+                access,
+                validation.cleaned._rawFarmLinkedUserId,
+                validation.cleaned._rawFarmLinkedProducerProfileId
+            )
+            validation.cleaned.farmLinkedUserId = userId
+            validation.cleaned.farmLinkedProducerProfileId = producerProfileId
+        }
+        delete validation.cleaned._rawFarmLinkedUserId
+        delete validation.cleaned._rawFarmLinkedProducerProfileId
 
         // SPRINT 1: Check section-level permissions
         // Basic genetics fields (breeder, geneticType, indica/sativa%) are available to all users.

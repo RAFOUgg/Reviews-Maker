@@ -60,6 +60,14 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
         navigate(`/edit/${node.reviewType}/${node.reviewId}`);
     };
 
+    // Symétrique de "Accéder à la chaîne de production" côté PhenoHunt (NodeContextMenu.jsx) —
+    // node.geneticTreeId est posé côté serveur par GET /chains/:id (production-chains.js) quand ce
+    // nœud Fleur référence une review qui a une généalogie renseignée.
+    const handleGoToGenealogy = () => {
+        onClose();
+        window.open(`/phenohunt?tree=${node.geneticTreeId}`, '_blank', 'noopener');
+    };
+
     const handleCenterView = () => {
         fitView({ nodes: [{ id: nodeId }], duration: 300 });
         onClose();
@@ -133,6 +141,11 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                     {node?.reviewId && (
                         <button className="context-menu-item" onClick={handleDetach}>
                             ✂️ Détacher la review liée
+                        </button>
+                    )}
+                    {node?.reviewType === 'flower' && node?.geneticTreeId && (
+                        <button className="context-menu-item" onClick={handleGoToGenealogy}>
+                            🧬 Voir la généalogie
                         </button>
                     )}
                     <button className="context-menu-item" onClick={handleDuplicate}>

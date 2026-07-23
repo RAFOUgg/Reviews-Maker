@@ -8,7 +8,7 @@ import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } fro
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
-import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor } from '../services/access.js'
+import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -75,6 +75,18 @@ function validateEdibleReviewData(data, options = {}) {
 
     if (data.fabricant && typeof data.fabricant === 'string') {
         cleaned.fabricant = data.fabricant.trim()
+    }
+    // Lien de compte optionnel derrière `fabricant` (cf. FlowerReview.farmLinkedUserId pour le
+    // commentaire complet) — stash brut, résolu/validé dans le route handler via resolveIdentityLink.
+    if (data.fabricantLinkedUserId !== undefined) {
+        cleaned._rawFabricantLinkedUserId = (data.fabricantLinkedUserId && typeof data.fabricantLinkedUserId === 'string')
+            ? data.fabricantLinkedUserId.trim() || null
+            : null
+    }
+    if (data.fabricantLinkedProducerProfileId !== undefined) {
+        cleaned._rawFabricantLinkedProducerProfileId = (data.fabricantLinkedProducerProfileId && typeof data.fabricantLinkedProducerProfileId === 'string')
+            ? data.fabricantLinkedProducerProfileId.trim() || null
+            : null
     }
 
     if (data.typeGenetiques && typeof data.typeGenetiques === 'string') {
@@ -247,13 +259,28 @@ router.post('/', requireAuth, upload.array('images', 4), requirePublishingAllowe
     }
 
     const cleanedData = validation.cleaned
+    const access = await resolveAccess(req.user)
+
+    // Résoudre le lien de compte optionnel derrière `fabricant` (cf. resolveIdentityLink) — un
+    // utilisateur ne peut lier que son propre id ou celui de son entreprise, jamais un id tiers.
+    if (cleanedData._rawFabricantLinkedUserId !== undefined || cleanedData._rawFabricantLinkedProducerProfileId !== undefined) {
+        const { userId: linkedUserId, producerProfileId } = resolveIdentityLink(
+            access,
+            cleanedData._rawFabricantLinkedUserId,
+            cleanedData._rawFabricantLinkedProducerProfileId
+        )
+        cleanedData.fabricantLinkedUserId = linkedUserId
+        cleanedData.fabricantLinkedProducerProfileId = producerProfileId
+    }
+    delete cleanedData._rawFabricantLinkedUserId
+    delete cleanedData._rawFabricantLinkedProducerProfileId
 
     const review = await prisma.review.create({
         data: {
             authorId: userId,
             // Rattachement entreprise : la review appartient à la société, pas au seul
             // rédacteur — elle reste accessible à l'équipe même s'il la quitte.
-            producerProfileId: owningCompanyId(await resolveAccess(req.user)),
+            producerProfileId: owningCompanyId(access),
             type: 'edible',
             holderName: cleanedData.nomProduit,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
@@ -347,6 +374,20 @@ router.put('/:id', requireAuth, upload.array('images', 4), requirePublishingAllo
     }
 
     const cleanedData = validation.cleaned
+
+    // Résoudre le lien de compte optionnel derrière `fabricant`, cf. commentaire équivalent sur POST.
+    if (cleanedData._rawFabricantLinkedUserId !== undefined || cleanedData._rawFabricantLinkedProducerProfileId !== undefined) {
+        const access = await resolveAccess(req.user)
+        const { userId: linkedUserId, producerProfileId } = resolveIdentityLink(
+            access,
+            cleanedData._rawFabricantLinkedUserId,
+            cleanedData._rawFabricantLinkedProducerProfileId
+        )
+        cleanedData.fabricantLinkedUserId = linkedUserId
+        cleanedData.fabricantLinkedProducerProfileId = producerProfileId
+    }
+    delete cleanedData._rawFabricantLinkedUserId
+    delete cleanedData._rawFabricantLinkedProducerProfileId
 
     await prisma.review.update({
         where: { id: reviewId },

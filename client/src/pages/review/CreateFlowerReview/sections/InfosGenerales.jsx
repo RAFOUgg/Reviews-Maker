@@ -79,14 +79,32 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 <span className="flex items-center justify-between gap-2">
                                     Farm / Producteur
                                     <span className="flex items-center gap-1.5">
-                                        <FillCompanyButton onFill={(name) => handleChange('farm', name)} />
-                                        <FillMyselfButton onFill={(name) => handleChange('farm', name)} />
-                                        <UnknownValueButton onClick={() => handleChange('farm', '')} />
+                                        <FillCompanyButton onFill={(name, _userId, producerProfileId) => {
+                                            handleChange('farm', name)
+                                            handleChange('farmLinkedUserId', null)
+                                            handleChange('farmLinkedProducerProfileId', producerProfileId)
+                                        }} />
+                                        <FillMyselfButton onFill={(name, userId) => {
+                                            handleChange('farm', name)
+                                            handleChange('farmLinkedUserId', userId)
+                                            handleChange('farmLinkedProducerProfileId', null)
+                                        }} />
+                                        <UnknownValueButton onClick={() => {
+                                            handleChange('farm', '')
+                                            handleChange('farmLinkedUserId', null)
+                                            handleChange('farmLinkedProducerProfileId', null)
+                                        }} />
                                     </span>
                                 </span>
                             }
                             value={formData.farm || ''}
-                            onChange={(e) => handleChange('farm', e.target.value)}
+                            onChange={(e) => {
+                                handleChange('farm', e.target.value)
+                                // Le texte n'étant plus garanti correspondre au compte lié une fois modifié
+                                // à la main, on retire le lien plutôt que de le laisser mentir sur un tiers.
+                                handleChange('farmLinkedUserId', null)
+                                handleChange('farmLinkedProducerProfileId', null)
+                            }}
                             placeholder="Nom du producteur"
                         />
                         <p className="text-xs text-white/40 mt-1">(Auto-complete depuis base de données)</p>

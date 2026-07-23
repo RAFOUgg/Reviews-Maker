@@ -8,7 +8,7 @@ import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } fro
 import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
-import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor } from '../services/access.js'
+import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -74,6 +74,18 @@ async function validateHashReviewData(data, options = {}) {
     // hashmaker (optionnel)
     if (data.hashmaker && typeof data.hashmaker === 'string') {
         cleaned.hashmaker = data.hashmaker.trim()
+    }
+    // Lien de compte optionnel derrière `hashmaker` (cf. FlowerReview.farmLinkedUserId pour le
+    // commentaire complet) — stash brut, résolu/validé dans le route handler via resolveIdentityLink.
+    if (data.hashmakerLinkedUserId !== undefined) {
+        cleaned._rawHashmakerLinkedUserId = (data.hashmakerLinkedUserId && typeof data.hashmakerLinkedUserId === 'string')
+            ? data.hashmakerLinkedUserId.trim() || null
+            : null
+    }
+    if (data.hashmakerLinkedProducerProfileId !== undefined) {
+        cleaned._rawHashmakerLinkedProducerProfileId = (data.hashmakerLinkedProducerProfileId && typeof data.hashmakerLinkedProducerProfileId === 'string')
+            ? data.hashmakerLinkedProducerProfileId.trim() || null
+            : null
     }
 
     // laboratoire (optionnel)
@@ -586,6 +598,21 @@ router.post('/', requireAuth, upload.fields([
     }
 
     const cleanedData = validation.cleaned
+    const access = await resolveAccess(req.user)
+
+    // Résoudre le lien de compte optionnel derrière `hashmaker` (cf. resolveIdentityLink) — un
+    // utilisateur ne peut lier que son propre id ou celui de son entreprise, jamais un id tiers.
+    if (cleanedData._rawHashmakerLinkedUserId !== undefined || cleanedData._rawHashmakerLinkedProducerProfileId !== undefined) {
+        const { userId: linkedUserId, producerProfileId } = resolveIdentityLink(
+            access,
+            cleanedData._rawHashmakerLinkedUserId,
+            cleanedData._rawHashmakerLinkedProducerProfileId
+        )
+        cleanedData.hashmakerLinkedUserId = linkedUserId
+        cleanedData.hashmakerLinkedProducerProfileId = producerProfileId
+    }
+    delete cleanedData._rawHashmakerLinkedUserId
+    delete cleanedData._rawHashmakerLinkedProducerProfileId
 
     // Créer la Review parente
     const review = await prisma.review.create({
@@ -593,7 +620,7 @@ router.post('/', requireAuth, upload.fields([
             authorId: userId,
             // Rattachement entreprise : la review appartient à la société, pas au seul
             // rédacteur — elle reste accessible à l'équipe même s'il la quitte.
-            producerProfileId: owningCompanyId(await resolveAccess(req.user)),
+            producerProfileId: owningCompanyId(access),
             type: 'hash',
             holderName: cleanedData.nomCommercial,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
@@ -714,6 +741,20 @@ router.put('/:id', requireAuth, upload.fields([
     }
 
     const cleanedData = validation.cleaned
+
+    // Résoudre le lien de compte optionnel derrière `hashmaker`, cf. commentaire équivalent sur POST.
+    if (cleanedData._rawHashmakerLinkedUserId !== undefined || cleanedData._rawHashmakerLinkedProducerProfileId !== undefined) {
+        const access = await resolveAccess(req.user)
+        const { userId: linkedUserId, producerProfileId } = resolveIdentityLink(
+            access,
+            cleanedData._rawHashmakerLinkedUserId,
+            cleanedData._rawHashmakerLinkedProducerProfileId
+        )
+        cleanedData.hashmakerLinkedUserId = linkedUserId
+        cleanedData.hashmakerLinkedProducerProfileId = producerProfileId
+    }
+    delete cleanedData._rawHashmakerLinkedUserId
+    delete cleanedData._rawHashmakerLinkedProducerProfileId
 
     // Mettre à jour la Review parente
     await prisma.review.update({

@@ -79,6 +79,8 @@ router.get("/chains", requireAuth, requireChainAccess, async (req, res) => {
                 shareCode: true,
                 createdAt: true,
                 updatedAt: true,
+                userId: true,
+                producerProfile: { select: { companyName: true } },
                 _count: { select: { nodes: true, edges: true } }
             },
             orderBy: { updatedAt: "desc" }
@@ -199,6 +201,20 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
             })
         }
 
+        // Navigation retour vers PhenoHunt : un nœud Fleur dont la review a une généalogie
+        // (FlowerReview.geneticTreeId) doit pouvoir proposer "Voir la généalogie" au même titre que
+        // PhenoHunt propose déjà "Accéder à la chaîne de production" (NodeContextMenu.jsx) — sans ce
+        // patch le frontend n'a aucun moyen de savoir qu'un arbre existe pour ce nœud.
+        const flowerReviewIds = chain.nodes.filter(n => n.reviewType === 'flower' && n.reviewId).map(n => n.reviewId)
+        if (flowerReviewIds.length > 0) {
+            const flowerData = await prisma.flowerReview.findMany({
+                where: { reviewId: { in: flowerReviewIds } },
+                select: { reviewId: true, geneticTreeId: true }
+            })
+            const treeByReviewId = new Map(flowerData.filter(f => f.geneticTreeId).map(f => [f.reviewId, f.geneticTreeId]))
+            chain.nodes = chain.nodes.map(n => treeByReviewId.has(n.reviewId) ? { ...n, geneticTreeId: treeByReviewId.get(n.reviewId) } : n)
+        }
+
         chain.edges = chain.edges.map(normalizeEdge)
 
         res.json(chain)
@@ -296,11 +312,11 @@ router.post("/chains/:id/events", requireAuth, requireChainAccess, async (req, r
         }
 
         // equipmentId (optionnel) référence une entrée SavedData (bibliothèque "Matériel",
-        // cf. client/src/pages/library/tabs/DataTab.jsx) — pas de FK Prisma (SavedData n'a pas de
-        // vocation à être verrouillée par une relation), juste une vérification applicative
-        // d'appartenance à l'utilisateur courant, même pattern que reviewId sur ChainNode.
+        // cf. client/src/pages/library/tabs/DataTab.jsx) — pas de FK Prisma, juste une vérification
+        // applicative d'appartenance, company-aware comme le reste de la bibliothèque (routes/library.js)
+        // puisque SavedData porte lui aussi producerProfileId.
         if (equipmentId) {
-            const equipment = await prisma.savedData.findFirst({ where: { id: equipmentId, userId: req.user.id } })
+            const equipment = await prisma.savedData.findFirst({ where: { id: equipmentId, ...companyScopeFilter(req.access) } })
             if (!equipment) {
                 return res.status(400).json({ error: "Invalid equipment reference" })
             }
@@ -1045,13 +1061,18 @@ router.get("/for-review/:reviewType/:reviewId", optionalAuth, async (req, res) =
                 name: true,
                 isPublic: true,
                 userId: true,
+                producerProfileId: true,
                 _count: { select: { nodes: true, edges: true } }
             }
         })
 
+        // Company-aware : une chaîne rattachée à l'entreprise doit rester visible à tout membre,
+        // pas seulement à son créateur (sinon le bouton "Accéder à la chaîne de production" depuis
+        // PhenoHunt échoue silencieusement pour les ressources d'entreprise).
+        const access = await resolveAccess(req.user)
         const visible = chains
-            .filter(c => c.isPublic || c.userId === req.user?.id)
-            .map(({ userId, ...rest }) => rest)
+            .filter(c => c.isPublic || c.userId === access.userId || (c.producerProfileId && access.company?.id === c.producerProfileId))
+            .map(({ userId, producerProfileId, ...rest }) => rest)
 
         res.json(visible)
     } catch (error) {
@@ -1079,10 +1100,14 @@ router.get("/for-review/:reviewType/:reviewId/events", optionalAuth, async (req,
         const chainIds = [...new Set(nodes.map(n => n.chainId))]
         const chains = await prisma.productionChain.findMany({
             where: { id: { in: chainIds } },
-            select: { id: true, isPublic: true, userId: true }
+            select: { id: true, isPublic: true, userId: true, producerProfileId: true }
         })
+        // Company-aware, même règle que GET /for-review/:reviewType/:reviewId ci-dessus.
+        const access = await resolveAccess(req.user)
         const visibleChainIds = new Set(
-            chains.filter(c => c.isPublic || c.userId === req.user?.id).map(c => c.id)
+            chains
+                .filter(c => c.isPublic || c.userId === access.userId || (c.producerProfileId && access.company?.id === c.producerProfileId))
+                .map(c => c.id)
         )
 
         const entityIds = nodes.filter(n => visibleChainIds.has(n.chainId)).map(n => n.id)

@@ -3,6 +3,8 @@ import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubs
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind } from 'lucide-react'
 import InteractivePipelineViewer from './InteractivePipelineViewer'
+import UserMention from '../shared/UserMention'
+import TrustBadge from '../shared/TrustBadge'
 
 export default function ReviewFullDisplay({ review }) {
     const [lightboxImg, setLightboxImg] = useState(null)
@@ -133,18 +135,37 @@ export default function ReviewFullDisplay({ review }) {
                                     <span className="text-white font-medium">{review.cultivars}</span>
                                 </div>
                             )}
-                            {(review.breeder || review.hashmaker) && (
+                            {/* Breeder (Flower) / Hashmaker (Hash+Concentrate) — la vraie valeur vit sur la
+                                sous-table du type (review.breeder/hashmaker de base ne sont jamais écrits par
+                                aucune route, colonnes historiques mortes). */}
+                            {(review.flowerData?.breeder || review.hashData?.hashmaker || review.concentrateData?.hashmaker) && (
                                 <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2">
                                     <User className="w-4 h-4 text-cyan-400" />
-                                    <span className="text-white/50">{review.breeder ? 'Breeder' : 'Hashmaker'}:</span>
-                                    <span className="text-white font-medium">{review.breeder || review.hashmaker}</span>
+                                    <span className="text-white/50">{review.flowerData?.breeder ? 'Breeder' : 'Hashmaker'}:</span>
+                                    <UserMention
+                                        userId={review.hashData?.hashmakerLinkedUserId || review.concentrateData?.hashmakerLinkedUserId}
+                                        className="text-white font-medium"
+                                    >
+                                        {review.flowerData?.breeder || review.hashData?.hashmaker || review.concentrateData?.hashmaker}
+                                    </UserMention>
                                 </div>
                             )}
                             {review.farm && (
                                 <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2">
                                     <Factory className="w-4 h-4 text-amber-400" />
                                     <span className="text-white/50">Farm:</span>
-                                    <span className="text-white font-medium">{review.farm}</span>
+                                    <UserMention userId={review.flowerData?.farmLinkedUserId} className="text-white font-medium">
+                                        {review.farm}
+                                    </UserMention>
+                                </div>
+                            )}
+                            {review.edibleData?.fabricant && (
+                                <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2">
+                                    <Factory className="w-4 h-4 text-amber-400" />
+                                    <span className="text-white/50">Fabricant:</span>
+                                    <UserMention userId={review.edibleData?.fabricantLinkedUserId} className="text-white font-medium">
+                                        {review.edibleData.fabricant}
+                                    </UserMention>
                                 </div>
                             )}
                             <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2">
@@ -152,10 +173,18 @@ export default function ReviewFullDisplay({ review }) {
                                 <span className="text-white/50">Date:</span>
                                 <span className="text-white">{formatDate(review.createdAt)}</span>
                             </div>
-                            <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2">
+                            <div className="flex items-center gap-3 bg-white/5 rounded-lg px-3 py-2 flex-wrap">
                                 <User className="w-4 h-4 text-pink-400" />
                                 <span className="text-white/50">Auteur:</span>
-                                <span className="text-white">{(typeof review.author === 'object' ? review.author?.username : review.author) || review.ownerName || 'Anonyme'}</span>
+                                <UserMention userId={typeof review.author === 'object' ? review.author?.id : null} className="text-white">
+                                    {(typeof review.author === 'object' ? review.author?.username : review.author) || review.ownerName || 'Anonyme'}
+                                </UserMention>
+                                {typeof review.author === 'object' && (
+                                    <TrustBadge
+                                        producerProfile={review.author?.producerProfile}
+                                        influencerProfile={review.author?.influencerProfile}
+                                    />
+                                )}
                             </div>
                         </div>
                     </div>

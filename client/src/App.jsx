@@ -8,6 +8,7 @@ import ExamplePipelineIntegration from './pages/public/ExamplePipelineIntegratio
 import LoginPage from './pages/auth/LoginPage'
 import AuthCallback from './components/account/AuthCallback'
 import ToastContainer from './components/shared/ToastContainer'
+import ProfileModal from './components/shared/ProfileModal'
 import ErrorBoundary from './components/shared/ErrorBoundary'
 import { useStore } from './store/useStore'
 import { useAuth } from './hooks/useAuth'
@@ -118,6 +119,7 @@ function App() {
                         <RDRBanner />
                         <DisclaimerRDRModal />
                         <ToastContainer />
+                        <ProfileModal />
 
                         {isAuthenticated && !loading && (
                             <>

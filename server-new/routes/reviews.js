@@ -183,9 +183,11 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
                     username: true,
                     avatar: true,
                     discordId: true,
-                    // Badge « producteur vérifié » exposé sur la review (cf. Chantier 5 traçabilité) —
-                    // lu par exportDataAdapter (author.producerProfile.isVerified/businessType).
-                    producerProfile: { select: { isVerified: true, businessType: true } }
+                    // Badges de confiance exposés sur la review (mentions cliquables + TrustBadge) —
+                    // lus par exportDataAdapter (producerProfile) et par UserMention/TrustBadge côté
+                    // ReviewFullDisplay/ProfileModal pour les comptes influenceur.
+                    producerProfile: { select: { isVerified: true, businessType: true } },
+                    influencerProfile: { select: { isVerified: true, brandName: true } }
                 }
             }
         }

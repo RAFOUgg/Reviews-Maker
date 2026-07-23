@@ -75,13 +75,22 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 <span className="flex items-center justify-between gap-2">
                                     Hashmaker / Extracteur
                                     <span className="flex items-center gap-1.5">
-                                        <FillMyselfButton onFill={(name) => handleChange('hashmaker', name)} />
-                                        <UnknownValueButton onClick={() => handleChange('hashmaker', '')} />
+                                        <FillMyselfButton onFill={(name, userId) => {
+                                            handleChange('hashmaker', name)
+                                            handleChange('hashmakerLinkedUserId', userId)
+                                        }} />
+                                        <UnknownValueButton onClick={() => {
+                                            handleChange('hashmaker', '')
+                                            handleChange('hashmakerLinkedUserId', null)
+                                        }} />
                                     </span>
                                 </span>
                             }
                             value={formData.hashmaker || ''}
-                            onChange={(e) => handleChange('hashmaker', e.target.value)}
+                            onChange={(e) => {
+                                handleChange('hashmaker', e.target.value)
+                                handleChange('hashmakerLinkedUserId', null)
+                            }}
                             placeholder="Nom de l'extracteur"
                         />
 

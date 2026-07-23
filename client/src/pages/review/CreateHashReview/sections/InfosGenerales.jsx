@@ -39,13 +39,24 @@ export default function InfosGenerales({ formData, handleChange, photos, handleP
                                 <span className="flex items-center justify-between gap-2">
                                     Hashmaker
                                     <span className="flex items-center gap-1.5">
-                                        <FillMyselfButton onFill={(name) => handleChange('hashmaker', name)} />
-                                        <UnknownValueButton onClick={() => handleChange('hashmaker', '')} />
+                                        <FillMyselfButton onFill={(name, userId) => {
+                                            handleChange('hashmaker', name)
+                                            handleChange('hashmakerLinkedUserId', userId)
+                                        }} />
+                                        <UnknownValueButton onClick={() => {
+                                            handleChange('hashmaker', '')
+                                            handleChange('hashmakerLinkedUserId', null)
+                                        }} />
                                     </span>
                                 </span>
                             }
                             value={formData.hashmaker || ''}
-                            onChange={(e) => handleChange('hashmaker', e.target.value)}
+                            onChange={(e) => {
+                                handleChange('hashmaker', e.target.value)
+                                // Le texte n'étant plus garanti correspondre au compte lié une fois modifié
+                                // à la main, on retire le lien plutôt que de le laisser mentir sur un tiers.
+                                handleChange('hashmakerLinkedUserId', null)
+                            }}
                             placeholder="Nom du hashmaker"
                         />
                     </div>

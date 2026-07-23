@@ -35,6 +35,23 @@ import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { requireFeature } from '../middleware/permissions.js'
 import { resolveAccess, companyScopeFilter, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js'
 import { wouldCreateCycle } from '../utils/graphCycle.js'
+import { REVIEW_TYPE_TO_DB } from '../utils/reviewTypeMap.js'
+
+/**
+ * Vérifie que `sourceReviewId` référence bien une FlowerReview que l'appelant a le droit de
+ * modifier (la sienne, ou celle de son entreprise) avant de la rattacher à un arbre — sinon
+ * n'importe quel utilisateur pouvait annexer silencieusement la fiche technique d'un tiers à son
+ * propre arbre généalogique en devinant/récupérant son id (même pattern de contrôle que
+ * production-chains.js:406-422 pour ChainNode.reviewId).
+ */
+async function assertOwnsSourceReview(req, sourceReviewId) {
+    const review = await prisma.review.findUnique({
+        where: { id: sourceReviewId },
+        select: { id: true, authorId: true, type: true, producerProfileId: true }
+    })
+    if (!review || review.type !== REVIEW_TYPE_TO_DB.flower) return false
+    return canModifyFor(req, review, 'authorId')
+}
 
 const router = express.Router()
 const prisma = new PrismaClient()
@@ -53,9 +70,10 @@ const requireGeneticsAccess = requireFeature('genetics_canvas')
 router.get("/next-pheno-code/:prefix", requireAuth, async (req, res) => {
     try {
         const prefix = req.params.prefix
+        const access = await resolveAccess(req.user)
         const nodes = await prisma.genNode.findMany({
             where: {
-                tree: { userId: req.user.id },
+                tree: companyScopeFilter(access),
                 genetics: { contains: `"phenotypeCode":"${prefix}-` }
             },
             select: { genetics: true }
@@ -97,6 +115,8 @@ router.get("/trees", requireAuth, async (req, res) => {
                 shareCode: true,
                 createdAt: true,
                 updatedAt: true,
+                userId: true,
+                producerProfile: { select: { companyName: true } },
                 _count: {
                     select: { nodes: true, edges: true, flowerReviews: true }
                 }
@@ -123,9 +143,10 @@ router.get("/find-node-for-review/:reviewId", requireAuth, async (req, res) => {
     try {
         const { reviewId } = req.params
         const name = (req.query.name || '').trim()
+        const access = await resolveAccess(req.user)
 
         const exact = await prisma.genNode.findFirst({
-            where: { sourceReviewId: reviewId, tree: { userId: req.user.id } },
+            where: { sourceReviewId: reviewId, tree: companyScopeFilter(access) },
             select: { id: true, treeId: true, tree: { select: { name: true } } }
         })
         if (exact) {
@@ -134,7 +155,7 @@ router.get("/find-node-for-review/:reviewId", requireAuth, async (req, res) => {
 
         if (name) {
             const byName = await prisma.genNode.findFirst({
-                where: { cultivarName: name, tree: { userId: req.user.id } },
+                where: { cultivarName: name, tree: companyScopeFilter(access) },
                 select: { id: true, treeId: true, tree: { select: { name: true } } }
             })
             if (byName) {
@@ -437,6 +458,13 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
             return res.status(400).json({ error: "Cultivar name is required" });
         }
 
+        // sourceReviewId n'est accepté que si l'appelant a le droit de modifier la review visée
+        // (la sienne, ou celle de son entreprise) — sinon n'importe qui pourrait rattacher la
+        // fiche technique d'un tiers à son propre arbre en devinant/récupérant son id.
+        const validSourceReviewId = (sourceReviewId && await assertOwnsSourceReview(req, sourceReviewId))
+            ? sourceReviewId
+            : null;
+
         const node = await prisma.genNode.create({
             data: {
                 treeId: req.params.id,
@@ -446,13 +474,13 @@ router.post("/trees/:id/nodes", requireAuth, requireGeneticsAccess, validateNode
                 image: image || null,
                 genetics: genetics ? JSON.stringify(genetics) : null,
                 notes: notes?.trim() || null,
-                sourceReviewId: sourceReviewId || null
+                sourceReviewId: validSourceReviewId
             }
         });
 
-        if (sourceReviewId) {
+        if (validSourceReviewId) {
             await prisma.flowerReview.updateMany({
-                where: { reviewId: sourceReviewId },
+                where: { reviewId: validSourceReviewId },
                 data: { geneticTreeId: req.params.id }
             }).catch(() => {}); // best-effort : ne bloque pas la création du nœud si la review n'existe pas/plus
         }
@@ -498,6 +526,12 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
             media
         } = req.body;
 
+        // Même contrôle d'ownership qu'à la création (cf. assertOwnsSourceReview) : sans ça, changer
+        // sourceReviewId d'un nœud existant permettait le même rattachement non autorisé.
+        const validSourceReviewId = sourceReviewId !== undefined
+            ? ((sourceReviewId && await assertOwnsSourceReview(req, sourceReviewId)) ? sourceReviewId : null)
+            : undefined;
+
         const updated = await prisma.genNode.update({
             where: { id: req.params.nodeId },
             data: {
@@ -507,7 +541,7 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
                 ...(image !== undefined && { image: image || null }),
                 ...(genetics !== undefined && { genetics: genetics ? JSON.stringify(genetics) : null }),
                 ...(notes !== undefined && { notes: notes?.trim() || null }),
-                ...(sourceReviewId !== undefined && { sourceReviewId: sourceReviewId || null }),
+                ...(validSourceReviewId !== undefined && { sourceReviewId: validSourceReviewId }),
                 ...(media !== undefined && { media: JSON.stringify(media) })
             }
         });
@@ -516,10 +550,10 @@ router.put("/nodes/:nodeId", requireAuth, requireGeneticsAccess, validateNodeUpd
         // existant à une review — ré-attacher après détachement, ou changer de review liée —
         // laisse FlowerReview.geneticTreeId à null pour toujours, et le modal "créer un arbre"
         // réapparaît à chaque réédition de cette review).
-        if (sourceReviewId !== undefined && sourceReviewId !== node.sourceReviewId) {
-            if (sourceReviewId) {
+        if (validSourceReviewId !== undefined && validSourceReviewId !== node.sourceReviewId) {
+            if (validSourceReviewId) {
                 await prisma.flowerReview.updateMany({
-                    where: { reviewId: sourceReviewId },
+                    where: { reviewId: validSourceReviewId },
                     data: { geneticTreeId: node.treeId }
                 }).catch(() => {});
             }

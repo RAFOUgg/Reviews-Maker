@@ -3,6 +3,7 @@ import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
 import { formatReviews } from '../utils/reviewFormatter.js'
 import { resolveAccess, companyScopeFilter } from '../services/access.js'
+import { getUserAccountType } from '../services/account.js'
 
 const router = express.Router()
 
@@ -20,7 +21,9 @@ router.get('/me/reviews', asyncHandler(async (req, res) => {
                     id: true,
                     username: true,
                     avatar: true,
-                    discordId: true
+                    discordId: true,
+                    producerProfile: { select: { isVerified: true, businessType: true } },
+                    influencerProfile: { select: { isVerified: true, brandName: true } }
                 }
             },
             likes: true
@@ -65,6 +68,9 @@ router.get('/me/stats', asyncHandler(async (req, res) => {
 }))
 
 // GET /api/users/:id/profile - Profil public d'un utilisateur
+// Sert la carte de profil ouverte par UserMention/ProfileModal — n'expose que des champs
+// publics-safe : jamais siret/ein/documents de vérification/adresse (ceux-là restent réservés à la
+// page Compte de l'intéressé).
 router.get('/:id/profile', asyncHandler(async (req, res) => {
     const user = await prisma.user.findUnique({
         where: { id: req.params.id },
@@ -74,8 +80,12 @@ router.get('/:id/profile', asyncHandler(async (req, res) => {
             avatar: true,
             discordId: true,
             createdAt: true,
-            _count: {
-                select: { reviews: true }
+            roles: true,
+            producerProfile: {
+                select: { companyName: true, businessType: true, isVerified: true }
+            },
+            influencerProfile: {
+                select: { brandName: true, brandLogo: true, isVerified: true, followerCount: true }
             }
         }
     })
@@ -98,7 +108,10 @@ router.get('/:id/profile', asyncHandler(async (req, res) => {
             ? `https://cdn.discordapp.com/avatars/${user.discordId}/${user.avatar}.png`
             : `https://cdn.discordapp.com/embed/avatars/${Math.floor(Math.random() * 5)}.png`,
         memberSince: user.createdAt,
-        totalReviews: publicReviews
+        totalReviews: publicReviews,
+        accountType: getUserAccountType(user),
+        producerProfile: user.producerProfile,
+        influencerProfile: user.influencerProfile
     })
 }))
 
@@ -116,7 +129,9 @@ router.get('/:id/reviews', asyncHandler(async (req, res) => {
                     id: true,
                     username: true,
                     avatar: true,
-                    discordId: true
+                    discordId: true,
+                    producerProfile: { select: { isVerified: true, businessType: true } },
+                    influencerProfile: { select: { isVerified: true, brandName: true } }
                 }
             },
             likes: true
