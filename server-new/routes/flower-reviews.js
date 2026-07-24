@@ -650,6 +650,20 @@ router.post('/',
             throw Errors.VALIDATION_ERROR(validation.errors)
         }
 
+        // Gating Producteur sur la Culture Pipeline et les opérations de généalogie, à la création
+        // aussi (pas seulement à la mise à jour) — sinon un compte gratuit pouvait tout simplement
+        // les inclure dès la création pour contourner le garde équivalent du PUT.
+        if (req.body.geneticTreeId || req.body.parentage || req.body.phenotypeCode) {
+            if (!canAccessSection(accountType, 'genetic')) {
+                throw Errors.FORBIDDEN('Genetics tree operations are not available for your account type. Upgrade to Producer to access.')
+            }
+        }
+        if (req.body.cultureTimelineData || req.body.cultureTimelineConfig) {
+            if (!canAccessSection(accountType, 'pipeline_culture')) {
+                throw Errors.FORBIDDEN('Culture Pipeline not available for your account type. Upgrade to Producer to access.')
+            }
+        }
+
         const access = await resolveAccess(req.user)
 
         // Résoudre geneticTreeId : vérifier existence + ownership avant d'assigner le FK scalaire,
@@ -981,9 +995,15 @@ router.put('/:id',
         // SPRINT 1: Check section-level permissions
         // Basic genetics fields (breeder, geneticType, indica/sativa%) are available to all users.
         // Only genealogy tree operations (parentage, phenotypeCode, geneticTreeId) are restricted to Producer+.
+        // `getUserAccountType(req.user)` (déjà calculé plus haut dans ce handler, ligne ~915) — pas
+        // `req.user.accountType` qui n'est pas le champ tenu à jour par le reste de l'app (roles/
+        // resolveAccess). Corrige aussi le body inspecté ci-dessous : le front envoie
+        // `cultureTimelineData`/`cultureTimelineConfig` à plat, jamais `pipelineData.culture`, donc ce
+        // garde ne se déclenchait jamais — n'importe quel compte gratuit pouvait sauvegarder une
+        // Culture Pipeline complète.
         const hasTreeOperation = req.body.geneticTreeId || req.body.parentage || req.body.phenotypeCode
         if (hasTreeOperation) {
-            if (!canAccessSection(req.user.accountType || 'consumer', 'genetic')) {
+            if (!canAccessSection(accountType, 'genetic')) {
                 throw Errors.FORBIDDEN(
                     'Genetics tree operations are not available for your account type. Upgrade to Producer to access.'
                 )
@@ -991,8 +1011,8 @@ router.put('/:id',
         }
 
         // If user is trying to update culture pipeline, verify access
-        if (req.body.pipelineData?.culture) {
-            if (!canAccessSection(req.user.accountType || 'consumer', 'pipeline_culture')) {
+        if (req.body.cultureTimelineData || req.body.cultureTimelineConfig) {
+            if (!canAccessSection(accountType, 'pipeline_culture')) {
                 throw Errors.FORBIDDEN(
                     'Culture Pipeline not available for your account type. Upgrade to Producer to access.'
                 )

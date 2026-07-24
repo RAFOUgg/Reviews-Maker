@@ -65,11 +65,16 @@ function getMassBalanceRows(reviewData) {
 
 function useReviewEvents(reviewData) {
     const [events, setEvents] = useState([]);
+    // `ready` passe à true que le fetch réussisse ou échoue — jamais bloqué indéfiniment. Exposé en
+    // DOM via `data-report-ready` (cf. rendu plus bas) pour qu'ExportModal.jsx puisse attendre la fin
+    // réelle de ce chargement avant de capturer, au lieu du délai fixe précédent qui pouvait figer
+    // le rapport de traçabilité sans le journal d'événements sur une connexion lente.
+    const [ready, setReady] = useState(false);
     const reviewId = reviewData?.id;
     const reviewType = normalizeReviewType(reviewData?.type);
 
     useEffect(() => {
-        if (!reviewId) return;
+        if (!reviewId) { setReady(true); return; }
         let cancelled = false;
         (async () => {
             try {
@@ -79,12 +84,14 @@ function useReviewEvents(reviewData) {
                 if (!cancelled) setEvents(Array.isArray(data) ? data : []);
             } catch {
                 // pas d'événements — journal simplement vide
+            } finally {
+                if (!cancelled) setReady(true);
             }
         })();
         return () => { cancelled = true; };
     }, [reviewId, reviewType]);
 
-    return events;
+    return { events, ready };
 }
 
 /**
@@ -115,7 +122,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     );
 
     const massBalanceRows = getMassBalanceRows(reviewData);
-    const events = useReviewEvents(reviewData);
+    const { events, ready: eventsReady } = useReviewEvents(reviewData);
     const activeTimelines = TIMELINE_PIPELINES.filter(t => reviewData[t.dataKey] && reviewData[t.configKey]);
 
     const hasLabInfo = reviewData.labName || reviewData.labMethod || reviewData.labAccredited;
@@ -140,6 +147,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     return (
         <div
             className="w-full h-full flex flex-col"
+            data-report-ready={eventsReady ? 'true' : 'false'}
             style={{
                 backgroundColor: colors.background,
                 padding: `${padding.container}px`,

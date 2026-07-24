@@ -24,6 +24,7 @@ import { PrivateRoute } from './components/PrivateRoute'
 
 // Lazy-loaded pages (code splitting)
 const ReviewDetailPage = lazy(() => import('./pages/public/ReviewDetailPage'))
+const PublicRenderPage = lazy(() => import('./pages/public/PublicRenderPage'))
 const CreateReviewPage = lazy(() => import('./pages/review/CreateReviewPage'))
 const CreateFlowerReview = lazy(() => import('./pages/review/CreateFlowerReview'))
 const CreateHashReview = lazy(() => import('./pages/review/CreateHashReview'))
@@ -193,6 +194,10 @@ function App() {
                                         </PrivateRoute>
                                     } />
                                 </Route>
+                                {/* Lien HTML vivant partageable (Export Maker, Chantier B) — page sans
+                                    chrome, hors Layout : re-rend TemplateRenderer avec les données
+                                    actuelles de la review à chaque visite, rien n'est figé. */}
+                                <Route path="/r/:id" element={<PublicRenderPage />} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/payment" element={<PaymentPage />} />

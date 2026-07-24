@@ -9,6 +9,8 @@ import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
+import { getUserAccountType } from '../services/account.js'
+import { canAccessSection } from '../middleware/permissions.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -483,6 +485,15 @@ router.post('/', requireAuth, upload.fields([
     }
 
     const cleanedData = validation.cleaned
+
+    // Gating Producteur sur le Pipeline Extraction — jusqu'ici totalement absent sur ce type
+    // (aucune vérification), à l'image de Hash/Fleur corrigés dans le même chantier.
+    if (bodyData.extractionTimelineData || bodyData.extractionTimelineConfig) {
+        if (!canAccessSection(getUserAccountType(req.user), 'pipeline_extraction')) {
+            return res.status(403).json({ error: 'Extraction Pipeline not available for your account type. Upgrade to Producer to access.' })
+        }
+    }
+
     const access = await resolveAccess(req.user)
 
     // Résoudre le lien de compte optionnel derrière `hashmaker` (cf. resolveIdentityLink) — un
@@ -618,6 +629,13 @@ router.put('/:id', requireAuth, upload.fields([
     }
 
     const cleanedData = validation.cleaned
+
+    // Gating Producteur sur le Pipeline Extraction, cf. commentaire équivalent sur POST.
+    if (bodyData.extractionTimelineData || bodyData.extractionTimelineConfig) {
+        if (!canAccessSection(getUserAccountType(req.user), 'pipeline_extraction')) {
+            return res.status(403).json({ error: 'Extraction Pipeline not available for your account type. Upgrade to Producer to access.' })
+        }
+    }
 
     // Résoudre le lien de compte optionnel derrière `hashmaker`, cf. commentaire équivalent sur POST.
     if (cleanedData._rawHashmakerLinkedUserId !== undefined || cleanedData._rawHashmakerLinkedProducerProfileId !== undefined) {

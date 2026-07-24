@@ -70,18 +70,23 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
     const [shareCode, setShareCode] = useState('')
     const [importCode, setImportCode] = useState('')
 
-    // Charger les templates sauvegardés — GET /api/library/templates renvoie un tableau
-    // brut (pas {templates, defaultId}), géré défensivement pour les deux formes.
+    // Charger les templates sauvegardés (GET /api/library/templates renvoie un tableau brut,
+    // partagé avec orchardStore.fetchRemotePresets qui exige strictement cette forme) + le
+    // template par défaut persisté, via l'endpoint dédié /templates/default.
     const fetchTemplates = useCallback(async () => {
         try {
             setLoading(true)
-            const response = await fetch('/api/library/templates', {
-                credentials: 'include'
-            })
-            if (response.ok) {
-                const data = await response.json()
+            const [templatesRes, defaultRes] = await Promise.all([
+                fetch('/api/library/templates', { credentials: 'include' }),
+                fetch('/api/library/templates/default', { credentials: 'include' }),
+            ])
+            if (templatesRes.ok) {
+                const data = await templatesRes.json()
                 setSavedTemplates(Array.isArray(data) ? data : (data.templates || []))
-                setDefaultTemplateId(Array.isArray(data) ? null : data.defaultId)
+            }
+            if (defaultRes.ok) {
+                const { defaultId } = await defaultRes.json()
+                setDefaultTemplateId(defaultId)
             }
         } catch (error) {
             toast.error('Erreur lors du chargement des templates')

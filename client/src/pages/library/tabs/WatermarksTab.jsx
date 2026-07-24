@@ -62,8 +62,13 @@ export default function WatermarksTab() {
             })
             if (response.ok) {
                 const data = await response.json()
-                setWatermarks(data.watermarks || [])
-                setDefaultWatermarkId(data.defaultId)
+                // GET /api/library/watermarks renvoie un tableau brut (pas {watermarks, defaultId}) —
+                // géré défensivement pour les deux formes, même piège déjà corrigé sur TemplatesTab.jsx.
+                // Le "défaut" est dérivé directement du tableau (Watermark.isDefault, un vrai champ en
+                // base, contrairement à SavedTemplate qui n'a pas d'équivalent persistant).
+                const list = Array.isArray(data) ? data : (data.watermarks || [])
+                setWatermarks(list)
+                setDefaultWatermarkId(Array.isArray(data) ? (list.find(w => w.isDefault)?.id ?? null) : data.defaultId)
             }
         } catch (error) {
             toast.error('Erreur lors du chargement des filigranes')

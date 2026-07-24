@@ -1,30 +1,53 @@
 /**
  * DisclaimerRDRModal - Modal de rappel RDR (Réduction Des Risques)
- * S'affiche à chaque ouverture de l'application (session-based via sessionStorage)
- * Rappelle la conformité légale et les conditions d'utilisation
+ *
+ * Ne s'affiche JAMAIS pour un compte connecté ayant déjà donné son consentement réel
+ * (`user.consentRDR`, enregistré côté serveur par ConsentModal.jsx lors de l'onboarding) —
+ * sans ce garde, ce rappel s'affichait pour tout le monde à chaque session, y compris les
+ * comptes ayant déjà légalement accepté les CGU/RDR.
+ * Pour un visiteur non connecté (pas de compte où persister un consentement), le rappel est
+ * mémorisé en localStorage avec horodatage et ne se réaffiche pas avant 24h.
  * Liquid Glass UI Design System - Responsive Mobile First
  */
 
 import React, { useEffect, useState, useRef } from 'react';
 import { LiquidModal, LiquidButton, LiquidCard } from '@/components/ui/LiquidUI';
 import { AlertTriangle, X, Lock, ShieldAlert, Scale, Heart, Ban, ScrollText } from 'lucide-react';
+import { useStore } from '../../store/useStore';
+
+const STORAGE_KEY = 'rdr_disclaimer_last_seen';
+const REMIND_AFTER_MS = 24 * 60 * 60 * 1000; // 24h
 
 const DisclaimerRDRModal = () => {
+    const { isAuthenticated, user } = useStore();
     const [isVisible, setIsVisible] = useState(false);
     const previousActiveElement = useRef(null);
 
     useEffect(() => {
-        // Utiliser sessionStorage au lieu de localStorage pour afficher à chaque session
-        const sessionAccepted = sessionStorage.getItem('rdr_session_accepted');
-
-        // Afficher si pas encore accepté dans cette session
-        if (!sessionAccepted) {
-            const timer = setTimeout(() => {
-                setIsVisible(true);
-            }, 1500);
-            return () => clearTimeout(timer);
+        // Consentement déjà enregistré sur le compte : ce rappel est redondant avec le vrai
+        // consentement légal (ConsentModal), ne jamais le montrer dans ce cas.
+        if (isAuthenticated && user?.consentRDR) {
+            setIsVisible(false);
+            return;
         }
-    }, []);
+
+        // Visiteur non connecté (ou connecté mais pas encore consenti — le vrai gate bloquant
+        // ConsentModal s'en charge déjà, inutile de superposer ce rappel par-dessus) : on garde
+        // une trace en localStorage (pas sessionStorage, pour survivre à un nouvel onglet) et on
+        // ne redemande pas avant 24h.
+        const lastSeen = Number(localStorage.getItem(STORAGE_KEY) || 0)
+        if (Date.now() - lastSeen < REMIND_AFTER_MS) {
+            setIsVisible(false)
+            return
+        }
+
+        // Léger délai pour laisser le premier rendu se stabiliser, sans faire attendre
+        // l'utilisateur qui veut déjà naviguer.
+        const timer = setTimeout(() => {
+            setIsVisible(true);
+        }, 300);
+        return () => clearTimeout(timer);
+    }, [isAuthenticated, user?.consentRDR]);
 
     useEffect(() => {
         if (!isVisible) return;
@@ -42,8 +65,8 @@ const DisclaimerRDRModal = () => {
     }, [isVisible]);
 
     const handleAccept = () => {
-        // Marquer comme accepté pour cette session uniquement
-        sessionStorage.setItem('rdr_session_accepted', 'true');
+        // Mémorisé 24h — pas juste le temps de l'onglet courant.
+        localStorage.setItem(STORAGE_KEY, String(Date.now()));
         setIsVisible(false);
     };
 
@@ -107,6 +130,8 @@ const DisclaimerRDRModal = () => {
         <LiquidModal
             isOpen={true}
             onClose={handleClose}
+            closeOnOverlay={false}
+            closeOnEsc={false}
             size="lg"
         >
             {/* Container scrollable principal pour mobile */}
@@ -173,7 +198,7 @@ const DisclaimerRDRModal = () => {
                         ✓ J'ai compris et j'accepte
                     </LiquidButton>
                     <p className="text-[10px] sm:text-xs text-white/40 text-center mt-2 sm:mt-3">
-                        Ce message s'affiche à chaque visite pour rappeler les conditions d'utilisation.
+                        Ce rappel ne se réaffichera pas avant 24h.
                     </p>
                 </div>
             </div>

@@ -26,9 +26,10 @@ export function getLotCode(reviewId) {
     return `${PREFIX}-${compact.slice(0, 8)}`;
 }
 
-// URL publique vers laquelle le QR code doit pointer — la review elle-même, seule cible stable
-// disponible tant que le Chantier 6 (export figé) n'existe pas encore.
+// URL publique vers laquelle le QR code doit pointer — le lien HTML vivant (Chantier B de la
+// finalisation Export Maker, `/r/:id`) plutôt que `/review/:id` : page sans chrome ni boutons
+// d'édition, pensée pour être scannée/partagée, qui re-rend toujours les données actuelles.
 export function getLotCodeUrl(reviewId, origin = (typeof window !== 'undefined' ? window.location.origin : '')) {
     if (!reviewId) return null;
-    return `${origin}/review/${reviewId}`;
+    return `${origin}/r/${reviewId}`;
 }

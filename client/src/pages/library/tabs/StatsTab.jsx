@@ -14,9 +14,9 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard } from '@/components/ui/LiquidUI'
 import { motion } from 'framer-motion'
 import {
-    BarChart3, TrendingUp, Eye, Heart, MessageCircle, Share2,
+    BarChart3, TrendingUp, Eye, Heart, MessageCircle,
     FileText, Download, Flower2, Hash, FlaskConical, Cookie,
-    Star, Calendar, Award, Target, Activity, Users
+    Target, Activity, Users
 } from 'lucide-react'
 
 // Icônes par type de produit
@@ -26,6 +26,16 @@ const TYPE_ICONS = {
     Concentré: { icon: FlaskConical, color: 'purple' },
     Comestible: { icon: Cookie, color: 'pink' },
 }
+
+// Les types stockés en base ('Fleurs', 'hash', 'concentrate', 'edible', cf. flower/hash/
+// concentrate/edible-reviews.js) ne correspondent pas à la casse attendue par TYPE_ICONS.
+const TYPE_LABELS = {
+    Fleurs: 'Fleur',
+    hash: 'Hash',
+    concentrate: 'Concentré',
+    edible: 'Comestible',
+}
+const displayType = (rawType) => TYPE_LABELS[rawType] || rawType || 'Autre'
 
 export default function StatsTab({ userTier = 'amateur' }) {
     const toast = useToast()
@@ -59,61 +69,6 @@ export default function StatsTab({ userTier = 'amateur' }) {
         fetchStats()
     }, [fetchStats])
 
-    // Données mock pour le développement
-    const getMockStats = () => ({
-        reviews: {
-            total: 24,
-            thisMonth: 5,
-            byType: {
-                Fleur: 12,
-                Hash: 6,
-                Concentré: 4,
-                Comestible: 2
-            },
-            public: 18,
-            private: 6
-        },
-        exports: {
-            total: 89,
-            thisMonth: 15,
-            byFormat: {
-                PNG: 45,
-                PDF: 28,
-                JPEG: 12,
-                SVG: 4
-            }
-        },
-        engagement: {
-            views: 1250,
-            likes: 89,
-            comments: 34,
-            shares: 12
-        },
-        ratings: {
-            given: {
-                average: 7.8,
-                total: 24
-            },
-            received: {
-                average: 8.2,
-                total: 156
-            }
-        },
-        topReviews: [
-            { id: 1, name: 'Zkittlez Premium', type: 'flower', views: 324, likes: 28 },
-            { id: 2, name: 'Temple Ball', type: 'Hash', views: 256, likes: 22 },
-            { id: 3, name: 'Live Rosin OG', type: 'Concentré', views: 189, likes: 15 },
-        ],
-        activity: [
-            { date: '2024-01', reviews: 3, exports: 12 },
-            { date: '2024-02', reviews: 5, exports: 18 },
-            { date: '2024-03', reviews: 4, exports: 15 },
-            { date: '2024-04', reviews: 6, exports: 22 },
-            { date: '2024-05', reviews: 3, exports: 10 },
-            { date: '2024-06', reviews: 3, exports: 12 },
-        ]
-    })
-
     // Stat Card Component
     const StatCard = ({ icon: Icon, label, value, subValue, color = 'purple', trend }) => (
         <LiquidCard glow="none" padding="md" className="hover:border-white/20 transition-all">
@@ -146,7 +101,8 @@ export default function StatsTab({ userTier = 'amateur' }) {
         return (
             <div className="space-y-3">
                 {Object.entries(data).map(([type, count]) => {
-                    const config = TYPE_ICONS[type] || { icon: FileText, color: 'gray' }
+                    const label = displayType(type)
+                    const config = TYPE_ICONS[label] || { icon: FileText, color: 'gray' }
                     const Icon = config.icon
                     const percentage = Math.round((count / total) * 100)
 
@@ -155,7 +111,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                             <div className="flex items-center justify-between text-sm">
                                 <span className="flex items-center gap-2 text-white/80">
                                     <Icon className={`w-4 h-4 text-${config.color}-400`} />
-                                    {type}
+                                    {label}
                                 </span>
                                 <span className="text-white/50">{count} ({percentage}%)</span>
                             </div>
@@ -231,7 +187,6 @@ export default function StatsTab({ userTier = 'amateur' }) {
                     value={stats.reviews.total}
                     subValue={`${stats.reviews.thisMonth} ce mois`}
                     color="purple"
-                    trend={15}
                 />
                 <StatCard
                     icon={Download}
@@ -239,21 +194,18 @@ export default function StatsTab({ userTier = 'amateur' }) {
                     value={stats.exports.total}
                     subValue={`${stats.exports.thisMonth} ce mois`}
                     color="blue"
-                    trend={8}
                 />
                 <StatCard
                     icon={Eye}
                     label="Vues totales"
                     value={stats.engagement.views}
                     color="green"
-                    trend={22}
                 />
                 <StatCard
                     icon={Heart}
                     label="J'aime reçus"
                     value={stats.engagement.likes}
                     color="red"
-                    trend={12}
                 />
             </div>
 
@@ -274,7 +226,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                         <Activity className="w-4 h-4 text-purple-400" />
                         Engagement
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-3 gap-4">
                         <div className="text-center p-4 bg-white/5 rounded-xl">
                             <Eye className="w-6 h-6 text-blue-400 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-white">{stats.engagement.views}</div>
@@ -290,58 +242,6 @@ export default function StatsTab({ userTier = 'amateur' }) {
                             <div className="text-2xl font-bold text-white">{stats.engagement.comments}</div>
                             <div className="text-xs text-white/50">Commentaires</div>
                         </div>
-                        <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <Share2 className="w-6 h-6 text-purple-400 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-white">{stats.engagement.shares}</div>
-                            <div className="text-xs text-white/50">Partages</div>
-                        </div>
-                    </div>
-                </LiquidCard>
-            </div>
-
-            {/* Notes moyennes */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <LiquidCard glow="none" padding="lg">
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                        <Star className="w-4 h-4 text-amber-400" />
-                        Notes données
-                    </h3>
-                    <div className="flex items-center gap-4">
-                        <div className="text-5xl font-bold text-amber-400">
-                            {stats.ratings.given.average.toFixed(1)}
-                        </div>
-                        <div>
-                            <div className="text-white/60">Moyenne</div>
-                            <div className="text-sm text-white/40">sur {stats.ratings.given.total} reviews</div>
-                        </div>
-                    </div>
-                    <div className="mt-4 h-2 bg-white/5 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-amber-500 rounded-full"
-                            style={{ width: `${(stats.ratings.given.average / 10) * 100}%` }}
-                        />
-                    </div>
-                </LiquidCard>
-
-                <LiquidCard glow="none" padding="lg">
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                        <Award className="w-4 h-4 text-green-400" />
-                        Notes reçues
-                    </h3>
-                    <div className="flex items-center gap-4">
-                        <div className="text-5xl font-bold text-green-400">
-                            {stats.ratings.received.average.toFixed(1)}
-                        </div>
-                        <div>
-                            <div className="text-white/60">Moyenne</div>
-                            <div className="text-sm text-white/40">sur {stats.ratings.received.total} évaluations</div>
-                        </div>
-                    </div>
-                    <div className="mt-4 h-2 bg-white/5 rounded-full overflow-hidden">
-                        <div
-                            className="h-full bg-green-500 rounded-full"
-                            style={{ width: `${(stats.ratings.received.average / 10) * 100}%` }}
-                        />
                     </div>
                 </LiquidCard>
             </div>
@@ -360,7 +260,8 @@ export default function StatsTab({ userTier = 'amateur' }) {
                 ) : (
                     <div className="space-y-3">
                         {stats.topReviews.map((review, index) => {
-                            const config = TYPE_ICONS[review.type] || { icon: FileText, color: 'gray' }
+                            const label = displayType(review.type)
+                            const config = TYPE_ICONS[label] || { icon: FileText, color: 'gray' }
                             const Icon = config.icon
 
                             return (
@@ -379,7 +280,7 @@ export default function StatsTab({ userTier = 'amateur' }) {
                                     </div>
                                     <div className="flex-1">
                                         <div className="font-medium text-white">{review.name}</div>
-                                        <div className="text-sm text-white/50">{review.type}</div>
+                                        <div className="text-sm text-white/50">{label}</div>
                                     </div>
                                     <div className="flex items-center gap-4 text-sm text-white/60">
                                         <span className="flex items-center gap-1">

@@ -4,6 +4,7 @@ import session from 'express-session'
 import { buildSessionOptions } from './session-options.js'
 import passport from 'passport'
 import cors from 'cors'
+import helmet from 'helmet'
 import fs from 'fs'
 import { PrismaClient } from '@prisma/client'
 import sqliteStore from 'connect-sqlite3'
@@ -102,6 +103,14 @@ app.use('/media', express.static(pipelineMediaDir))
 // un JSON reparsé/réordonné la casse. Ce montage doit précéder express.json() ci-dessous, sinon le
 // corps est déjà consommé et la vérification devient impossible (cf. routes/payment.js).
 app.use('/api/payment/webhook', express.raw({ type: 'application/json' }))
+// Ce process ne sert que du JSON + des fichiers statiques (images/médias), jamais de HTML —
+// la CSP par défaut d'helmet ne s'applique à rien ici et resterait un no-op. En revanche
+// crossOriginResourcePolicy: 'same-origin' casserait le chargement des images par le client
+// (autre origine en dev comme en prod), d'où l'override explicite en 'cross-origin'.
+app.use(helmet({
+    contentSecurityPolicy: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+}))
 app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb', extended: true }))
 app.use(cors({

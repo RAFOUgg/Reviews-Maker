@@ -34,6 +34,15 @@ export const requireAuth = (req, res, next) => {
             message: 'Authentication required'
         })
     }
+
+    if (req.user?.isBanned) {
+        return res.status(403).json({
+            error: 'account_banned',
+            message: req.user.banReason || 'Votre compte a été suspendu',
+            bannedAt: req.user.bannedAt
+        })
+    }
+
     next()
 }
 

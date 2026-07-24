@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { reviewsService } from '../../services/apiService';
 import {
   Search, Grid, List, Heart, MessageCircle, Eye, Star,
-  Calendar, TrendingUp, MoreVertical, ExternalLink
+  Calendar, TrendingUp, MoreVertical, ExternalLink, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
@@ -83,7 +83,7 @@ export default function GalleryPage() {
   };
 
   const handleViewReview = (reviewId) => {
-    navigate(`/reviews/${reviewId}`);
+    navigate(`/review/${reviewId}`);
   };
 
   const handleLike = async (reviewId, liked) => {

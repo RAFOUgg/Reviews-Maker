@@ -222,6 +222,41 @@ export const ACCOUNT_PERMISSIONS = {
 }
 
 /**
+ * Résout la vraie clé de tier à utiliser dans ACCOUNT_PERMISSIONS à partir d'un utilisateur.
+ *
+ * `user.accountType` en base ne vaut que 'consumer'|'influencer'|'producer' (jamais
+ * 'influencer_basic'/'influencer_pro', qui n'existent que dans ACCOUNT_PERMISSIONS) — le
+ * sous-palier Influenceur vit en fait dans `user.roles` (JSON, même pattern de résolution que
+ * `server-new/routes/templates.js:getUserAccountType`). Sans cette résolution, tout compte
+ * Influenceur payant retombait silencieusement sur les permissions Consumer (perte de
+ * SVG/CSV/JSON/HTML et de la haute résolution).
+ * @param {{accountType?: string, roles?: string}} user
+ * @returns {string} clé valide dans ACCOUNT_PERMISSIONS
+ */
+export function resolveAccountTypeKey(user) {
+    const rawAccountType = user?.accountType
+    const accountType = (typeof rawAccountType === 'string' ? rawAccountType : rawAccountType?.type) || ACCOUNT_TYPES.CONSUMER
+
+    if (accountType !== 'influencer' && accountType !== 'influenceur') {
+        // producer/consumer/beta_tester sont déjà des clés valides telles quelles.
+        return accountType
+    }
+
+    let roles = []
+    try {
+        roles = JSON.parse(user?.roles || '{"roles":[]}').roles || []
+    } catch {
+        roles = []
+    }
+
+    if (roles.includes('influencer_pro')) return ACCOUNT_TYPES.INFLUENCER_PRO
+    if (roles.includes('influencer_basic')) return ACCOUNT_TYPES.INFLUENCER_BASIC
+    // Compte Influenceur confirmé mais sans étiquette de sous-palier retrouvée : ne jamais
+    // rétrograder silencieusement vers Consumer, défaut sur le palier payant le plus bas.
+    return ACCOUNT_TYPES.INFLUENCER_BASIC
+}
+
+/**
  * Vérifie si un format d'export est autorisé pour un type de compte
  */
 export function canExportFormat(accountType, format) {

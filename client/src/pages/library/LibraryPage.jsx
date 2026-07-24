@@ -159,7 +159,7 @@ export default function LibraryPage() {
             case 'data':
                 return isProducer ? <DataTab /> : null
             case 'stats':
-                return <StatsTab />
+                return <StatsTab userTier={user?.accountType} />
             default:
                 return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={setActiveTab} />
         }

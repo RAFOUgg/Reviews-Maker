@@ -1,7 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { QRCodeSVG } from 'qrcode.react';
+import { Link2, Check } from 'lucide-react';
+import { getLotCodeUrl } from '../../utils/lotCode';
+import { getAvailableTimelapsePipelines, exportTimelapseToGIF, downloadTimelapseGIF, getTimelapseFrames } from '../../utils/TimelapseExporter';
+import { Film } from 'lucide-react';
 // Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
-import { useOrchardStore } from '../../store/orchardStore';
+import { useOrchardStore, DEFAULT_CONFIG } from '../../store/orchardStore';
 import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 import {
@@ -9,9 +14,13 @@ import {
     getMaxExportQuality,
     canExportFormat,
     getAccountFeatures,
+    resolveAccountTypeKey,
+    ACCOUNT_PERMISSIONS,
     ACCOUNT_TYPES
 } from '../../config/exportConfig';
 import TemplateRenderer from './TemplateRenderer';
+import WatermarkEditor from './WatermarkEditor';
+import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { getFieldRegistry, GROUP_LABELS } from '../../utils/fieldRegistry';
 import { serializeRenderToHtml, downloadHtml } from '../../utils/htmlExport';
@@ -75,18 +84,30 @@ function MiniPreview({ config, reviewData }) {
     );
 }
 
-export default function ExportModal({ onClose }) {
-    const reviewData = useOrchardStore((state) => state.reviewData);
-    const config = useOrchardStore((state) => state.config);
+export default function ExportModal({ onClose, reviewData: reviewDataProp, config: configProp }) {
+    // Deux façons d'alimenter ce modal : depuis Orchard Studio (aucune prop, tout vient du store
+    // pendant l'édition live) ou en autonome — ex. le bouton "Exporter" de ReviewDetailPage, qui n'a
+    // pas de session Orchard Studio ouverte derrière lui. `isStandalone` distingue les deux cas pour
+    // savoir si CE modal doit lui-même monter un canvas de capture (cf. plus bas), ou s'appuyer sur
+    // celui déjà rendu par le panneau d'édition.
+    const isStandalone = Boolean(reviewDataProp);
+    const storeReviewData = useOrchardStore((state) => state.reviewData);
+    const storeConfig = useOrchardStore((state) => state.config);
+    const reviewData = reviewDataProp || storeReviewData;
+    // Review jamais éditée dans Orchard Studio (pas de config sauvegardée) : repli sur une config
+    // par défaut sensée plutôt que de planter — la Fiche Technique Détaillée, pas le format compact
+    // social, puisqu'on exporte ici un document de référence, pas un post réseau social.
+    const config = configProp || storeConfig || {
+        ...DEFAULT_CONFIG,
+        template: 'detailedCard',
+        ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio,
+    };
     const user = useStore((state) => state.user);
-    const authorName = reviewData?.ownerName || (reviewData?.author ? (typeof reviewData.author === 'string' ? reviewData.author : (reviewData.author.username || reviewData.author.id)) : null) || 'Export Maker'
 
-    // Déterminer le type de compte utilisateur. `accountType` est stocké comme string
-    // ('producer', 'influencer'…) en base ; certains chemins historiques le passaient comme
-    // objet { type }. On gère les deux — sinon `.type` sur une string vaut undefined et TOUT
-    // compte retombait en CONSUMER, masquant les formats premium (HTML/SVG/CSV/JSON) à tous.
-    const rawAccountType = user?.accountType;
-    const accountType = (typeof rawAccountType === 'string' ? rawAccountType : rawAccountType?.type) || ACCOUNT_TYPES.CONSUMER;
+    // Résout la vraie clé de tier ('influencer_basic'/'influencer_pro', pas juste 'influencer')
+    // depuis accountType + roles — sans ça tout compte Influenceur payant retombait
+    // silencieusement sur les permissions Consumer (perte de SVG/CSV/JSON/HTML et haute résolution).
+    const accountType = resolveAccountTypeKey(user);
     const accountFeatures = getAccountFeatures(accountType);
     const availableFormats = getExportFormatsForUI(accountType);
     const maxQuality = getMaxExportQuality(accountType);
@@ -110,6 +131,28 @@ export default function ExportModal({ onClose }) {
     const [isExporting, setIsExporting] = useState(false);
     const [exportStatus, setExportStatus] = useState(null);
     const [exportProgress, setExportProgress] = useState(0);
+    const [linkCopied, setLinkCopied] = useState(false);
+    // Export "évolutif" (Chantier C) — cf. utils/TimelapseExporter.js, généralisé depuis
+    // CuringGIFExporter.js pour fonctionner sur n'importe quel pipeline (pas seulement curing).
+    const availableTimelapses = useMemo(() => getAvailableTimelapsePipelines(reviewData), [reviewData]);
+    const [selectedTimelapse, setSelectedTimelapse] = useState(availableTimelapses[0]?.key || null);
+    const [timelapseGenerating, setTimelapseGenerating] = useState(false);
+    const [timelapseProgress, setTimelapseProgress] = useState(0);
+    // Filigrane personnalisé (Influenceur Pro/Producteur) — porté depuis l'ancien moteur
+    // ExportMaker.jsx pour qu'il reste disponible une fois ce dernier retiré. Appliqué directement
+    // sur le clone capturé dans prepareCapture(), pas sur l'aperçu live — fonctionne donc de façon
+    // identique qu'on exporte depuis Orchard Studio ou en autonome (ReviewDetailPage).
+    const [watermark, setWatermark] = useState({
+        type: 'text',
+        content: '',
+        imageUrl: null,
+        position: { x: 50, y: 90 },
+        size: 20,
+        opacity: 30,
+        rotation: 0,
+        color: '#ffffff',
+        visible: false,
+    });
 
     // Vérifier les permissions au changement de format
     useEffect(() => {
@@ -147,9 +190,6 @@ export default function ExportModal({ onClose }) {
                 case 'pdf':
                     await exportPDF(allPages);
                     break;
-                case 'markdown':
-                    await exportMarkdown();
-                    break;
                 case 'html':
                     await exportHTML(allPages);
                     break;
@@ -166,17 +206,21 @@ export default function ExportModal({ onClose }) {
                     throw new Error('Format non supporté');
             }
 
-            // Figement (Chantier 6) : seul le rapport de traçabilité fige ses données rendues —
-            // un export image classique reste un usage ponctuel, pas un document à faire attester
-            // plus tard. Best-effort : un échec ici ne doit jamais invalider l'export déjà téléchargé.
-            if (config?.template === 'traceabilityReport' && reviewData?.id) {
-                try {
+            // Comptage d'usage réel (alimente l'onglet Statistiques de la Bibliothèque, qui
+            // affichait jusqu'ici des totaux fictifs faute d'un seul export jamais tracké pour
+            // les formats courants) — best-effort : un échec ici ne doit jamais invalider l'export
+            // déjà téléchargé. Le figement (snapshot+hash) reste réservé au rapport de traçabilité :
+            // un export image classique n'a pas vocation à être attesté plus tard.
+            try {
+                if (config?.template === 'traceabilityReport' && reviewData?.id) {
                     const snapshotData = buildExportReviewData(reviewData);
                     const contentHash = await computeContentHash(snapshotData);
                     await incrementExportCount(selectedFormat, 'standard', { reviewId: reviewData.id, snapshotData, contentHash });
-                } catch {
-                    // best-effort, cf. commentaire ci-dessus
+                } else {
+                    await incrementExportCount(selectedFormat, 'standard', reviewData?.id ? { reviewId: reviewData.id } : null);
                 }
+            } catch {
+                // best-effort, cf. commentaire ci-dessus
             }
 
             setExportStatus('✅ Export réussi !');
@@ -187,6 +231,27 @@ export default function ExportModal({ onClose }) {
             setExportStatus(`❌ Erreur: ${error.message}`);
         } finally {
             setIsExporting(false);
+        }
+    };
+
+    /** Export "évolutif" (Chantier C) — anime la timeline de pipeline sélectionnée en GIF. */
+    const handleGenerateTimelapse = async () => {
+        if (!selectedTimelapse) return;
+        setTimelapseGenerating(true);
+        setTimelapseProgress(0);
+        try {
+            const frames = getTimelapseFrames(reviewData, selectedTimelapse);
+            const pipelineLabel = availableTimelapses.find((p) => p.key === selectedTimelapse)?.label || 'Évolution';
+            const blob = await exportTimelapseToGIF(frames, {
+                title: pipelineLabel,
+                onProgress: setTimelapseProgress,
+            });
+            downloadTimelapseGIF(blob, `${reviewData.title || 'review'}-${selectedTimelapse}-evolution-${Date.now()}.gif`);
+        } catch (error) {
+            setExportStatus(`❌ Erreur timelapse: ${error.message}`);
+        } finally {
+            setTimelapseGenerating(false);
+            setTimelapseProgress(0);
         }
     };
 
@@ -213,11 +278,55 @@ export default function ExportModal({ onClose }) {
             transform: 'none', position: 'relative', overflow: 'hidden', boxSizing: 'border-box',
         });
 
+        // Filigrane personnalisé : injecté directement dans le clone capturé plutôt que dans
+        // l'aperçu live — fonctionne donc identiquement que la capture vienne du canvas live
+        // d'Orchard Studio ou du canvas caché monté en mode autonome (cf. isStandalone plus haut).
+        if (watermark.visible && (watermark.content || watermark.imageUrl)) {
+            const wm = document.createElement('div');
+            Object.assign(wm.style, {
+                position: 'absolute',
+                left: `${watermark.position.x}%`,
+                top: `${watermark.position.y}%`,
+                transform: `translate(-50%, -50%) rotate(${watermark.rotation}deg)`,
+                opacity: String(watermark.opacity / 100),
+                pointerEvents: 'none',
+                whiteSpace: 'nowrap',
+                zIndex: 9999,
+            });
+            if (watermark.type === 'image' && watermark.imageUrl) {
+                const img = document.createElement('img');
+                img.src = watermark.imageUrl;
+                img.style.maxWidth = `${watermark.size * 4}px`;
+                wm.appendChild(img);
+            } else {
+                wm.textContent = watermark.content;
+                wm.style.fontSize = `${watermark.size}px`;
+                wm.style.color = watermark.color;
+                wm.style.fontWeight = '600';
+            }
+            target.appendChild(wm);
+        }
+
         exportContainer.appendChild(target);
         return { target, exportContainer, width: w, height: h };
     };
 
     /** Preload fonts and wait for render */
+    // Rapport de traçabilité : son journal d'événements se charge en async après le premier rendu
+    // (cf. useReviewEvents dans TraceabilityReportTemplate.jsx), qui pose data-report-ready="true"
+    // sur son nœud racine une fois réglé. DOIT être attendu sur la source LIVE avant clonage —
+    // prepareCapture fait un cloneNode(true) figé dans le temps : attendre après coup sur le clone
+    // ne verrait jamais l'attribut changer, puisque le clone ne reçoit plus les mises à jour React
+    // du nœud original. Borné à 5s pour ne jamais bloquer l'export si le fetch traîne anormalement.
+    const waitForReportReady = async (sourceContainer) => {
+        const reportMarker = sourceContainer.querySelector('[data-report-ready]');
+        if (!reportMarker) return;
+        const start = Date.now();
+        while (reportMarker.getAttribute('data-report-ready') !== 'true' && Date.now() - start < 5000) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    };
+
     const waitForRender = async (target) => {
         await preloadFonts();
         if (config?.typography?.fontFamily) await preloadSpecificFont(config.typography.fontFamily);
@@ -238,6 +347,7 @@ export default function ExportModal({ onClose }) {
             setExportStatus(`📸 Capture page ${i + 1}/${pages.length}...`);
             setExportProgress(20 + Math.round((i / pages.length) * 60));
 
+            await waitForReportReady(pages[i]);
             const { target, exportContainer, width, height } = prepareCapture(pages[i]);
             await waitForRender(target);
 
@@ -289,6 +399,7 @@ export default function ExportModal({ onClose }) {
             setExportStatus(`📸 Capture page ${i + 1}/${pages.length}...`);
             setExportProgress(20 + Math.round((i / pages.length) * 60));
 
+            await waitForReportReady(pages[i]);
             const { target, exportContainer, width, height } = prepareCapture(pages[i]);
             await waitForRender(target);
 
@@ -335,6 +446,7 @@ export default function ExportModal({ onClose }) {
             setExportStatus(`🎨 Génération SVG page ${i + 1}/${pages.length}...`);
             setExportProgress(20 + Math.round((i / pages.length) * 60));
 
+            await waitForReportReady(pages[i]);
             const { target, exportContainer, width, height } = prepareCapture(pages[i]);
             await waitForRender(target);
 
@@ -383,6 +495,7 @@ export default function ExportModal({ onClose }) {
             setExportStatus(`📸 Capture page ${i + 1}/${pages.length}...`);
             setExportProgress(20 + Math.round((i / pages.length) * 60));
 
+            await waitForReportReady(pages[i]);
             const { target, exportContainer } = prepareCapture(pages[i]);
             await waitForRender(target);
 
@@ -439,68 +552,6 @@ export default function ExportModal({ onClose }) {
         downloadHtml(html, `${safe}.html`);
     };
 
-    const exportMarkdown = async () => {
-        let markdown = `# ${reviewData.title || 'Review'}\n\n`;
-
-        if (reviewData.rating) {
-            markdown += `**Note:** ${'★'.repeat(Math.floor(reviewData.rating))}${'☆'.repeat(5 - Math.floor(reviewData.rating))} (${reviewData.rating}/5)\n\n`;
-        }
-
-        if (reviewData.category) {
-            markdown += `**Catégorie:** ${reviewData.category}\n\n`;
-        }
-
-        if (authorName) {
-            markdown += `**Auteur:** ${authorName}\n`;
-        }
-
-        if (reviewData.date) {
-            markdown += `**Date:** ${new Date(reviewData.date).toLocaleDateString('fr-FR')}\n\n`;
-        }
-
-        if (reviewData.thcLevel || reviewData.cbdLevel) {
-            markdown += `## Composition\n\n`;
-            if (reviewData.thcLevel) markdown += `- **THC:** ${reviewData.thcLevel}%\n`;
-            if (reviewData.cbdLevel) markdown += `- **CBD:** ${reviewData.cbdLevel}%\n`;
-            markdown += `\n`;
-        }
-
-        if (reviewData.description) {
-            markdown += `## Description\n\n${reviewData.description}\n\n`;
-        }
-
-        if (reviewData.effects && reviewData.effects.length > 0) {
-            markdown += `## Effets\n\n`;
-            reviewData.effects.forEach(effect => {
-                markdown += `- ${effect}\n`;
-            });
-            markdown += `\n`;
-        }
-
-        if (reviewData.aromas && reviewData.aromas.length > 0) {
-            markdown += `## Arômes\n\n`;
-            reviewData.aromas.forEach(aroma => {
-                markdown += `- ${aroma}\n`;
-            });
-            markdown += `\n`;
-        }
-
-        if (reviewData.tags && reviewData.tags.length > 0) {
-            markdown += `## Tags\n\n`;
-            markdown += reviewData.tags.map(tag => `#${tag}`).join(' ') + '\n\n';
-        }
-
-        markdown += `---\n\n*Exporté depuis Export Maker - Reviews-Maker*\n`;
-
-        const blob = new Blob([markdown], { type: 'text/markdown' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.download = `review-${reviewData.title || 'export'}-${Date.now()}.md`;
-        link.href = url;
-        link.click();
-        URL.revokeObjectURL(url);
-    };
-
     /** Télécharge un Blob texte sous un nom donné (fabrique commune CSV/JSON). */
     const downloadTextBlob = (content, mime, extension) => {
         const blob = new Blob([content], { type: mime });
@@ -555,6 +606,15 @@ export default function ExportModal({ onClose }) {
 
     return (
         <>
+            {/* En mode autonome (pas de session Orchard Studio ouverte derrière ce modal), il n'existe
+                nulle part ailleurs de canvas #orchard-template-canvas déjà monté à capturer — on en
+                rend un ici, hors-écran, en plus du MiniPreview visible (qui, lui, utilise un canvasId
+                distinct pour ne jamais entrer en collision avec celui-ci). */}
+            {isStandalone && (
+                <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
+                    <TemplateRenderer config={config} reviewData={reviewData} />
+                </div>
+            )}
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -608,6 +668,87 @@ export default function ExportModal({ onClose }) {
                         </div>
                         {/* Right: options */}
                         <div className="flex-1 space-y-6 overflow-y-auto">
+                            {/* Lien vivant partageable (Export Maker, Chantier B) — contrairement aux
+                                formats ci-dessous, ne fige rien : la page /r/:id re-rend toujours les
+                                données actuelles de la review. Nécessite que la review soit publique,
+                                même règle que le reste de la Galerie — pas de nouveau modèle de permission. */}
+                            {reviewData?.id && (
+                                <div className="p-4 rounded-xl border border-purple-200 dark:border-purple-800 bg-purple-50 dark:bg-purple-900/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Link2 className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Lien vivant partageable</h4>
+                                    </div>
+                                    {reviewData.isPublic ? (
+                                        <>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                                Cette page se met à jour automatiquement si vous modifiez la review plus tard.
+                                            </p>
+                                            <div className="flex items-center gap-3">
+                                                <div className="bg-white p-2 rounded-lg flex-shrink-0">
+                                                    <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={56} level="M" />
+                                                </div>
+                                                <div className="flex-1 min-w-0">
+                                                    <input
+                                                        readOnly
+                                                        value={getLotCodeUrl(reviewData.id)}
+                                                        onFocus={(e) => e.target.select()}
+                                                        className="w-full px-2 py-1.5 text-xs rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                                                    />
+                                                    <button
+                                                        onClick={async () => {
+                                                            try {
+                                                                await navigator.clipboard.writeText(getLotCodeUrl(reviewData.id));
+                                                                setLinkCopied(true);
+                                                                setTimeout(() => setLinkCopied(false), 2000);
+                                                            } catch { /* clipboard indisponible, l'utilisateur peut copier le champ à la main */ }
+                                                        }}
+                                                        className="mt-2 flex items-center gap-1.5 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700"
+                                                    >
+                                                        {linkCopied ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+                                                        {linkCopied ? 'Copié !' : 'Copier le lien'}
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                                            Rendez cette review publique pour obtenir un lien partageable.
+                                        </p>
+                                    )}
+                                </div>
+                            )}
+                            {/* Export "évolutif" (Chantier C) — anime la timeline de pipeline choisie en
+                                GIF. N'apparaît que si au moins un pipeline a ≥2 points de données réels. */}
+                            {availableTimelapses.length > 0 && (
+                                <div className="p-4 rounded-xl border border-teal-200 dark:border-teal-800 bg-teal-50 dark:bg-teal-900/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Film className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Évolution dans le temps</h4>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                        Génère un GIF animé de l'évolution des notes au fil de la timeline.
+                                    </p>
+                                    <div className="flex items-center gap-2">
+                                        <select
+                                            value={selectedTimelapse || ''}
+                                            onChange={(e) => setSelectedTimelapse(e.target.value)}
+                                            disabled={timelapseGenerating}
+                                            className="flex-1 px-2 py-1.5 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                                        >
+                                            {availableTimelapses.map((p) => (
+                                                <option key={p.key} value={p.key}>{p.label} ({p.frameCount} points)</option>
+                                            ))}
+                                        </select>
+                                        <button
+                                            onClick={handleGenerateTimelapse}
+                                            disabled={timelapseGenerating}
+                                            className="px-3 py-1.5 text-sm font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 whitespace-nowrap"
+                                        >
+                                            {timelapseGenerating ? `${timelapseProgress}%` : 'Générer le GIF'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
                             {/* Scope selection (what to export) */}
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
@@ -623,7 +764,7 @@ export default function ExportModal({ onClose }) {
                                 <div className="flex items-center justify-between mb-3">
                                     <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Format d'export</h4>
                                     <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
-                                        {accountFeatures.name || 'Amateur'}
+                                        {ACCOUNT_PERMISSIONS[accountType]?.name || 'Amateur'}
                                     </span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
@@ -773,12 +914,6 @@ export default function ExportModal({ onClose }) {
                                     </div>
                                 )}
 
-                                {selectedFormat === 'markdown' && (
-                                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                                        Le fichier Markdown contiendra tous les détails textuels de la review dans un format portable et réutilisable.
-                                    </p>
-                                )}
-
                                 {/* Option: include branding in export */}
                                 <div className="mt-4 border-t pt-4">
                                     <label className={`flex items-center gap-2 ${accountFeatures.brandingRemoval ? 'cursor-pointer' : 'cursor-not-allowed opacity-50'}`}>
@@ -802,6 +937,26 @@ export default function ExportModal({ onClose }) {
                                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 ml-6">
                                             💎 Le retrait du branding Reviews-Maker nécessite un compte Influenceur ou Producteur
                                         </p>
+                                    )}
+                                </div>
+
+                                {/* Filigrane personnalisé (Influenceur Pro / Producteur) — porté depuis
+                                    l'ancien moteur ExportMaker.jsx, appliqué sur le clone capturé
+                                    (cf. prepareCapture) donc disponible pour tous les formats image. */}
+                                <div className="mt-4 border-t pt-4">
+                                    <label className="flex items-center gap-2 cursor-pointer mb-3">
+                                        <input
+                                            type="checkbox"
+                                            checked={watermark.visible}
+                                            onChange={(e) => setWatermark({ ...watermark, visible: e.target.checked })}
+                                            className="w-4 h-4 rounded border-gray-300 focus:ring-purple-500"
+                                        />
+                                        <span className="text-sm text-gray-700 dark:text-gray-300">
+                                            Filigrane personnalisé
+                                        </span>
+                                    </label>
+                                    {watermark.visible && (
+                                        <WatermarkEditor watermark={watermark} onWatermarkChange={setWatermark} />
                                     )}
                                 </div>
                             </div>

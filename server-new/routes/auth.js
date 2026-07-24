@@ -7,6 +7,7 @@ import { hashPassword, verifyPassword } from '../services/password.js'
 import { verifyUserTOTP } from '../services/totp.js'
 import { getUserLimits } from '../middleware/permissions.js'
 import { resolveAccess } from '../services/access.js'
+import { authLimiter, codeVerifyLimiter, passwordResetLimiter } from '../middleware/rateLimit.js'
 
 const router = express.Router()
 
@@ -108,7 +109,7 @@ router.get('/discord', (req, res, next) => {
 })
 
 // POST /api/auth/email/signup - Création de compte email/password
-router.post('/email/signup', asyncHandler(async (req, res) => {
+router.post('/email/signup', authLimiter, asyncHandler(async (req, res) => {
     // `isPaid` était accepté ici et activait l'abonnement sur simple déclaration du client : retiré.
     const { email, password, username, pseudo, accountType } = req.body || {}
     const finalUsername = username || pseudo // Accepter les deux noms de champ
@@ -199,7 +200,7 @@ router.post('/email/signup', asyncHandler(async (req, res) => {
 }))
 
 // POST /api/auth/email/login - Connexion email/password
-router.post('/email/login', asyncHandler(async (req, res) => {
+router.post('/email/login', authLimiter, asyncHandler(async (req, res) => {
     const { email, password } = req.body || {}
 
     if (!email || !password) {
@@ -239,7 +240,7 @@ router.post('/email/login', asyncHandler(async (req, res) => {
 }))
 
 // POST /api/auth/email/login/totp - Deuxième étape du login si la 2FA TOTP est activée
-router.post('/email/login/totp', asyncHandler(async (req, res) => {
+router.post('/email/login/totp', codeVerifyLimiter, asyncHandler(async (req, res) => {
     const { email, password, token } = req.body || {}
 
     if (!email || !password || !token) {
@@ -683,7 +684,7 @@ router.get('/facebook/callback', (req, res, next) => {
  * Envoie un code 6 chiffres par email
  * CDC: "code de vérification 6 chiffres obligatoire à chaque connexion"
  */
-router.post('/send-verification-code', asyncHandler(async (req, res) => {
+router.post('/send-verification-code', passwordResetLimiter, asyncHandler(async (req, res) => {
     const { email, type = 'login' } = req.body
 
     if (!email) {
@@ -733,7 +734,7 @@ router.post('/send-verification-code', asyncHandler(async (req, res) => {
  * POST /api/auth/verify-code
  * Vérifie un code 6 chiffres
  */
-router.post('/verify-code', asyncHandler(async (req, res) => {
+router.post('/verify-code', codeVerifyLimiter, asyncHandler(async (req, res) => {
     const { email, code, type = 'login' } = req.body
 
     if (!email || !code) {
@@ -815,7 +816,7 @@ router.post('/verify-code', asyncHandler(async (req, res) => {
  * POST /api/auth/forgot-password
  * Envoie un email avec lien de réinitialisation (token 1h)
  */
-router.post('/forgot-password', asyncHandler(async (req, res) => {
+router.post('/forgot-password', passwordResetLimiter, asyncHandler(async (req, res) => {
     const { email } = req.body
 
     if (!email) {
@@ -861,7 +862,7 @@ router.post('/forgot-password', asyncHandler(async (req, res) => {
  * POST /api/auth/reset-password
  * Réinitialise le mot de passe avec token
  */
-router.post('/reset-password', asyncHandler(async (req, res) => {
+router.post('/reset-password', passwordResetLimiter, asyncHandler(async (req, res) => {
     const { email, token, newPassword } = req.body
 
     if (!email || !token || !newPassword) {

@@ -9,7 +9,7 @@ import { apiTypeToInternal } from '../../utils/reviewTypeMeta'
 import { getLotCode } from '../../utils/lotCode'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
-const ExportMaker = React.lazy(() => import('../../components/export/ExportMaker'))
+const ExportModal = React.lazy(() => import('../../components/export/ExportModal'))
 import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2, GitBranch } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
 
@@ -143,7 +143,7 @@ export default function ReviewDetailPage() {
                             </LiquidButton>
 
                             <LiquidButton
-                                onClick={() => navigate(`/edit/${id}`)}
+                                onClick={() => navigate(`/edit/${apiTypeToInternal(review.type)}/${id}`)}
                                 variant="secondary"
                                 size="sm"
                             >
@@ -262,12 +262,22 @@ export default function ReviewDetailPage() {
                 )}
             </div>
 
-            {/* Export Modal using ExportMaker */}
+            {/* Même moteur de rendu que l'aperçu Orchard Studio (TemplateRenderer/exportDataAdapter)
+                — ce qui est configuré/prévisualisé est désormais ce qui s'exporte réellement ici. */}
             {showExportModal && (
                 <Suspense fallback={<div className="p-6 text-center">Chargement de l'export…</div>}>
-                    <ExportMaker
+                    <ExportModal
                         reviewData={review}
-                        productType={review.type}
+                        config={(() => {
+                            if (!review.orchardConfig) return undefined
+                            try {
+                                return typeof review.orchardConfig === 'string'
+                                    ? JSON.parse(review.orchardConfig)
+                                    : review.orchardConfig
+                            } catch {
+                                return undefined
+                            }
+                        })()}
                         onClose={() => setShowExportModal(false)}
                     />
                 </Suspense>

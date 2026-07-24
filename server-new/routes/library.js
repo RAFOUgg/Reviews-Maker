@@ -10,7 +10,7 @@ import { PrismaClient } from '@prisma/client';
 import { asyncHandler, requireAuthOrThrow } from '../utils/errorHandler.js';
 import { canAccessFeature } from '../middleware/permissions.js';
 import { requireAuth } from '../middleware/auth.js';
-import { resolveAccess, companyScopeFilter, canModifyResource, canModifyFor, canReadFor, owningCompanyId } from '../services/access.js';
+import { resolveAccess, companyScopeFilter, canModifyResource, canModifyFor, canReadFor, owningCompanyId, requirePublishingAllowed } from '../services/access.js';
 import multer from 'multer'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -69,6 +69,14 @@ router.get('/templates', requireAuth, asyncHandler(async (req, res) => {
     });
 
     res.json(templates);
+}));
+
+/**
+ * GET /api/library/templates/default
+ * Récupère l'id du template par défaut de l'utilisateur (persisté sur User.defaultExportTemplate)
+ */
+router.get('/templates/default', requireAuth, asyncHandler(async (req, res) => {
+    res.json({ defaultId: req.user.defaultExportTemplate || null });
 }));
 
 /**
@@ -559,7 +567,9 @@ router.put('/data/:id', requireAuth, asyncHandler(async (req, res) => {
  * Accepts multipart/form-data with 'file' or JSON body with 'fileUrl'.
  * Fields: reviewId (optional), name, description, templateName, format, isPublic (true/false), tags
  */
-router.post('/exports', requireAuth, uploadExport.single('file'), asyncHandler(async (req, res) => {
+// requirePublishingAllowed : même garde que la création/visibilité de review — sans ça, publier un
+// export directement via cette route contournait le gate SIRET/KYC pour un compte pro non vérifié.
+router.post('/exports', requireAuth, uploadExport.single('file'), requirePublishingAllowed, asyncHandler(async (req, res) => {
     const { reviewId, name, description, templateName, format, isPublic: isPublicRaw, tags } = req.body
     const isPublic = isPublicRaw === 'true' || isPublicRaw === true || isPublicRaw === '1'
 
@@ -738,26 +748,48 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
         where: { authorId: req.user.id, isPublic: true }
     });
 
-    // Engagement (placeholder - will be replaced with real metrics)
-    const engagement = {
-        views: 0,
-        likes: 0,
-        comments: 0,
-        shares: 0
-    };
+    // Engagement réel — vues/likes/commentaires sur les reviews de l'utilisateur
+    // (mêmes modèles que routes/stats.js : reviewView/reviewLike/reviewComment)
+    const [totalViews, totalLikes, totalComments] = await Promise.all([
+        prisma.reviewView.count({ where: { review: { authorId: req.user.id } } }),
+        prisma.reviewLike.count({ where: { review: { authorId: req.user.id }, isLike: true } }),
+        prisma.reviewComment.count({ where: { review: { authorId: req.user.id }, isDeleted: false } }),
+    ]);
 
-    // Top reviews by views/likes (placeholder)
-    const topReviews = await prisma.review.findMany({
+    // Exports réels — le modèle Export (routes/usage.js) est la source authentique,
+    // un par export effectué (format/date), à la différence de UserStats qui n'était jamais écrit.
+    const [totalExports, exportsThisMonth, exportsByFormat] = await Promise.all([
+        prisma.export.count({ where: { userId: req.user.id } }),
+        prisma.export.count({
+            where: {
+                userId: req.user.id,
+                createdAt: { gte: new Date(new Date().setMonth(new Date().getMonth() - 1)) }
+            }
+        }),
+        prisma.export.groupBy({ by: ['format'], where: { userId: req.user.id }, _count: true }),
+    ]);
+
+    // Top reviews par engagement réel (vues + likes), même logique que routes/stats.js
+    const topReviewsRaw = await prisma.review.findMany({
         where: { authorId: req.user.id, isPublic: true },
-        take: 5,
-        orderBy: { createdAt: 'desc' },
+        take: 20,
         select: {
             id: true,
             holderName: true,
             type: true,
-            createdAt: true
+            _count: { select: { views: true, likes: true } }
         }
     });
+    const topReviews = topReviewsRaw
+        .sort((a, b) => (b._count.views + b._count.likes) - (a._count.views + a._count.likes))
+        .slice(0, 5)
+        .map(r => ({
+            id: r.id,
+            name: r.holderName,
+            type: r.type,
+            views: r._count.views,
+            likes: r._count.likes,
+        }));
 
     res.json({
         reviews: {
@@ -770,21 +802,18 @@ router.get('/stats', requireAuth, asyncHandler(async (req, res) => {
             private: totalReviews - publicReviews
         },
         exports: {
-            total: 0,
-            thisMonth: 0,
-            byFormat: {}
+            total: totalExports,
+            thisMonth: exportsThisMonth,
+            byFormat: Object.fromEntries(
+                exportsByFormat.map(e => [(e.format || 'png').toUpperCase(), e._count])
+            ),
         },
-        engagement,
-        ratings: {
-            given: { average: 0, total: 0 },
-            received: { average: 0, total: 0 }
+        engagement: {
+            views: totalViews,
+            likes: totalLikes,
+            comments: totalComments,
         },
-        topReviews: topReviews.map(r => ({
-            ...r,
-            views: 0,
-            likes: 0
-        })),
-        activity: []
+        topReviews,
     });
 }));
 
@@ -883,12 +912,27 @@ router.post('/templates/import', requireAuth, asyncHandler(async (req, res) => {
 router.post('/templates/default', requireAuth, asyncHandler(async (req, res) => {
     const { templateId, isPredefined } = req.body;
 
-    // Stocker la préférence utilisateur (on pourrait utiliser une table User preferences)
-    // Pour l'instant, on va simplement renvoyer une confirmation
-    res.json({
-        success: true,
-        defaultId: isPredefined ? `predefined:${templateId}` : templateId
+    // Vérifier l'appartenance avant de persister (même classe de bug IDOR que
+    // watermarks/default : un templateId d'un autre utilisateur ne doit jamais être acceptable).
+    if (!isPredefined && templateId) {
+        const owned = await prisma.savedTemplate.findFirst({
+            where: { id: templateId, userId: req.user.id },
+        });
+        if (!owned) {
+            return res.status(404).json({ error: 'not_found', message: 'Template non trouvé' });
+        }
+    }
+
+    const defaultId = isPredefined ? `predefined:${templateId}` : templateId;
+
+    // Persisté sur User.defaultExportTemplate — colonne déjà présente dans le schéma
+    // ("ID du template préféré") mais jamais écrite jusqu'ici, d'où la perte au rechargement.
+    await prisma.user.update({
+        where: { id: req.user.id },
+        data: { defaultExportTemplate: defaultId },
     });
+
+    res.json({ success: true, defaultId });
 }));
 
 /**
@@ -909,8 +953,18 @@ router.post('/watermarks/default', requireAuth, asyncHandler(async (req, res) =>
         },
     });
 
-    // Définir le nouveau default
+    // Définir le nouveau default — vérifier l'appartenance avant d'écrire (IDOR sinon :
+    // n'importe quel watermarkId d'un autre utilisateur pouvait être marqué default).
     if (watermarkId) {
+        const target = await prisma.watermark.findFirst({
+            where: { id: watermarkId, userId: req.user.id },
+        });
+        if (!target) {
+            return res.status(404).json({
+                error: 'not_found',
+                message: 'Filigrane non trouvé',
+            });
+        }
         await prisma.watermark.update({
             where: { id: watermarkId },
             data: { isDefault: true },

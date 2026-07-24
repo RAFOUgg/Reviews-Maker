@@ -546,6 +546,7 @@ export function requireSectionAccess(section) {
             const sectionNames = {
                 genetic: 'Genetiques',
                 pipeline_culture: 'Pipeline Culture',
+                pipeline_separation: 'Pipeline Séparation',
                 pipeline_extraction: 'Pipeline Extraction',
                 pipeline_curing: 'Pipeline Curing',
                 phenohunt: 'PhenoHunt',
@@ -625,6 +626,7 @@ export function canAccessSection(accountType, section) {
     const sectionRestrictions = {
         genetic: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
         pipeline_culture: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
+        pipeline_separation: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
         pipeline_extraction: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
         pipeline_curing: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],
         phenohunt: [ACCOUNT_TYPES.PRODUCER, ACCOUNT_TYPES.MERCHANT],

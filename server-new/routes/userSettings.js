@@ -9,6 +9,7 @@ import { requireAuth } from '../middleware/auth.js'
 import { forgetTrackedSession } from '../middleware/sessionTracking.js'
 import { hashPassword, verifyPassword } from '../services/password.js'
 import { setupTOTP, verifyTOTPToken } from '../services/totp.js'
+import { codeVerifyLimiter } from '../middleware/rateLimit.js'
 
 const router = express.Router()
 
@@ -70,7 +71,7 @@ router.put('/settings', requireAuth, async (req, res) => {
 
 // ==================== CHANGE PASSWORD ====================
 // POST /api/user/settings/change-password
-router.post('/change-password', requireAuth, async (req, res) => {
+router.post('/change-password', requireAuth, codeVerifyLimiter, async (req, res) => {
     try {
         const { currentPassword, newPassword, confirmPassword } = req.body;
 
@@ -142,7 +143,7 @@ router.post('/2fa/setup', requireAuth, async (req, res) => {
 
 // ==================== VERIFY & ENABLE 2FA ====================
 // POST /api/user/2fa/verify
-router.post('/2fa/verify', requireAuth, async (req, res) => {
+router.post('/2fa/verify', requireAuth, codeVerifyLimiter, async (req, res) => {
     try {
         const { secret, token } = req.body;
 

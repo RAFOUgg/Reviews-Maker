@@ -11,7 +11,7 @@ import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
 import { EXPORT_LIMITS } from '../middleware/permissions.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
-import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requireReviewWriteOrThrow, resolveAccess } from '../services/access.js'
+import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requireReviewWriteOrThrow, resolveAccess, requirePublishingAllowed } from '../services/access.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -654,7 +654,10 @@ router.delete('/:id', requireAuth, asyncHandler(async (req, res) => {
 }))
 
 // PATCH /api/reviews/:id/visibility - Changer la visibilité d'une review
-router.patch('/:id/visibility', requireAuth, asyncHandler(async (req, res) => {
+// requirePublishingAllowed : sans ce garde, un compte pro non vérifié SIRET/KYC pouvait contourner
+// le gate de publication (déjà appliqué à la création) en créant une review privée puis en basculant
+// simplement sa visibilité ici — même contrainte, même middleware, juste sur un second point d'entrée.
+router.patch('/:id/visibility', requireAuth, requirePublishingAllowed, asyncHandler(async (req, res) => {
     const { id } = req.params
     const { isPublic } = req.body
 

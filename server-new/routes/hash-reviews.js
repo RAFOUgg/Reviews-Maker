@@ -9,6 +9,8 @@ import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
+import { getUserAccountType } from '../services/account.js'
+import { canAccessSection } from '../middleware/permissions.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -597,6 +599,15 @@ router.post('/', requireAuth, upload.fields([
         return res.status(400).json({ error: 'validation_error', message: 'Validation failed', details: validation.errors })
     }
 
+    // Gating Producteur sur le Pipeline Séparation — jusqu'ici totalement absent sur ce type (aucune
+    // vérification, même cassée), contrairement à Fleur qui avait au moins un garde (bien que
+    // lui-même non fonctionnel, corrigé dans le même chantier).
+    if (bodyData.separationTimelineData || bodyData.separationTimelineConfig) {
+        if (!canAccessSection(getUserAccountType(req.user), 'pipeline_separation')) {
+            return res.status(403).json({ error: 'Separation Pipeline not available for your account type. Upgrade to Producer to access.' })
+        }
+    }
+
     const cleanedData = validation.cleaned
     const access = await resolveAccess(req.user)
 
@@ -741,6 +752,13 @@ router.put('/:id', requireAuth, upload.fields([
     }
 
     const cleanedData = validation.cleaned
+
+    // Gating Producteur sur le Pipeline Séparation, cf. commentaire équivalent sur POST.
+    if (bodyData.separationTimelineData || bodyData.separationTimelineConfig) {
+        if (!canAccessSection(getUserAccountType(req.user), 'pipeline_separation')) {
+            return res.status(403).json({ error: 'Separation Pipeline not available for your account type. Upgrade to Producer to access.' })
+        }
+    }
 
     // Résoudre le lien de compte optionnel derrière `hashmaker`, cf. commentaire équivalent sur POST.
     if (cleanedData._rawHashmakerLinkedUserId !== undefined || cleanedData._rawHashmakerLinkedProducerProfileId !== undefined) {
