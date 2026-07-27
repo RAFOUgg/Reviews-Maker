@@ -147,7 +147,9 @@
       "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:5173/api/auth/me)",
       "Bash(curl -s -w \"\\\\nHTTP %{http_code}\\\\n\" http://localhost:3000/api/auth/me)",
       "Bash(ls -la /tmp/ 2>&1 | head -5; echo \"---\"; cat /tmp/rm-server.log 2>&1 | tail -60)",
-      "Bash(node _audit-account-tmp.mjs)"
+      "Bash(node _audit-account-tmp.mjs)",
+      "Bash(nohup npm run dev)",
+      "Bash(disown)"
     ],
     "additionalDirectories": [
       "c:\\Users\\Rafi\\Documents\\.0AMes-Logiciel\\Reviews-Maker",
