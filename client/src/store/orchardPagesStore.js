@@ -9,6 +9,17 @@ import { persist } from 'zustand/middleware';
 /**
  * Templates de pages prédéfinis par type de review et format
  */
+// NB (2026-07-27) : les listes `modules` ci-dessous DOIVENT utiliser les clés réellement lues par
+// `TemplateRenderer`'s `filteredConfig` (= les clés de `DEFAULT_CONFIG.contentModules`,
+// `orchardStore.js` — les mêmes que celles pilotées par `fieldRegistry.js`/`ContentModuleControls`).
+// Piège déjà rencontré deux fois ailleurs dans Export Maker (overflow, StepCard) : une clé qui
+// N'EXISTE PAS dans `contentModules` (`typeCulture`, `pipelineCuring`…) ne fait RIEN — elle n'est
+// simplement jamais lue, et pire, toute clé RÉELLE absente de la liste d'une page est mise à
+// `false` explicitement par le filtrage, masquant la section correspondante sur cette page. Trouvé
+// ici : aucune page Fleur ne listait la vraie clé `curing`, donc le pipeline Curing & Maturation
+// disparaissait silencieusement de TOUTE pagination automatique (jamais coupé — jamais rendu du
+// tout). Culture et curing ont chacun leur propre page dédiée ci-dessous (plutôt que partagés avec
+// d'autres sections) pour laisser à un pipeline à beaucoup d'étapes toute la hauteur disponible.
 export const PAGE_TEMPLATES = {
     'Fleur': {
         '1:1': [
@@ -19,10 +30,22 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type']
             },
             {
-                id: 'info-culture',
-                label: 'Infos & Culture',
+                id: 'info',
+                label: 'Infos',
+                icon: 'ℹ️',
+                modules: ['cultivar', 'breeder', 'farm', 'strainType']
+            },
+            {
+                id: 'culture',
+                label: 'Culture',
                 icon: '🌱',
-                modules: ['cultivar', 'breeder', 'farm', 'strainType', 'typeCulture', 'substratMix', 'fertilizationPipeline']
+                modules: ['substratMix', 'fertilizationPipeline']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing']
             },
             {
                 id: 'notes-detail',
@@ -57,10 +80,16 @@ export const PAGE_TEMPLATES = {
                 modules: ['aromas', 'tastes', 'effects', 'terpenes', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes']
             },
             {
-                id: 'production',
-                label: 'Production & Technique',
-                icon: '⚗️',
-                modules: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'pipelineCuring', 'extraData', 'author', 'date']
+                id: 'culture',
+                label: 'Culture',
+                icon: '🌱',
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing', 'author', 'date']
             }
         ],
         '9:16': [
@@ -83,6 +112,12 @@ export const PAGE_TEMPLATES = {
                 modules: ['categoryRatings', 'aromas', 'effects']
             },
             {
+                id: 'culture-curing',
+                label: 'Culture & Curing',
+                icon: '🌱',
+                modules: ['substratMix', 'fertilizationPipeline', 'curing']
+            },
+            {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
@@ -103,10 +138,16 @@ export const PAGE_TEMPLATES = {
                 modules: ['categoryRatings', 'aromas', 'tastes', 'effects']
             },
             {
-                id: 'production',
-                label: 'Production',
-                icon: '⚗️',
-                modules: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'pipelineCuring', 'description', 'author', 'date']
+                id: 'culture',
+                label: 'Culture',
+                icon: '🌱',
+                modules: ['substratMix', 'fertilizationPipeline', 'description']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing', 'author', 'date']
             }
         ],
         'A4': [
@@ -117,10 +158,16 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType']
             },
             {
-                id: 'info-culture',
-                label: 'Infos & Culture',
+                id: 'culture',
+                label: 'Culture',
                 icon: '🌱',
-                modules: ['typeCulture', 'substratMix', 'fertilizationPipeline', 'pipelineCuring', 'extraData']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing']
             },
             {
                 id: 'evaluation',
@@ -186,7 +233,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['description', 'pipelineCuring', 'author', 'date']
+                modules: ['description', 'curing', 'author', 'date']
             }
         ],
         '9:16': [
@@ -232,7 +279,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['pipelineSeparation', 'pipelineCuring', 'description', 'author', 'date']
+                modules: ['pipelineSeparation', 'curing', 'description', 'author', 'date']
             }
         ]
     },
@@ -286,7 +333,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['description', 'texture', 'pipelineCuring', 'author', 'date']
+                modules: ['description', 'texture', 'curing', 'author', 'date']
             }
         ],
         '9:16': [
@@ -578,7 +625,7 @@ export const useOrchardPagesStore = create(
 /**
  * Récupère les pages par défaut selon le type de review et le ratio
  */
-function getDefaultPages(reviewType, ratio = '1:1') {
+export function getDefaultPages(reviewType, ratio = '1:1') {
     const type = reviewType || 'Fleur';
     const templates = PAGE_TEMPLATES[type] || PAGE_TEMPLATES['Fleur'];
     const pagesForRatio = templates[ratio] || templates['1:1'];

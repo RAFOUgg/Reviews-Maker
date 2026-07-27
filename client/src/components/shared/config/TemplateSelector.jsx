@@ -3,19 +3,10 @@ import { Check, Layers, X } from 'lucide-react';
 import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
+import { shouldAutoLockPagination } from '../../../utils/orchardHelpers';
 
 // Templates that support pagination (multi-page) — detailed/full templates
 const PAGINATION_SUPPORTED_TEMPLATES = ['detailedCard', 'blogArticle'];
-// Minimum data count to auto-lock pagination ON
-function shouldAutoLockPagination(reviewData) {
-    if (!reviewData) return false;
-    const categoryCount = reviewData.categoryRatings ? Object.keys(reviewData.categoryRatings).length : 0;
-    const aromasCount = Array.isArray(reviewData.aromas) ? reviewData.aromas.length : 0;
-    const effectsCount = Array.isArray(reviewData.effects) ? reviewData.effects.length : 0;
-    const tastesCount = Array.isArray(reviewData.tastes) ? reviewData.tastes.length : 0;
-    const hasPipeline = !!(reviewData.pipelineGlobal || reviewData.pipelineSeparation || reviewData.pipelineExtraction || reviewData.pipelineCuring);
-    return (categoryCount >= 4 || aromasCount > 4 || effectsCount > 5 || tastesCount > 4 || hasPipeline);
-}
 
 export default function TemplateSelector() {
     const config = useOrchardStore((state) => state.config);

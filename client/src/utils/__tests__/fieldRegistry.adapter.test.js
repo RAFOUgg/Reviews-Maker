@@ -128,6 +128,17 @@ describe('fieldRegistry — getOverflowFields (évolutivité automatique)', () =
         expect(getOverflowFields(null)).toEqual([]);
         expect(getOverflowFields('x')).toEqual([]);
     });
+    it('exclut le bookkeeping Orchard Studio (isPrivate/isOurReview/orchardPreset/orchardLayoutMode)', () => {
+        const overflow = getOverflowFields({
+            type: 'flower', isPrivate: false, isOurReview: false,
+            orchardPreset: 'detailedCard', orchardLayoutMode: 'template',
+        });
+        const keys = overflow.map((f) => f.key);
+        expect(keys).not.toContain('isPrivate');
+        expect(keys).not.toContain('isOurReview');
+        expect(keys).not.toContain('orchardPreset');
+        expect(keys).not.toContain('orchardLayoutMode');
+    });
     it('exclut images/photos (galerie déjà gérée par mainImage)', () => {
         const overflow = getOverflowFields({
             type: 'flower',

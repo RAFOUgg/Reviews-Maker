@@ -14,6 +14,7 @@ import {
     getResponsiveAdjustments,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
@@ -255,23 +256,33 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         </span>
     );
 
+    // Icônes décoratives best-effort par identifiant de champ (couvre les ids les plus courants
+    // des *SidebarContent.js) — purement cosmétique : un champ sans icône reconnue s'affiche quand
+    // même (repli '•'), il ne disparaît jamais faute d'icône.
+    const METRIC_ICONS = {
+        temperature: '🌡️', temp: '🌡️', temperatureDay: '🌡️', temperatureNight: '🌡️', temperatureEau: '🌡️',
+        humidity: '💧', ambientHumidity: '💧', humidite: '💧', hr: '💧',
+        co2: '☁️', co2Ppm: '☁️', vpd: '💨',
+        ppfd: '☀️', lightType: '☀️',
+        ph: '🧪', ec: '🧪',
+        container: '🫙', recipient: '🫙',
+        packaging: '📦', emballage: '📦',
+        action: '⚡', event: '⚡', evenement: '⚡',
+        method: '⚙️', methode: '⚙️', spaceType: '🏠', seedType: '🌱',
+    };
+    const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
+
     // Carte d'étape — un seul mode d'affichage, toujours détaillé (cf. décision : la fiche
     // s'allonge plutôt que de tronquer/masquer du contenu, quel que soit le nombre d'étapes).
-    const StepCard = ({ step, index }) => {
+    // Les métriques viennent de `summarizeCellFields` (déjà la logique de référence du canevas
+    // Chaîne de production pour lire une cellule de pipeline) plutôt que d'une liste de noms de
+    // champs devinés à la main ici — cette dernière ne correspondait pas aux vrais noms enregistrés
+    // par les formulaires (`co2Ppm`/`ambientHumidity`/`ph`/`ec`… jamais affichés, bug 2026-07-27).
+    const StepCard = ({ step, index, pipelineType }) => {
         const label = step.label || step.date || step.semaine || step.phase || step.jour || `${index + 1}`;
-        const temp = step.temperature ?? step.temp;
-        const humidity = step.humidity ?? step.humidite ?? step.hr;
-        const co2 = step.co2;
-        const ppfd = step.ppfd;
-        const container = step.container ?? step.recipient;
-        const packaging = step.packaging ?? step.emballage;
-        const volume = step.volume ?? step.volumeRecipient;
-        const curingType = step.curingType ?? step.typeCuring;
-        const opacity = step.opacite ?? step.recipientOpacity;
-        const action = step.action ?? step.event ?? step.evenement;
-        const method = step.method ?? step.methode;
-        const note = step.note ?? step.comment ?? step.commentaire;
-        const hasMetrics = temp != null || humidity != null || co2 || ppfd || container || packaging;
+        const fields = summarizeCellFields(pipelineType, step);
+        const noteField = fields.find((f) => NOTE_KEYS.has(f.key));
+        const metricFields = fields.filter((f) => f !== noteField);
 
         return (
             <div style={{
@@ -296,35 +307,20 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Metrics + note */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {/* Row 1: env metrics */}
-                    {hasMetrics && (
+                    {metricFields.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {temp != null && <MetricBadge icon="🌡️" value={`${temp}°C`} highlight />}
-                            {humidity != null && <MetricBadge icon="💧" value={`${humidity}%`} highlight />}
-                            {co2 != null && <MetricBadge icon="☁️" value={`${co2}ppm`} />}
-                            {ppfd != null && <MetricBadge icon="☀️" value={`${ppfd}µ`} />}
-                            {container && <MetricBadge icon="🫙" value={String(container)} />}
-                            {packaging && !isSquare && <MetricBadge icon="📦" value={String(packaging)} />}
-                            {volume && !isSquare && <MetricBadge icon="📐" value={volume} />}
-                            {curingType && !isSquare && <MetricBadge icon="❄️" value={curingType} />}
-                            {opacity && !isSquare && <MetricBadge icon="🔍" value={opacity} />}
+                            {metricFields.map((f) => (
+                                <MetricBadge key={f.key} icon={METRIC_ICONS[f.key] || '•'} value={`${f.label} : ${f.value}`} />
+                            ))}
                         </div>
                     )}
-                    {/* Row 2: action / method */}
-                    {(action || method) && (
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
-                            {action && <MetricBadge icon="⚡" value={String(action)} highlight />}
-                            {method && <MetricBadge icon="⚙️" value={String(method)} />}
-                        </div>
-                    )}
-                    {/* Row 3: note — texte complet */}
-                    {note && (
+                    {noteField && (
                         <div style={{
                             fontSize: `${fontSize.small}px`,
                             color: colors.textSecondary, fontStyle: 'italic',
                             lineHeight: '1.4',
                         }}>
-                            💬 {String(note)}
+                            💬 {noteField.value}
                         </div>
                     )}
                 </div>
@@ -332,9 +328,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
+    // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de
+    // type attendu par `summarizeCellFields`/`FIELD_LOOKUPS` (chainCellPipelines.js). Purification
+    // et fertilisation n'ont pas de lookup dédié là-bas : repli sur les clés brutes humanisées par
+    // `summarizeCellFields` lui-même (pas d'erreur, juste moins joliment libellé).
+    const PIPELINE_TYPE_BY_KEY = {
+        pipelineGlobal: 'culture',
+        pipelineCuring: 'curing',
+        pipelineExtraction: 'extraction',
+        pipelineSeparation: 'separation',
+    };
+
     const PipelineTimeline = ({ pipeline }) => {
         // Prefer rawSteps (objects) over stringified steps
         const rawSteps = pipeline.rawSteps || pipeline.steps.map(s => ({ label: s }));
+        const pipelineType = PIPELINE_TYPE_BY_KEY[pipeline.key] || pipeline.key;
 
         return (
             <div style={{ marginBottom: `${spacing.element}px` }}>
@@ -371,7 +379,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     où le survol souris qui portait l'info n'existe pas). */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {rawSteps.map((step, i) => (
-                        <StepCard key={i} step={step} index={i} />
+                        <StepCard key={i} step={step} index={i} pipelineType={pipelineType} />
                     ))}
                 </div>
             </div>

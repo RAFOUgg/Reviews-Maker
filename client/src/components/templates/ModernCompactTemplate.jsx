@@ -14,8 +14,19 @@ import {
     colorWithOpacity,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
+
+// Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
+// attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que DetailedCardTemplate.
+const PIPELINE_TYPE_BY_KEY = {
+    pipelineGlobal: 'culture',
+    pipelineCuring: 'curing',
+    pipelineExtraction: 'extraction',
+    pipelineSeparation: 'separation',
+};
+const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
 
 /**
  * ModernCompactTemplate - Template moderne et compact
@@ -411,6 +422,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
                     {pipelines.map((p, pi) => {
                         const steps = p.rawSteps || p.steps.map(s => ({ label: s }));
+                        const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
                         return (
                             <div key={pi} style={{ borderRadius: isSquare ? 8 : 10, backgroundColor: colorWithOpacity(colors.accent, 8), overflow: 'hidden' }}>
                                 {/* Pipeline header */}
@@ -424,13 +436,16 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                     <span style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: '600' }}>{steps.length}×</span>
                                 </div>
                                 {/* Toutes les étapes, toujours en détail — libellés/notes complets, pas de
-                                    troncature ni de mode "compact" en pastilles colorées sans texte. */}
+                                    troncature ni de mode "compact" en pastilles colorées sans texte. Champs
+                                    résumés via `summarizeCellFields` (même logique que le canevas Chaîne de
+                                    production) plutôt que des noms devinés qui ne correspondaient pas aux
+                                    vrais champs enregistrés par les formulaires (bug 2026-07-27). */}
                                 <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexDirection: 'column', gap: 4 }}>
                                     {steps.map((step, si) => {
                                         const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
-                                        const temp = step.temperature ?? step.temp;
-                                        const humidity = step.humidity ?? step.humidite ?? step.hr;
-                                        const note = step.note || step.comment || '';
+                                        const fields = summarizeCellFields(pipelineType, step);
+                                        const noteField = fields.find((f) => NOTE_KEYS.has(f.key));
+                                        const metricFields = fields.filter((f) => f !== noteField);
                                         return (
                                             <div key={si} style={{
                                                 display: 'flex', gap: 6, alignItems: 'flex-start', flexWrap: 'wrap',
@@ -440,10 +455,12 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                                 <span style={{ fontSize: `${fontSize.small}px`, fontWeight: '700', color: colors.accent }}>
                                                     {String(label)}
                                                 </span>
-                                                {temp != null && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🌡️ {temp}°C</span>}
-                                                {humidity != null && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>💧 {humidity}%</span>}
-                                                {step.container && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🫙 {String(step.container)}</span>}
-                                                {note && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontStyle: 'italic', flexBasis: '100%' }}>💬 {note}</span>}
+                                                {metricFields.map((f) => (
+                                                    <span key={f.key} style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
+                                                        {f.label} : {f.value}
+                                                    </span>
+                                                ))}
+                                                {noteField && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontStyle: 'italic', flexBasis: '100%' }}>💬 {noteField.value}</span>}
                                             </div>
                                         );
                                     })}

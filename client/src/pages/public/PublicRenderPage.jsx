@@ -27,7 +27,9 @@ export default function PublicRenderPage() {
     const [review, setReview] = useState(null)
     const [notFound, setNotFound] = useState(false)
     const containerRef = useRef(null)
+    const scaledBoxRef = useRef(null)
     const [scale, setScale] = useState(1)
+    const [contentHeight, setContentHeight] = useState(0)
 
     useEffect(() => {
         let active = true
@@ -53,18 +55,38 @@ export default function PublicRenderPage() {
     })()
     const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']
 
+    // Mise à l'échelle sur la LARGEUR uniquement — contrairement à l'aperçu Orchard Studio (qui
+    // capture une image à ratio fixe), cette page est un document vivant censé défiler
+    // normalement (cf. commentaire du composant). Caler aussi sur la hauteur du viewport forçait
+    // un canevas à hauteur bloquée qui coupait silencieusement tout contenu dépassant un seul
+    // écran (bug corrigé 2026-07-27, cf. `allowOverflow` sur TemplateRenderer).
     useEffect(() => {
         const el = containerRef.current
         if (!el || !review) return
         const observer = new ResizeObserver((entries) => {
-            const { width, height } = entries[0].contentRect
-            if (width && height) {
-                setScale(Math.min(width / dims.width, height / dims.height, 1))
+            const { width } = entries[0].contentRect
+            if (width) {
+                setScale(Math.min(width / dims.width, 1))
             }
         })
         observer.observe(el)
         return () => observer.disconnect()
-    }, [review, dims.width, dims.height])
+    }, [review, dims.width])
+
+    // Mesure la hauteur RÉELLE (non affectée par `transform: scale`, qui ne change que le rendu
+    // visuel, pas la boîte de mise en page) pour compenser l'espace réservé par le flux normal —
+    // sans ça, sur mobile (scale ~0.2), ~80% de la page sous la fiche visible serait un vide
+    // scrollable correspondant à l'espace non-réduit de la boîte.
+    useEffect(() => {
+        const el = scaledBoxRef.current
+        if (!el) return
+        const observer = new ResizeObserver((entries) => {
+            const h = entries[0].contentRect.height
+            if (h) setContentHeight(h)
+        })
+        observer.observe(el)
+        return () => observer.disconnect()
+    }, [review])
 
     if (notFound) {
         return (
@@ -86,18 +108,24 @@ export default function PublicRenderPage() {
         <div
             ref={containerRef}
             style={{
-                minHeight: '100vh', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                background: '#0a0a0f', padding: 16, boxSizing: 'border-box', overflow: 'hidden',
+                minHeight: '100vh', width: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center',
+                background: '#0a0a0f', padding: 16, boxSizing: 'border-box',
             }}
         >
+            {/* `allowOverflow` : la fiche défile normalement au lieu d'être coupée à la hauteur
+                d'un seul écran (bug corrigé 2026-07-27) — `height:'auto'` + `transform-origin` en
+                haut pour que la mise à l'échelle ne recentre pas un document potentiellement plus
+                haut que la fenêtre. */}
             <div
+                ref={scaledBoxRef}
                 style={{
-                    width: dims.width, height: dims.height,
-                    transform: `scale(${scale})`, transformOrigin: 'center center', flexShrink: 0,
-                    borderRadius: 12, overflow: 'hidden', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                    width: dims.width, height: 'auto',
+                    transform: `scale(${scale})`, transformOrigin: 'top center', flexShrink: 0,
+                    borderRadius: 12, overflow: 'visible', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
+                    marginBottom: (scale < 1 && contentHeight) ? `${-(1 - scale) * contentHeight}px` : 0,
                 }}
             >
-                <TemplateRenderer config={config} reviewData={review} canvasId="public-render-canvas" />
+                <TemplateRenderer config={config} reviewData={review} canvasId="public-render-canvas" allowOverflow />
             </div>
         </div>
     )

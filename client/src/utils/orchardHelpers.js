@@ -567,6 +567,41 @@ function buildTimelineConfigMeta(rawConfig) {
     return parts.length > 0 ? parts.join(' · ') : null;
 }
 
+// Vraies clés de données de timeline pipeline (JSON array), une par type de procédé — PAS les
+// champs `pipelineGlobal`/`pipelineSeparation`/`pipelineExtraction`/`fertilizationPipeline` lus
+// par `extractPipelines` ci-dessous, qui sont des champs morts sur `Review` (piège déjà connu,
+// cf. CLAUDE.md) : `extractPipelines` ne les lit correctement qu'APRÈS traduction par
+// `exportDataAdapter.js`, jamais sur le `reviewData` brut (pré-adaptateur) qu'a `TemplateSelector`.
+const TIMELINE_DATA_KEYS = ['cultureTimelineData', 'curingTimelineData', 'extractionTimelineData', 'separationTimelineData'];
+
+function hasAnyTimelineData(reviewData) {
+    return TIMELINE_DATA_KEYS.some((k) => {
+        const v = reviewData[k];
+        if (Array.isArray(v)) return v.length > 0;
+        if (typeof v === 'string') return safeParse(v, []).length > 0;
+        return false;
+    });
+}
+
+/**
+ * Le contenu est-il assez dense pour justifier la pagination automatique ? Utilisé à la fois par
+ * le sélecteur de template (session d'édition Orchard Studio) et par les chemins d'export
+ * autonomes (ExportModal standalone, page publique /r/:id) qui n'ont jamais de session de pages
+ * active — sans ce partage, ces derniers ne paginaient jamais, quel que soit le volume réel de
+ * données (bug corrigé le 2026-07-27 : jusqu'à 65% d'une fiche dense pouvait être coupé
+ * silencieusement par le canevas à hauteur fixe).
+ * @param {Object} reviewData - reviewData BRUT (pré-adaptateur : `cultureTimelineData` etc. tels
+ *   que renvoyés par l'API, pas les champs `pipelineGlobal`/... synthétisés par l'adaptateur).
+ */
+export function shouldAutoLockPagination(reviewData) {
+    if (!reviewData) return false;
+    const categoryCount = reviewData.categoryRatings ? Object.keys(reviewData.categoryRatings).length : 0;
+    const aromasCount = Array.isArray(reviewData.aromas) ? reviewData.aromas.length : 0;
+    const effectsCount = Array.isArray(reviewData.effects) ? reviewData.effects.length : 0;
+    const tastesCount = Array.isArray(reviewData.tastes) ? reviewData.tastes.length : 0;
+    return categoryCount >= 4 || aromasCount > 4 || effectsCount > 5 || tastesCount > 4 || hasAnyTimelineData(reviewData);
+}
+
 /**
  * Extrait les pipelines depuis les données de review
  * @param {Object} reviewData - Données de la review
@@ -903,4 +938,5 @@ export default {
     PRODUCT_TYPES,
     isFieldRelevant,
     getResponsiveAdjustments,
+    shouldAutoLockPagination,
 };

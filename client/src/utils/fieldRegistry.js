@@ -285,6 +285,10 @@ const PROTECTED_ROOT_KEYS = new Set([
     // fichiers uploadés (ex. flower-1753612345-847362951.jpg) n'a jamais vocation à s'afficher
     // comme texte générique.
     'images', 'photos',
+    // Bookkeeping Orchard Studio / statut interne — jamais du contenu de review. Trouvé en
+    // production (2026-07-27) : "Is private: Non", "Orchard preset: detailedCard" etc.
+    // s'affichaient tels quels dans "Données supplémentaires" faute d'exclusion.
+    'isPrivate', 'isOurReview', 'orchardPreset', 'orchardLayoutMode',
 ]);
 
 // Plomberie de pipeline (couverte par `pipelineInteractiveView`) et de lien de compte (couverte

@@ -8,7 +8,8 @@ import { exportCanvasesToVideo, downloadVideo } from '../../utils/videoExporter'
 import { Film } from 'lucide-react';
 // Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
 import { useOrchardStore, resolveOrchardConfig } from '../../store/orchardStore';
-import { useOrchardPagesStore } from '../../store/orchardPagesStore';
+import { useOrchardPagesStore, getDefaultPages } from '../../store/orchardPagesStore';
+import { shouldAutoLockPagination } from '../../utils/orchardHelpers';
 import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 import {
@@ -107,13 +108,25 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
         ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio,
     });
 
-    // Pagination (Chantier Phase 2) : `useOrchardPagesStore` est la session d'édition en cours
-    // (pas encore persistée par review — limite connue), donc n'a de sens qu'en présence d'une
-    // review effectivement éditée dans Orchard Studio ; en standalone pur elle reste vide et le
-    // rendu retombe sur le canvas simple, comme avant.
-    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const pages = useOrchardPagesStore((state) => state.pages);
-    const hasMultiplePages = pagesEnabled && pages.length > 1;
+    // Pagination (Chantier Phase 2, corrigé 2026-07-27) : `useOrchardPagesStore` est la session
+    // d'édition Orchard Studio en cours — jamais persistée sur la review elle-même. Le chemin
+    // standalone (bouton "Exporter" sur une review déjà sauvegardée, sans session Orchard Studio
+    // ouverte) n'avait donc JAMAIS de pagination, quel que soit le volume réel de données : un
+    // canevas à hauteur fixe (ex. 1080px en 16:9) avec `overflow:hidden` coupait silencieusement
+    // tout ce qui dépassait — jusqu'à ~65% d'une fiche dense (pipelines complets, cf. Phase
+    // précédente) pouvait disparaître sans aucun signal. Repli : si aucune session de pages n'est
+    // active MAIS que le contenu est dense (même heuristique que `TemplateSelector`), générer des
+    // pages par défaut via `getDefaultPages` (déjà utilisées par le mode édition) plutôt que de
+    // rendre un unique canevas qui débordera silencieusement.
+    const sessionPagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
+    const sessionPages = useOrchardPagesStore((state) => state.pages);
+    const autoPages = useMemo(() => {
+        if (sessionPagesEnabled && sessionPages.length > 1) return null; // session déjà active, prioritaire
+        if (!shouldAutoLockPagination(reviewData)) return null; // contenu peu dense : page unique suffit
+        return getDefaultPages(reviewData?.type, config?.ratio);
+    }, [sessionPagesEnabled, sessionPages, reviewData, config?.ratio]);
+    const pages = (sessionPagesEnabled && sessionPages.length > 1) ? sessionPages : (autoPages || []);
+    const hasMultiplePages = pages.length > 1;
     const pageDims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];
     const user = useStore((state) => state.user);
 
@@ -769,7 +782,12 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                         {/* Left: live preview */}
                         <div className="flex flex-col flex-shrink-0 w-full md:w-[380px] lg:w-[420px]">
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Aperçu de l'export</h4>
-                            <div className="min-h-[280px] md:flex-1 md:min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            {/* `h-[280px]` fixe (pas juste `min-h`) sur mobile : `MiniPreview` mesure sa
+                                propre taille via `h-full` + ResizeObserver, qui a besoin d'une hauteur
+                                RÉSOLUE sur ce parent pour ne pas s'effondrer sur la hauteur native
+                                non-réduite du canevas (1080px) — sans quoi la vignette se retrouvait
+                                centrée hors-écran (bug corrigé 2026-07-27). */}
+                            <div className="h-[280px] md:h-auto md:flex-1 md:min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                                 <MiniPreview config={config} reviewData={reviewData} />
                             </div>
                             <div className="mt-2 text-center">

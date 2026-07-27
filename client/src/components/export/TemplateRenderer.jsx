@@ -28,7 +28,7 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'orchard-template-canvas', className = '' }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'orchard-template-canvas', className = '', allowOverflow = false }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useOrchardStore((state) => state.templates);
     const adaptedReviewData = buildExportReviewData(reviewData);
@@ -81,8 +81,14 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             data-ratio={config.ratio}
             style={{
                 width: dimensions.width,
-                height: dimensions.height,
-                overflow: 'hidden',
+                // `allowOverflow` : la page publique /r/:id est un document vivant qui défile
+                // normalement, pas un export figé à taille fixe (PNG/PDF) — un canevas à hauteur
+                // bloquée y coupait silencieusement tout contenu dépassant les dimensions du ratio
+                // (bug corrigé 2026-07-27). Les consommateurs de capture (ExportModal, MiniPreview)
+                // gardent le comportement à hauteur fixe, requis pour produire une image/PDF net.
+                height: allowOverflow ? 'auto' : dimensions.height,
+                minHeight: allowOverflow ? dimensions.height : undefined,
+                overflow: allowOverflow ? 'visible' : 'hidden',
                 position: 'relative',
                 isolation: 'isolate',
             }}
@@ -112,7 +118,8 @@ TemplateRenderer.propTypes = {
     activeModules: PropTypes.arrayOf(PropTypes.string),
     pageMode: PropTypes.bool,
     canvasId: PropTypes.string,
-    className: PropTypes.string
+    className: PropTypes.string,
+    allowOverflow: PropTypes.bool
 };
 
 
