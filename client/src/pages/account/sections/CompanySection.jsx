@@ -309,7 +309,7 @@ export default function CompanySection() {
                                 </LiquidBadge>
 
                                 {canManageMembers ? (
-                                    <div className="w-48">
+                                    <div className="w-full sm:w-48">
                                         <LiquidSelect
                                             value={member.role}
                                             onChange={(role) => handleRoleChange(member.id, role)}

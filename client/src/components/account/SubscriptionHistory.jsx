@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { Clock, Download, Receipt, CheckCircle, XCircle, AlertCircle } from 'lucide-react'
 import { paymentService } from '../../services/apiService'
+import { LiquidCard, LiquidButton, LiquidSelect } from '@/components/ui/LiquidUI'
 
 /**
  * SubscriptionHistory - Affiche l'historique des abonnements et paiements
@@ -133,51 +134,49 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
 
     if (loading) {
         return (
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 text-center">
-                <Clock className="w-12 h-12 text-gray-500 mx-auto mb-3 animate-spin" />
-                <p className="text-gray-400">Chargement de l'historique...</p>
-            </div>
+            <LiquidCard glow="none" padding="lg" className="text-center">
+                <Clock className="w-12 h-12 text-white/30 mx-auto mb-3 animate-spin" />
+                <p className="text-white/50">Chargement de l'historique...</p>
+            </LiquidCard>
         )
     }
 
     if ((history || []).length === 0) {
         return (
-            <div className="bg-gray-800/50 rounded-xl p-6 border border-gray-700/50 text-center">
-                <Clock className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                <p className="text-gray-400">Aucun historique d'abonnement</p>
-                <p className="text-sm text-gray-500 mt-1">
+            <LiquidCard glow="none" padding="lg" className="text-center">
+                <Clock className="w-12 h-12 text-white/30 mx-auto mb-3" />
+                <p className="text-white/50">Aucun historique d'abonnement</p>
+                <p className="text-sm text-white/30 mt-1">
                     Vos transactions apparaîtront ici une fois abonné
                 </p>
-            </div>
+            </LiquidCard>
         )
     }
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-                    <Receipt className="w-5 h-5" />
-                    Historique des paiements
-                </h3>
-            </div>
+            <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+                <Receipt className="w-5 h-5" />
+                Historique des paiements
+            </h3>
 
-            <div className="bg-gray-800/50 rounded-xl border border-gray-700/50 overflow-hidden">
-                <div className="divide-y divide-gray-700/50">
+            <LiquidCard glow="none" padding="none">
+                <div className="divide-y divide-white/10">
                     {history.map((item) => (
-                        <div key={item.id} className="p-4 hover:bg-gray-700/20 transition-colors">
-                            <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-3">
+                        <div key={item.id} className="p-4">
+                            <div className="flex flex-wrap items-center justify-between gap-3">
+                                <div className="flex items-center gap-3 min-w-0">
                                     {getStatusIcon(item.status)}
-                                    <div>
-                                        <p className="text-white font-medium">
+                                    <div className="min-w-0">
+                                        <p className="text-white font-medium truncate">
                                             {getTypeLabel(item.type)}
-                                            {item.plan && <span className="text-gray-400 ml-2">• {item.plan}</span>}
+                                            {item.plan && <span className="text-white/40 ml-2">• {item.plan}</span>}
                                         </p>
-                                        <p className="text-sm text-gray-400">{formatDate(item.date)}</p>
+                                        <p className="text-sm text-white/40">{formatDate(item.date)}</p>
                                     </div>
                                 </div>
 
-                                <div className="flex items-center gap-4">
+                                <div className="flex items-center gap-4 shrink-0">
                                     <div className="text-right">
                                         <p className={`font-semibold ${item.type === 'refund' ? 'text-green-400' : 'text-white'
                                             }`}>
@@ -197,7 +196,7 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
                                                 // TODO: Télécharger la facture
                                                 console.log('Download invoice:', item.invoice)
                                             }}
-                                            className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                                            className="p-2.5 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                                             title="Télécharger la facture"
                                         >
                                             <Download className="w-4 h-4" />
@@ -208,50 +207,63 @@ export default function SubscriptionHistory({ subscriptionHistory = [] }) {
                         </div>
                     ))}
                 </div>
-            </div>
+            </LiquidCard>
 
             {/* Informations de renouvellement */}
-            <div className="bg-blue-900/20 border border-blue-700/30 rounded-xl p-4">
+            <LiquidCard glow="cyan" padding="md">
                 <div className="flex items-start gap-3">
-                    <Clock className="w-5 h-5 text-blue-400 mt-0.5" />
-                    <div>
-                        <p className="text-blue-300 font-medium">Prochain prélèvement</p>
-                        <p className="text-sm text-blue-400/80">
+                    <Clock className="w-5 h-5 text-cyan-400 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                        <p className="text-white font-medium">Prochain prélèvement</p>
+                        <p className="text-sm text-white/50">
                             {nextBilling ? `${new Date(nextBilling).toLocaleDateString('fr-FR')} • ` : 'Aucun prochain prélèvement enregistré'}
                         </p>
                     </div>
                 </div>
-            </div>
+            </LiquidCard>
 
             {/* Actions */}
-            <div className="flex gap-3">
-                <button className="flex-1 py-2 px-4 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors">
+            <div className="flex flex-col sm:flex-row gap-3">
+                {/* Pas encore de moyen de paiement enregistré côté back — un bouton actif qui ne
+                    fait rien serait trompeur (cf. le bug corrigé sur les sessions actives). */}
+                <LiquidButton
+                    variant="secondary"
+                    disabled
+                    title="Bientôt disponible"
+                    className="flex-1"
+                >
                     Modifier le moyen de paiement
-                </button>
-                <button onClick={handleCancel} disabled={loading} className="py-2 px-4 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors">
+                </LiquidButton>
+                <LiquidButton
+                    variant="outline"
+                    glow="red"
+                    onClick={handleCancel}
+                    disabled={loading}
+                >
                     Annuler l'abonnement
-                </button>
+                </LiquidButton>
             </div>
 
             {/* Upgrade / Downgrade quick actions */}
-            <div className="mt-3 flex items-center gap-3">
-                <select
-                    aria-label="Choisir une formule"
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <LiquidSelect
                     value={selectedPlan}
-                    onChange={(e) => setSelectedPlan(e.target.value)}
-                    className="bg-gray-800 text-white rounded-lg p-2 text-sm"
-                >
-                    <option value="amateur">Amateur (gratuit)</option>
-                    <option value="influenceur">Influenceur</option>
-                    <option value="producteur">Producteur</option>
-                </select>
-                <button
+                    onChange={setSelectedPlan}
+                    wrapperClassName="sm:w-56"
+                    options={[
+                        { value: 'amateur', label: 'Amateur (gratuit)' },
+                        { value: 'influenceur', label: 'Influenceur' },
+                        { value: 'producteur', label: 'Producteur' }
+                    ]}
+                />
+                <LiquidButton
+                    variant="primary"
+                    glow="purple"
                     onClick={() => handleChangePlan(selectedPlan)}
                     disabled={changingPlan}
-                    className="py-2 px-4 bg-purple-600 hover:bg-purple-700 text-white rounded-lg text-sm font-medium transition-colors"
                 >
                     {changingPlan ? 'Traitement...' : 'Changer de formule'}
-                </button>
+                </LiquidButton>
             </div>
         </div>
     )

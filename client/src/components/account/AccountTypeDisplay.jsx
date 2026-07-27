@@ -1,7 +1,6 @@
 import React from 'react'
 import { useStore } from '../../store/useStore'
-import { getAccountTypeLabel, getAccountTypeColor, getAccountTypeEmoji } from '../../hooks/useAccountFeatures'
-import { paymentService, accountService } from '../../services/apiService'
+import { LiquidCard, LiquidBadge } from '@/components/ui/LiquidUI'
 
 /**
  * Composant pour afficher le type de compte actuel
@@ -38,8 +37,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 emoji: '👤',
                 price: '0€',
                 period: '/mois',
-                color: 'from-slate-400 to-slate-500',
-                textColor: 'text-slate-900',
+                glow: 'none',
                 description: 'Compte gratuit avec fonctionnalités limitées',
                 benefits: [
                     '✓ 5 exports/mois',
@@ -52,8 +50,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 emoji: '🌾',
                 price: '29,99€',
                 period: '/mois',
-                color: 'from-blue-500 to-blue-600',
-                textColor: 'text-white',
+                glow: 'cyan',
                 description: 'Pour les producteurs professionnels',
                 benefits: [
                     '✓ Exports illimités',
@@ -69,8 +66,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 emoji: '⭐',
                 price: '15,99€',
                 period: '/mois',
-                color: 'from-purple-500 to-purple-600',
-                textColor: 'text-white',
+                glow: 'purple',
                 description: 'Pour les influenceurs et reviewers',
                 benefits: [
                     '✓ Exports haute qualité (300dpi)',
@@ -84,8 +80,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                 emoji: '👨‍💼',
                 price: 'N/A',
                 period: '',
-                color: 'from-red-500 to-red-600',
-                textColor: 'text-white',
+                glow: 'amber',
                 description: 'Accès administrateur complet',
                 benefits: [
                     '✓ Accès panel admin',
@@ -104,65 +99,59 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
     return (
         <div className="space-y-4">
             {/* Header avec type et prix */}
-            <div className={`bg-gradient-to-r ${info.color} ${info.textColor} rounded-lg p-6 shadow-lg`}>
-                <div className="flex items-start justify-between mb-4">
-                    <div className="flex items-center gap-3">
-                        <span className="text-4xl">{info.emoji}</span>
-                        <div>
-                            <h3 className="text-2xl font-bold flex items-center gap-2">
+            <LiquidCard glow={info.glow} padding="lg">
+                <div className="flex flex-wrap items-start justify-between gap-4 mb-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <span className="text-4xl shrink-0">{info.emoji}</span>
+                        <div className="min-w-0">
+                            <h3 className="text-2xl font-bold flex flex-wrap items-center gap-2 text-white">
                                 {info.label}
                                 {isAdmin && (
-                                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-red-500/30 border border-red-400/50">
-                                        🛡️ Admin
-                                    </span>
+                                    <LiquidBadge variant="danger" size="sm">🛡️ Admin</LiquidBadge>
                                 )}
                             </h3>
-                            <p className="opacity-90 text-sm">{info.description}</p>
+                            <p className="text-white/50 text-sm">{info.description}</p>
                         </div>
                     </div>
-                    <div className="text-right">
-                        <div className="text-3xl font-bold">{info.price}</div>
-                        <div className="text-sm opacity-90">{info.period}</div>
+                    <div className="text-right shrink-0">
+                        <div className="text-3xl font-bold text-white">{info.price}</div>
+                        <div className="text-sm text-white/50">{info.period}</div>
                     </div>
                 </div>
 
                 {/* Statut réel. Cette ligne affichait « Abonnement actif » en dur, y compris sur un
                     compte gratuit qui n'a aucun abonnement. */}
-                <div className="flex items-center gap-2 pt-4 border-t border-opacity-20 border-current">
+                <div className="flex items-center gap-2 pt-4 border-t border-white/10">
                     {isFreePlan ? (
                         <>
                             <div className="w-2 h-2 bg-white/40 rounded-full"></div>
-                            <span className="text-sm font-medium opacity-80">Aucun abonnement</span>
+                            <span className="text-sm font-medium text-white/60">Aucun abonnement</span>
                         </>
                     ) : subscriptionActive ? (
                         <>
                             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                            <span className="text-sm font-medium">Abonnement actif</span>
+                            <span className="text-sm font-medium text-white">Abonnement actif</span>
                         </>
                     ) : (
                         <>
                             <div className="w-2 h-2 bg-amber-400 rounded-full"></div>
-                            <span className="text-sm font-medium">Abonnement inactif</span>
+                            <span className="text-sm font-medium text-white">Abonnement inactif</span>
                         </>
                     )}
                 </div>
-            </div>
+            </LiquidCard>
 
             {/* Bénéfices */}
-            <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4">
-                <h4 className="font-semibold mb-3 text-slate-900 dark:text-white">Fonctionnalités incluses:</h4>
+            <LiquidCard glow="none" padding="md">
+                <h4 className="font-semibold mb-3 text-white">Fonctionnalités incluses :</h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                     {info.benefits.map((benefit, idx) => (
-                        <div key={idx} className="text-sm text-slate-700 dark:text-slate-300 flex items-center gap-2">
+                        <div key={idx} className="text-sm text-white/60 flex items-center gap-2">
                             <span>{benefit}</span>
                         </div>
                     ))}
                 </div>
-            </div>
-
-            {/* Legacy direct checkout buttons removed: use the 'Modifier le plan' action instead */}
-
-            {/* Legacy subscription action block removed — use Actions panel on Account page */}
+            </LiquidCard>
         </div>
     )
 }

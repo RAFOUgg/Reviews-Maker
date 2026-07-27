@@ -123,7 +123,7 @@ export default function SubscriptionManager({ user }) {
                             <LiquidButton variant="outline" onClick={() => setShowPaymentModal(true)} aria-label="Gérer le moyen de paiement">
                                 Gérer le moyen de paiement
                             </LiquidButton>
-                            <LiquidButton variant="destructive" onClick={confirmCancel} disabled={isCancelling} aria-label="Annuler l'abonnement">
+                            <LiquidButton variant="danger" onClick={confirmCancel} disabled={isCancelling} aria-label="Annuler l'abonnement">
                                 {isCancelling ? 'Résiliation...' : "Annuler l'abonnement"}
                             </LiquidButton>
                         </>
@@ -133,16 +133,16 @@ export default function SubscriptionManager({ user }) {
                 {/* Payment inline modal (simple placeholder). Replace by modal réutilisable si nécessaire */}
                 {showPaymentModal && (
                     <div className="mt-4 p-4 bg-white/5 rounded-lg border border-white/8 relative" role="dialog" aria-label="Gestion du moyen de paiement">
-                        <button aria-label="Fermer" className="absolute top-3 right-3 p-1 rounded hover:bg-white/5" onClick={() => setShowPaymentModal(false)}>
+                        <button aria-label="Fermer" className="absolute top-3 right-3 p-2 rounded hover:bg-white/5" onClick={() => setShowPaymentModal(false)}>
                             <X className="w-4 h-4 text-white/60" />
                         </button>
-                        <div className="flex items-start justify-between">
-                            <div>
+                        <div className="flex flex-wrap items-start justify-between gap-3 pr-8">
+                            <div className="min-w-0">
                                 <h5 className="text-white font-semibold mb-1">Méthode de paiement</h5>
                                 <p className="text-sm text-white/60 mb-2">Mode actuel: <strong className="text-white">Non configuré</strong></p>
                                 <p className="text-sm text-white/60">Intégration paiement (Stripe/PayPal) à venir — pour l'instant, utilisez la page Paiement complète si nécessaire.</p>
                             </div>
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 shrink-0">
                                 <LiquidButton variant="ghost" onClick={() => setShowPaymentModal(false)}>Fermer</LiquidButton>
                                 <LiquidButton variant="primary" onClick={() => { setShowPaymentModal(false); navigate('/payment') }}>Configurer</LiquidButton>
                             </div>

@@ -189,7 +189,7 @@ export default function AccountChoicePage() {
             <div className="w-full max-w-7xl my-8 relative z-10">
                 {/* En-tête */}
                 <div className="text-center mb-12 space-y-4 animate-fade-in">
-                    <h1 className="text-5xl md:text-6xl font-black tracking-tight bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-2xl">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black tracking-tight bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent drop-shadow-2xl">
                         {isUpgrade ? 'Changer de Plan' : 'Choisissez votre Plan'}
                     </h1>
                     <p className="text-xl md:text-2xl text-white/70 font-light max-w-3xl mx-auto">
@@ -342,14 +342,13 @@ export default function AccountChoicePage() {
                         )}
 
                         <p>
+                            {/* Pas de page CGU/Politique de confidentialité dans l'app : un bouton qui
+                                imite un lien mais ne mène nulle part est trompeur, on garde le texte
+                                en clair en attendant que ces pages existent. */}
                             <strong className="text-white">📜 Conformité légale :</strong> En continuant, vous acceptez nos{' '}
-                            <button className="underline hover:text-white transition-colors">
-                                Conditions Générales d'Utilisation
-                            </button>
+                            <span className="text-white/90">Conditions Générales d'Utilisation</span>
                             {' '}et notre{' '}
-                            <button className="underline hover:text-white transition-colors">
-                                Politique de Confidentialité
-                            </button>
+                            <span className="text-white/90">Politique de Confidentialité</span>
                             . Vous reconnaissez avoir pris connaissance du disclaimer RDR (Réduction Des Risques).
                         </p>
 
@@ -375,7 +374,7 @@ export default function AccountChoicePage() {
                     <LiquidButton
                         onClick={handleContinue}
                         variant="primary"
-                        size="xl"
+                        size="lg"
                         glow="purple"
                         className="px-12"
                         disabled={betaUpgradeLoading}

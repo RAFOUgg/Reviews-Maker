@@ -166,7 +166,7 @@ export default function CompanyInvitePage() {
                     Connectez-vous ou créez un compte avec l’adresse <strong>{invite.email}</strong> pour
                     répondre à cette invitation.
                 </p>
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                     <LiquidButton onClick={() => navigate(`/login?next=/company/invite/${token}`)} fullWidth>
                         Se connecter
                     </LiquidButton>
@@ -233,7 +233,7 @@ export default function CompanyInvitePage() {
                     ({invite.myDecision === 'accepted' ? 'accepté' : 'refusé'}).
                 </p>
             ) : (
-                <div className="flex gap-3">
+                <div className="flex flex-col sm:flex-row gap-3">
                     <LiquidButton
                         variant="ghost"
                         onClick={() => decide('refuse')}

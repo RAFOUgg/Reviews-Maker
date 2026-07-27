@@ -12,6 +12,7 @@ import { useState, useRef, useEffect, createContext, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Check, ChevronDown, X } from 'lucide-react'
 import { createPortal } from 'react-dom'
+import { useResponsiveLayout } from '@/hooks/useResponsiveLayout'
 
 // ============================================
 // LIQUID CARD - with cursor tracking effect
@@ -935,6 +936,32 @@ export function LiquidTabs({
     onChange,
     variant = 'default' // default | pills | underline
 }) {
+    // Sous ~640px, une rangée de pills scrollable ne montre aucun indice fiable qu'il y a plus
+    // d'onglets hors-écran — un menu liste (LiquidSelect) rend tous les choix visibles d'un coup,
+    // sans dépendre d'un geste de scroll horizontal découvert par hasard.
+    const { isMobile } = useResponsiveLayout()
+
+    if (isMobile) {
+        return (
+            <LiquidSelect
+                value={activeTab}
+                onChange={(id) => {
+                    const tab = tabs.find(t => t.id === id)
+                    if (tab && !tab.disabled) onChange?.(id)
+                }}
+                options={tabs.map(tab => ({
+                    value: tab.id,
+                    label: tab.label,
+                    // LiquidSelect attend un élément déjà instancié pour `icon` (rendu tel quel),
+                    // alors que LiquidTabs reçoit une référence de composant (`<tab.icon size={16}/>`).
+                    icon: tab.icon ? <tab.icon size={16} /> : undefined,
+                    disabled: tab.disabled
+                }))}
+                wrapperClassName="liquid-tabs-mobile-select"
+            />
+        )
+    }
+
     return (
         <div className={`liquid-tabs ${variant}`}>
             {tabs.map((tab) => (

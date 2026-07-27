@@ -1,9 +1,8 @@
 import React, { useState, useMemo } from 'react';
-import { createPortal } from 'react-dom';
-import { X, CheckCircle, Sparkles, TrendingUp, Building2, ArrowLeft } from 'lucide-react';
+import { CheckCircle, Sparkles, TrendingUp, Building2 } from 'lucide-react';
 import { useStore } from '../../store';
 import { useNavigate } from 'react-router-dom';
-import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
+import { LiquidModal, LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI';
 import { useToast } from '../shared/ToastContainer';
 import { accountService, paymentService } from '../../services/apiService';
 import ConfirmDialog from '../shared/ConfirmDialog';
@@ -165,36 +164,19 @@ export default function UpgradeModal({ isOpen, onClose }) {
         }
     }
 
-    if (!isOpen) return null;
+    const modalTitle = (
+        <div className="min-w-0">
+            <h2 className="text-xl md:text-2xl font-black bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
+                Changer de Plan
+            </h2>
+            <p className="text-white/50 text-sm mt-0.5">
+                Plan actuel : <span className="text-purple-400 font-semibold capitalize">{accountType}</span>
+            </p>
+        </div>
+    )
 
-    const modalContent = (
-        <div
-            className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm overflow-y-auto p-4"
-            onClick={(e) => e.target === e.currentTarget && onClose()}
-        >
-            <div className="fixed inset-0 pointer-events-none overflow-hidden">
-                <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-purple-600/10 rounded-full blur-[120px]" />
-                <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/8 rounded-full blur-[100px]" />
-            </div>
-
-            <div className="bg-gradient-to-br from-[#0a0a1a] to-[#07070f] rounded-2xl shadow-2xl max-w-5xl w-full border border-white/10 relative max-h-[90vh] overflow-hidden">
-                <div className="p-6 border-b border-white/10 flex items-center justify-between">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-black bg-gradient-to-r from-white via-white to-white/60 bg-clip-text text-transparent">
-                            Changer de Plan
-                        </h2>
-                        <p className="text-white/50 mt-1">
-                            Plan actuel: <span className="text-purple-400 font-semibold capitalize">{accountType}</span>
-                        </p>
-                    </div>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-white/10 rounded-xl transition-colors"
-                    >
-                        <X size={24} className="text-white/60" />
-                    </button>
-                </div>
-                <div className="p-6 overflow-auto" style={{ maxHeight: 'calc(90vh - 96px)' }}>
+    return (
+        <LiquidModal isOpen={isOpen} onClose={onClose} size="wide" title={modalTitle}>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {accountTypes.map((type) => {
                             const isSelected = selectedType === type.type;
@@ -305,14 +287,12 @@ export default function UpgradeModal({ isOpen, onClose }) {
                             )}
 
                             <p>
+                                {/* Pas de page CGU/Politique de confidentialité dans l'app : un bouton qui
+                                    imite un lien mais ne mène nulle part est trompeur, on garde le texte
+                                    en clair en attendant que ces pages existent. */}
                                 <strong className="text-white">📜 Conformité légale :</strong> En continuant, vous acceptez nos
-                                <button className="underline hover:text-white transition-colors">
-                                    Conditions Générales d'Utilisation
-                                </button>
-                                {' '}et notre
-                                <button className="underline hover:text-white transition-colors">
-                                    Politique de Confidentialité
-                                </button>
+                                {' '}<span className="text-white/90">Conditions Générales d'Utilisation</span>
+                                {' '}et notre <span className="text-white/90">Politique de Confidentialité</span>
                                 . Vous reconnaissez avoir pris connaissance du disclaimer RDR (Réduction Des Risques).
                             </p>
 
@@ -328,7 +308,7 @@ export default function UpgradeModal({ isOpen, onClose }) {
                         <LiquidButton
                             onClick={handleContinue}
                             variant="primary"
-                            size="xl"
+                            size="lg"
                             glow="purple"
                             className="px-12"
                         >
@@ -350,12 +330,13 @@ export default function UpgradeModal({ isOpen, onClose }) {
                     {/* Cancel subscription action */}
                     {accountType && accountType !== 'amateur' && (
                         <div className="mt-6 text-center">
-                            <button
+                            <LiquidButton
+                                variant="ghost"
+                                glow="red"
                                 onClick={handleCancelSubscription}
-                                className="py-2 px-4 text-red-400 hover:text-red-300 hover:bg-red-900/20 rounded-lg text-sm font-medium transition-colors"
                             >
                                 Résilier l'abonnement
-                            </button>
+                            </LiquidButton>
                         </div>
                     )}
                     <ConfirmDialog
@@ -367,10 +348,6 @@ export default function UpgradeModal({ isOpen, onClose }) {
                         confirmText="Résilier"
                         cancelText="Annuler"
                     />
-                </div>
-            </div>
-        </div>
+        </LiquidModal>
     );
-
-    return createPortal(modalContent, document.body);
 }

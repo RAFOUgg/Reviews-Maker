@@ -134,9 +134,9 @@ export default function PaymentPage() {
                             Résumé
                         </h2>
 
-                        <div className="flex items-center gap-4 mb-6 p-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl border border-purple-500/20">
-                            <div className="text-5xl">{accountInfo.icon}</div>
-                            <div>
+                        <div className="flex flex-wrap items-center gap-4 mb-6 p-4 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl border border-purple-500/20">
+                            <div className="text-5xl shrink-0">{accountInfo.icon}</div>
+                            <div className="min-w-0">
                                 <h3 className="text-xl font-bold text-white">
                                     {accountInfo.name}
                                 </h3>
@@ -180,12 +180,12 @@ export default function PaymentPage() {
 
                         {/* Méthode PayPal (uniquement) */}
                         <div className="mb-6">
-                            <div className="w-full flex items-center gap-4 p-5 rounded-xl border-2 border-[#0070BA]/50 bg-gradient-to-r from-[#0070BA]/10 to-[#003087]/10">
-                                <svg className="w-12 h-12" viewBox="0 0 24 24" fill="none">
+                            <div className="w-full flex flex-wrap items-center gap-4 p-5 rounded-xl border-2 border-[#0070BA]/50 bg-gradient-to-r from-[#0070BA]/10 to-[#003087]/10">
+                                <svg className="w-12 h-12 shrink-0" viewBox="0 0 24 24" fill="none">
                                     <path d="M7.076 21.337H2.47a.641.641 0 0 1-.633-.74L4.944 3.72A.75.75 0 0 1 5.682 3h6.063c2.838 0 4.544 1.447 4.544 3.86 0 2.683-1.875 4.353-5.007 4.353H8.61l-1.116 6.615a.641.641 0 0 1-.633.533l.215-.024z" fill="#003087" />
                                     <path d="M18.868 3.72L15.762 21.097a.641.641 0 0 1-.633.533h-4.606a.641.641 0 0 1-.633-.74L12.997 3.72A.75.75 0 0 1 13.735 3h4.395c.346 0 .638.254.698.59l.04.13z" fill="#0070BA" />
                                 </svg>
-                                <div className="flex-1">
+                                <div className="flex-1 min-w-[8rem]">
                                     <h3 className="text-lg font-bold text-white">PayPal</h3>
                                     <p className="text-sm text-white/50">Paiement sécurisé avec PayPal</p>
                                 </div>
