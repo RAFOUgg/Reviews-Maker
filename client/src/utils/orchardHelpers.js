@@ -843,13 +843,17 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
             gap: isSquare ? 4 : 6,
         },
 
-        // Tailles de police ajustées
+        // Tailles de police ajustées — planchers appliqués sur text/small : quel que soit le
+        // ratio, une fiche technique reste un document à LIRE. Les multiplicateurs en cascade
+        // (ratio × sous-élément, ex. badges de pipeline) faisaient descendre le texte à 6-9px
+        // effectifs sur certains ratios — illisible. `title`/`subtitle`/`section` restent scalés
+        // librement (déjà nettement plus grands, la hiérarchie visuelle reste utile là).
         fontSize: {
             title: Math.round((baseTypography.titleSize || 32) * scaleFactor),
             subtitle: Math.round((baseTypography.titleSize || 32) * scaleFactor * 0.7),
             section: Math.round((baseTypography.titleSize || 32) * scaleFactor * 0.55),
-            text: Math.round((baseTypography.textSize || 14) * scaleFactor),
-            small: Math.round((baseTypography.textSize || 14) * scaleFactor * 0.85),
+            text: Math.max(14, Math.round((baseTypography.textSize || 14) * scaleFactor)),
+            small: Math.max(12, Math.round((baseTypography.textSize || 14) * scaleFactor * 0.85)),
         },
 
         // Layout

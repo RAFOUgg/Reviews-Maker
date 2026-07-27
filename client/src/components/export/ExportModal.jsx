@@ -733,18 +733,19 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                 onClick={onClose}
             />
 
-            <div className="fixed inset-0 z-[10003] flex items-center justify-center p-4 pointer-events-none">
+            <div className="fixed inset-0 z-[10003] flex items-center justify-center p-2 sm:p-4 pointer-events-none">
                 <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     exit={{ scale: 0.9, opacity: 0 }}
-                    className="w-full max-w-5xl bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
+                    style={{ width: 'min(1180px, 96vw)', maxHeight: '92vh' }}
+                    className="flex flex-col bg-white dark:bg-gray-800 rounded-2xl shadow-2xl overflow-hidden pointer-events-auto"
                 >
                     {/* Header */}
-                    <div className="p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900">
+                    <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-white dark:from-gray-800 dark:to-gray-900 flex-shrink-0">
                         <div className="flex items-center justify-between">
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 dark:text-white">
+                                <h3 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                                     Exporter la Review
                                 </h3>
                                 <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
@@ -762,12 +763,13 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                         </div>
                     </div>
 
-                    {/* Content: two-column layout with preview */}
-                    <div className="p-6 flex gap-6 max-h-[65vh]">
+                    {/* Content: preview stacked above options on mobile, side-by-side on desktop
+                        (même pattern que OrchardPanel.jsx) — l'aperçu n'est plus jamais masqué. */}
+                    <div className="p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
                         {/* Left: live preview */}
-                        <div className="hidden md:flex flex-col flex-shrink-0 w-[340px]">
+                        <div className="flex flex-col flex-shrink-0 w-full md:w-[380px] lg:w-[420px]">
                             <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Aperçu de l'export</h4>
-                            <div className="flex-1 min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+                            <div className="min-h-[280px] md:flex-1 md:min-h-0 rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
                                 <MiniPreview config={config} reviewData={reviewData} />
                             </div>
                             <div className="mt-2 text-center">
@@ -777,7 +779,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                             </div>
                         </div>
                         {/* Right: options */}
-                        <div className="flex-1 space-y-6 overflow-y-auto">
+                        <div className="flex-1 space-y-6 md:overflow-y-auto min-w-0">
                             {/* Lien vivant partageable (Export Maker, Chantier B) — contrairement aux
                                 formats ci-dessous, ne fige rien : la page /r/:id re-rend toujours les
                                 données actuelles de la review. Nécessite que la review soit publique,
@@ -892,7 +894,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                             {/* Scope selection (what to export) */}
                             <div>
                                 <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">Étendue de l'export</h4>
-                                <div className="flex gap-2">
+                                <div className="flex flex-wrap gap-2">
                                     <button onClick={() => setSelectedScope('full')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'full' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-700'}`}>Entrée complète</button>
                                     <button onClick={() => setSelectedScope('canvas')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'canvas' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-700'}`}>Canvas uniquement</button>
                                     <button onClick={() => setSelectedScope('openGraph')} className={`px-3 py-2 rounded-lg text-sm ${selectedScope === 'openGraph' ? 'bg-purple-600 text-white' : 'bg-gray-50 text-gray-700'}`}>Social (Open Graph)</button>

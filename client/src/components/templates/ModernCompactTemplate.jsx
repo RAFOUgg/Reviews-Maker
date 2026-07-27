@@ -411,8 +411,6 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
                     {pipelines.map((p, pi) => {
                         const steps = p.rawSteps || p.steps.map(s => ({ label: s }));
-                        const maxDisplay = isSquare ? 4 : (isPortrait ? 5 : limits.maxTags + 2);
-                        const isCompact = steps.length > maxDisplay;
                         return (
                             <div key={pi} style={{ borderRadius: isSquare ? 8 : 10, backgroundColor: colorWithOpacity(colors.accent, 8), overflow: 'hidden' }}>
                                 {/* Pipeline header */}
@@ -423,58 +421,33 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                 }}>
                                     <span style={{ fontSize: isSquare ? '12px' : '14px' }}>{p.icon}</span>
                                     <span style={{ fontSize: `${fontSize.small}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>{p.name}</span>
-                                    <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.accent, fontWeight: '600' }}>{steps.length}×</span>
+                                    <span style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: '600' }}>{steps.length}×</span>
                                 </div>
-                                {isCompact ? (
-                                    <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                                        {steps.slice(0, maxDisplay + 4).map((step, si) => {
-                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
-                                            const temp = step.temperature ?? step.temp;
-                                            const humidity = step.humidity ?? step.humidite;
-                                            const tooltip = [label, temp != null ? `🌡️${temp}°C` : '', humidity != null ? `💧${humidity}%` : '', step.note || ''].filter(Boolean).join(' ');
-                                            const intensity = temp != null ? Math.min(Math.round((temp / 30) * 55) + 15, 70) : 20 + si * 3;
-                                            return (
-                                                <span key={si} title={tooltip} style={{
-                                                    padding: `2px ${spacing.gap}px`, borderRadius: 5,
-                                                    backgroundColor: colorWithOpacity(colors.accent, intensity),
-                                                    color: colors.textPrimary,
-                                                    fontSize: `${fontSize.small * 0.82}px`, fontWeight: '600',
-                                                }}>
-                                                    {String(label).slice(0, 4)}
+                                {/* Toutes les étapes, toujours en détail — libellés/notes complets, pas de
+                                    troncature ni de mode "compact" en pastilles colorées sans texte. */}
+                                <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                    {steps.map((step, si) => {
+                                        const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
+                                        const temp = step.temperature ?? step.temp;
+                                        const humidity = step.humidity ?? step.humidite ?? step.hr;
+                                        const note = step.note || step.comment || '';
+                                        return (
+                                            <div key={si} style={{
+                                                display: 'flex', gap: 6, alignItems: 'flex-start', flexWrap: 'wrap',
+                                                padding: '4px 6px',
+                                                borderLeft: `2px solid ${colorWithOpacity(colors.accent, 40 + Math.min(si * 5, 40))}`,
+                                            }}>
+                                                <span style={{ fontSize: `${fontSize.small}px`, fontWeight: '700', color: colors.accent }}>
+                                                    {String(label)}
                                                 </span>
-                                            );
-                                        })}
-                                        {steps.length > maxDisplay + 4 && (
-                                            <span style={{ fontSize: `${fontSize.small * 0.82}px`, color: colors.textSecondary, alignSelf: 'center' }}>
-                                                +{steps.length - maxDisplay - 4}
-                                            </span>
-                                        )}
-                                    </div>
-                                ) : (
-                                    <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                        {steps.map((step, si) => {
-                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
-                                            const temp = step.temperature ?? step.temp;
-                                            const humidity = step.humidity ?? step.humidite ?? step.hr;
-                                            const note = step.note || step.comment || '';
-                                            return (
-                                                <div key={si} style={{
-                                                    display: 'flex', gap: 4, alignItems: 'center',
-                                                    padding: '2px 4px',
-                                                    borderLeft: `2px solid ${colorWithOpacity(colors.accent, 40 + si * 5)}`,
-                                                }}>
-                                                    <span style={{ fontSize: `${fontSize.small * 0.88}px`, fontWeight: '700', color: colors.accent, minWidth: '28px' }}>
-                                                        {String(label).slice(0, 5)}
-                                                    </span>
-                                                    {temp != null && <span style={{ fontSize: `${fontSize.small * 0.78}px`, color: colors.textSecondary }}>🌡️{temp}°</span>}
-                                                    {humidity != null && <span style={{ fontSize: `${fontSize.small * 0.78}px`, color: colors.textSecondary }}>💧{humidity}%</span>}
-                                                    {step.container && <span style={{ fontSize: `${fontSize.small * 0.76}px`, color: colors.textSecondary }}>🫙 {String(step.container).slice(0, 10)}</span>}
-                                                    {note && <span style={{ fontSize: `${fontSize.small * 0.76}px`, color: colors.textSecondary, fontStyle: 'italic', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flex: 1 }}>💬 {note.slice(0, 30)}</span>}
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                )}
+                                                {temp != null && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🌡️ {temp}°C</span>}
+                                                {humidity != null && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>💧 {humidity}%</span>}
+                                                {step.container && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>🫙 {String(step.container)}</span>}
+                                                {note && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontStyle: 'italic', flexBasis: '100%' }}>💬 {note}</span>}
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
                         );
                     })}

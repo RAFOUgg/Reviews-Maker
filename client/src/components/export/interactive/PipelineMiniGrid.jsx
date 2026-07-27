@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
 import { safeParse, colorWithOpacity } from '../../../utils/orchardHelpers';
+import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
 
 /**
  * PipelineMiniGrid - Grille interactive lecture seule d'une timeline de pipeline
@@ -38,10 +39,10 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 13, fontWeight: 600 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
                 <span>{icon}</span>
                 <span style={{ flex: 1 }}>{name}</span>
-                <span style={{ fontSize: 11, opacity: 0.7 }}>{filledCount}/{cells.length} documentées</span>
+                <span style={{ fontSize: 12, opacity: 0.7 }}>{filledCount}/{cells.length} documentées</span>
             </div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, position: 'relative' }}>
                 {cells.map((cell) => {
@@ -74,12 +75,12 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                         padding: '6px 10px', borderRadius: 8,
                         backgroundColor: colorWithOpacity(accentColor, 10),
                         border: `1px solid ${colorWithOpacity(accentColor, 25)}`,
-                        fontSize: 12,
+                        fontSize: 13,
                     }}>
                         <div style={{ fontWeight: 700, marginBottom: 4 }}>{cell?.label}</div>
                         {entries.length === 0 && <div style={{ opacity: 0.6 }}>Aucune donnée pour cette étape</div>}
                         {entries.map(([k, v]) => (
-                            <div key={k}>{k} : {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>
+                            <div key={k}>{getFieldLabel(k) || humanizeKey(k)} : {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>
                         ))}
                     </div>
                 );

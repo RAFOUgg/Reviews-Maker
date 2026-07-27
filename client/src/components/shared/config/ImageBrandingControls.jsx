@@ -239,7 +239,7 @@ export default function ImageBrandingControls() {
                             <label className="block text-sm font-medium text-white/70 mb-2">
                                 Position
                             </label>
-                            <div className="grid grid-cols-3 gap-2">
+                            <div className="grid grid-cols-2 gap-2">
                                 {LOGO_POSITIONS.map((position) => (
                                     <LiquidButton
                                         key={position.id}

@@ -281,6 +281,10 @@ const PROTECTED_ROOT_KEYS = new Set([
     'type', 'holderName', 'review', 'flowerData', 'hashData', 'concentrateData', 'edibleData',
     'geneticTree', 'geneticTreeId', 'productionChain', 'extraData', 'tags', 'orchardConfig',
     'sourceLineage', 'parentFlowerReviewId', 'author', 'ownerName', 'user',
+    // Galerie photo : déjà gérée par `mainImage` (sélection dédiée) — un tableau de noms de
+    // fichiers uploadés (ex. flower-1753612345-847362951.jpg) n'a jamais vocation à s'afficher
+    // comme texte générique.
+    'images', 'photos',
 ]);
 
 // Plomberie de pipeline (couverte par `pipelineInteractiveView`) et de lien de compte (couverte
@@ -317,9 +321,35 @@ function inferOverflowType(value) {
     return 'text';
 }
 
+// Motifs de chaînes "techniques" (noms de fichiers uploadés, chemins, jetons opaques) qui ne
+// sont jamais du contenu destiné à l'affichage — bug réel observé : un tableau `images`/`photos`
+// non protégé exposait des noms comme `flower-1753612345-847362951.jpg` tel quel dans la fiche.
+const TECHNICAL_STRING_PATTERNS = [
+    /\.(jpe?g|png|webp|gif|avif|bmp|svg|pdf|mp4|webm|mov|csv|json)$/i, // extension de fichier
+    /^[a-z]+-\d{9,}-\d+/i, // motif d'upload `${type}-${Date.now()}-${random}${ext}`
+];
+
+function looksLikeTechnicalString(value) {
+    if (typeof value !== 'string') return false;
+    if (value.includes('/') || value.includes('\\')) return true; // chemin/URL relative
+    if (TECHNICAL_STRING_PATTERNS.some((re) => re.test(value))) return true;
+    // Jeton opaque (hash/uuid/slug) : long, sans espace, alphanumérique — jamais une phrase humaine.
+    if (value.length > 24 && !/\s/.test(value) && /^[a-z0-9_.-]+$/i.test(value)) return true;
+    return false;
+}
+
 function isOverflowEligibleValue(value) {
     if (value === undefined || value === null || value === '') return false;
-    if (Array.isArray(value)) return value.length > 0 && value.every((v) => typeof v !== 'object' || v === null);
+    if (looksLikeTechnicalString(value)) return false;
+    if (Array.isArray(value)) {
+        const primitives = value.filter((v) => typeof v !== 'object' || v === null);
+        if (primitives.length === 0) return false;
+        // Un tableau où toutes les entrées ressemblent à du texte technique n'est pas du contenu
+        // affichable (ex. liste de noms de fichiers) — rejeté en bloc plutôt que filtré en silence,
+        // pour ne pas laisser passer un tableau vidé de son sens.
+        if (primitives.every((v) => looksLikeTechnicalString(v))) return false;
+        return true;
+    }
     if (typeof value === 'object') return false; // objets/relations imbriqués : hors scope générique
     return true;
 }

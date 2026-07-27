@@ -67,7 +67,7 @@ export default function TypographyControls() {
                 <label className="block text-sm font-medium text-white/70 mb-2">
                     Graisse du titre
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                     {FONT_WEIGHTS.map((weight) => (
                         <LiquidButton
                             key={weight.value}
@@ -99,7 +99,7 @@ export default function TypographyControls() {
                 <label className="block text-sm font-medium text-white/70 mb-2">
                     Graisse du texte
                 </label>
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 gap-2">
                     {FONT_WEIGHTS.slice(0, 4).map((weight) => (
                         <LiquidButton
                             key={weight.value}

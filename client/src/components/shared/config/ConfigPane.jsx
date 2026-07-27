@@ -32,8 +32,13 @@ export default function ConfigPane() {
 
     return (
         <div className="h-full flex flex-col" style={{ background: 'var(--app-bg, transparent)' }}>
-            {/* Navigation par onglets */}
-            <div className="p-2 border-b border-white/10 overflow-x-auto">
+            {/* Navigation par onglets — fondu de bord en masque CSS : signale que la barre défile
+                horizontalement (le scrollbar natif est masqué par `.liquid-tabs`), sans quoi une
+                rangée d'onglets coupée donne l'impression d'un contenu manquant/cassé. */}
+            <div
+                className="p-2 border-b border-white/10 overflow-x-auto"
+                style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)' }}
+            >
                 <LiquidTabs tabs={panels} activeTab={activePanel} onChange={setActivePanel} variant="pills" />
             </div>
 

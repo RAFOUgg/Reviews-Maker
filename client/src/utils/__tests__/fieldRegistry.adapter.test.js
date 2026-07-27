@@ -128,4 +128,26 @@ describe('fieldRegistry — getOverflowFields (évolutivité automatique)', () =
         expect(getOverflowFields(null)).toEqual([]);
         expect(getOverflowFields('x')).toEqual([]);
     });
+    it('exclut images/photos (galerie déjà gérée par mainImage)', () => {
+        const overflow = getOverflowFields({
+            type: 'flower',
+            images: ['flower-1753612345-847362951.jpg', 'flower-1753612399-112233445.jpg'],
+            photos: ['/images/hash-xyz.jpg'],
+        });
+        const keys = overflow.map((f) => f.key);
+        expect(keys).not.toContain('images');
+        expect(keys).not.toContain('photos');
+    });
+    it('rejette les noms de fichiers/jetons techniques même sous une clé inconnue', () => {
+        const overflow = getOverflowFields({
+            type: 'flower',
+            uploadedFileName: 'flower-1753612345-847362951.jpg',
+            internalToken: 'a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p6',
+            realNote: 'Séché 14 jours en bocal, très aromatique',
+        });
+        const keys = overflow.map((f) => f.key);
+        expect(keys).not.toContain('uploadedFileName');
+        expect(keys).not.toContain('internalToken');
+        expect(keys).toContain('realNote');
+    });
 });
