@@ -1,6 +1,8 @@
 import { motion } from 'framer-motion';
+import { Check, Layers, X } from 'lucide-react';
 import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
+import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
 
 // Templates that support pagination (multi-page) — detailed/full templates
 const PAGINATION_SUPPORTED_TEMPLATES = ['detailedCard', 'blogArticle'];
@@ -58,29 +60,34 @@ export default function TemplateSelector() {
         <div className="space-y-4">
             {/* Titre */}
             <div>
-                <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                <h3 className="text-base font-semibold text-white/90 mb-1">
                     Choix du Template
                 </h3>
-                <p className="text-xs text-gray-500 dark:text-gray-400">
+                <p className="text-xs text-white/50">
                     Sélectionnez un style de présentation pour votre review
                 </p>
             </div>
 
             {/* Galerie de templates */}
-            <div className="flex items-center justify-between">
-                <div />
-                <button onClick={() => {
-                    const id = prompt('ID du template (ex: my-custom-template)');
-                    if (!id) return;
-                    const name = prompt('Nom du template (ex: Ma mise en page)') || id;
-                    registerTemplate(id, {
-                        name,
-                        description: 'Template personnalisé',
-                        layout: 'custom',
-                        defaultRatio: '1:1',
-                        supportedRatios: ['1:1', '16:9']
-                    });
-                }} className="px-3 py-2 text-white rounded-lg text-sm">➕ Créer Template</button>
+            <div className="flex items-center justify-end">
+                <LiquidButton
+                    size="sm"
+                    icon={Layers}
+                    onClick={() => {
+                        const id = prompt('ID du template (ex: my-custom-template)');
+                        if (!id) return;
+                        const name = prompt('Nom du template (ex: Ma mise en page)') || id;
+                        registerTemplate(id, {
+                            name,
+                            description: 'Template personnalisé',
+                            layout: 'custom',
+                            defaultRatio: '1:1',
+                            supportedRatios: ['1:1', '16:9']
+                        });
+                    }}
+                >
+                    Créer Template
+                </LiquidButton>
             </div>
             <div className="grid grid-cols-1 gap-2">
                 {Object.values(templates).map((template) => (
@@ -89,33 +96,39 @@ export default function TemplateSelector() {
                         whileHover={{ scale: 1.01 }}
                         whileTap={{ scale: 0.99 }}
                         onClick={() => setTemplate(template.id)}
-                        className={`p-3 rounded-lg text-left transition-all border-2 ${config.template === template.id ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 dark:border-purple-500' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300'}`}
+                        className={`liquid-card p-3 text-left ${config.template === template.id ? 'ring-2 ring-purple-500' : ''}`}
                     >
                         <div className="flex items-start justify-between mb-1.5">
                             <div>
-                                <h4 className="font-medium text-sm text-gray-900 dark:text-white">
+                                <h4 className="font-medium text-sm text-white/90">
                                     {template.name}
                                 </h4>
-                                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-0.5">
+                                <p className="text-[11px] text-white/50 mt-0.5">
                                     {template.description}
                                 </p>
                             </div>
-                            {config.template === template.id && (
-                                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                                    {/* Supprimer template custom */}
-                                    {!DEFAULT_TEMPLATES[template.id] && (
-                                        <button title="Supprimer le template" onClick={(e) => { e.stopPropagation(); if (window.confirm(`Supprimer le template ${template.name}?`)) unregisterTemplate(template.id); }} className="ml-2 p-1 text-xs bg-red-100 rounded">×</button>
-                                    )}
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
-                            )}
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                                {config.template === template.id && (
+                                    <Check className="w-5 h-5 text-purple-400" />
+                                )}
+                                {!DEFAULT_TEMPLATES[template.id] && (
+                                    <button
+                                        type="button"
+                                        title="Supprimer le template"
+                                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Supprimer le template ${template.name}?`)) unregisterTemplate(template.id); }}
+                                        className="p-1 rounded bg-red-500/15 text-red-400 hover:bg-red-500/25"
+                                    >
+                                        <X className="w-3.5 h-3.5" />
+                                    </button>
+                                )}
+                            </div>
                         </div>
 
                         <div className="flex gap-1 mt-1.5">
                             {template.supportedRatios.slice(0, 3).map((ratio) => (
                                 <span
                                     key={ratio}
-                                    className="text-[10px] px-1.5 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                                    className="text-[10px] px-1.5 py-0.5 rounded bg-white/10 text-white/60"
                                 >
                                     {ratio}
                                 </span>
@@ -127,7 +140,7 @@ export default function TemplateSelector() {
 
             {/* Sélecteur de ratio */}
             <div>
-                <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                <h4 className="text-sm font-semibold text-white/90 mb-2">
                     Format d'affichage
                 </h4>
                 <div className="grid grid-cols-2 gap-1.5">
@@ -142,7 +155,7 @@ export default function TemplateSelector() {
                                 whileTap={isSupported ? { scale: 0.99 } : {}}
                                 onClick={() => isSupported && setRatio(ratio.id)}
                                 disabled={!isSupported}
-                                className={`p-2 rounded-md text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : isSupported ? 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700' : 'bg-gray-50 dark:bg-gray-900 text-gray-400 dark:text-gray-600 cursor-not-allowed opacity-50'}`}
+                                className={`p-2 rounded-lg text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : isSupported ? 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10' : 'bg-white/[0.02] text-white/25 cursor-not-allowed'}`}
                             >
                                 <div className="flex items-center justify-center gap-1.5">
                                     <span className="text-sm">{ratio.icon}</span>
@@ -154,23 +167,20 @@ export default function TemplateSelector() {
                 </div>
             </div>
             {/* ── PAGINATION TOGGLE ── */}
-            <div className={`rounded-xl border-2 p-4 transition-all ${isPaginationLocked ? 'border-amber-400 dark:border-amber-500 bg-amber-50/50 dark:bg-amber-900/10' : pagesEnabled ? 'border-indigo-400 dark:border-indigo-500 bg-indigo-50/50 dark:bg-indigo-900/10' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800'}`}>
+            <div className={`liquid-card p-4 ${isPaginationLocked ? 'ring-2 ring-amber-400/60' : pagesEnabled ? 'ring-2 ring-indigo-400/60' : ''}`}>
                 <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                            <span className="text-sm font-bold text-gray-900 dark:text-white">
+                            <span className="text-sm font-bold text-white/90">
                                 Pagination
                             </span>
                             {isPaginationLocked && (
-                                <span className="flex items-center gap-1 text-xs font-semibold text-amber-600 dark:text-amber-400 bg-amber-100 dark:bg-amber-900/30 px-2 py-0.5 rounded-full">
-                                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                    </svg>
-                                    Auto
+                                <span className="text-xs font-semibold text-amber-400 bg-amber-400/15 px-2 py-0.5 rounded-full">
+                                    🔒 Auto
                                 </span>
                             )}
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-white/50">
                             {isPaginationLocked
                                 ? 'Données denses — pagination recommandée'
                                 : pagesEnabled
@@ -179,37 +189,20 @@ export default function TemplateSelector() {
                         </p>
                     </div>
 
-                    {/* Toggle button */}
-                    <button
-                        onClick={handlePaginationToggle}
+                    <LiquidToggle
+                        checked={pagesEnabled}
+                        onChange={handlePaginationToggle}
                         disabled={isPaginationLocked && !pagesEnabled && !isPaginationSupported}
-                        title={isPaginationLocked && !pagesEnabled ? 'Pagination requise pour ce volume de données' : pagesEnabled ? 'Désactiver la pagination' : 'Activer la pagination'}
-                        className={`relative inline-flex h-7 w-14 items-center rounded-full transition-colors focus:outline-none flex-shrink-0 ml-3 ${pagesEnabled ? 'bg-indigo-500' : isPaginationLocked ? 'bg-amber-400' : 'bg-gray-300 dark:bg-gray-600'} ${isPaginationLocked && !pagesEnabled ? 'cursor-default' : 'cursor-pointer hover:opacity-90'}`}
-                    >
-                        <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform ${pagesEnabled ? 'translate-x-8' : 'translate-x-1'}`} />
-                        {isPaginationLocked && (
-                            <span className="absolute right-1.5 top-1/2 -translate-y-1/2">
-                                <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                                </svg>
-                            </span>
-                        )}
-                    </button>
+                    />
                 </div>
 
                 {/* Quick action when just enabled */}
                 {pagesEnabled && (
-                    <motion.button
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        onClick={() => setActivePanel('pagination')}
-                        className="mt-3 w-full px-3 py-2 text-xs font-semibold text-indigo-600 dark:text-indigo-400 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg hover:bg-indigo-200 dark:hover:bg-indigo-900/50 transition-colors flex items-center justify-center gap-2"
-                    >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                        </svg>
-                        Gérer les pages →
-                    </motion.button>
+                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="mt-3">
+                        <LiquidButton size="sm" variant="ghost" className="w-full" onClick={() => setActivePanel('pagination')}>
+                            Gérer les pages →
+                        </LiquidButton>
+                    </motion.div>
                 )}
             </div>
         </div>

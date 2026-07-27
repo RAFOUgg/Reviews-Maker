@@ -1,7 +1,9 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Search, X } from 'lucide-react';
 import { useOrchardStore } from '../../../store/orchardStore';
-import { getFieldRegistry, GROUPS, GROUP_LABELS } from '../../../utils/fieldRegistry';
+import { getFieldRegistry, GROUPS, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
+import { LiquidButton, LiquidInput } from '../../ui/LiquidUI';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Ce panneau pilote `config.contentModules[<clé canonique>]` — LES MÊMES clés que
@@ -115,8 +117,8 @@ function CategorySection({ category, contentModules, reviewData, onToggle, onTog
                     <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.2 }} className="overflow-hidden">
                         <div className="p-3 pt-0 space-y-2">
                             <div className="flex gap-2 mb-3">
-                                <button onClick={() => onToggleAll(category, true)} className="flex-1 text-xs py-1.5 rounded-lg bg-white/50 dark:bg-black/30 hover:bg-white/70 dark:hover:bg-black/50 transition-colors font-medium">✓ Tout activer</button>
-                                <button onClick={() => onToggleAll(category, false)} className="flex-1 text-xs py-1.5 rounded-lg bg-black/10 dark:bg-white/10 hover:bg-black/20 dark:hover:bg-white/20 transition-colors font-medium">✕ Tout désactiver</button>
+                                <LiquidButton size="sm" variant="ghost" className="flex-1" onClick={() => onToggleAll(category, true)}>✓ Tout activer</LiquidButton>
+                                <LiquidButton size="sm" variant="ghost" className="flex-1" onClick={() => onToggleAll(category, false)}>✕ Tout désactiver</LiquidButton>
                             </div>
                             <div className="grid grid-cols-2 gap-2">
                                 {category.fields.map((f) => (
@@ -157,7 +159,7 @@ export default function ContentModuleControls() {
         for (const f of fields) {
             (byGroup[f.group] = byGroup[f.group] || []).push(f);
         }
-        return GROUPS
+        const curated = GROUPS
             .filter((g) => byGroup[g] && byGroup[g].length > 0)
             .map((g) => ({
                 key: g,
@@ -166,7 +168,22 @@ export default function ContentModuleControls() {
                 color: GROUP_COLORS[g] || 'gray',
                 fields: byGroup[g],
             }));
-    }, [productType]);
+
+        // Champs présents dans reviewData mais sans entrée curée dans le registre — nouveau
+        // champ de formulaire/pipeline pas encore doté d'un libellé/groupe soigné. Catégorie
+        // synthétique en fin de liste, plutôt qu'invisibles.
+        const overflowFields = getOverflowFields(reviewData);
+        if (overflowFields.length > 0) {
+            curated.push({
+                key: 'overflow',
+                name: GROUP_LABELS.overflow,
+                icon: '➕',
+                color: 'gray',
+                fields: overflowFields,
+            });
+        }
+        return curated;
+    }, [productType, reviewData]);
 
     const allFields = useMemo(() => categories.flatMap((c) => c.fields), [categories]);
 
@@ -204,28 +221,29 @@ export default function ContentModuleControls() {
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h3 className="text-lg font-bold text-gray-900 dark:text-white flex items-center gap-2">📦 Modules de Contenu</h3>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">Choisissez les éléments à afficher</p>
+                    <h3 className="text-lg font-bold text-white/90 flex items-center gap-2">📦 Modules de Contenu</h3>
+                    <p className="text-xs text-white/50 mt-0.5">Choisissez les éléments à afficher</p>
                 </div>
                 <div className="flex items-center gap-2">
                     {dataCount !== null && (
-                        <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-500 dark:text-green-400 text-xs font-bold" title="Champs avec données">📊 {dataCount}</span>
+                        <span className="px-2 py-1 rounded-full bg-green-500/15 text-green-400 text-xs font-bold" title="Champs avec données">📊 {dataCount}</span>
                     )}
-                    <span className="px-3 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 text-sm font-bold">{visibleCount}/{totalCount}</span>
+                    <span className="px-3 py-1 rounded-full bg-purple-500/20 text-purple-300 text-sm font-bold">{visibleCount}/{totalCount}</span>
                 </div>
             </div>
 
             {/* Recherche */}
             <div className="relative">
-                <input
-                    type="text"
+                <LiquidInput
+                    icon={Search}
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="🔍 Rechercher un module..."
-                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                    placeholder="Rechercher un module..."
                 />
                 {searchQuery && (
-                    <button onClick={() => setSearchQuery('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">✕</button>
+                    <button onClick={() => setSearchQuery('')} className="absolute right-4 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70">
+                        <X className="w-4 h-4" />
+                    </button>
                 )}
             </div>
 
@@ -239,8 +257,8 @@ export default function ContentModuleControls() {
                         ))}
                     </div>
                     {filteredFields.length === 0 && (
-                        <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                            <span className="text-3xl mb-2 block">🔍</span>
+                        <div className="text-center py-8 text-white/40">
+                            <Search className="w-8 h-8 mx-auto mb-2 opacity-50" />
                             <p className="text-sm">Aucun module trouvé pour « {searchQuery} »</p>
                         </div>
                     )}
@@ -264,9 +282,9 @@ export default function ContentModuleControls() {
             )}
 
             {/* Actions globales */}
-            <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-700">
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setAll(true)} className="flex-1 px-3 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm font-medium hover:shadow-lg transition-all shadow-sm">✓ Tout afficher</motion.button>
-                <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={() => setAll(false)} className="flex-1 px-3 py-2.5 rounded-xl bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">✕ Tout masquer</motion.button>
+            <div className="flex gap-2 pt-2 border-t border-white/10">
+                <LiquidButton variant="primary" className="flex-1" onClick={() => setAll(true)}>✓ Tout afficher</LiquidButton>
+                <LiquidButton variant="ghost" className="flex-1" onClick={() => setAll(false)}>✕ Tout masquer</LiquidButton>
             </div>
         </div>
     );

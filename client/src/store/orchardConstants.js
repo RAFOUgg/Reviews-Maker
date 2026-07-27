@@ -56,18 +56,23 @@ export const COLOR_PALETTES = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // MODULE PRESETS PAR TEMPLATE — modules auto-activés/désactivés à la sélection
 // ═══════════════════════════════════════════════════════════════════════════════
+// Vocabulaire aligné sur les clés canoniques de `client/src/utils/fieldRegistry.js` — ces
+// presets utilisaient auparavant un vocabulaire pointé (`visual.colorRating`, `odeurs.intensity`,
+// `effets.onset`…) qui ne correspondait à AUCUNE clé réelle de `contentModules` : appliquer un
+// préréglage créait des clés mortes sans jamais activer/désactiver les groupes visés. Les clés
+// ci-dessous sont celles réellement lues par `RegistrySections.jsx`/`DetailedCardTemplate.jsx`.
 export const TEMPLATE_MODULE_PRESETS = {
     modernCompact: {
         // Essentiel seulement — aperçu compact
         enable: [
-            'nomCommercial', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'title', 'mainImage', 'images', 'cultivar', 'cultivarsList',
             'farm', 'hashmaker', 'type',
-            'analytics.thcLevel', 'analytics.cbdLevel',
-            'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
-            'odeurs.intensity', 'odeurs.dominantNotes',
-            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
-            'gouts.intensity', 'gouts.aggressiveness',
-            'effets.onset', 'effets.intensity', 'effets.effects',
+            'thcLevel', 'cbdLevel',
+            'couleurScore', 'densiteVisuelle', 'trichomesScore', 'moisissureScore', 'grainesScore',
+            'intensiteAromeScore', 'aromas',
+            'dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore',
+            'intensiteGoutScore', 'agressiviteScore',
+            'monteeScore', 'intensiteEffetScore', 'effects',
             'curing',
         ],
         disable: [
@@ -76,25 +81,25 @@ export const TEMPLATE_MODULE_PRESETS = {
             'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
             'fertilizationPipeline', 'substratMix', 'processing',
             'recipe', 'ingredients',
-            'odeurs.complexity', 'odeurs.fidelity', 'odeurs.secondaryNotes',
-            'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
-            'effets.duration',
-            'analytics.terpeneProfile',
+            'complexiteAromeScore', 'fideliteAromeScore', 'secondaryAromas',
+            'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
+            'dureeEffet',
+            'terpenes',
         ],
     },
     detailedCard: {
         // Tout activé — fiche technique complète
         enable: [
-            'nomCommercial', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'title', 'mainImage', 'images', 'cultivar', 'cultivarsList',
             'farm', 'hashmaker', 'type', 'breeder', 'strainType', 'genetics',
-            'analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile',
-            'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
-            'visual.transparency', 'visual.viscosity',
-            'odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes',
-            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
-            'texture.malleability', 'texture.friability', 'texture.melting', 'texture.residue', 'texture.viscosity',
-            'gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
-            'effets.onset', 'effets.intensity', 'effets.effects', 'effets.duration',
+            'thcLevel', 'cbdLevel', 'terpenes',
+            'couleurScore', 'densiteVisuelle', 'trichomesScore', 'moisissureScore', 'grainesScore',
+            'couleurTransparence', 'pureteVisuelle',
+            'intensiteAromeScore', 'complexiteAromeScore', 'fideliteAromeScore', 'aromas', 'secondaryAromas',
+            'dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore',
+            'malleabiliteScore', 'friabiliteScore', 'meltingScore', 'residuScore', 'viscositeScore',
+            'intensiteGoutScore', 'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
+            'monteeScore', 'intensiteEffetScore', 'effects', 'dureeEffet',
             'curing',
             'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
             'fertilizationPipeline', 'substratMix', 'processing',
@@ -106,14 +111,14 @@ export const TEMPLATE_MODULE_PRESETS = {
     blogArticle: {
         // Tout activé comme detailedCard
         enable: [
-            'nomCommercial', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'title', 'mainImage', 'images', 'cultivar', 'cultivarsList',
             'farm', 'hashmaker', 'type', 'breeder', 'strainType', 'genetics',
-            'analytics.thcLevel', 'analytics.cbdLevel', 'analytics.terpeneProfile',
-            'visual.colorRating', 'visual.density', 'visual.trichomes', 'visual.mold', 'visual.seeds',
-            'odeurs.intensity', 'odeurs.complexity', 'odeurs.fidelity', 'odeurs.dominantNotes', 'odeurs.secondaryNotes',
-            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
-            'gouts.intensity', 'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
-            'effets.onset', 'effets.intensity', 'effets.effects', 'effets.duration',
+            'thcLevel', 'cbdLevel', 'terpenes',
+            'couleurScore', 'densiteVisuelle', 'trichomesScore', 'moisissureScore', 'grainesScore',
+            'intensiteAromeScore', 'complexiteAromeScore', 'fideliteAromeScore', 'aromas', 'secondaryAromas',
+            'dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore',
+            'intensiteGoutScore', 'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
+            'monteeScore', 'intensiteEffetScore', 'effects', 'dureeEffet',
             'curing',
             'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
             'cultureTimelineData', 'cultureTimelineConfig',
@@ -123,12 +128,12 @@ export const TEMPLATE_MODULE_PRESETS = {
     socialStory: {
         // Visuels + impactant — format story
         enable: [
-            'nomCommercial', 'mainImage', 'images', 'cultivar', 'farm', 'hashmaker', 'type',
-            'analytics.thcLevel', 'analytics.cbdLevel',
-            'visual.colorRating', 'visual.density', 'visual.trichomes',
-            'odeurs.intensity', 'odeurs.dominantNotes',
-            'gouts.intensity',
-            'effets.onset', 'effets.intensity', 'effets.effects',
+            'title', 'mainImage', 'images', 'cultivar', 'farm', 'hashmaker', 'type',
+            'thcLevel', 'cbdLevel',
+            'couleurScore', 'densiteVisuelle', 'trichomesScore',
+            'intensiteAromeScore', 'aromas',
+            'intensiteGoutScore',
+            'monteeScore', 'intensiteEffetScore', 'effects',
             'curing',
         ],
         disable: [
@@ -137,12 +142,12 @@ export const TEMPLATE_MODULE_PRESETS = {
             'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
             'fertilizationPipeline', 'substratMix', 'processing',
             'recipe', 'ingredients',
-            'odeurs.complexity', 'odeurs.fidelity', 'odeurs.secondaryNotes',
-            'texture.hardness', 'texture.density', 'texture.elasticity', 'texture.stickiness',
-            'texture.malleability', 'texture.friability', 'texture.melting', 'texture.residue',
-            'gouts.aggressiveness', 'gouts.dryPuffNotes', 'gouts.inhalationNotes', 'gouts.exhalationNotes',
-            'effets.duration',
-            'analytics.terpeneProfile',
+            'complexiteAromeScore', 'fideliteAromeScore', 'secondaryAromas',
+            'dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore',
+            'malleabiliteScore', 'friabiliteScore', 'meltingScore', 'residuScore',
+            'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
+            'dureeEffet',
+            'terpenes',
         ],
     },
 };

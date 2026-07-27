@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { buildExportReviewData } from '../exportDataAdapter';
-import { getAllFields, getFieldRegistry, PRODUCT_TYPES } from '../fieldRegistry';
+import { getAllFields, getFieldRegistry, getOverflowFields, PRODUCT_TYPES } from '../fieldRegistry';
 
 // Chemin PUBLIC : review aplatie côté serveur (noms de colonnes DB)
 const publicFlower = {
@@ -91,5 +91,41 @@ describe('fieldRegistry — intégrité', () => {
         for (const f of getAllFields()) {
             if (f.type === 'score') expect(cats).toContain(f.cat);
         }
+    });
+});
+
+describe('fieldRegistry — getOverflowFields (évolutivité automatique)', () => {
+    it('détecte un champ non réclamé par aucune entrée du registre', () => {
+        const overflow = getOverflowFields({ type: 'flower', effetsFiltre: 'Oui' });
+        expect(overflow.map((f) => f.key)).toContain('effetsFiltre');
+    });
+    it('n\'inclut jamais un champ déjà réclamé par une entrée curée', () => {
+        const overflow = getOverflowFields({ type: 'flower', thcPercent: 22.5 });
+        expect(overflow.map((f) => f.key)).not.toContain('thcPercent');
+    });
+    it('exclut les clés protégées et la plomberie pipeline/lien de compte', () => {
+        const overflow = getOverflowFields({
+            type: 'flower', id: 'r1', reviewId: 'r1', createdAt: '2026-01-01',
+            cultureTimelineConfig: '{}', culturePipelineId: 'p1',
+            farmLinkedUserId: 'u1', effetsFiltre: 'Oui',
+        });
+        const keys = overflow.map((f) => f.key);
+        expect(keys).not.toContain('id');
+        expect(keys).not.toContain('cultureTimelineConfig');
+        expect(keys).not.toContain('culturePipelineId');
+        expect(keys).not.toContain('farmLinkedUserId');
+        expect(keys).toContain('effetsFiltre');
+    });
+    it('ignore les valeurs vides/objets imbriqués, dérive un libellé lisible', () => {
+        const overflow = getOverflowFields({ type: 'flower', champTest: '', autreChamp: 'valeur', relationObj: { a: 1 } });
+        const keys = overflow.map((f) => f.key);
+        expect(keys).not.toContain('champTest');
+        expect(keys).not.toContain('relationObj');
+        const entry = overflow.find((f) => f.key === 'autreChamp');
+        expect(entry.label).toBe('Autre champ');
+    });
+    it('retourne un tableau vide pour une entrée non-objet', () => {
+        expect(getOverflowFields(null)).toEqual([]);
+        expect(getOverflowFields('x')).toEqual([]);
     });
 });

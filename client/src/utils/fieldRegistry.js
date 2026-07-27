@@ -60,6 +60,7 @@ export const GROUP_LABELS = {
     purification: 'Purification',
     recipe: 'Recette',
     traceability: 'Traçabilité',
+    overflow: 'Données supplémentaires',
 };
 
 /**
@@ -261,6 +262,98 @@ export function getFieldLabel(key) {
     return LABEL_INDEX[key];
 }
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// OVERFLOW — évolutivité automatique
+// ═══════════════════════════════════════════════════════════════════════════════
+// Le serveur aplatit déjà TOUTE colonne de la sous-table produit à la racine de reviewData
+// (`flattenSubReview`, server-new/utils/reviewFormatter.js — un `Object.entries` générique, pas
+// une liste blanche) : une nouvelle colonne Prisma/un nouveau champ de formulaire est donc déjà
+// présent dans reviewData dès sa création, sans aucune synchronisation serveur. Le seul chaînon
+// manquant était ce registre, écrit à la main : un champ sans entrée disparaissait silencieusement
+// d'Export Maker. `getOverflowFields` referme cette boucle en repérant, à l'exécution, les clés de
+// reviewData qu'aucune entrée du registre ne réclame, et en les exposant génériquement — même
+// principe déjà éprouvé côté pipelines (`summarizeCellFields`, `chainCellPipelines.js`).
+
+// Clés jamais éligibles au fallback générique : bookkeeping, identité de la Review, objets
+// relationnels imbriqués, doublons de sous-table déjà aplatis ailleurs.
+const PROTECTED_ROOT_KEYS = new Set([
+    'id', 'reviewId', 'authorId', 'createdAt', 'updatedAt', 'isPublic', 'producerProfileId',
+    'type', 'holderName', 'review', 'flowerData', 'hashData', 'concentrateData', 'edibleData',
+    'geneticTree', 'geneticTreeId', 'productionChain', 'extraData', 'tags', 'orchardConfig',
+    'sourceLineage', 'parentFlowerReviewId', 'author', 'ownerName', 'user',
+]);
+
+// Plomberie de pipeline (couverte par `pipelineInteractiveView`) et de lien de compte (couverte
+// par l'affichage dédié farm/hashmaker/fabricant) — exclue par motif plutôt que par liste figée,
+// pour rester valable si de nouveaux pipelines/liens sont ajoutés plus tard.
+const OVERFLOW_EXCLUDE_PATTERNS = [
+    /(TimelineConfig|TimelineData|PipelineId|PipelineGithubId)$/,
+    /Linked(UserId|ProducerProfileId)$/,
+];
+
+/** Aplati tous les `sources[]` des entrées du registre applicables à un type de produit. */
+export function getClaimedSources(productType) {
+    const claimed = new Set();
+    for (const f of getFieldRegistry(productType)) {
+        for (const s of f.sources) claimed.add(s);
+    }
+    return claimed;
+}
+
+/** camelCase/snake_case → "Title Case", repli utilisé quand aucune entrée curée n'existe. */
+export function humanizeKey(key) {
+    const spaced = String(key)
+        .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+        .replace(/[_-]+/g, ' ')
+        .trim();
+    return spaced.charAt(0).toUpperCase() + spaced.slice(1).toLowerCase();
+}
+
+function inferOverflowType(value) {
+    if (typeof value === 'boolean') return 'bool';
+    if (typeof value === 'number') return 'number';
+    if (Array.isArray(value)) return 'list';
+    if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}/.test(value)) return 'date';
+    return 'text';
+}
+
+function isOverflowEligibleValue(value) {
+    if (value === undefined || value === null || value === '') return false;
+    if (Array.isArray(value)) return value.length > 0 && value.every((v) => typeof v !== 'object' || v === null);
+    if (typeof value === 'object') return false; // objets/relations imbriqués : hors scope générique
+    return true;
+}
+
+/**
+ * Détecte les clés de `reviewData` non couvertes par le registre — nouveau champ de formulaire/
+ * colonne Prisma pas encore doté d'une entrée curée. Retourne des entrées au MÊME format que le
+ * registre (`{key, label, group:'overflow', type, sources}`), donc consommables sans changement
+ * par `ModuleToggle`/`fieldHasData`/`renderFieldValue`.
+ */
+export function getOverflowFields(reviewData) {
+    if (!reviewData || typeof reviewData !== 'object') return [];
+    const productType = reviewData.type || reviewData.productType || reviewData.typeProduit;
+    const claimed = getClaimedSources(productType);
+    const seen = new Set();
+    const overflow = [];
+
+    for (const key of Object.keys(reviewData)) {
+        if (seen.has(key) || claimed.has(key) || PROTECTED_ROOT_KEYS.has(key)) continue;
+        if (OVERFLOW_EXCLUDE_PATTERNS.some((re) => re.test(key))) continue;
+        const value = reviewData[key];
+        if (!isOverflowEligibleValue(value)) continue;
+        seen.add(key);
+        overflow.push({
+            key,
+            label: humanizeKey(key),
+            group: 'overflow',
+            type: inferOverflowType(value),
+            sources: [key],
+        });
+    }
+    return overflow;
+}
+
 export default {
     PRODUCT_TYPES,
     CATEGORY_KEYS,
@@ -269,4 +362,7 @@ export default {
     getFieldRegistry,
     getAllFields,
     getFieldsByGroup,
+    getClaimedSources,
+    humanizeKey,
+    getOverflowFields,
 };

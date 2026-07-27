@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import TemplateRenderer from '../../components/export/TemplateRenderer'
-import { DEFAULT_CONFIG } from '../../store/orchardStore'
+import { resolveOrchardConfig } from '../../store/orchardStore'
 import { DEFAULT_TEMPLATES } from '../../store/orchardConstants'
 
 const RATIO_DIMS = {
@@ -39,13 +39,16 @@ export default function PublicRenderPage() {
     }, [id])
 
     const config = (() => {
-        if (!review?.orchardConfig) {
-            return { ...DEFAULT_CONFIG, template: 'detailedCard', ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio }
-        }
+        const fallback = { template: 'detailedCard', ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio }
+        if (!review?.orchardConfig) return resolveOrchardConfig(fallback)
         try {
-            return typeof review.orchardConfig === 'string' ? JSON.parse(review.orchardConfig) : review.orchardConfig
+            const saved = typeof review.orchardConfig === 'string' ? JSON.parse(review.orchardConfig) : review.orchardConfig
+            // Répare un orchardConfig sauvegardé avant l'ajout de nouvelles clés à
+            // DEFAULT_CONFIG.contentModules — sinon les sections "opt-in" (cultivarsList,
+            // aromas, terpenes…) disparaissent silencieusement sur une review pourtant pleine.
+            return resolveOrchardConfig(saved)
         } catch {
-            return { ...DEFAULT_CONFIG, template: 'detailedCard', ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio }
+            return resolveOrchardConfig(fallback)
         }
     })()
     const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']

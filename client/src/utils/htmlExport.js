@@ -73,15 +73,14 @@ async function inlineTree(srcRoot, dstRoot) {
 }
 
 /**
- * Construit le document HTML autonome à partir d'un nœud de rendu.
- * @param {HTMLElement} node - le canvas #orchard-template-canvas (ou conteneur d'aperçu)
- * @param {Object} opts - { title, width, height, background }
- * @returns {Promise<string>} document HTML complet
+ * Clone un nœud de rendu et inline ses styles calculés + images en data URI — le cœur commun
+ * aux exports HTML mono-page et multi-page ci-dessous.
+ * @param {HTMLElement} node
+ * @returns {Promise<{width:number, height:number, frameHtml:string}>}
  */
-export async function serializeRenderToHtml(node, opts = {}) {
-    const width = opts.width || node.getAttribute('data-width') || node.offsetWidth;
-    const height = opts.height || node.getAttribute('data-height') || node.offsetHeight;
-    const title = (opts.title || 'Fiche Reviews-Maker').replace(/</g, '&lt;');
+async function serializeNodeToFrame(node) {
+    const width = node.getAttribute('data-width') || node.offsetWidth;
+    const height = node.getAttribute('data-height') || node.offsetHeight;
 
     const clone = node.cloneNode(true);
     await inlineTree(node, clone);
@@ -98,7 +97,20 @@ export async function serializeRenderToHtml(node, opts = {}) {
     // choisir le ratio A4 avant l'export. On ne force PAS le débordement ici : neutraliser les
     // hauteurs internes casse le layout en colonnes du template détaillé.
 
-    const inner = clone.outerHTML;
+    return { width, height, frameHtml: clone.outerHTML };
+}
+
+/**
+ * Construit le document HTML autonome à partir d'un nœud de rendu.
+ * @param {HTMLElement} node - le canvas #orchard-template-canvas (ou conteneur d'aperçu)
+ * @param {Object} opts - { title, width, height, background }
+ * @returns {Promise<string>} document HTML complet
+ */
+export async function serializeRenderToHtml(node, opts = {}) {
+    const { width, frameHtml } = await serializeNodeToFrame(node);
+    const title = (opts.title || 'Fiche Reviews-Maker').replace(/</g, '&lt;');
+    const w = opts.width || width;
+
     return `<!doctype html>
 <html lang="fr">
 <head>
@@ -109,12 +121,56 @@ export async function serializeRenderToHtml(node, opts = {}) {
   * { box-sizing: border-box; }
   html,body { margin:0; padding:0; }
   body { display:flex; justify-content:center; align-items:flex-start; background:#0b0b14; padding:24px; min-height:100vh; }
-  .rm-frame { width:${width}px; max-width:100%; box-shadow:0 10px 40px rgba(0,0,0,.4); border-radius:16px; overflow:hidden; }
-  @media (max-width:${width}px){ .rm-frame{ transform-origin: top center; } }
+  .rm-frame { width:${w}px; max-width:100%; box-shadow:0 10px 40px rgba(0,0,0,.4); border-radius:16px; overflow:hidden; }
+  @media (max-width:${w}px){ .rm-frame{ transform-origin: top center; } }
 </style>
 </head>
 <body>
-<div class="rm-frame">${inner}</div>
+<div class="rm-frame">${frameHtml}</div>
+</body>
+</html>`;
+}
+
+/**
+ * Variante multi-page de `serializeRenderToHtml` : sérialise CHAQUE nœud fourni (une page =
+ * un canvas `.orchard-export-page`) et compose un document unique — chaque page dans son propre
+ * bloc avec numérotation, saut de page à l'impression (`break-after: page`), et défilement/ancres
+ * à l'écran. Réutilise `serializeNodeToFrame` : même fidélité (styles inlinés, images en data URI)
+ * que l'export mono-page, juste composée N fois.
+ * @param {HTMLElement[]} nodes
+ * @param {Object} opts - { title }
+ * @returns {Promise<string>} document HTML complet
+ */
+export async function serializeMultiPageHtml(nodes, opts = {}) {
+    const title = (opts.title || 'Fiche Reviews-Maker').replace(/</g, '&lt;');
+    const frames = await Promise.all(nodes.map((n) => serializeNodeToFrame(n)));
+    const width = frames[0]?.width || 800;
+
+    const pagesHtml = frames.map((f, i) => `
+<section class="rm-page" id="page-${i + 1}">
+  <div class="rm-page-number">Page ${i + 1} / ${frames.length}</div>
+  <div class="rm-frame" style="width:${f.width}px">${f.frameHtml}</div>
+</section>`).join('\n');
+
+    return `<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${title}</title>
+<style>
+  * { box-sizing: border-box; }
+  html,body { margin:0; padding:0; }
+  body { display:flex; flex-direction:column; align-items:center; gap:32px; background:#0b0b14; padding:32px 24px; }
+  .rm-page { display:flex; flex-direction:column; align-items:center; gap:8px; break-after: page; }
+  .rm-page:last-child { break-after: auto; }
+  .rm-page-number { color:#9ca3af; font:600 12px/1 system-ui, sans-serif; letter-spacing:.05em; text-transform:uppercase; }
+  .rm-frame { width:${width}px; max-width:100%; box-shadow:0 10px 40px rgba(0,0,0,.4); border-radius:16px; overflow:hidden; }
+  @media print { body { background:#fff; padding:0; gap:0; } .rm-page-number { display:none; } .rm-frame { box-shadow:none; border-radius:0; } }
+</style>
+</head>
+<body>
+${pagesHtml}
 </body>
 </html>`;
 }

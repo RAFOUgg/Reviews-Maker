@@ -309,6 +309,37 @@ const DEFAULT_CONFIG = {
     sectionStyles: {},
 };
 
+// ═══════════════════════════════════════════════════════════════════════════════
+// Résolution de contentModules périmés (schéma qui a évolué depuis l'enregistrement)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Un `orchardConfig` sauvegardé sur une Review (via OrchardPanel) est écrit une fois puis
+// relu tel quel par ExportModal/PublicRenderPage — contrairement à la session d'édition en
+// localStorage, qui bénéficie déjà du garde-fou `merge()` du middleware `persist` ci-dessous.
+// Une review configurée avant l'ajout de nouvelles clés à DEFAULT_CONFIG.contentModules
+// (nouveau champ de formulaire, nouveau module) se retrouve donc avec des sections qui
+// exigent une clé explicitement `true` (style "opt-in", ex. DetailedCardTemplate.jsx)
+// silencieusement vides, alors que les sections "opt-out" (`!== false`) survivent — c'est
+// exactement le symptôme "review pleine, export presque vide" sur une review déjà éditée.
+// Cette fonction applique la même règle que `merge()` (moins de 70 clés = préréglage/format
+// périmé, on force les défauts ; sinon on fusionne pour combler les clés manquantes) à
+// n'importe quel `contentModules` sauvegardé, y compris en base de données.
+export function resolveContentModules(savedContentModules) {
+    const savedCount = Object.keys(savedContentModules || {}).length;
+    if (savedCount < 70) return { ...DEFAULT_CONFIG.contentModules };
+    return { ...DEFAULT_CONFIG.contentModules, ...savedContentModules };
+}
+
+// Résout une config de review potentiellement périmée/partielle en repartant toujours de
+// DEFAULT_CONFIG (nouvelles clés de premier niveau incluses) puis en fusionnant contentModules
+// via `resolveContentModules` (les modules exigent une règle de fusion spécifique, cf. ci-dessus).
+export function resolveOrchardConfig(savedConfig) {
+    return {
+        ...DEFAULT_CONFIG,
+        ...(savedConfig || {}),
+        contentModules: resolveContentModules(savedConfig?.contentModules),
+    };
+}
+
 export const useOrchardStore = create(
     persist(
         (set, get) => ({
@@ -634,9 +665,7 @@ export const useOrchardStore = create(
 
                 // TOUJOURS utiliser les modules par défaut si moins de 70 modules
                 // Car l'ancien format avait seulement 13 modules
-                const contentModules = savedModulesCount < 70
-                    ? { ...DEFAULT_CONFIG.contentModules }
-                    : { ...DEFAULT_CONFIG.contentModules, ...persistedState.config.contentModules };
+                const contentModules = resolveContentModules(persistedState.config?.contentModules);
 
                 const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) < 70
                     ? [...DEFAULT_CONFIG.moduleOrder]

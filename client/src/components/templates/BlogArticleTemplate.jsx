@@ -13,6 +13,8 @@ import {
     getResponsiveAdjustments,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 
 /**
  * BlogArticleTemplate - Template article de blog professionnel
@@ -512,6 +514,20 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 </div>
                             ))}
                         </div>
+                    </div>
+                )}
+
+                {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
+                {contentModules.phenoHuntView !== false && (
+                    <div style={styles.section}>
+                        <GenealogyMiniView reviewData={reviewData} compact={false} sectionFontSize={typography.textSize + 1} accentColor={colors.accent} titleColor={colors.title} />
+                    </div>
+                )}
+
+                {/* Vue interactive Chaîne de production — même logique de masquage async */}
+                {contentModules.productionChainView !== false && (
+                    <div style={styles.section}>
+                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={typography.textSize + 1} accentColor={colors.accent} titleColor={colors.title} />
                     </div>
                 )}
 

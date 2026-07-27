@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { getFieldsByGroup, GROUP_LABELS } from '../../../utils/fieldRegistry';
+import { getFieldsByGroup, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
 import { CANNABINOIDS } from '../../../data/cannabinoids';
 import { formatDate } from '../../../utils/orchardHelpers';
 
@@ -168,7 +168,12 @@ export function GisementSections({ reviewData, contentModules, groups, Section, 
             );
         }
 
-        const fields = getFieldsByGroup(group, reviewData.type)
+        // Overflow : champs de reviewData non couverts par le registre (nouveau champ de
+        // formulaire/pipeline sans entrée curée) — détectés dynamiquement plutôt que déclarés
+        // dans le registre statique, cf. `getOverflowFields`.
+        const groupFields = group === 'overflow' ? getOverflowFields(reviewData) : getFieldsByGroup(group, reviewData.type);
+
+        const fields = groupFields
             .filter((f) => f.type !== 'score') // les scores vont dans les notes par catégorie
             .filter((f) => f.ref == null || group !== 'analytics') // cannabinoïdes gérés par CannabinoidGrid
             .filter((f) => isModuleOn(contentModules, f.key));

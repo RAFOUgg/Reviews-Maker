@@ -1,11 +1,13 @@
 import { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { DndContext, closestCenter, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import PropTypes from 'prop-types';
+import { GripVertical, Trash2, FileText, Plus, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useOrchardStore } from '../../../store/orchardStore';
 import { useOrchardPagesStore, PAGE_TEMPLATES } from '../../../store/orchardPagesStore';
+import { LiquidButton, LiquidToggle, LiquidModal, LiquidBadge } from '../../ui/LiquidUI';
 
 /**
  * Composant pour une page triable dans la liste
@@ -24,17 +26,12 @@ function SortablePage({ page, pageNumber, isActive, onClick, onRemove }) {
             <motion.div
                 whileHover={{ scale: 1.02 }}
                 onClick={onClick}
-                className={`p-3 rounded-lg border-2 transition-all cursor-pointer shadow-sm hover:shadow-md ${isActive ? 'border-purple-500 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/30 dark:to-pink-900/30 ring-2 ring-purple-300 dark:ring-purple-700 shadow-lg shadow-purple-500/20' : 'border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 hover:border-purple-300 dark:hover:border-purple-600'}`}
+                className={`liquid-card p-3 cursor-pointer ${isActive ? 'ring-2 ring-purple-500' : ''}`}
             >
                 <div className="flex items-center gap-3">
                     {/* Drag Handle */}
-                    <div
-                        {...listeners}
-                        className="cursor-grab active:cursor-grabbing p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded"
-                    >
-                        <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h16M4 16h16" />
-                        </svg>
+                    <div {...listeners} className="cursor-grab active:cursor-grabbing p-1 hover:bg-white/10 rounded">
+                        <GripVertical className="w-4 h-4 text-white/40" />
                     </div>
 
                     {/* Icon */}
@@ -42,44 +39,34 @@ function SortablePage({ page, pageNumber, isActive, onClick, onRemove }) {
 
                     {/* Info */}
                     <div className="flex-1 min-w-0">
-                        <h4 className="font-medium text-sm text-gray-900 dark:text-white truncate">
-                            <span className="text-gray-400 dark:text-gray-500 mr-1">#{pageNumber}</span>
+                        <h4 className="font-medium text-sm text-white/90 truncate">
+                            <span className="text-white/40 mr-1">#{pageNumber}</span>
                             {page.label}
                         </h4>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                        <p className="text-xs text-white/50">
                             {page.modules.length} module{page.modules.length > 1 ? 's' : ''}
                         </p>
                     </div>
 
                     {/* Actions */}
                     <button
-                        onClick={(e) => {
-                            e.stopPropagation();
-                            onRemove();
-                        }}
-                        className="p-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 text-gray-400 hover:text-red-600 transition-colors"
+                        onClick={(e) => { e.stopPropagation(); onRemove(); }}
+                        className="p-1.5 rounded-lg hover:bg-red-500/15 text-white/40 hover:text-red-400 transition-colors"
                         title="Supprimer cette page"
                     >
-                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
+                        <Trash2 className="w-4 h-4" />
                     </button>
                 </div>
 
                 {/* Modules preview */}
                 {isActive && page.modules.length > 0 && (
-                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                    <div className="mt-3 pt-3 border-t border-white/10">
                         <div className="flex flex-wrap gap-1">
                             {page.modules.slice(0, 6).map((module, i) => (
-                                <span
-                                    key={i}
-                                    className="text-xs px-2 py-1 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded"
-                                >
-                                    {module}
-                                </span>
+                                <LiquidBadge key={i} size="sm">{module}</LiquidBadge>
                             ))}
                             {page.modules.length > 6 && (
-                                <span className="text-xs px-2 py-1 text-gray-500">
+                                <span className="text-xs px-2 py-1 text-white/40">
                                     +{page.modules.length - 6}
                                 </span>
                             )}
@@ -147,31 +134,24 @@ export default function PageManager({ embedded = false }) {
     };
 
     return (
-        <div className={`flex flex-col ${embedded ? 'space-y-4' : 'h-full bg-gray-50 dark:bg-gray-900'}`}>
+        <div className={`flex flex-col ${embedded ? 'space-y-4' : 'h-full'}`}>
 
             {/* Header - only when not embedded */}
             {!embedded && (
-                <div className="p-4 border-b border-gray-200 dark:border-gray-800 bg-gradient-to-r from-white to-gray-50 dark:from-gray-800 dark:to-gray-900">
+                <div className="p-4 border-b border-white/10">
                     <div className="flex items-center justify-between mb-3">
                         <div className="flex items-center gap-2">
                             <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center flex-shrink-0">
-                                <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                                </svg>
+                                <FileText className="w-4 h-4 text-white" />
                             </div>
                             <div>
-                                <h3 className="text-base font-bold text-gray-900 dark:text-white">Pages</h3>
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                <h3 className="text-base font-bold text-white/90">Pages</h3>
+                                <p className="text-xs text-white/50">
                                     {pages.length} page{pages.length > 1 ? 's' : ''}
                                 </p>
                             </div>
                         </div>
-                        <button
-                            onClick={togglePagesMode}
-                            className={`px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-1.5 ${pagesEnabled ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/30 ring-2 ring-purple-300 dark:ring-purple-700' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                        >
-                            <span>{pagesEnabled ? 'ON' : 'OFF'}</span>
-                        </button>
+                        <LiquidToggle checked={pagesEnabled} onChange={togglePagesMode} size="sm" />
                     </div>
                 </div>
             )}
@@ -180,14 +160,14 @@ export default function PageManager({ embedded = false }) {
             {embedded && (
                 <div>
                     <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-sm font-bold text-gray-900 dark:text-white">
+                        <h3 className="text-sm font-bold text-white/90">
                             Trame de pages
                         </h3>
-                        <span className="text-xs text-indigo-600 dark:text-indigo-400 font-semibold">
+                        <span className="text-xs text-indigo-400 font-semibold">
                             {pages.length} page{pages.length > 1 ? 's' : ''}
                         </span>
                     </div>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                    <p className="text-xs text-white/50 mb-3">
                         Glissez pour réordonner · Cliquez pour sélectionner
                     </p>
                 </div>
@@ -213,124 +193,79 @@ export default function PageManager({ embedded = false }) {
 
                     {/* Actions row */}
                     <div className="flex gap-2 pt-1">
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            className="flex-1 p-2.5 border-2 border-dashed border-indigo-300 dark:border-indigo-700 rounded-lg text-indigo-500 dark:text-indigo-400 hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all text-xs font-medium flex items-center justify-center gap-1.5"
-                        >
-                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                            </svg>
+                        <LiquidButton size="sm" variant="ghost" icon={Plus} className="flex-1" onClick={() => setShowAddModal(true)}>
                             Ajouter une page
-                        </button>
-                        <button
-                            onClick={handleResetPages}
-                            title="Réinitialiser les pages par défaut"
-                            className="px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-xs"
-                        >
-                            ↺
-                        </button>
+                        </LiquidButton>
+                        <LiquidButton size="sm" variant="ghost" icon={RotateCcw} onClick={handleResetPages} title="Réinitialiser les pages par défaut" />
                     </div>
                 </div>
             )}
 
             {/* Navigation buttons */}
             {!embedded && pagesEnabled && pages.length > 1 && (
-                <div className="p-4 border-t border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-800">
+                <div className="p-4 border-t border-white/10">
                     <div className="flex items-center justify-between gap-2">
-                        <button
+                        <LiquidButton
+                            size="sm" variant="ghost" icon={ChevronLeft} className="flex-1"
                             onClick={() => setCurrentPage(Math.max(0, currentPageIndex - 1))}
                             disabled={currentPageIndex === 0}
-                            className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         >
-                            ← Précédent
-                        </button>
-                        <div className="px-3 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-lg font-bold">
-                            {currentPageIndex + 1} / {pages.length}
-                        </div>
-                        <button
+                            Précédent
+                        </LiquidButton>
+                        <LiquidBadge variant="info">{currentPageIndex + 1} / {pages.length}</LiquidBadge>
+                        <LiquidButton
+                            size="sm" variant="ghost" icon={ChevronRight} iconPosition="right" className="flex-1"
                             onClick={() => setCurrentPage(Math.min(pages.length - 1, currentPageIndex + 1))}
                             disabled={currentPageIndex === pages.length - 1}
-                            className="flex-1 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium text-sm disabled:opacity-40 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
                         >
-                            Suivant →
-                        </button>
+                            Suivant
+                        </LiquidButton>
                     </div>
                 </div>
             )}
 
             {/* Add page modal */}
-            <AnimatePresence>
-                {showAddModal && (
-                    <>
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50"
-                            onClick={() => setShowAddModal(false)}
-                        />
-                        <motion.div
-                            initial={{ opacity: 0, scale: 0.9, y: 20 }}
-                            animate={{ opacity: 1, scale: 1, y: 0 }}
-                            exit={{ opacity: 0, scale: 0.9, y: 20 }}
-                            className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 w-96 max-h-[80vh] overflow-y-auto"
-                        >
-                            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">Ajouter une page</h3>
+            <LiquidModal isOpen={showAddModal} onClose={() => setShowAddModal(false)} title="Ajouter une page" size="sm">
+                <div className="space-y-2 px-6 pb-6">
+                    {/* Blank page */}
+                    <button
+                        onClick={() => handleAddPage({ label: 'Nouvelle page', icon: '📄', modules: [] })}
+                        className="liquid-card w-full p-4 text-left"
+                    >
+                        <div className="flex items-center gap-3">
+                            <span className="text-2xl">📄</span>
+                            <div>
+                                <div className="font-semibold text-white/90">Page vierge</div>
+                                <div className="text-xs text-white/50">Contenu personnalisé vide</div>
+                            </div>
+                        </div>
+                    </button>
 
-                            <div className="space-y-2">
-                                {/* Blank page */}
-                                <button
-                                    onClick={() => handleAddPage({ label: 'Nouvelle page', icon: '📄', modules: [] })}
-                                    className="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
-                                >
+                    {/* Available page templates */}
+                    {availablePageTemplates.length > 0 && (
+                        <>
+                            <div className="pt-2 pb-1">
+                                <p className="text-xs font-semibold text-white/40 uppercase tracking-wider">
+                                    Modèles disponibles
+                                </p>
+                            </div>
+                            {availablePageTemplates.map((tpl, i) => (
+                                <button key={i} onClick={() => handleAddPage(tpl)} className="liquid-card w-full p-4 text-left">
                                     <div className="flex items-center gap-3">
-                                        <span className="text-2xl">📄</span>
+                                        <span className="text-2xl">{tpl.icon || '📋'}</span>
                                         <div>
-                                            <div className="font-semibold text-gray-900 dark:text-white">Page vierge</div>
-                                            <div className="text-xs text-gray-500">Contenu personnalisé vide</div>
+                                            <div className="font-semibold text-white/90">{tpl.label}</div>
+                                            {tpl.description && (
+                                                <div className="text-xs text-white/50">{tpl.description}</div>
+                                            )}
                                         </div>
                                     </div>
                                 </button>
-
-                                {/* Available page templates */}
-                                {availablePageTemplates.length > 0 && (
-                                    <>
-                                        <div className="pt-2 pb-1">
-                                            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                                                Modèles disponibles
-                                            </p>
-                                        </div>
-                                        {availablePageTemplates.map((tpl, i) => (
-                                            <button
-                                                key={i}
-                                                onClick={() => handleAddPage(tpl)}
-                                                className="w-full p-4 text-left border-2 border-gray-200 dark:border-gray-700 rounded-xl hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 transition-all"
-                                            >
-                                                <div className="flex items-center gap-3">
-                                                    <span className="text-2xl">{tpl.icon || '📋'}</span>
-                                                    <div>
-                                                        <div className="font-semibold text-gray-900 dark:text-white">{tpl.label}</div>
-                                                        {tpl.description && (
-                                                            <div className="text-xs text-gray-500">{tpl.description}</div>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </button>
-                                        ))}
-                                    </>
-                                )}
-                            </div>
-
-                            <button
-                                onClick={() => setShowAddModal(false)}
-                                className="mt-4 w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 rounded-lg font-medium hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm"
-                            >
-                                Annuler
-                            </button>
-                        </motion.div>
-                    </>
-                )}
-            </AnimatePresence>
+                            ))}
+                        </>
+                    )}
+                </div>
+            </LiquidModal>
         </div>
     );
 }
@@ -338,4 +273,3 @@ export default function PageManager({ embedded = false }) {
 PageManager.propTypes = {
     embedded: PropTypes.bool,
 };
-

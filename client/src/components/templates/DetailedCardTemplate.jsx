@@ -21,10 +21,10 @@ import { CannabinoidGrid, GisementSections, getCannabinoidItems } from './sectio
 
 // Groupes du "gisement" rendus génériquement depuis le registre (jamais affichés avant) :
 // récolte, culture, usage, labo, et les procédés propres aux Hash/Concentré/Comestible.
-const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'lab', 'separation', 'extraction', 'purification', 'recipe'];
+const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'lab', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
 const GISEMENT_ICONS = {
     harvest: '🌾', culture: '🌱', usage: '💨', lab: '🧪',
-    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯',
+    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
 };
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
@@ -540,7 +540,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5 }}
-                className="w-full h-full flex flex-col"
+                className="w-full h-full flex flex-col justify-center"
             >
                 {/* Header avec image et infos principales */}
                 <div
@@ -678,24 +678,29 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </div>
                 )}
 
-                {/* Grid layout pour les sections — adapte le nombre de colonnes dynamiquement */}
-                <div
-                    className={`grid ${(() => {
-                        const hasCol1 = hasInfoSectionContent || hasProvenanceSectionContent
-                            || (contentModules.cultivarsList && cultivars.length > 0)
-                            || (contentModules.effects && effects.length > 0);
-                        const hasCol2 = (contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0))
-                            || (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))
-                            || (contentModules.terpenes && terpenes.length > 0)
-                            || (contentModules.substratMix && substrat.length > 0);
-                        return (isPortrait || isSquare || !hasCol1 || !hasCol2) ? 'grid-cols-1' : 'grid-cols-2';
-                    })()}`}
-                    style={{
-                        gap: `${spacing.section}px`,
-                        flex: isSquare ? 'none' : 1,
-                        overflow: isSquare ? 'visible' : 'hidden'
-                    }}
-                >
+                {/* Grid layout pour les sections — adapte le nombre de colonnes dynamiquement.
+                    flex:1 uniquement si au moins une colonne a du contenu réel : sinon, sur une
+                    page peu remplie (pagination, review en cours de saisie), ce conteneur vide
+                    forçait quand même l'expansion sur toute la hauteur restante du canvas,
+                    laissant un grand vide visuel entre le header et le pied de page. */}
+                {(() => {
+                    const hasCol1 = hasInfoSectionContent || hasProvenanceSectionContent
+                        || (contentModules.cultivarsList && cultivars.length > 0)
+                        || (contentModules.effects && effects.length > 0);
+                    const hasCol2 = (contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0))
+                        || (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))
+                        || (contentModules.terpenes && terpenes.length > 0)
+                        || (contentModules.substratMix && substrat.length > 0);
+                    const hasAnyColContent = hasCol1 || hasCol2;
+                    return (
+                        <div
+                            className={`grid ${(isPortrait || isSquare || !hasCol1 || !hasCol2) ? 'grid-cols-1' : 'grid-cols-2'}`}
+                            style={{
+                                gap: `${spacing.section}px`,
+                                flex: (isSquare || !hasAnyColContent) ? 'none' : 1,
+                                overflow: isSquare ? 'visible' : 'hidden'
+                            }}
+                        >
                     {/* Colonne 1 */}
                     <div>
                         {/* Informations générales */}
@@ -879,7 +884,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             );
                         })()}
                     </div>
-                </div>
+                        </div>
+                    );
+                })()}
 
                 {/* Cannabinoïdes — grille complète (majeurs + acides + mineurs) via le référentiel */}
                 {getCannabinoidItems(reviewData, contentModules).length > 0 && (

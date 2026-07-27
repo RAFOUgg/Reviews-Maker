@@ -7,6 +7,8 @@ import {
     colorWithOpacity,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 
 /**
  * SocialStoryTemplate - Template optimisé pour les stories Instagram/TikTok
@@ -288,6 +290,17 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                             {tastes.map((t, i) => renderTag(t, i, '#fb923c'))}
                         </div>
                     </div>
+                )}
+
+                {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié.
+                    Format story très contraint verticalement : mode compact, pas de section dédiée. */}
+                {contentModules.phenoHuntView !== false && (
+                    <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={12} accentColor={accent} titleColor={colors.title || white} />
+                )}
+
+                {/* Vue interactive Chaîne de production — même logique de masquage async */}
+                {contentModules.productionChainView !== false && (
+                    <ProductionChainMiniView reviewData={reviewData} sectionFontSize={12} accentColor={accent} titleColor={colors.title || white} />
                 )}
 
                 {/* Spacer */}

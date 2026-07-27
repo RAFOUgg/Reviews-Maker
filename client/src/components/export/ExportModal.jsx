@@ -3,10 +3,12 @@ import { motion } from 'framer-motion';
 import { QRCodeSVG } from 'qrcode.react';
 import { Link2, Check } from 'lucide-react';
 import { getLotCodeUrl } from '../../utils/lotCode';
-import { getAvailableTimelapsePipelines, exportTimelapseToGIF, downloadTimelapseGIF, getTimelapseFrames } from '../../utils/TimelapseExporter';
+import { getAvailableTimelapsePipelines, exportTimelapseToGIF, downloadTimelapseGIF, getTimelapseFrames, exportCanvasesToGIF } from '../../utils/TimelapseExporter';
+import { exportCanvasesToVideo, downloadVideo } from '../../utils/videoExporter';
 import { Film } from 'lucide-react';
 // Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
-import { useOrchardStore, DEFAULT_CONFIG } from '../../store/orchardStore';
+import { useOrchardStore, resolveOrchardConfig } from '../../store/orchardStore';
+import { useOrchardPagesStore } from '../../store/orchardPagesStore';
 import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 import {
@@ -23,7 +25,7 @@ import WatermarkEditor from './WatermarkEditor';
 import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { getFieldRegistry, GROUP_LABELS } from '../../utils/fieldRegistry';
-import { serializeRenderToHtml, downloadHtml } from '../../utils/htmlExport';
+import { serializeRenderToHtml, serializeMultiPageHtml, downloadHtml } from '../../utils/htmlExport';
 import { computeContentHash } from '../../utils/exportSnapshot';
 import { incrementExportCount } from '../../hooks/useUsageStats';
 
@@ -97,11 +99,22 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // Review jamais éditée dans Orchard Studio (pas de config sauvegardée) : repli sur une config
     // par défaut sensée plutôt que de planter — la Fiche Technique Détaillée, pas le format compact
     // social, puisqu'on exporte ici un document de référence, pas un post réseau social.
-    const config = configProp || storeConfig || {
-        ...DEFAULT_CONFIG,
+    // `resolveOrchardConfig` répare aussi le cas d'un `orchardConfig` PRÉSENT mais périmé (moins de
+    // modules que le schéma courant) — sans ça, une review déjà configurée avant l'ajout de
+    // nouvelles clés à DEFAULT_CONFIG.contentModules affichait un export presque vide.
+    const config = resolveOrchardConfig(configProp || storeConfig || {
         template: 'detailedCard',
         ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio,
-    };
+    });
+
+    // Pagination (Chantier Phase 2) : `useOrchardPagesStore` est la session d'édition en cours
+    // (pas encore persistée par review — limite connue), donc n'a de sens qu'en présence d'une
+    // review effectivement éditée dans Orchard Studio ; en standalone pur elle reste vide et le
+    // rendu retombe sur le canvas simple, comme avant.
+    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
+    const pages = useOrchardPagesStore((state) => state.pages);
+    const hasMultiplePages = pagesEnabled && pages.length > 1;
+    const pageDims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];
     const user = useStore((state) => state.user);
 
     // Résout la vraie clé de tier ('influencer_basic'/'influencer_pro', pas juste 'influencer')
@@ -138,6 +151,12 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     const [selectedTimelapse, setSelectedTimelapse] = useState(availableTimelapses[0]?.key || null);
     const [timelapseGenerating, setTimelapseGenerating] = useState(false);
     const [timelapseProgress, setTimelapseProgress] = useState(0);
+    // GIF/vidéo pleine carte (Phase 4) : cycle entre les pages configurées — distinct du timelapse
+    // de pipeline ci-dessus, qui anime l'évolution d'UNE timeline plutôt que la fiche entière.
+    const [fullCardGifGenerating, setFullCardGifGenerating] = useState(false);
+    const [fullCardGifProgress, setFullCardGifProgress] = useState(0);
+    const [fullCardVideoGenerating, setFullCardVideoGenerating] = useState(false);
+    const [fullCardVideoProgress, setFullCardVideoProgress] = useState(0);
     // Filigrane personnalisé (Influenceur Pro/Producteur) — porté depuis l'ancien moteur
     // ExportMaker.jsx pour qu'il reste disponible une fois ce dernier retiré. Appliqué directement
     // sur le clone capturé dans prepareCapture(), pas sur l'aperçu live — fonctionne donc de façon
@@ -252,6 +271,74 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
         } finally {
             setTimelapseGenerating(false);
             setTimelapseProgress(0);
+        }
+    };
+
+    /** Rasterise chaque page `.orchard-export-page` en canvas (même pipeline que les exports image :
+     * prepareCapture + html-to-image) — étape commune au GIF et à la vidéo pleine carte ci-dessous. */
+    const capturePageCanvases = async (onProgress) => {
+        const pageNodes = Array.from(document.querySelectorAll('.orchard-export-page'));
+        if (pageNodes.length < 2) throw new Error('Au moins 2 pages configurées sont nécessaires');
+
+        const { toCanvas } = await import('html-to-image');
+        const canvases = [];
+        for (let i = 0; i < pageNodes.length; i++) {
+            onProgress?.(Math.round((i / pageNodes.length) * 100));
+            await waitForReportReady(pageNodes[i]);
+            const { target, exportContainer, width, height } = prepareCapture(pageNodes[i]);
+            await waitForRender(target);
+            try {
+                const canvas = await toCanvas(target, {
+                    cacheBust: true, width, height,
+                    style: { width: `${width}px`, height: `${height}px`, transform: 'none' },
+                    fontEmbedCSS: true,
+                });
+                canvases.push(canvas);
+            } finally {
+                exportContainer.remove();
+            }
+        }
+        return canvases;
+    };
+
+    /** GIF pleine carte (Phase 4) — anime un cycle des pages configurées de la fiche (≥2 pages
+     * requises ; distinct du timelapse de pipeline ci-dessus, qui anime UNE timeline plutôt que
+     * la fiche entière). */
+    const handleGenerateFullCardGif = async () => {
+        setFullCardGifGenerating(true);
+        setFullCardGifProgress(0);
+        try {
+            const canvases = await capturePageCanvases((p) => setFullCardGifProgress(Math.round(p * 0.7)));
+            const blob = await exportCanvasesToGIF(canvases, {
+                width: pageDims.width, height: pageDims.height,
+                onProgress: (p) => setFullCardGifProgress(70 + Math.round(p * 0.3)),
+            });
+            downloadTimelapseGIF(blob, `${reviewData.title || reviewData.holderName || 'review'}-fiche-${Date.now()}.gif`);
+        } catch (error) {
+            setExportStatus(`❌ Erreur GIF: ${error.message}`);
+        } finally {
+            setFullCardGifGenerating(false);
+            setFullCardGifProgress(0);
+        }
+    };
+
+    /** Vidéo pleine carte (Phase 4) — même principe que le GIF ci-dessus, encodée en `.webm` via
+     * `MediaRecorder` natif (approche retenue avec l'utilisateur : pas de dépendance ffmpeg.wasm). */
+    const handleGenerateFullCardVideo = async () => {
+        setFullCardVideoGenerating(true);
+        setFullCardVideoProgress(0);
+        try {
+            const canvases = await capturePageCanvases((p) => setFullCardVideoProgress(Math.round(p * 0.5)));
+            const blob = await exportCanvasesToVideo(canvases, {
+                width: pageDims.width, height: pageDims.height,
+                onProgress: (p) => setFullCardVideoProgress(50 + Math.round(p * 0.5)),
+            });
+            downloadVideo(blob, `${reviewData.title || reviewData.holderName || 'review'}-fiche-${Date.now()}.webm`);
+        } catch (error) {
+            setExportStatus(`❌ Erreur vidéo: ${error.message}`);
+        } finally {
+            setFullCardVideoGenerating(false);
+            setFullCardVideoProgress(0);
         }
     };
 
@@ -545,9 +632,10 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
         // Rendu HTML autonome (fidèle à la galerie). Le canvas natif porte déjà toute la fiche ;
         // ses styles calculés sont à taille réelle (le scale d'aperçu vit sur le parent, pas capturé).
         setExportStatus('🌐 Génération du HTML…');
-        const source = pages[0];
         const title = reviewData.title || reviewData.holderName || 'Fiche Reviews-Maker';
-        const html = await serializeRenderToHtml(source, { title });
+        const html = pages.length > 1
+            ? await serializeMultiPageHtml(pages, { title })
+            : await serializeRenderToHtml(pages[0], { title });
         const safe = String(title).replace(/[^\p{L}\p{N}\-_ ]/gu, '').trim().replace(/\s+/g, '-').toLowerCase() || 'fiche';
         downloadHtml(html, `${safe}.html`);
     };
@@ -610,9 +698,31 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                 nulle part ailleurs de canvas #orchard-template-canvas déjà monté à capturer — on en
                 rend un ici, hors-écran, en plus du MiniPreview visible (qui, lui, utilise un canvasId
                 distinct pour ne jamais entrer en collision avec celui-ci). */}
-            {isStandalone && (
+            {!hasMultiplePages && isStandalone && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
                     <TemplateRenderer config={config} reviewData={reviewData} />
+                </div>
+            )}
+            {/* Pagination : `handleExport` cherche `.orchard-export-page` — sans ça il ne capture
+                jamais que la page unique actuellement visible (le canvas simple ou l'aperçu paginé
+                de PagedPreviewPane), qu'il y ait 1 ou 9 pages configurées. On monte donc ici TOUTES
+                les pages hors-écran, chacune filtrée sur ses propres `modules` (même prop
+                `activeModules`/`pageMode` que PagedPreviewPane pour la preview live), qu'on soit en
+                mode autonome ou dans une session Orchard Studio ouverte. */}
+            {hasMultiplePages && (
+                <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
+                    {pages.map((page, i) => (
+                        <div key={page.id} style={{ width: pageDims.width, height: pageDims.height }}>
+                            <TemplateRenderer
+                                config={config}
+                                reviewData={reviewData}
+                                canvasId={`orchard-export-page-${i}`}
+                                className="orchard-export-page"
+                                activeModules={page.modules}
+                                pageMode
+                            />
+                        </div>
+                    ))}
                 </div>
             )}
             <motion.div
@@ -745,6 +855,36 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                             className="px-3 py-1.5 text-sm font-medium rounded-lg bg-teal-600 text-white hover:bg-teal-700 disabled:opacity-50 whitespace-nowrap"
                                         >
                                             {timelapseGenerating ? `${timelapseProgress}%` : 'Générer le GIF'}
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+                            {/* GIF/vidéo pleine carte (Phase 4) — cycle entre les pages configurées de la
+                                fiche. N'apparaît que si la pagination est active avec au moins 2 pages :
+                                une seule frame n'a aucune valeur, autant garder l'export image classique. */}
+                            {hasMultiplePages && (
+                                <div className="p-4 rounded-xl border border-pink-200 dark:border-pink-800 bg-pink-50 dark:bg-pink-900/10">
+                                    <div className="flex items-center gap-2 mb-2">
+                                        <Film className="w-4 h-4 text-pink-600 dark:text-pink-400" />
+                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Fiche animée</h4>
+                                    </div>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+                                        Génère un GIF ou une vidéo qui feuillette les {pages.length} pages configurées de la fiche.
+                                    </p>
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={handleGenerateFullCardGif}
+                                            disabled={fullCardGifGenerating}
+                                            className="flex-1 px-3 py-1.5 text-sm font-medium rounded-lg bg-pink-600 text-white hover:bg-pink-700 disabled:opacity-50"
+                                        >
+                                            {fullCardGifGenerating ? `${fullCardGifProgress}%` : '🖼️ GIF'}
+                                        </button>
+                                        <button
+                                            onClick={handleGenerateFullCardVideo}
+                                            disabled={fullCardVideoGenerating}
+                                            className="flex-1 px-3 py-1.5 text-sm font-medium rounded-lg bg-pink-600 text-white hover:bg-pink-700 disabled:opacity-50"
+                                        >
+                                            {fullCardVideoGenerating ? `${fullCardVideoProgress}%` : '🎬 Vidéo'}
                                         </button>
                                     </div>
                                 </div>

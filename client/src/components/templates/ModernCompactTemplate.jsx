@@ -14,6 +14,8 @@ import {
     colorWithOpacity,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 
 /**
  * ModernCompactTemplate - Template moderne et compact
@@ -477,6 +479,16 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         );
                     })}
                 </div>
+            )}
+
+            {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
+            {contentModules.phenoHuntView !== false && (
+                <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.small} accentColor={colors.accent} titleColor={colors.title} />
+            )}
+
+            {/* Vue interactive Chaîne de production — même logique de masquage async */}
+            {contentModules.productionChainView !== false && (
+                <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.small} accentColor={colors.accent} titleColor={colors.title} />
             )}
 
             {/* Description */}

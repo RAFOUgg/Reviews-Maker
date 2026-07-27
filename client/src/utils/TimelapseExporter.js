@@ -159,6 +159,35 @@ export async function exportTimelapseToGIF(frames, options = {}) {
     }
 }
 
+/**
+ * Encode une liste de canvases déjà capturés en GIF animé — utilisé pour le GIF "pleine carte"
+ * (Phase 4 : cycle entre les pages configurées de la fiche), qui capture via le pipeline de
+ * capture d'ExportModal (`prepareCapture`/html-to-image) plutôt que la génération de frame HTML
+ * de `renderFrame` ci-dessus (propre aux métriques de pipeline). Même encodeur `gif.js`, réutilisé
+ * tel quel plutôt que dupliqué.
+ * @param {HTMLCanvasElement[]} canvases
+ * @param {Object} options - { delay, quality, width, height, onProgress }
+ * @returns {Promise<Blob>}
+ */
+export async function exportCanvasesToGIF(canvases, options = {}) {
+    const { delay = 1500, quality = 10, width, height, onProgress } = options
+    if (!canvases || canvases.length < 2) {
+        throw new Error('Au moins 2 pages sont nécessaires pour un GIF pleine carte')
+    }
+    const gif = new GIF({
+        workers: 4, quality,
+        width: width || canvases[0].width, height: height || canvases[0].height,
+        workerScript: '/gif.worker.js',
+    })
+    canvases.forEach((canvas) => gif.addFrame(canvas, { delay }))
+    return new Promise((resolve, reject) => {
+        gif.on('finished', resolve)
+        gif.on('error', reject)
+        if (onProgress) gif.on('progress', (p) => onProgress(Math.round(p * 100)))
+        gif.render()
+    })
+}
+
 export function downloadTimelapseGIF(blob, filename = 'evolution.gif') {
     const url = URL.createObjectURL(blob)
     const link = document.createElement('a')
