@@ -33,9 +33,13 @@ function useScaleToFit(canvasW, canvasH, padding = 48) {
 }
 
 /**
- * Composant d'affichage avec pagination pour le mode multi-pages
+ * Composant d'affichage avec pagination pour le mode multi-pages.
+ * @param {boolean} autoActive - pagination active automatiquement (contenu dense détecté par
+ *   `shouldAutoLockPagination` côté `OrchardPanel`) sans que l'utilisateur ait coché le mode
+ *   pages à la main — `pagesEnabled` reste `false` dans ce cas, donc le repli non-paginé
+ *   ci-dessous doit aussi en tenir compte, pas seulement `pagesEnabled`.
  */
-export default function PagedPreviewPane() {
+export default function PagedPreviewPane({ autoActive = false }) {
     const previewRef = useRef(null);
     const [direction, setDirection] = useState(0);
 
@@ -68,12 +72,14 @@ export default function PagedPreviewPane() {
         </div>
     );
 
-    const paginationRecommended = pages.length > 1 && !pagesEnabled && (
+    // Le bandeau de suggestion n'a plus de raison d'être une fois la pagination déjà active
+    // automatiquement (autoActive) — elle l'est déjà, pas besoin de proposer de l'activer.
+    const paginationRecommended = pages.length > 1 && !pagesEnabled && !autoActive && (
         config.ratio === '1:1' || config.ratio === '9:16' || config.ratio === '4:3'
     );
 
     // Non-paged render path
-    if (!pagesEnabled || pages.length === 0) {
+    if (!(pagesEnabled || autoActive) || pages.length === 0) {
         return (
             <div ref={areaRef} className="w-full h-full bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 overflow-hidden relative flex items-center justify-center">
                 <motion.div
@@ -365,6 +371,10 @@ export default function PagedPreviewPane() {
         </div>
     );
 }
+
+PagedPreviewPane.propTypes = {
+    autoActive: PropTypes.bool,
+};
 
 
 

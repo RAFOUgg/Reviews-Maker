@@ -753,6 +753,40 @@ export function extractPipelines(reviewData) {
 }
 
 /**
+ * Filtre le résultat d'`extractPipelines()` pour ne garder que les pipelines actifs selon
+ * `config.contentModules` — nécessaire en pagination : `TemplateRenderer`'s `filteredConfig`
+ * met à `false` toute clé absente de la liste `modules` de la page active (voir
+ * `orchardPagesStore.js`), donc sans ce filtre un template qui fait juste `pipelines.map(...)`
+ * réaffiche TOUS les pipelines (Culture + Curing + Extraction + ...) sur CHAQUE page au lieu de
+ * respecter la répartition en pages dédiées. Bug trouvé le 2026-07-28 : seul
+ * `DetailedCardTemplate.jsx` avait ce filtre (en ligne, dupliqué) ; `ModernCompactTemplate.jsx`
+ * et `BlogArticleTemplate.jsx` affichaient tout sans filtrage. Hors pagination (`contentModules`
+ * = config globale, la plupart des clés à `true`), ce filtre ne retire rien — sans effet de bord
+ * sur le rendu simple/non-paginé.
+ * @param {Array} pipelines - retour de `extractPipelines(reviewData)`
+ * @param {Object} contentModules - `config.contentModules` (déjà filtré par page si paginé)
+ * @returns {Array}
+ */
+export function filterVisiblePipelines(pipelines, contentModules) {
+    if (!Array.isArray(pipelines) || !contentModules) return pipelines || [];
+    return pipelines.filter((p) => {
+        if (contentModules.pipelines === true) return true;
+        if (contentModules[p.key] === true) return true;
+        if (p.key === 'pipelineCuring' || p.key === 'curingTimeline') return contentModules.curing !== false;
+        if (p.key === 'pipelineGlobal' || p.key === 'cultureTimeline') return contentModules.fertilizationPipeline !== false;
+        // Repli `extractPipelines` (timelineDefs) : quand l'adaptateur n'a pas déjà synthétisé
+        // `pipelineExtraction`/`pipelineSeparation`, le pipeline est poussé avec `key` =
+        // `extractionTimelineData`/`separationTimelineData` (le nom de la donnée brute, pas le nom
+        // de module) — sans ce mapping explicite, aucune branche ci-dessus ne matche jamais et le
+        // pipeline entier disparaît silencieusement (trouvé 2026-07-28 en vérifiant Concentré/Hash).
+        if (p.key === 'extractionTimelineData') return contentModules.pipelineExtraction !== false;
+        if (p.key === 'separationTimelineData') return contentModules.pipelineSeparation !== false;
+        const explicitKeys = ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline'];
+        return explicitKeys.some((k) => k === p.key && contentModules[k]);
+    });
+}
+
+/**
  * Extrait les données du substrat
  * @param {*} substratMix - Données du substrat
  * @returns {Array} Liste des composants du substrat
@@ -932,6 +966,7 @@ export default {
     extractCategoryRatings,
     extractExtraData,
     extractPipelines,
+    filterVisiblePipelines,
     extractSubstrat,
     RATIO_DIMENSIONS,
     calculateDimensions,

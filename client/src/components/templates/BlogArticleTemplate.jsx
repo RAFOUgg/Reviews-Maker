@@ -7,13 +7,30 @@ import {
     formatDate,
     extractCategoryRatings,
     extractPipelines,
+    filterVisiblePipelines,
     extractSubstrat,
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
 } from '../../utils/orchardHelpers';
 import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+
+// Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
+// attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que ModernCompactTemplate
+// / DetailedCardTemplate.
+const PIPELINE_TYPE_BY_KEY = {
+    pipelineGlobal: 'culture',
+    cultureTimeline: 'culture',
+    pipelineCuring: 'curing',
+    curingTimeline: 'curing',
+    pipelineExtraction: 'extraction',
+    extractionTimelineData: 'extraction',
+    pipelineSeparation: 'separation',
+    separationTimelineData: 'separation',
+};
+const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 
 /**
@@ -38,7 +55,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
 
     // Extraction des données - passer reviewData pour fallbacks
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
-    const pipelines = extractPipelines(reviewData);
+    const pipelines = filterVisiblePipelines(extractPipelines(reviewData), contentModules);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags + 2); // Un peu plus pour articles
     const secondaryAromas = asArray(reviewData.secondaryAromas).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags + 2);
@@ -389,13 +406,17 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     </div>
                 )}
 
-                {/* Pipelines — rich step rendering */}
+                {/* Pipelines — toutes les étapes, toujours en détail (pas de mode compact en
+                    carrés sans texte, pas de troncature de libellé) ; champs résumés via
+                    `summarizeCellFields` (même logique que le canevas Chaîne de production)
+                    plutôt que des noms de champs devinés qui ne correspondaient pas aux vrais
+                    noms enregistrés par les formulaires (co2Ppm/ambientHumidity/ph/ec…). */}
                 {pipelines.length > 0 && (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>⚗️ Processus de Production</h2>
                         {pipelines.map((p, pi) => {
                             const rawSteps = p.rawSteps || p.steps.map(s => ({ label: s }));
-                            const isCompact = rawSteps.length > 8;
+                            const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
                             return (
                                 <div key={pi} className="mb-6">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '8px 14px', backgroundColor: colorWithOpacity(colors.accent, 12), borderRadius: 10 }}>
@@ -405,75 +426,29 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                             {rawSteps.length} étapes
                                         </span>
                                     </div>
-                                    {isCompact ? (
-                                        <div>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                                                {rawSteps.map((step, j) => {
-                                                    const label = step.label || step.date || step.semaine || step.phase || step.jour || `${j + 1}`;
-                                                    const temp = step.temperature ?? step.temp;
-                                                    const humidity = step.humidity ?? step.humidite ?? step.hr;
-                                                    const note = step.note || step.comment || '';
-                                                    const action = step.action || step.event || '';
-                                                    const tooltip = [label, temp != null ? `🌡️${temp}°C` : '', humidity != null ? `💧${humidity}%` : '', action, note].filter(Boolean).join(' · ');
-                                                    const intensity = temp != null ? Math.min(Math.round((temp / 35) * 60) + 15, 75) : 18 + j * 2;
-                                                    return (
-                                                        <div key={j} title={tooltip} style={{ width: 36, height: 36, borderRadius: 6, backgroundColor: colorWithOpacity(colors.accent, intensity), border: `1px solid ${colorWithOpacity(colors.accent, 35)}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '11px', fontWeight: '700', color: colors.textPrimary, cursor: 'default' }}>
-                                                            {String(label).slice(0, 3)}
-                                                        </div>
-                                                    );
-                                                })}
-                                            </div>
-                                            {/* Evolution legend */}
-                                            {(() => {
-                                                const first = rawSteps[0];
-                                                const last = rawSteps[rawSteps.length - 1];
-                                                const fTemp = first?.temperature ?? first?.temp;
-                                                const lTemp = last?.temperature ?? last?.temp;
-                                                const fHum = first?.humidity ?? first?.humidite;
-                                                const lHum = last?.humidity ?? last?.humidite;
-                                                if (!fTemp && !fHum) return null;
-                                                return (
-                                                    <div style={{ marginTop: 6, display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                                                        {fTemp != null && lTemp != null && <span style={{ fontSize: '12px', color: colors.textSecondary }}>🌡️ {fTemp}°C → {lTemp}°C</span>}
-                                                        {fHum != null && lHum != null && <span style={{ fontSize: '12px', color: colors.textSecondary }}>💧 {fHum}% → {lHum}%</span>}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                        {rawSteps.map((step, j) => {
+                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `Étape ${j + 1}`;
+                                            const fields = summarizeCellFields(pipelineType, step);
+                                            const noteField = fields.find((f) => NOTE_KEYS.has(f.key));
+                                            const metricFields = fields.filter((f) => f !== noteField);
+                                            return (
+                                                <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '7px 10px', backgroundColor: colorWithOpacity(colors.accent, j % 2 === 0 ? 6 : 10), borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(j * 4, 35))}`, borderRadius: '0 8px 8px 0' }}>
+                                                    <span style={{ flexShrink: 0, padding: '3px 7px', backgroundColor: colorWithOpacity(colors.accent, 22), borderRadius: 6, fontSize: '12px', fontWeight: '700', color: colors.accent, textAlign: 'center', whiteSpace: 'nowrap' }}>
+                                                        {String(label)}
+                                                    </span>
+                                                    <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
+                                                        {metricFields.map((f) => (
+                                                            <span key={f.key} style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>
+                                                                {f.label} : {f.value}
+                                                            </span>
+                                                        ))}
+                                                        {noteField && <div style={{ flex: '1 0 100%', fontSize: '11px', color: colors.textSecondary, fontStyle: 'italic', marginTop: 2 }}>💬 {noteField.value}</div>}
                                                     </div>
-                                                );
-                                            })()}
-                                        </div>
-                                    ) : (
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                            {rawSteps.map((step, j) => {
-                                                const label = step.label || step.date || step.semaine || step.phase || step.jour || `Étape ${j + 1}`;
-                                                const temp = step.temperature ?? step.temp;
-                                                const humidity = step.humidity ?? step.humidite ?? step.hr;
-                                                const container = step.container || step.recipient;
-                                                const packaging = step.packaging || step.emballage;
-                                                const co2 = step.co2;
-                                                const ppfd = step.ppfd;
-                                                const action = step.action || step.event || step.evenement;
-                                                const method = step.method || step.methode;
-                                                const note = step.note || step.comment || step.commentaire;
-                                                return (
-                                                    <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '7px 10px', backgroundColor: colorWithOpacity(colors.accent, j % 2 === 0 ? 6 : 10), borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(j * 4, 35))}`, borderRadius: '0 8px 8px 0' }}>
-                                                        <span style={{ flexShrink: 0, minWidth: 44, padding: '3px 7px', backgroundColor: colorWithOpacity(colors.accent, 22), borderRadius: 6, fontSize: '12px', fontWeight: '700', color: colors.accent, textAlign: 'center' }}>
-                                                            {String(label).slice(0, 6)}
-                                                        </span>
-                                                        <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
-                                                            {temp != null && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 22), fontSize: '11px', color: colors.accent, fontWeight: '600' }}>🌡️ {temp}°C</span>}
-                                                            {humidity != null && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 22), fontSize: '11px', color: colors.accent, fontWeight: '600' }}>💧 {humidity}%</span>}
-                                                            {co2 != null && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>☁️ {co2}ppm</span>}
-                                                            {ppfd != null && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>☀️ {ppfd}µmol</span>}
-                                                            {container && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>🫙 {container}</span>}
-                                                            {packaging && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>📦 {packaging}</span>}
-                                                            {action && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 22), fontSize: '11px', color: colors.accent, fontWeight: '600' }}>⚡ {action}</span>}
-                                                            {method && <span style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>⚙️ {method}</span>}
-                                                            {note && <div style={{ flex: '1 0 100%', fontSize: '11px', color: colors.textSecondary, fontStyle: 'italic', marginTop: 2 }}>💬 {note.slice(0, 120)}{note.length > 120 ? '…' : ''}</div>}
-                                                        </div>
-                                                    </div>
-                                                );
-                                            })}
-                                        </div>
-                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </div>
                             );
                         })}

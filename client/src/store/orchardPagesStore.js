@@ -184,6 +184,10 @@ export const PAGE_TEMPLATES = {
         ]
     },
     'Hash': {
+        // NB (2026-07-28) : séparation/purification/curing ont chacun leur propre page (même
+        // principe que Fleur ci-dessus) — avant ce correctif, `curing` était absent de TOUTES les
+        // pages 1:1 et 9:16 (bug identique à celui documenté plus haut pour Fleur : le pipeline
+        // Curing & Maturation d'une review Hash disparaissait silencieusement de l'export en 1:1/9:16).
         '1:1': [
             {
                 id: 'cover',
@@ -192,10 +196,28 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type']
             },
             {
-                id: 'production',
-                label: 'Production',
-                icon: '⚗️',
-                modules: ['hashmaker', 'cultivarsList', 'pipelineSeparation', 'pipelinePurification']
+                id: 'info',
+                label: 'Infos',
+                icon: 'ℹ️',
+                modules: ['hashmaker', 'cultivarsList', 'texture']
+            },
+            {
+                id: 'separation',
+                label: 'Séparation',
+                icon: '🔬',
+                modules: ['pipelineSeparation']
+            },
+            {
+                id: 'purification',
+                label: 'Purification',
+                icon: '✨',
+                modules: ['pipelinePurification']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing']
             },
             {
                 id: 'evaluation',
@@ -207,7 +229,7 @@ export const PAGE_TEMPLATES = {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['description', 'texture', 'author', 'date']
+                modules: ['description', 'author', 'date']
             }
         ],
         '16:9': [
@@ -218,22 +240,34 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList']
             },
             {
-                id: 'production',
-                label: 'Production',
-                icon: '⚗️',
-                modules: ['pipelineSeparation', 'pipelinePurification', 'categoryRatings']
+                id: 'evaluation',
+                label: 'Évaluation',
+                icon: '⭐',
+                modules: ['categoryRatings', 'description', 'texture', 'dureeEffet']
             },
             {
                 id: 'sensory',
                 label: 'Profil Sensoriel',
                 icon: '🌸',
-                modules: ['aromas', 'tastes', 'effects', 'texture']
+                modules: ['aromas', 'tastes', 'effects']
             },
             {
-                id: 'details',
-                label: 'Détails',
-                icon: '📝',
-                modules: ['description', 'curing', 'author', 'date']
+                id: 'separation',
+                label: 'Séparation',
+                icon: '🔬',
+                modules: ['pipelineSeparation']
+            },
+            {
+                id: 'purification',
+                label: 'Purification',
+                icon: '✨',
+                modules: ['pipelinePurification']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing', 'author', 'date']
             }
         ],
         '9:16': [
@@ -244,16 +278,22 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type']
             },
             {
-                id: 'production',
-                label: 'Production',
-                icon: '⚗️',
-                modules: ['hashmaker', 'cultivarsList', 'pipelineSeparation']
+                id: 'info',
+                label: 'Infos',
+                icon: 'ℹ️',
+                modules: ['hashmaker', 'cultivarsList']
             },
             {
                 id: 'evaluation',
                 label: 'Évaluation',
                 icon: '⭐',
                 modules: ['categoryRatings', 'aromas', 'effects']
+            },
+            {
+                id: 'production',
+                label: 'Production',
+                icon: '⚗️',
+                modules: ['pipelineSeparation', 'pipelinePurification', 'curing']
             },
             {
                 id: 'details',
@@ -276,14 +316,34 @@ export const PAGE_TEMPLATES = {
                 modules: ['categoryRatings', 'aromas', 'tastes', 'effects', 'texture']
             },
             {
+                id: 'separation',
+                label: 'Séparation',
+                icon: '🔬',
+                modules: ['pipelineSeparation']
+            },
+            {
+                id: 'purification',
+                label: 'Purification',
+                icon: '✨',
+                modules: ['pipelinePurification']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing']
+            },
+            {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['pipelineSeparation', 'curing', 'description', 'author', 'date']
+                modules: ['description', 'author', 'date']
             }
         ]
     },
     'Concentré': {
+        // Même principe que Hash ci-dessus : extraction/purification/curing isolés sur leur propre
+        // page ; `curing` était absent de TOUTES les pages 1:1, 9:16 et 4:3 avant ce correctif.
         '1:1': [
             {
                 id: 'cover',
@@ -292,10 +352,28 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type']
             },
             {
+                id: 'info',
+                label: 'Infos',
+                icon: 'ℹ️',
+                modules: ['breeder', 'cultivarsList', 'texture']
+            },
+            {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['breeder', 'cultivarsList', 'pipelineExtraction', 'pipelinePurification', 'purgevide']
+                modules: ['pipelineExtraction']
+            },
+            {
+                id: 'purification',
+                label: 'Purification',
+                icon: '✨',
+                modules: ['pipelinePurification', 'purgevide']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing']
             },
             {
                 id: 'evaluation',
@@ -304,10 +382,10 @@ export const PAGE_TEMPLATES = {
                 modules: ['categoryRatings', 'aromas', 'tastes', 'effects']
             },
             {
-                id: 'technique',
-                label: 'Technique',
-                icon: '💎',
-                modules: ['description', 'texture', 'terpenes', 'author', 'date']
+                id: 'experience',
+                label: 'Expérience',
+                icon: '✨',
+                modules: ['description', 'terpenes', 'author', 'date']
             }
         ],
         '16:9': [
@@ -318,22 +396,34 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type', 'breeder', 'cultivarsList']
             },
             {
-                id: 'extraction',
-                label: 'Extraction',
-                icon: '🔬',
-                modules: ['pipelineExtraction', 'pipelinePurification', 'categoryRatings']
+                id: 'evaluation',
+                label: 'Évaluation',
+                icon: '⭐',
+                modules: ['categoryRatings', 'description', 'texture', 'terpenes']
             },
             {
                 id: 'sensory',
                 label: 'Profil Sensoriel',
                 icon: '🌸',
-                modules: ['aromas', 'tastes', 'effects', 'terpenes']
+                modules: ['aromas', 'tastes', 'effects']
             },
             {
-                id: 'details',
-                label: 'Détails',
-                icon: '📝',
-                modules: ['description', 'texture', 'curing', 'author', 'date']
+                id: 'extraction',
+                label: 'Extraction',
+                icon: '🔬',
+                modules: ['pipelineExtraction']
+            },
+            {
+                id: 'purification',
+                label: 'Purification',
+                icon: '✨',
+                modules: ['pipelinePurification', 'purgevide']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing', 'author', 'date']
             }
         ],
         '9:16': [
@@ -344,16 +434,22 @@ export const PAGE_TEMPLATES = {
                 modules: ['image', 'title', 'rating', 'type']
             },
             {
-                id: 'extraction',
-                label: 'Extraction',
-                icon: '🔬',
-                modules: ['breeder', 'cultivarsList', 'pipelineExtraction']
+                id: 'info',
+                label: 'Infos',
+                icon: 'ℹ️',
+                modules: ['breeder', 'cultivarsList']
             },
             {
                 id: 'evaluation',
                 label: 'Évaluation',
                 icon: '⭐',
                 modules: ['categoryRatings', 'aromas', 'effects']
+            },
+            {
+                id: 'production',
+                label: 'Production',
+                icon: '⚗️',
+                modules: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'curing']
             },
             {
                 id: 'details',
@@ -373,13 +469,31 @@ export const PAGE_TEMPLATES = {
                 id: 'evaluation',
                 label: 'Évaluation',
                 icon: '⭐',
-                modules: ['categoryRatings', 'aromas', 'tastes', 'effects', 'terpenes']
+                modules: ['categoryRatings', 'aromas', 'tastes', 'effects', 'texture']
+            },
+            {
+                id: 'extraction',
+                label: 'Extraction',
+                icon: '🔬',
+                modules: ['pipelineExtraction']
+            },
+            {
+                id: 'purification',
+                label: 'Purification',
+                icon: '✨',
+                modules: ['pipelinePurification', 'purgevide']
+            },
+            {
+                id: 'curing',
+                label: 'Curing & Maturation',
+                icon: '🔥',
+                modules: ['curing']
             },
             {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['pipelineExtraction', 'texture', 'description', 'author', 'date']
+                modules: ['description', 'terpenes', 'author', 'date']
             }
         ]
     },

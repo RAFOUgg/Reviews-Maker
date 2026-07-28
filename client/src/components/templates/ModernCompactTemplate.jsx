@@ -8,6 +8,7 @@ import {
     formatDate,
     extractCategoryRatings,
     extractPipelines,
+    filterVisiblePipelines,
     extractSubstrat,
     extractExtraData,
     getResponsiveAdjustments,
@@ -22,9 +23,13 @@ import ProductionChainMiniView from '../export/interactive/ProductionChainMiniVi
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que DetailedCardTemplate.
 const PIPELINE_TYPE_BY_KEY = {
     pipelineGlobal: 'culture',
+    cultureTimeline: 'culture',
     pipelineCuring: 'curing',
+    curingTimeline: 'curing',
     pipelineExtraction: 'extraction',
+    extractionTimelineData: 'extraction',
     pipelineSeparation: 'separation',
+    separationTimelineData: 'separation',
 };
 const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
 
@@ -50,7 +55,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     // Données extraites - passer reviewData pour fallbacks
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
-    const pipelines = extractPipelines(reviewData);
+    const pipelines = filterVisiblePipelines(extractPipelines(reviewData), contentModules);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
     const secondaryAromas = asArray(reviewData.secondaryAromas).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);

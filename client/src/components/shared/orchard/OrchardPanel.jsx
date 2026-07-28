@@ -12,6 +12,7 @@ import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
 import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
+import { shouldAutoLockPagination } from '../../../utils/orchardHelpers';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -229,6 +230,13 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     // Pages store
     const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
     const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
+    // Aperçu live paginé même sans activation manuelle, si le contenu est dense — sans ça,
+    // l'aperçu Orchard Studio (la surface la plus regardée en configurant un export) coupait
+    // silencieusement tout ce qui dépassait un canevas à hauteur fixe, comme l'export autonome
+    // avant son propre correctif (2026-07-27). `loadDefaultPages` est déjà appelé
+    // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
+    // vers `PagedPreviewPane` les ignorait tant que `pagesEnabled` n'était pas coché à la main.
+    const effectivePagesActive = pagesEnabled || shouldAutoLockPagination(reviewData);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -555,7 +563,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
+                                {effectivePagesActive ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} /> : <PreviewPane />}
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT
@@ -573,7 +581,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
 
                                 {/* Preview Pane - Right */}
                                 <div className="flex-1 overflow-hidden min-w-0 min-h-[300px]">
-                                    {pagesEnabled ? <PagedPreviewPane /> : <PreviewPane />}
+                                    {effectivePagesActive ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} /> : <PreviewPane />}
                                 </div>
                             </motion.div>
                         )}

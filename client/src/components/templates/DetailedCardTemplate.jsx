@@ -8,6 +8,7 @@ import {
     formatDate,
     extractCategoryRatings,
     extractPipelines,
+    filterVisiblePipelines,
     extractSubstrat,
     extractExtraData,
     colorWithOpacity,
@@ -334,9 +335,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // `summarizeCellFields` lui-même (pas d'erreur, juste moins joliment libellé).
     const PIPELINE_TYPE_BY_KEY = {
         pipelineGlobal: 'culture',
+        cultureTimeline: 'culture',
         pipelineCuring: 'curing',
+        curingTimeline: 'curing',
         pipelineExtraction: 'extraction',
+        extractionTimelineData: 'extraction',
         pipelineSeparation: 'separation',
+        separationTimelineData: 'separation',
     };
 
     const PipelineTimeline = ({ pipeline }) => {
@@ -825,20 +830,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Pipelines (full width) */}
                 {(() => {
-                    // Determine which pipelines to show based on enabled contentModules
-                    const visiblePipelines = pipelines.filter(p => {
-                        // If pipelines flag is explicitly true, show all
-                        if (contentModules.pipelines === true) return true;
-                        // Explicit key match in contentModules
-                        if (contentModules[p.key] === true) return true;
-                        // Curing-related pipelines
-                        if (p.key === 'pipelineCuring' || p.key === 'curingTimeline') return contentModules.curing !== false;
-                        // Culture-related pipelines
-                        if (p.key === 'pipelineGlobal' || p.key === 'cultureTimeline') return contentModules.fertilizationPipeline !== false;
-                        // Explicit pipeline module keys
-                        const explicitKeys = ['pipelineExtraction', 'pipelineSeparation', 'pipelinePurification', 'fertilizationPipeline'];
-                        return explicitKeys.some(k => k === p.key && contentModules[k]);
-                    });
+                    // Filtre partagé avec ModernCompactTemplate/BlogArticleTemplate (orchardHelpers.js)
+                    // — nécessaire pour que la pagination répartisse bien un pipeline par page dédiée
+                    // au lieu de tout réafficher sur chaque page.
+                    const visiblePipelines = filterVisiblePipelines(pipelines, contentModules);
                     if (visiblePipelines.length === 0) return null;
                     return (
                         <Section title="Processus de Production" icon="⚗️">
