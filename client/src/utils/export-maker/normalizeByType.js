@@ -1,5 +1,5 @@
 /**
- * Generic Normalizer for OrchardPanel
+ * Generic Normalizer for ExportMakerPanel
  * Works with any product type by using the product type mappings
  */
 
@@ -19,7 +19,7 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
   // --- Merge known nested section objects from forms into top-level fields ---
   // Many review forms use nested sections like `gouts`, `odeurs`, `texture`,
   // `effets`, `analytics`, `culture`, `recipe`, etc. Merge those keys into
-  // the top-level normalized object so downstream templates and the Orchard
+  // the top-level normalized object so downstream templates and Export Maker
   // UI read the actual form values instead of empty flattened fields.
   try {
     const sectionKeys = ['gouts', 'odeurs', 'texture', 'effets', 'visual', 'visuel', 'analytics', 'culture', 'genetique', 'genetics', 'recipe', 'curing', 'pipeline', 'pipelineCuring', 'flowerData'];
@@ -36,15 +36,15 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     });
   } catch (e) {
     // non-fatal, we'll continue with existing normalization
-    console.warn('Orchard: merging nested sections failed', e);
+    console.warn('Export Maker: merging nested sections failed', e);
   }
 
-  // Reverse mappings: API / backend field names → OrchardPanel expected names
+  // Reverse mappings: API / backend field names → ExportMakerPanel expected names
   // When loading from API, flatterned field names differ from form field names
   try {
     const reverseVisualMap = {
       // flattenFlowerFormData stores form.densite → densiteVisuelle
-      // OrchardPanel categoryRatings looks for 'densite'
+      // ExportMakerPanel categoryRatings looks for 'densite'
       densiteVisuelle: 'densite',
       trichomesScore: 'trichome',
       pistilsScore: 'pistil',
@@ -76,13 +76,13 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
       notesOdeursDominantes: 'aromas',
       notesOdeursSecondaires: 'secondaryAromas',
     };
-    for (const [apiKey, orchardKey] of Object.entries(reverseVisualMap)) {
-      if (normalized[apiKey] !== undefined && normalized[orchardKey] === undefined) {
-        normalized[orchardKey] = normalized[apiKey];
+    for (const [apiKey, exportMakerKey] of Object.entries(reverseVisualMap)) {
+      if (normalized[apiKey] !== undefined && normalized[exportMakerKey] === undefined) {
+        normalized[exportMakerKey] = normalized[apiKey];
       }
     }
   } catch (e) {
-    console.warn('Orchard: reverse field name mappings failed', e);
+    console.warn('Export Maker: reverse field name mappings failed', e);
   }
 
   // Helper to resolve raw filenames to proper URLs (adds /images/ prefix if needed)
@@ -94,7 +94,7 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     return `/images/${s}`;
   };
 
-  // Map common French form keys to Orchard expected keys
+  // Map common French form keys to Export Maker expected keys
   try {
     // Photos from the form use `photos` (with {file, preview}) — map to `images` and `mainImage` for preview
     if (Array.isArray(normalized.photos) && normalized.photos.length > 0) {
@@ -206,7 +206,7 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
     if (!normalized.cultivar && normalized.nomCommercial) normalized.cultivar = normalized.nomCommercial;
   } catch (e) {
     // non-fatal mapping errors
-    console.warn('Orchard: french-key mappings failed', e);
+    console.warn('Export Maker: french-key mappings failed', e);
   }
 
   // Parse extraData if it's a JSON string
@@ -225,7 +225,7 @@ export function normalizeReviewDataByType(reviewData, productType = 'flower') {
       normalized.extraData = parsedExtra;
     }
   } catch (err) {
-    console.warn('Failed to normalize extraData for OrchardPanel', err);
+    console.warn('Failed to normalize extraData for ExportMakerPanel', err);
   }
 
   const dataSource = { ...parsedExtra, ...normalized };

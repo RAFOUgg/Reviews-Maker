@@ -532,7 +532,7 @@ router.get('/influencer-profile', requireAuth, asyncHandler(async (req, res) => 
 
 /**
  * PATCH /api/account/influencer-profile
- * Met à jour le profil influenceur (branding Orchard)
+ * Met à jour le profil influenceur (branding Export Maker)
  */
 router.patch('/influencer-profile', requireAuth, asyncHandler(async (req, res) => {
     if (!req.user) {

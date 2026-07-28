@@ -27,8 +27,8 @@ vi.mock('../../../hooks/useAuth', () => ({
     })
 }))
 
-vi.mock('../../../store/orchardStore', () => ({
-    useOrchardStore: vi.fn((selector) => {
+vi.mock('../../../store/exportMakerStore', () => ({
+    useExportMakerStore: vi.fn((selector) => {
         const mockStore = {
             config: {
                 colors: {
@@ -52,13 +52,13 @@ vi.mock('../../../utils/GIFExporter', () => ({
     downloadGIF: vi.fn()
 }))
 
-// Mock orchard utilities
-vi.mock('../../../utils/orchard/moduleMappings', () => ({
+// Mock export-maker utilities
+vi.mock('../../../utils/export-maker/moduleMappings', () => ({
     getModulesByProductType: vi.fn(() => [])
 }))
 
 // Mock constants
-vi.mock('../../../store/orchardConstants', () => ({
+vi.mock('../../../store/exportMakerConstants', () => ({
     DEFAULT_TEMPLATES: {
         modernCompact: {
             name: 'Modern Compact',

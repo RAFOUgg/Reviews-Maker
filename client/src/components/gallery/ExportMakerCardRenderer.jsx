@@ -1,9 +1,9 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import TemplateRenderer from '../export/TemplateRenderer';
-import { RATIO_DIMENSIONS } from '../../utils/orchardHelpers';
-import { DEFAULT_CONFIG } from '../../store/orchardStore';
+import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
+import { DEFAULT_CONFIG } from '../../store/exportMakerStore';
 
-// Même logique de mise à l'échelle que PreviewPane.jsx (aperçu Orchard Studio) — TemplateRenderer
+// Même logique de mise à l'échelle que PreviewPane.jsx (aperçu Export Maker) — TemplateRenderer
 // rend toujours à la résolution native fixe (ex: 800x800), donc on le scale via transform pour
 // qu'il rentre dans la cellule de grille de la galerie, au lieu de déborder ou d'être rogné.
 function useScaleToFit(canvasW, canvasH) {
@@ -25,18 +25,18 @@ function useScaleToFit(canvasW, canvasH) {
 }
 
 /**
- * Rend une review avec le même moteur que l'aperçu Orchard Studio (TemplateRenderer),
+ * Rend une review avec le même moteur que l'aperçu Export Maker (TemplateRenderer),
  * pour que la galerie publique affiche exactement le template/couleurs/modules choisis
  * par l'auteur, au lieu d'un layout générique fixe.
  */
-export default function OrchardCardRenderer({ reviewData, orchardConfig }) {
+export default function ExportMakerCardRenderer({ reviewData, exportMakerConfig }) {
     const config = useMemo(() => ({
         ...DEFAULT_CONFIG,
-        ...(orchardConfig || {}),
-        contentModules: { ...DEFAULT_CONFIG.contentModules, ...(orchardConfig?.contentModules || {}) },
-        colors: { ...DEFAULT_CONFIG.colors, ...(orchardConfig?.colors || {}) },
-        typography: { ...DEFAULT_CONFIG.typography, ...(orchardConfig?.typography || {}) },
-    }), [orchardConfig]);
+        ...(exportMakerConfig || {}),
+        contentModules: { ...DEFAULT_CONFIG.contentModules, ...(exportMakerConfig?.contentModules || {}) },
+        colors: { ...DEFAULT_CONFIG.colors, ...(exportMakerConfig?.colors || {}) },
+        typography: { ...DEFAULT_CONFIG.typography, ...(exportMakerConfig?.typography || {}) },
+    }), [exportMakerConfig]);
 
     const dims = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
     const { ref, scale } = useScaleToFit(dims.width, dims.height);

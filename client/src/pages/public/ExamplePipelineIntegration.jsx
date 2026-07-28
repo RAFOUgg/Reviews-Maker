@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import PipelineWithSidebar from '../../components/pipelines/views/PipelineWithSidebar';
-import { CONTENT_SCHEMAS } from '../../components/shared/orchard/PipelineContentsSidebar';
+import { CONTENT_SCHEMAS } from '../../components/shared/export-maker/PipelineContentsSidebar';
 import LiquidCard from '../../components/ui/LiquidCard';
 
 /**

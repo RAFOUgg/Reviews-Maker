@@ -68,7 +68,7 @@ export function useEdibleForm(reviewId = null) {
             // recipe.ingredients/steps : jamais remis dans formData avant ce fix, donc
             // RecipePipelineSection s'affichait toujours vide au rechargement d'une review existante
             // finalWeight/servings : pas de colonne dédiée, persistés dans extraData comme
-            // orchardPreset (cf. server-new/routes/edible-reviews.js).
+            // exportMakerPreset (cf. server-new/routes/edible-reviews.js).
             const recipe = {
                 ingredients: parseArr(ed.ingredients, []),
                 steps: parseArr(ed.etapesPreparation, []),
@@ -86,10 +86,10 @@ export function useEdibleForm(reviewId = null) {
                 typeGenetiques: ed.typeGenetiques || '',
                 sourceLineage: parseArr(ed.sourceLineage, []),
                 status: baseReview.status || 'draft',
-                orchardPreset: extraData.orchardPreset || null,
-                orchardConfig: extraData.orchardConfig || null,
-                orchardCustomLayout: extraData.orchardCustomLayout || null,
-                orchardLayoutMode: extraData.orchardLayoutMode || null,
+                exportMakerPreset: extraData.exportMakerPreset || null,
+                exportMakerConfig: extraData.exportMakerConfig || null,
+                exportMakerCustomLayout: extraData.exportMakerCustomLayout || null,
+                exportMakerLayoutMode: extraData.exportMakerLayoutMode || null,
                 gouts,
                 effets,
                 recipe,

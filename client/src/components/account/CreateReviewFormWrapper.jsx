@@ -16,7 +16,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Eye, X } from 'lucide-react'
 import { useResponsiveLayout } from '../../hooks/useResponsiveLayout'
 import { ResponsiveCreateReviewLayout } from '../forms/helpers/ResponsiveCreateReviewLayout'
-import OrchardPanel from '../shared/orchard/OrchardPanel'
+import ExportMakerPanel from '../shared/export-maker/ExportMakerPanel'
 
 const CreateReviewFormWrapper = ({
     productType = 'flower',
@@ -39,7 +39,7 @@ const CreateReviewFormWrapper = ({
     reviewHasPreview = false, // bool — un rendu a-t-il déjà été créé ?
 }) => {
     const [currentSection, setCurrentSection] = useState(0)
-    const [showOrchard, setShowOrchard] = useState(false)
+    const [showExportMaker, setshowExportMaker] = useState(false)
     const layout = useResponsiveLayout()
     const scrollContainerRef = useRef(null)
 
@@ -85,12 +85,12 @@ const CreateReviewFormWrapper = ({
                 isSaving={saving}
                 reviewId={reviewId}
                 reviewHasPreview={reviewHasPreview}
-                onOpenPreview={() => setShowOrchard(true)}
+                onOpenPreview={() => setshowExportMaker(true)}
             >
-                {/* Bouton Aperçu - Ouvre OrchardPanel (système complet: templates, export, partage) */}
+                {/* Bouton Aperçu - Ouvre ExportMakerPanel (système complet: templates, export, partage) */}
                 <div className="flex justify-end mb-4">
                     <button
-                        onClick={() => setShowOrchard(!showOrchard)}
+                        onClick={() => setshowExportMaker(!showExportMaker)}
                         className={`flex items-center gap-2 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/50 text-purple-300 rounded-lg font-medium transition-all ${layout.isMobile
                             ? 'px-3 py-2 text-xs'
                             : 'px-4 py-2 text-sm'
@@ -157,9 +157,9 @@ const CreateReviewFormWrapper = ({
                 </AnimatePresence>
             </ResponsiveCreateReviewLayout>
 
-            {/* OrchardPanel – OUTSIDE layout to avoid z-index stacking context issues */}
-            {showOrchard && (
-                <OrchardPanel
+            {/* ExportMakerPanel – OUTSIDE layout to avoid z-index stacking context issues */}
+            {showExportMaker && (
+                <ExportMakerPanel
                     reviewData={{
                         ...formData,
                         images: photos,
@@ -168,7 +168,7 @@ const CreateReviewFormWrapper = ({
                         author: { username: formData.ownerName || 'Anonyme' }
                     }}
                     productType={productType}
-                    onClose={() => setShowOrchard(false)}
+                    onClose={() => setshowExportMaker(false)}
                 />
             )}
         </>

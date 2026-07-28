@@ -1,7 +1,7 @@
 import PropTypes from 'prop-types';
 import { getFieldsByGroup, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
 import { CANNABINOIDS } from '../../../data/cannabinoids';
-import { formatDate } from '../../../utils/orchardHelpers';
+import { formatDate } from '../../../utils/exportMakerHelpers';
 
 /**
  * RegistrySections — rend le "gisement" de données piloté par fieldRegistry, pour n'importe

@@ -1,5 +1,5 @@
 /**
- * Orchard Pages Store - Gestion du système multi-pages
+ * Export Maker Pages Store - Gestion du système multi-pages
  * Permet de créer des reviews sur plusieurs pages avec disposition personnalisable
  */
 
@@ -11,7 +11,7 @@ import { persist } from 'zustand/middleware';
  */
 // NB (2026-07-27) : les listes `modules` ci-dessous DOIVENT utiliser les clés réellement lues par
 // `TemplateRenderer`'s `filteredConfig` (= les clés de `DEFAULT_CONFIG.contentModules`,
-// `orchardStore.js` — les mêmes que celles pilotées par `fieldRegistry.js`/`ContentModuleControls`).
+// `exportMakerStore.js` — les mêmes que celles pilotées par `fieldRegistry.js`/`ContentModuleControls`).
 // Piège déjà rencontré deux fois ailleurs dans Export Maker (overflow, StepCard) : une clé qui
 // N'EXISTE PAS dans `contentModules` (`typeCulture`, `pipelineCuring`…) ne fait RIEN — elle n'est
 // simplement jamais lue, et pire, toute clé RÉELLE absente de la liste d'une page est mise à
@@ -593,10 +593,22 @@ export const PAGE_TEMPLATES = {
     }
 };
 
+const PAGES_STORAGE_KEY = 'export-maker-pages-storage';
+const LEGACY_PAGES_STORAGE_KEY = 'orchard-pages-storage'; // ancien nom de code (renommage 2026-07-28)
+
+// Migration ponctuelle, même logique que exportMakerStore.js : amorce la nouvelle clé depuis
+// l'ancienne si elle n'existe pas encore, pour ne pas perdre la trame de pages en cours des
+// utilisateurs déjà ouverts sur l'app au moment du renommage.
+try {
+    if (!localStorage.getItem(PAGES_STORAGE_KEY) && localStorage.getItem(LEGACY_PAGES_STORAGE_KEY)) {
+        localStorage.setItem(PAGES_STORAGE_KEY, localStorage.getItem(LEGACY_PAGES_STORAGE_KEY));
+    }
+} catch { /* localStorage indisponible (SSR, mode privé strict...) — pas bloquant */ }
+
 /**
  * Store Zustand pour la gestion des pages
  */
-export const useOrchardPagesStore = create(
+export const useExportMakerPagesStore = create(
     persist(
         (set, get) => ({
             // État
@@ -701,7 +713,7 @@ export const useOrchardPagesStore = create(
             })
         }),
         {
-            name: 'orchard-pages-storage',
+            name: PAGES_STORAGE_KEY,
             partialize: (state) => ({
                 pagesEnabled: state.pagesEnabled,
                 pages: state.pages
@@ -709,7 +721,7 @@ export const useOrchardPagesStore = create(
             // Validation et correction des données lors de la restauration
             onRehydrateStorage: () => (state, error) => {
                 if (error) {
-                    console.error('[OrchardPages] Error rehydrating storage:', error)
+                    console.error('[ExportMakerPages] Error rehydrating storage:', error)
                     return
                 }
 
@@ -717,7 +729,7 @@ export const useOrchardPagesStore = create(
                 if (state) {
                     // S'assurer que pages est toujours un tableau
                     if (!Array.isArray(state.pages)) {
-                        console.warn('[OrchardPages] Invalid pages data, resetting to empty array')
+                        console.warn('[ExportMakerPages] Invalid pages data, resetting to empty array')
                         state.pages = []
                     }
 
@@ -750,4 +762,4 @@ export function getDefaultPages(reviewType, ratio = '1:1') {
     }));
 }
 
-export default useOrchardPagesStore;
+export default useExportMakerPagesStore;

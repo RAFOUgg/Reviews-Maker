@@ -12,8 +12,8 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
-} from '../../utils/orchardHelpers';
-import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+} from '../../utils/exportMakerHelpers';
+import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 
@@ -154,7 +154,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const renderBranding = () => {
         if (!branding?.enabled || !branding?.logoUrl) return null;
         return (
-            <div className="flex items-center gap-3 mt-8 pt-6 orchard-branding" style={{ borderTop: `1px solid ${colorWithOpacity(colors.accent, 20)}` }}>
+            <div className="flex items-center gap-3 mt-8 pt-6 export-maker-branding" style={{ borderTop: `1px solid ${colorWithOpacity(colors.accent, 20)}` }}>
                 <img src={branding.logoUrl} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', opacity: branding.opacity }} />
                 <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>Publié sur notre plateforme</span>
             </div>

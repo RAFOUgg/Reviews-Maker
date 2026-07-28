@@ -1,8 +1,8 @@
 import { useRef, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import TemplateRenderer from '../../export/TemplateRenderer';
-import { RATIO_DIMENSIONS } from '../../../utils/orchardHelpers';
+import { RATIO_DIMENSIONS } from '../../../utils/exportMakerHelpers';
 
 function useScaleToFit(canvasW, canvasH, padding = 64) {
     const ref = useRef(null);
@@ -26,9 +26,9 @@ function useScaleToFit(canvasW, canvasH, padding = 64) {
 
 export default function PreviewPane() {
     const previewRef = useRef(null);
-    const config = useOrchardStore((state) => state.config);
-    const reviewData = useOrchardStore((state) => state.reviewData);
-    const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
+    const config = useExportMakerStore((state) => state.config);
+    const reviewData = useExportMakerStore((state) => state.reviewData);
+    const isPreviewFullscreen = useExportMakerStore((state) => state.isPreviewFullscreen);
 
     const dims = RATIO_DIMENSIONS[config?.ratio] || RATIO_DIMENSIONS['1:1'];
     const { ref: areaRef, scale } = useScaleToFit(dims.width, dims.height);
@@ -78,7 +78,7 @@ export default function PreviewPane() {
                 {/* Scale wrapper — outer box takes scaled display size */}
                 <div
                     ref={previewRef}
-                    id="orchard-preview-container"
+                    id="export-maker-preview-container"
                     className="shadow-2xl rounded-xl overflow-hidden"
                     style={{ width: scaledW, height: scaledH, position: 'relative', flexShrink: 0 }}
                 >

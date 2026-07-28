@@ -1,4 +1,4 @@
-import { getModulesByProductType } from './orchard/moduleMappings'
+import { getModulesByProductType } from './export-maker/moduleMappings'
 
 // Mapping element id -> module fields that imply its availability
 export const ELEMENT_MODULES_MAP = {

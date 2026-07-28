@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import { useOrchardStore } from '../../store/orchardStore';
+import { useExportMakerStore } from '../../store/exportMakerStore';
 import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
@@ -28,9 +28,9 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'orchard-template-canvas', className = '', allowOverflow = false }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false }) {
     let TemplateComponent = TEMPLATES[config.template];
-    const templatesMeta = useOrchardStore((state) => state.templates);
+    const templatesMeta = useExportMakerStore((state) => state.templates);
     const adaptedReviewData = buildExportReviewData(reviewData);
 
     // If the configured template is a registered custom template (layout=custom) use CustomTemplate
@@ -40,7 +40,7 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
     }
 
     // If the stored review explicitly selected a custom layout mode, force the CustomTemplate
-    if (reviewData?.orchardLayoutMode === 'custom') {
+    if (reviewData?.exportMakerLayoutMode === 'custom') {
         TemplateComponent = CustomTemplate;
     }
 

@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import TemplateRenderer from '../../components/export/TemplateRenderer'
-import { resolveOrchardConfig } from '../../store/orchardStore'
-import { DEFAULT_TEMPLATES } from '../../store/orchardConstants'
+import { resolveExportMakerConfig } from '../../store/exportMakerStore'
+import { DEFAULT_TEMPLATES } from '../../store/exportMakerConstants'
 
 const RATIO_DIMS = {
     '1:1': { width: 800, height: 800 },
@@ -16,7 +16,7 @@ const RATIO_DIMS = {
  * Lien HTML vivant partageable (Chantier B de la finalisation Export Maker) — contrairement à un
  * export figé (PNG/PDF/…), cette page se contente de re-rendre TemplateRenderer avec les données
  * ACTUELLES de la review à chaque visite : pas de nouveau mécanisme de "live update" à construire,
- * juste une page qui ne fige rien. Réutilise exactement le même moteur que l'aperçu Orchard Studio
+ * juste une page qui ne fige rien. Réutilise exactement le même moteur que l'aperçu Export Maker
  * et le bouton "Exporter" (TemplateRenderer/exportDataAdapter/fieldRegistry) — aucune nouvelle
  * logique de champs. Respecte la visibilité existante : `GET /api/reviews/:id` ne sert déjà que les
  * reviews publiques à un visiteur non connecté (canReadFor côté serveur), pas de nouveau modèle de
@@ -42,20 +42,20 @@ export default function PublicRenderPage() {
 
     const config = (() => {
         const fallback = { template: 'detailedCard', ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio }
-        if (!review?.orchardConfig) return resolveOrchardConfig(fallback)
+        if (!review?.exportMakerConfig) return resolveExportMakerConfig(fallback)
         try {
-            const saved = typeof review.orchardConfig === 'string' ? JSON.parse(review.orchardConfig) : review.orchardConfig
-            // Répare un orchardConfig sauvegardé avant l'ajout de nouvelles clés à
+            const saved = typeof review.exportMakerConfig === 'string' ? JSON.parse(review.exportMakerConfig) : review.exportMakerConfig
+            // Répare un exportMakerConfig sauvegardé avant l'ajout de nouvelles clés à
             // DEFAULT_CONFIG.contentModules — sinon les sections "opt-in" (cultivarsList,
             // aromas, terpenes…) disparaissent silencieusement sur une review pourtant pleine.
-            return resolveOrchardConfig(saved)
+            return resolveExportMakerConfig(saved)
         } catch {
-            return resolveOrchardConfig(fallback)
+            return resolveExportMakerConfig(fallback)
         }
     })()
     const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']
 
-    // Mise à l'échelle sur la LARGEUR uniquement — contrairement à l'aperçu Orchard Studio (qui
+    // Mise à l'échelle sur la LARGEUR uniquement — contrairement à l'aperçu Export Maker (qui
     // capture une image à ratio fixe), cette page est un document vivant censé défiler
     // normalement (cf. commentaire du composant). Caler aussi sur la hauteur du viewport forçait
     // un canevas à hauteur bloquée qui coupait silencieusement tout contenu dépassant un seul

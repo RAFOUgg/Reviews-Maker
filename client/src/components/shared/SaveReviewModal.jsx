@@ -13,7 +13,7 @@ import { Save, Globe, Lock, Eye, X, CheckCircle, Loader2, RefreshCw, ChevronRigh
  *   onClose           ()  → fermer la modale
  *   onSaveDraft       ()  → sauvegarder comme brouillon privé
  *   onPublish         ()  → publier (appelé après que l'aperçu est validé)
- *   onOpenPreview     ()  → ouvre l'OrchardPanel (aperçu + export)
+ *   onOpenPreview     ()  → ouvre l'ExportMakerPanel (aperçu + export)
  *   isSaving          bool
  *   reviewId          string|null      (null = pas encore sauvegardée)
  *   hasPreview        bool             (true = un rendu a déjà été créé)

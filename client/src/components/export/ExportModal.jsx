@@ -7,9 +7,9 @@ import { getAvailableTimelapsePipelines, exportTimelapseToGIF, downloadTimelapse
 import { exportCanvasesToVideo, downloadVideo } from '../../utils/videoExporter';
 import { Film } from 'lucide-react';
 // Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
-import { useOrchardStore, resolveOrchardConfig } from '../../store/orchardStore';
-import { useOrchardPagesStore, getDefaultPages } from '../../store/orchardPagesStore';
-import { shouldAutoLockPagination } from '../../utils/orchardHelpers';
+import { useExportMakerStore, resolveExportMakerConfig } from '../../store/exportMakerStore';
+import { useExportMakerPagesStore, getDefaultPages } from '../../store/exportMakerPagesStore';
+import { shouldAutoLockPagination } from '../../utils/exportMakerHelpers';
 import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 import {
@@ -23,7 +23,7 @@ import {
 } from '../../config/exportConfig';
 import TemplateRenderer from './TemplateRenderer';
 import WatermarkEditor from './WatermarkEditor';
-import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
+import { DEFAULT_TEMPLATES } from '../../store/exportMakerConstants';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { getFieldRegistry, GROUP_LABELS } from '../../utils/fieldRegistry';
 import { serializeRenderToHtml, serializeMultiPageHtml, downloadHtml } from '../../utils/htmlExport';
@@ -41,7 +41,7 @@ const RATIO_DIMS = {
 
 /**
  * Mini scaled preview that fits export-sized card into a small container.
- * Utilise TemplateRenderer (le même moteur que l'aperçu principal d'Orchard Studio /
+ * Utilise TemplateRenderer (le même moteur que l'aperçu principal d'Export Maker /
  * Export Maker) pour que ce qui s'exporte corresponde exactement à ce qui est prévisualisé —
  * avant ce composant rendait InteractiveReviewCard, un renderer différent qui pouvait
  * afficher un template/des couleurs différents de ce que l'utilisateur venait de configurer.
@@ -81,36 +81,36 @@ function MiniPreview({ config, reviewData }) {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
                 }}
             >
-                <TemplateRenderer config={config} reviewData={reviewData} canvasId="orchard-template-canvas-mini" />
+                <TemplateRenderer config={config} reviewData={reviewData} canvasId="export-maker-canvas-mini" />
             </div>
         </div>
     );
 }
 
 export default function ExportModal({ onClose, reviewData: reviewDataProp, config: configProp }) {
-    // Deux façons d'alimenter ce modal : depuis Orchard Studio (aucune prop, tout vient du store
+    // Deux façons d'alimenter ce modal : depuis Export Maker (aucune prop, tout vient du store
     // pendant l'édition live) ou en autonome — ex. le bouton "Exporter" de ReviewDetailPage, qui n'a
-    // pas de session Orchard Studio ouverte derrière lui. `isStandalone` distingue les deux cas pour
+    // pas de session Export Maker ouverte derrière lui. `isStandalone` distingue les deux cas pour
     // savoir si CE modal doit lui-même monter un canvas de capture (cf. plus bas), ou s'appuyer sur
     // celui déjà rendu par le panneau d'édition.
     const isStandalone = Boolean(reviewDataProp);
-    const storeReviewData = useOrchardStore((state) => state.reviewData);
-    const storeConfig = useOrchardStore((state) => state.config);
+    const storeReviewData = useExportMakerStore((state) => state.reviewData);
+    const storeConfig = useExportMakerStore((state) => state.config);
     const reviewData = reviewDataProp || storeReviewData;
-    // Review jamais éditée dans Orchard Studio (pas de config sauvegardée) : repli sur une config
+    // Review jamais éditée dans Export Maker (pas de config sauvegardée) : repli sur une config
     // par défaut sensée plutôt que de planter — la Fiche Technique Détaillée, pas le format compact
     // social, puisqu'on exporte ici un document de référence, pas un post réseau social.
-    // `resolveOrchardConfig` répare aussi le cas d'un `orchardConfig` PRÉSENT mais périmé (moins de
+    // `resolveExportMakerConfig` répare aussi le cas d'un `exportMakerConfig` PRÉSENT mais périmé (moins de
     // modules que le schéma courant) — sans ça, une review déjà configurée avant l'ajout de
     // nouvelles clés à DEFAULT_CONFIG.contentModules affichait un export presque vide.
-    const config = resolveOrchardConfig(configProp || storeConfig || {
+    const config = resolveExportMakerConfig(configProp || storeConfig || {
         template: 'detailedCard',
         ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio,
     });
 
-    // Pagination (Chantier Phase 2, corrigé 2026-07-27) : `useOrchardPagesStore` est la session
-    // d'édition Orchard Studio en cours — jamais persistée sur la review elle-même. Le chemin
-    // standalone (bouton "Exporter" sur une review déjà sauvegardée, sans session Orchard Studio
+    // Pagination (Chantier Phase 2, corrigé 2026-07-27) : `useExportMakerPagesStore` est la session
+    // d'édition Export Maker en cours — jamais persistée sur la review elle-même. Le chemin
+    // standalone (bouton "Exporter" sur une review déjà sauvegardée, sans session Export Maker
     // ouverte) n'avait donc JAMAIS de pagination, quel que soit le volume réel de données : un
     // canevas à hauteur fixe (ex. 1080px en 16:9) avec `overflow:hidden` coupait silencieusement
     // tout ce qui dépassait — jusqu'à ~65% d'une fiche dense (pipelines complets, cf. Phase
@@ -118,8 +118,8 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // active MAIS que le contenu est dense (même heuristique que `TemplateSelector`), générer des
     // pages par défaut via `getDefaultPages` (déjà utilisées par le mode édition) plutôt que de
     // rendre un unique canevas qui débordera silencieusement.
-    const sessionPagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const sessionPages = useOrchardPagesStore((state) => state.pages);
+    const sessionPagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
+    const sessionPages = useExportMakerPagesStore((state) => state.pages);
     const autoPages = useMemo(() => {
         if (sessionPagesEnabled && sessionPages.length > 1) return null; // session déjà active, prioritaire
         if (!shouldAutoLockPagination(reviewData)) return null; // contenu peu dense : page unique suffit
@@ -173,7 +173,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // Filigrane personnalisé (Influenceur Pro/Producteur) — porté depuis l'ancien moteur
     // ExportMaker.jsx pour qu'il reste disponible une fois ce dernier retiré. Appliqué directement
     // sur le clone capturé dans prepareCapture(), pas sur l'aperçu live — fonctionne donc de façon
-    // identique qu'on exporte depuis Orchard Studio ou en autonome (ReviewDetailPage).
+    // identique qu'on exporte depuis Export Maker ou en autonome (ReviewDetailPage).
     const [watermark, setWatermark] = useState({
         type: 'text',
         content: '',
@@ -202,12 +202,12 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
             setExportProgress(10);
 
             // Gather all export pages (pagination support)
-            const allPages = Array.from(document.querySelectorAll('.orchard-export-page'));
+            const allPages = Array.from(document.querySelectorAll('.export-maker-page'));
 
             // Fallback: single canvas element
             if (allPages.length === 0) {
-                let container = document.getElementById('orchard-template-canvas')
-                    || document.getElementById('orchard-preview-container');
+                let container = document.getElementById('export-maker-canvas')
+                    || document.getElementById('export-maker-preview-container');
                 if (!container) throw new Error('Conteneur d\'aperçu introuvable');
                 allPages.push(container);
             }
@@ -287,10 +287,10 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
         }
     };
 
-    /** Rasterise chaque page `.orchard-export-page` en canvas (même pipeline que les exports image :
+    /** Rasterise chaque page `.export-maker-page` en canvas (même pipeline que les exports image :
      * prepareCapture + html-to-image) — étape commune au GIF et à la vidéo pleine carte ci-dessous. */
     const capturePageCanvases = async (onProgress) => {
-        const pageNodes = Array.from(document.querySelectorAll('.orchard-export-page'));
+        const pageNodes = Array.from(document.querySelectorAll('.export-maker-page'));
         if (pageNodes.length < 2) throw new Error('Au moins 2 pages configurées sont nécessaires');
 
         const { toCanvas } = await import('html-to-image');
@@ -366,7 +366,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
 
         const target = container.cloneNode(true);
         if (!exportOptions.includeBranding) {
-            target.querySelectorAll('.orchard-branding').forEach(b => b.remove());
+            target.querySelectorAll('.export-maker-branding').forEach(b => b.remove());
         }
 
         const w = selectedScope === 'openGraph' ? 1200 : originalWidth;
@@ -380,7 +380,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
 
         // Filigrane personnalisé : injecté directement dans le clone capturé plutôt que dans
         // l'aperçu live — fonctionne donc identiquement que la capture vienne du canvas live
-        // d'Orchard Studio ou du canvas caché monté en mode autonome (cf. isStandalone plus haut).
+        // d'Export Maker ou du canvas caché monté en mode autonome (cf. isStandalone plus haut).
         if (watermark.visible && (watermark.content || watermark.imageUrl)) {
             const wm = document.createElement('div');
             Object.assign(wm.style, {
@@ -707,8 +707,8 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
 
     return (
         <>
-            {/* En mode autonome (pas de session Orchard Studio ouverte derrière ce modal), il n'existe
-                nulle part ailleurs de canvas #orchard-template-canvas déjà monté à capturer — on en
+            {/* En mode autonome (pas de session Export Maker ouverte derrière ce modal), il n'existe
+                nulle part ailleurs de canvas #export-maker-canvas déjà monté à capturer — on en
                 rend un ici, hors-écran, en plus du MiniPreview visible (qui, lui, utilise un canvasId
                 distinct pour ne jamais entrer en collision avec celui-ci). */}
             {!hasMultiplePages && isStandalone && (
@@ -716,12 +716,12 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                     <TemplateRenderer config={config} reviewData={reviewData} />
                 </div>
             )}
-            {/* Pagination : `handleExport` cherche `.orchard-export-page` — sans ça il ne capture
+            {/* Pagination : `handleExport` cherche `.export-maker-page` — sans ça il ne capture
                 jamais que la page unique actuellement visible (le canvas simple ou l'aperçu paginé
                 de PagedPreviewPane), qu'il y ait 1 ou 9 pages configurées. On monte donc ici TOUTES
                 les pages hors-écran, chacune filtrée sur ses propres `modules` (même prop
                 `activeModules`/`pageMode` que PagedPreviewPane pour la preview live), qu'on soit en
-                mode autonome ou dans une session Orchard Studio ouverte. */}
+                mode autonome ou dans une session Export Maker ouverte. */}
             {hasMultiplePages && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
                     {pages.map((page, i) => (
@@ -729,8 +729,8 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                             <TemplateRenderer
                                 config={config}
                                 reviewData={reviewData}
-                                canvasId={`orchard-export-page-${i}`}
-                                className="orchard-export-page"
+                                canvasId={`export-maker-page-${i}`}
+                                className="export-maker-page"
                                 activeModules={page.modules}
                                 pageMode
                             />
@@ -777,7 +777,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                     </div>
 
                     {/* Content: preview stacked above options on mobile, side-by-side on desktop
-                        (même pattern que OrchardPanel.jsx) — l'aperçu n'est plus jamais masqué. */}
+                        (même pattern que ExportMakerPanel.jsx) — l'aperçu n'est plus jamais masqué. */}
                     <div className="p-4 sm:p-6 flex flex-col md:flex-row gap-4 sm:gap-6 flex-1 min-h-0 overflow-y-auto md:overflow-hidden">
                         {/* Left: live preview */}
                         <div className="flex flex-col flex-shrink-0 w-full md:w-[380px] lg:w-[420px]">

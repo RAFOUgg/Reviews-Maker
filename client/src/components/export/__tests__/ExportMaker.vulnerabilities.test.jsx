@@ -21,8 +21,8 @@ vi.mock('../../../hooks/useAuth', () => ({
     })
 }))
 
-vi.mock('../../../store/orchardStore', () => ({
-    useOrchardStore: vi.fn((selector) => {
+vi.mock('../../../store/exportMakerStore', () => ({
+    useExportMakerStore: vi.fn((selector) => {
         const mockStore = {
             config: {
                 colors: { background: '#1a1a2e', accent: '#ffd700', textPrimary: '#ffffff' },
@@ -35,11 +35,11 @@ vi.mock('../../../store/orchardStore', () => ({
 }))
 
 // Mock des utilitaires critiques
-vi.mock('../../../utils/orchard/moduleMappings', () => ({
+vi.mock('../../../utils/export-maker/moduleMappings', () => ({
     getModulesByProductType: vi.fn(() => ['genetics', 'visual', 'effects', 'terpenes'])
 }))
 
-vi.mock('../../../store/orchardConstants', () => ({
+vi.mock('../../../store/exportMakerConstants', () => ({
     DEFAULT_TEMPLATES: {
         modernCompact: { name: 'Modern Compact', description: 'Compact' },
         detailedCard: { name: 'Detailed Card', description: 'Detailed' }

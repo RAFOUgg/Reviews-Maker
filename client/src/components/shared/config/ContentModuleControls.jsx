@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { getFieldRegistry, GROUPS, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
 import { LiquidButton, LiquidInput } from '../../ui/LiquidUI';
 
@@ -143,9 +143,9 @@ function CategorySection({ category, contentModules, reviewData, onToggle, onTog
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
 export default function ContentModuleControls() {
-    const config = useOrchardStore((state) => state.config);
-    const reviewData = useOrchardStore((state) => state.reviewData);
-    const toggleContentModule = useOrchardStore((state) => state.toggleContentModule);
+    const config = useExportMakerStore((state) => state.config);
+    const reviewData = useExportMakerStore((state) => state.reviewData);
+    const toggleContentModule = useExportMakerStore((state) => state.toggleContentModule);
 
     const [searchQuery, setSearchQuery] = useState('');
     const [expandedCategories, setExpandedCategories] = useState({ presentation: true, general: true });

@@ -279,16 +279,16 @@ export function getFieldLabel(key) {
 const PROTECTED_ROOT_KEYS = new Set([
     'id', 'reviewId', 'authorId', 'createdAt', 'updatedAt', 'isPublic', 'producerProfileId',
     'type', 'holderName', 'review', 'flowerData', 'hashData', 'concentrateData', 'edibleData',
-    'geneticTree', 'geneticTreeId', 'productionChain', 'extraData', 'tags', 'orchardConfig',
+    'geneticTree', 'geneticTreeId', 'productionChain', 'extraData', 'tags', 'exportMakerConfig',
     'sourceLineage', 'parentFlowerReviewId', 'author', 'ownerName', 'user',
     // Galerie photo : déjà gérée par `mainImage` (sélection dédiée) — un tableau de noms de
     // fichiers uploadés (ex. flower-1753612345-847362951.jpg) n'a jamais vocation à s'afficher
     // comme texte générique.
     'images', 'photos',
-    // Bookkeeping Orchard Studio / statut interne — jamais du contenu de review. Trouvé en
-    // production (2026-07-27) : "Is private: Non", "Orchard preset: detailedCard" etc.
+    // Bookkeeping Export Maker / statut interne — jamais du contenu de review. Trouvé en
+    // production (2026-07-27) : "Is private: Non", "Export Maker preset: detailedCard" etc.
     // s'affichaient tels quels dans "Données supplémentaires" faute d'exclusion.
-    'isPrivate', 'isOurReview', 'orchardPreset', 'orchardLayoutMode',
+    'isPrivate', 'isOurReview', 'exportMakerPreset', 'exportMakerLayoutMode',
 ]);
 
 // Plomberie de pipeline (couverte par `pipelineInteractiveView`) et de lien de compte (couverte

@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { useExportConfigSave } from '../../../hooks/useExportConfigSave';
 import { useToast } from '../../shared/ToastContainer';
 import ConfigPane from '../config/ConfigPane';
@@ -11,8 +11,8 @@ import PagedPreviewPane from './PagedPreviewPane';
 import CustomLayoutPane from '../config/CustomLayoutPane';
 import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
-import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
-import { shouldAutoLockPagination } from '../../../utils/orchardHelpers';
+import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
+import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -40,7 +40,7 @@ function normalizeReviewData(reviewData) {
             normalized.extraData = parsedExtra;
         }
     } catch (err) {
-        console.warn('Failed to normalize extraData for OrchardPanel', err);
+        console.warn('Failed to normalize extraData for ExportMakerPanel', err);
     }
 
     // ============================================================================
@@ -212,7 +212,7 @@ function normalizeReviewData(reviewData) {
     return normalized;
 }
 
-export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onPublish }) {
+export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied, onPublish }) {
     const toast = useToast();
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
@@ -222,18 +222,18 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
     const canvasRef = useRef(null);
     const modalRef = useRef(null);
-    const setReviewData = useOrchardStore((state) => state.setReviewData);
-    const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
-    const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
-    const setPreviewFullscreen = useOrchardStore((state) => state.setPreviewFullscreen);
-    const config = useOrchardStore((state) => state.config);
-    const activePreset = useOrchardStore((state) => state.activePreset);
+    const setReviewData = useExportMakerStore((state) => state.setReviewData);
+    const isPreviewFullscreen = useExportMakerStore((state) => state.isPreviewFullscreen);
+    const togglePreviewFullscreen = useExportMakerStore((state) => state.togglePreviewFullscreen);
+    const setPreviewFullscreen = useExportMakerStore((state) => state.setPreviewFullscreen);
+    const config = useExportMakerStore((state) => state.config);
+    const activePreset = useExportMakerStore((state) => state.activePreset);
 
     // Pages store
-    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
+    const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
+    const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
     // Aperçu live paginé même sans activation manuelle, si le contenu est dense — sans ça,
-    // l'aperçu Orchard Studio (la surface la plus regardée en configurant un export) coupait
+    // l'aperçu Export Maker (la surface la plus regardée en configurant un export) coupait
     // silencieusement tout ce qui dépassait un canevas à hauteur fixe, comme l'export autonome
     // avant son propre correctif (2026-07-27). `loadDefaultPages` est déjà appelé
     // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
@@ -283,19 +283,19 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             }
 
             // Charger le layout personnalisé s'il existe depuis la review
-            if (reviewData.orchardCustomLayout) {
+            if (reviewData.exportMakerCustomLayout) {
                 try {
-                    const parsed = typeof reviewData.orchardCustomLayout === 'string'
-                        ? JSON.parse(reviewData.orchardCustomLayout)
-                        : reviewData.orchardCustomLayout;
+                    const parsed = typeof reviewData.exportMakerCustomLayout === 'string'
+                        ? JSON.parse(reviewData.exportMakerCustomLayout)
+                        : reviewData.exportMakerCustomLayout;
                     setCustomLayout(Array.isArray(parsed) ? parsed : []);
                 } catch (err) {
-                    console.warn('Failed to parse orchardCustomLayout', err);
+                    console.warn('Failed to parse exportMakerCustomLayout', err);
                 }
             }
 
             // Si la review a été sauvegardée en mode custom, activer le mode custom
-            if (reviewData.orchardLayoutMode === 'custom') {
+            if (reviewData.exportMakerLayoutMode === 'custom') {
                 setIsCustomMode(true);
             }
 
@@ -313,16 +313,16 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     };
 
     const handleApplyPreset = () => {
-        // Sauvegarder la configuration Orchard dans le formData
+        // Sauvegarder la configuration Export Maker dans le formData
         if (onPresetApplied) {
             onPresetApplied({
-                orchardConfig: config,
+                exportMakerConfig: config,
                 // activePreset ne reste renseigné que pour les presets sauvegardés (rare) —
                 // config.template est ce qui change réellement quand on choisit un template
                 // (Moderne Compact, Fiche Détaillée, etc.), donc c'est lui qui doit être
-                // persisté comme "orchardPreset" sinon le badge "Aperçu requis" de la
+                // persisté comme "exportMakerPreset" sinon le badge "Aperçu requis" de la
                 // bibliothèque ne disparaît jamais après un Appliquer
-                orchardPreset: activePreset || config.template,
+                exportMakerPreset: activePreset || config.template,
                 customLayout: isCustomMode ? customLayout : null, // Sauvegarder le layout custom
                 layoutMode: isCustomMode ? 'custom' : 'template'
             });
@@ -376,7 +376,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             const field = active.data.current.field;
 
             // Calculer la position relative au canvas
-            const canvasElement = document.querySelector('.orchard-canvas-resize-parent');
+            const canvasElement = document.querySelector('.export-maker-canvas-resize-parent');
             if (canvasElement && event.activatorEvent) {
                 const rect = canvasElement.getBoundingClientRect();
                 const clientX = event.activatorEvent.clientX || 0;
@@ -481,7 +481,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                             <motion.button
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
-                                onClick={() => onPublish({ orchardPreset: activePreset || config.template, orchardConfig: config })}
+                                onClick={() => onPublish({ exportMakerPreset: activePreset || config.template, exportMakerConfig: config })}
                                 className="px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50"
                                 title="Publier la review"
                             >
@@ -662,7 +662,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     );
 }
 
-OrchardPanel.propTypes = {
+ExportMakerPanel.propTypes = {
     reviewData: PropTypes.object.isRequired,
     onClose: PropTypes.func.isRequired,
     onPresetApplied: PropTypes.func, // Callback optionnel pour sauvegarder le preset dans le parent

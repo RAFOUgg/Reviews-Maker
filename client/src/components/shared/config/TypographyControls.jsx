@@ -1,4 +1,4 @@
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidSelect, LiquidButton } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
 
@@ -27,8 +27,8 @@ const FONT_WEIGHTS = [
 const FONT_FAMILY_OPTIONS = FONT_FAMILIES.map((font) => ({ value: font, label: font }));
 
 export default function TypographyControls() {
-    const config = useOrchardStore((state) => state.config);
-    const updateTypography = useOrchardStore((state) => state.updateTypography);
+    const config = useExportMakerStore((state) => state.config);
+    const updateTypography = useExportMakerStore((state) => state.updateTypography);
 
     return (
         <div className="space-y-6">

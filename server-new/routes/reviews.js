@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
-import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
+import { formatReview, formatReviews, prepareReviewData, buildReviewFilters, extractImageFilenames, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewData, validateReviewId } from '../utils/validation.js'
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
@@ -51,7 +51,7 @@ const upload = multer({
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
 router.get('/', optionalAuth, asyncHandler(async (req, res) => {
-    const { type, search, sortBy = 'createdAt', order = 'desc', publicOnly, hasOrchard, userId } = req.query
+    const { type, search, sortBy = 'createdAt', order = 'desc', publicOnly, hasExportMaker, userId } = req.query
 
     // Valider les paramètres de tri
     const validSortFields = ['createdAt', 'updatedAt', 'note', 'holderName']
@@ -63,7 +63,7 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
     // Construire les filtres de recherche
     const currentUser = (typeof req.isAuthenticated === 'function' && req.isAuthenticated()) ? req.user : null
     const where = buildReviewFilters(
-        { type, search, publicOnly, hasOrchard, userId },
+        { type, search, publicOnly, hasExportMaker, userId },
         currentUser
     )
 
@@ -85,8 +85,8 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
 
     // Formater les reviews avec le helper centralisé
     let formattedReviews = formatReviews(reviews, currentUser)
-    // Exposer orchardConfig/preset si présents
-    formattedReviews = formattedReviews.map(r => liftOrchardFromExtra(r))
+    // Exposer exportMakerConfig/preset si présents
+    formattedReviews = formattedReviews.map(r => liftExportMakerFromExtra(r))
     // Map DB field names to API-friendly English keys
     formattedReviews = formattedReviews.map(r => mapToApi('Review', r))
 
@@ -226,7 +226,7 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
     // Formater la review
     let formattedReview = formatReview(review, currentUser)
 
-    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = liftExportMakerFromExtra(formattedReview)
 
     // ✅ S'assurer que authorId est toujours présent
     if (!formattedReview.authorId) {
@@ -315,7 +315,7 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
 
     const mainImage = imageFilenames[0]
 
-    // Collecter les champs supplémentaires (extraData) pour persister orchardConfig/orchardPreset etc.
+    // Collecter les champs supplémentaires (extraData) pour persister exportMakerConfig/exportMakerPreset etc.
     const extraData = {}
     for (const [key, value] of Object.entries(req.body)) {
         // Ne pas recopier les champs déjà nettoyés par la validation
@@ -359,7 +359,7 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
 
     // Formater, map DB fields to API (english keys), et retourner
     let formattedReview = formatReview(review, req.user)
-    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = liftExportMakerFromExtra(formattedReview)
     formattedReview = mapToApi('Review', formattedReview)
 
     res.status(201).json(formattedReview)
@@ -614,7 +614,7 @@ router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (
 
     // Formater et retourner
     let formattedReview = formatReview(updated, req.user)
-    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = liftExportMakerFromExtra(formattedReview)
     formattedReview = mapToApi('Review', formattedReview)
     res.json(formattedReview)
 }))
@@ -693,7 +693,7 @@ router.patch('/:id/visibility', requireAuth, requirePublishingAllowed, asyncHand
 
     // Formater et retourner
     let formattedReview = formatReview(updatedReview, req.user)
-    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = liftExportMakerFromExtra(formattedReview)
     formattedReview = mapToApi('Review', formattedReview)
     res.json(formattedReview)
 }))
@@ -744,7 +744,7 @@ router.patch('/:id/preview', requireAuth, asyncHandler(async (req, res) => {
     })
 
     let formattedReview = formatReview(updated, req.user)
-    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = liftExportMakerFromExtra(formattedReview)
     formattedReview = mapToApi('Review', formattedReview)
     res.json({ previewUrl, review: formattedReview })
 }))

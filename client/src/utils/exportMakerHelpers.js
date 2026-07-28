@@ -1,5 +1,5 @@
 /**
- * Orchard Helpers - Utilitaires centralisés pour le système Orchard Studio
+ * Export Maker Helpers - Utilitaires centralisés pour le système Export Maker
  * Ces fonctions sont partagées entre tous les templates et renderers
  */
 import { getFieldLabel } from './fieldRegistry';
@@ -585,7 +585,7 @@ function hasAnyTimelineData(reviewData) {
 
 /**
  * Le contenu est-il assez dense pour justifier la pagination automatique ? Utilisé à la fois par
- * le sélecteur de template (session d'édition Orchard Studio) et par les chemins d'export
+ * le sélecteur de template (session d'édition Export Maker) et par les chemins d'export
  * autonomes (ExportModal standalone, page publique /r/:id) qui n'ont jamais de session de pages
  * active — sans ce partage, ces derniers ne paginaient jamais, quel que soit le volume réel de
  * données (bug corrigé le 2026-07-27 : jusqu'à 65% d'une fiche dense pouvait être coupé
@@ -756,7 +756,7 @@ export function extractPipelines(reviewData) {
  * Filtre le résultat d'`extractPipelines()` pour ne garder que les pipelines actifs selon
  * `config.contentModules` — nécessaire en pagination : `TemplateRenderer`'s `filteredConfig`
  * met à `false` toute clé absente de la liste `modules` de la page active (voir
- * `orchardPagesStore.js`), donc sans ce filtre un template qui fait juste `pipelines.map(...)`
+ * `exportMakerPagesStore.js`), donc sans ce filtre un template qui fait juste `pipelines.map(...)`
  * réaffiche TOUS les pipelines (Culture + Curing + Extraction + ...) sur CHAQUE page au lieu de
  * respecter la répartition en pages dédiées. Bug trouvé le 2026-07-28 : seul
  * `DetailedCardTemplate.jsx` avait ce filtre (en ligne, dupliqué) ; `ModernCompactTemplate.jsx`

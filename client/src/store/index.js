@@ -2,6 +2,6 @@
 export { useStore } from './useStore';
 export { useThemeStore } from './themeStore';
 export { usePipelineStore } from './pipelineStore';
-export { useOrchardStore } from './orchardStore';
-export { useOrchardPagesStore } from './orchardPagesStore';
-export { COLOR_PALETTES } from './orchardConstants';
+export { useExportMakerStore } from './exportMakerStore';
+export { useExportMakerPagesStore } from './exportMakerPagesStore';
+export { COLOR_PALETTES } from './exportMakerConstants';

@@ -22,8 +22,8 @@ const publicFlower = {
     author: { username: 'bob', producerProfile: { isVerified: true, businessType: 'producer' } },
 };
 
-// Chemin ORCHARD : formData normalisé (noms formData)
-const orchardFlower = {
+// chemin Export Maker : formData normalisé (noms formData)
+const exportMakerFlower = {
     type: 'flower', holderName: 'OG Kush', rating: 7.9,
     densite: 8, trichome: 7, durete: 6, montee: 9, intensiteEffet: 8,
     aromasIntensity: 7, agressivite: 3, intensiteFumee: 8,
@@ -52,8 +52,8 @@ describe('exportDataAdapter — chemin public (colonnes DB aplaties)', () => {
     it('déduit cultivar <- variety', () => expect(a.cultivar).toBe('Purple Haze'));
 });
 
-describe('exportDataAdapter — chemin Orchard (noms formData)', () => {
-    const b = buildExportReviewData(orchardFlower);
+describe('exportDataAdapter — chemin Export Maker (noms formData)', () => {
+    const b = buildExportReviewData(exportMakerFlower);
 
     it('conserve la note existante', () => expect(b.rating).toBe(7.9));
     it('reconstruit categoryRatings.visual depuis noms formData', () => expect(b.categoryRatings.visual.densiteVisuelle).toBe(8));
@@ -128,16 +128,16 @@ describe('fieldRegistry — getOverflowFields (évolutivité automatique)', () =
         expect(getOverflowFields(null)).toEqual([]);
         expect(getOverflowFields('x')).toEqual([]);
     });
-    it('exclut le bookkeeping Orchard Studio (isPrivate/isOurReview/orchardPreset/orchardLayoutMode)', () => {
+    it('exclut le bookkeeping Export Maker (isPrivate/isOurReview/exportMakerPreset/exportMakerLayoutMode)', () => {
         const overflow = getOverflowFields({
             type: 'flower', isPrivate: false, isOurReview: false,
-            orchardPreset: 'detailedCard', orchardLayoutMode: 'template',
+            exportMakerPreset: 'detailedCard', exportMakerLayoutMode: 'template',
         });
         const keys = overflow.map((f) => f.key);
         expect(keys).not.toContain('isPrivate');
         expect(keys).not.toContain('isOurReview');
-        expect(keys).not.toContain('orchardPreset');
-        expect(keys).not.toContain('orchardLayoutMode');
+        expect(keys).not.toContain('exportMakerPreset');
+        expect(keys).not.toContain('exportMakerLayoutMode');
     });
     it('exclut images/photos (galerie déjà gérée par mainImage)', () => {
         const overflow = getOverflowFields({

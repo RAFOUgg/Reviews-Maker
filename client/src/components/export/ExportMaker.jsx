@@ -11,15 +11,15 @@ import { useAuth } from '../../hooks/useAuth';
 import { FeatureGate } from '../account/FeatureGate';
 import WatermarkEditor from './WatermarkEditor';
 import { exportPipelineToGIF, downloadGIF } from '../../utils/GIFExporter';
-import { DEFAULT_TEMPLATES } from '../../store/orchardConstants';
-import { useOrchardStore } from '../../store/orchardStore';
+import { DEFAULT_TEMPLATES } from '../../store/exportMakerConstants';
+import { useExportMakerStore } from '../../store/exportMakerStore';
 import useReviewData from './hooks/useReviewData';
 import useCanvasLayout from './hooks/useCanvasLayout';
 import { exportToPng, exportToJpeg, exportToSvg, exportToPdf, downloadDataUrl, downloadBlob } from './services/exportService';
 import MiniBars from './MiniBars'
 import TerpeneBar from './TerpeneBar'
 import ScoreGauge from './ScoreGauge'
-import OrchardContextMenu from '../shared/orchard/OrchardContextMenu';
+import ExportMakerContextMenu from '../shared/export-maker/ExportMakerContextMenu';
 import ContentModuleControls from '../shared/config/ContentModuleControls';
 import TypographyControls from '../shared/config/TypographyControls';
 import ColorPaletteControls from '../shared/config/ColorPaletteControls';
@@ -36,8 +36,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         return () => console.debug('[ExportMaker] unmounted')
     }, [productType, reviewData?.id])
 
-    // Sync reviewData into orchardStore so ContentModuleControls can show data availability
-    const setReviewData = useOrchardStore((s) => s.setReviewData);
+    // Sync reviewData into exportMakerStore so ContentModuleControls can show data availability
+    const setReviewData = useExportMakerStore((s) => s.setReviewData);
     useEffect(() => {
         if (reviewData) setReviewData(reviewData);
         return () => setReviewData(null);
@@ -108,12 +108,12 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
 
     const { user } = useAuth()
 
-    // Lire la config de présentation depuis le store OrchardPanel (couleurs, typo)
-    const orchardConfig = useOrchardStore((s) => s.config);
-    const previewBackground = orchardConfig?.colors?.background || 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
-    const previewFont = orchardConfig?.typography?.fontFamily || 'Inter';
-    const previewAccent = orchardConfig?.colors?.accent || '#ffd700';
-    const previewTextColor = orchardConfig?.colors?.textPrimary || '#ffffff';
+    // Lire la config de présentation depuis le store ExportMakerPanel (couleurs, typo)
+    const exportMakerConfig = useExportMakerStore((s) => s.config);
+    const previewBackground = exportMakerConfig?.colors?.background || 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
+    const previewFont = exportMakerConfig?.typography?.fontFamily || 'Inter';
+    const previewAccent = exportMakerConfig?.colors?.accent || '#ffd700';
+    const previewTextColor = exportMakerConfig?.colors?.textPrimary || '#ffffff';
 
     // Layout hook: design size and canvas scale for preview
     const { designSize, canvasScale } = useCanvasLayout(previewAreaRef, format);
@@ -121,7 +121,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     // Résolution du nom de la review (plusieurs champs possibles selon le type de produit)
     const reviewName = (reviewData?.holderName || reviewData?.nomCommercial || reviewData?.name || '').trim() || 'export';
 
-    // Templates — basés sur DEFAULT_TEMPLATES d'orchardConstants
+    // Templates — basés sur DEFAULT_TEMPLATES d'exportMakerConstants
     const productKey = productType || 'flower';
 
     const templates = Object.entries(DEFAULT_TEMPLATES).map(([key, tpl]) => {
@@ -689,7 +689,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     const { templateData, resolveReviewField, getCategoryScores, getMainImage } = useReviewData(reviewData);
 
     const isSectionVisible = (sectionKey) => {
-        const visibility = orchardConfig?.contentModules?.[sectionKey]?.visible;
+        const visibility = exportMakerConfig?.contentModules?.[sectionKey]?.visible;
         return visibility !== false; // true par défaut si pas défini
     };
 
@@ -699,8 +699,8 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         fleurs: '🌸', concentré: '🍯', comestible: '🍪'
     };
 
-    // Render modes from orchard config
-    const renderModes = orchardConfig?.renderModes || {};
+    // Render modes from Export Maker config
+    const renderModes = exportMakerConfig?.renderModes || {};
 
     // Score renderer — supports: 'gauge', 'bar', 'pill', 'number' with adaptive fontSize
     const renderScore = (value, label, color = '#A78BFA', fontSize = 1, mode) => {
@@ -859,7 +859,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
     )
 
     const SectionCard = ({ children, title, icon, noPadding = false, sectionKey, fontSize = 1 }) => {
-        const ss = sectionKey ? (orchardConfig?.sectionStyles?.[sectionKey] || {}) : {};
+        const ss = sectionKey ? (exportMakerConfig?.sectionStyles?.[sectionKey] || {}) : {};
         const cardStyle = {
             background: ss.background || 'rgba(255,255,255,0.03)',
             border: '1px solid rgba(255,255,255,0.06)',
@@ -872,7 +872,7 @@ const ExportMaker = ({ reviewData, productType = 'flower', onClose }) => {
         return (
             <div
                 style={cardStyle}
-                {...(sectionKey ? { 'data-orchard-section': sectionKey, 'data-orchard-label': title || sectionKey } : {})}
+                {...(sectionKey ? { 'data-export-maker-section': sectionKey, 'data-export-maker-label': title || sectionKey } : {})}
             >
                 {title && (
                     <div style={{

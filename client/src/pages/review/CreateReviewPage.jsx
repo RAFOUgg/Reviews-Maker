@@ -12,7 +12,7 @@ import SubstratMixer from '../../components/forms/helpers/SubstratMixer';
 import RecipeSection from '../../components/forms/helpers/RecipeSection';
 import SectionNavigator from '../../components/shared/ui-helpers/SectionNavigator';
 import CategoryRatingSummary from '../../components/shared/charts/CategoryRatingSummary';
-import OrchardPanel from '../../components/shared/orchard/OrchardPanel';
+import ExportMakerPanel from '../../components/shared/export-maker/ExportMakerPanel';
 import { AnimatePresence } from 'framer-motion';
 import LiquidSlider from '../../components/ui/LiquidSlider';
 import { productStructures } from '../../utils/productStructures';
@@ -91,13 +91,13 @@ export default function CreateReviewPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [hasSolvents, setHasSolvents] = useState(false);
-    const [showOrchardStudio, setShowOrchardStudio] = useState(false);
+    const [showExportMakerStudio, setshowExportMakerStudio] = useState(false);
     const [isLoading, setIsLoading] = useState(isEditing);
     const [showSaveModal, setShowSaveModal] = useState(false);
     // Préremplit le choix public/privé avec le réglage "Visibilité par défaut" du compte
     // (client/src/pages/account/AccountPage.jsx, onglet Préférences) plutôt qu'un `false` figé.
     const [saveModalData, setSaveModalData] = useState({ title: '', isPublic: preferences?.defaultVisibility === 'public' });
-    // publishIntent: si true, réouvrir la save modal en mode public après fermeture de l'OrchardPanel
+    // publishIntent: si true, réouvrir la save modal en mode public après fermeture de l'ExportMakerPanel
     const [pendingPublishAfterPreview, setPendingPublishAfterPreview] = useState(false);
 
     // Fonction pour obtenir l'URL d'une image (pour preview)
@@ -310,7 +310,7 @@ export default function CreateReviewPage() {
             toast.error('Le nom commercial est requis');
             return;
         }
-        // ℹ️ Note: orchardPreset n'est plus obligatoire pour permettre la sauvegarde
+        // ℹ️ Note: exportMakerPreset n'est plus obligatoire pour permettre la sauvegarde
         // L'utilisateur peut définir l'aperçu plus tard s'il le souhaite via l'édition
 
         // Ouvrir la modale de sauvegarde
@@ -485,7 +485,7 @@ export default function CreateReviewPage() {
                         <button onClick={() => navigate('/')} className="transition-colors text-white/70 hover:text-white">← Retour</button>
                         <div className="text-center"><h1 className="text-xl font-bold text-title">{isEditing ? `Modifier ${formData.type}` : formData.type}</h1></div>
                         <button
-                            onClick={() => setShowOrchardStudio(true)}
+                            onClick={() => setshowExportMakerStudio(true)}
                             className="liquid-glass--button bg-gradient-to-r text-white rounded-xl font-medium shadow-lg transition-all flex items-center gap-2"
                         >
                             🎨 Aperçu
@@ -515,9 +515,9 @@ export default function CreateReviewPage() {
             </div>
             <div className="h-24"></div>
 
-            {/* Orchard Studio Modal */}
+            {/* Export Maker Modal */}
             <AnimatePresence>
-                {showOrchardStudio && (() => {
+                {showExportMakerStudio && (() => {
                     // ✅ Normaliser les données pour éviter les erreurs de type
                     const normalizeArray = (value) => {
                         if (Array.isArray(value)) return value;
@@ -528,7 +528,7 @@ export default function CreateReviewPage() {
                     };
 
                     return (
-                        <OrchardPanel
+                        <ExportMakerPanel
                             productType={typeFromUrl}
                             reviewId={isEditing ? editId : null}
                             reviewData={{
@@ -559,24 +559,24 @@ export default function CreateReviewPage() {
                                 farm: formData.farm || ''
                             }}
                             onClose={() => {
-                                setShowOrchardStudio(false);
+                                setshowExportMakerStudio(false);
                                 // Si l'utilisateur voulait publier, réouvrir la save modal en mode public
-                                if (pendingPublishAfterPreview && formData.orchardPreset) {
+                                if (pendingPublishAfterPreview && formData.exportMakerPreset) {
                                     setPendingPublishAfterPreview(false);
                                     const defaultTitle = `${formData.holderName || 'Review'} - ${formData.type || 'Produit'}`;
                                     setSaveModalData({ title: defaultTitle, isPublic: true });
                                     setShowSaveModal(true);
                                 }
                             }}
-                            onPresetApplied={(orchardData) => {
-                                // ✅ Sauvegarder la configuration Orchard dans formData
+                            onPresetApplied={(exportMakerData) => {
+                                // ✅ Sauvegarder la configuration Export Maker dans formData
                                 setFormData(prev => ({
                                     ...prev,
-                                    orchardConfig: JSON.stringify(orchardData.orchardConfig),
-                                    orchardPreset: orchardData.orchardPreset || 'custom',
-                                    orchardCustomLayout: orchardData.customLayout || null,
-                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template'),
-                                    ...(orchardData.previewUrl ? { orchardPreviewUrl: orchardData.previewUrl } : {})
+                                    exportMakerConfig: JSON.stringify(exportMakerData.exportMakerConfig),
+                                    exportMakerPreset: exportMakerData.exportMakerPreset || 'custom',
+                                    exportMakerCustomLayout: exportMakerData.customLayout || null,
+                                    exportMakerLayoutMode: exportMakerData.layoutMode || (exportMakerData.customLayout ? 'custom' : 'template'),
+                                    ...(exportMakerData.previewUrl ? { exportMakerPreviewUrl: exportMakerData.previewUrl } : {})
                                 }));
                                 toast.success('✅ Aperçu défini avec succès !');
                             }}
@@ -630,13 +630,13 @@ export default function CreateReviewPage() {
                                                 name="visibility"
                                                 checked={saveModalData.isPublic}
                                                 onChange={() => setSaveModalData(prev => ({ ...prev, isPublic: true }))}
-                                                disabled={!formData.orchardPreset}
+                                                disabled={!formData.exportMakerPreset}
                                                 className="w-4 h-4 border-white/20 bg-transparent focus:ring-offset-0 disabled:opacity-50"
                                                 style={{ accentColor: 'var(--primary)' }}
                                             />
                                             <span className="text-white">Publique (visible par tous)</span>
                                         </label>
-                                        {!formData.orchardPreset && (
+                                        {!formData.exportMakerPreset && (
                                             <div className="ml-7 space-y-2">
                                                 <p className="text-amber-400 text-sm">
                                                     ⚠️ Un aperçu visuel est requis pour la galerie publique.
@@ -646,7 +646,7 @@ export default function CreateReviewPage() {
                                                     onClick={() => {
                                                         setPendingPublishAfterPreview(true);
                                                         setShowSaveModal(false);
-                                                        setShowOrchardStudio(true);
+                                                        setshowExportMakerStudio(true);
                                                     }}
                                                     className="text-xs px-3 py-1.5 bg-violet-600/20 hover:bg-violet-600/40 border border-violet-500/40 text-violet-300 rounded-lg transition-all"
                                                 >

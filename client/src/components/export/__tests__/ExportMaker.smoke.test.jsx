@@ -28,8 +28,8 @@ vi.mock('../../../hooks/useAuth', () => ({
     })
 }))
 
-vi.mock('../../../store/orchardStore', () => ({
-    useOrchardStore: vi.fn((selector) => {
+vi.mock('../../../store/exportMakerStore', () => ({
+    useExportMakerStore: vi.fn((selector) => {
         const mockStore = {
             config: {
                 colors: {

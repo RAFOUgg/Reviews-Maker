@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import {
     Type, BarChart3, Gauge, Smile, Palette, Ruler, Hash, Eye, EyeOff,
     ChevronRight, Square, Circle, Columns, Rows, Maximize2, Minimize2,
@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 
 /**
- * OrchardContextMenu — Enhanced right-click context menu for preview elements.
+ * ExportMakerContextMenu — Enhanced right-click context menu for preview elements.
  * Configures: display style, font size/weight, accent color, layout, padding,
  * border radius, opacity, background, columns, visibility.
  */
@@ -83,16 +83,16 @@ const OPACITY_VALUES = [
     { id: '20', label: '20%', value: 0.2 },
 ];
 
-export default function OrchardContextMenu() {
+export default function ExportMakerContextMenu() {
     const [menuPos, setMenuPos] = useState(null);
     const [targetInfo, setTargetInfo] = useState(null);
     const [subMenu, setSubMenu] = useState(null);
     const menuRef = useRef(null);
 
-    const updateSectionStyle = useOrchardStore((s) => s.updateSectionStyle);
-    const resetSectionStyle = useOrchardStore((s) => s.resetSectionStyle);
-    const toggleContentModule = useOrchardStore((s) => s.toggleContentModule);
-    const sectionStyles = useOrchardStore((s) => s.config?.sectionStyles || {});
+    const updateSectionStyle = useExportMakerStore((s) => s.updateSectionStyle);
+    const resetSectionStyle = useExportMakerStore((s) => s.resetSectionStyle);
+    const toggleContentModule = useExportMakerStore((s) => s.toggleContentModule);
+    const sectionStyles = useExportMakerStore((s) => s.config?.sectionStyles || {});
 
     const closeMenu = useCallback(() => {
         setMenuPos(null);
@@ -115,16 +115,16 @@ export default function OrchardContextMenu() {
 
     useEffect(() => {
         const handler = (e) => {
-            const sectionEl = e.target.closest('[data-orchard-section]');
-            const scoreEl = e.target.closest('[data-orchard-score]');
+            const sectionEl = e.target.closest('[data-export-maker-section]');
+            const scoreEl = e.target.closest('[data-export-maker-score]');
             const moduleEl = sectionEl || scoreEl;
             if (!moduleEl) return;
 
             e.preventDefault();
             e.stopPropagation();
 
-            const sectionKey = moduleEl.getAttribute('data-orchard-section') || moduleEl.getAttribute('data-orchard-score');
-            const sectionLabel = moduleEl.getAttribute('data-orchard-label') || sectionKey;
+            const sectionKey = moduleEl.getAttribute('data-export-maker-section') || moduleEl.getAttribute('data-export-maker-score');
+            const sectionLabel = moduleEl.getAttribute('data-export-maker-label') || sectionKey;
 
             const x = Math.min(e.clientX, window.innerWidth - 280);
             const y = Math.min(e.clientY, window.innerHeight - 400);

@@ -45,7 +45,7 @@ HTMLCanvasElement.prototype.getContext = vi.fn(() => ({
 // Mock toDataURL pour canvas
 HTMLCanvasElement.prototype.toDataURL = vi.fn(() => 'data:image/png;base64,mockedImageData')
 
-// Mock pour localStorage (orchardStore persistence)
+// Mock pour localStorage (exportMakerStore persistence)
 const localStorageMock = {
     getItem: vi.fn((key) => {
         return localStorage._storage[key] || null

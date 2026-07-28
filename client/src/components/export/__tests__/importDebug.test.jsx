@@ -22,12 +22,12 @@ describe('ExportMaker Imports Debug', () => {
         }
     })
 
-    it('devrait pouvoir importer orchardStore', async () => {
+    it('devrait pouvoir importer exportMakerStore', async () => {
         try {
-            const { useOrchardStore } = await import('../../../store/orchardStore')
-            expect(useOrchardStore).toBeDefined()
+            const { useExportMakerStore } = await import('../../../store/exportMakerStore')
+            expect(useExportMakerStore).toBeDefined()
         } catch (error) {
-            console.error('orchardStore import error:', error)
+            console.error('exportMakerStore import error:', error)
             throw error
         }
     })

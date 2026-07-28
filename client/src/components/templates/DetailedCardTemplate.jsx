@@ -13,8 +13,8 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
-} from '../../utils/orchardHelpers';
-import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+} from '../../utils/exportMakerHelpers';
+import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
@@ -435,7 +435,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
         return (
             <div
-                className="absolute pointer-events-none orchard-branding"
+                className="absolute pointer-events-none export-maker-branding"
                 style={{
                     ...positionMap[branding.position || 'bottom-right'],
                     opacity: branding.opacity || 0.8,
@@ -830,7 +830,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Pipelines (full width) */}
                 {(() => {
-                    // Filtre partagé avec ModernCompactTemplate/BlogArticleTemplate (orchardHelpers.js)
+                    // Filtre partagé avec ModernCompactTemplate/BlogArticleTemplate (exportMakerHelpers.js)
                     // — nécessaire pour que la pagination répartisse bien un pipeline par page dédiée
                     // au lieu de tout réafficher sur chaque page.
                     const visiblePipelines = filterVisiblePipelines(pipelines, contentModules);

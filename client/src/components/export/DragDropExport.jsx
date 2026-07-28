@@ -7,7 +7,7 @@ import {
 } from 'lucide-react';
 import { useAccountType } from '../../hooks/useAccountType';
 import { FeatureGate } from '../account/FeatureGate';
-import { getSectionsByProductType } from '../../utils/orchard/moduleMappings';
+import { getSectionsByProductType } from '../../utils/export-maker/moduleMappings';
 
 /**
  * DragDropExport - Éditeur personnalisé avec drag & drop pour exports

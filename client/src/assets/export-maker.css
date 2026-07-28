@@ -1,4 +1,4 @@
-/* Orchard Studio - Custom Styles & Animations */
+/* Export Maker - Custom Styles & Animations */
 
 /* Apple-like smooth transitions */
 * {
@@ -7,89 +7,89 @@
 }
 
 /* Smooth scrollbars */
-.orchard-scrollbar::-webkit-scrollbar {
+.export-maker-scrollbar::-webkit-scrollbar {
     width: 8px;
     height: 8px;
 }
 
-.orchard-scrollbar::-webkit-scrollbar-track {
+.export-maker-scrollbar::-webkit-scrollbar-track {
     background: transparent;
 }
 
-.orchard-scrollbar::-webkit-scrollbar-thumb {
+.export-maker-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 999px;
     transition: background 0.2s;
 }
 
-.orchard-scrollbar::-webkit-scrollbar-thumb:hover {
+.export-maker-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(0, 0, 0, 0.3);
 }
 
-.dark .orchard-scrollbar::-webkit-scrollbar-thumb {
+.dark .export-maker-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
 }
 
-.dark .orchard-scrollbar::-webkit-scrollbar-thumb:hover {
+.dark .export-maker-scrollbar::-webkit-scrollbar-thumb:hover {
     background: rgba(255, 255, 255, 0.3);
 }
 
 /* Glassmorphism effect */
-.orchard-glass {
+.export-maker-glass {
     background: rgba(255, 255, 255, 0.8);
     backdrop-filter: blur(10px);
     -webkit-backdrop-filter: blur(10px);
     border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
-.dark .orchard-glass {
+.dark .export-maker-glass {
     background: rgba(0, 0, 0, 0.5);
     border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 /* Smooth color transitions */
-.orchard-transition-colors {
+.export-maker-transition-colors {
     transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         color 0.3s cubic-bezier(0.4, 0, 0.2, 1),
         border-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Elevated shadow (Apple-style) */
-.orchard-shadow-elevated {
+.export-maker-shadow-elevated {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08),
         0 0 1px rgba(0, 0, 0, 0.05);
 }
 
-.dark .orchard-shadow-elevated {
+.dark .export-maker-shadow-elevated {
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3),
         0 0 1px rgba(0, 0, 0, 0.2);
 }
 
-.orchard-shadow-elevated-lg {
+.export-maker-shadow-elevated-lg {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12),
         0 0 1px rgba(0, 0, 0, 0.08);
 }
 
-.dark .orchard-shadow-elevated-lg {
+.dark .export-maker-shadow-elevated-lg {
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4),
         0 0 1px rgba(0, 0, 0, 0.3);
 }
 
 /* Smooth scale animation */
-.orchard-scale-hover {
+.export-maker-scale-hover {
     transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.orchard-scale-hover:hover {
+.export-maker-scale-hover:hover {
     transform: scale(1.02);
 }
 
-.orchard-scale-hover:active {
+.export-maker-scale-hover:active {
     transform: scale(0.98);
 }
 
 /* Fade in animation */
-@keyframes orchardFadeIn {
+@keyframes exportMakerFadeIn {
     from {
         opacity: 0;
         transform: translateY(10px);
@@ -101,12 +101,12 @@
     }
 }
 
-.orchard-fade-in {
-    animation: orchardFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+.export-maker-fade-in {
+    animation: exportMakerFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Shimmer effect for loading */
-@keyframes orchardShimmer {
+@keyframes exportMakerShimmer {
     0% {
         background-position: -1000px 0;
     }
@@ -116,16 +116,16 @@
     }
 }
 
-.orchard-shimmer {
+.export-maker-shimmer {
     background: linear-gradient(90deg,
             rgba(255, 255, 255, 0) 0%,
             rgba(255, 255, 255, 0.3) 50%,
             rgba(255, 255, 255, 0) 100%);
     background-size: 1000px 100%;
-    animation: orchardShimmer 2s infinite;
+    animation: exportMakerShimmer 2s infinite;
 }
 
-.dark .orchard-shimmer {
+.dark .export-maker-shimmer {
     background: linear-gradient(90deg,
             rgba(255, 255, 255, 0) 0%,
             rgba(255, 255, 255, 0.1) 50%,
@@ -133,7 +133,7 @@
 }
 
 /* Pulse animation for active elements */
-@keyframes orchardPulse {
+@keyframes exportMakerPulse {
 
     0%,
     100% {
@@ -145,12 +145,12 @@
     }
 }
 
-.orchard-pulse {
-    animation: orchardPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+.export-maker-pulse {
+    animation: exportMakerPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 /* Gradient text effect */
-.orchard-gradient-text {
+.export-maker-gradient-text {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -158,7 +158,7 @@
 }
 
 /* Smooth border animation */
-@keyframes orchardBorderPulse {
+@keyframes exportMakerBorderPulse {
 
     0%,
     100% {
@@ -170,23 +170,23 @@
     }
 }
 
-.orchard-border-pulse {
-    animation: orchardBorderPulse 2s ease-in-out infinite;
+.export-maker-border-pulse {
+    animation: exportMakerBorderPulse 2s ease-in-out infinite;
 }
 
 /* Focus ring (Apple-style) */
-.orchard-focus-ring:focus {
+.export-maker-focus-ring:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.3);
 }
 
-.orchard-focus-ring:focus-visible {
+.export-maker-focus-ring:focus-visible {
     outline: none;
     box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.4);
 }
 
 /* Custom range slider styles */
-input[type="range"].orchard-slider {
+input[type="range"].export-maker-slider {
     -webkit-appearance: none;
     appearance: none;
     height: 6px;
@@ -194,7 +194,7 @@ input[type="range"].orchard-slider {
     outline: none;
 }
 
-input[type="range"].orchard-slider::-webkit-slider-thumb {
+input[type="range"].export-maker-slider::-webkit-slider-thumb {
     -webkit-appearance: none;
     appearance: none;
     width: 20px;
@@ -206,12 +206,12 @@ input[type="range"].orchard-slider::-webkit-slider-thumb {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-input[type="range"].orchard-slider::-webkit-slider-thumb:hover {
+input[type="range"].export-maker-slider::-webkit-slider-thumb:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
 }
 
-input[type="range"].orchard-slider::-moz-range-thumb {
+input[type="range"].export-maker-slider::-moz-range-thumb {
     width: 20px;
     height: 20px;
     border-radius: 50%;
@@ -222,74 +222,74 @@ input[type="range"].orchard-slider::-moz-range-thumb {
     transition: transform 0.2s, box-shadow 0.2s;
 }
 
-input[type="range"].orchard-slider::-moz-range-thumb:hover {
+input[type="range"].export-maker-slider::-moz-range-thumb:hover {
     transform: scale(1.1);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
 }
 
 /* Toggle switch animation */
-.orchard-toggle {
+.export-maker-toggle {
     transition: background-color 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.orchard-toggle-thumb {
+.export-maker-toggle-thumb {
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Card hover effect */
-.orchard-card {
+.export-maker-card {
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.orchard-card:hover {
+.export-maker-card:hover {
     transform: translateY(-2px);
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
 }
 
-.dark .orchard-card:hover {
+.dark .export-maker-card:hover {
     box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4);
 }
 
 /* Backdrop blur support check */
 @supports (backdrop-filter: blur(10px)) or (-webkit-backdrop-filter: blur(10px)) {
-    .orchard-backdrop-blur {
+    .export-maker-backdrop-blur {
         backdrop-filter: blur(10px);
         -webkit-backdrop-filter: blur(10px);
     }
 }
 
 /* Smooth page transitions */
-.orchard-page-transition-enter {
+.export-maker-page-transition-enter {
     opacity: 0;
     transform: scale(0.98);
 }
 
-.orchard-page-transition-enter-active {
+.export-maker-page-transition-enter-active {
     opacity: 1;
     transform: scale(1);
     transition: opacity 0.3s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.orchard-page-transition-exit {
+.export-maker-page-transition-exit {
     opacity: 1;
     transform: scale(1);
 }
 
-.orchard-page-transition-exit-active {
+.export-maker-page-transition-exit-active {
     opacity: 0;
     transform: scale(0.98);
     transition: opacity 0.3s, transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Template container styles */
-.orchard-template-container {
+.export-maker-template-container {
     will-change: transform;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
 }
 
 /* Prevent text selection during drag */
-.orchard-no-select {
+.export-maker-no-select {
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -297,7 +297,7 @@ input[type="range"].orchard-slider::-moz-range-thumb:hover {
 }
 
 /* Custom checkbox */
-.orchard-checkbox {
+.export-maker-checkbox {
     appearance: none;
     -webkit-appearance: none;
     width: 20px;
@@ -309,33 +309,33 @@ input[type="range"].orchard-slider::-moz-range-thumb:hover {
     transition: all 0.2s;
 }
 
-.orchard-checkbox:checked {
+.export-maker-checkbox:checked {
     background-color: #a855f7;
     border-color: #a855f7;
     background-image: url("data:image/svg+xml,%3csvg viewBox='0 0 16 16' fill='white' xmlns='http://www.w3.org/2000/svg'%3e%3cpath d='M12.207 4.793a1 1 0 010 1.414l-5 5a1 1 0 01-1.414 0l-2-2a1 1 0 011.414-1.414L6.5 9.086l4.293-4.293a1 1 0 011.414 0z'/%3e%3c/svg%3e");
 }
 
-.dark .orchard-checkbox {
+.dark .export-maker-checkbox {
     background-color: #1f2937;
     border-color: #4b5563;
 }
 
 /* Smooth gradient backgrounds */
-.orchard-gradient-bg {
+.export-maker-gradient-bg {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
-.orchard-gradient-bg-alt {
+.export-maker-gradient-bg-alt {
     background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
 }
 
 /* Print styles */
 @media print {
-    .orchard-no-print {
+    .export-maker-no-print {
         display: none !important;
     }
 
-    .orchard-template-container {
+    .export-maker-template-container {
         box-shadow: none !important;
         border-radius: 0 !important;
     }
@@ -343,7 +343,7 @@ input[type="range"].orchard-slider::-moz-range-thumb:hover {
 
 /* Responsive utilities */
 @media (max-width: 640px) {
-    .orchard-mobile-full {
+    .export-maker-mobile-full {
         width: 100% !important;
         max-width: none !important;
     }

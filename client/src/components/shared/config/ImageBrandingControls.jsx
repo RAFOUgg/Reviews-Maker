@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check, Folder } from 'lucide-react';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidButton, LiquidInput, LiquidToggle } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
 
@@ -27,10 +27,10 @@ const LOGO_SIZES = [
 ];
 
 export default function ImageBrandingControls() {
-    const config = useOrchardStore((state) => state.config);
-    const updateImage = useOrchardStore((state) => state.updateImage);
-    const updateBranding = useOrchardStore((state) => state.updateBranding);
-    const reviewData = useOrchardStore((state) => state.reviewData);
+    const config = useExportMakerStore((state) => state.config);
+    const updateImage = useExportMakerStore((state) => state.updateImage);
+    const updateBranding = useExportMakerStore((state) => state.updateBranding);
+    const reviewData = useExportMakerStore((state) => state.reviewData);
     const [logoInput, setLogoInput] = useState(config.branding.logoUrl || '');
 
     // Collect all available images from reviewData

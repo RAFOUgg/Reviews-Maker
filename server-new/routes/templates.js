@@ -1,6 +1,6 @@
 import express from 'express'
 import { prisma } from '../server.js'
-import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
+import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { asyncHandler, Errors, requireAuthOrThrow } from '../utils/errorHandler.js'
 import fs from 'fs/promises'
 import path from 'path'
@@ -276,7 +276,7 @@ router.post('/:id/export', asyncHandler(async (req, res) => {
     if (reviewId) {
         try {
             const review = await prisma.review.findUnique({ where: { id: reviewId }, include: { author: { select: { id: true, username: true, avatar: true, discordId: true } }, likes: true } })
-            bound = review ? liftOrchardFromExtra(formatReview(review, null)) : null
+            bound = review ? liftExportMakerFromExtra(formatReview(review, null)) : null
         } catch (e) {
             // prisma may not be available or table missing
             bound = null

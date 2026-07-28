@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { LayoutGrid, Type, Palette, ListChecks, Image as ImageIcon, Bookmark, Files } from 'lucide-react';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidTabs } from '../../ui/LiquidUI';
 import TemplateSelector from './TemplateSelector';
 import TypographyControls from './TypographyControls';
@@ -8,7 +8,7 @@ import ColorPaletteControls from './ColorPaletteControls';
 import ContentModuleControls from './ContentModuleControls';
 import ImageBrandingControls from './ImageBrandingControls';
 import PresetManager from './PresetManager';
-import PageManager from '../../shared/orchard/PageManager';
+import PageManager from '../../shared/export-maker/PageManager';
 
 // Ordre : Template en 1er (choix du gabarit), puis Contenu/Pagination en 2e/3e position — ce sont
 // les réglages qui pilotent QUOI s'affiche et OÙ, donc les plus consultés après le choix du
@@ -24,8 +24,8 @@ const BASE_PANELS = [
 ];
 
 export default function ConfigPane() {
-    const activePanel = useOrchardStore((state) => state.activePanel);
-    const setActivePanel = useOrchardStore((state) => state.setActivePanel);
+    const activePanel = useExportMakerStore((state) => state.activePanel);
+    const setActivePanel = useExportMakerStore((state) => state.setActivePanel);
 
     return (
         <div className="h-full min-h-0 flex flex-col" style={{ background: 'var(--app-bg, transparent)' }}>

@@ -4,7 +4,7 @@
  */
 
 import React from 'react'
-import UnifiedPipeline from '../../../../components/shared/orchard/UnifiedPipeline'
+import UnifiedPipeline from '../../../../components/shared/export-maker/UnifiedPipeline'
 
 export default function PipelineCuring({ formData, handleChange }) {
     const handlePipelineChange = (pipelineData) => {

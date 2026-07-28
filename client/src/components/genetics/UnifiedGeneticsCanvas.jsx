@@ -55,6 +55,18 @@ const edgeTypes = {
 // un lien fraternel ne relie pas un parent à son enfant, et "pairing" relie deux parents entre eux.
 const PARENT_CHILD_TYPES = ['parent', 'pollen_donor', 'clone', 'mutation'];
 
+// Libellés lisibles des types de relation — mêmes valeurs que le select d'EdgeFormModal.jsx,
+// dupliqués ici pour l'affichage en lecture seule du panneau latéral (pas de dépendance croisée
+// entre les deux fichiers pour un simple mapping valeur→libellé).
+const RELATIONSHIP_TYPE_LABELS = {
+    parent: 'Parent',
+    pollen_donor: 'Donateur de pollen',
+    sibling: 'Frère/Sœur',
+    clone: 'Clone',
+    mutation: 'Mutation',
+    pairing: 'Couple parental (liaison)'
+};
+
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     const store = useGeneticsStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
@@ -528,6 +540,11 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
     }, [treeId, store.selectedTreeId, store.loadTree]);
 
     const selectedNode = store.selectedNodeId ? store.nodes.find(n => n.id === store.selectedNodeId) : null;
+    // Une arête "family" (fusion visuelle d'un couple, cf. sync effect plus haut) n'a pas d'id réel
+    // en base — un clic dessus ne trouve donc rien ici et le panneau reste vide, comme avant.
+    const selectedEdge = store.selectedEdgeId ? store.edges.find(e => e.id === store.selectedEdgeId) : null;
+    const edgeParentNode = selectedEdge ? store.nodes.find(n => n.id === selectedEdge.parentNodeId) : null;
+    const edgeChildNode = selectedEdge ? store.nodes.find(n => n.id === selectedEdge.childNodeId) : null;
 
     return (
         <GraphCanvasShell
@@ -583,51 +600,74 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
             loadingLabel="Chargement de l'arbre généalogique..."
             error={store.treeError}
             onErrorReset={() => store.clearSelection()}
-            sidePanel={selectedNode && (
+            sidePanel={(selectedNode || selectedEdge) && (
                 <Panel position="top-right" className="node-info-panel">
                     <div className="info-content">
-                        <h4>{selectedNode.cultivarName}</h4>
-                        {selectedNode.genetics && (
-                            <p>Type: {selectedNode.genetics.type || 'N/A'}</p>
-                        )}
-                        {selectedNode.notes && (
-                            <p className="notes">{selectedNode.notes}</p>
-                        )}
-                        {selectedNode.sourceReviewOrphaned && (
-                            <p className="notes" style={{ color: '#fbbf24' }}>
-                                ⚠️ La review liée à ce nœud a été supprimée
-                            </p>
-                        )}
-                        {!readOnly && (
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <button className="btn-edit" onClick={() => store.openNodeForm(selectedNode)}>
-                                    Éditer
-                                </button>
-                                {selectedNode.sourceReviewId && !selectedNode.sourceReviewOrphaned && (
-                                    <button
-                                        className="btn-edit"
-                                        onClick={() => window.open(`/edit/flower/${selectedNode.sourceReviewId}`, '_blank', 'noopener')}
-                                    >
-                                        Éditer la review
-                                    </button>
+                        {selectedNode && (
+                            <>
+                                <h4>{selectedNode.cultivarName}</h4>
+                                {selectedNode.genetics && (
+                                    <p>Type: {selectedNode.genetics.type || 'N/A'}</p>
                                 )}
-                                {selectedNode.sourceReviewId && (
-                                    <button
-                                        className="btn-edit"
-                                        onClick={() => store.updateNode(selectedNode.id, { sourceReviewId: null })}
-                                    >
-                                        Détacher la review
-                                    </button>
+                                {selectedNode.notes && (
+                                    <p className="notes">{selectedNode.notes}</p>
                                 )}
-                                {!selectedNode.sourceReviewId && (
-                                    <button
-                                        className="btn-edit"
-                                        onClick={() => store.openLinkReviewPicker(selectedNode.id)}
-                                    >
-                                        Lier à une review existante
-                                    </button>
+                                {selectedNode.sourceReviewOrphaned && (
+                                    <p className="notes" style={{ color: '#fbbf24' }}>
+                                        ⚠️ La review liée à ce nœud a été supprimée
+                                    </p>
                                 )}
-                            </div>
+                                {!readOnly && (
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button className="btn-edit" onClick={() => store.openNodeForm(selectedNode)}>
+                                            Éditer
+                                        </button>
+                                        {selectedNode.sourceReviewId && !selectedNode.sourceReviewOrphaned && (
+                                            <button
+                                                className="btn-edit"
+                                                onClick={() => window.open(`/edit/flower/${selectedNode.sourceReviewId}`, '_blank', 'noopener')}
+                                            >
+                                                Éditer la review
+                                            </button>
+                                        )}
+                                        {selectedNode.sourceReviewId && (
+                                            <button
+                                                className="btn-edit"
+                                                onClick={() => store.updateNode(selectedNode.id, { sourceReviewId: null })}
+                                            >
+                                                Détacher la review
+                                            </button>
+                                        )}
+                                        {!selectedNode.sourceReviewId && (
+                                            <button
+                                                className="btn-edit"
+                                                onClick={() => store.openLinkReviewPicker(selectedNode.id)}
+                                            >
+                                                Lier à une review existante
+                                            </button>
+                                        )}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {selectedEdge && (
+                            <>
+                                <h4>{edgeParentNode?.cultivarName || '?'} → {edgeChildNode?.cultivarName || '?'}</h4>
+                                <p>Relation : {RELATIONSHIP_TYPE_LABELS[selectedEdge.relationshipType] || selectedEdge.relationshipType}</p>
+                                {selectedEdge.pollinationMethod && <p>Méthode de pollinisation : {selectedEdge.pollinationMethod}</p>}
+                                {selectedEdge.notes && <p className="notes">{selectedEdge.notes}</p>}
+                                {!readOnly && (
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button className="btn-edit" onClick={() => store.openEdgeForm(selectedEdge)}>
+                                            Éditer
+                                        </button>
+                                        <button className="btn-edit" onClick={() => store.openMediaModal('edge', selectedEdge.id)}>
+                                            Photos / Vidéos{Array.isArray(selectedEdge.media) && selectedEdge.media.length > 0 ? ` (${selectedEdge.media.length})` : ''}
+                                        </button>
+                                    </div>
+                                )}
+                            </>
                         )}
                     </div>
                 </Panel>

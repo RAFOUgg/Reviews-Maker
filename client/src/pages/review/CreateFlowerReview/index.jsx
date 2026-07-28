@@ -4,7 +4,7 @@ import { useStore } from '../../../store/useStore'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures'
 import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout'
-const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+const ExportMakerPanel = lazy(() => import('../../../components/shared/export-maker/ExportMakerPanel'))
 import { AnimatePresence, motion } from 'framer-motion'
 import { flowerReviewsService } from '../../../services/apiService'
 import { ResponsiveCreateReviewLayout } from '../../../components/forms/helpers/ResponsiveCreateReviewLayout'
@@ -64,14 +64,14 @@ export default function CreateFlowerReview() {
     } = usePhotoUpload()
 
     const [currentSection, setCurrentSection] = useState(0)
-    const [showOrchard, setShowOrchard] = useState(false)
+    const [showExportMaker, setshowExportMaker] = useState(false)
     const [isDirty, setIsDirty] = useState(false)
     const scrollContainerRef = useRef(null)
 
     // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
     useEffect(() => {
         if (!loading && searchParams.get('openExport') === '1') {
-            setShowOrchard(true)
+            setshowExportMaker(true)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading])
@@ -323,10 +323,10 @@ export default function CreateFlowerReview() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
-    // Publier avec les données orchardData passées directement (évite la race-condition setState)
-    const handleSubmitWithOrchardData = async (orchardData = {}) => {
-        const orchardPreset = orchardData.orchardPreset || formData.orchardPreset
-        if (!orchardPreset) {
+    // Publier avec les données exportMakerData passées directement (évite la race-condition setState)
+    const handleSubmitWithExportMakerData = async (exportMakerData = {}) => {
+        const exportMakerPreset = exportMakerData.exportMakerPreset || formData.exportMakerPreset
+        if (!exportMakerPreset) {
             toast.error('Un aperçu est requis pour publier publiquement.')
             return
         }
@@ -340,8 +340,8 @@ export default function CreateFlowerReview() {
 
             const mergedData = {
                 ...formData,
-                orchardPreset,
-                orchardConfig: orchardData.orchardConfig ? JSON.stringify(orchardData.orchardConfig) : formData.orchardConfig,
+                exportMakerPreset,
+                exportMakerConfig: exportMakerData.exportMakerConfig ? JSON.stringify(exportMakerData.exportMakerConfig) : formData.exportMakerConfig,
             }
             const flatData = flattenFlowerFormData(mergedData)
             const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImages)
@@ -400,7 +400,7 @@ export default function CreateFlowerReview() {
                     title="Créer une review Fleur"
                     onExitToClassic={() => setWizardOverride(false)}
                     onOpenHandoff={handleOpenHandoff}
-                    onComplete={() => setShowOrchard(true)}
+                    onComplete={() => setshowExportMaker(true)}
                     initialIndex={wizardIndex}
                     onIndexChange={setWizardIndex}
                     saving={saving}
@@ -416,7 +416,7 @@ export default function CreateFlowerReview() {
                 subtitle="Documentez votre variété en détail"
                 sectionEmojis={sectionEmojis}
                 showProgress={true}
-                onOpenPreview={() => setShowOrchard(true)}
+                onOpenPreview={() => setshowExportMaker(true)}
                 onSave={() => handleSave({ silent: false })}
                 onEnableWizard={() => setWizardOverride(true)}
                 isDirty={isDirty}
@@ -503,22 +503,22 @@ export default function CreateFlowerReview() {
             </ResponsiveCreateReviewLayout>
             )}
 
-            {/* Orchard Preview Panel – OUTSIDE layout to avoid z-index stacking context issues */}
-            {showOrchard && (
+            {/* Export Maker Preview Panel – OUTSIDE layout to avoid z-index stacking context issues */}
+            {showExportMaker && (
                 <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
-                    <OrchardPanel
+                    <ExportMakerPanel
                         reviewData={formData}
                         productType="flower"
                         reviewId={id || null}
-                        onClose={() => setShowOrchard(false)}
-                        onPresetApplied={(orchardData) => {
-                            handleChange('orchardPreset', orchardData.orchardPreset || 'custom')
-                            handleChange('orchardConfig', JSON.stringify(orchardData.orchardConfig || {}))
-                            if (orchardData.customLayout) handleChange('orchardCustomLayout', orchardData.customLayout)
-                            if (orchardData.layoutMode) handleChange('orchardLayoutMode', orchardData.layoutMode)
-                            setShowOrchard(false)
+                        onClose={() => setshowExportMaker(false)}
+                        onPresetApplied={(exportMakerData) => {
+                            handleChange('exportMakerPreset', exportMakerData.exportMakerPreset || 'custom')
+                            handleChange('exportMakerConfig', JSON.stringify(exportMakerData.exportMakerConfig || {}))
+                            if (exportMakerData.customLayout) handleChange('exportMakerCustomLayout', exportMakerData.customLayout)
+                            if (exportMakerData.layoutMode) handleChange('exportMakerLayoutMode', exportMakerData.layoutMode)
+                            setshowExportMaker(false)
                         }}
-                        onPublish={handleSubmitWithOrchardData}
+                        onPublish={handleSubmitWithExportMakerData}
                     />
                 </Suspense>
             )}

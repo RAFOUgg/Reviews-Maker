@@ -1,7 +1,7 @@
 /**
- * OrchardMaker Product Type Mappings
+ * Export Maker Product Type Mappings
  * Defines which fields belong to which category for each product type
- * Allows OrchardPanel to work generically with all product types
+ * Allows ExportMakerPanel to work generically with all product types
  */
 
 // ============================================================================

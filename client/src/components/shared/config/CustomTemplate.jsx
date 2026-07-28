@@ -5,7 +5,7 @@ import {
     asArray,
     extractLabel,
     colorWithOpacity,
-} from '../../../utils/orchardHelpers';
+} from '../../../utils/exportMakerHelpers';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CUSTOM TEMPLATE — Zone-based drag-drop rendering with quality data display
@@ -230,12 +230,12 @@ export default function CustomTemplate({ config, reviewData, dimensions }) {
             {/* Branding */}
             {config.branding?.enabled && config.branding?.logoUrl && (
                 <div className="absolute" style={{ right: 16, bottom: 16, opacity: config.branding.opacity }}>
-                    <img src={config.branding.logoUrl} alt="logo" className="w-12 h-12 object-contain orchard-branding" />
+                    <img src={config.branding.logoUrl} alt="logo" className="w-12 h-12 object-contain export-maker-branding" />
                 </div>
             )}
 
             {/* Render custom layout overlays if saved */}
-            {renderCustomLayout(reviewData?.orchardCustomLayout, reviewData, colors, typography)}
+            {renderCustomLayout(reviewData?.exportMakerCustomLayout, reviewData, colors, typography)}
         </div>
     );
 }

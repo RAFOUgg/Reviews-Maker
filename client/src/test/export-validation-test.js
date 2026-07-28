@@ -333,7 +333,7 @@ const validationTests = {
           if (config.template !== 'compact') return true;
 
           // Template compact doit avoir moins de sections détaillées
-          const sections = element.querySelectorAll('[data-orchard-section]');
+          const sections = element.querySelectorAll('[data-export-maker-section]');
           return sections.length <= 4; // Max 4 sections pour compact
         }
       },
@@ -344,7 +344,7 @@ const validationTests = {
           if (config.template !== 'detailed') return true;
 
           // Template détaillé doit avoir plus de sections
-          const sections = element.querySelectorAll('[data-orchard-section]');
+          const sections = element.querySelectorAll('[data-export-maker-section]');
           return sections.length >= 3; // Min 3 sections pour détaillé
         }
       }
@@ -529,28 +529,28 @@ function simulateCanvasContent(container, reviewData, config) {
   // Sections sensorielles
   if (reviewData.terpenes && reviewData.terpenes.length > 0) {
     const terpSection = document.createElement('div');
-    terpSection.setAttribute('data-orchard-section', 'terpenes');
+    terpSection.setAttribute('data-export-maker-section', 'terpenes');
     terpSection.innerHTML = '<h3>Terpènes</h3>';
     container.appendChild(terpSection);
   }
 
   if (reviewData.odor) {
     const odorSection = document.createElement('div');
-    odorSection.setAttribute('data-orchard-section', 'odor');
+    odorSection.setAttribute('data-export-maker-section', 'odor');
     odorSection.innerHTML = '<h3>👃 Odeur</h3>';
     container.appendChild(odorSection);
   }
 
   if (reviewData.taste) {
     const tasteSection = document.createElement('div');
-    tasteSection.setAttribute('data-orchard-section', 'taste');
+    tasteSection.setAttribute('data-export-maker-section', 'taste');
     tasteSection.innerHTML = '<h3>😋 Goût</h3>';
     container.appendChild(tasteSection);
   }
 
   if (reviewData.effects) {
     const effectsSection = document.createElement('div');
-    effectsSection.setAttribute('data-orchard-section', 'effects');
+    effectsSection.setAttribute('data-export-maker-section', 'effects');
     effectsSection.innerHTML = '<h3>💥 Effets</h3>';
     container.appendChild(effectsSection);
   }

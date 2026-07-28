@@ -244,10 +244,10 @@ export default function ReviewsTab() {
 
     // Actions
     const toggleVisibility = async (reviewId, currentVisibility) => {
-        // Gate : pour publier publiquement, un aperçu (orchardPreset) est obligatoire
+        // Gate : pour publier publiquement, un aperçu (exportMakerPreset) est obligatoire
         if (!currentVisibility) {
             const review = reviews.find(r => r.id === reviewId)
-            if (review && !review.orchardPreset) {
+            if (review && !review.exportMakerPreset) {
                 toast.error(
                     '⚠️ Un aperçu est requis pour publier. Ouvrez la review en édition et définissez un aperçu via "Créer aperçu".'
                 )
@@ -351,7 +351,7 @@ export default function ReviewsTab() {
                                         }`}>
                                         {review.isPublic ? 'Publique' : 'Privée'}
                                     </span>
-                                    {!review.isPublic && !review.orchardPreset && (
+                                    {!review.isPublic && !review.exportMakerPreset && (
                                         <button
                                             onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}?openExport=1`)}
                                             className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
@@ -488,7 +488,7 @@ export default function ReviewsTab() {
 
                         {/* Badge aperçu (manquant = avertissement) — placé sous le badge visibilité (top-right),
                             jamais en bas où il chevaucherait la barre d'actions au survol (bottom-2, pleine largeur) */}
-                        {!review.isPublic && !review.orchardPreset && (
+                        {!review.isPublic && !review.exportMakerPreset && (
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();

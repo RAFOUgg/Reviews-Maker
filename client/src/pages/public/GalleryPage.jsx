@@ -8,7 +8,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { LiquidCard, LiquidChip, LiquidInput, LiquidButton } from '@/components/ui/LiquidUI';
-import OrchardCardRenderer from '../../components/gallery/OrchardCardRenderer';
+import ExportMakerCardRenderer from '../../components/gallery/ExportMakerCardRenderer';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -197,9 +197,9 @@ export default function GalleryPage() {
                 onContextMenu={(e) => handleContextMenu(e, review)}
                 onClick={() => handleViewReview(review.id)}
               >
-                <OrchardCardRenderer
+                <ExportMakerCardRenderer
                   reviewData={review}
-                  orchardConfig={review.orchardConfig}
+                  exportMakerConfig={review.exportMakerConfig}
                 />
               </div>
             ))}
@@ -285,9 +285,9 @@ export default function GalleryPage() {
                 </div>
 
                 <div className="h-[70vh] max-h-[700px]">
-                  <OrchardCardRenderer
+                  <ExportMakerCardRenderer
                     reviewData={selectedReview}
-                    orchardConfig={selectedReview.orchardConfig}
+                    exportMakerConfig={selectedReview.exportMakerConfig}
                   />
                 </div>
               </motion.div>

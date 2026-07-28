@@ -1,7 +1,7 @@
 /**
  * HomeReviewCard Component
  * Card d'affichage d'une review dans la galerie HomePage
- * Utilise l'aperçu Orchard défini si disponible, sinon affiche les images
+ * Utilise l'Aperçu Export Maker défini si disponible, sinon affiche les images
  */
 
 import PropTypes from 'prop-types'

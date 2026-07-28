@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
-import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
+import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import {
     requireSectionAccess,
@@ -37,7 +37,7 @@ const upload = multer({
     storage,
     limits: {
         fileSize: 200 * 1024 * 1024,   // 200 Mo par fichier (photo ou vidéo)
-        fieldSize: 100 * 1024 * 1024,  // 100 MB par champ texte (orchardConfig, pipeline JSON, etc.)
+        fieldSize: 100 * 1024 * 1024,  // 100 MB par champ texte (exportMakerConfig, pipeline JSON, etc.)
         fields: 1000,                   // max 1000 champs texte
         files: 10                       // max 10 fichiers
     },
@@ -735,10 +735,10 @@ router.post('/',
             cultivars: validation.cleaned.cultivars || null,
             farm: validation.cleaned.farm || null,
             extraData: JSON.stringify({
-                ...(req.body.orchardPreset ? { orchardPreset: req.body.orchardPreset } : {}),
-                ...(req.body.orchardConfig ? { orchardConfig: req.body.orchardConfig } : {}),
-                ...(req.body.orchardCustomLayout ? { orchardCustomLayout: req.body.orchardCustomLayout } : {}),
-                ...(req.body.orchardLayoutMode ? { orchardLayoutMode: req.body.orchardLayoutMode } : {}),
+                ...(req.body.exportMakerPreset ? { exportMakerPreset: req.body.exportMakerPreset } : {}),
+                ...(req.body.exportMakerConfig ? { exportMakerConfig: req.body.exportMakerConfig } : {}),
+                ...(req.body.exportMakerCustomLayout ? { exportMakerCustomLayout: req.body.exportMakerCustomLayout } : {}),
+                ...(req.body.exportMakerLayoutMode ? { exportMakerLayoutMode: req.body.exportMakerLayoutMode } : {}),
                 ...(req.body.isOurReview !== undefined ? { isOurReview: req.body.isOurReview === 'true' || req.body.isOurReview === true } : {}),
             })
         }
@@ -807,7 +807,7 @@ router.post('/',
 
         // Formater et retourner
         let formattedReview = formatReview(result.review, req.user)
-        formattedReview = liftOrchardFromExtra(formattedReview)
+        formattedReview = liftExportMakerFromExtra(formattedReview)
 
         // Ajouter les données flowerData dans la réponse
         formattedReview.flowerData = {
@@ -884,7 +884,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 
     // Formater la review
     let formattedReview = formatReview(review, currentUser)
-    formattedReview = liftOrchardFromExtra(formattedReview)
+    formattedReview = liftExportMakerFromExtra(formattedReview)
 
     // Parser les JSON strings pour le frontend
     if (review.flowerData) {
@@ -1072,15 +1072,15 @@ router.put('/:id',
                     cultivars: validation.cleaned.cultivars || review.cultivars || null,
                     farm: validation.cleaned.farm || review.farm || null,
                     isPublic: req.body.isPublic !== undefined ? (req.body.isPublic === 'true' || req.body.isPublic === true) : review.isPublic,
-                    // Merge orchard/aperçu data into extraData
+                    // Merge Export Maker/aperçu data into extraData
                     extraData: (() => {
                         let existing = {}
                         try { existing = JSON.parse(review.extraData || '{}') } catch (e) { }
                         const updated = { ...existing }
-                        if (req.body.orchardPreset) updated.orchardPreset = req.body.orchardPreset
-                        if (req.body.orchardConfig) updated.orchardConfig = req.body.orchardConfig
-                        if (req.body.orchardCustomLayout) updated.orchardCustomLayout = req.body.orchardCustomLayout
-                        if (req.body.orchardLayoutMode) updated.orchardLayoutMode = req.body.orchardLayoutMode
+                        if (req.body.exportMakerPreset) updated.exportMakerPreset = req.body.exportMakerPreset
+                        if (req.body.exportMakerConfig) updated.exportMakerConfig = req.body.exportMakerConfig
+                        if (req.body.exportMakerCustomLayout) updated.exportMakerCustomLayout = req.body.exportMakerCustomLayout
+                        if (req.body.exportMakerLayoutMode) updated.exportMakerLayoutMode = req.body.exportMakerLayoutMode
                         if (req.body.isOurReview !== undefined) updated.isOurReview = req.body.isOurReview === 'true' || req.body.isOurReview === true
                         return JSON.stringify(updated)
                     })()
@@ -1144,7 +1144,7 @@ router.put('/:id',
 
         // Formater et retourner
         let formattedReview = formatReview(result.review, req.user)
-        formattedReview = liftOrchardFromExtra(formattedReview)
+        formattedReview = liftExportMakerFromExtra(formattedReview)
 
         // Ajouter les données flowerData
         formattedReview.flowerData = {

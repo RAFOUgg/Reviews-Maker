@@ -11,7 +11,7 @@ export function useFlowerForm(reviewId = null) {
         const base = {
             type: 'flower',
             // Flat aliases for VisuelTechnique.jsx (reads formData.densite etc.)
-            // Start at 0 so empty reviews don't appear pre-filled in OrchardPanel
+            // Start at 0 so empty reviews don't appear pre-filled in ExportMakerPanel
             colorRating: 0, densite: 0, trichomes: 0, pistils: 0, manucure: 0, moisissure: 0, graines: 0,
             selectedColors: [],
             // Visual sub-object — all scores start at 0

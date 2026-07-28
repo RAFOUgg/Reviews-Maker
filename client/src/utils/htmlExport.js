@@ -102,7 +102,7 @@ async function serializeNodeToFrame(node) {
 
 /**
  * Construit le document HTML autonome à partir d'un nœud de rendu.
- * @param {HTMLElement} node - le canvas #orchard-template-canvas (ou conteneur d'aperçu)
+ * @param {HTMLElement} node - le canvas #export-maker-canvas (ou conteneur d'aperçu)
  * @param {Object} opts - { title, width, height, background }
  * @returns {Promise<string>} document HTML complet
  */
@@ -133,7 +133,7 @@ export async function serializeRenderToHtml(node, opts = {}) {
 
 /**
  * Variante multi-page de `serializeRenderToHtml` : sérialise CHAQUE nœud fourni (une page =
- * un canvas `.orchard-export-page`) et compose un document unique — chaque page dans son propre
+ * un canvas `.export-maker-page`) et compose un document unique — chaque page dans son propre
  * bloc avec numérotation, saut de page à l'impression (`break-after: page`), et défilement/ancres
  * à l'écran. Réutilise `serializeNodeToFrame` : même fidélité (styles inlinés, images en data URI)
  * que l'export mono-page, juste composée N fois.

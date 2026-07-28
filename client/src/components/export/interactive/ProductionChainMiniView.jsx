@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { safeParse } from '../../../utils/orchardHelpers';
+import { safeParse } from '../../../utils/exportMakerHelpers';
 
 /**
  * ProductionChainMiniView - Vue interactive lecture seule de la chaîne de production

@@ -5,8 +5,8 @@ import { arrayMove, SortableContext, useSortable, verticalListSortingStrategy } 
 import { CSS } from '@dnd-kit/utilities';
 import PropTypes from 'prop-types';
 import { GripVertical, Trash2, FileText, Plus, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useOrchardStore } from '../../../store/orchardStore';
-import { useOrchardPagesStore, PAGE_TEMPLATES } from '../../../store/orchardPagesStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
+import { useExportMakerPagesStore, PAGE_TEMPLATES } from '../../../store/exportMakerPagesStore';
 import { LiquidButton, LiquidToggle, LiquidModal, LiquidBadge } from '../../ui/LiquidUI';
 
 /**
@@ -92,18 +92,18 @@ SortablePage.propTypes = {
 export default function PageManager({ embedded = false }) {
     const [showAddModal, setShowAddModal] = useState(false);
 
-    const config = useOrchardStore((state) => state.config);
-    const reviewData = useOrchardStore((state) => state.reviewData);
+    const config = useExportMakerStore((state) => state.config);
+    const reviewData = useExportMakerStore((state) => state.reviewData);
 
-    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const pages = useOrchardPagesStore((state) => state.pages);
-    const currentPageIndex = useOrchardPagesStore((state) => state.currentPageIndex);
-    const togglePagesMode = useOrchardPagesStore((state) => state.togglePagesMode);
-    const addPage = useOrchardPagesStore((state) => state.addPage);
-    const removePage = useOrchardPagesStore((state) => state.removePage);
-    const setCurrentPage = useOrchardPagesStore((state) => state.setCurrentPage);
-    const reorderPages = useOrchardPagesStore((state) => state.reorderPages);
-    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
+    const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
+    const pages = useExportMakerPagesStore((state) => state.pages);
+    const currentPageIndex = useExportMakerPagesStore((state) => state.currentPageIndex);
+    const togglePagesMode = useExportMakerPagesStore((state) => state.togglePagesMode);
+    const addPage = useExportMakerPagesStore((state) => state.addPage);
+    const removePage = useExportMakerPagesStore((state) => state.removePage);
+    const setCurrentPage = useExportMakerPagesStore((state) => state.setCurrentPage);
+    const reorderPages = useExportMakerPagesStore((state) => state.reorderPages);
+    const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 

@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { ReactFlowProvider } from 'reactflow'
 import { parseImages } from '../../utils/imageUtils'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
-import OrchardCardRenderer from '../../components/gallery/OrchardCardRenderer'
+import ExportMakerCardRenderer from '../../components/gallery/ExportMakerCardRenderer'
 import ProductionChainCanvas from '../../components/production-chain/ProductionChainCanvas'
 import { apiTypeToInternal } from '../../utils/reviewTypeMeta'
 import { getLotCode } from '../../utils/lotCode'
@@ -22,7 +22,7 @@ export default function ReviewDetailPage() {
     const [review, setReview] = useState(null)
     const [loading, setLoading] = useState(true)
     const [selectedImage, setSelectedImage] = useState(null)
-    const [viewMode, setViewMode] = useState('full') // 'full' or 'orchard'
+    const [viewMode, setViewMode] = useState('full') // 'full' or 'exportMaker'
     const [showExportModal, setShowExportModal] = useState(false)
     const [productionChains, setProductionChains] = useState([])
     const [expandedChainId, setExpandedChainId] = useState(null)
@@ -208,8 +208,8 @@ export default function ReviewDetailPage() {
                     </div>
                 )}
 
-                {/* View Mode Switcher - Only show if Orchard config exists */}
-                {review.orchardConfig && (
+                {/* View Mode Switcher - Only show if Export Maker config exists */}
+                {review.exportMakerConfig && (
                     <div className="mb-6 flex gap-2">
                         <LiquidChip
                             active={viewMode === 'full'}
@@ -220,8 +220,8 @@ export default function ReviewDetailPage() {
                             <span>Vue Détaillée</span>
                         </LiquidChip>
                         <LiquidChip
-                            active={viewMode === 'orchard'}
-                            onClick={() => setViewMode('orchard')}
+                            active={viewMode === 'exportMaker'}
+                            onClick={() => setViewMode('exportMaker')}
                             color="cyan"
                         >
                             <Layout className="w-4 h-4" />
@@ -230,15 +230,15 @@ export default function ReviewDetailPage() {
                     </div>
                 )}
 
-                {/* Orchard Interactive HTML Preview — même moteur (TemplateRenderer) que l'aperçu
-                    Orchard Studio, pour reproduire exactement le template/couleurs/modules choisis */}
-                {viewMode === 'orchard' && review.orchardConfig ? (
+                {/* Export Maker Interactive HTML Preview — même moteur (TemplateRenderer) que l'aperçu
+                    Export Maker, pour reproduire exactement le template/couleurs/modules choisis */}
+                {viewMode === 'exportMaker' && review.exportMakerConfig ? (
                     <LiquidCard glow="cyan" padding="lg">
                         <div className="h-[70vh] max-h-[800px]">
-                            <OrchardCardRenderer
-                                orchardConfig={typeof review.orchardConfig === 'string' ? (() => {
-                                    try { return JSON.parse(review.orchardConfig) } catch { return review.orchardConfig }
-                                })() : review.orchardConfig}
+                            <ExportMakerCardRenderer
+                                exportMakerConfig={typeof review.exportMakerConfig === 'string' ? (() => {
+                                    try { return JSON.parse(review.exportMakerConfig) } catch { return review.exportMakerConfig }
+                                })() : review.exportMakerConfig}
                                 reviewData={{
                                     ...review,
                                     title: review.holderName,
@@ -257,23 +257,23 @@ export default function ReviewDetailPage() {
                         </div>
                     </LiquidCard>
                 ) : (
-                    /* Full Review Display - Always show by default or if no Orchard config */
+                    /* Full Review Display - Always show by default or if no Export Maker config */
                     <ReviewFullDisplay review={review} />
                 )}
             </div>
 
-            {/* Même moteur de rendu que l'aperçu Orchard Studio (TemplateRenderer/exportDataAdapter)
+            {/* Même moteur de rendu que l'aperçu Export Maker (TemplateRenderer/exportDataAdapter)
                 — ce qui est configuré/prévisualisé est désormais ce qui s'exporte réellement ici. */}
             {showExportModal && (
                 <Suspense fallback={<div className="p-6 text-center">Chargement de l'export…</div>}>
                     <ExportModal
                         reviewData={review}
                         config={(() => {
-                            if (!review.orchardConfig) return undefined
+                            if (!review.exportMakerConfig) return undefined
                             try {
-                                return typeof review.orchardConfig === 'string'
-                                    ? JSON.parse(review.orchardConfig)
-                                    : review.orchardConfig
+                                return typeof review.exportMakerConfig === 'string'
+                                    ? JSON.parse(review.exportMakerConfig)
+                                    : review.exportMakerConfig
                             } catch {
                                 return undefined
                             }

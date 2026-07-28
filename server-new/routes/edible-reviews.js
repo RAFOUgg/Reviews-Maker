@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
-import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
+import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
@@ -285,10 +285,10 @@ router.post('/', requireAuth, upload.array('images', 4), requirePublishingAllowe
             holderName: cleanedData.nomProduit,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
             extraData: JSON.stringify({
-                ...(bodyData.orchardPreset ? { orchardPreset: bodyData.orchardPreset } : {}),
-                ...(bodyData.orchardConfig ? { orchardConfig: bodyData.orchardConfig } : {}),
-                ...(bodyData.orchardCustomLayout ? { orchardCustomLayout: bodyData.orchardCustomLayout } : {}),
-                ...(bodyData.orchardLayoutMode ? { orchardLayoutMode: bodyData.orchardLayoutMode } : {}),
+                ...(bodyData.exportMakerPreset ? { exportMakerPreset: bodyData.exportMakerPreset } : {}),
+                ...(bodyData.exportMakerConfig ? { exportMakerConfig: bodyData.exportMakerConfig } : {}),
+                ...(bodyData.exportMakerCustomLayout ? { exportMakerCustomLayout: bodyData.exportMakerCustomLayout } : {}),
+                ...(bodyData.exportMakerLayoutMode ? { exportMakerLayoutMode: bodyData.exportMakerLayoutMode } : {}),
                 ...(bodyData.recipeFinalWeight ? { recipeFinalWeight: bodyData.recipeFinalWeight } : {}),
                 ...(bodyData.recipeServings ? { recipeServings: bodyData.recipeServings } : {}),
             })
@@ -394,16 +394,16 @@ router.put('/:id', requireAuth, upload.array('images', 4), requirePublishingAllo
         data: {
             holderName: cleanedData.nomProduit,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
-            // Merge orchard/aperçu data into extraData (sinon orchardPreset/orchardConfig
+            // Merge orchard/aperçu data into extraData (sinon exportMakerPreset/exportMakerConfig
             // appliqués dans Export Maker ne sont jamais persistés pour ce type de review)
             extraData: (() => {
                 let existing = {}
                 try { existing = JSON.parse(review.extraData || '{}') } catch (e) { }
                 const updated = { ...existing }
-                if (bodyData.orchardPreset) updated.orchardPreset = bodyData.orchardPreset
-                if (bodyData.orchardConfig) updated.orchardConfig = bodyData.orchardConfig
-                if (bodyData.orchardCustomLayout) updated.orchardCustomLayout = bodyData.orchardCustomLayout
-                if (bodyData.orchardLayoutMode) updated.orchardLayoutMode = bodyData.orchardLayoutMode
+                if (bodyData.exportMakerPreset) updated.exportMakerPreset = bodyData.exportMakerPreset
+                if (bodyData.exportMakerConfig) updated.exportMakerConfig = bodyData.exportMakerConfig
+                if (bodyData.exportMakerCustomLayout) updated.exportMakerCustomLayout = bodyData.exportMakerCustomLayout
+                if (bodyData.exportMakerLayoutMode) updated.exportMakerLayoutMode = bodyData.exportMakerLayoutMode
                 if (bodyData.recipeFinalWeight) updated.recipeFinalWeight = bodyData.recipeFinalWeight
                 if (bodyData.recipeServings) updated.recipeServings = bodyData.recipeServings
                 return JSON.stringify(updated)

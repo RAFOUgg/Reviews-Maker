@@ -1,4 +1,4 @@
-// Constantes pour Orchard Studio
+// Constantes pour Export Maker
 // Séparées du store pour éviter les problèmes de références circulaires
 
 // Palettes de couleurs harmonieuses prédéfinies

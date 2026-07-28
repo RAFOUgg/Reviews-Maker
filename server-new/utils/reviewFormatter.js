@@ -279,24 +279,33 @@ function resolvePreviewUrl(candidate) {
     return `/images/${v.replace(/^\//, '')}`
 }
 
-// Lift orchard / preview shortcuts from extraData into formatted fields
-export function liftOrchardFromExtra(formatted) {
+// Lift Export Maker / preview shortcuts from extraData into formatted fields.
+// Repli de lecture (renommage 2026-07-28, ancien nom de code "Orchard") : les reviews déjà en
+// base ont ces clés stockées sous leur ANCIEN nom dans le JSON `extraData` (le client n'écrit
+// plus que le nouveau nom depuis ce changement) — on lit donc le nouveau nom en priorité, avec
+// repli sur l'ancien, mais on n'expose et n'écrit désormais QUE le nouveau nom côté `formatted`
+// pour que le client (qui ne connaît plus que `exportMakerConfig` etc.) fonctionne dans les deux cas.
+export function liftExportMakerFromExtra(formatted) {
     if (!formatted) return formatted
     try {
         const extra = formatted.extraData || {}
-        if (extra.orchardConfig) {
-            formatted.orchardConfig = safeJSONParse(extra.orchardConfig, extra.orchardConfig)
+        const exportMakerConfigRaw = extra.exportMakerConfig ?? extra.orchardConfig
+        if (exportMakerConfigRaw) {
+            formatted.exportMakerConfig = safeJSONParse(exportMakerConfigRaw, exportMakerConfigRaw)
         }
-        if (extra.orchardPreset) {
-            // orchardPreset is usually a simple string, keep as-is
-            formatted.orchardPreset = extra.orchardPreset
+        const exportMakerPreset = extra.exportMakerPreset ?? extra.orchardPreset
+        if (exportMakerPreset) {
+            // exportMakerPreset is usually a simple string, keep as-is
+            formatted.exportMakerPreset = exportMakerPreset
         }
         // expose custom layout and layout mode if present (persisted in extraData)
-        if (extra.orchardCustomLayout) {
-            formatted.orchardCustomLayout = safeJSONParse(extra.orchardCustomLayout, extra.orchardCustomLayout)
+        const exportMakerCustomLayoutRaw = extra.exportMakerCustomLayout ?? extra.orchardCustomLayout
+        if (exportMakerCustomLayoutRaw) {
+            formatted.exportMakerCustomLayout = safeJSONParse(exportMakerCustomLayoutRaw, exportMakerCustomLayoutRaw)
         }
-        if (extra.orchardLayoutMode) {
-            formatted.orchardLayoutMode = extra.orchardLayoutMode
+        const exportMakerLayoutMode = extra.exportMakerLayoutMode ?? extra.orchardLayoutMode
+        if (exportMakerLayoutMode) {
+            formatted.exportMakerLayoutMode = exportMakerLayoutMode
         }
         // expose isOurReview flag ("notre production")
         if (extra.isOurReview !== undefined) {
@@ -309,16 +318,16 @@ export function liftOrchardFromExtra(formatted) {
             if (resolved) formatted.mainImageUrl = resolved
         }
 
-        // Store orchard/template preview thumbnails separately — NOT as mainImageUrl
-        const orchardPreviewKeys = [
+        // Store Export Maker/template preview thumbnails separately — NOT as mainImageUrl
+        const exportMakerPreviewKeys = [
             'apercu_definit', 'apercuDefinit', 'previewUrl', 'preview',
-            'orchardPreview', 'orchardFinalPreview', 'finalPreview'
+            'exportMakerPreview', 'exportMakerFinalPreview', 'orchardPreview', 'orchardFinalPreview', 'finalPreview'
         ]
-        for (const key of orchardPreviewKeys) {
+        for (const key of exportMakerPreviewKeys) {
             if (extra[key]) {
                 const resolved = resolvePreviewUrl(extra[key])
                 if (resolved) {
-                    formatted.orchardPreviewUrl = resolved
+                    formatted.exportMakerPreviewUrl = resolved
                     break
                 }
             }
@@ -345,7 +354,7 @@ export function liftOrchardFromExtra(formatted) {
     return formatted
 }
 
-// (liftOrchardFromExtra implemented above with preview handling)
+// (liftExportMakerFromExtra implemented above with preview handling)
 
 /**
  * Formatte plusieurs reviews
@@ -358,9 +367,9 @@ export function formatReviews(reviews, currentUser = null) {
         return []
     }
 
-    // liftOrchardFromExtra ensures orchardPreset / orchardConfig from extraData
+    // liftExportMakerFromExtra ensures orchardPreset / orchardConfig from extraData
     // are exposed at top level on every review (library cards, visibility toggles, etc.)
-    return reviews.map(review => liftOrchardFromExtra(formatReview(review, currentUser)))
+    return reviews.map(review => liftExportMakerFromExtra(formatReview(review, currentUser)))
 }
 
 /**
@@ -469,10 +478,13 @@ export function buildReviewFilters(filters, currentUser = null) {
         }
     }
 
-    // Filtre: seulement les reviews qui ont un Aperçu (orchardPreset) — utile pour la galerie d'aperçus
-    if (filters.hasOrchard === true || filters.hasOrchard === 'true') {
-        // extraData is stored as JSON string — check substring 'orchardPreset' for compatibility
-        where.extraData = { contains: 'orchardPreset' }
+    // Filtre: seulement les reviews qui ont un Aperçu (exportMakerPreset) — utile pour la galerie
+    // d'aperçus. Paramètre non appelé par le client actuellement (vérifié) — ne teste que le
+    // nouveau nom de champ ; les reviews sauvegardées avant le renommage 2026-07-28 (qui n'ont que
+    // l'ancien 'orchardPreset' dans leur JSON extraData) ne matcheraient pas ce filtre précis s'il
+    // était un jour utilisé, contrairement à `liftExportMakerFromExtra` qui, lui, lit bien les deux.
+    if (filters.hasExportMaker === true || filters.hasExportMaker === 'true') {
+        where.extraData = { contains: 'exportMakerPreset' }
     }
 
     // Recherche textuelle

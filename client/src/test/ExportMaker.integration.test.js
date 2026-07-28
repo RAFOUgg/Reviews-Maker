@@ -76,7 +76,7 @@ const mockReviewData = {
 };
 
 // Mock des stores et hooks
-vi.mock('../store/orchardStore.js', () => ({
+vi.mock('../store/exportMakerStore.js', () => ({
   default: {
     subscribe: vi.fn(),
     getState: () => ({
@@ -249,7 +249,7 @@ describe('ExportMaker Integration Tests', () => {
 
       // Simuler sélection template compact via state interne
       // Le composant devrait adapter le contenu selon le template
-      const sections = container.querySelectorAll('[data-orchard-section]');
+      const sections = container.querySelectorAll('[data-export-maker-section]');
 
       // S'assurer qu'il y a des sections définies
       expect(sections.length).toBeGreaterThan(0);

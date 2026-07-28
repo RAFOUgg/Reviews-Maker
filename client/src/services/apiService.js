@@ -310,7 +310,7 @@ export const reviewsService = {
     },
 
     /**
-     * Définir l'image d'aperçu galerie (thumbnail capturé depuis OrchardPanel)
+     * Définir l'image d'aperçu galerie (thumbnail capturé depuis ExportMakerPanel)
      */
     async setPreview(id, previewDataUrl) {
         return fetchAPI(`${API_BASE}/reviews/${id}/preview`, {

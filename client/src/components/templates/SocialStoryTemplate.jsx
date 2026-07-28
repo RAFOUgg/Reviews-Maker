@@ -5,8 +5,8 @@ import {
     formatRating,
     extractCategoryRatings,
     colorWithOpacity,
-} from '../../utils/orchardHelpers';
-import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+} from '../../utils/exportMakerHelpers';
+import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 
@@ -151,7 +151,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     )}
                     {/* Logo top-right */}
                     {branding?.enabled && branding?.logoUrl && (
-                        <img src={branding.logoUrl} alt="Logo" className="orchard-branding"
+                        <img src={branding.logoUrl} alt="Logo" className="export-maker-branding"
                             style={{
                                 position: 'absolute', top: 16, right: 16,
                                 width: 44, height: 44, objectFit: 'contain',

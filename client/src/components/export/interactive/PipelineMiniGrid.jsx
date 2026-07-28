@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
-import { safeParse, colorWithOpacity } from '../../../utils/orchardHelpers';
+import { safeParse, colorWithOpacity } from '../../../utils/exportMakerHelpers';
 import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
 
 /**

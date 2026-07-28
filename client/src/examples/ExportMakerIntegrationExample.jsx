@@ -1,17 +1,17 @@
 /**
- * Exemple d'intégration d'Orchard Studio dans une page de review
+ * Exemple d'intégration d'Export Maker dans une page de review
  * 
- * Ce fichier montre comment utiliser le système Orchard pour permettre
+ * Ce fichier montre comment utiliser le système Export Maker pour permettre
  * aux utilisateurs de personnaliser et exporter leurs reviews.
  */
 
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import OrchardPanel from '../components/orchard/OrchardPanel';
-import '../assets/orchard.css';
+import ExportMakerPanel from '../components/export-maker/ExportMakerPanel';
+import '../assets/export-maker.css';
 
 export default function ReviewDetailPage() {
-    const [showOrchard, setShowOrchard] = useState(false);
+    const [showExportMaker, setshowExportMaker] = useState(false);
 
     // Exemple de données de review
     // Dans une vraie app, ces données viendraient de votre API/state
@@ -114,16 +114,16 @@ export default function ReviewDetailPage() {
                     </div>
                 </div>
 
-                {/* Bouton pour ouvrir Orchard Studio */}
+                {/* Bouton pour ouvrir Export Maker */}
                 <div className="flex gap-4">
                     <button
-                        onClick={() => setShowOrchard(true)}
+                        onClick={() => setshowExportMaker(true)}
                         className="flex-1 flex items-center justify-center gap-3 px-6 py-4 bg-gradient-to-r text-white rounded-xl font-semibold text-lg shadow-lg hover:shadow-purple-500/50 transition-all transform hover:scale-[1.02] active:scale-[0.98]"
                     >
                         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
-                        Personnaliser & Exporter avec Orchard Studio
+                        Personnaliser & Exporter avec Export Maker
                     </button>
 
                     <button
@@ -133,7 +133,7 @@ export default function ReviewDetailPage() {
                     </button>
                 </div>
 
-                {/* Informations sur Orchard */}
+                {/* Informations sur Export Maker */}
                 <div className="mt-6 p-4 bg-gradient-to-r dark:/20 dark:/20 rounded-xl border dark:">
                     <div className="flex items-start gap-3">
                         <div className="w-10 h-10 bg-gradient-to-br rounded-lg flex items-center justify-center flex-shrink-0">
@@ -143,7 +143,7 @@ export default function ReviewDetailPage() {
                         </div>
                         <div>
                             <h4 className="font-semibold dark: mb-1">
-                                Nouveau : Orchard Studio 🎨
+                                Nouveau : Export Maker 🎨
                             </h4>
                             <p className="text-sm dark:">
                                 Personnalisez entièrement l'apparence de vos reviews et exportez-les en PNG, JPEG, PDF ou Markdown !
@@ -154,12 +154,12 @@ export default function ReviewDetailPage() {
                 </div>
             </div>
 
-            {/* Orchard Panel (modal) */}
+            {/* Export Maker Panel (modal) */}
             <AnimatePresence>
-                {showOrchard && (
-                    <OrchardPanel
+                {showExportMaker && (
+                    <ExportMakerPanel
                         reviewData={reviewData}
-                        onClose={() => setShowOrchard(false)}
+                        onClose={() => setshowExportMaker(false)}
                     />
                 )}
             </AnimatePresence>
@@ -170,7 +170,7 @@ export default function ReviewDetailPage() {
 /**
  * NOTES D'INTÉGRATION :
  * 
- * 1. Assurez-vous d'importer orchard.css dans votre point d'entrée principal (main.jsx ou index.css)
+ * 1. Assurez-vous d'importer export-maker.css dans votre point d'entrée principal (main.jsx ou index.css)
  * 
  * 2. Les données de review doivent suivre cette structure :
  *    {
@@ -193,9 +193,9 @@ export default function ReviewDetailPage() {
  *    <Route path="/reviews/:id" element={<ReviewDetailPage />} />
  * 
  * 4. Pour l'utiliser dans un composant existant, ajoutez simplement :
- *    - Le state : const [showOrchard, setShowOrchard] = useState(false)
- *    - Le bouton : <button onClick={() => setShowOrchard(true)}>...</button>
- *    - Le composant : {showOrchard && <OrchardPanel ... />}
+ *    - Le state : const [showExportMaker, setshowExportMaker] = useState(false)
+ *    - Le bouton : <button onClick={() => setshowExportMaker(true)}>...</button>
+ *    - Le composant : {showExportMaker && <ExportMakerPanel ... />}
  * 
  * 5. Les préréglages sont automatiquement sauvegardés dans localStorage
  * 

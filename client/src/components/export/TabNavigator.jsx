@@ -1,7 +1,7 @@
 /**
  * TabNavigator Component
  * Composant pour gérer les onglets d'export avec conditional rendering
- * Remplace le système de tabs broken dans ExportMaker/OrchardPanel
+ * Remplace le système de tabs broken dans ExportMaker/ExportMakerPanel
  */
 
 import { useState } from 'react';

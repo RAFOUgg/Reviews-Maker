@@ -4,8 +4,8 @@ import {
     colorWithOpacity,
     formatDate,
     getResponsiveAdjustments,
-} from '../../utils/orchardHelpers';
-import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+} from '../../utils/exportMakerHelpers';
+import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';

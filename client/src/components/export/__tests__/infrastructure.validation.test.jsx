@@ -60,7 +60,7 @@ describe('Infrastructure de Test - Validation Finale', () => {
     describe('Utilitaires Export', () => {
         it('devrait pouvoir tester functions utilitaires sans memory issues', async () => {
             try {
-                const moduleMappings = await import('../../../utils/orchard/moduleMappings')
+                const moduleMappings = await import('../../../utils/export-maker/moduleMappings')
 
                 // Test function utilitaire
                 const modules = moduleMappings.getModulesByProductType('flower')

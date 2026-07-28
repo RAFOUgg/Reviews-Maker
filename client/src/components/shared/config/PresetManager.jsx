@@ -1,18 +1,18 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Bookmark, Layers, Pencil, Trash2 } from 'lucide-react';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidButton, LiquidInput, LiquidTextarea, LiquidModal, LiquidBadge } from '../../ui/LiquidUI';
 
 export default function PresetManager() {
-    const presets = useOrchardStore((state) => state.presets);
-    const activePreset = useOrchardStore((state) => state.activePreset);
-    const config = useOrchardStore((state) => state.config);
-    const savePreset = useOrchardStore((state) => state.savePreset);
-    const loadPreset = useOrchardStore((state) => state.loadPreset);
-    const deletePreset = useOrchardStore((state) => state.deletePreset);
-    const updatePreset = useOrchardStore((state) => state.updatePreset);
-    const fetchRemotePresets = useOrchardStore((state) => state.fetchRemotePresets);
+    const presets = useExportMakerStore((state) => state.presets);
+    const activePreset = useExportMakerStore((state) => state.activePreset);
+    const config = useExportMakerStore((state) => state.config);
+    const savePreset = useExportMakerStore((state) => state.savePreset);
+    const loadPreset = useExportMakerStore((state) => state.loadPreset);
+    const deletePreset = useExportMakerStore((state) => state.deletePreset);
+    const updatePreset = useExportMakerStore((state) => state.updatePreset);
+    const fetchRemotePresets = useExportMakerStore((state) => state.fetchRemotePresets);
 
     // Récupère les préréglages sauvegardés côté serveur (autres navigateurs/appareils)
     // au montage du panneau, fusionnés avec les préréglages locaux par le store.

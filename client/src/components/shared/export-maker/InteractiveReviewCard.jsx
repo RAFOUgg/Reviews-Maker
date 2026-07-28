@@ -2,7 +2,7 @@
  * InteractiveReviewCard — Responsive, interactive HTML review renderer
  *
  * Three modes:
- *   preview        → fluid scrollable HTML for OrchardPanel preview
+ *   preview        → fluid scrollable HTML for ExportMakerPanel preview
  *   export         → fixed pixel dimensions + canvas ID for html-to-image capture
  *   preview-export → fixed pixel dimensions without canvas ID (WYSIWYG preview)
  *
@@ -13,12 +13,12 @@
  */
 import { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useOrchardStore } from '../../../store/orchardStore';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import {
     asArray, extractLabel, formatRating, formatDate,
     extractCategoryRatings, extractPipelines, getResponsiveAdjustments,
     RATIO_DIMENSIONS
-} from '../../../utils/orchardHelpers';
+} from '../../../utils/exportMakerHelpers';
 import InteractivePipelineViewer from '../../gallery/InteractivePipelineViewer';
 import GenealogyTree2DInteractive from './GenealogyTree2DInteractive';
 import { Star, ChevronDown, Eye, Image as ImageIcon, X, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -49,8 +49,8 @@ function Section({ title, icon, children, defaultOpen = true, badge, compact, se
 
     return (
         <div
-            data-orchard-section={sectionKey || title}
-            data-orchard-label={title}
+            data-export-maker-section={sectionKey || title}
+            data-export-maker-label={title}
             className="overflow-hidden"
             style={{
                 borderRadius: ss.borderRadius ? `${ss.borderRadius}px` : forceOpen ? '6px' : compact ? '10px' : '14px',
@@ -157,7 +157,7 @@ function ScoreBar({ label, value, icon, compact }) {
             ? 'linear-gradient(90deg, #eab308, #f59e0b)'
             : 'linear-gradient(90deg, #ef4444, #f87171)';
     return (
-        <div data-orchard-score={label} data-orchard-label={label} className="flex items-center gap-2">
+        <div data-export-maker-score={label} data-export-maker-label={label} className="flex items-center gap-2">
             {icon && <span className={`${compact ? 'text-[10px]' : 'text-xs'} w-4 text-center flex-shrink-0`}>{icon}</span>}
             <span
                 className={`${compact ? 'text-[10px]' : 'text-xs'} truncate flex-shrink-0`}
@@ -529,8 +529,8 @@ const RATIO_STYLES = {
    MAIN COMPONENT
    ══════════════════════════════════════════════════════════════════════════════ */
 export default function InteractiveReviewCard({ mode = 'preview' }) {
-    const config = useOrchardStore(s => s.config);
-    const reviewData = useOrchardStore(s => s.reviewData);
+    const config = useExportMakerStore(s => s.config);
+    const reviewData = useExportMakerStore(s => s.reviewData);
 
     // ── Base data extraction ─────────────────────────────────────────────────
     const categoryRatings = useMemo(() => reviewData ? extractCategoryRatings(reviewData?.categoryRatings, reviewData) : [], [reviewData]);
@@ -1411,13 +1411,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
         return (
             <div
                 key={`page-${pageNum}`}
-                id={isCanvasCapture ? `orchard-template-canvas${pageNum === 1 ? '' : `-${pageNum}`}` : undefined}
+                id={isCanvasCapture ? `export-maker-canvas${pageNum === 1 ? '' : `-${pageNum}`}` : undefined}
                 data-width={rDims.width}
                 data-height={rDims.height}
                 data-ratio={ratio}
                 data-page={pageNum}
                 data-total-pages={totalPgs}
-                className="orchard-export-page"
+                className="export-maker-page"
                 style={{
                     ...rootStyle,
                     width: `${rDims.width}px`,
@@ -1533,7 +1533,7 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                             data-width={rDims.width}
                             data-height={rDims.height}
                             data-ratio={ratio}
-                            className="orchard-export-page"
+                            className="export-maker-page"
                             style={{
                                 ...rootStyle,
                                 width: `${rDims.width}px`,
@@ -1596,13 +1596,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
 
                     {/* Page 1: classic two-col */}
                     <div
-                        id="orchard-template-canvas"
+                        id="export-maker-canvas"
                         data-width={rDims.width}
                         data-height={rDims.height}
                         data-ratio={ratio}
                         data-page="1"
                         data-total-pages={totalPages}
-                        className="orchard-export-page"
+                        className="export-maker-page"
                         style={{
                             ...rootStyle,
                             width: `${rDims.width}px`,
@@ -1639,13 +1639,13 @@ export default function InteractiveReviewCard({ mode = 'preview' }) {
                     {rightColReady && rightColPages.slice(1).map((group, pIdx) => (
                         <div
                             key={`twoCol-p${pIdx + 2}`}
-                            id={`orchard-template-canvas-${pIdx + 2}`}
+                            id={`export-maker-canvas-${pIdx + 2}`}
                             data-width={rDims.width}
                             data-height={rDims.height}
                             data-ratio={ratio}
                             data-page={pIdx + 2}
                             data-total-pages={totalPages}
-                            className="orchard-export-page"
+                            className="export-maker-page"
                             style={{
                                 ...rootStyle,
                                 width: `${rDims.width}px`,

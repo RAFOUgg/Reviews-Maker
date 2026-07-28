@@ -14,7 +14,7 @@ import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { AnimatePresence, motion } from 'framer-motion'
 import WatermarksTab from './WatermarksTab'
-import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore'
+import { useExportMakerStore, DEFAULT_TEMPLATES } from '../../../store/exportMakerStore'
 import {
     Layout, LayoutGrid, LayoutList, Copy, Trash2, Eye, Star,
     Share2, Download, Plus, Check, Lock, Sparkles,
@@ -26,8 +26,8 @@ const SUB_TABS = [
     { id: 'watermarks', label: 'Filigranes', icon: Stamp },
 ]
 
-// Templates prédéfinis Export Maker — reflète le vrai registre Orchard
-// (client/src/store/orchardConstants.js::DEFAULT_TEMPLATES + TemplateRenderer.jsx::TEMPLATES),
+// Templates prédéfinis Export Maker — reflète le vrai registre Export Maker
+// (client/src/store/exportMakerConstants.js::DEFAULT_TEMPLATES + TemplateRenderer.jsx::TEMPLATES),
 // remplace l'ancienne liste (ids compact/detailed/complete/influencer/custom) qui ne
 // correspondait à aucun template réellement sélectionnable dans Export Maker.
 const TEMPLATE_ICONS = { modernCompact: LayoutGrid, detailedCard: LayoutList, blogArticle: FileText, socialStory: Smartphone, custom: Settings2 }
@@ -59,7 +59,7 @@ const TIER_CONFIG = {
 export default function TemplatesTab({ userTier = 'amateur' }) {
     const toast = useToast()
     const navigate = useNavigate()
-    const applyConfig = useOrchardStore((state) => state.applyConfig)
+    const applyConfig = useExportMakerStore((state) => state.applyConfig)
 
     const [subTab, setSubTab] = useState('templates')
     const [savedTemplates, setSavedTemplates] = useState([])
@@ -71,7 +71,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
     const [importCode, setImportCode] = useState('')
 
     // Charger les templates sauvegardés (GET /api/library/templates renvoie un tableau brut,
-    // partagé avec orchardStore.fetchRemotePresets qui exige strictement cette forme) + le
+    // partagé avec exportMakerStore.fetchRemotePresets qui exige strictement cette forme) + le
     // template par défaut persisté, via l'endpoint dédié /templates/default.
     const fetchTemplates = useCallback(async () => {
         try {
@@ -95,7 +95,7 @@ export default function TemplatesTab({ userTier = 'amateur' }) {
         }
     }, [toast])
 
-    // "Utiliser" un template Orchard sauvegardé : charge sa config dans le store global
+    // "Utiliser" un template Export Maker sauvegardé : charge sa config dans le store global
     // Export Maker — la prochaine ouverture d'"Aperçu" sur une review l'utilisera.
     const useTemplate = (template) => {
         try {

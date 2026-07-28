@@ -152,7 +152,7 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                         const startWidth = width;
 
                         const onMove = (evt) => {
-                            const parent = document.querySelector('.orchard-canvas-resize-parent');
+                            const parent = document.querySelector('.export-maker-canvas-resize-parent');
                             if (parent) {
                                 const rect = parent.getBoundingClientRect();
                                 const deltaX = evt.clientX - startX;
@@ -206,7 +206,7 @@ function DropCanvas({ children, isOver }) {
     return (
         <div
             ref={setNodeRef}
-            className={`orchard-canvas-resize-parent relative w-full h-full overflow-hidden ${isOver ? 'ring-4 ring-green-500/50' : 'ring-2 /30'}`}
+            className={`export-maker-canvas-resize-parent relative w-full h-full overflow-hidden ${isOver ? 'ring-4 ring-green-500/50' : 'ring-2 /30'}`}
         >
             {/* Grille d'aide au positionnement */}
             <div className="absolute inset-0 pointer-events-none opacity-10">

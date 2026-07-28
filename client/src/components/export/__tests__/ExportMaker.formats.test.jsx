@@ -111,20 +111,20 @@ describe('ExportMaker - Tests des 5 Formats d\'Export', () => {
                 useAuth: () => ({ user: { id: 'consumer', accountType: 'consumer' } })
             }))
 
-            vi.mock('../../../store/orchardStore', () => ({
-                useOrchardStore: vi.fn((selector) => {
+            vi.mock('../../../store/exportMakerStore', () => ({
+                useExportMakerStore: vi.fn((selector) => {
                     const store = { config: { colors: {}, typography: {} }, setReviewData: vi.fn() }
                     return selector ? selector(store) : store
                 })
             }))
 
-            vi.mock('../../../store/orchardConstants', () => ({
+            vi.mock('../../../store/exportMakerConstants', () => ({
                 DEFAULT_TEMPLATES: {
                     modernCompact: { name: 'Modern Compact', description: 'Compact' }
                 }
             }))
 
-            vi.mock('../../../utils/orchard/moduleMappings', () => ({
+            vi.mock('../../../utils/export-maker/moduleMappings', () => ({
                 getModulesByProductType: vi.fn(() => [])
             }))
         })

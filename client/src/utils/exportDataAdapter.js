@@ -7,14 +7,14 @@
  * registre :
  *   - chemin public : review renvoyée par l'API, déjà APLATIE côté serveur
  *     (reviewFormatter.flattenSubReview) → noms de colonnes DB (thcPercent, dureteScore…) ;
- *   - chemin Orchard : état de formulaire normalisé (normalizeReviewData) → noms formData
+ *   - chemin Export Maker : état de formulaire normalisé (normalizeReviewData) → noms formData
  *     (densite, durete, montee…).
  *
  * Le registre encapsule ce mapping ; ce fichier ne fait qu'appliquer les transformations de
  * type et reconstruire categoryRatings à partir des sous-scores /10. Point de branchement
  * unique : TemplateRenderer.jsx (+ ExportModal pour le figement de traçabilité).
  */
-import { asArray, safeParse } from './orchardHelpers';
+import { asArray, safeParse } from './exportMakerHelpers';
 import { getFieldRegistry, normalizeProductType } from './fieldRegistry';
 
 function pick(...values) {
@@ -63,7 +63,7 @@ function setOrDelete(target, key, value) {
 /**
  * Reconstruit categoryRatings { visual: {champ: note}, smell: {...}, ... } à partir des
  * sous-scores /10 présents (couvre noms DB ET formData via les `sources[]` du registre).
- * Reproduit le comportement de OrchardPanel.normalizeReviewData mais pour les deux origines.
+ * Reproduit le comportement de ExportMakerPanel.normalizeReviewData mais pour les deux origines.
  */
 function buildCategoryRatings(source, fields) {
     const cats = {};

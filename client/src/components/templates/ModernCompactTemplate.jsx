@@ -13,8 +13,8 @@ import {
     extractExtraData,
     getResponsiveAdjustments,
     colorWithOpacity,
-} from '../../utils/orchardHelpers';
-import { resolveImageUrl } from '../../utils/orchard/resolveImageUrl';
+} from '../../utils/exportMakerHelpers';
+import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
@@ -196,7 +196,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
         return (
             <div
-                className="absolute pointer-events-none orchard-branding"
+                className="absolute pointer-events-none export-maker-branding"
                 style={{
                     ...positionMap[branding.position || 'bottom-right'],
                     opacity: branding.opacity || 0.8,

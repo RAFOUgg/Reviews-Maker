@@ -1,13 +1,13 @@
 /**
  * ContentPanel Component
- * Panel gauche affichant TOUS les champs draggables disponibles pour l'aperçu Orchard
+ * Panel gauche affichant TOUS les champs draggables disponibles pour l'Aperçu Export Maker
  * Version complète avec tous les champs détaillés par catégorie
  */
 
 import { useMemo, useState } from 'react';
 import { useStore } from '../../../store/useStore';
-import { getExportSectionsByType, getAllowedFields } from '../../../utils/orchard/productTypeMappings';
-import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
+import { getExportSectionsByType, getAllowedFields } from '../../../utils/export-maker/productTypeMappings';
+import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import PropTypes from 'prop-types';
 
 // Types de champs disponibles pour le drag & drop (utilisé par dnd-kit ou react-dnd)
@@ -464,7 +464,7 @@ export default function ContentPanel({ reviewData, placedFields, onFieldSelect }
     // Déterminer les sections autorisées selon le type de produit et le type de compte
     const accountType = useStore(state => state.accountType) || 'amateur';
     const productType = reviewData?.type || reviewData?.productType || 'flower';
-    const pages = useOrchardPagesStore(state => state.pages) || [];
+    const pages = useExportMakerPagesStore(state => state.pages) || [];
 
     // Mapping simple entre les sections d'export (productTypeMappings) et nos sections UI
     const EXPORT_TO_UI_SECTION = {

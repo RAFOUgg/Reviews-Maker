@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS } from './orchardConstants';
+import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS } from './exportMakerConstants';
 
-// Note: COLOR_PALETTES et DEFAULT_TEMPLATES sont maintenant importés depuis orchardConstants.js
+// Note: COLOR_PALETTES et DEFAULT_TEMPLATES sont maintenant importés depuis exportMakerConstants.js
 // pour éviter les problèmes de références circulaires et les re-renders infinis
 
 // Les constantes sont maintenant réexportées pour maintenir la compatibilité
@@ -13,10 +13,20 @@ export { DEFAULT_CONFIG };
 // FORCE RESET: Supprimer localStorage obsolète AVANT que zustand ne charge
 // ═══════════════════════════════════════════════════════════════════════════════
 const CURRENT_STORAGE_VERSION = 8; // v8: dark default background - BUILD MAR 2026
-const STORAGE_KEY = 'orchard-storage';
+const STORAGE_KEY = 'export-maker-storage';
+const LEGACY_STORAGE_KEY = 'orchard-storage'; // ancien nom de code "Orchard" (renommage 2026-07-28)
+
+// Migration ponctuelle : amorce la nouvelle clé depuis l'ancienne si elle n'existe pas encore,
+// pour ne pas jeter la config en cours des utilisateurs déjà ouverts sur l'app au moment du
+// renommage. Sans risque de conflit avec le FORCE RESET ci-dessous, qui s'applique après.
+try {
+    if (!localStorage.getItem(STORAGE_KEY) && localStorage.getItem(LEGACY_STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, localStorage.getItem(LEGACY_STORAGE_KEY));
+    }
+} catch { /* localStorage indisponible (SSR, mode privé strict...) — pas bloquant */ }
 
 // FORCE IMMEDIATE RESET - Dec 2 2025
-console.log('🚀 Orchard Store Loading - Version 7 - Forcing localStorage check...');
+console.log('🚀 Export Maker Store Loading - Version 7 - Forcing localStorage check...');
 
 try {
     const stored = localStorage.getItem(STORAGE_KEY);
@@ -28,7 +38,7 @@ try {
         const stateConfig = parsed?.state?.config || parsed?.config || {};
         const modulesCount = Object.keys(stateConfig?.contentModules || {}).length;
 
-        console.log('🔍 Orchard Storage Check:', {
+        console.log('🔍 Export Maker Storage Check:', {
             storedVersion,
             currentVersion: CURRENT_STORAGE_VERSION,
             modulesCount,
@@ -45,7 +55,7 @@ try {
         }
     }
 } catch (e) {
-    console.warn('Orchard storage check failed, forcing removal:', e);
+    console.warn('Export Maker storage check failed, forcing removal:', e);
     try { localStorage.removeItem(STORAGE_KEY); } catch { }
 }
 
@@ -312,7 +322,7 @@ const DEFAULT_CONFIG = {
 // ═══════════════════════════════════════════════════════════════════════════════
 // Résolution de contentModules périmés (schéma qui a évolué depuis l'enregistrement)
 // ═══════════════════════════════════════════════════════════════════════════════
-// Un `orchardConfig` sauvegardé sur une Review (via OrchardPanel) est écrit une fois puis
+// Un `exportMakerConfig` sauvegardé sur une Review (via ExportMakerPanel) est écrit une fois puis
 // relu tel quel par ExportModal/PublicRenderPage — contrairement à la session d'édition en
 // localStorage, qui bénéficie déjà du garde-fou `merge()` du middleware `persist` ci-dessous.
 // Une review configurée avant l'ajout de nouvelles clés à DEFAULT_CONFIG.contentModules
@@ -332,7 +342,7 @@ export function resolveContentModules(savedContentModules) {
 // Résout une config de review potentiellement périmée/partielle en repartant toujours de
 // DEFAULT_CONFIG (nouvelles clés de premier niveau incluses) puis en fusionnant contentModules
 // via `resolveContentModules` (les modules exigent une règle de fusion spécifique, cf. ci-dessus).
-export function resolveOrchardConfig(savedConfig) {
+export function resolveExportMakerConfig(savedConfig) {
     return {
         ...DEFAULT_CONFIG,
         ...(savedConfig || {}),
@@ -340,7 +350,7 @@ export function resolveOrchardConfig(savedConfig) {
     };
 }
 
-export const useOrchardStore = create(
+export const useExportMakerStore = create(
     persist(
         (set, get) => ({
             // État de l'interface
@@ -517,7 +527,7 @@ export const useOrchardStore = create(
                 return preset;
             },
 
-            // Récupère les préréglages Orchard sauvegardés côté serveur et les fusionne avec
+            // Récupère les préréglages Export Maker sauvegardés côté serveur et les fusionne avec
             // les préréglages locaux (par remoteId, pour éviter les doublons entre navigateurs).
             fetchRemotePresets: async () => {
                 try {
@@ -603,7 +613,7 @@ export const useOrchardStore = create(
                 activePreset: null
             }),
 
-            // Applique une configuration Orchard arbitraire (ex: template sauvegardé
+            // Applique une configuration Export Maker arbitraire (ex: template sauvegardé
             // sélectionné depuis Bibliothèque > Templates) sans passer par un preset local.
             applyConfig: (config) => set({
                 config: { ...DEFAULT_CONFIG, ...config },
@@ -625,7 +635,7 @@ export const useOrchardStore = create(
             getColorPalettes: () => COLOR_PALETTES
         }),
         {
-            name: 'orchard-storage',
+            name: STORAGE_KEY,
             // Ne persister que les préréglages et la dernière config
             partialize: (state) => ({
                 presets: state.presets,
@@ -636,7 +646,7 @@ export const useOrchardStore = create(
             version: CURRENT_STORAGE_VERSION,
             // Migration pour les changements de version
             migrate: (persistedState, version) => {
-                console.warn('🔄 Orchard Storage Migration:', { from: version, to: CURRENT_STORAGE_VERSION, hasState: !!persistedState });
+                console.warn('🔄 Export Maker Storage Migration:', { from: version, to: CURRENT_STORAGE_VERSION, hasState: !!persistedState });
 
                 // Si version < 7, reset COMPLET des contentModules et moduleOrder
                 if (version < CURRENT_STORAGE_VERSION) {
@@ -662,7 +672,7 @@ export const useOrchardStore = create(
                 const savedModulesCount = Object.keys(persistedState.config?.contentModules || {}).length;
                 const defaultModulesCount = Object.keys(DEFAULT_CONFIG.contentModules).length;
 
-                console.log('🔄 Orchard Storage Merge:', {
+                console.log('🔄 Export Maker Storage Merge:', {
                     savedModulesCount,
                     defaultModulesCount,
                     forceDefault: savedModulesCount < 50 // Moins de 50 = vieux format
@@ -695,9 +705,9 @@ export const useOrchardStore = create(
 );
 
 // Hooks utilitaires
-export const useOrchardConfig = () => useOrchardStore((state) => state.config);
-export const useOrchardPresets = () => useOrchardStore((state) => state.presets);
-export const useOrchardActions = () => useOrchardStore((state) => ({
+export const useExportMakerConfig = () => useExportMakerStore((state) => state.config);
+export const useExportMakerPresets = () => useExportMakerStore((state) => state.presets);
+export const useExportMakerActions = () => useExportMakerStore((state) => ({
     setTemplate: state.setTemplate,
     setRatio: state.setRatio,
     updateTypography: state.updateTypography,

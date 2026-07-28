@@ -9,7 +9,7 @@ import { useResponsiveLayout } from '../../../hooks/useResponsiveLayout'
 import WizardFlow from '../../../components/wizard/WizardFlow'
 import { getConcentrateWizardQuestions } from '../../../components/wizard/schemas/concentrateWizardQuestions'
 
-const OrchardPanel = lazy(() => import('../../../components/shared/orchard/OrchardPanel'))
+const ExportMakerPanel = lazy(() => import('../../../components/shared/export-maker/ExportMakerPanel'))
 import { flattenConcentrateFormData, createFormDataFromFlat, diffFlatData, hasAttachedPipelineMedia } from '../../../utils/formDataFlattener'
 
 // Import sections
@@ -37,7 +37,7 @@ export default function CreateConcentrateReview() {
     const [searchParams] = useSearchParams()
     const { isAuthenticated, authChecked, preferences } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
-    const [showOrchard, setShowOrchard] = useState(false)
+    const [showExportMaker, setshowExportMaker] = useState(false)
     const [isDirty, setIsDirty] = useState(false)
 
     const { formData, handleChange, loading, saving, setSaving } = useConcentrateForm(id)
@@ -46,7 +46,7 @@ export default function CreateConcentrateReview() {
     // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
     useEffect(() => {
         if (!loading && searchParams.get('openExport') === '1') {
-            setShowOrchard(true)
+            setshowExportMaker(true)
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading])
@@ -185,7 +185,7 @@ export default function CreateConcentrateReview() {
         return savedReview
     }
 
-    const handleSubmitWithOrchardData = async (orchardData = {}) => {
+    const handleSubmitWithExportMakerData = async (exportMakerData = {}) => {
         if (!formData.nomCommercial || !photos || photos.length === 0) {
             toast.error('Veuillez remplir les champs obligatoires : Nom commercial et au moins 1 photo')
             return
@@ -198,8 +198,8 @@ export default function CreateConcentrateReview() {
                 .filter(Boolean)
             const mergedData = {
                 ...formData,
-                ...(orchardData.orchardPreset && { orchardPreset: orchardData.orchardPreset }),
-                ...(orchardData.orchardConfig && { orchardConfig: JSON.stringify(orchardData.orchardConfig) }),
+                ...(exportMakerData.exportMakerPreset && { exportMakerPreset: exportMakerData.exportMakerPreset }),
+                ...(exportMakerData.exportMakerConfig && { exportMakerConfig: JSON.stringify(exportMakerData.exportMakerConfig) }),
             }
             const flatData = flattenConcentrateFormData(mergedData)
             const reviewFormData = createFormDataFromFlat(flatData, photos, 'published', existingImages)
@@ -275,7 +275,7 @@ export default function CreateConcentrateReview() {
                     title="Créer une review Concentré"
                     onExitToClassic={() => setWizardOverride(false)}
                     onOpenHandoff={handleOpenHandoff}
-                    onComplete={() => setShowOrchard(true)}
+                    onComplete={() => setshowExportMaker(true)}
                     initialIndex={wizardIndex}
                     onIndexChange={setWizardIndex}
                     saving={saving}
@@ -295,7 +295,7 @@ export default function CreateConcentrateReview() {
                 photos={photos}
                 handlePhotoUpload={handlePhotoUpload}
                 removePhoto={removePhoto}
-                onOpenPreview={() => setShowOrchard(true)}
+                onOpenPreview={() => setshowExportMaker(true)}
                 onSave={() => handleSave({ silent: false })}
                 onEnableWizard={() => setWizardOverride(true)}
                 isDirty={isDirty}
@@ -384,9 +384,9 @@ export default function CreateConcentrateReview() {
             )}
 
             <AnimatePresence>
-                {showOrchard && (
+                {showExportMaker && (
                     <Suspense fallback={<div className="p-4"><div className="animate-spin w-6 h-6 border-b-2 rounded-full border-purple-400"></div></div>}>
-                        <OrchardPanel
+                        <ExportMakerPanel
                             productType="Concentrate"
                             reviewData={{
                                 title: formData.nomCommercial || 'Aperçu concentré',
@@ -401,16 +401,16 @@ export default function CreateConcentrateReview() {
                                 ...formData,
                                 images: photos.map(p => (p?.url || p?.preview || p?.name)).filter(Boolean),
                             }}
-                            onClose={() => setShowOrchard(false)}
-                            onPresetApplied={(orchardData) => {
-                                if (orchardData?.orchardPreset) {
-                                    handleChange('orchardPreset', orchardData.orchardPreset)
+                            onClose={() => setshowExportMaker(false)}
+                            onPresetApplied={(exportMakerData) => {
+                                if (exportMakerData?.exportMakerPreset) {
+                                    handleChange('exportMakerPreset', exportMakerData.exportMakerPreset)
                                 }
-                                if (orchardData?.orchardConfig) {
-                                    handleChange('orchardConfig', orchardData.orchardConfig)
+                                if (exportMakerData?.exportMakerConfig) {
+                                    handleChange('exportMakerConfig', exportMakerData.exportMakerConfig)
                                 }
                             }}
-                            onPublish={handleSubmitWithOrchardData}
+                            onPublish={handleSubmitWithExportMakerData}
                         />
                     </Suspense>
                 )}

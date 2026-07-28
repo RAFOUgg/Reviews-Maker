@@ -3,7 +3,7 @@ import { useMemo } from 'react';
 /**
  * GenealogyTree2D – Static 2D HTML/CSS genealogy tree renderer
  * Renders genetic tree nodes and relationships as pure HTML
- * for use in OrchardPanel preview/export (no React Flow dependency).
+ * for use in ExportMakerPanel preview/export (no React Flow dependency).
  */
 
 // Layout: auto-position nodes in a top-down tree layout

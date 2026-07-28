@@ -1,8 +1,8 @@
 /**
  * GalleryReviewCard — Standalone interactive HTML review renderer for public gallery
  * 
- * Unlike InteractiveReviewCard (which reads from orchardStore), this component
- * receives reviewData and orchardConfig as props, making it suitable for the
+ * Unlike InteractiveReviewCard (which reads from exportMakerStore), this component
+ * receives reviewData and exportMakerConfig as props, making it suitable for the
  * public gallery and detail pages where the zustand store isn't populated.
  */
 import { useState, useMemo } from 'react';
@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     asArray, extractLabel, formatRating, formatDate,
     extractCategoryRatings, extractPipelines
-} from '../../utils/orchardHelpers';
+} from '../../utils/exportMakerHelpers';
 import InteractivePipelineViewer from './InteractivePipelineViewer';
 import { Star, ChevronDown, Eye, ImageIcon, X, ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
@@ -147,8 +147,8 @@ function CategoryCard({ cat }) {
     );
 }
 
-export default function GalleryReviewCard({ reviewData, orchardConfig }) {
-    const config = orchardConfig || {};
+export default function GalleryReviewCard({ reviewData, exportMakerConfig }) {
+    const config = exportMakerConfig || {};
     const cm = config?.contentModules || {};
     const typo = config?.typography || {};
 

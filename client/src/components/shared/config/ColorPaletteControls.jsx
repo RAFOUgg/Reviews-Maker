@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Check } from 'lucide-react';
-import { useOrchardStore } from '../../../store/orchardStore';
-import { COLOR_PALETTES } from '../../../store/orchardConstants';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
+import { COLOR_PALETTES } from '../../../store/exportMakerConstants';
 import { LiquidButton, LiquidInput } from '../../ui/LiquidUI';
 
 function ColorRow({ label, value, onChange }) {
@@ -28,9 +28,9 @@ function ColorRow({ label, value, onChange }) {
 }
 
 export default function ColorPaletteControls() {
-    const config = useOrchardStore((state) => state.config);
-    const updateColors = useOrchardStore((state) => state.updateColors);
-    const applyColorPalette = useOrchardStore((state) => state.applyColorPalette);
+    const config = useExportMakerStore((state) => state.config);
+    const updateColors = useExportMakerStore((state) => state.updateColors);
+    const applyColorPalette = useExportMakerStore((state) => state.applyColorPalette);
     const palettes = COLOR_PALETTES;
     const [customMode, setCustomMode] = useState(false);
 

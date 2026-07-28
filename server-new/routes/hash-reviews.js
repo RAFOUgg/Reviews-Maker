@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url'
 import fs from 'fs/promises'
 import { prisma } from '../server.js'
 import { asyncHandler, Errors, requireAuthOrThrow, requireOwnershipOrThrow } from '../utils/errorHandler.js'
-import { formatReview, liftOrchardFromExtra } from '../utils/reviewFormatter.js'
+import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter.js'
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
@@ -33,7 +33,7 @@ const upload = multer({
     storage,
     limits: {
         fileSize: 200 * 1024 * 1024,   // 200 Mo par fichier (photo ou vidéo)
-        fieldSize: 50 * 1024 * 1024,   // 50 MB par champ texte (orchardConfig JSON)
+        fieldSize: 50 * 1024 * 1024,   // 50 MB par champ texte (exportMakerConfig JSON)
         fields: 500,
         files: 10
     },
@@ -636,10 +636,10 @@ router.post('/', requireAuth, upload.fields([
             holderName: cleanedData.nomCommercial,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
             extraData: JSON.stringify({
-                ...(bodyData.orchardPreset ? { orchardPreset: bodyData.orchardPreset } : {}),
-                ...(bodyData.orchardConfig ? { orchardConfig: bodyData.orchardConfig } : {}),
-                ...(bodyData.orchardCustomLayout ? { orchardCustomLayout: bodyData.orchardCustomLayout } : {}),
-                ...(bodyData.orchardLayoutMode ? { orchardLayoutMode: bodyData.orchardLayoutMode } : {}),
+                ...(bodyData.exportMakerPreset ? { exportMakerPreset: bodyData.exportMakerPreset } : {}),
+                ...(bodyData.exportMakerConfig ? { exportMakerConfig: bodyData.exportMakerConfig } : {}),
+                ...(bodyData.exportMakerCustomLayout ? { exportMakerCustomLayout: bodyData.exportMakerCustomLayout } : {}),
+                ...(bodyData.exportMakerLayoutMode ? { exportMakerLayoutMode: bodyData.exportMakerLayoutMode } : {}),
             })
         }
     })
@@ -780,16 +780,16 @@ router.put('/:id', requireAuth, upload.fields([
         data: {
             holderName: cleanedData.nomCommercial,
             isPublic: bodyData.isPublic === true || bodyData.isPublic === 'true',
-            // Merge orchard/aperçu data into extraData (sinon orchardPreset/orchardConfig
+            // Merge orchard/aperçu data into extraData (sinon exportMakerPreset/exportMakerConfig
             // appliqués dans Export Maker ne sont jamais persistés pour ce type de review)
             extraData: (() => {
                 let existing = {}
                 try { existing = JSON.parse(review.extraData || '{}') } catch (e) { }
                 const updated = { ...existing }
-                if (bodyData.orchardPreset) updated.orchardPreset = bodyData.orchardPreset
-                if (bodyData.orchardConfig) updated.orchardConfig = bodyData.orchardConfig
-                if (bodyData.orchardCustomLayout) updated.orchardCustomLayout = bodyData.orchardCustomLayout
-                if (bodyData.orchardLayoutMode) updated.orchardLayoutMode = bodyData.orchardLayoutMode
+                if (bodyData.exportMakerPreset) updated.exportMakerPreset = bodyData.exportMakerPreset
+                if (bodyData.exportMakerConfig) updated.exportMakerConfig = bodyData.exportMakerConfig
+                if (bodyData.exportMakerCustomLayout) updated.exportMakerCustomLayout = bodyData.exportMakerCustomLayout
+                if (bodyData.exportMakerLayoutMode) updated.exportMakerLayoutMode = bodyData.exportMakerLayoutMode
                 return JSON.stringify(updated)
             })()
         }

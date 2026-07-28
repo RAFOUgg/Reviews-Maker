@@ -129,11 +129,11 @@ export function flattenFlowerFormData(data) {
     if (data.farm) flat.farm = data.farm
     if (data.varietyType) flat.varietyType = data.varietyType
 
-    // Aperçu / Orchard preset — doit être persisté dans extraData côté serveur
-    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
-    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
-    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
-    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+    // Aperçu / Export Maker preset — doit être persisté dans extraData côté serveur
+    if (data.exportMakerPreset) flat.exportMakerPreset = data.exportMakerPreset
+    if (data.exportMakerConfig) flat.exportMakerConfig = data.exportMakerConfig
+    if (data.exportMakerCustomLayout) flat.exportMakerCustomLayout = data.exportMakerCustomLayout
+    if (data.exportMakerLayoutMode) flat.exportMakerLayoutMode = data.exportMakerLayoutMode
 
     // "Notre production" flag — stocké dans extraData côté serveur
     if (data.isOurReview !== undefined) flat.isOurReview = data.isOurReview
@@ -286,11 +286,11 @@ export function flattenHashFormData(data) {
         if (data.effets.dureeEffetsCategorie) flat.dureeEffets = data.effets.dureeEffetsCategorie
     }
 
-    // Aperçu / Orchard preset (peut être dans extraData parsé ou direct)
-    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
-    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
-    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
-    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+    // Aperçu / Export Maker preset (peut être dans extraData parsé ou direct)
+    if (data.exportMakerPreset) flat.exportMakerPreset = data.exportMakerPreset
+    if (data.exportMakerConfig) flat.exportMakerConfig = data.exportMakerConfig
+    if (data.exportMakerCustomLayout) flat.exportMakerCustomLayout = data.exportMakerCustomLayout
+    if (data.exportMakerLayoutMode) flat.exportMakerLayoutMode = data.exportMakerLayoutMode
 
     return flat
 }
@@ -383,11 +383,11 @@ export function flattenConcentrateFormData(data) {
         if (data.effets.dureeEffetsCategorie) flat.dureeEffets = data.effets.dureeEffetsCategorie
     }
 
-    // Aperçu / Orchard preset
-    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
-    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
-    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
-    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+    // Aperçu / Export Maker preset
+    if (data.exportMakerPreset) flat.exportMakerPreset = data.exportMakerPreset
+    if (data.exportMakerConfig) flat.exportMakerConfig = data.exportMakerConfig
+    if (data.exportMakerCustomLayout) flat.exportMakerCustomLayout = data.exportMakerCustomLayout
+    if (data.exportMakerLayoutMode) flat.exportMakerLayoutMode = data.exportMakerLayoutMode
 
     return flat
 }
@@ -413,7 +413,7 @@ export function flattenEdibleFormData(data) {
         if (data.recipe.ingredients) flat.ingredients = data.recipe.ingredients
         if (data.recipe.steps) flat.etapesPreparation = data.recipe.steps
         // Bilan matière du produit fini — pas de colonne dédiée sur EdibleReview, persisté dans
-        // extraData comme orchardPreset/orchardConfig (cf. server-new/routes/edible-reviews.js).
+        // extraData comme exportMakerPreset/exportMakerConfig (cf. server-new/routes/edible-reviews.js).
         if (data.recipe.finalWeight) flat.recipeFinalWeight = data.recipe.finalWeight
         if (data.recipe.servings) flat.recipeServings = data.recipe.servings
     }
@@ -437,11 +437,11 @@ export function flattenEdibleFormData(data) {
 
     // Traçabilité multi-source
     if (data.sourceLineage !== undefined) flat.sourceLineage = data.sourceLineage
-    // Aperçu / Orchard preset
-    if (data.orchardPreset) flat.orchardPreset = data.orchardPreset
-    if (data.orchardConfig) flat.orchardConfig = data.orchardConfig
-    if (data.orchardCustomLayout) flat.orchardCustomLayout = data.orchardCustomLayout
-    if (data.orchardLayoutMode) flat.orchardLayoutMode = data.orchardLayoutMode
+    // Aperçu / Export Maker preset
+    if (data.exportMakerPreset) flat.exportMakerPreset = data.exportMakerPreset
+    if (data.exportMakerConfig) flat.exportMakerConfig = data.exportMakerConfig
+    if (data.exportMakerCustomLayout) flat.exportMakerCustomLayout = data.exportMakerCustomLayout
+    if (data.exportMakerLayoutMode) flat.exportMakerLayoutMode = data.exportMakerLayoutMode
 
     return flat
 }

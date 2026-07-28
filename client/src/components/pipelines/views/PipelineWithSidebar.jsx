@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Save, Download, Upload, Info, FolderPlus, ChevronDown } from 'lucide-react';
-import PipelineContentsSidebar from '../../shared/orchard/PipelineContentsSidebar';
+import PipelineContentsSidebar from '../../shared/export-maker/PipelineContentsSidebar';
 import PipelineGridView from './PipelineGridView';
 import PipelineDataModal from '../core/PipelineDataModal';
 import PresetGroupsManager from '../../shared/config/PresetGroupsManager';

@@ -11,7 +11,7 @@ import FertilizationPipeline from '../../components/pipelines/legacy/Fertilizati
 import SubstratMixer from '../../components/forms/helpers/SubstratMixer';
 import RecipeSection from '../../components/forms/helpers/RecipeSection';
 import GlobalRating from '../../components/shared/charts/GlobalRating';
-import OrchardPanel from '../../components/shared/orchard/OrchardPanel';
+import ExportMakerPanel from '../../components/shared/export-maker/ExportMakerPanel';
 import { AnimatePresence } from 'framer-motion';
 import { productStructures } from '../../utils/productStructures';
 import { parseImages } from '../../utils/imageUtils';
@@ -39,7 +39,7 @@ export default function EditReviewPage() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [error, setError] = useState('');
     const [hasSolvents, setHasSolvents] = useState(false);
-    const [showOrchardStudio, setShowOrchardStudio] = useState(false);
+    const [showExportMakerStudio, setshowExportMakerStudio] = useState(false);
 
     const fetchReview = async () => {
         try {
@@ -128,18 +128,18 @@ export default function EditReviewPage() {
             // form fields that were saved into extraData are accessible via formData[fieldKey]
             const mergedFormData = { ...parsedData, ...parsedData.extraData };
 
-            // Charger orchardConfig et orchardPreset depuis extraData si présents
-            if (parsedData.extraData.orchardConfig) {
-                mergedFormData.orchardConfig = parsedData.extraData.orchardConfig;
+            // Charger exportMakerConfig et exportMakerPreset depuis extraData si présents
+            if (parsedData.extraData.exportMakerConfig) {
+                mergedFormData.exportMakerConfig = parsedData.extraData.exportMakerConfig;
             }
-            if (parsedData.extraData.orchardPreset) {
-                mergedFormData.orchardPreset = parsedData.extraData.orchardPreset;
+            if (parsedData.extraData.exportMakerPreset) {
+                mergedFormData.exportMakerPreset = parsedData.extraData.exportMakerPreset;
             }
-            if (parsedData.extraData.orchardCustomLayout) {
-                mergedFormData.orchardCustomLayout = parsedData.extraData.orchardCustomLayout;
+            if (parsedData.extraData.exportMakerCustomLayout) {
+                mergedFormData.exportMakerCustomLayout = parsedData.extraData.exportMakerCustomLayout;
             }
-            if (parsedData.extraData.orchardLayoutMode) {
-                mergedFormData.orchardLayoutMode = parsedData.extraData.orchardLayoutMode;
+            if (parsedData.extraData.exportMakerLayoutMode) {
+                mergedFormData.exportMakerLayoutMode = parsedData.extraData.exportMakerLayoutMode;
             }
 
             // Helper: lookup a value in multiple locations (top-level, extraData, categoryRatings, ratings)
@@ -283,7 +283,7 @@ export default function EditReviewPage() {
     // Ouvre automatiquement Export Maker si on arrive depuis la bibliothèque via le badge "Aperçu requis"
     useEffect(() => {
         if (!loading && review && searchParams.get('openExport') === '1') {
-            setShowOrchardStudio(true);
+            setshowExportMakerStudio(true);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [loading, review]);
@@ -385,7 +385,7 @@ export default function EditReviewPage() {
             return;
         }
 
-        // ℹ️ Note: orchardPreset n'est plus obligatoire pour permettre la sauvegarde
+        // ℹ️ Note: exportMakerPreset n'est plus obligatoire pour permettre la sauvegarde
         // L'utilisateur peut définir l'aperçu plus tard s'il le souhaite
 
         setIsSubmitting(true);
@@ -908,10 +908,10 @@ export default function EditReviewPage() {
                             </p>
                         </div>
                         <button
-                            onClick={() => setShowOrchardStudio(true)}
-                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.orchardPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'} text-white`}
+                            onClick={() => setshowExportMakerStudio(true)}
+                            className={`px-4 py-2 rounded-xl font-medium shadow-lg transition-all flex items-center gap-2 ${formData.exportMakerPreset ? 'bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-500 hover:to-emerald-500' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500'} text-white`}
                         >
-                            {formData.orchardPreset ? '✅ Aperçu défini' : '🎨 Définir aperçu'}
+                            {formData.exportMakerPreset ? '✅ Aperçu défini' : '🎨 Définir aperçu'}
                         </button>
                     </div>
                     {/* Résumé des notes par catégorie */}
@@ -1029,9 +1029,9 @@ export default function EditReviewPage() {
 
             <div className="h-24"></div>
 
-            {/* Orchard Studio Modal */}
+            {/* Export Maker Modal */}
             <AnimatePresence>
-                {showOrchardStudio && (() => {
+                {showExportMakerStudio && (() => {
                     // ✅ Normaliser les données pour éviter les erreurs de type
                     const normalizeArray = (value) => {
                         if (Array.isArray(value)) return value;
@@ -1042,7 +1042,7 @@ export default function EditReviewPage() {
                     };
 
                     return (
-                        <OrchardPanel
+                        <ExportMakerPanel
                             productType={formData.type || 'flower'}
                             reviewId={id}
                             reviewData={{
@@ -1072,21 +1072,21 @@ export default function EditReviewPage() {
                                 breeder: formData.breeder || formData.hashmaker || '',
                                 farm: formData.farm || ''
                             }}
-                            onClose={() => setShowOrchardStudio(false)}
-                            onPresetApplied={(orchardData) => {
-                                // Sauvegarder la configuration Orchard dans formData
+                            onClose={() => setshowExportMakerStudio(false)}
+                            onPresetApplied={(exportMakerData) => {
+                                // Sauvegarder la configuration Export Maker dans formData
                                 setFormData(prev => ({
                                     ...prev,
-                                    orchardConfig: JSON.stringify(orchardData.orchardConfig),
-                                    orchardPreset: orchardData.orchardPreset || 'custom',
-                                    orchardCustomLayout: orchardData.customLayout || null,
-                                    orchardLayoutMode: orchardData.layoutMode || (orchardData.customLayout ? 'custom' : 'template'),
-                                    ...(orchardData.previewUrl ? { orchardPreviewUrl: orchardData.previewUrl } : {})
+                                    exportMakerConfig: JSON.stringify(exportMakerData.exportMakerConfig),
+                                    exportMakerPreset: exportMakerData.exportMakerPreset || 'custom',
+                                    exportMakerCustomLayout: exportMakerData.customLayout || null,
+                                    exportMakerLayoutMode: exportMakerData.layoutMode || (exportMakerData.customLayout ? 'custom' : 'template'),
+                                    ...(exportMakerData.previewUrl ? { exportMakerPreviewUrl: exportMakerData.previewUrl } : {})
                                 }));
                                 toast.success('✅ Aperçu défini avec succès !');
                             }}
                             onPublish={async () => {
-                                // Publication directe depuis l'OrchardPanel (préview déjà uploadé)
+                                // Publication directe depuis l'ExportMakerPanel (préview déjà uploadé)
                                 try {
                                     await reviewsService.updateVisibility(id, true);
                                     toast.success('🎉 Review publiée dans la galerie !');

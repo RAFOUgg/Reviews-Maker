@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import GenealogyTree2DInteractive from '../../shared/orchard/GenealogyTree2DInteractive';
-import { safeParse } from '../../../utils/orchardHelpers';
+import GenealogyTree2DInteractive from '../../shared/export-maker/GenealogyTree2DInteractive';
+import { safeParse } from '../../../utils/exportMakerHelpers';
 
 /**
  * GenealogyMiniView - Vue interactive lecture seule de l'arbre généalogique (PhenoHunt)

@@ -1,27 +1,27 @@
 import { motion } from 'framer-motion';
 import { Check, Layers, X } from 'lucide-react';
-import { useOrchardStore, DEFAULT_TEMPLATES } from '../../../store/orchardStore';
-import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
+import { useExportMakerStore, DEFAULT_TEMPLATES } from '../../../store/exportMakerStore';
+import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
-import { shouldAutoLockPagination } from '../../../utils/orchardHelpers';
+import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
 
 // Templates that support pagination (multi-page) — detailed/full templates
 const PAGINATION_SUPPORTED_TEMPLATES = ['detailedCard', 'blogArticle'];
 
 export default function TemplateSelector() {
-    const config = useOrchardStore((state) => state.config);
-    const reviewData = useOrchardStore((state) => state.reviewData);
-    const setTemplate = useOrchardStore((state) => state.setTemplate);
-    const setRatio = useOrchardStore((state) => state.setRatio);
-    const registerTemplate = useOrchardStore((state) => state.registerTemplate);
-    const templates = useOrchardStore((state) => state.templates);
-    const unregisterTemplate = useOrchardStore((state) => state.unregisterTemplate);
-    const setActivePanel = useOrchardStore((state) => state.setActivePanel);
+    const config = useExportMakerStore((state) => state.config);
+    const reviewData = useExportMakerStore((state) => state.reviewData);
+    const setTemplate = useExportMakerStore((state) => state.setTemplate);
+    const setRatio = useExportMakerStore((state) => state.setRatio);
+    const registerTemplate = useExportMakerStore((state) => state.registerTemplate);
+    const templates = useExportMakerStore((state) => state.templates);
+    const unregisterTemplate = useExportMakerStore((state) => state.unregisterTemplate);
+    const setActivePanel = useExportMakerStore((state) => state.setActivePanel);
 
-    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-    const pagesCount = useOrchardPagesStore((state) => state.pages.length);
-    const togglePagesMode = useOrchardPagesStore((state) => state.togglePagesMode);
-    const loadDefaultPages = useOrchardPagesStore((state) => state.loadDefaultPages);
+    const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
+    const pagesCount = useExportMakerPagesStore((state) => state.pages.length);
+    const togglePagesMode = useExportMakerPagesStore((state) => state.togglePagesMode);
+    const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
 
     const isOverflow = shouldAutoLockPagination(reviewData);
     const isPaginationSupported = PAGINATION_SUPPORTED_TEMPLATES.includes(config.template) || isOverflow;

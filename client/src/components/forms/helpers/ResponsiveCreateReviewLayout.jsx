@@ -30,7 +30,7 @@ export const ResponsiveCreateReviewLayout = ({
     subtitle,
     showProgress = true,
     sectionEmojis = [], // Array d'émojis pour chaque section
-    // Optional callback to open a global preview/orchard panel from the footer
+    // Optional callback to open a global preview/Export Maker Panel from the footer
     onOpenPreview,
     // Optional manual save handler — renders a "Sauvegarder" button left of Aperçu.
     // Disabled (greyed out) when isDirty is false, so the user can see at a glance

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/orchardHelpers'
+import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/exportMakerHelpers'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind } from 'lucide-react'
 import InteractivePipelineViewer from './InteractivePipelineViewer'
