@@ -22,7 +22,7 @@ export default function CreateReviewPage() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const { productType } = useParams(); // Nouveau: path param
-    const { isAuthenticated, createReview, updateReview, getReviewById, user } = useStore();
+    const { isAuthenticated, createReview, updateReview, getReviewById, user, preferences } = useStore();
     const toast = useToast();
 
     // Support ancien système query param + nouveau path param
@@ -94,7 +94,9 @@ export default function CreateReviewPage() {
     const [showOrchardStudio, setShowOrchardStudio] = useState(false);
     const [isLoading, setIsLoading] = useState(isEditing);
     const [showSaveModal, setShowSaveModal] = useState(false);
-    const [saveModalData, setSaveModalData] = useState({ title: '', isPublic: false });
+    // Préremplit le choix public/privé avec le réglage "Visibilité par défaut" du compte
+    // (client/src/pages/account/AccountPage.jsx, onglet Préférences) plutôt qu'un `false` figé.
+    const [saveModalData, setSaveModalData] = useState({ title: '', isPublic: preferences?.defaultVisibility === 'public' });
     // publishIntent: si true, réouvrir la save modal en mode public après fermeture de l'OrchardPanel
     const [pendingPublishAfterPreview, setPendingPublishAfterPreview] = useState(false);
 
@@ -313,7 +315,7 @@ export default function CreateReviewPage() {
 
         // Ouvrir la modale de sauvegarde
         const defaultTitle = `${formData.holderName || 'Review'} - ${formData.type || 'Produit'}`;
-        setSaveModalData({ title: defaultTitle, isPublic: false });
+        setSaveModalData({ title: defaultTitle, isPublic: preferences?.defaultVisibility === 'public' });
         setShowSaveModal(true);
     };
 

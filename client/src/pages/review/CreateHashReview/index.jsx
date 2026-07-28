@@ -35,7 +35,7 @@ export default function CreateHashReview() {
     const toast = useToast()
     const { id } = useParams()
     const [searchParams] = useSearchParams()
-    const { isAuthenticated, authChecked } = useStore()
+    const { isAuthenticated, authChecked, preferences } = useStore()
     const [currentSection, setCurrentSection] = useState(0)
     const [showOrchard, setShowOrchard] = useState(false)
     const [isDirty, setIsDirty] = useState(false)
@@ -237,10 +237,14 @@ export default function CreateHashReview() {
     useEffect(() => {
         if (!hasLoadedRef.current) return
         setIsDirty(true)
+        // Préférence "Sauvegarde auto." (onglet Préférences du compte) : la review reste marquée
+        // "non sauvegardée" (isDirty) même désactivée, seule la sauvegarde silencieuse programmée
+        // est sautée — l'utilisateur doit alors sauvegarder manuellement.
+        if (!preferences.autoSaveDrafts) return
         if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current)
         autoSaveTimerRef.current = setTimeout(() => { handleSave({ silent: true }) }, 2500)
         return () => { if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current) }
-    }, [formData])
+    }, [formData, preferences.autoSaveDrafts])
 
     // Filet de sécurité : si l'utilisateur quitte la page moins de 2.5s après sa dernière
     // modification, le debounce ci-dessus n'a pas encore eu le temps de sauvegarder — on

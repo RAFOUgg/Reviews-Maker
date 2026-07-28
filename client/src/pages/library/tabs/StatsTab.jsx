@@ -11,6 +11,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useToast } from '../../../components/shared/ToastContainer'
+import { useStore } from '../../../store/useStore'
 import { LiquidCard } from '@/components/ui/LiquidUI'
 import { motion } from 'framer-motion'
 import {
@@ -39,6 +40,7 @@ const displayType = (rawType) => TYPE_LABELS[rawType] || rawType || 'Autre'
 
 export default function StatsTab({ userTier = 'amateur' }) {
     const toast = useToast()
+    const { preferences } = useStore()
 
     const [stats, setStats] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -209,111 +211,117 @@ export default function StatsTab({ userTier = 'amateur' }) {
                 />
             </div>
 
-            {/* Distribution et engagement */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Distribution par type */}
-                <LiquidCard glow="none" padding="lg">
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                        <Target className="w-4 h-4 text-purple-400" />
-                        Distribution par type
-                    </h3>
-                    <TypeDistribution data={stats.reviews.byType} />
-                </LiquidCard>
+            {/* Statistiques détaillées — masquables via l'onglet Préférences du compte
+                (préférence "Statistiques détaillées"), qui ne consultait jusque-là rien de réel. */}
+            {preferences.showDetailedStats && (
+                <>
+                    {/* Distribution et engagement */}
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        {/* Distribution par type */}
+                        <LiquidCard glow="none" padding="lg">
+                            <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                                <Target className="w-4 h-4 text-purple-400" />
+                                Distribution par type
+                            </h3>
+                            <TypeDistribution data={stats.reviews.byType} />
+                        </LiquidCard>
 
-                {/* Engagement */}
-                <LiquidCard glow="none" padding="lg">
-                    <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                        <Activity className="w-4 h-4 text-purple-400" />
-                        Engagement
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                        <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <Eye className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-white">{stats.engagement.views}</div>
-                            <div className="text-xs text-white/50">Vues</div>
-                        </div>
-                        <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <Heart className="w-6 h-6 text-red-400 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-white">{stats.engagement.likes}</div>
-                            <div className="text-xs text-white/50">J'aime</div>
-                        </div>
-                        <div className="text-center p-4 bg-white/5 rounded-xl">
-                            <MessageCircle className="w-6 h-6 text-green-400 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-white">{stats.engagement.comments}</div>
-                            <div className="text-xs text-white/50">Commentaires</div>
-                        </div>
-                    </div>
-                </LiquidCard>
-            </div>
-
-            {/* Top reviews */}
-            <LiquidCard glow="none" padding="lg">
-                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                    <TrendingUp className="w-4 h-4 text-purple-400" />
-                    Top reviews
-                </h3>
-
-                {stats.topReviews.length === 0 ? (
-                    <p className="text-center text-white/40 py-8">
-                        Publiez des reviews pour voir votre classement
-                    </p>
-                ) : (
-                    <div className="space-y-3">
-                        {stats.topReviews.map((review, index) => {
-                            const label = displayType(review.type)
-                            const config = TYPE_ICONS[label] || { icon: FileText, color: 'gray' }
-                            const Icon = config.icon
-
-                            return (
-                                <div
-                                    key={review.id}
-                                    className="flex items-center gap-4 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
-                                >
-                                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-400' :
-                                        index === 1 ? 'bg-gray-400/20 text-gray-400' :
-                                            'bg-orange-700/20 text-orange-600'
-                                        }`}>
-                                        #{index + 1}
-                                    </div>
-                                    <div className={`w-10 h-10 rounded-lg bg-${config.color}-500/20 flex items-center justify-center`}>
-                                        <Icon className={`w-5 h-5 text-${config.color}-400`} />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="font-medium text-white">{review.name}</div>
-                                        <div className="text-sm text-white/50">{label}</div>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-sm text-white/60">
-                                        <span className="flex items-center gap-1">
-                                            <Eye className="w-4 h-4" />
-                                            {review.views}
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <Heart className="w-4 h-4" />
-                                            {review.likes}
-                                        </span>
-                                    </div>
+                        {/* Engagement */}
+                        <LiquidCard glow="none" padding="lg">
+                            <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                                <Activity className="w-4 h-4 text-purple-400" />
+                                Engagement
+                            </h3>
+                            <div className="grid grid-cols-3 gap-4">
+                                <div className="text-center p-4 bg-white/5 rounded-xl">
+                                    <Eye className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                                    <div className="text-2xl font-bold text-white">{stats.engagement.views}</div>
+                                    <div className="text-xs text-white/50">Vues</div>
                                 </div>
-                            )
-                        })}
+                                <div className="text-center p-4 bg-white/5 rounded-xl">
+                                    <Heart className="w-6 h-6 text-red-400 mx-auto mb-2" />
+                                    <div className="text-2xl font-bold text-white">{stats.engagement.likes}</div>
+                                    <div className="text-xs text-white/50">J'aime</div>
+                                </div>
+                                <div className="text-center p-4 bg-white/5 rounded-xl">
+                                    <MessageCircle className="w-6 h-6 text-green-400 mx-auto mb-2" />
+                                    <div className="text-2xl font-bold text-white">{stats.engagement.comments}</div>
+                                    <div className="text-xs text-white/50">Commentaires</div>
+                                </div>
+                            </div>
+                        </LiquidCard>
                     </div>
-                )}
-            </LiquidCard>
 
-            {/* Formats d'export */}
-            <LiquidCard glow="none" padding="lg">
-                <h3 className="font-bold text-white mb-4 flex items-center gap-2">
-                    <Download className="w-4 h-4 text-blue-400" />
-                    Exports par format
-                </h3>
-                <div className="grid grid-cols-4 gap-4">
-                    {Object.entries(stats.exports.byFormat).map(([format, count]) => (
-                        <div key={format} className="text-center p-4 bg-white/5 rounded-xl">
-                            <div className="text-2xl font-bold text-white">{count}</div>
-                            <div className="text-xs text-white/50 mt-1">{format}</div>
+                    {/* Top reviews */}
+                    <LiquidCard glow="none" padding="lg">
+                        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4 text-purple-400" />
+                            Top reviews
+                        </h3>
+
+                        {stats.topReviews.length === 0 ? (
+                            <p className="text-center text-white/40 py-8">
+                                Publiez des reviews pour voir votre classement
+                            </p>
+                        ) : (
+                            <div className="space-y-3">
+                                {stats.topReviews.map((review, index) => {
+                                    const label = displayType(review.type)
+                                    const config = TYPE_ICONS[label] || { icon: FileText, color: 'gray' }
+                                    const Icon = config.icon
+
+                                    return (
+                                        <div
+                                            key={review.id}
+                                            className="flex items-center gap-4 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors"
+                                        >
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold ${index === 0 ? 'bg-amber-500/20 text-amber-400' :
+                                                index === 1 ? 'bg-gray-400/20 text-gray-400' :
+                                                    'bg-orange-700/20 text-orange-600'
+                                                }`}>
+                                                #{index + 1}
+                                            </div>
+                                            <div className={`w-10 h-10 rounded-lg bg-${config.color}-500/20 flex items-center justify-center`}>
+                                                <Icon className={`w-5 h-5 text-${config.color}-400`} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <div className="font-medium text-white">{review.name}</div>
+                                                <div className="text-sm text-white/50">{label}</div>
+                                            </div>
+                                            <div className="flex items-center gap-4 text-sm text-white/60">
+                                                <span className="flex items-center gap-1">
+                                                    <Eye className="w-4 h-4" />
+                                                    {review.views}
+                                                </span>
+                                                <span className="flex items-center gap-1">
+                                                    <Heart className="w-4 h-4" />
+                                                    {review.likes}
+                                                </span>
+                                            </div>
+                                        </div>
+                                    )
+                                })}
+                            </div>
+                        )}
+                    </LiquidCard>
+
+                    {/* Formats d'export */}
+                    <LiquidCard glow="none" padding="lg">
+                        <h3 className="font-bold text-white mb-4 flex items-center gap-2">
+                            <Download className="w-4 h-4 text-blue-400" />
+                            Exports par format
+                        </h3>
+                        <div className="grid grid-cols-4 gap-4">
+                            {Object.entries(stats.exports.byFormat).map(([format, count]) => (
+                                <div key={format} className="text-center p-4 bg-white/5 rounded-xl">
+                                    <div className="text-2xl font-bold text-white">{count}</div>
+                                    <div className="text-xs text-white/50 mt-1">{format}</div>
+                                </div>
+                            ))}
                         </div>
-                    ))}
-                </div>
-            </LiquidCard>
+                    </LiquidCard>
+                </>
+            )}
 
             {/* Note pour producteurs */}
             {userTier === 'producer' && (

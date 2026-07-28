@@ -1,7 +1,6 @@
 import { motion } from 'framer-motion';
 import { LayoutGrid, Type, Palette, ListChecks, Image as ImageIcon, Bookmark, Files } from 'lucide-react';
 import { useOrchardStore } from '../../../store/orchardStore';
-import { useOrchardPagesStore } from '../../../store/orchardPagesStore';
 import { LiquidTabs } from '../../ui/LiquidUI';
 import TemplateSelector from './TemplateSelector';
 import TypographyControls from './TypographyControls';
@@ -11,11 +10,15 @@ import ImageBrandingControls from './ImageBrandingControls';
 import PresetManager from './PresetManager';
 import PageManager from '../../shared/orchard/PageManager';
 
+// Ordre : Template en 1er (choix du gabarit), puis Contenu/Pagination en 2e/3e position — ce sont
+// les réglages qui pilotent QUOI s'affiche et OÙ, donc les plus consultés après le choix du
+// template — avant les réglages plus cosmétiques (typo/couleurs/image/préréglages).
 const BASE_PANELS = [
     { id: 'template', label: 'Template', icon: LayoutGrid },
+    { id: 'content', label: 'Contenu', icon: ListChecks },
+    { id: 'pagination', label: 'Pagination', icon: Files },
     { id: 'typography', label: 'Typographie', icon: Type },
     { id: 'colors', label: 'Couleurs', icon: Palette },
-    { id: 'content', label: 'Contenu', icon: ListChecks },
     { id: 'image', label: 'Image & Logo', icon: ImageIcon },
     { id: 'presets', label: 'Préréglages', icon: Bookmark },
 ];
@@ -23,15 +26,9 @@ const BASE_PANELS = [
 export default function ConfigPane() {
     const activePanel = useOrchardStore((state) => state.activePanel);
     const setActivePanel = useOrchardStore((state) => state.setActivePanel);
-    const pagesEnabled = useOrchardPagesStore((state) => state.pagesEnabled);
-
-    // Onglet Pagination ajouté uniquement quand le mode pages est activé
-    const panels = pagesEnabled
-        ? [...BASE_PANELS, { id: 'pagination', label: 'Pagination', icon: Files }]
-        : BASE_PANELS;
 
     return (
-        <div className="h-full flex flex-col" style={{ background: 'var(--app-bg, transparent)' }}>
+        <div className="h-full min-h-0 flex flex-col" style={{ background: 'var(--app-bg, transparent)' }}>
             {/* Navigation par onglets — fondu de bord en masque CSS : signale que la barre défile
                 horizontalement (le scrollbar natif est masqué par `.liquid-tabs`), sans quoi une
                 rangée d'onglets coupée donne l'impression d'un contenu manquant/cassé. */}
@@ -39,11 +36,11 @@ export default function ConfigPane() {
                 className="p-2 border-b border-white/10 overflow-x-auto"
                 style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)' }}
             >
-                <LiquidTabs tabs={panels} activeTab={activePanel} onChange={setActivePanel} variant="pills" />
+                <LiquidTabs tabs={BASE_PANELS} activeTab={activePanel} onChange={setActivePanel} variant="pills" />
             </div>
 
             {/* Contenu du panneau actif */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4">
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4">
                 <motion.div
                     key={activePanel}
                     initial={{ opacity: 0, y: 10 }}

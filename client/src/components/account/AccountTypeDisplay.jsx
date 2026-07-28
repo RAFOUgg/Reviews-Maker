@@ -6,7 +6,7 @@ import { LiquidCard, LiquidBadge } from '@/components/ui/LiquidUI'
  * Composant pour afficher le type de compte actuel
  * Affiche: Type, badge couleur, prix, statut
  */
-export default function AccountTypeDisplay({ onUpgradeClick }) {
+export default function AccountTypeDisplay() {
     const { accountType, user } = useStore()
     const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin')
 
@@ -14,6 +14,7 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
     // par définition aucun abonnement : parler d'« actif » ou d'« inactif » n'y a pas de sens.
     const subscriptionActive = Boolean(user?.access?.subscriptionActive)
     const isFreePlan = !['producer', 'influencer'].includes(user?.access?.accountType || accountType)
+    const isVerifiedPro = Boolean(user?.access?.isVerifiedPro)
 
     const getSubscriptionInfo = () => {
         // Normalize incoming accountType (backend uses English keys)
@@ -139,6 +140,25 @@ export default function AccountTypeDisplay({ onUpgradeClick }) {
                         </>
                     )}
                 </div>
+
+                {/* Vérification KYC entreprise — n'a de sens que pour Producteur/Influenceur.
+                    Vivait auparavant en double dans SubscriptionManager.jsx, avec le type de
+                    compte déjà affiché ci-dessus. */}
+                {!isFreePlan && (
+                    <div className="flex items-center gap-2 pt-2">
+                        {isVerifiedPro ? (
+                            <>
+                                <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
+                                <span className="text-sm font-medium text-white">Entreprise vérifiée (KYC)</span>
+                            </>
+                        ) : (
+                            <>
+                                <div className="w-2 h-2 bg-white/40 rounded-full"></div>
+                                <span className="text-sm font-medium text-white/60">Vérification KYC non complétée</span>
+                            </>
+                        )}
+                    </div>
+                )}
             </LiquidCard>
 
             {/* Bénéfices */}

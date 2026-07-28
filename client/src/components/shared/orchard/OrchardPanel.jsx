@@ -221,9 +221,11 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
     const canvasRef = useRef(null);
+    const modalRef = useRef(null);
     const setReviewData = useOrchardStore((state) => state.setReviewData);
     const isPreviewFullscreen = useOrchardStore((state) => state.isPreviewFullscreen);
     const togglePreviewFullscreen = useOrchardStore((state) => state.togglePreviewFullscreen);
+    const setPreviewFullscreen = useOrchardStore((state) => state.setPreviewFullscreen);
     const config = useOrchardStore((state) => state.config);
     const activePreset = useOrchardStore((state) => state.activePreset);
 
@@ -237,6 +239,30 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
     // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
     // vers `PagedPreviewPane` les ignorait tant que `pagesEnabled` n'était pas coché à la main.
     const effectivePagesActive = pagesEnabled || shouldAutoLockPagination(reviewData);
+
+    // Plein écran réel : superpose la Fullscreen API du navigateur au mode CSS existant
+    // (`isPreviewFullscreen`, jusqu'ici jamais câblé à aucun bouton) qui masque déjà le panneau de
+    // config pour que l'aperçu prenne toute la modale. `fullscreenchange` resynchronise le flag si
+    // l'utilisateur quitte via Échap/chrome navigateur plutôt que via ce bouton.
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            if (!document.fullscreenElement) setPreviewFullscreen(false);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, [setPreviewFullscreen]);
+
+    const handleToggleFullscreen = useCallback(() => {
+        if (!isPreviewFullscreen) {
+            togglePreviewFullscreen();
+            modalRef.current?.requestFullscreen?.().catch(() => {});
+        } else {
+            if (document.fullscreenElement) {
+                document.exitFullscreen?.().catch(() => {});
+            }
+            togglePreviewFullscreen();
+        }
+    }, [isPreviewFullscreen, togglePreviewFullscreen]);
 
     // Configurer les sensors pour @dnd-kit
     const sensors = useSensors(
@@ -419,6 +445,7 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
             />
 
             <motion.div
+                ref={modalRef}
                 initial={{ scale: 0.95, opacity: 0, y: 20 }}
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -492,6 +519,28 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                             </svg>
                             Exporter
                         </motion.button>
+
+                        {/* Bouton Plein écran — API Fullscreen du navigateur + masque le panneau de
+                            config pour que l'aperçu prenne toute la modale (voir handleToggleFullscreen) */}
+                        {showPreview && !isCustomMode && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={handleToggleFullscreen}
+                                className="p-2 rounded-lg bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:text-purple-600 dark:hover:text-purple-400 transition-colors"
+                                title={isPreviewFullscreen ? 'Quitter le plein écran' : 'Voir en plein écran'}
+                            >
+                                {isPreviewFullscreen ? (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 9V4.5M9 9H4.5M9 9L3.75 3.75M15 9h4.5M15 9V4.5M15 9l5.25-5.25M9 15v4.5M9 15H4.5M9 15l-5.25 5.25M15 15h4.5M15 15v4.5m0-4.5l5.25 5.25" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.75 3.75v4.5m0-4.5h4.5m-4.5 0L9 9M20.25 3.75v4.5m0-4.5h-4.5m4.5 0L15 9M3.75 20.25v-4.5m0 4.5h4.5m-4.5 0L9 15M20.25 20.25v-4.5m0 4.5h-4.5m4.5 0L15 15" />
+                                    </svg>
+                                )}
+                            </motion.button>
+                        )}
 
                         {/* Bouton Fermer */}
                         <motion.button
@@ -574,8 +623,13 @@ export default function OrchardPanel({ reviewData, onClose, onPresetApplied, onP
                                 exit={{ opacity: 0 }}
                                 className="flex flex-col md:flex-row h-full"
                             >
-                                {/* Configuration Pane - Left */}
-                                <div className="w-full md:w-96 xl:w-[28rem] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 max-h-[40vh] md:max-h-none">
+                                {/* Configuration Pane - Left — `h-[40vh]` (pas `max-h`) en mobile :
+                                    une hauteur non-définie (max-height seul) empêche `h-full` de se
+                                    résoudre dans ConfigPane, cassant son propre scroll interne et
+                                    coupant "Format d'affichage"/les onglets sans moyen de scroller
+                                    visible (bug 2026-07-28). En desktop (`md:flex-row`), l'étirement
+                                    flex par défaut suffit déjà, `md:h-auto` laisse faire. */}
+                                <div className="w-full md:w-96 xl:w-[28rem] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 h-[40vh] md:h-auto min-h-0">
                                     <ConfigPane />
                                 </div>
 

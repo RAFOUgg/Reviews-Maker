@@ -163,13 +163,27 @@ export default function PageManager({ embedded = false }) {
                         <h3 className="text-sm font-bold text-white/90">
                             Trame de pages
                         </h3>
-                        <span className="text-xs text-indigo-400 font-semibold">
-                            {pages.length} page{pages.length > 1 ? 's' : ''}
-                        </span>
+                        {pagesEnabled && (
+                            <span className="text-xs text-indigo-400 font-semibold">
+                                {pages.length} page{pages.length > 1 ? 's' : ''}
+                            </span>
+                        )}
                     </div>
-                    <p className="text-xs text-white/50 mb-3">
-                        Glissez pour réordonner · Cliquez pour sélectionner
-                    </p>
+                    {pagesEnabled ? (
+                        <p className="text-xs text-white/50 mb-3">
+                            Glissez pour réordonner · Cliquez pour sélectionner
+                        </p>
+                    ) : (
+                        <div className="liquid-card p-4 mt-2 text-center space-y-3">
+                            <p className="text-xs text-white/60">
+                                La pagination répartit la fiche sur plusieurs pages (utile pour les
+                                contenus denses : pipelines longs, beaucoup de données).
+                            </p>
+                            <LiquidButton size="sm" variant="primary" onClick={togglePagesMode}>
+                                Activer la pagination
+                            </LiquidButton>
+                        </div>
+                    )}
                 </div>
             )}
 

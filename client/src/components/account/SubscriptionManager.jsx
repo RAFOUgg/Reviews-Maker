@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { CreditCard, Shield, Check, X } from 'lucide-react'
-import { LiquidCard, LiquidButton, LiquidBadge } from '@/components/ui/LiquidUI'
+import { CreditCard, X } from 'lucide-react'
+import { LiquidCard, LiquidButton } from '@/components/ui/LiquidUI'
 import ConfirmDialog from '../shared/ConfirmDialog'
 import { useToast } from '../shared/ToastContainer'
 import { accountService, paymentService } from '../../services/apiService'
@@ -9,7 +9,9 @@ import { useStore } from '../../store'
 
 /**
  * SubscriptionManager
- * Composant réutilisable pour gérer le paiement / KYC / abonnement
+ * Composant réutilisable pour gérer le paiement / abonnement (actions).
+ * Le statut (type de compte, abonnement, vérification KYC) vit dans AccountTypeDisplay.jsx —
+ * il y était auparavant dupliqué ici, dans un style différent.
  */
 export default function SubscriptionManager({ user }) {
     const navigate = useNavigate()
@@ -21,9 +23,7 @@ export default function SubscriptionManager({ user }) {
 
     // `access` est calculé par le serveur : il tient compte de l'abonnement réel et de l'héritage
     // entreprise, contrairement aux colonnes brutes de `user` qui peuvent être périmées.
-    const effectiveType = user?.access?.accountType || user?.accountType || 'consumer'
     const subscriptionActive = Boolean(user?.access?.subscriptionActive)
-    const isVerifiedPro = Boolean(user?.access?.isVerifiedPro)
 
     const confirmCancel = () => setShowCancelDialog(true)
 
@@ -56,52 +56,6 @@ export default function SubscriptionManager({ user }) {
 
     return (
         <div className="space-y-4">
-            <LiquidCard glow="purple" padding="lg">
-                <h4 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
-                    <CreditCard className="w-4 h-4" /> État du Compte
-                </h4>
-                {/* Ces trois indicateurs affichaient « Actif » et « Vérifiée » EN DUR, sans aucune
-                    condition : un compte gratuit et non vérifié lisait donc que son abonnement
-                    était actif et son KYC validé. Ils reflètent désormais `access`, calculé par
-                    le serveur (services/access.js). */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                    <div className="p-3 bg-indigo-500/8 rounded-xl border border-indigo-500/10">
-                        <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Type de Compte</p>
-                        <p className="text-lg font-bold text-white">
-                            {effectiveType === 'producer' ? '🌱 Producteur' : effectiveType === 'influencer' ? '⭐ Influenceur' : 'Amateur'}
-                        </p>
-                    </div>
-
-                    <div className={`p-3 rounded-xl border ${subscriptionActive ? 'bg-green-500/8 border-green-500/10' : 'bg-white/[0.04] border-white/10'}`}>
-                        <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Abonnement</p>
-                        <div className="flex items-center gap-2">
-                            {subscriptionActive ? (
-                                <>
-                                    <Check className="w-4 h-4 text-green-400" />
-                                    <p className="text-lg font-bold text-green-400">Actif</p>
-                                </>
-                            ) : (
-                                <p className="text-lg font-bold text-white/50">Aucun</p>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className={`p-3 rounded-xl border ${isVerifiedPro ? 'bg-blue-500/8 border-blue-500/10' : 'bg-white/[0.04] border-white/10'}`}>
-                        <p className="text-xs text-white/40 uppercase tracking-wider mb-1">Vérification KYC</p>
-                        <div className="flex items-center gap-2">
-                            {isVerifiedPro ? (
-                                <>
-                                    <Check className="w-4 h-4 text-blue-400" />
-                                    <p className="text-lg font-bold text-blue-400">Vérifiée</p>
-                                </>
-                            ) : (
-                                <p className="text-lg font-bold text-white/50">Non vérifiée</p>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </LiquidCard>
-
             <LiquidCard glow="default" padding="lg">
                 <h4 className="text-lg font-semibold text-white flex items-center gap-2 mb-3">
                     <CreditCard className="w-4 h-4" /> Gestion de l'abonnement

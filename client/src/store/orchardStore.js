@@ -590,6 +590,11 @@ export const useOrchardStore = create(
                 isPreviewFullscreen: !state.isPreviewFullscreen
             })),
 
+            // Setter explicite (par opposition au toggle ci-dessus) — nécessaire pour resynchroniser
+            // ce flag avec l'état réel du navigateur quand l'utilisateur quitte le plein écran via
+            // Échap/chrome navigateur plutôt que par le bouton (écouteur `fullscreenchange`).
+            setPreviewFullscreen: (value) => set({ isPreviewFullscreen: !!value }),
+
             setReviewData: (data) => set({ reviewData: data }),
 
             // Réinitialiser à la configuration par défaut
@@ -709,6 +714,7 @@ export const useOrchardActions = () => useOrchardStore((state) => ({
     updatePreset: state.updatePreset,
     setActivePanel: state.setActivePanel,
     togglePreviewFullscreen: state.togglePreviewFullscreen,
+    setPreviewFullscreen: state.setPreviewFullscreen,
     setReviewData: state.setReviewData,
     resetConfig: state.resetConfig,
     getTemplates: state.getTemplates,

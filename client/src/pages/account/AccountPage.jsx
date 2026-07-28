@@ -4,16 +4,13 @@ import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store'
 import { motion } from 'framer-motion'
 import {
-  LogOut,
   CreditCard,
-  Bell,
   Eye,
   Save,
-  Share2,
+  Globe,
   BarChart3,
   Lock,
   User,
-  Calendar,
   Check,
   Settings,
   Building2
@@ -22,13 +19,11 @@ import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidToggle, Liqu
 import ProfileSection from './sections/ProfileSection'
 import CompanySection from './sections/CompanySection'
 import AccountTypeDisplay from '../../components/account/AccountTypeDisplay'
-import UpgradeModal from '../../components/account/UpgradeModal'
 import SubscriptionHistory from '../../components/account/SubscriptionHistory'
 import SubscriptionManager from '../../components/account/SubscriptionManager'
-import { accountService, paymentService, settingsService } from '../../services/apiService'
+import { settingsService } from '../../services/apiService'
 import ConfirmDialog from '../../components/shared/ConfirmDialog'
 import { useToast } from '../../components/shared/ToastContainer'
-import { useAccountFeatures } from '../../hooks/useAccountFeatures'
 
 const SUPPORTED_LANGUAGES = [
   { code: 'fr', name: 'Français', flag: '🇫🇷' },
@@ -53,29 +48,15 @@ const getTabSections = (accountType, hasCompany) => {
 const AccountPage = () => {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
-  const { user, accountType, checkAuth, logout } = useStore()
-  const { isProducteur } = useAccountFeatures()
+  const { user, accountType, checkAuth, logout, preferences, updatePreference } = useStore()
 
   const isProfileComplete = user?.birthdate && user?.country
   // `access` est calculé côté serveur (/api/auth/me) : titulaire d'une entreprise ou employé invité.
   const hasCompany = Boolean(user?.access?.company)
   const [activeTab, setActiveTab] = useState('profile')
-  const [showUpgradeModal, setShowUpgradeModal] = useState(false)
   const [language, setLanguage] = useState(() => i18n.language || 'fr')
-  const [isSaved, setIsSaved] = useState(false)
-  const [showCancelDialog, setShowCancelDialog] = useState(false)
 
   const toast = useToast()
-
-  // Préférences chargées depuis le serveur : en cas d'échec on garde les valeurs par défaut
-  // plutôt que d'afficher des interrupteurs vides.
-  useEffect(() => {
-    let active = true
-    settingsService.getPreferences()
-      .then(prefs => { if (active) setPreferences(prefs) })
-      .catch(() => { /* valeurs par défaut conservées */ })
-    return () => { active = false }
-  }, [])
 
   // Permet d'ouvrir directement un onglet via l'URL (ex: /account?tab=subscription)
   useEffect(() => {
@@ -91,17 +72,9 @@ const AccountPage = () => {
     }
   }, [])
 
-  // Les préférences vivent côté serveur : en localStorage elles étaient perdues au changement
-  // d'appareil. `privateProfile` a été retiré — c'était un doublon factice de `publicProfile`,
-  // le vrai réglage éditable dans l'onglet Profil.
-  const [preferences, setPreferences] = useState({
-    defaultVisibility: 'private',
-    showNotifications: true,
-    autoSaveDrafts: true,
-    allowSocialSharing: false,
-    showDetailedStats: true
-  })
-
+  // Les préférences vivent désormais dans le store (chargées une fois au login, cf. checkAuth()
+  // dans useStore.js) — partagées avec les formulaires de review et Bibliothèque > Statistiques,
+  // qui les consultent pour de vrai (autosave, visibilité par défaut, stats détaillées).
   const handleLanguageChange = async (newLang) => {
     try {
       setLanguage(newLang)
@@ -112,8 +85,7 @@ const AccountPage = () => {
         body: JSON.stringify({ language: newLang })
       })
       if (response.ok) {
-        setIsSaved(true)
-        setTimeout(() => setIsSaved(false), 2000)
+        toast.success('Langue mise à jour')
       }
     } catch (error) {
       console.error('Failed to change language:', error)
@@ -121,18 +93,11 @@ const AccountPage = () => {
   }
 
   const handlePreferenceChange = async (key, value) => {
-    // Optimiste : le toggle réagit immédiatement, on rétablit si le serveur refuse.
-    const previous = preferences
-    setPreferences(prev => ({ ...prev, [key]: value }))
-
-    try {
-      const saved = await settingsService.updatePreferences({ [key]: value })
-      setPreferences(saved)
-      setIsSaved(true)
-      setTimeout(() => setIsSaved(false), 2000)
-    } catch (err) {
-      setPreferences(previous)
-      toast.error(err.message || 'Préférence non enregistrée')
+    const { ok, error } = await updatePreference(key, value)
+    if (ok) {
+      toast.success('Préférence mise à jour')
+    } else {
+      toast.error(error?.message || 'Préférence non enregistrée')
     }
   }
 
@@ -143,9 +108,10 @@ const AccountPage = () => {
     navigate('/login')
   }
 
+  // Le serveur n'accepte que 'private'|'public' (server-new/routes/userSettings.js) — proposer
+  // "Amis uniquement" renvoyait une 400 au premier essai, cette notion n'existe pas dans le schéma.
   const visibilityOptions = [
     { value: 'private', label: 'Privé' },
-    { value: 'friends', label: 'Amis uniquement' },
     { value: 'public', label: 'Public' }
   ]
 
@@ -271,27 +237,16 @@ const AccountPage = () => {
                   <p className="text-white/50">Visualisez votre plan actuel et gérez vos options (modifier, moyen de paiement, résilier).</p>
                 </div>
 
-                {/* Layout revisited: place Actions below the 'Fonctionnalités incluses' */}
-                <div className="space-y-6">
-                  {/* Main summary and features */}
-                  <div>
-                    <AccountTypeDisplay onUpgradeClick={() => setShowUpgradeModal(true)} />
-                  </div>
-
-                  {/* Actions block placed under the features for clearer flow on all breakpoints */}
-                  <div className="bg-white/3 dark:bg-white/5 rounded-lg p-4 space-y-4 border border-white/6 md:w-2/3 lg:w-1/2 mx-auto">
-                    <h3 className="text-lg font-semibold text-white">Actions</h3>
-
-                    {/* Inline subscription manager (payment & KYC) placed here */}
-                    <SubscriptionManager user={user} />
-
-                  </div>
+                {/* Plan + bénéfices à gauche, actions à droite — même esprit que PaymentPage.jsx.
+                    L'ancien bloc "Actions" bridé à lg:w-1/2 et centré cassait la largeur pleine
+                    du bloc du dessus ; ce layout garde les deux cohérents sur desktop. */}
+                <div className="grid gap-6 lg:grid-cols-[3fr_2fr] items-start">
+                  <AccountTypeDisplay />
+                  <SubscriptionManager user={user} />
                 </div>
 
                 {(accountType === 'producer' || accountType === 'influencer') && (
-                  <div>
-                    <SubscriptionHistory />
-                  </div>
+                  <SubscriptionHistory />
                 )}
               </div>
             )}
@@ -305,6 +260,8 @@ const AccountPage = () => {
                 preferences={preferences}
                 handlePreferenceChange={handlePreferenceChange}
                 visibilityOptions={visibilityOptions}
+                language={language}
+                handleLanguageChange={handleLanguageChange}
                 t={t}
               />
             )}
@@ -315,42 +272,39 @@ const AccountPage = () => {
           </motion.div>
         </LiquidCard>
       </div>
-
-      {/* Modal Upgrade */}
-      <UpgradeModal
-        isOpen={showUpgradeModal}
-        onClose={() => setShowUpgradeModal(false)}
-      />
     </div>
   )
 }
 
 // ============== Section Components ==============
 
-function PreferencesSection({ preferences, handlePreferenceChange, visibilityOptions, t }) {
+function PreferencesSection({ preferences, handlePreferenceChange, visibilityOptions, language, handleLanguageChange, t }) {
   return (
     <div>
       <h3 className="text-2xl font-bold mb-6 text-white">{t('account.preferences') || 'Préférences'}</h3>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {/* Notifications */}
-        <LiquidCard glow="blue" padding="md">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-blue-500/20 flex items-center justify-center">
-                <Bell size={16} className="text-blue-400" />
-              </div>
-              <span className="font-semibold text-white">{t('account.notifications') || 'Notifications'}</span>
+      {/* 4 réglages, tous réellement branchés à un comportement (retiré : Notifications et Partage
+          social, qui se sauvegardaient sans qu'aucune fonctionnalité de l'app ne les consulte —
+          aucun système de notifications ni de partage n'existe encore). */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+        {/* Langue — existait déjà côté logique (handleLanguageChange, route /api/account/language)
+            mais n'avait jamais de rendu. */}
+        <LiquidCard glow="cyan" padding="md">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+              <Globe size={16} className="text-cyan-400" />
             </div>
-            <LiquidToggle
-              checked={preferences.showNotifications}
-              onChange={(checked) => handlePreferenceChange('showNotifications', checked)}
-            />
+            <span className="font-semibold text-white">{t('account.language') || 'Langue'}</span>
           </div>
-          <p className="text-sm text-white/40">{t('account.notificationsDesc') || 'Recevoir les notifications d\'activité'}</p>
+          <LiquidSelect
+            value={language}
+            onChange={handleLanguageChange}
+            options={SUPPORTED_LANGUAGES.map(lang => ({ value: lang.code, label: `${lang.flag} ${lang.name}` }))}
+          />
         </LiquidCard>
 
-        {/* Visibility */}
+        {/* Visibility — préremplit le choix public/privé proposé à la publication d'une nouvelle
+            review depuis /create. */}
         <LiquidCard glow="green" padding="md">
           <div className="flex items-center gap-2 mb-3">
             <div className="w-8 h-8 rounded-lg bg-green-500/20 flex items-center justify-center">
@@ -363,9 +317,10 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
             onChange={(v) => handlePreferenceChange('defaultVisibility', v)}
             options={visibilityOptions}
           />
+          <p className="text-sm text-white/40 mt-2">Choix proposé par défaut lors de la publication d'une nouvelle review.</p>
         </LiquidCard>
 
-        {/* Auto-save */}
+        {/* Auto-save — désactive réellement l'autosave des brouillons de review. */}
         <LiquidCard glow="purple" padding="md">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">
@@ -382,24 +337,7 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
           <p className="text-sm text-white/40">{t('account.autoSaveDesc') || 'Sauvegarder automatiquement les brouillons'}</p>
         </LiquidCard>
 
-        {/* Social Sharing */}
-        <LiquidCard glow="pink" padding="md">
-          <div className="flex items-start justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-pink-500/20 flex items-center justify-center">
-                <Share2 size={16} className="text-pink-400" />
-              </div>
-              <span className="font-semibold text-white">{t('account.socialSharing') || 'Partage social'}</span>
-            </div>
-            <LiquidToggle
-              checked={preferences.allowSocialSharing}
-              onChange={(checked) => handlePreferenceChange('allowSocialSharing', checked)}
-            />
-          </div>
-          <p className="text-sm text-white/40">{t('account.socialSharingDesc') || 'Autoriser le partage sur réseaux sociaux'}</p>
-        </LiquidCard>
-
-        {/* Statistics */}
+        {/* Statistics — masque/affiche réellement les blocs avancés de Bibliothèque > Statistiques. */}
         <LiquidCard glow="orange" padding="md">
           <div className="flex items-start justify-between mb-3">
             <div className="flex items-center gap-2">

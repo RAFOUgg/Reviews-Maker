@@ -1,5 +1,15 @@
 import { create } from 'zustand'
-import { reviewsService, authService, usersService } from '../services/apiService'
+import { reviewsService, authService, usersService, settingsService } from '../services/apiService'
+
+// Mêmes valeurs par défaut que DEFAULT_PREFERENCES côté serveur (server-new/routes/userSettings.js)
+// — tant que loadPreferences() n'a pas résolu, on affiche ces valeurs plutôt que des toggles vides.
+const DEFAULT_PREFERENCES = {
+    showNotifications: true,
+    autoSaveDrafts: true,
+    allowSocialSharing: false,
+    showDetailedStats: true,
+    defaultVisibility: 'private'
+}
 
 export const useStore = create((set, get) => ({
     // Reviews state
@@ -26,6 +36,11 @@ export const useStore = create((set, get) => ({
     authChecked: false,
     accountType: 'consumer', // 'consumer' | 'producer' | 'influencer' | 'admin' (backend keys)
 
+    // Préférences compte (onglet Préférences) : chargées une fois au login (checkAuth), partagées
+    // par tous les consommateurs (formulaires de review, Bibliothèque > Statistiques...) pour éviter
+    // un fetch dupliqué dans chacun.
+    preferences: { ...DEFAULT_PREFERENCES },
+
     // Cache pour éviter les requêtes répétées
     _reviewsCache: {},
     _cacheTimestamp: null,
@@ -35,13 +50,36 @@ export const useStore = create((set, get) => ({
     setUser: (user) => set({ user, isAuthenticated: !!user }),
     setAccountType: (accountType) => set({ accountType }),
 
+    loadPreferences: async () => {
+        try {
+            const preferences = await settingsService.getPreferences()
+            set({ preferences: { ...DEFAULT_PREFERENCES, ...preferences } })
+        } catch {
+            // Valeurs par défaut déjà en place, rien à faire.
+        }
+    },
+
+    // Update optimiste : le toggle réagit immédiatement, on rétablit si le serveur refuse.
+    updatePreference: async (key, value) => {
+        const previous = get().preferences
+        set({ preferences: { ...previous, [key]: value } })
+        try {
+            const saved = await settingsService.updatePreferences({ [key]: value })
+            set({ preferences: { ...DEFAULT_PREFERENCES, ...saved } })
+            return { ok: true }
+        } catch (err) {
+            set({ preferences: previous })
+            return { ok: false, error: err }
+        }
+    },
+
     logout: async () => {
         try {
             await authService.logout()
         } catch (error) {
             // Erreur silencieuse
         }
-        set({ user: null, isAuthenticated: false, accountType: 'consumer', reviews: [], _reviewsCache: {} })
+        set({ user: null, isAuthenticated: false, accountType: 'consumer', preferences: { ...DEFAULT_PREFERENCES }, reviews: [], _reviewsCache: {} })
     },
 
     checkAuth: async () => {
@@ -54,6 +92,10 @@ export const useStore = create((set, get) => ({
             // PRO que l'API refuse ensuite en 403.
             const accountType = user?.access?.accountType || user?.accountType || 'consumer'
             set({ user, isAuthenticated: true, accountType, authChecked: true })
+
+            // Fire-and-forget : les pages qui lisent `preferences` gardent les valeurs par défaut
+            // tant que ça n'a pas résolu, pas besoin de bloquer checkAuth() dessus.
+            get().loadPreferences()
 
             // Force permission resync on login to avoid stale local cache
             try {
