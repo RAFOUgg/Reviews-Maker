@@ -289,6 +289,25 @@ const PROTECTED_ROOT_KEYS = new Set([
     // production (2026-07-27) : "Is private: Non", "Export Maker preset: detailedCard" etc.
     // s'affichaient tels quels dans "Données supplémentaires" faute d'exclusion.
     'isPrivate', 'isOurReview', 'exportMakerPreset', 'exportMakerLayoutMode',
+    // Trouvé en production (2026-07-30, review "GMO" antérieure au renommage 2026-07-28) : la
+    // config Export Maker COMPLÈTE (JSON brut de plusieurs Ko) s'affichait comme une carte de
+    // "Données supplémentaires", avec `exportMakerPreset`/`exportMakerLayoutMode` à côté. Cause
+    // racine structurelle, pas propre à cette review : `CreateReviewPage.jsx` construit `formData`
+    // via `{ ...review.extraData, ...review }` pour hydrater le formulaire depuis n'importe quelle
+    // clé extraData — toute clé de bookkeeping Export Maker qui n'est PAS déjà relevée au niveau
+    // racine par `liftExportMakerFromExtra` (serveur) réapparaît donc comme clé racine de
+    // `reviewData` dans la session d'édition, et devient éligible à `getOverflowFields` si elle n'y
+    // est pas explicitement protégée. `exportMakerConfig` l'était déjà (ligne ci-dessus) mais pas
+    // `exportMakerCustomLayout`, ni AUCUNE clé de l'ancien nom de code "Orchard" (repli lu par
+    // `liftExportMakerFromExtra` mais jamais protégé ici) — les deux manquaient. Couvre les deux
+    // générations de noms pour ne jamais avoir à revenir corriger ce point à la 3e occurrence.
+    'exportMakerCustomLayout', 'exportMakerPreview', 'exportMakerFinalPreview', 'exportMakerPreviewUrl',
+    'orchardConfig', 'orchardPreset', 'orchardCustomLayout', 'orchardLayoutMode',
+    'orchardPreview', 'orchardFinalPreview',
+    // Autres clés de repli d'aperçu lues par le même mécanisme serveur (`exportMakerPreviewKeys`,
+    // reviewFormatter.js) — jamais du contenu, seulement des URLs/jetons de vignette.
+    'apercu_definit', 'apercuDefinit', 'previewUrl', 'preview', 'finalPreview',
+    'previewThumbnail', 'apercu_thumbnail',
 ]);
 
 // Plomberie de pipeline (couverte par `pipelineInteractiveView`) et de lien de compte (couverte
@@ -339,6 +358,16 @@ function looksLikeTechnicalString(value) {
     if (TECHNICAL_STRING_PATTERNS.some((re) => re.test(value))) return true;
     // Jeton opaque (hash/uuid/slug) : long, sans espace, alphanumérique — jamais une phrase humaine.
     if (value.length > 24 && !/\s/.test(value) && /^[a-z0-9_.-]+$/i.test(value)) return true;
+    // JSON sérialisé stocké tel quel (pas encore reparsé côté objet) — filet de sécurité générique
+    // en plus du blocage par nom exact ci-dessus (`PROTECTED_ROOT_KEYS`) : trouvé en production
+    // (2026-07-30) qu'une config Export Maker entière (plusieurs Ko) pouvait apparaître comme une
+    // chaîne brute `{"template":...}` dans "Données supplémentaires" — toute clé de bookkeeping
+    // future qui stocke du JSON string sans être nommément protégée sera désormais interceptée ici
+    // aussi, pas seulement pour les clés déjà connues aujourd'hui.
+    const trimmed = value.trim();
+    if (trimmed.length > 40 && ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']')))) {
+        return true;
+    }
     return false;
 }
 
