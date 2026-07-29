@@ -6,7 +6,7 @@ import { CSS } from '@dnd-kit/utilities';
 import PropTypes from 'prop-types';
 import { GripVertical, Trash2, FileText, Plus, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
-import { useExportMakerPagesStore, PAGE_TEMPLATES } from '../../../store/exportMakerPagesStore';
+import { useExportMakerPagesStore, PAGE_TEMPLATES, normalizePageTemplateType } from '../../../store/exportMakerPagesStore';
 import { LiquidButton, LiquidToggle, LiquidModal, LiquidBadge } from '../../ui/LiquidUI';
 
 /**
@@ -107,8 +107,11 @@ export default function PageManager({ embedded = false }) {
 
     const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
 
-    // Page templates available for current review type + ratio
-    const reviewType = reviewData?.type || 'Fleur';
+    // Page templates available for current review type + ratio — `normalizePageTemplateType`
+    // réconcilie les formes de `type` divergentes (formulaire vs API), cf. commentaire dans
+    // exportMakerPagesStore.js (bug trouvé 2026-07-29 : sans ça, aucun gabarit Hash/Concentré/
+    // Comestible n'était jamais trouvé ici, "Ajouter une page" ne proposait aucun modèle).
+    const reviewType = normalizePageTemplateType(reviewData?.type);
     const currentRatio = config?.ratio || '1:1';
     const availablePageTemplates = (PAGE_TEMPLATES[reviewType]?.[currentRatio] || PAGE_TEMPLATES[reviewType]?.['1:1'] || []);
 

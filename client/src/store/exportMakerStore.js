@@ -210,6 +210,27 @@ const DEFAULT_CONFIG = {
         floweringTime: true,
         harvestDate: true,
 
+        // === MÉTADONNÉES RÉCOLTE/SÉPARATION/EXTRACTION (hors tableau d'étapes pipeline) ===
+        // Ajoutées 2026-07-29 : ces clés n'existaient nulle part dans `contentModules` alors que
+        // `fieldRegistry.js` les référence déjà (groupes harvest/separation/extraction) et que
+        // `isModuleOn()` traite toute clé absente comme active sur CHAQUE page — sans entrée ici,
+        // le filtre par page de `TemplateRenderer` ne peut jamais les désactiver nulle part, donc
+        // elles se répétaient sur toutes les pages une fois la pagination active (ex. "Méthode
+        // d'extraction"/"Méthode de séparation" sur DetailedCardTemplate).
+        trichomesTranslucides: true,
+        trichomesLaiteux: true,
+        trichomesAmbres: true,
+        modeRecolte: true,
+        poidsBrut: true,
+        poidsNet: true,
+        methodeSeparation: true,
+        nombrePasses: true,
+        temperatureEau: true,
+        tailleMailles: true,
+        typeMatierePremiere: true,
+        rendementEstime: true,
+        methodeExtraction: true,
+
         // === VUES INTERACTIVES (Fiche Détaillée uniquement) ===
         phenoHuntView: true,
         productionChainView: true,

@@ -39,7 +39,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline']
+                modules: ['substratMix', 'fertilizationPipeline', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'curing',
@@ -83,7 +83,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'extraData']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'curing',
@@ -115,7 +115,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture-curing',
                 label: 'Culture & Curing',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'curing']
+                modules: ['substratMix', 'fertilizationPipeline', 'curing', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'details',
@@ -141,7 +141,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'description']
+                modules: ['substratMix', 'fertilizationPipeline', 'description', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'curing',
@@ -161,7 +161,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'extraData']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'curing',
@@ -205,7 +205,7 @@ export const PAGE_TEMPLATES = {
                 id: 'separation',
                 label: 'Séparation',
                 icon: '🔬',
-                modules: ['pipelineSeparation']
+                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
             },
             {
                 id: 'purification',
@@ -255,7 +255,7 @@ export const PAGE_TEMPLATES = {
                 id: 'separation',
                 label: 'Séparation',
                 icon: '🔬',
-                modules: ['pipelineSeparation']
+                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
             },
             {
                 id: 'purification',
@@ -293,7 +293,7 @@ export const PAGE_TEMPLATES = {
                 id: 'production',
                 label: 'Production',
                 icon: '⚗️',
-                modules: ['pipelineSeparation', 'pipelinePurification', 'curing']
+                modules: ['pipelineSeparation', 'pipelinePurification', 'curing', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
             },
             {
                 id: 'details',
@@ -319,7 +319,7 @@ export const PAGE_TEMPLATES = {
                 id: 'separation',
                 label: 'Séparation',
                 icon: '🔬',
-                modules: ['pipelineSeparation']
+                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
             },
             {
                 id: 'purification',
@@ -361,7 +361,7 @@ export const PAGE_TEMPLATES = {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['pipelineExtraction']
+                modules: ['pipelineExtraction', 'methodeExtraction']
             },
             {
                 id: 'purification',
@@ -411,7 +411,7 @@ export const PAGE_TEMPLATES = {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['pipelineExtraction']
+                modules: ['pipelineExtraction', 'methodeExtraction']
             },
             {
                 id: 'purification',
@@ -449,7 +449,7 @@ export const PAGE_TEMPLATES = {
                 id: 'production',
                 label: 'Production',
                 icon: '⚗️',
-                modules: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'curing']
+                modules: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'curing', 'methodeExtraction']
             },
             {
                 id: 'details',
@@ -475,7 +475,7 @@ export const PAGE_TEMPLATES = {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['pipelineExtraction']
+                modules: ['pipelineExtraction', 'methodeExtraction']
             },
             {
                 id: 'purification',
@@ -748,12 +748,35 @@ export const useExportMakerPagesStore = create(
     )
 );
 
+// Normalise n'importe quelle forme de `type` vers une clé valide de `PAGE_TEMPLATES` — trouvé
+// 2026-07-29 (6e occurrence du bug de vocabulaire deviné déjà documenté 5 fois dans CLAUDE.md) :
+// le `reviewData.type` interne aux hooks de formulaire (`useHashForm.js`/`useConcentrateForm.js`/
+// `useEdibleForm.js`) est en minuscules anglais ('hash'/'concentrate'/'edible'), alors que
+// `PAGE_TEMPLATES` est indexé en français capitalisé ('Hash'/'Concentré'/'Comestible'/'Fleur',
+// SINGULIER). La vraie review sauvegardée en API utilise elle un 3e format encore différent pour
+// les fleurs ('Fleurs', PLURIEL) — sans cette normalisation, `PAGE_TEMPLATES[type]` ne matche
+// JAMAIS pour Hash/Concentré/Comestible dans Export Maker Studio (repli silencieux sur le
+// gabarit Fleur), ce qui empêchait tout champ spécifique à ces types (méthode de séparation,
+// etc.) d'avoir une page où s'afficher.
+const TYPE_KEY_ALIASES = {
+    flower: 'Fleur', fleur: 'Fleur', fleurs: 'Fleur',
+    hash: 'Hash',
+    concentrate: 'Concentré', concentré: 'Concentré', concentre: 'Concentré', concentres: 'Concentré',
+    edible: 'Comestible', comestible: 'Comestible', comestibles: 'Comestible',
+};
+
+export function normalizePageTemplateType(reviewType) {
+    if (reviewType && PAGE_TEMPLATES[reviewType]) return reviewType;
+    const lower = String(reviewType || '').toLowerCase();
+    return TYPE_KEY_ALIASES[lower] || 'Fleur';
+}
+
 /**
  * Récupère les pages par défaut selon le type de review et le ratio
  */
 export function getDefaultPages(reviewType, ratio = '1:1') {
-    const type = reviewType || 'Fleur';
-    const templates = PAGE_TEMPLATES[type] || PAGE_TEMPLATES['Fleur'];
+    const type = normalizePageTemplateType(reviewType);
+    const templates = PAGE_TEMPLATES[type];
     const pagesForRatio = templates[ratio] || templates['1:1'];
 
     return pagesForRatio.map(page => ({

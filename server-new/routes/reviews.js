@@ -152,20 +152,16 @@ router.get('/my', requireAuth, asyncHandler(async (req, res) => {
     res.json(apiReviews)
 }))
 
-// GET /api/reviews/:id - Récupérer une review spécifique
-router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
-    console.log(`🔍 GET /api/reviews/${req.params.id}`)
-    console.log('👤 Authenticated:', typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false)
-    console.log('👤 User:', req.user ? { id: req.user.id, username: req.user.username } : null)
-
-    // Valider l'ID
-    if (!validateReviewId(req.params.id)) {
-        console.error('❌ Invalid review ID format:', req.params.id)
-        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
-    }
+// Résout une review par id en respectant les droits d'accès, SANS jamais lancer d'exception —
+// retourne soit `{ review }` (déjà formatée/mappée API), soit `{ error: 'invalid_id'|'not_found'|
+// 'forbidden' }`. Extrait de l'ancien corps de `GET /:id` pour être réutilisé tel quel par la
+// traversée de lignage (`GET /:id/lineage`, ci-dessous) : un nœud inaccessible dans une chaîne
+// doit devenir un placeholder, pas faire échouer toute la requête.
+async function resolveReviewForRead(id, req) {
+    if (!validateReviewId(id)) return { error: 'invalid_id' }
 
     const review = await prisma.review.findUnique({
-        where: { id: req.params.id },
+        where: { id },
         include: {
             flowerData: {
                 include: {
@@ -193,26 +189,12 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
         }
     })
 
-    if (!review) {
-        console.error('❌ Review not found:', req.params.id)
-        throw Errors.REVIEW_NOT_FOUND()
-    }
+    if (!review) return { error: 'not_found' }
 
-    console.log('📄 Review found:', { id: review.id, authorId: review.authorId, isPublic: review.isPublic })
-
-    // Vérifier les permissions pour les reviews privées
     const isAuthenticated = typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false
     const currentUser = isAuthenticated ? req.user : null
 
-    if (!(await canReadFor(req, review, 'authorId'))) {
-        console.error('🚫 Access forbidden:', {
-            isPublic: review.isPublic,
-            isAuthenticated,
-            reviewAuthorId: review.authorId,
-            currentUserId: currentUser?.id
-        })
-        throw Errors.FORBIDDEN()
-    }
+    if (!(await canReadFor(req, review, 'authorId'))) return { error: 'forbidden' }
 
     // Ne renvoyer l'arbre généalogique lié que s'il est public ou si l'utilisateur en est propriétaire
     if (review.flowerData?.geneticTree) {
@@ -225,7 +207,6 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
 
     // Formater la review
     let formattedReview = formatReview(review, currentUser)
-
     formattedReview = liftExportMakerFromExtra(formattedReview)
 
     // ✅ S'assurer que authorId est toujours présent
@@ -233,12 +214,84 @@ router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
         formattedReview.authorId = review.authorId
     }
 
-    // Map DB fields to API (English keys)
-    const apiReview = mapToApi('Review', formattedReview)
+    return { review: mapToApi('Review', formattedReview) }
+}
 
-    console.log('✅ Sending review:', { id: apiReview.id, authorId: apiReview.authorId })
+// GET /api/reviews/:id - Récupérer une review spécifique
+router.get('/:id', optionalAuth, asyncHandler(async (req, res) => {
+    console.log(`🔍 GET /api/reviews/${req.params.id}`)
+    console.log('👤 Authenticated:', typeof req.isAuthenticated === 'function' ? req.isAuthenticated() : false)
 
-    res.json(apiReview)
+    const result = await resolveReviewForRead(req.params.id, req)
+
+    if (result.error === 'invalid_id') {
+        console.error('❌ Invalid review ID format:', req.params.id)
+        throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    }
+    if (result.error === 'not_found') {
+        console.error('❌ Review not found:', req.params.id)
+        throw Errors.REVIEW_NOT_FOUND()
+    }
+    if (result.error === 'forbidden') {
+        console.error('🚫 Access forbidden:', req.params.id)
+        throw Errors.FORBIDDEN()
+    }
+
+    console.log('✅ Sending review:', { id: result.review.id, authorId: result.review.authorId })
+    res.json(result.review)
+}))
+
+// GET /api/reviews/:id/lineage - Traçabilité amont : remonte la chaîne `sourceLineage` depuis
+// cette review (Fleur→Hash→Concentré→Comestible), tous niveaux confondus. Traversée ASCENDANTE
+// uniquement (retrouver les sources, pas qui a utilisé cette review comme source) — cf. décision
+// de scope documentée dans CLAUDE.md sur le rapprochement cross-auteur, volontairement pas repris
+// ici. Chaque nœud inaccessible (403/404) devient un placeholder `{ accessible:false }` — la
+// visibilité d'une review ne dépend jamais de celle par laquelle on y accède (`canReadFor`).
+router.get('/:id/lineage', optionalAuth, asyncHandler(async (req, res) => {
+    const rootId = req.params.id
+
+    // La review racine suit les mêmes codes d'erreur que GET /:id (400/404/403 réels) — seules les
+    // sources REMONTÉES depuis elle deviennent des placeholders si inaccessibles, pas la racine
+    // elle-même (sinon on renverrait 200 avec un contenu vide pour un id invalide/inconnu).
+    const rootResult = await resolveReviewForRead(rootId, req)
+    if (rootResult.error === 'invalid_id') throw Errors.INVALID_FIELD('id', 'Invalid review ID format')
+    if (rootResult.error === 'not_found') throw Errors.REVIEW_NOT_FOUND()
+    if (rootResult.error === 'forbidden') throw Errors.FORBIDDEN()
+
+    const MAX_DEPTH = 8
+    const nodes = new Map()
+    const edges = []
+    nodes.set(rootId, { id: rootId, type: rootResult.review.type, depth: 0, accessible: true, review: rootResult.review })
+    const queue = (Array.isArray(rootResult.review.sourceLineage) ? rootResult.review.sourceLineage : [])
+        .filter((src) => src?.id)
+        .map((src) => {
+            edges.push({ from: rootId, to: src.id })
+            return { id: src.id, depth: 1 }
+        })
+
+    while (queue.length > 0) {
+        const { id, depth } = queue.shift()
+        if (nodes.has(id)) continue // garde anti-cycle (sourceLineage saisi à la main)
+
+        const result = await resolveReviewForRead(id, req)
+        if (result.error) {
+            nodes.set(id, { id, depth, accessible: false })
+            continue
+        }
+
+        const { review } = result
+        nodes.set(id, { id, type: review.type, depth, accessible: true, review })
+
+        if (depth < MAX_DEPTH && Array.isArray(review.sourceLineage)) {
+            for (const src of review.sourceLineage) {
+                if (!src?.id) continue
+                edges.push({ from: id, to: src.id })
+                if (!nodes.has(src.id)) queue.push({ id: src.id, depth: depth + 1 })
+            }
+        }
+    }
+
+    res.json({ rootId, nodes: Array.from(nodes.values()), edges })
 }))
 
 // POST /api/reviews - Créer une nouvelle review

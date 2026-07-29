@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
-import { useExportMakerStore } from '../../../store/exportMakerStore';
+import { useExportMakerStore, resolveExportMakerConfig } from '../../../store/exportMakerStore';
 import { useExportConfigSave } from '../../../hooks/useExportConfigSave';
 import { useToast } from '../../shared/ToastContainer';
 import ConfigPane from '../config/ConfigPane';
@@ -222,7 +222,9 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
     const canvasRef = useRef(null);
     const modalRef = useRef(null);
+    const seededConfigForReviewId = useRef(null);
     const setReviewData = useExportMakerStore((state) => state.setReviewData);
+    const applyConfig = useExportMakerStore((state) => state.applyConfig);
     const isPreviewFullscreen = useExportMakerStore((state) => state.isPreviewFullscreen);
     const togglePreviewFullscreen = useExportMakerStore((state) => state.togglePreviewFullscreen);
     const setPreviewFullscreen = useExportMakerStore((state) => state.setPreviewFullscreen);
@@ -280,6 +282,26 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
             if (normalized) {
                 setReviewData(normalized);
+            }
+
+            // Amorcer la config depuis CETTE review (une seule fois par review ouverte) — sans ça,
+            // le studio affichait la config de la session Zustand globale/précédente au lieu de
+            // celle réellement sauvegardée sur la review qu'on rouvre en édition (gap trouvé en
+            // vérifiant le tour du 2026-07-28). `resolveExportMakerConfig` répare au passage un
+            // config sauvegardé avant l'ajout de nouvelles clés `contentModules`, même garde-fou
+            // que `ExportModal.jsx`/`PublicRenderPage.jsx`.
+            if (reviewData.id && seededConfigForReviewId.current !== reviewData.id) {
+                seededConfigForReviewId.current = reviewData.id;
+                if (reviewData.exportMakerConfig) {
+                    try {
+                        const parsed = typeof reviewData.exportMakerConfig === 'string'
+                            ? JSON.parse(reviewData.exportMakerConfig)
+                            : reviewData.exportMakerConfig;
+                        applyConfig(resolveExportMakerConfig(parsed));
+                    } catch (err) {
+                        console.warn('Failed to parse exportMakerConfig', err);
+                    }
+                }
             }
 
             // Charger le layout personnalisé s'il existe depuis la review
