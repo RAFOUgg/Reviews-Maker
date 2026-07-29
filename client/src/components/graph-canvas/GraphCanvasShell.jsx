@@ -211,6 +211,14 @@ export default function GraphCanvasShell({
                 zoomOnPinch
                 panOnDrag
                 preventScrolling
+                // Backspace/Suppr retirait un nœud/liaison sélectionné de l'état React Flow local
+                // (via onNodesChange/onEdgesChange générique) SANS jamais appeler le store — pas de
+                // confirmation, pas de suppression serveur. Le nœud réapparaissait dès la prochaine
+                // resynchronisation store→canevas, ce qui donnait l'impression d'une suppression qui
+                // échoue au hasard. Le retrait doit systématiquement passer par le menu contextuel
+                // (ConfirmModal + store.deleteNode/deleteEdge), déjà correct des deux côtés
+                // (PhenoHunt et Chaîne de production).
+                deleteKeyCode={null}
                 // Magnétisme des connexions : rayon par défaut de React Flow (20, en unités flow)
                 // trop serré sur un arbre dense ou dézoomé — 60 reste sous la moitié de la largeur
                 // par défaut d'un nœud (140px) pour éviter toute ambiguïté entre nœuds voisins.

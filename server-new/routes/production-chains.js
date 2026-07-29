@@ -9,10 +9,13 @@
  * GET    /api/production-chains/chains                          - Lister les chaînes de l'utilisateur
  * POST   /api/production-chains/chains                          - Créer une nouvelle chaîne
  * GET    /api/production-chains/chains/:id                      - Récupérer une chaîne
- * GET    /api/production-chains/chains/:id/events                - Journal d'événements (AuditLog) de la chaîne
+ * GET    /api/production-chains/chains/:id/events                - Journal d'événements (AuditLog) de la chaîne, paginé (?before=<eventId>&limit=)
  * POST   /api/production-chains/chains/:id/events                - Journaliser un événement manuel (incident, équipement...)
  * PUT    /api/production-chains/chains/:id                      - Modifier une chaîne
  * DELETE /api/production-chains/chains/:id                      - Supprimer une chaîne
+ * POST   /api/production-chains/chains/:id/share                - Générer/régénérer un code de partage public
+ * DELETE /api/production-chains/chains/:id/share                - Révoquer le code de partage
+ * GET    /api/production-chains/shared/:code                    - Résoudre une chaîne par code de partage (public, sans auth)
  *
  * POST   /api/production-chains/chains/:id/nodes                - Ajouter un nœud (référence une review)
  * PUT    /api/production-chains/nodes/:nodeId                   - Modifier un nœud
@@ -60,6 +63,82 @@ const normalizeEdge = (edge) => ({
     sourceId: edge.sourceNodeId ?? edge.sourceAnnotationId,
     targetId: edge.targetNodeId ?? edge.targetAnnotationId
 })
+
+// Sans caractères ambigus (0/O, 1/I/L) — même alphabet que templates.js (generateShareCode).
+function generateChainShareCode() {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
+    let code = ''
+    for (let i = 0; i < 8; i++) {
+        code += chars.charAt(Math.floor(Math.random() * chars.length))
+    }
+    return code
+}
+
+// Assemble le document complet d'une chaîne (nœuds/arêtes/annotations + flags dérivés) — factorisé
+// hors de GET /chains/:id pour être réutilisé tel quel par GET /shared/:code (résolution par code
+// de partage, pas d'id), qui ne partage que l'assemblage, pas la vérification d'accès (le code lui-
+// même est le justificatif, cf. route plus bas).
+async function assembleChainDetail(chainId) {
+    const chain = await prisma.productionChain.findUnique({
+        where: { id: chainId },
+        include: {
+            nodes: {
+                select: {
+                    id: true, reviewType: true, reviewId: true, label: true, image: true,
+                    position: true, color: true, cellData: true, media: true, createdAt: true, updatedAt: true
+                }
+            },
+            edges: {
+                select: {
+                    id: true, sourceNodeId: true, sourceAnnotationId: true, targetNodeId: true, targetAnnotationId: true,
+                    technique: true, date: true, notes: true, waypointX: true, waypointY: true,
+                    sourceHandle: true, targetHandle: true, cellData: true, media: true
+                }
+            },
+            annotations: {
+                select: {
+                    id: true, nodeId: true, edgeId: true, position: true, title: true, body: true,
+                    sourceLabel: true, sourceReviewId: true, sourceReviewType: true, pipelineType: true,
+                    cellTimestamp: true, mediaUrl: true, mediaType: true
+                }
+            }
+        }
+    })
+
+    if (!chain) return null
+
+    // Détection des liens cassés : reviewId n'a pas de FK Prisma (4 tables de review
+    // différentes possibles), donc rien n'empêche une review d'être supprimée en laissant
+    // le ChainNode qui la référençait intact. Même pattern que genetics.js.
+    const linkedReviewIds = [...new Set(chain.nodes.filter(n => n.reviewId).map(n => n.reviewId))]
+    if (linkedReviewIds.length > 0) {
+        const foundReviews = await prisma.review.findMany({
+            where: { id: { in: linkedReviewIds } },
+            select: { id: true }
+        })
+        const foundReviewIds = new Set(foundReviews.map(r => r.id))
+        chain.nodes = chain.nodes.map(n => {
+            if (!n.reviewId) return n
+            return { ...n, reviewOrphaned: !foundReviewIds.has(n.reviewId) }
+        })
+    }
+
+    // Navigation retour vers PhenoHunt : un nœud Fleur dont la review a une généalogie
+    // (FlowerReview.geneticTreeId) doit pouvoir proposer "Voir la généalogie".
+    const flowerReviewIds = chain.nodes.filter(n => n.reviewType === 'flower' && n.reviewId).map(n => n.reviewId)
+    if (flowerReviewIds.length > 0) {
+        const flowerData = await prisma.flowerReview.findMany({
+            where: { reviewId: { in: flowerReviewIds } },
+            select: { reviewId: true, geneticTreeId: true }
+        })
+        const treeByReviewId = new Map(flowerData.filter(f => f.geneticTreeId).map(f => [f.reviewId, f.geneticTreeId]))
+        chain.nodes = chain.nodes.map(n => treeByReviewId.has(n.reviewId) ? { ...n, geneticTreeId: treeByReviewId.get(n.reviewId) } : n)
+    }
+
+    chain.edges = chain.edges.map(normalizeEdge)
+
+    return chain
+}
 
 // =============================================================================
 // CHAINS ROUTES
@@ -119,107 +198,90 @@ router.post("/chains", requireAuth, requireChainAccess, validateChainCreation, a
 
 router.get("/chains/:id", optionalAuth, async (req, res) => {
     try {
-        const chain = await prisma.productionChain.findUnique({
-            where: { id: req.params.id },
-            include: {
-                nodes: {
-                    select: {
-                        id: true,
-                        reviewType: true,
-                        reviewId: true,
-                        label: true,
-                        image: true,
-                        position: true,
-                        color: true,
-                        cellData: true,
-                        media: true,
-                        createdAt: true,
-                        updatedAt: true
-                    }
-                },
-                edges: {
-                    select: {
-                        id: true,
-                        sourceNodeId: true,
-                        sourceAnnotationId: true,
-                        targetNodeId: true,
-                        targetAnnotationId: true,
-                        technique: true,
-                        date: true,
-                        notes: true,
-                        waypointX: true,
-                        waypointY: true,
-                        sourceHandle: true,
-                        targetHandle: true,
-                        cellData: true,
-                        media: true
-                    }
-                },
-                annotations: {
-                    select: {
-                        id: true,
-                        nodeId: true,
-                        edgeId: true,
-                        position: true,
-                        title: true,
-                        body: true,
-                        sourceLabel: true,
-                        sourceReviewId: true,
-                        sourceReviewType: true,
-                        pipelineType: true,
-                        cellTimestamp: true,
-                        mediaUrl: true,
-                        mediaType: true
-                    }
-                }
-            }
-        })
+        // Accès géré ici (propriétaire/entreprise/isPublic) — assembleChainDetail ne fait que la
+        // lecture/les jointures, réutilisée telle quelle par GET /shared/:code ci-dessous.
+        const chainForAccess = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
+
+        if (!chainForAccess) {
+            return res.status(404).json({ error: "Chain not found" })
+        }
+
+        if (!(await canReadFor(req, chainForAccess))) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        const chain = await assembleChainDetail(req.params.id)
+        res.json(chain)
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch production chain" })
+    }
+})
+
+// Génère (ou régénère) un code de partage public pour cette chaîne — la connaissance du code fait
+// office de justificatif (même sémantique qu'un lien "quiconque a le lien peut voir"), donc on force
+// isPublic à true en même temps : un code inutilisable tant que la chaîne reste privée aurait été
+// trompeur. Propriétaire/entreprise uniquement (canModifyFor), comme le reste des routes de mutation.
+router.post("/chains/:id/share", requireAuth, requireChainAccess, async (req, res) => {
+    try {
+        const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
 
         if (!chain) {
             return res.status(404).json({ error: "Chain not found" })
         }
 
-        if (!(await canReadFor(req, chain))) {
+        if (!(await canModifyFor(req, chain))) {
             return res.status(403).json({ error: "Forbidden" })
         }
 
-        // Détection des liens cassés : reviewId n'a pas de FK Prisma (4 tables de review
-        // différentes possibles), donc rien n'empêche une review d'être supprimée en laissant
-        // le ChainNode qui la référençait intact. Même pattern que genetics.js (GET /trees/:id,
-        // sourceReviewOrphaned) — on vérifie tous les nœuds ayant un reviewId non-null et on
-        // marque reviewOrphaned sur ceux dont l'id ne résout plus.
-        const linkedReviewIds = [...new Set(chain.nodes.filter(n => n.reviewId).map(n => n.reviewId))]
-        if (linkedReviewIds.length > 0) {
-            const foundReviews = await prisma.review.findMany({
-                where: { id: { in: linkedReviewIds } },
-                select: { id: true }
-            })
-            const foundReviewIds = new Set(foundReviews.map(r => r.id))
-            chain.nodes = chain.nodes.map(n => {
-                if (!n.reviewId) return n
-                return { ...n, reviewOrphaned: !foundReviewIds.has(n.reviewId) }
-            })
-        }
+        const shareCode = generateChainShareCode()
+        const updated = await prisma.productionChain.update({
+            where: { id: req.params.id },
+            data: { shareCode, isPublic: true }
+        })
 
-        // Navigation retour vers PhenoHunt : un nœud Fleur dont la review a une généalogie
-        // (FlowerReview.geneticTreeId) doit pouvoir proposer "Voir la généalogie" au même titre que
-        // PhenoHunt propose déjà "Accéder à la chaîne de production" (NodeContextMenu.jsx) — sans ce
-        // patch le frontend n'a aucun moyen de savoir qu'un arbre existe pour ce nœud.
-        const flowerReviewIds = chain.nodes.filter(n => n.reviewType === 'flower' && n.reviewId).map(n => n.reviewId)
-        if (flowerReviewIds.length > 0) {
-            const flowerData = await prisma.flowerReview.findMany({
-                where: { reviewId: { in: flowerReviewIds } },
-                select: { reviewId: true, geneticTreeId: true }
-            })
-            const treeByReviewId = new Map(flowerData.filter(f => f.geneticTreeId).map(f => [f.reviewId, f.geneticTreeId]))
-            chain.nodes = chain.nodes.map(n => treeByReviewId.has(n.reviewId) ? { ...n, geneticTreeId: treeByReviewId.get(n.reviewId) } : n)
-        }
-
-        chain.edges = chain.edges.map(normalizeEdge)
-
-        res.json(chain)
+        res.json({ shareCode: updated.shareCode, shareUrl: `${req.protocol}://${req.get('host')}/production-chain/shared/${updated.shareCode}` })
     } catch (error) {
-        res.status(500).json({ error: "Failed to fetch production chain" })
+        res.status(500).json({ error: "Failed to generate share code" })
+    }
+})
+
+// Révoque le code de partage (le lien déjà distribué cesse de fonctionner) — ne touche pas isPublic,
+// qui reste un réglage indépendant modifiable séparément (PUT /chains/:id).
+router.delete("/chains/:id/share", requireAuth, requireChainAccess, async (req, res) => {
+    try {
+        const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
+
+        if (!chain) {
+            return res.status(404).json({ error: "Chain not found" })
+        }
+
+        if (!(await canModifyFor(req, chain))) {
+            return res.status(403).json({ error: "Forbidden" })
+        }
+
+        await prisma.productionChain.update({ where: { id: req.params.id }, data: { shareCode: null } })
+        res.json({ message: "Share code revoked" })
+    } catch (error) {
+        res.status(500).json({ error: "Failed to revoke share code" })
+    }
+})
+
+// Résolution publique par code de partage — aucune vérification canReadFor (le code est le
+// justificatif), mais on exige quand même isPublic actuellement true : si le propriétaire a
+// désactivé la visibilité publique après avoir généré un lien, ce dernier doit cesser de fonctionner
+// plutôt que de rester une porte dérobée silencieuse.
+router.get("/shared/:code", async (req, res) => {
+    try {
+        const chain = await prisma.productionChain.findUnique({ where: { shareCode: req.params.code } })
+
+        if (!chain || !chain.isPublic) {
+            return res.status(404).json({ error: "Invalid or expired share code" })
+        }
+
+        const full = await assembleChainDetail(chain.id)
+        res.json(full)
+    } catch (error) {
+        res.status(500).json({ error: "Failed to fetch shared chain" })
     }
 })
 
@@ -227,6 +289,10 @@ router.get("/chains/:id", optionalAuth, async (req, res) => {
 // chainId, donc on récupère d'abord les ids de nœuds/liaisons/annotations de CETTE chaîne, puis on
 // filtre AuditLog sur ces entityId. Même règle d'accès que GET /chains/:id (lecture publique ou
 // propriétaire uniquement).
+// Pagination par curseur (?before=<eventId>) : sur une chaîne active de longue durée, les 500
+// événements les plus récents (plafond fixe) rendaient les plus anciens définitivement
+// inaccessibles depuis l'UI — ?before permet désormais de continuer à remonter dans le temps.
+// ?limit optionnel (défaut 200, plafonné à 500) pour ne pas re-descendre la totalité à chaque page.
 router.get("/chains/:id/events", optionalAuth, async (req, res) => {
     try {
         const chain = await prisma.productionChain.findUnique({ where: { id: req.params.id } })
@@ -252,19 +318,35 @@ router.get("/chains/:id/events", optionalAuth, async (req, res) => {
         ]
 
         if (entityIds.length === 0) {
-            return res.json([])
+            return res.json({ events: [], hasMore: false })
+        }
+
+        const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 200, 1), 500)
+        const before = req.query.before || null
+
+        let cursorDate = null
+        if (before) {
+            const cursorEvent = await prisma.auditLog.findUnique({ where: { id: before }, select: { createdAt: true } })
+            cursorDate = cursorEvent?.createdAt || null
         }
 
         const events = await prisma.auditLog.findMany({
             where: {
                 entityType: { in: ['chainNode', 'chainEdge', 'chainAnnotation'] },
-                entityId: { in: entityIds }
+                entityId: { in: entityIds },
+                ...(cursorDate && { createdAt: { lt: cursorDate } })
             },
             orderBy: { createdAt: 'desc' },
-            take: 500
+            take: limit + 1
         })
 
-        res.json(events.map(e => ({ ...e, metadata: JSON.parse(e.metadata || "{}") })))
+        const hasMore = events.length > limit
+        const page = events.slice(0, limit)
+
+        res.json({
+            events: page.map(e => ({ ...e, metadata: JSON.parse(e.metadata || "{}") })),
+            hasMore
+        })
     } catch (error) {
         res.status(500).json({ error: "Failed to fetch chain events" })
     }

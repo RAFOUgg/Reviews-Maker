@@ -20,14 +20,23 @@ function normalizeReviewType(type) {
 
 // Ordonne les nœuds de la chaîne selon les liaisons (amont → aval), en tolérant
 // les chaînes non strictement linéaires (plusieurs sources/aval possibles).
+// edge.sourceId/targetId (normalisés côté serveur, cf. normalizeEdge dans production-chains.js)
+// peuvent référencer une annotation (bulle) plutôt qu'un nœud produit — cette vue ne rend aucune
+// annotation, donc une liaison dont une extrémité n'est pas un nœud produit connu n'a pas
+// d'équivalent ici et ne doit pas participer à l'ordonnancement (sinon incomingCount se met à
+// jour sur un id fantôme, et le vrai nœud cible reste à tort compté comme racine).
 function orderChainNodes(nodes, edges) {
+    const nodeIds = new Set(nodes.map(n => n.id));
     const incomingCount = {};
     const outgoing = {};
     nodes.forEach(n => { incomingCount[n.id] = 0; });
     edges.forEach(e => {
-        outgoing[e.sourceNodeId] = outgoing[e.sourceNodeId] || [];
-        outgoing[e.sourceNodeId].push(e.targetNodeId);
-        incomingCount[e.targetNodeId] = (incomingCount[e.targetNodeId] || 0) + 1;
+        const sourceId = e.sourceId ?? e.sourceNodeId;
+        const targetId = e.targetId ?? e.targetNodeId;
+        if (!nodeIds.has(sourceId) || !nodeIds.has(targetId)) return;
+        outgoing[sourceId] = outgoing[sourceId] || [];
+        outgoing[sourceId].push(targetId);
+        incomingCount[targetId] = (incomingCount[targetId] || 0) + 1;
     });
     const roots = nodes.filter(n => !incomingCount[n.id]);
     const queue = [...(roots.length ? roots : nodes.slice(0, 1))];
@@ -104,7 +113,7 @@ export default function ProductionChainMiniView({ reviewData, sectionFontSize = 
             <div style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 6 }}>
                 {ordered.map((node, i) => {
                 const isCurrent = node.reviewType === reviewType && node.reviewId === reviewId;
-                const edgeToNext = (chain.edges || []).find(e => e.sourceNodeId === node.id && e.targetNodeId === ordered[i + 1]?.id);
+                const edgeToNext = (chain.edges || []).find(e => (e.sourceId ?? e.sourceNodeId) === node.id && (e.targetId ?? e.targetNodeId) === ordered[i + 1]?.id);
                 return (
                     <div key={node.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                         <button

@@ -65,6 +65,8 @@ const useProductionChainStore = create(
             // nœud/liaison sélectionné) puis filtré côté panneau, même stratégie que `nodes`/`edges`.
             events: [],
             eventsLoading: false,
+            eventsHasMore: false,
+            eventsLoadingMore: false,
 
             // STATE - CHAIN SECTION LINK (toggle Pipeline <-> Chaîne de production dans les
             // formulaires de review — un seul embed actif à la fois par page, donc un état
@@ -170,7 +172,7 @@ const useProductionChainStore = create(
 
                     set({
                         selectedChainId: chainId,
-                        selectedChain: { id: chain.id, name: chain.name, description: chain.description, isPublic: chain.isPublic },
+                        selectedChain: { id: chain.id, name: chain.name, description: chain.description, isPublic: chain.isPublic, shareCode: chain.shareCode },
                         nodes: parsedNodes,
                         edges: parsedEdges,
                         annotations: parsedAnnotations,
@@ -203,12 +205,46 @@ const useProductionChainStore = create(
                         throw new Error(`Failed to fetch chain events: ${response.status}`);
                     }
 
-                    const events = await response.json();
-                    set({ events, eventsLoading: false });
+                    // GET .../events pagine désormais par curseur ({ events, hasMore }) plutôt que de
+                    // renvoyer un tableau brut plafonné à 500 lignes non récupérables au-delà.
+                    const { events, hasMore } = await response.json();
+                    set({ events, eventsHasMore: !!hasMore, eventsLoading: false });
                     return { data: events };
                 } catch (error) {
                     set({ eventsLoading: false });
                     return { error: error.message || 'Failed to fetch chain events' };
+                }
+            },
+
+            // Ajoute une page plus ancienne au journal déjà chargé (cf. eventsHasMore) — utilisé par
+            // le bouton "Charger plus d'événements" du panneau latéral du canevas.
+            loadMoreChainEvents: async (chainId) => {
+                const state = get();
+                if (state.eventsLoadingMore || !state.eventsHasMore || state.events.length === 0) return;
+                const cursor = state.events[state.events.length - 1]?.id;
+                if (!cursor) return;
+
+                set({ eventsLoadingMore: true });
+                try {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}/events?before=${cursor}`, {
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to fetch chain events: ${response.status}`);
+                    }
+
+                    const { events, hasMore } = await response.json();
+                    set(state => ({
+                        events: [...state.events, ...events],
+                        eventsHasMore: !!hasMore,
+                        eventsLoadingMore: false
+                    }));
+                    return { data: events };
+                } catch (error) {
+                    set({ eventsLoadingMore: false });
+                    return { error: error.message || 'Failed to load more chain events' };
                 }
             },
 
@@ -289,13 +325,64 @@ const useProductionChainStore = create(
                     set(state => ({
                         chains: state.chains.map(c => c.id === chainId ? updated : c),
                         selectedChain: state.selectedChainId === chainId
-                            ? { id: updated.id, name: updated.name, description: updated.description, isPublic: updated.isPublic }
+                            ? { id: updated.id, name: updated.name, description: updated.description, isPublic: updated.isPublic, shareCode: state.selectedChain?.shareCode }
                             : state.selectedChain
                     }));
 
                     return { data: updated };
                 } catch (error) {
                     return { error: error.message || 'Failed to update chain' };
+                }
+            },
+
+            // Génère/régénère un code de partage public pour cette chaîne (force isPublic à true
+            // côté serveur, cf. production-chains.js) — utilisé par le panneau de partage de
+            // ChainFormModal.jsx.
+            generateShareLink: async (chainId) => {
+                try {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}/share`, {
+                        method: 'POST',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        const error = await response.json();
+                        throw new Error(error.error || 'Failed to generate share link');
+                    }
+
+                    const result = await response.json();
+                    set(state => ({
+                        chains: state.chains.map(c => c.id === chainId ? { ...c, shareCode: result.shareCode, isPublic: true } : c),
+                        selectedChain: state.selectedChainId === chainId
+                            ? { ...state.selectedChain, isPublic: true, shareCode: result.shareCode }
+                            : state.selectedChain
+                    }));
+                    return { data: result };
+                } catch (error) {
+                    return { error: error.message || 'Failed to generate share link' };
+                }
+            },
+
+            revokeShareLink: async (chainId) => {
+                try {
+                    const response = await fetch(`${API_BASE}/chains/${chainId}/share`, {
+                        method: 'DELETE',
+                        credentials: 'include'
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`Failed to revoke share link: ${response.status}`);
+                    }
+
+                    set(state => ({
+                        chains: state.chains.map(c => c.id === chainId ? { ...c, shareCode: null } : c),
+                        selectedChain: state.selectedChainId === chainId
+                            ? { ...state.selectedChain, shareCode: null }
+                            : state.selectedChain
+                    }));
+                    return { success: true };
+                } catch (error) {
+                    return { error: error.message || 'Failed to revoke share link' };
                 }
             },
 

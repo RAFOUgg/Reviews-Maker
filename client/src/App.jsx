@@ -26,6 +26,7 @@ import { PrivateRoute } from './components/PrivateRoute'
 const ReviewDetailPage = lazy(() => import('./pages/public/ReviewDetailPage'))
 const PublicRenderPage = lazy(() => import('./pages/public/PublicRenderPage'))
 const ReviewLineagePage = lazy(() => import('./pages/public/ReviewLineagePage'))
+const ProductionChainSharedPage = lazy(() => import('./pages/public/ProductionChainSharedPage'))
 const CreateReviewPage = lazy(() => import('./pages/review/CreateReviewPage'))
 const CreateFlowerReview = lazy(() => import('./pages/review/CreateFlowerReview'))
 const CreateHashReview = lazy(() => import('./pages/review/CreateHashReview'))
@@ -201,6 +202,9 @@ function App() {
                                 {/* Traçabilité multi-review (chaîne sourceLineage ascendante) — même
                                     motif hors Layout que /r/:id, cf. ReviewLineagePage.jsx. */}
                                 <Route path="/r/:id/lineage" element={<ReviewLineagePage />} />
+                                {/* Chaîne de production partagée par code (cf. ChainFormModal.jsx) —
+                                    même motif hors Layout, lecture seule, sans compte requis. */}
+                                <Route path="/production-chain/shared/:code" element={<ProductionChainSharedPage />} />
                                 <Route path="/login" element={<LoginPage />} />
                                 <Route path="/register" element={<RegisterPage />} />
                                 <Route path="/payment" element={<PaymentPage />} />

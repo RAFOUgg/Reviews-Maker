@@ -49,6 +49,7 @@ import ChainMediaPickerModal from './ChainMediaPickerModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import ConfirmModal from '../shared/ConfirmModal';
+import { useToast } from '../shared/ToastContainer';
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 
 // Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
@@ -129,6 +130,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const { fitView, screenToFlowPosition } = useReactFlow();
     const rfStoreApi = useStoreApi();
     const navigate = useNavigate();
+    const toast = useToast();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
@@ -426,7 +428,10 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             return source && target ? `${source.label} → ${target.label}` : null;
         }
         return null;
-    }, [store.nodes, store.edges, store.annotations, store]);
+    // store.annotations n'est pas utilisé ici (aucun chemin de describeTarget ne lit
+    // store.annotations) — dépendance retirée, seul store lui-même (via resolveChainEndpoint)
+    // et store.nodes/store.edges (accès direct) sont réellement nécessaires.
+    }, [store.nodes, store.edges, store]);
 
     const processCellDrop = useCallback(async (cells, originTargetType, originTargetId, dropPosition, forcedAction = null) => {
         if (!cells || cells.length === 0) return;
@@ -764,10 +769,16 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const handleImportLineage = useCallback(async () => {
         if (readOnly || importing) return;
         setImporting(true);
+        // Compteurs pour un rapport de fin d'import — avant ce correctif, tout échec (review
+        // introuvable, ajout de nœud/liaison refusé) était avalé par un `continue`/résultat ignoré,
+        // laissant l'utilisateur croire à un import complet alors qu'il pouvait être partiel.
+        let addedNodes = 0;
+        let addedEdges = 0;
+        let failed = 0;
         try {
             for (const node of store.nodes) {
                 const res = await fetch(`/api/reviews/${node.reviewId}`, { credentials: 'include' });
-                if (!res.ok) continue;
+                if (!res.ok) { failed++; continue; }
                 const review = await res.json();
 
                 let sourceLineage = [];
@@ -787,21 +798,31 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                             position: { x: (node.position?.x || 0) - 200, y: (node.position?.y || 0) + Math.random() * 100 },
                             color: '#10b981'
                         });
+                        if (result.error) { failed++; continue; }
                         sourceNode = result.data;
+                        addedNodes++;
                     }
 
                     if (sourceNode) {
                         const edgeExists = store.edges.some(e => e.sourceNodeId === sourceNode.id && e.targetNodeId === node.id);
                         if (!edgeExists) {
-                            await store.addEdge({ sourceNodeId: sourceNode.id, targetNodeId: node.id });
+                            const edgeResult = await store.addEdge({ sourceNodeId: sourceNode.id, targetNodeId: node.id });
+                            if (edgeResult.error) failed++; else addedEdges++;
                         }
                     }
                 }
             }
         } finally {
             setImporting(false);
+            if (addedNodes === 0 && addedEdges === 0 && failed === 0) {
+                toast.info('Rien à importer — aucune traçabilité source trouvée sur les produits déjà présents.');
+            } else if (failed === 0) {
+                toast.success(`Import terminé : ${addedNodes} produit${addedNodes > 1 ? 's' : ''} et ${addedEdges} liaison${addedEdges > 1 ? 's' : ''} ajouté(s).`);
+            } else {
+                toast.warning(`Import partiel : ${addedNodes} produit(s)/${addedEdges} liaison(s) ajouté(s), ${failed} échec(s) (review introuvable ou droits insuffisants).`);
+            }
         }
-    }, [readOnly, importing, store]);
+    }, [readOnly, importing, store, toast]);
 
     const handleExportJSON = useCallback(() => {
         const data = {
@@ -821,6 +842,13 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const handleExportSVG = useCallback(async () => {
         setExportingSvg(true);
         try {
+            // onlyRenderVisibleElements (virtualisation, cf. props GraphCanvasShell) ne monte dans le
+            // DOM que ce qui est dans le viewport actuel — sans recentrer d'abord sur l'ensemble du
+            // graphe, un export pouvait couper les nœuds hors cadre au moment du clic. fitView()
+            // déclenche une transition CSS ; on laisse un court délai avant la capture pour que React
+            // Flow ait fini de monter les nœuds nouvellement visibles.
+            fitView({ padding: 0.15, duration: 0 });
+            await new Promise(resolve => setTimeout(resolve, 150));
             const viewport = document.querySelector('.react-flow__viewport');
             if (!viewport) throw new Error('Canvas introuvable');
             const dataUrl = await toSvg(viewport, { backgroundColor: '#07070f' });
@@ -833,7 +861,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         } finally {
             setExportingSvg(false);
         }
-    }, [chainId]);
+    }, [chainId, fitView]);
 
     // Nœuds dont la review liée (reviewId) a été supprimée depuis — calculé côté client à partir
     // du flag posé par le backend (GET /chains/:id), même pattern que UnifiedGeneticsCanvas.jsx.
@@ -1211,6 +1239,18 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                                     </div>
                                 );
                             })}
+                            {store.eventsHasMore && (
+                                <button
+                                    type="button"
+                                    className="info-event-add-btn"
+                                    style={{ width: '100%', justifyContent: 'center', marginTop: 6 }}
+                                    disabled={store.eventsLoadingMore}
+                                    onClick={() => store.loadMoreChainEvents(store.selectedChainId)}
+                                    title="Le journal complet de la chaîne contient plus d'événements que ceux déjà chargés"
+                                >
+                                    {store.eventsLoadingMore ? 'Chargement...' : 'Charger plus d\'événements'}
+                                </button>
+                            )}
                         </div>
                     </div>
                     )}
