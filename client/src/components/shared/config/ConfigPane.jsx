@@ -29,14 +29,19 @@ export default function ConfigPane() {
 
     return (
         <div className="h-full min-h-0 flex flex-col" style={{ background: 'var(--app-bg, transparent)' }}>
-            {/* Navigation par onglets — fondu de bord en masque CSS : signale que la barre défile
-                horizontalement (le scrollbar natif est masqué par `.liquid-tabs`), sans quoi une
-                rangée d'onglets coupée donne l'impression d'un contenu manquant/cassé. */}
-            <div
-                className="p-2 border-b border-white/10 overflow-x-auto"
-                style={{ WebkitMaskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)', maskImage: 'linear-gradient(to right, transparent 0, black 16px, black calc(100% - 16px), transparent 100%)' }}
-            >
-                <LiquidTabs tabs={BASE_PANELS} activeTab={activePanel} onChange={setActivePanel} variant="pills" />
+            {/* Navigation par onglets — passe en retour à la ligne (au lieu du scroll horizontal
+                caché par défaut de `.liquid-tabs`) : avec 7 onglets, le scroll masqué laissait
+                plusieurs onglets totalement hors champ sans indice fiable qu'il y en avait
+                davantage (trouvé 2026-07-29, capture montrant l'onglet "Typographie" coupé net
+                au bord de la modale). Tous les onglets restent ainsi visibles d'un coup. */}
+            <div className="p-2 border-b border-white/10">
+                <LiquidTabs
+                    tabs={BASE_PANELS}
+                    activeTab={activePanel}
+                    onChange={setActivePanel}
+                    variant="pills"
+                    className="!flex-wrap !overflow-visible"
+                />
             </div>
 
             {/* Contenu du panneau actif */}

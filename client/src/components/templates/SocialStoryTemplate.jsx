@@ -5,6 +5,7 @@ import {
     formatRating,
     extractCategoryRatings,
     colorWithOpacity,
+    getResponsiveAdjustments,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
@@ -27,11 +28,17 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const accent = colors.accent || '#a78bfa';
     const bg = colors.background || 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)';
 
+    // Échelle responsive partagée avec les 4 autres templates — ce template supporte plusieurs
+    // ratios (1:1/16:9/9:16, cf. TemplateSelector) mais ignorait jusqu'ici entièrement le ratio
+    // choisi (tailles de police et limites de densité en dur, pensées pour 9:16 uniquement).
+    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const { fontSize, limits } = responsive;
+
     // Données
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
-    const aromas = asArray(reviewData.aromas).slice(0, 4);
-    const effects = asArray(reviewData.effects).slice(0, 4);
-    const tastes = asArray(reviewData.tastes).slice(0, 3);
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
+    const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
+    const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
+    const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
     const { filled, value: ratingValue } = formatRating(reviewData.rating || 0, 5);
 
     const mainImage = resolveImageUrl(
@@ -46,15 +53,14 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const farm = reviewData.farm || reviewData.hashmaker || reviewData.producer || '';
     const productType = reviewData.type || reviewData.typeName || '';
 
-    // Couleurs
-    const white = '#ffffff';
-    const whiteMuted = 'rgba(255,255,255,0.65)';
-    const whiteDim = 'rgba(255,255,255,0.2)';
-    const cardBg = 'rgba(255,255,255,0.08)';
-    const cardBorder = 'rgba(255,255,255,0.15)';
-
-    // Catégorie → couleur accent distinct
-    const catColors = ['#a78bfa', '#34d399', '#fb923c', '#60a5fa', '#f472b6'];
+    // Couleurs — dérivées de la palette active (`colors.textPrimary`/`textSecondary`) plutôt que du
+    // blanc en dur : ce template assumait jusqu'ici toujours un fond sombre, cassant illisible sur
+    // la palette claire "minimal" (texte blanc sur fond clair).
+    const white = colors.textPrimary || '#ffffff';
+    const whiteMuted = colorWithOpacity(colors.textSecondary || white, 70);
+    const whiteDim = colorWithOpacity(colors.textSecondary || white, 22);
+    const cardBg = colorWithOpacity(colors.textPrimary || white, 8);
+    const cardBorder = colorWithOpacity(colors.textPrimary || white, 15);
 
     const renderStars = () => (
         <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
@@ -67,24 +73,25 @@ export default function SocialStoryTemplate({ config, reviewData }) {
         </div>
     );
 
-    const renderCategoryBar = (cat, idx) => {
+    const renderCategoryBar = (cat) => {
         const pct = Math.min(100, (cat.value / 10) * 100);
-        const color = catColors[idx % catColors.length];
+        // Une seule couleur accent (comme ModernCompactTemplate/DetailedCardTemplate) plutôt qu'un
+        // dégradé de teintes en dur déconnecté de la palette choisie.
         return (
             <div key={cat.key} style={{ marginBottom: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: 13, color: whiteMuted, display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ fontSize: fontSize.text, color: whiteMuted, display: 'flex', alignItems: 'center', gap: 5 }}>
                         <span>{cat.icon}</span>
                         <span style={{ fontWeight: 500 }}>{cat.label}</span>
                     </span>
-                    <span style={{ fontSize: 13, fontWeight: 700, color: color }}>
+                    <span style={{ fontSize: fontSize.text, fontWeight: 700, color: accent }}>
                         {cat.value.toFixed(1)}
                     </span>
                 </div>
                 <div style={{ height: 5, borderRadius: 3, background: whiteDim, overflow: 'hidden' }}>
                     <div style={{
                         width: `${pct}%`, height: '100%',
-                        background: `linear-gradient(90deg, ${colorWithOpacity(color, 80)}, ${color})`,
+                        background: `linear-gradient(90deg, ${colorWithOpacity(accent, 80)}, ${accent})`,
                         borderRadius: 3,
                         transition: 'width 0.6s ease'
                     }} />
@@ -93,15 +100,17 @@ export default function SocialStoryTemplate({ config, reviewData }) {
         );
     };
 
-    const renderTag = (item, i, tagAccent) => (
+    // Une seule couleur accent pour tous les tags (comme les autres templates), plutôt qu'une
+    // teinte en dur différente par catégorie (effets/arômes/goûts) déconnectée de la palette.
+    const renderTag = (item, i) => (
         <span key={i} style={{
             padding: '4px 10px',
             borderRadius: 20,
-            fontSize: 12,
+            fontSize: fontSize.small,
             fontWeight: 500,
             color: white,
-            background: colorWithOpacity(tagAccent, 25),
-            border: `1px solid ${colorWithOpacity(tagAccent, 40)}`,
+            background: colorWithOpacity(accent, 25),
+            border: `1px solid ${colorWithOpacity(accent, 40)}`,
             whiteSpace: 'nowrap',
         }}>
             {extractLabel(item)}
@@ -143,7 +152,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                             position: 'absolute', top: 16, left: 16,
                             padding: '4px 12px', borderRadius: 20,
                             background: colorWithOpacity(accent, 85),
-                            fontSize: 11, fontWeight: 700, letterSpacing: '0.08em',
+                            fontSize: fontSize.small, fontWeight: 700, letterSpacing: '0.08em',
                             textTransform: 'uppercase', color: white,
                         }}>
                             {productType}
@@ -174,13 +183,13 @@ export default function SocialStoryTemplate({ config, reviewData }) {
             {/* ── CONTENT AREA ── */}
             <div style={{
                 flex: 1, display: 'flex', flexDirection: 'column',
-                padding: '16px 20px 14px', overflow: 'hidden', gap: 12,
+                padding: `${responsive.padding.container}px`, overflow: 'hidden', gap: responsive.spacing.section,
             }}>
                 {/* Title & meta */}
                 <div>
                     {contentModules.title && title && (
                         <h1 style={{
-                            fontSize: Math.min(typography?.titleSize || 28, 28),
+                            fontSize: fontSize.title,
                             fontWeight: 800,
                             lineHeight: 1.15,
                             margin: 0,
@@ -191,13 +200,13 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     )}
                     <div style={{ display: 'flex', gap: 8, marginTop: 5, flexWrap: 'wrap' }}>
                         {cultivar && (
-                            <span style={{ fontSize: 13, color: accent, fontWeight: 600 }}>{cultivar}</span>
+                            <span style={{ fontSize: fontSize.text, color: accent, fontWeight: 600 }}>{cultivar}</span>
                         )}
                         {farm && cultivar && (
-                            <span style={{ fontSize: 13, color: whiteDim }}>·</span>
+                            <span style={{ fontSize: fontSize.text, color: whiteDim }}>·</span>
                         )}
                         {farm && (
-                            <span style={{ fontSize: 13, color: whiteMuted }}>{farm}</span>
+                            <span style={{ fontSize: fontSize.text, color: whiteMuted }}>{farm}</span>
                         )}
                     </div>
                 </div>
@@ -207,10 +216,10 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                         {renderStars()}
                         <span style={{
-                            fontSize: 22, fontWeight: 800, color: accent,
+                            fontSize: fontSize.subtitle, fontWeight: 800, color: accent,
                             textShadow: `0 0 20px ${colorWithOpacity(accent, 50)}`,
                         }}>
-                            {ratingValue.toFixed(1)}<span style={{ fontSize: 13, fontWeight: 400, color: whiteMuted }}>/10</span>
+                            {ratingValue.toFixed(1)}<span style={{ fontSize: fontSize.small, fontWeight: 400, color: whiteMuted }}>/10</span>
                         </span>
                     </div>
                 )}
@@ -225,8 +234,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                                     background: cardBg, border: `1px solid ${cardBorder}`,
                                     textAlign: 'center',
                                 }}>
-                                    <div style={{ fontSize: 10, color: whiteMuted, marginBottom: 2 }}>THC</div>
-                                    <div style={{ fontSize: 18, fontWeight: 800, color: '#f87171' }}>
+                                    <div style={{ fontSize: fontSize.small, color: whiteMuted, marginBottom: 2 }}>THC</div>
+                                    <div style={{ fontSize: fontSize.text + 4, fontWeight: 800, color: accent }}>
                                         {reviewData.thcLevel || reviewData.thc}%
                                     </div>
                                 </div>
@@ -237,8 +246,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                                     background: cardBg, border: `1px solid ${cardBorder}`,
                                     textAlign: 'center',
                                 }}>
-                                    <div style={{ fontSize: 10, color: whiteMuted, marginBottom: 2 }}>CBD</div>
-                                    <div style={{ fontSize: 18, fontWeight: 800, color: '#34d399' }}>
+                                    <div style={{ fontSize: fontSize.small, color: whiteMuted, marginBottom: 2 }}>CBD</div>
+                                    <div style={{ fontSize: fontSize.text + 4, fontWeight: 800, color: accent }}>
                                         {reviewData.cbdLevel || reviewData.cbd}%
                                     </div>
                                 </div>
@@ -252,18 +261,18 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         padding: '10px 14px', borderRadius: 12,
                         background: cardBg, border: `1px solid ${cardBorder}`,
                     }}>
-                        {categoryRatings.slice(0, 4).map((cat, i) => renderCategoryBar(cat, i))}
+                        {categoryRatings.map((cat) => renderCategoryBar(cat))}
                     </div>
                 )}
 
                 {/* Effects */}
                 {contentModules.effects && effects.length > 0 && (
                     <div>
-                        <div style={{ fontSize: 11, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        <div style={{ fontSize: fontSize.small, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                             ⚡ Effets
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                            {effects.map((e, i) => renderTag(e, i, '#a78bfa'))}
+                            {effects.map((e, i) => renderTag(e, i))}
                         </div>
                     </div>
                 )}
@@ -271,11 +280,11 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Aromas */}
                 {contentModules.aromas && aromas.length > 0 && (
                     <div>
-                        <div style={{ fontSize: 11, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        <div style={{ fontSize: fontSize.small, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                             🌸 Arômes
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                            {aromas.map((a, i) => renderTag(a, i, '#34d399'))}
+                            {aromas.map((a, i) => renderTag(a, i))}
                         </div>
                     </div>
                 )}
@@ -283,11 +292,11 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Tastes */}
                 {contentModules.tastes !== false && tastes.length > 0 && !aromas.length && (
                     <div>
-                        <div style={{ fontSize: 11, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        <div style={{ fontSize: fontSize.small, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                             👅 Goûts
                         </div>
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                            {tastes.map((t, i) => renderTag(t, i, '#fb923c'))}
+                            {tastes.map((t, i) => renderTag(t, i))}
                         </div>
                     </div>
                 )}
@@ -295,12 +304,12 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié.
                     Format story très contraint verticalement : mode compact, pas de section dédiée. */}
                 {contentModules.phenoHuntView !== false && (
-                    <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={12} accentColor={accent} titleColor={colors.title || white} />
+                    <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.small} accentColor={accent} titleColor={colors.title || white} />
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
                 {contentModules.productionChainView !== false && (
-                    <ProductionChainMiniView reviewData={reviewData} sectionFontSize={12} accentColor={accent} titleColor={colors.title || white} />
+                    <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.small} accentColor={accent} titleColor={colors.title || white} />
                 )}
 
                 {/* Spacer */}
@@ -313,7 +322,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     borderTop: `1px solid ${whiteDim}`,
                 }}>
                     {contentModules.author && (
-                        <span style={{ fontSize: 12, color: whiteMuted }}>
+                        <span style={{ fontSize: fontSize.small, color: whiteMuted }}>
                             par <strong style={{ color: accent }}>
                                 {reviewData.ownerName ||
                                     (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) ||
@@ -321,7 +330,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                             </strong>
                         </span>
                     )}
-                    <span style={{ fontSize: 10, color: whiteDim, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: fontSize.small, color: whiteDim, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                         terpologie.eu
                     </span>
                 </div>

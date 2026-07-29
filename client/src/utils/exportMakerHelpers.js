@@ -888,7 +888,12 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
 
     // Facteur de réduction basé sur la surface disponible
     // 1:1 (1080x1080) est le format le plus contraint, donc facteur le plus bas
-    const scaleFactor = isSquare ? 0.7 : isPortrait ? 0.8 : isLandscape ? 0.9 : isA4 ? 1.0 : 0.85;
+    // NB (2026-07-29) : `isA4` DOIT être vérifié avant `isPortrait` dans les 3 ternaires de cette
+    // fonction (ici, `padding.container`, `grid.cols`) — un canevas A4 (1754×2480) satisfait AUSSI
+    // la condition portrait (hauteur > largeur×1.2), donc placé après `isPortrait` il n'atteint
+    // JAMAIS sa propre branche : A4 héritait silencieusement de l'échelle du format 9:16 (0.8) au
+    // lieu de la sienne (1.0), sous-dimensionné pour un format 2x plus grand pensé pour l'impression.
+    const scaleFactor = isSquare ? 0.7 : isA4 ? 1.0 : isPortrait ? 0.8 : isLandscape ? 0.9 : 0.85;
 
     return {
         // Facteurs d'échelle
@@ -900,7 +905,7 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
 
         // Padding adaptatif
         padding: {
-            container: isSquare ? 16 : isPortrait ? 20 : isA4 ? 48 : 24,
+            container: isSquare ? 16 : isA4 ? 48 : isPortrait ? 20 : 24,
             section: isSquare ? 8 : 12,
             card: isSquare ? 8 : 12,
         },
@@ -949,7 +954,7 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
 
         // Grid
         grid: {
-            cols: isSquare ? 2 : isPortrait ? 2 : isA4 ? 4 : 3,
+            cols: isSquare ? 2 : isA4 ? 4 : isPortrait ? 2 : 3,
         },
     };
 }

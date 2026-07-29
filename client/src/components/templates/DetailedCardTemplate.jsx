@@ -20,6 +20,7 @@ import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { CannabinoidGrid, GisementSections, getCannabinoidItems } from './sections/RegistrySections';
+import TemplateSection from './sections/TemplateSection';
 
 // Groupes du "gisement" rendus génériquement depuis le registre (jamais affichés avant) :
 // récolte, culture, usage, labo, et les procédés propres aux Hash/Concentré/Comestible.
@@ -117,31 +118,19 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         (contentModules?.parentage && reviewData.parentage) ||
         reviewData.producerVerified;
 
-    // Composants réutilisables
-    const Section = ({ title, icon, children, className = '' }) => {
-        if (!children || (React.Children.count(children) === 0)) return null;
-        return (
-            <div style={{ marginBottom: `${spacing.section}px` }} className={className}>
-                <h3
-                    style={{
-                        fontSize: `${fontSize.section}px`,
-                        fontWeight: '600',
-                        color: colors.title,
-                        marginBottom: `${spacing.element}px`,
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: `${spacing.gap}px`,
-                        borderBottom: `${isSquare ? 1 : 2}px solid ${colorWithOpacity(colors.accent, 30)}`,
-                        paddingBottom: `${spacing.gap}px`,
-                    }}
-                >
-                    {icon && <span>{icon}</span>}
-                    {title}
-                </h3>
-                {children}
-            </div>
-        );
-    };
+    // Composants réutilisables — `Section` délègue à `TemplateSection.jsx` (partagé avec
+    // `TraceabilityReportTemplate.jsx`, qui en dupliquait une copie quasi identique avant le
+    // 2026-07-29) ; wrapper fin pour ne pas devoir changer tous les appels `<Section title=.../>`
+    // existants plus bas dans ce fichier.
+    const Section = ({ title, icon, children, className = '' }) => (
+        <TemplateSection
+            title={title} icon={icon} className={className}
+            fontSize={fontSize} spacing={spacing} colors={colors}
+            borderWidth={isSquare ? 1 : 2}
+        >
+            {children}
+        </TemplateSection>
+    );
 
     const InfoCard = ({ label, value, icon, size = 'normal' }) => {
         if (!value) return null;
@@ -637,7 +626,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             {/* Métadonnées COA — saisies en formulaire (labName/labMethod/labAccredited)
                                 mais jamais rendues dans un export avant ce fix (cf. audit traçabilité) */}
                             {(contentModules.thcLevel || contentModules.cbdLevel) && (reviewData.labName || reviewData.labMethod || reviewData.labAccredited) && (
-                                <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: 'rgba(139,92,246,0.08)', borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}`, fontSize: `${typography.textSize - 1}px`, color: colors.textSecondary || '#9ca3af' }}>
+                                <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: colorWithOpacity(colors.accent, 8), borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}`, fontSize: `${fontSize.text - 1}px`, color: colors.textSecondary || '#9ca3af' }}>
                                     🔬 {[
                                         reviewData.labName,
                                         reviewData.labMethod && LAB_METHOD_LABELS[reviewData.labMethod] || reviewData.labMethod,
@@ -668,7 +657,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     borderRadius: '999px',
                                     background: colorWithOpacity('#22c55e', 15),
                                     border: `1px solid ${colorWithOpacity('#22c55e', 35)}`,
-                                    fontSize: `${typography.textSize - 2}px`,
+                                    fontSize: `${fontSize.text - 2}px`,
                                     color: '#22c55e',
                                     fontWeight: '600',
                                 }}>
@@ -682,9 +671,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     ? [p.female, p.male].filter(Boolean).join(' ♀ × ♂ ')
                                     : String(p);
                                 return parentageText ? (
-                                    <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: 'rgba(255,255,255,0.05)', borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}` }}>
-                                        <div style={{ fontSize: `${typography.textSize - 1}px`, color: colors.textSecondary || '#9ca3af', marginBottom: '2px' }}>Lignée</div>
-                                        <div style={{ fontSize: `${typography.textSize}px`, color: colors.textPrimary || '#fff', fontStyle: 'italic' }}>🌿 {parentageText}</div>
+                                    <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: colorWithOpacity(colors.accent, 5), borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}` }}>
+                                        <div style={{ fontSize: `${fontSize.text - 1}px`, color: colors.textSecondary || '#9ca3af', marginBottom: '2px' }}>Lignée</div>
+                                        <div style={{ fontSize: `${fontSize.text}px`, color: colors.textPrimary || '#fff', fontStyle: 'italic' }}>🌿 {parentageText}</div>
                                     </div>
                                 ) : null;
                             })()}

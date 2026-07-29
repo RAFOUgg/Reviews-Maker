@@ -473,10 +473,14 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                 exit={{ scale: 0.95, opacity: 0, y: 20 }}
                 transition={{ type: 'spring', damping: 25, stiffness: 300 }}
                 className="fixed z-[10002] bg-white dark:bg-gray-900 rounded-2xl shadow-2xl overflow-hidden flex flex-col border-2 border-gray-200 dark:border-gray-700"
+                // Taille en % de la fenêtre plutôt qu'un plafond pixel modeste (1180px/860px
+                // laissait énormément d'espace vide sur un grand écran, cf. capture 2026-07-29) —
+                // le plafond pixel ne sert plus qu'à éviter des lignes de texte démesurées sur un
+                // moniteur ultra-large, pas à brider la taille sur un écran desktop courant.
                 style={
                     showPreview
-                        ? { inset: 0, margin: 'auto', width: 'min(1180px, 96vw)', height: 'min(860px, calc(100svh - 3rem))' }
-                        : { inset: 0, margin: 'auto', width: 'min(600px, 95vw)', height: 'fit-content', maxHeight: 'calc(100svh - 3rem)' }
+                        ? { inset: 0, margin: 'auto', width: 'min(1800px, 94vw)', height: 'min(980px, 92vh)' }
+                        : { inset: 0, margin: 'auto', width: 'min(700px, 95vw)', height: 'fit-content', maxHeight: '92vh' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}

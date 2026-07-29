@@ -11,6 +11,7 @@ import { evaluateChainEventRules } from '../../utils/chainEventRules';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
+import TemplateSection from './sections/TemplateSection';
 
 const BUSINESS_TYPE_LABELS = {
     farm: 'Ferme', laboratory: 'Laboratoire', extractor: 'Extracteur',
@@ -128,21 +129,18 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     const hasLabInfo = reviewData.labName || reviewData.labMethod || reviewData.labAccredited;
     const hasTrustInfo = reviewData.producerVerified || hasLabInfo;
 
-    const Section = ({ title, icon, children }) => {
-        if (!children || (Array.isArray(children) && children.every(c => !c))) return null;
-        return (
-            <div style={{ marginBottom: `${spacing.section}px` }}>
-                <h3 style={{
-                    fontSize: `${fontSize.section}px`, fontWeight: 700, color: colors.title,
-                    marginBottom: `${spacing.element}px`, display: 'flex', alignItems: 'center', gap: 8,
-                    borderBottom: `2px solid ${colorWithOpacity(colors.accent, 35)}`, paddingBottom: 6,
-                }}>
-                    <span>{icon}</span> {title}
-                </h3>
-                {children}
-            </div>
-        );
-    };
+    // Délègue à `TemplateSection.jsx` (partagé avec `DetailedCardTemplate.jsx`, qui définissait
+    // l'original) — props ajustées pour préserver le rendu exact déjà en place ici (fontWeight 700,
+    // bordure 2px/opacité 35, gap 8/paddingBottom 6 en dur plutôt que `spacing.gap`).
+    const Section = ({ title, icon, children }) => (
+        <TemplateSection
+            title={title} icon={icon}
+            fontSize={fontSize} spacing={spacing} colors={colors}
+            fontWeight={700} borderWidth={2} borderOpacity={35} gap={8}
+        >
+            {children}
+        </TemplateSection>
+    );
 
     return (
         <div

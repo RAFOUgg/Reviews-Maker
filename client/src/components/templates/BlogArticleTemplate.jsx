@@ -75,50 +75,54 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
             : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 
-    // Styles
+    // Styles — espacements dérivés de `spacing`/`padding` (responsive par ratio) plutôt que des
+    // marges fixes identiques quel que soit le format choisi (bug d'incohérence trouvé 2026-07-29 :
+    // ce template était le seul, avec SocialStory, à ignorer l'échelle d'espacement partagée).
+    // Les multiplicateurs visent à préserver la respiration généreuse déjà en place (format long
+    // adapté à la lecture), pas des valeurs identiques pixel pour pixel.
     const styles = {
         section: {
-            marginBottom: '32px',
+            marginBottom: `${spacing.section * 1.6}px`,
         },
         sectionTitle: {
-            fontSize: `${typography.titleSize - 6}px`,
+            fontSize: `${fontSize.title - 6}px`,
             fontWeight: '700',
             color: colors.title,
-            marginBottom: '16px',
-            paddingBottom: '8px',
+            marginBottom: `${spacing.element * 2}px`,
+            paddingBottom: `${spacing.gap}px`,
             borderBottom: `3px solid ${colors.accent}`,
             display: 'inline-block',
         },
         paragraph: {
-            fontSize: `${typography.textSize + 1}px`,
+            fontSize: `${fontSize.text + 1}px`,
             color: colors.textSecondary,
             lineHeight: '1.9',
-            marginBottom: '16px',
+            marginBottom: `${spacing.element * 2}px`,
         },
         tag: {
             display: 'inline-block',
-            fontSize: `${typography.textSize - 1}px`,
-            padding: '8px 16px',
+            fontSize: `${fontSize.text - 1}px`,
+            padding: `${spacing.gap}px ${spacing.element * 2}px`,
             borderRadius: '25px',
             backgroundColor: colorWithOpacity(colors.accent, 15),
             color: colors.accent,
             fontWeight: '500',
-            margin: '4px',
+            margin: `${spacing.gap * 0.7}px`,
         },
         infoBox: {
             backgroundColor: colorWithOpacity(colors.accent, 8),
             borderLeft: `4px solid ${colors.accent}`,
-            padding: '20px 24px',
+            padding: `${padding.card}px ${padding.card * 1.2}px`,
             borderRadius: '0 12px 12px 0',
-            marginBottom: '24px',
+            marginBottom: `${spacing.section * 1.2}px`,
         },
         quote: {
-            fontSize: `${typography.textSize + 4}px`,
+            fontSize: `${fontSize.text + 4}px`,
             fontStyle: 'italic',
             color: colors.textPrimary,
             borderLeft: `4px solid ${colors.accent}`,
-            paddingLeft: '20px',
-            margin: '32px 0',
+            paddingLeft: `${spacing.element * 2.5}px`,
+            margin: `${spacing.section * 1.6}px 0`,
         },
     };
 
@@ -156,7 +160,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
         return (
             <div className="flex items-center gap-3 mt-8 pt-6 export-maker-branding" style={{ borderTop: `1px solid ${colorWithOpacity(colors.accent, 20)}` }}>
                 <img src={branding.logoUrl} alt="Logo" style={{ width: '40px', height: '40px', objectFit: 'contain', opacity: branding.opacity }} />
-                <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>Publié sur notre plateforme</span>
+                <span style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>Publié sur notre plateforme</span>
             </div>
         );
     };
@@ -182,7 +186,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     <div className="flex items-center gap-4 mb-4">
                         {contentModules.type && reviewData.type && (
                             <span style={{
-                                fontSize: `${typography.textSize - 2}px`,
+                                fontSize: `${fontSize.text - 2}px`,
                                 color: colors.accent,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.15em',
@@ -193,7 +197,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         )}
                         {contentModules.category && reviewData.category && (
                             <span style={{
-                                fontSize: `${typography.textSize - 2}px`,
+                                fontSize: `${fontSize.text - 2}px`,
                                 color: colors.textSecondary,
                                 padding: '4px 12px',
                                 borderRadius: '20px',
@@ -207,7 +211,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     {/* Title */}
                     {contentModules.title && (reviewData.title || reviewData.holderName) && (
                         <h1 style={{
-                            fontSize: `${typography.titleSize + 12}px`,
+                            fontSize: `${fontSize.title + 12}px`,
                             fontWeight: typography.titleWeight,
                             color: colors.title,
                             lineHeight: '1.15',
@@ -218,7 +222,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     )}
 
                     {/* Meta: Author, Date, Rating */}
-                    <div className="flex flex-wrap items-center gap-6" style={{ fontSize: `${typography.textSize}px`, color: colors.textSecondary }}>
+                    <div className="flex flex-wrap items-center gap-6" style={{ fontSize: `${fontSize.text}px`, color: colors.textSecondary }}>
                         {contentModules.author && (
                             <span>
                                 Par <strong style={{ color: colors.textPrimary }}>
@@ -253,7 +257,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ maxHeight: '500px', objectFit: 'cover' }} />
                             </div>
                             {reviewData.cultivar && (
-                                <figcaption style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary, marginTop: '12px', textAlign: 'center' }}>
+                                <figcaption style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary, marginTop: '12px', textAlign: 'center' }}>
                                     Cultivar: {reviewData.cultivar}
                                 </figcaption>
                             )}
@@ -264,7 +268,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 {/* Introduction / Description */}
                 {contentModules.description && reviewData.description && (
                     <div style={styles.section}>
-                        <p style={{ ...styles.paragraph, fontSize: `${typography.textSize + 3}px`, fontWeight: '400' }}>
+                        <p style={{ ...styles.paragraph, fontSize: `${fontSize.text + 3}px`, fontWeight: '400' }}>
                             {reviewData.description}
                         </p>
                     </div>
@@ -273,32 +277,32 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 {/* Quick Facts Box */}
                 {(contentModules.thcLevel || contentModules.cbdLevel || contentModules.strainType) && (
                     <div style={styles.infoBox}>
-                        <h3 style={{ fontSize: `${typography.textSize + 2}px`, fontWeight: '700', color: colors.title, marginBottom: '16px' }}>
+                        <h3 style={{ fontSize: `${fontSize.text + 2}px`, fontWeight: '700', color: colors.title, marginBottom: `${spacing.element * 2}px` }}>
                             📊 Fiche Technique Rapide
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             {contentModules.thcLevel && reviewData.thcLevel && (
                                 <div>
-                                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>THC</div>
-                                    <div style={{ fontSize: `${typography.textSize + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.thcLevel}%</div>
+                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>THC</div>
+                                    <div style={{ fontSize: `${fontSize.text + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.thcLevel}%</div>
                                 </div>
                             )}
                             {contentModules.cbdLevel && reviewData.cbdLevel && (
                                 <div>
-                                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>CBD</div>
-                                    <div style={{ fontSize: `${typography.textSize + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.cbdLevel}%</div>
+                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>CBD</div>
+                                    <div style={{ fontSize: `${fontSize.text + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.cbdLevel}%</div>
                                 </div>
                             )}
                             {contentModules.strainType && reviewData.strainType && (
                                 <div>
-                                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>Type</div>
-                                    <div style={{ fontSize: `${typography.textSize + 2}px`, fontWeight: '600', color: colors.textPrimary }}>{reviewData.strainType}</div>
+                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>Type</div>
+                                    <div style={{ fontSize: `${fontSize.text + 2}px`, fontWeight: '600', color: colors.textPrimary }}>{reviewData.strainType}</div>
                                 </div>
                             )}
                             {contentModules.indicaRatio && reviewData.indicaRatio !== undefined && (
                                 <div>
-                                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>Indica</div>
-                                    <div style={{ fontSize: `${typography.textSize + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.indicaRatio}%</div>
+                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>Indica</div>
+                                    <div style={{ fontSize: `${fontSize.text + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.indicaRatio}%</div>
                                 </div>
                             )}
                         </div>
@@ -313,8 +317,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             {categoryRatings.map((r, i) => (
                                 <div key={i} className="text-center p-4 rounded-xl" style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}>
                                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>{r.icon}</div>
-                                    <div style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>{r.label}</div>
-                                    <div style={{ fontSize: `${typography.textSize + 6}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
+                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>{r.label}</div>
+                                    <div style={{ fontSize: `${fontSize.text + 6}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
                                 </div>
                             ))}
                         </div>
@@ -348,37 +352,37 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         <h2 style={styles.sectionTitle}>🌸 Profil Sensoriel</h2>
                         {contentModules.aromas && aromas.length > 0 && (
                             <div className="mb-6">
-                                <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '12px' }}>Arômes dominants</h3>
+                                <h3 style={{ fontSize: `${fontSize.text + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: `${spacing.element}px` }}>Arômes dominants</h3>
                                 {renderTags(aromas)}
                             </div>
                         )}
                         {contentModules.aromas && secondaryAromas.length > 0 && (
                             <div className="mb-6">
-                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>Arômes secondaires</h3>
+                                <h3 style={{ fontSize: `${fontSize.text}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>Arômes secondaires</h3>
                                 {renderTags(secondaryAromas)}
                             </div>
                         )}
                         {contentModules.tastes !== false && dryPuffNotes.length > 0 && (
                             <div className="mb-4">
-                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>💨 Tirage à sec</h3>
+                                <h3 style={{ fontSize: `${fontSize.text}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>💨 Tirage à sec</h3>
                                 {renderTags(dryPuffNotes)}
                             </div>
                         )}
                         {contentModules.tastes !== false && inhalationNotes.length > 0 && (
                             <div className="mb-4">
-                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>🌬️ Inhalation</h3>
+                                <h3 style={{ fontSize: `${fontSize.text}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>🌬️ Inhalation</h3>
                                 {renderTags(inhalationNotes)}
                             </div>
                         )}
                         {contentModules.tastes !== false && exhalationNotes.length > 0 && (
                             <div className="mb-4">
-                                <h3 style={{ fontSize: `${typography.textSize}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>↩️ Expiration / Arrière-goût</h3>
+                                <h3 style={{ fontSize: `${fontSize.text}px`, fontWeight: '500', color: colors.textSecondary, marginBottom: '8px' }}>↩️ Expiration / Arrière-goût</h3>
                                 {renderTags(exhalationNotes)}
                             </div>
                         )}
                         {contentModules.tastes !== false && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
                             <div>
-                                <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: '12px' }}>Goûts</h3>
+                                <h3 style={{ fontSize: `${fontSize.text + 1}px`, fontWeight: '600', color: colors.textPrimary, marginBottom: `${spacing.element}px` }}>Goûts</h3>
                                 {renderTags(tastes)}
                             </div>
                         )}
@@ -391,7 +395,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         <h2 style={styles.sectionTitle}>⚡ Effets Ressentis</h2>
                         {renderTags(effects)}
                         {contentModules.dureeEffet && reviewData.dureeEffet && (
-                            <p style={{ ...styles.paragraph, marginTop: '16px' }}>
+                            <p style={{ ...styles.paragraph, marginTop: `${spacing.element * 2}px` }}>
                                 <strong>Durée des effets :</strong> {reviewData.dureeEffet}
                             </p>
                         )}
@@ -421,8 +425,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 <div key={pi} className="mb-6">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '8px 14px', backgroundColor: colorWithOpacity(colors.accent, 12), borderRadius: 10 }}>
                                         <span style={{ fontSize: '20px' }}>{p.icon}</span>
-                                        <h3 style={{ fontSize: `${typography.textSize + 1}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>{p.name}</h3>
-                                        <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.accent, fontWeight: '600', padding: '2px 8px', backgroundColor: colorWithOpacity(colors.accent, 20), borderRadius: 20 }}>
+                                        <h3 style={{ fontSize: `${fontSize.text + 1}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>{p.name}</h3>
+                                        <span style={{ fontSize: `${fontSize.text - 2}px`, color: colors.accent, fontWeight: '600', padding: '2px 8px', backgroundColor: colorWithOpacity(colors.accent, 20), borderRadius: 20 }}>
                                             {rawSteps.length} étapes
                                         </span>
                                     </div>
@@ -484,8 +488,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {extraData.map((d, i) => (
                                 <div key={i} className="p-3 rounded-lg" style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}>
-                                    <span style={{ fontSize: `${typography.textSize - 2}px`, color: colors.textSecondary }}>{d.icon} {d.label}</span>
-                                    <div style={{ fontSize: `${typography.textSize}px`, fontWeight: '600', color: colors.textPrimary }}>{d.value}</div>
+                                    <span style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>{d.icon} {d.label}</span>
+                                    <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary }}>{d.value}</div>
                                 </div>
                             ))}
                         </div>
@@ -495,14 +499,14 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
                 {contentModules.phenoHuntView !== false && (
                     <div style={styles.section}>
-                        <GenealogyMiniView reviewData={reviewData} compact={false} sectionFontSize={typography.textSize + 1} accentColor={colors.accent} titleColor={colors.title} />
+                        <GenealogyMiniView reviewData={reviewData} compact={false} sectionFontSize={fontSize.text + 1} accentColor={colors.accent} titleColor={colors.title} />
                     </div>
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
                 {contentModules.productionChainView !== false && (
                     <div style={styles.section}>
-                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={typography.textSize + 1} accentColor={colors.accent} titleColor={colors.title} />
+                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.text + 1} accentColor={colors.accent} titleColor={colors.title} />
                     </div>
                 )}
 

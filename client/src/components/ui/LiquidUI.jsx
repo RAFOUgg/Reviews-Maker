@@ -934,7 +934,8 @@ export function LiquidTabs({
     tabs, // [{ id, label, icon?, disabled? }]
     activeTab,
     onChange,
-    variant = 'default' // default | pills | underline
+    variant = 'default', // default | pills | underline
+    className = '' // classes additionnelles (ex. forcer le retour à la ligne au lieu du scroll horizontal)
 }) {
     // Sous ~640px, une rangée de pills scrollable ne montre aucun indice fiable qu'il y a plus
     // d'onglets hors-écran — un menu liste (LiquidSelect) rend tous les choix visibles d'un coup,
@@ -963,7 +964,7 @@ export function LiquidTabs({
     }
 
     return (
-        <div className={`liquid-tabs ${variant}`}>
+        <div className={`liquid-tabs ${variant} ${className}`}>
             {tabs.map((tab) => (
                 <button
                     key={tab.id}
