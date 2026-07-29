@@ -12,6 +12,7 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
+    getGlassTokens,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
@@ -52,6 +53,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isA4, fontSize, padding, spacing, limits } = responsive;
+    const glass = getGlassTokens(colors);
 
     // Extraction des données - passer reviewData pour fallbacks
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
@@ -110,11 +112,18 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
             margin: `${spacing.gap * 0.7}px`,
         },
         infoBox: {
-            backgroundColor: colorWithOpacity(colors.accent, 8),
+            background: glass.background,
+            border: `1px solid ${glass.border}`,
             borderLeft: `4px solid ${colors.accent}`,
             padding: `${padding.card}px ${padding.card * 1.2}px`,
-            borderRadius: '0 12px 12px 0',
+            borderRadius: '0 20px 20px 0',
             marginBottom: `${spacing.section * 1.2}px`,
+            backdropFilter: 'blur(24px) saturate(150%)',
+            WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+            boxShadow: [
+                `0 4px 24px -4px ${glass.shadow}`,
+                `inset 0 1px 1px ${glass.borderHighlight}`,
+            ].join(', '),
         },
         quote: {
             fontSize: `${fontSize.text + 4}px`,
@@ -240,10 +249,18 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 {/* Featured Image — or gallery */}
                 {contentModules.mainImage !== false && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
                     const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                    const imageFrameStyle = {
+                        border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
+                        boxShadow: [
+                            '0 4px 24px -4px rgba(0,0,0,0.4)',
+                            '0 12px 48px -12px rgba(0,0,0,0.5)',
+                            `inset 0 1px 1px ${colorWithOpacity('#ffffff', 20)}`,
+                        ].join(', '),
+                    };
                     if (showGallery) {
                         return (
                             <figure className="mb-10">
-                                <div className="grid overflow-hidden shadow-xl" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: reviewData.images.length >= 3 ? '2fr 1fr 1fr' : reviewData.images.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: '420px' }}>
+                                <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: reviewData.images.length >= 3 ? '2fr 1fr 1fr' : reviewData.images.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: '420px', ...imageFrameStyle }}>
                                     {reviewData.images.slice(0, 4).map((img, ii) => (
                                         <img key={ii} src={img} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? '420px' : '208px' }} />
                                     ))}
@@ -253,7 +270,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     }
                     return (
                         <figure className="mb-10">
-                            <div className="overflow-hidden shadow-xl" style={{ borderRadius: `${image.borderRadius}px` }}>
+                            <div className="overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
                                 <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ maxHeight: '500px', objectFit: 'cover' }} />
                             </div>
                             {reviewData.cultivar && (
@@ -315,7 +332,11 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         <h2 style={styles.sectionTitle}>🎯 Évaluation Détaillée</h2>
                         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {categoryRatings.map((r, i) => (
-                                <div key={i} className="text-center p-4 rounded-xl" style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}>
+                                <div key={i} className="text-center p-4 rounded-2xl" style={{
+                                    backgroundColor: colorWithOpacity(colors.accent, 8),
+                                    border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
+                                    boxShadow: `inset 0 1px 1px ${colorWithOpacity('#ffffff', 12)}`,
+                                }}>
                                     <div style={{ fontSize: '28px', marginBottom: '8px' }}>{r.icon}</div>
                                     <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>{r.label}</div>
                                     <div style={{ fontSize: `${fontSize.text + 6}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
@@ -423,7 +444,19 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
                             return (
                                 <div key={pi} className="mb-6">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10, padding: '8px 14px', backgroundColor: colorWithOpacity(colors.accent, 12), borderRadius: 10 }}>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
+                                        padding: '10px 16px',
+                                        background: glass.background,
+                                        border: `1px solid ${glass.border}`,
+                                        borderRadius: 16,
+                                        backdropFilter: 'blur(24px) saturate(150%)',
+                                        WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+                                        boxShadow: [
+                                            `0 4px 24px -4px ${glass.shadow}`,
+                                            `inset 0 1px 1px ${glass.borderHighlight}`,
+                                        ].join(', '),
+                                    }}>
                                         <span style={{ fontSize: '20px' }}>{p.icon}</span>
                                         <h3 style={{ fontSize: `${fontSize.text + 1}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>{p.name}</h3>
                                         <span style={{ fontSize: `${fontSize.text - 2}px`, color: colors.accent, fontWeight: '600', padding: '2px 8px', backgroundColor: colorWithOpacity(colors.accent, 20), borderRadius: 20 }}>
@@ -487,7 +520,11 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         <h2 style={styles.sectionTitle}>📊 Caractéristiques Avancées</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {extraData.map((d, i) => (
-                                <div key={i} className="p-3 rounded-lg" style={{ backgroundColor: colorWithOpacity(colors.accent, 8) }}>
+                                <div key={i} className="p-3 rounded-xl" style={{
+                                    backgroundColor: colorWithOpacity(colors.accent, 8),
+                                    border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
+                                    boxShadow: `inset 0 1px 1px ${colorWithOpacity('#ffffff', 12)}`,
+                                }}>
                                     <span style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>{d.icon} {d.label}</span>
                                     <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '600', color: colors.textPrimary }}>{d.value}</div>
                                 </div>

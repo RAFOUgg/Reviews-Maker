@@ -13,6 +13,7 @@ import {
     extractExtraData,
     getResponsiveAdjustments,
     colorWithOpacity,
+    getGlassTokens,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
@@ -52,6 +53,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isPortrait, isLandscape, fontSize, padding, spacing, limits } = responsive;
+    const glass = getGlassTokens(colors);
 
     // Données extraites - passer reviewData pour fallbacks
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
@@ -106,8 +108,10 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         },
         infoCard: {
             backgroundColor: colorWithOpacity(colors.accent, 15),
-            borderRadius: `${isSquare ? 8 : 12}px`,
+            borderRadius: `${isSquare ? 12 : 16}px`,
             padding: `${padding.card}px`,
+            border: `1px solid ${colorWithOpacity(colors.accent, 22)}`,
+            boxShadow: `inset 0 1px 1px ${colorWithOpacity('#ffffff', 12)}`,
         },
     };
 
@@ -217,11 +221,19 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     {/* Image */}
                     {contentModules.mainImage !== false && mainImage && (() => {
                         const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                        const imageFrameStyle = {
+                            border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
+                            boxShadow: [
+                                '0 4px 24px -4px rgba(0,0,0,0.4)',
+                                '0 12px 48px -12px rgba(0,0,0,0.5)',
+                                `inset 0 1px 1px ${colorWithOpacity('#ffffff', 20)}`,
+                            ].join(', '),
+                        };
                         if (showGallery) {
                             return (
                                 <div className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
                                     {reviewData.images.slice(0, 2).map((img, ii) => (
-                                        <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px` }}>
+                                        <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
                                             <img src={img} alt="" className="w-full h-full object-cover" />
                                         </div>
                                     ))}
@@ -230,7 +242,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         }
                         return (
                             <div className="flex-shrink-0 w-2/5 h-full">
-                                <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px` }}>
+                                <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
                                     <img src={mainImage} alt="" className="w-full h-full object-cover" />
                                 </div>
                             </div>
@@ -267,9 +279,17 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         );
                     }
                     const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                    const imageFrameStyle = {
+                        border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
+                        boxShadow: [
+                            '0 4px 24px -4px rgba(0,0,0,0.4)',
+                            '0 12px 48px -12px rgba(0,0,0,0.5)',
+                            `inset 0 1px 1px ${colorWithOpacity('#ffffff', 20)}`,
+                        ].join(', '),
+                    };
                     if (showGallery) {
                         return (
-                            <div className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3 }}>
+                            <div className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
                                 {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
                                         <img src={img} alt="" className="w-full h-full object-cover" />
@@ -284,6 +304,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             style={{
                                 borderRadius: `${responsive.image.borderRadius}px`,
                                 maxHeight: responsive.image.maxHeight,
+                                ...imageFrameStyle,
                             }}
                         >
                             <img src={mainImage} alt="" className="w-full h-full object-cover" />
@@ -429,7 +450,18 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         const steps = p.rawSteps || p.steps.map(s => ({ label: s }));
                         const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
                         return (
-                            <div key={pi} style={{ borderRadius: isSquare ? 8 : 10, backgroundColor: colorWithOpacity(colors.accent, 8), overflow: 'hidden' }}>
+                            <div key={pi} style={{
+                                borderRadius: isSquare ? 16 : 20,
+                                background: glass.background,
+                                border: `1px solid ${glass.border}`,
+                                backdropFilter: 'blur(24px) saturate(150%)',
+                                WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+                                boxShadow: [
+                                    `0 4px 24px -4px ${glass.shadow}`,
+                                    `inset 0 1px 1px ${glass.borderHighlight}`,
+                                ].join(', '),
+                                overflow: 'hidden',
+                            }}>
                                 {/* Pipeline header */}
                                 <div style={{
                                     padding: `${spacing.gap}px ${spacing.element}px`,

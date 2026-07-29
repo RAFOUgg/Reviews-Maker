@@ -135,7 +135,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     const Section = ({ title, icon, children }) => (
         <TemplateSection
             title={title} icon={icon}
-            fontSize={fontSize} spacing={spacing} colors={colors}
+            fontSize={fontSize} spacing={spacing} padding={padding} colors={colors}
             fontWeight={700} borderWidth={2} borderOpacity={35} gap={8}
         >
             {children}

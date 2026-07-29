@@ -132,6 +132,24 @@ export function colorWithOpacity(color, opacity) {
     return `rgba(128, 128, 128, ${alpha})`;
 }
 
+// Recette de verre LiquidUI (`apple-liquid-glass.css` — .liquid-card) traduite pour les templates
+// d'export — source unique, partagée par `TemplateSection.jsx` et les blocs "carte" des autres
+// templates (image principale, pipelines...), pour ne jamais dupliquer la logique de teinte.
+// LiquidUI est pensé "glassmorphism sombre" (pas de variante fond clair côté app) — mais la palette
+// "Minimaliste" (seule palette à fond clair, cf. `exportMakerConstants.js`) doit rester lisible :
+// le verre y est donc teinté sombre au lieu de blanc, même recette en calques, teinte adaptée au fond.
+export function getGlassTokens(colors) {
+    const isLight = !colors.background?.includes('gradient');
+    const tint = isLight ? (colors.title || '#0F172A') : '#ffffff';
+    return {
+        isLight,
+        background: colorWithOpacity(tint, isLight ? 5 : 6),
+        border: colorWithOpacity(tint, isLight ? 10 : 12),
+        borderHighlight: colorWithOpacity(isLight ? tint : '#ffffff', isLight ? 18 : 25),
+        shadow: isLight ? 'rgba(15,23,42,0.12)' : 'rgba(0,0,0,0.4)',
+    };
+}
+
 /**
  * Détermine si une couleur est claire ou foncée
  * @param {string} hexColor - Couleur hex

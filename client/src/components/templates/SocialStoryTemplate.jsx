@@ -61,6 +61,15 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const whiteDim = colorWithOpacity(colors.textSecondary || white, 22);
     const cardBg = colorWithOpacity(colors.textPrimary || white, 8);
     const cardBorder = colorWithOpacity(colors.textPrimary || white, 15);
+    // Carte de verre (mêmes calques que `TemplateSection.jsx`/pilote 2026-07-29), appliquée aux
+    // deux seuls blocs "panneau" de ce template (THC/CBD, barres de notation) — le hero plein cadre
+    // et les tags restent volontairement plats, cohérent avec le pilote (blur réservé aux grandes
+    // surfaces, jamais aux petits chips).
+    const cardGlassStyle = {
+        backdropFilter: 'blur(24px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(150%)',
+        boxShadow: `inset 0 1px 1px ${colorWithOpacity(white, 12)}`,
+    };
 
     const renderStars = () => (
         <div style={{ display: 'flex', gap: 4, justifyContent: 'center' }}>
@@ -230,9 +239,9 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         <div style={{ display: 'flex', gap: 10 }}>
                             {(reviewData.thcLevel || reviewData.thc) && (
                                 <div style={{
-                                    flex: 1, padding: '8px 12px', borderRadius: 10,
+                                    flex: 1, padding: '8px 12px', borderRadius: 14,
                                     background: cardBg, border: `1px solid ${cardBorder}`,
-                                    textAlign: 'center',
+                                    textAlign: 'center', ...cardGlassStyle,
                                 }}>
                                     <div style={{ fontSize: fontSize.small, color: whiteMuted, marginBottom: 2 }}>THC</div>
                                     <div style={{ fontSize: fontSize.text + 4, fontWeight: 800, color: accent }}>
@@ -242,9 +251,9 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                             )}
                             {(reviewData.cbdLevel || reviewData.cbd) && (
                                 <div style={{
-                                    flex: 1, padding: '8px 12px', borderRadius: 10,
+                                    flex: 1, padding: '8px 12px', borderRadius: 14,
                                     background: cardBg, border: `1px solid ${cardBorder}`,
-                                    textAlign: 'center',
+                                    textAlign: 'center', ...cardGlassStyle,
                                 }}>
                                     <div style={{ fontSize: fontSize.small, color: whiteMuted, marginBottom: 2 }}>CBD</div>
                                     <div style={{ fontSize: fontSize.text + 4, fontWeight: 800, color: accent }}>
@@ -258,8 +267,9 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Category Rating Bars */}
                 {contentModules.categoryRatings && categoryRatings.length > 0 && (
                     <div style={{
-                        padding: '10px 14px', borderRadius: 12,
+                        padding: '10px 14px', borderRadius: 16,
                         background: cardBg, border: `1px solid ${cardBorder}`,
+                        ...cardGlassStyle,
                     }}>
                         {categoryRatings.map((cat) => renderCategoryBar(cat))}
                     </div>

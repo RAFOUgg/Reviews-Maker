@@ -125,7 +125,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const Section = ({ title, icon, children, className = '' }) => (
         <TemplateSection
             title={title} icon={icon} className={className}
-            fontSize={fontSize} spacing={spacing} colors={colors}
+            fontSize={fontSize} spacing={spacing} padding={padding} colors={colors}
             borderWidth={isSquare ? 1 : 2}
         >
             {children}
@@ -139,9 +139,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             <div
                 style={{
                     padding: `${padding.card}px`,
-                    borderRadius: `${isSquare ? 8 : 12}px`,
+                    borderRadius: `${isSquare ? 12 : 16}px`,
                     backgroundColor: colorWithOpacity(colors.accent, 10),
-                    border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
+                    border: `1px solid ${colorWithOpacity(colors.accent, 22)}`,
+                    boxShadow: `inset 0 1px 1px ${colorWithOpacity('#ffffff', 12)}`,
                 }}
             >
                 <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>
@@ -470,6 +471,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                         width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
                                         display: 'flex', gap: 4,
                                         height: responsive.image.maxHeight,
+                                        border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
+                                        boxShadow: [
+                                            '0 4px 24px -4px rgba(0,0,0,0.4)',
+                                            '0 12px 48px -12px rgba(0,0,0,0.5)',
+                                        ].join(', '),
                                     }}
                                 >
                                     {galleryImages.slice(0, isSquare ? 2 : 4).map((img, ii) => (
@@ -482,11 +488,18 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         }
                         return (
                             <div
-                                className="flex-shrink-0 overflow-hidden shadow-lg"
+                                className="flex-shrink-0 overflow-hidden"
                                 style={{
+                                    position: 'relative',
                                     borderRadius: `${responsive.image.borderRadius}px`,
                                     width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
                                     height: responsive.image.maxHeight,
+                                    border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
+                                    boxShadow: [
+                                        '0 4px 24px -4px rgba(0,0,0,0.4)',
+                                        '0 12px 48px -12px rgba(0,0,0,0.5)',
+                                        `inset 0 1px 1px ${colorWithOpacity('#ffffff', 20)}`,
+                                    ].join(', '),
                                 }}
                             >
                                 <img src={mainImage} alt="" className="w-full h-full object-cover" />
@@ -569,6 +582,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             borderRadius: `${isSquare ? 12 : 16}px`,
                             marginBottom: `${spacing.section}px`,
                             backgroundColor: colorWithOpacity(colors.accent, 5),
+                            border: `1px solid ${colorWithOpacity(colors.accent, 15)}`,
                             flexShrink: 0
                         }}
                     >
