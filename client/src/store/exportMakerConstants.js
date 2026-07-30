@@ -50,6 +50,21 @@ export const COLOR_PALETTES = {
         textSecondary: '#64748B',
         accent: '#8B5CF6',
         title: '#0F172A'
+    },
+    // Palette "Résine" (2026-07-30) — direction artistique v2 de la Fiche Technique Détaillée
+    // (specs-direction-artistique.md), pensée "certificat de laboratoire" plutôt que glassmorphism
+    // SaaS générique : charcoal-vert + ambre résine comme accent unique. Devient le défaut de ce
+    // template (`TEMPLATE_DEFAULT_IDENTITY.detailedCard` ci-dessous) mais reste une palette normale,
+    // sélectionnable/modifiable comme les autres. Les bandes sémantiques de score (vert conforme/
+    // ambre moyen/terracotta bas) sont un système FIXE distinct — voir `SEMANTIC_SCORE_COLORS`
+    // dans `exportMakerHelpers.js`, jamais dérivé de cette palette.
+    resin: {
+        name: 'Résine',
+        background: 'radial-gradient(900px 500px at 20% -10%, rgba(62,124,90,.10), transparent 60%), radial-gradient(700px 500px at 100% 0%, rgba(201,146,46,.08), transparent 55%), #0E1512',
+        textPrimary: '#EDEAE0',
+        textSecondary: '#A9B2AA',
+        accent: '#C9922E',
+        title: '#EDEAE0'
     }
 };
 
@@ -238,7 +253,7 @@ export const DEFAULT_TEMPLATES = {
 // dans exportMakerStore.js), fusionné par-dessus au moment de l'application.
 export const TEMPLATE_DEFAULT_IDENTITY = {
     modernCompact: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
-    detailedCard: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
+    detailedCard: { defaultPalette: 'resin', defaultTypography: { fontFamily: 'Space Grotesk', titleWeight: '700' } },
     blogArticle: { defaultPalette: 'elegant', defaultTypography: { fontFamily: 'Merriweather', titleWeight: '700' } },
     socialStory: { defaultPalette: 'sunset', defaultTypography: { fontFamily: 'Poppins', titleWeight: '800' } },
     traceabilityReport: { defaultPalette: 'ocean', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },

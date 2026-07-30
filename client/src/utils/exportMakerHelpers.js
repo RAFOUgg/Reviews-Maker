@@ -132,6 +132,26 @@ export function colorWithOpacity(color, opacity) {
     return `rgba(128, 128, 128, ${alpha})`;
 }
 
+// Bandes sémantiques de score (2026-07-30, Fiche Technique Détaillée v2 — specs-direction-
+// artistique.md) : contrairement à `colors.accent` (décoratif, dérivé de la palette active), ces
+// 3 couleurs sont FIXES et indépendantes de la palette — un signal de lecture stable (comme un
+// badge "vérifié" toujours vert) plutôt qu'une teinte de marque. Réutilisable par les autres
+// templates lors d'un futur rollout de cette direction artistique.
+export const SEMANTIC_SCORE_COLORS = {
+    hi: '#3E7C5A',  // vert plante — conforme / bon score
+    mid: '#C9922E', // ambre résine — score moyen
+    lo: '#B5533A',  // terracotta — score bas / attention
+};
+
+/** Bande sémantique d'un score /10 selon la règle du spec : ≥7.5 hi, ≥5 mid, sinon lo. */
+export function getScoreBand(value) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return 'mid';
+    if (n >= 7.5) return 'hi';
+    if (n >= 5) return 'mid';
+    return 'lo';
+}
+
 // Recette de verre LiquidUI (`apple-liquid-glass.css` — .liquid-card) traduite pour les templates
 // d'export — source unique, partagée par `TemplateSection.jsx` et les blocs "carte" des autres
 // templates (image principale, pipelines...), pour ne jamais dupliquer la logique de teinte.

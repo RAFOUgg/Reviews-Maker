@@ -4,41 +4,36 @@ import React from 'react';
 import {
     asArray,
     extractLabel,
-    formatRating,
     formatDate,
     extractCategoryRatings,
     extractPipelines,
     filterVisiblePipelines,
-    extractSubstrat,
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
+    SEMANTIC_SCORE_COLORS,
+    getScoreBand,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
 import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
-import { CannabinoidGrid, GisementSections, getCannabinoidItems } from './sections/RegistrySections';
-import TemplateSection from './sections/TemplateSection';
-
-// Groupes du "gisement" rendus génériquement depuis le registre (jamais affichés avant) :
-// récolte, culture, usage, labo, et les procédés propres aux Hash/Concentré/Comestible.
-const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'lab', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
-const GISEMENT_ICONS = {
-    harvest: '🌾', culture: '🌱', usage: '💨', lab: '🧪',
-    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
-};
+import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
+import SensoryRadar from './sections/SensoryRadar';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 
-const BUSINESS_TYPE_LABELS = {
-    farm: 'Ferme',
-    laboratory: 'Laboratoire',
-    extractor: 'Extracteur',
-    manufacturer: 'Fabricant',
-    distributor: 'Distributeur',
-    other: 'Producteur',
+// Groupes du "gisement" rendus génériquement depuis le registre — 'lab' est retiré de cette liste
+// car ses 7 champs sont désormais assemblés explicitement dans la section 04 "Données laboratoire
+// & curing" (specs-direction-artistique.md), aux côtés des champs de curing (curingType/
+// curingTemperature/curingHumidity/curingDuration, qui ne sont eux jamais dans le registre — cf.
+// extractExtraData). Les retirer d'ici évite la duplication ; tous les autres groupes restent pour
+// ne perdre aucune donnée réelle non couverte par le spec (celui-ci ne modélise qu'un cas simple).
+const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
+const GISEMENT_ICONS = {
+    harvest: '🌾', culture: '🌱', usage: '💨',
+    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
 };
 
 const LAB_METHOD_LABELS = {
@@ -58,10 +53,34 @@ const TIMELINE_PIPELINES = [
     { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
 ];
 
+// Traduit la clé du pipeline (`extractPipelines`) vers l'identifiant de type attendu par
+// `summarizeCellFields` (chainCellPipelines.js) — même mapping que les autres templates.
+const PIPELINE_TYPE_BY_KEY = {
+    pipelineGlobal: 'culture',
+    cultureTimeline: 'culture',
+    pipelineCuring: 'curing',
+    curingTimeline: 'curing',
+    pipelineExtraction: 'extraction',
+    extractionTimelineData: 'extraction',
+    pipelineSeparation: 'separation',
+    separationTimelineData: 'separation',
+};
+
+const DISPLAY = '"Space Grotesk", "Inter", sans-serif';
+const MONO = '"JetBrains Mono", "SF Mono", ui-monospace, monospace';
+
 /**
- * DetailedCardTemplate - Template fiche technique complète et professionnelle
- * Affiche TOUTES les informations de la review de manière structurée
- * Optimisé pour l'impression et le partage professionnel
+ * DetailedCardTemplate — Fiche Technique Détaillée, direction artistique v2 (2026-07-30,
+ * specs-direction-artistique.md + terpologie-coa-v2.html). Remplace le glassmorphism (livré
+ * 2026-07-29) par une identité "certificat de laboratoire" : fond charcoal-vert par défaut
+ * (palette "Résine"), 3 bandes sémantiques FIXES pour les scores (vert conforme / ambre moyen /
+ * terracotta bas — `SEMANTIC_SCORE_COLORS`, indépendantes de la palette active), Space Grotesk
+ * pour les titres, JetBrains Mono pour tous les chiffres/données (chasse tabulaire). Un seul gros
+ * chiffre du document : la note globale.
+ *
+ * Mode papier (impression/document) déclenché automatiquement sur le ratio A4 — fond crème/encre
+ * sombre/filets fins, les accents (résine/plante/terracotta + accent de palette) restent
+ * identiques entre écran et papier (cf. spec §2).
  */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
     if (!config || !reviewData) {
@@ -73,24 +92,34 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-
-    // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isPortrait, isA4, fontSize, padding, spacing, limits, grid } = responsive;
 
-    // Extraction des données - passer reviewData pour les fallbacks
-    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
+    // Mode papier = ratio A4 (cf. tableau d'adaptation par format du spec : Document/PDF → mode
+    // papier ; tous les autres ratios → mode écran). Pas ajouté à `getResponsiveAdjustments`
+    // (ratio-driven only, partagé par les 4 autres templates) — dérivé localement ici.
+    const isPaperMode = isA4;
+    const isLightScreenPalette = !colors.background?.includes('gradient');
+    const tint = (isPaperMode || isLightScreenPalette) ? '#000000' : '#ffffff';
+
+    const bg = isPaperMode ? '#F5F2E9' : colors.background;
+    const surface = isPaperMode ? '#EAE5D7' : colorWithOpacity(tint, isLightScreenPalette ? 4 : 5);
+    const line = isPaperMode ? '#D8D2C2' : colorWithOpacity(tint, 11);
+    const lineSoft = isPaperMode ? '#DCD6C6' : colorWithOpacity(tint, 7);
+    const textPrimary = isPaperMode ? '#1A211D' : (colors.textPrimary || '#EDEAE0');
+    const textSecondary = isPaperMode ? '#4a5049' : (colors.textSecondary || '#A9B2AA');
+    const titleColor = isPaperMode ? '#1A211D' : (colors.title || textPrimary);
+    const accent = colors.accent || '#C9922E';
+
+    // Extraction des données
+    const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
+    const categoryByKey = Object.fromEntries(categoryRatings.map((c) => [c.key, c]));
     const pipelines = extractPipelines(reviewData);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
     const secondaryAromas = asArray(reviewData.secondaryAromas).slice(0, limits.maxTags);
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
-    const dryPuffNotes = asArray(reviewData.dryPuffNotes).slice(0, limits.maxTags);
-    const inhalationNotes = asArray(reviewData.inhalationNotes).slice(0, limits.maxTags);
-    const exhalationNotes = asArray(reviewData.exhalationNotes).slice(0, limits.maxTags);
-    const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
-    const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
-    const substrat = extractSubstrat(reviewData.substratMix);
+    const cannabinoidItems = getCannabinoidItems(reviewData, contentModules);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
@@ -100,156 +129,140 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 
-    // Visibilité des sections Informations et Provenance (évite les titres vides sur les pages paginées)
-    const hasInfoSectionContent =
-        (contentModules?.category && reviewData.category) ||
-        (contentModules?.strainType && reviewData.strainType) ||
-        (contentModules?.indicaRatio && reviewData.indicaRatio !== undefined) ||
-        (contentModules?.thcLevel && reviewData.thcLevel) ||
-        (contentModules?.cbdLevel && reviewData.cbdLevel) ||
-        (contentModules?.dureeEffet && reviewData.dureeEffet);
+    const producerName = reviewData.farm || reviewData.hashmaker || reviewData.breeder || '';
+    const authorName = reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme';
+    const lotCode = reviewData.id ? getLotCode(reviewData.id) : null;
+    const docDate = formatDate(reviewData.date || reviewData.createdAt);
 
-    const hasProvenanceSectionContent =
-        (contentModules?.cultivar && reviewData.cultivar) ||
-        (contentModules?.breeder && reviewData.breeder) ||
-        (contentModules?.farm && reviewData.farm) ||
-        (contentModules?.hashmaker && reviewData.hashmaker) ||
-        (contentModules?.phenotypeCode && reviewData.phenotypeCode) ||
-        (contentModules?.parentage && reviewData.parentage) ||
-        reviewData.producerVerified;
+    // ── Section 01 : familles sensorielles ────────────────────────────────────────────────
+    // 3 familles du spec, combinant les 5 catégories réelles (visual/smell/texture/taste/effects)
+    // deux par deux + smell seule — "Odeur & Arôme" ne reprend QUE la catégorie smell (les tags
+    // d'arômes/dominants-secondaires sont une section à part, 03).
+    const combineSubDetails = (...cats) => cats
+        .filter(Boolean)
+        .flatMap((c) => c.subDetails || (c.value != null ? [{ key: c.key, label: c.label, value: c.value }] : []));
+    const families = [
+        { title: 'Visuel & Texture', dot: accent, metrics: combineSubDetails(categoryByKey.visual, categoryByKey.texture) },
+        { title: 'Odeur & Arôme', dot: SEMANTIC_SCORE_COLORS.hi, metrics: combineSubDetails(categoryByKey.smell) },
+        { title: 'Goût & Effets', dot: SEMANTIC_SCORE_COLORS.lo, metrics: combineSubDetails(categoryByKey.taste, categoryByKey.effects) },
+    ].filter((f) => f.metrics.length > 0);
 
-    // Composants réutilisables — `Section` délègue à `TemplateSection.jsx` (partagé avec
-    // `TraceabilityReportTemplate.jsx`, qui en dupliquait une copie quasi identique avant le
-    // 2026-07-29) ; wrapper fin pour ne pas devoir changer tous les appels `<Section title=.../>`
-    // existants plus bas dans ce fichier.
-    const Section = ({ title, icon, children, className = '' }) => (
-        <TemplateSection
-            title={title} icon={icon} className={className}
-            fontSize={fontSize} spacing={spacing} padding={padding} colors={colors}
-            borderWidth={isSquare ? 1 : 2}
-        >
+    // ── Section 02 : radar 6 axes ──────────────────────────────────────────────────────────
+    // 5 axes = moyenne des 5 catégories réelles ; "Arôme" (6e) dérivé d'une sous-métrique déjà
+    // réelle de la catégorie smell (complexité/intensité aromatique) — décision actée avec
+    // l'utilisateur plutôt que d'inventer une donnée qui n'existe pas.
+    const aromeSubDetail = categoryByKey.smell?.subDetails?.find((s) => s.key === 'complexiteAromas' || s.key === 'intensiteAromatique' || s.key === 'aromasIntensity');
+    const radarAxes = [
+        categoryByKey.visual && { label: 'Visuel', value: categoryByKey.visual.value },
+        categoryByKey.smell && { label: 'Odeur', value: categoryByKey.smell.value },
+        categoryByKey.texture && { label: 'Texture', value: categoryByKey.texture.value },
+        categoryByKey.taste && { label: 'Goût', value: categoryByKey.taste.value },
+        categoryByKey.effects && { label: 'Effets', value: categoryByKey.effects.value },
+        (aromeSubDetail || categoryByKey.smell) && { label: 'Arôme', value: aromeSubDetail?.value ?? categoryByKey.smell?.value },
+    ].filter(Boolean);
+
+    // ── Section 04 : grille labo & curing ──────────────────────────────────────────────────
+    const labCells = [];
+    if (isModuleOn(contentModules, 'labName') && reviewData.labName) labCells.push({ label: 'Laboratoire', value: reviewData.labName });
+    if (isModuleOn(contentModules, 'labMethod') && reviewData.labMethod) labCells.push({ label: "Méthode d'analyse", value: LAB_METHOD_LABELS[reviewData.labMethod] || reviewData.labMethod });
+    if (isModuleOn(contentModules, 'labAccredited') && reviewData.labAccredited !== undefined && reviewData.labAccredited !== null) {
+        labCells.push({ label: 'Laboratoire accrédité', value: reviewData.labAccredited ? 'Oui' : 'Non', status: reviewData.labAccredited ? 'ok' : 'warn' });
+    }
+    if (isModuleOn(contentModules, 'labAccreditationStandard') && reviewData.labAccreditationStandard) labCells.push({ label: "Norme d'accréditation", value: reviewData.labAccreditationStandard });
+    if (isModuleOn(contentModules, 'labAnalysisDate') && reviewData.labAnalysisDate) labCells.push({ label: "Date d'analyse", value: formatDate(reviewData.labAnalysisDate) });
+    if (isModuleOn(contentModules, 'labReportUrl') && reviewData.labReportUrl) labCells.push({ label: "Certificat d'analyse", value: 'Disponible', status: 'ok' });
+    if (isModuleOn(contentModules, 'terpeneFileUrl') && reviewData.terpeneFileUrl) labCells.push({ label: 'Certificat terpènes', value: 'Disponible', status: 'ok' });
+    if (reviewData.curingType) labCells.push({ label: 'Type de curing', value: reviewData.curingType });
+    if (reviewData.curingTemperature != null) labCells.push({ label: 'Température curing', value: reviewData.curingTemperature, unit: '°C' });
+    if (reviewData.curingHumidity != null) labCells.push({ label: 'Humidité curing', value: reviewData.curingHumidity, unit: '%' });
+    if (reviewData.curingDuration) labCells.push({ label: 'Durée curing', value: reviewData.curingDuration });
+
+    // ── Composants locaux ──────────────────────────────────────────────────────────────────
+
+    // Titre de section — numéroté (spec) ou non (sections réelles hors périmètre du spec, ex.
+    // pipelines/généalogie/données complémentaires), toujours un simple filet + libellé, jamais
+    // de carte/verre (la direction v2 abandonne délibérément le glassmorphism).
+    const Section = ({ idx, title, children }) => (
+        <div style={{ padding: `${spacing.section}px 0`, borderTop: `1px solid ${lineSoft}` }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: spacing.element * 2 }}>
+                {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accent, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
+                <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
+                <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
+            </div>
             {children}
-        </TemplateSection>
+        </div>
     );
 
-    const InfoCard = ({ label, value, icon, size = 'normal' }) => {
-        if (!value) return null;
-        const isSmall = size === 'small';
+    const Metric = ({ label, value }) => {
+        const band = getScoreBand(value);
         return (
-            <div
-                style={{
-                    padding: `${padding.card}px`,
-                    borderRadius: `${isSquare ? 12 : 16}px`,
-                    backgroundColor: colorWithOpacity(colors.accent, 10),
-                    border: `1px solid ${colorWithOpacity(colors.accent, 22)}`,
-                    boxShadow: `inset 0 1px 1px ${colorWithOpacity('#ffffff', 12)}`,
-                }}
-            >
-                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>
-                    {icon && <span className="mr-1">{icon}</span>}{label}
+            <div style={{ marginBottom: spacing.gap + 3 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
+                    <span style={{ fontSize: `${fontSize.small}px`, color: textSecondary }}>{label}</span>
+                    <span style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, fontWeight: 600, color: textPrimary }}>{Number(value).toFixed(1)}</span>
                 </div>
-                <div style={{
-                    fontSize: `${isSmall ? fontSize.text : fontSize.text}px`,
-                    fontWeight: '600',
-                    color: colors.accent
-                }}>
-                    {value}
-                </div>
-            </div>
-        );
-    };
-
-    const Tag = ({ children, variant = 'default' }) => {
-        const variants = {
-            default: { bg: 20, border: 30 },
-            accent: { bg: 25, border: 40 },
-            subtle: { bg: 10, border: 15 },
-        };
-        const v = variants[variant];
-        return (
-            <span
-                style={{
-                    display: 'inline-block',
-                    fontSize: `${fontSize.small}px`,
-                    padding: `${spacing.gap}px ${spacing.element}px`,
-                    borderRadius: `${isSquare ? 12 : 20}px`,
-                    backgroundColor: colorWithOpacity(colors.accent, v.bg),
-                    border: `1px solid ${colorWithOpacity(colors.accent, v.border)}`,
-                    color: colors.accent,
-                    fontWeight: '500',
-                }}
-            >
-                {children}
-            </span>
-        );
-    };
-
-    const RatingBar = ({ label, value, icon, maxValue = 10 }) => {
-        const percentage = (value / maxValue) * 100;
-        return (
-            <div className="flex items-center gap-2" style={{ marginBottom: `${spacing.gap}px` }}>
-                <span style={{ width: isSquare ? '70px' : '90px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
-                    {icon} {label}
-                </span>
-                <div
-                    className="flex-1 rounded-full overflow-hidden"
-                    style={{
-                        height: isSquare ? '8px' : '12px',
-                        backgroundColor: colorWithOpacity(colors.accent, 15)
-                    }}
-                >
+                <div style={{ height: 6, borderRadius: 99, background: line, overflow: 'hidden' }}>
                     <motion.div
                         initial={{ width: 0 }}
-                        animate={{ width: `${percentage}%` }}
-                        transition={{ duration: 0.8, ease: 'easeOut' }}
-                        className="h-full rounded-full"
-                        style={{ backgroundColor: colors.accent }}
+                        animate={{ width: `${Math.max(0, Math.min(10, value)) * 10}%` }}
+                        transition={{ duration: 0.7, ease: 'easeOut' }}
+                        style={{ height: '100%', borderRadius: 99, background: SEMANTIC_SCORE_COLORS[band] }}
                     />
                 </div>
-                <span style={{ width: '40px', fontSize: `${fontSize.small}px`, fontWeight: '600', color: colors.textPrimary, textAlign: 'right' }}>
-                    {value.toFixed(1)}
-                </span>
             </div>
         );
     };
 
-    // Render rich step metrics badges
-    const renderStepMetrics = (step) => {
-        if (!step || typeof step !== 'object') return [];
-        const metrics = [];
-        const temp = step.temperature ?? step.temp;
-        const humidity = step.humidity ?? step.humidite ?? step.hr;
-        if (temp != null) metrics.push(`🌡️ ${temp}°C`);
-        if (humidity != null) metrics.push(`💧 ${humidity}%`);
-        if (step.container ?? step.recipient) metrics.push(`🫙 ${step.container ?? step.recipient}`);
-        if (step.packaging ?? step.emballage) metrics.push(`📦 ${step.packaging ?? step.emballage}`);
-        if (step.method ?? step.methode) metrics.push(`⚙️ ${step.method ?? step.methode}`);
-        if (step.co2) metrics.push(`☁️ ${step.co2}ppm`);
-        if (step.ppfd) metrics.push(`☀️ ${step.ppfd}µmol`);
-        if (step.volume ?? step.volumeRecipient) metrics.push(`📐 ${step.volume ?? step.volumeRecipient}`);
-        return metrics;
+    const FamilyBlock = ({ title, dot, metrics }) => {
+        const avg = metrics.reduce((s, m) => s + m.value, 0) / metrics.length;
+        return (
+            <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: spacing.element, paddingBottom: spacing.gap, borderBottom: `1px solid ${lineSoft}` }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0 }} />
+                    <span style={{ fontFamily: DISPLAY, fontSize: `${fontSize.small + 1}px`, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: titleColor, whiteSpace: 'nowrap' }}>{title}</span>
+                    <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small}px`, color: textSecondary }}>moy {avg.toFixed(1)}</span>
+                </div>
+                {metrics.map((m, i) => <Metric key={i} label={m.label} value={m.value} />)}
+            </div>
+        );
     };
 
-    // Metric badge inline — texte complet, jamais tronqué (retour à la ligne si nécessaire) : une
-    // fiche technique reste un document à lire, pas une mosaïque de pastilles décoratives.
-    const MetricBadge = ({ icon, value, highlight = false }) => (
-        <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '3px',
-            padding: '3px 7px', borderRadius: 5,
-            backgroundColor: highlight ? colorWithOpacity(colors.accent, 25) : colorWithOpacity(colors.accent, 12),
-            border: `1px solid ${colorWithOpacity(colors.accent, highlight ? 40 : 20)}`,
-            fontSize: `${fontSize.small}px`,
-            color: highlight ? colors.accent : colors.textSecondary,
-            fontWeight: highlight ? '600' : '400',
-            whiteSpace: 'normal',
-        }}>
-            {icon} {value}
-        </span>
-    );
+    const ChipGroup = ({ title, items, variant = 'default' }) => {
+        if (!items || items.length === 0) return null;
+        return (
+            <div>
+                <div style={{ fontFamily: MONO, fontSize: `${Math.max(9, fontSize.small - 1)}px`, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase', marginBottom: spacing.gap + 2 }}>{title}</div>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                    {items.map((it, i) => (
+                        <span key={i} style={{
+                            fontSize: `${fontSize.small}px`,
+                            padding: '5px 11px',
+                            borderRadius: 99,
+                            border: `1px solid ${variant === 'primary' ? colorWithOpacity(accent, 50) : line}`,
+                            background: variant === 'primary' ? colorWithOpacity(accent, 12) : surface,
+                            color: variant === 'primary' ? accent : textPrimary,
+                        }}>
+                            {extractLabel(it)}
+                        </span>
+                    ))}
+                </div>
+            </div>
+        );
+    };
 
-    // Icônes décoratives best-effort par identifiant de champ (couvre les ids les plus courants
-    // des *SidebarContent.js) — purement cosmétique : un champ sans icône reconnue s'affiche quand
-    // même (repli '•'), il ne disparaît jamais faute d'icône.
+    const DataCell = ({ label, value, unit, status }) => {
+        const statusColor = status === 'ok' ? SEMANTIC_SCORE_COLORS.hi : status === 'warn' ? SEMANTIC_SCORE_COLORS.lo : textPrimary;
+        return (
+            <div style={{ background: surface, padding: `${padding.card * 0.8}px ${padding.card}px` }}>
+                <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.1em', color: textSecondary, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 2}px`, fontWeight: 600, color: statusColor }}>
+                    {value}{unit && <span style={{ fontSize: 11, color: textSecondary, fontWeight: 400 }}> {unit}</span>}
+                </div>
+            </div>
+        );
+    };
+
+    // Icônes best-effort par identifiant de champ de pipeline (purement cosmétique).
     const METRIC_ICONS = {
         temperature: '🌡️', temp: '🌡️', temperatureDay: '🌡️', temperatureNight: '🌡️', temperatureEau: '🌡️',
         humidity: '💧', ambientHumidity: '💧', humidite: '💧', hr: '💧',
@@ -263,12 +276,6 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     };
     const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
 
-    // Carte d'étape — un seul mode d'affichage, toujours détaillé (cf. décision : la fiche
-    // s'allonge plutôt que de tronquer/masquer du contenu, quel que soit le nombre d'étapes).
-    // Les métriques viennent de `summarizeCellFields` (déjà la logique de référence du canevas
-    // Chaîne de production pour lire une cellule de pipeline) plutôt que d'une liste de noms de
-    // champs devinés à la main ici — cette dernière ne correspondait pas aux vrais noms enregistrés
-    // par les formulaires (`co2Ppm`/`ambientHumidity`/`ph`/`ec`… jamais affichés, bug 2026-07-27).
     const StepCard = ({ step, index, pipelineType }) => {
         const label = step.label || step.date || step.semaine || step.phase || step.jour || `${index + 1}`;
         const fields = summarizeCellFields(pipelineType, step);
@@ -279,38 +286,38 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             <div style={{
                 display: 'flex', gap: isSquare ? 6 : 8, alignItems: 'flex-start',
                 padding: `${isSquare ? 6 : 8}px ${isSquare ? 8 : 10}px`,
-                backgroundColor: colorWithOpacity(colors.accent, 6 + (index % 2) * 4),
-                border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
-                borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(index * 5, 40))}`,
-                borderRadius: `0 ${isSquare ? 6 : 8}px ${isSquare ? 6 : 8}px 0`,
+                background: surface,
+                borderLeft: `3px solid ${accent}`,
             }}>
-                {/* Step label pill — texte complet */}
                 <div style={{
                     flexShrink: 0, textAlign: 'center',
                     padding: `3px ${isSquare ? 7 : 9}px`,
-                    backgroundColor: colorWithOpacity(colors.accent, 20),
+                    background: colorWithOpacity(accent, 16),
                     borderRadius: isSquare ? 5 : 7,
+                    fontFamily: MONO,
                     fontSize: `${fontSize.small}px`, fontWeight: '700',
-                    color: colors.accent, whiteSpace: 'nowrap',
+                    color: accent, whiteSpace: 'nowrap',
                 }}>
                     {String(label)}
                 </div>
-
-                {/* Metrics + note */}
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
                     {metricFields.length > 0 && (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
                             {metricFields.map((f) => (
-                                <MetricBadge key={f.key} icon={METRIC_ICONS[f.key] || '•'} value={`${f.label} : ${f.value}`} />
+                                <span key={f.key} style={{
+                                    display: 'inline-flex', alignItems: 'center', gap: 3,
+                                    padding: '3px 7px', borderRadius: 5,
+                                    background: colorWithOpacity(accent, 8),
+                                    border: `1px solid ${line}`,
+                                    fontSize: `${fontSize.small}px`, color: textSecondary,
+                                }}>
+                                    {METRIC_ICONS[f.key] || '•'} {f.label} : <span style={{ fontFamily: MONO }}>{f.value}</span>
+                                </span>
                             ))}
                         </div>
                     )}
                     {noteField && (
-                        <div style={{
-                            fontSize: `${fontSize.small}px`,
-                            color: colors.textSecondary, fontStyle: 'italic',
-                            lineHeight: '1.4',
-                        }}>
+                        <div style={{ fontSize: `${fontSize.small}px`, color: textSecondary, fontStyle: 'italic', lineHeight: '1.4' }}>
                             💬 {noteField.value}
                         </div>
                     )}
@@ -319,99 +326,38 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
-    // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de
-    // type attendu par `summarizeCellFields`/`FIELD_LOOKUPS` (chainCellPipelines.js). Purification
-    // et fertilisation n'ont pas de lookup dédié là-bas : repli sur les clés brutes humanisées par
-    // `summarizeCellFields` lui-même (pas d'erreur, juste moins joliment libellé).
-    const PIPELINE_TYPE_BY_KEY = {
-        pipelineGlobal: 'culture',
-        cultureTimeline: 'culture',
-        pipelineCuring: 'curing',
-        curingTimeline: 'curing',
-        pipelineExtraction: 'extraction',
-        extractionTimelineData: 'extraction',
-        pipelineSeparation: 'separation',
-        separationTimelineData: 'separation',
-    };
-
     const PipelineTimeline = ({ pipeline }) => {
-        // Prefer rawSteps (objects) over stringified steps
-        const rawSteps = pipeline.rawSteps || pipeline.steps.map(s => ({ label: s }));
+        const rawSteps = pipeline.rawSteps || pipeline.steps.map((s) => ({ label: s }));
         const pipelineType = PIPELINE_TYPE_BY_KEY[pipeline.key] || pipeline.key;
-
         return (
             <div style={{ marginBottom: `${spacing.element}px` }}>
-                {/* Pipeline Header */}
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: spacing.element,
                     marginBottom: spacing.gap + 2,
                     padding: `${isSquare ? 5 : 7}px ${isSquare ? 8 : 12}px`,
-                    backgroundColor: colorWithOpacity(colors.accent, 15),
+                    background: surface,
                     borderRadius: isSquare ? 8 : 10,
                 }}>
                     <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{pipeline.icon}</span>
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <span style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.textPrimary }}>
-                            {pipeline.name}
-                        </span>
-                        {pipeline.configMeta && (
-                            <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
-                                {pipeline.configMeta}
-                            </span>
-                        )}
+                        <span style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text}px`, fontWeight: '700', color: titleColor }}>{pipeline.name}</span>
+                        {pipeline.configMeta && <span style={{ fontSize: `${fontSize.small}px`, color: textSecondary }}>{pipeline.configMeta}</span>}
                     </div>
                     <span style={{
-                        fontSize: `${fontSize.small}px`, color: colors.accent,
-                        backgroundColor: colorWithOpacity(colors.accent, 20),
+                        fontFamily: MONO, fontSize: `${fontSize.small}px`, color: accent,
+                        background: colorWithOpacity(accent, 16),
                         padding: '2px 7px', borderRadius: 20, fontWeight: '600',
                     }}>
                         {rawSteps.length} étape{rawSteps.length > 1 ? 's' : ''}
                     </span>
                 </div>
-
-                {/* Toutes les étapes, toujours en détail — la fiche s'allonge plutôt que de
-                    dégrader en carrés colorés sans texte (illisible, notamment à l'export statique
-                    où le survol souris qui portait l'info n'existe pas). */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {rawSteps.map((step, i) => (
-                        <StepCard key={i} step={step} index={i} pipelineType={pipelineType} />
-                    ))}
+                    {rawSteps.map((step, i) => <StepCard key={i} step={step} index={i} pipelineType={pipelineType} />)}
                 </div>
             </div>
         );
     };
 
-    const SubstratChart = ({ data }) => (
-        <div className="space-y-2">
-            {data.map((s, i) => {
-                const pct = s.percentage || (100 / data.length);
-                return (
-                    <div key={i} className="flex items-center gap-3">
-                        <span style={{ width: '120px', fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
-                            {s.name}
-                        </span>
-                        <div
-                            className="flex-1 h-4 rounded-full overflow-hidden"
-                            style={{ backgroundColor: colorWithOpacity(colors.accent, 10) }}
-                        >
-                            <motion.div
-                                initial={{ width: 0 }}
-                                animate={{ width: `${pct}%` }}
-                                transition={{ duration: 0.6, delay: i * 0.1 }}
-                                className="h-full rounded-full"
-                                style={{ backgroundColor: colors.accent }}
-                            />
-                        </div>
-                        <span style={{ width: '50px', fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: '600' }}>
-                            {pct.toFixed(0)}%
-                        </span>
-                    </div>
-                );
-            })}
-        </div>
-    );
-
-    // Render branding
     const renderBranding = () => {
         if (!branding?.enabled || !branding?.logoUrl) return null;
         const positionMap = {
@@ -422,7 +368,6 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' },
         };
         const sizeMap = { small: '50px', medium: '70px', large: '90px' };
-
         return (
             <div
                 className="absolute pointer-events-none export-maker-branding"
@@ -438,519 +383,233 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
-    return (
-        <div
-            className="relative w-full h-full overflow-auto"
-            style={{
-                background: colors.background,
-                fontFamily: typography.fontFamily,
-                padding: `${padding.container}px`,
-            }}
-        >
-            <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
-                className="w-full h-full flex flex-col"
-            >
-                {/* Header avec image et infos principales */}
-                <div
-                    className={`flex ${isSquare ? 'gap-3' : 'gap-6'} ${isSquare ? 'mb-3' : 'mb-6'} ${isPortrait || isSquare ? 'flex-col' : 'flex-row'}`}
-                    style={{ flexShrink: 0 }}
-                >
-                    {/* Image — single or gallery */}
-                    {contentModules.mainImage !== false && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
-                        const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
-                        const galleryImages = reviewData.images || [];
-                        if (showGallery) {
-                            return (
-                                <div
-                                    className="flex-shrink-0 overflow-hidden"
-                                    style={{
-                                        borderRadius: `${responsive.image.borderRadius}px`,
-                                        width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
-                                        display: 'flex', gap: 4,
-                                        height: responsive.image.maxHeight,
-                                        border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
-                                        boxShadow: [
-                                            '0 4px 24px -4px rgba(0,0,0,0.4)',
-                                            '0 12px 48px -12px rgba(0,0,0,0.5)',
-                                        ].join(', '),
-                                    }}
-                                >
-                                    {galleryImages.slice(0, isSquare ? 2 : 4).map((img, ii) => (
-                                        <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden', borderRadius: `${responsive.image.borderRadius}px` }}>
-                                            <img src={img} alt="" className="w-full h-full object-cover" />
-                                        </div>
-                                    ))}
-                                </div>
-                            );
-                        }
-                        return (
-                            <div
-                                className="flex-shrink-0 overflow-hidden"
-                                style={{
-                                    position: 'relative',
-                                    borderRadius: `${responsive.image.borderRadius}px`,
-                                    width: isPortrait || isSquare ? '100%' : responsive.image.maxWidth,
-                                    height: responsive.image.maxHeight,
-                                    border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
-                                    boxShadow: [
-                                        '0 4px 24px -4px rgba(0,0,0,0.4)',
-                                        '0 12px 48px -12px rgba(0,0,0,0.5)',
-                                        `inset 0 1px 1px ${colorWithOpacity('#ffffff', 20)}`,
-                                    ].join(', '),
-                                }}
-                            >
-                                <img src={mainImage} alt="" className="w-full h-full object-cover" />
-                            </div>
-                        );
-                    })()}
+    const metaItems = [
+        contentModules.type && reviewData.type && { label: 'Type', value: reviewData.type },
+        contentModules.consumptionMethod !== false && reviewData.consumptionMethod && { label: 'Consommation', value: reviewData.consumptionMethod },
+        reviewData.labAccredited !== undefined && reviewData.labAccredited !== null && { label: 'Labo accrédité', value: reviewData.labAccredited ? 'Oui' : 'Non', status: reviewData.labAccredited ? 'ok' : 'warn' },
+        { label: 'Certificat', value: reviewData.labReportUrl ? 'Disponible' : 'Non disponible', status: reviewData.labReportUrl ? 'ok' : 'warn' },
+    ].filter(Boolean);
 
-                    {/* Infos principales */}
-                    <div className="flex-1" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.element}px` }}>
-                        {/* Type badge */}
-                        {contentModules.type && reviewData.type && (
-                            <span
-                                style={{
-                                    fontSize: `${fontSize.small}px`,
-                                    color: colors.accent,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.15em',
-                                    fontWeight: '600',
-                                }}
-                            >
-                                📦 {reviewData.type}
+    const stacked = isPortrait || isSquare;
+    const visiblePipelines = filterVisiblePipelines(pipelines, contentModules);
+
+    return (
+        <div className="relative w-full h-full overflow-auto" style={{ background: bg, fontFamily: 'Inter, sans-serif', color: textPrimary, padding: `${padding.container}px` }}>
+            <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full h-full flex flex-col">
+
+                {/* ── MASTHEAD ── */}
+                <div style={{
+                    display: 'flex', flexDirection: stacked ? 'column' : 'row',
+                    gap: stacked ? spacing.section : 0,
+                    background: surface,
+                    borderRadius: 14,
+                    border: `1px solid ${line}`,
+                    overflow: 'hidden',
+                    marginBottom: `${spacing.section}px`,
+                    flexShrink: 0,
+                }}>
+                    <div style={{ flex: stacked ? 'none' : '1 1 55%', padding: `${padding.section}px`, position: 'relative', display: 'flex', flexDirection: 'column', gap: spacing.gap }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                            <div style={{ width: 22, height: 22, borderRadius: 6, background: `conic-gradient(from 210deg, ${accent}, ${SEMANTIC_SCORE_COLORS.hi}, ${accent})`, flexShrink: 0 }} />
+                            <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${fontSize.small + 1}px`, color: titleColor }}>
+                                TERPOLOGIE{producerName && <span style={{ color: textSecondary, fontWeight: 500 }}> / {producerName}</span>}
                             </span>
+                            <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small - 1}px`, letterSpacing: '0.1em', color: SEMANTIC_SCORE_COLORS.hi, border: `1px solid ${line}`, padding: '4px 9px', borderRadius: 6, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                                Fiche technique · COA
+                            </span>
+                        </div>
+
+                        {contentModules.category && (reviewData.category || reviewData.type) && (
+                            <div style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>
+                                {reviewData.category || reviewData.type}
+                            </div>
                         )}
 
-                        {/* Title */}
                         {contentModules.title && (reviewData.title || reviewData.holderName) && (
-                            <h1 style={{ fontSize: `${fontSize.title}px`, fontWeight: typography.titleWeight, color: colors.title, lineHeight: '1.2' }}>
+                            <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${Math.round(fontSize.title * 1.35)}px`, lineHeight: 0.98, letterSpacing: '-0.02em', color: titleColor }}>
                                 {reviewData.title || reviewData.holderName}
                             </h1>
                         )}
 
-                        {/* Rating */}
-                        {contentModules.rating && reviewData.rating != null && !isNaN(parseFloat(reviewData.rating)) && (
-                            <div className="flex items-center gap-4">
-                                <div className="flex gap-1">
-                                    {[...Array(5)].map((_, i) => {
-                                        const { filled } = formatRating(reviewData.rating, 5);
-                                        return (
-                                            <svg key={i} width="28" height="28" viewBox="0 0 24 24"
-                                                fill={i < filled ? colors.accent : 'none'}
-                                                stroke={colors.accent} strokeWidth="1.5"
-                                            >
-                                                <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" />
-                                            </svg>
-                                        );
-                                    })}
-                                </div>
-                                <span style={{ fontSize: `${fontSize.subtitle}px`, fontWeight: '700', color: colors.textPrimary }}>
-                                    {parseFloat(reviewData.rating).toFixed(1)}/10
-                                </span>
-                            </div>
-                        )}
+                        <div style={{ fontSize: `${fontSize.text}px`, color: textSecondary }}>
+                            Rédigé par <b style={{ color: titleColor, fontWeight: 600 }}>{authorName}</b>
+                            {lotCode && <> · Lot <b style={{ color: titleColor, fontWeight: 600, fontFamily: MONO }}>{lotCode}</b></>}
+                            {docDate && <> · {docDate}</>}
+                        </div>
 
-                        {/* Category Ratings bars — with expandable sub-scores */}
-                        {contentModules.categoryRatings && categoryRatings.length > 0 && (
-                            <div className="space-y-1 mt-4">
-                                {categoryRatings.map((r, i) => (
+                        {metaItems.length > 0 && (
+                            <div style={{ display: 'flex', gap: spacing.section, marginTop: spacing.gap, flexWrap: 'wrap' }}>
+                                {metaItems.map((m, i) => (
                                     <div key={i}>
-                                        <RatingBar label={r.label} value={r.value} icon={r.icon} />
-                                        {/* Sub-score bars (individual fields) — skip on tiny square format */}
-                                        {r.subDetails && r.subDetails.length > 1 && !isSquare && (
-                                            <div style={{ marginLeft: 14, marginTop: 2, marginBottom: `${spacing.gap}px` }}>
-                                                {r.subDetails.map((sub, si) => (
-                                                    <RatingBar key={si} label={sub.label} value={sub.value} />
-                                                ))}
-                                            </div>
-                                        )}
+                                        <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase' }}>{m.label}</div>
+                                        <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 1}px`, fontWeight: 600, marginTop: 2, color: m.status === 'ok' ? SEMANTIC_SCORE_COLORS.hi : m.status === 'warn' ? SEMANTIC_SCORE_COLORS.lo : titleColor }}>
+                                            {m.value}
+                                        </div>
                                     </div>
                                 ))}
                             </div>
                         )}
+
+                        {contentModules.rating && reviewData.rating != null && !isNaN(parseFloat(reviewData.rating)) && (
+                            <div style={{ marginTop: stacked ? spacing.gap : 0, textAlign: stacked ? 'left' : 'right', ...(stacked ? {} : { position: 'absolute', right: padding.section, bottom: padding.section }) }}>
+                                <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.14em', color: textSecondary, textTransform: 'uppercase' }}>Note globale</div>
+                                <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${Math.round(fontSize.title * 0.85)}px`, lineHeight: 1, color: accent }}>
+                                    {parseFloat(reviewData.rating).toFixed(1)}<span style={{ fontSize: `${fontSize.text + 3}px`, color: textSecondary }}>/10</span>
+                                </div>
+                            </div>
+                        )}
                     </div>
+
+                    {contentModules.mainImage !== false && mainImage && (
+                        <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', minHeight: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
+                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ position: stacked ? 'static' : 'absolute', inset: 0 }} />
+                            {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F5F2E9' : '#0E1512', 85)}, transparent 22%)` }} />}
+                        </div>
+                    )}
                 </div>
 
-                {/* Description */}
-                {contentModules.description && reviewData.description && (
-                    <div
-                        style={{
-                            padding: `${padding.card}px`,
-                            borderRadius: `${isSquare ? 12 : 16}px`,
-                            marginBottom: `${spacing.section}px`,
-                            backgroundColor: colorWithOpacity(colors.accent, 5),
-                            border: `1px solid ${colorWithOpacity(colors.accent, 15)}`,
-                            flexShrink: 0
-                        }}
-                    >
-                        <p
-                            style={{
-                                fontSize: `${fontSize.small}px`,
-                                color: colors.textSecondary,
-                                lineHeight: isSquare ? '1.4' : '1.6',
-                                display: '-webkit-box',
-                                WebkitLineClamp: limits.descriptionLines,
-                                WebkitBoxOrient: 'vertical',
-                                overflow: 'hidden',
-                            }}
-                        >
-                            {reviewData.description}
-                        </p>
-                    </div>
-                )}
-
-                {/* Grid layout pour les sections — adapte le nombre de colonnes dynamiquement.
-                    flex:1 uniquement si au moins une colonne a du contenu réel : sinon, sur une
-                    page peu remplie (pagination, review en cours de saisie), ce conteneur vide
-                    forçait quand même l'expansion sur toute la hauteur restante du canvas,
-                    laissant un grand vide visuel entre le header et le pied de page. */}
-                {(() => {
-                    const hasCol1 = hasInfoSectionContent || hasProvenanceSectionContent
-                        || (contentModules.cultivarsList && cultivars.length > 0)
-                        || (contentModules.effects && effects.length > 0);
-                    const hasCol2 = (contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0))
-                        || (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))
-                        || (contentModules.terpenes && terpenes.length > 0)
-                        || (contentModules.substratMix && substrat.length > 0);
-                    const hasAnyColContent = hasCol1 || hasCol2;
-                    return (
-                        <div
-                            className={`grid ${(isPortrait || isSquare || !hasCol1 || !hasCol2) ? 'grid-cols-1' : 'grid-cols-2'}`}
-                            style={{
-                                gap: `${spacing.section}px`,
-                                flex: (isSquare || !hasAnyColContent) ? 'none' : 1,
-                                overflow: isSquare ? 'visible' : 'hidden'
-                            }}
-                        >
-                    {/* Colonne 1 */}
-                    <div>
-                        {/* Informations générales */}
-                        {hasInfoSectionContent && <Section title="Informations" icon="📋">
-                            <div className={`grid grid-cols-2`} style={{ gap: `${spacing.gap}px` }}>
-                                {contentModules.category && reviewData.category && <InfoCard label="Catégorie" value={reviewData.category} icon="📂" />}
-                                {contentModules.strainType && reviewData.strainType && <InfoCard label="Type de strain" value={reviewData.strainType} icon="🧬" />}
-                                {contentModules.indicaRatio && reviewData.indicaRatio !== undefined && <InfoCard label="Ratio Indica" value={`${reviewData.indicaRatio}%`} icon="⚖️" />}
-                                {contentModules.thcLevel && reviewData.thcLevel && <InfoCard label="THC" value={`${reviewData.thcLevel}%`} icon="🔬" />}
-                                {contentModules.cbdLevel && reviewData.cbdLevel && <InfoCard label="CBD" value={`${reviewData.cbdLevel}%`} icon="💊" />}
-                                {contentModules.dureeEffet && reviewData.dureeEffet && <InfoCard label="Durée effets" value={reviewData.dureeEffet} icon="⏱️" />}
-                            </div>
-                            {/* Métadonnées COA — saisies en formulaire (labName/labMethod/labAccredited)
-                                mais jamais rendues dans un export avant ce fix (cf. audit traçabilité) */}
-                            {(contentModules.thcLevel || contentModules.cbdLevel) && (reviewData.labName || reviewData.labMethod || reviewData.labAccredited) && (
-                                <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: colorWithOpacity(colors.accent, 8), borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}`, fontSize: `${fontSize.text - 1}px`, color: colors.textSecondary || '#9ca3af' }}>
-                                    🔬 {[
-                                        reviewData.labName,
-                                        reviewData.labMethod && LAB_METHOD_LABELS[reviewData.labMethod] || reviewData.labMethod,
-                                        reviewData.labAccredited && `accrédité${reviewData.labAccreditationStandard ? ` ${reviewData.labAccreditationStandard}` : ''}`,
-                                    ].filter(Boolean).join(' · ')}
-                                </div>
-                            )}
-                        </Section>}
-
-                        {/* Provenance */}
-                        {hasProvenanceSectionContent && <Section title="Provenance" icon="🌱">
-                            <div className={`grid grid-cols-2`} style={{ gap: `${spacing.gap}px` }}>
-                                {contentModules.cultivar && reviewData.cultivar && <InfoCard label="Cultivar" value={reviewData.cultivar} icon="🌿" />}
-                                {contentModules.breeder && reviewData.breeder && <InfoCard label="Breeder" value={reviewData.breeder} icon="🧬" />}
-                                {contentModules.farm && reviewData.farm && <InfoCard label="Farm" value={reviewData.farm} icon="🏡" />}
-                                {contentModules.hashmaker && reviewData.hashmaker && <InfoCard label="Hash Maker" value={reviewData.hashmaker} icon="👨‍🔬" />}
-                                {contentModules.phenotypeCode && reviewData.phenotypeCode && <InfoCard label="Phénotype" value={reviewData.phenotypeCode} icon="🔬" />}
-                            </div>
-                            {/* Badge de confiance — ProducerProfile.isVerified/businessType, jusqu'ici
-                                jamais affiché en dehors de la page compte de l'auteur (Chantier 5). */}
-                            {reviewData.producerVerified && (
-                                <div style={{
-                                    marginTop: `${spacing.gap}px`,
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '5px',
-                                    padding: '3px 9px',
-                                    borderRadius: '999px',
-                                    background: colorWithOpacity('#22c55e', 15),
-                                    border: `1px solid ${colorWithOpacity('#22c55e', 35)}`,
-                                    fontSize: `${fontSize.text - 2}px`,
-                                    color: '#22c55e',
-                                    fontWeight: '600',
-                                }}>
-                                    ✓ Producteur vérifié{BUSINESS_TYPE_LABELS[reviewData.producerBusinessType] ? ` · ${BUSINESS_TYPE_LABELS[reviewData.producerBusinessType]}` : ''}
-                                </div>
-                            )}
-                            {/* Parentage / Lignée */}
-                            {contentModules.parentage && reviewData.parentage && (() => {
-                                const p = reviewData.parentage;
-                                const parentageText = typeof p === 'object'
-                                    ? [p.female, p.male].filter(Boolean).join(' ♀ × ♂ ')
-                                    : String(p);
-                                return parentageText ? (
-                                    <div style={{ marginTop: `${spacing.gap}px`, padding: '6px 10px', background: colorWithOpacity(colors.accent, 5), borderRadius: '8px', borderLeft: `3px solid ${colors.accent || '#a78bfa'}` }}>
-                                        <div style={{ fontSize: `${fontSize.text - 1}px`, color: colors.textSecondary || '#9ca3af', marginBottom: '2px' }}>Lignée</div>
-                                        <div style={{ fontSize: `${fontSize.text}px`, color: colors.textPrimary || '#fff', fontStyle: 'italic' }}>🌿 {parentageText}</div>
-                                    </div>
-                                ) : null;
-                            })()}
-                        </Section>}
-
-                        {/* Cultivars */}
-                        {contentModules.cultivarsList && cultivars.length > 0 && (
-                            <Section title="Cultivars" icon="🌿">
-                                <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                    {cultivars.map((c, i) => (
-                                        <Tag key={i} variant="accent">{extractLabel(c)}</Tag>
-                                    ))}
-                                </div>
-                            </Section>
-                        )}
-
-                        {/* Effets */}
-                        {contentModules.effects && effects.length > 0 && (
-                            <Section title="Effets" icon="⚡">
-                                <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                    {effects.map((e, i) => <Tag key={i} variant="accent">{extractLabel(e)}</Tag>)}
-                                </div>
-                            </Section>
-                        )}
-                    </div>
-
-                    {/* Colonne 2 */}
-                    <div>
-                        {/* Profil sensoriel */}
-                        {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) ||
-                            (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
-                                <Section title="Profil Sensoriel" icon="🌸">
-                                    {/* Primary aromas */}
-                                    {contentModules.aromas && aromas.length > 0 && (
-                                        <div style={{ marginBottom: `${spacing.element}px` }}>
-                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes dominants</div>
-                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                                {aromas.map((a, i) => <Tag key={i}>{extractLabel(a)}</Tag>)}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Secondary aromas */}
-                                    {contentModules.aromas && secondaryAromas.length > 0 && (
-                                        <div style={{ marginBottom: `${spacing.element}px` }}>
-                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Arômes secondaires</div>
-                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                                {secondaryAromas.map((a, i) => <Tag key={i} variant="subtle">{extractLabel(a)}</Tag>)}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Dry puff notes */}
-                                    {contentModules.tastes !== false && dryPuffNotes.length > 0 && (
-                                        <div style={{ marginBottom: `${spacing.gap}px` }}>
-                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>💨 Tirage à sec</div>
-                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                                {dryPuffNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Inhalation notes */}
-                                    {contentModules.tastes !== false && inhalationNotes.length > 0 && (
-                                        <div style={{ marginBottom: `${spacing.gap}px` }}>
-                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>🌬️ Inhalation</div>
-                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                                {inhalationNotes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Exhalation notes */}
-                                    {contentModules.tastes !== false && exhalationNotes.length > 0 && (
-                                        <div>
-                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>↩️ Expiration / Arrière-goût</div>
-                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                                {exhalationNotes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
-                                            </div>
-                                        </div>
-                                    )}
-                                    {/* Fallback: generic tastes */}
-                                    {contentModules.tastes !== false && tastes.length > 0 && dryPuffNotes.length === 0 && inhalationNotes.length === 0 && (
-                                        <div>
-                                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, marginBottom: `${spacing.gap}px` }}>Goûts</div>
-                                            <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                                {tastes.map((t, i) => <Tag key={i}>{extractLabel(t)}</Tag>)}
-                                            </div>
-                                        </div>
-                                    )}
-                                </Section>
-                            )}
-
-                        {/* Terpènes */}
-                        {contentModules.terpenes && terpenes.length > 0 && (
-                            <Section title="Terpènes" icon="🧪">
-                                <div className="flex flex-wrap" style={{ gap: `${spacing.gap}px` }}>
-                                    {terpenes.map((t, i) => <Tag key={i} variant="subtle">{extractLabel(t)}</Tag>)}
-                                </div>
-                            </Section>
-                        )}
-
-                        {/* Substrat */}
-                        {contentModules.substratMix && substrat.length > 0 && (
-                            <Section title="Substrat" icon="🪴">
-                                <SubstratChart data={substrat} />
-                            </Section>
-                        )}
-
-                        {/* Texture — individual sub-score bars */}
-                        {contentModules.categoryRatings && (() => {
-                            const textureCat = categoryRatings.find(r => r.key === 'texture');
-                            if (!textureCat?.subDetails || textureCat.subDetails.length === 0) return null;
-                            return (
-                                <Section title="Texture" icon="✋">
-                                    <div className="space-y-1">
-                                        {textureCat.subDetails.map((sub, si) => (
-                                            <RatingBar key={si} label={sub.label} value={sub.value} />
-                                        ))}
-                                    </div>
-                                </Section>
-                            );
-                        })()}
-                    </div>
+                {/* ── 01 · ÉVALUATION SENSORIELLE ── */}
+                {families.length > 0 && (
+                    <Section idx="01" title="Évaluation sensorielle">
+                        <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : `repeat(${families.length}, 1fr)`, gap: `${spacing.section}px` }}>
+                            {families.map((f, i) => <FamilyBlock key={i} title={f.title} dot={f.dot} metrics={f.metrics} />)}
                         </div>
-                    );
-                })()}
-
-                {/* Cannabinoïdes — grille complète (majeurs + acides + mineurs) via le référentiel */}
-                {getCannabinoidItems(reviewData, contentModules).length > 0 && (
-                    <Section title="Cannabinoïdes" icon="🔬">
-                        <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
                     </Section>
                 )}
 
-                {/* Gisement complet piloté par le registre (récolte, culture, usage, labo, procédés…) */}
+                {/* ── 02 · PROFIL CANNABINOÏDE ── */}
+                {(cannabinoidItems.length > 0 || radarAxes.length >= 3) && (
+                    <Section idx="02" title="Profil cannabinoïde">
+                        <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : '1.4fr 1fr', gap: `${spacing.section}px`, alignItems: 'start' }}>
+                            {cannabinoidItems.length > 0 && (() => {
+                                const max = Math.max(...cannabinoidItems.map((c) => c.value));
+                                const total = cannabinoidItems.reduce((s, c) => s + c.value, 0);
+                                return (
+                                    <div>
+                                        {cannabinoidItems.map((c, i) => (
+                                            <div key={c.key} style={{ display: 'grid', gridTemplateColumns: '60px 1fr 56px', alignItems: 'center', gap: 12, padding: '8px 0', borderBottom: `1px solid ${lineSoft}` }}>
+                                                <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, fontWeight: 600, color: titleColor }}>{c.label}</span>
+                                                <span style={{ height: 9, borderRadius: 99, background: line, overflow: 'hidden', display: 'block' }}>
+                                                    <motion.span initial={{ width: 0 }} animate={{ width: `${(c.value / max) * 100}%` }} transition={{ duration: 0.7 }} style={{ display: 'block', height: '100%', borderRadius: 99, background: accent }} />
+                                                </span>
+                                                <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, textAlign: 'right', color: titleColor }}>{c.value}{c.unit}</span>
+                                            </div>
+                                        ))}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 56px', alignItems: 'center', gap: 12, borderTop: `1px solid ${line}`, marginTop: 4, paddingTop: 12 }}>
+                                            <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, fontWeight: 700, color: SEMANTIC_SCORE_COLORS.hi }}>Total</span>
+                                            <span style={{ height: 9, borderRadius: 99, background: line, overflow: 'hidden', display: 'block' }}>
+                                                <span style={{ display: 'block', height: '100%', width: '100%', borderRadius: 99, background: SEMANTIC_SCORE_COLORS.hi }} />
+                                            </span>
+                                            <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, textAlign: 'right', fontWeight: 700, color: SEMANTIC_SCORE_COLORS.hi }}>{total.toFixed(1)}%</span>
+                                        </div>
+                                    </div>
+                                );
+                            })()}
+                            {radarAxes.length >= 3 && (
+                                <div style={{ background: surface, border: `1px solid ${lineSoft}`, borderRadius: 9, padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase', alignSelf: 'flex-start', marginBottom: 2 }}>Empreinte sensorielle</div>
+                                    <SensoryRadar axes={radarAxes} accentColor={accent} lineColor={line} textColor={textSecondary} size={isSquare ? 200 : 240} />
+                                </div>
+                            )}
+                        </div>
+                    </Section>
+                )}
+
+                {/* ── 03 · PROFIL AROMATIQUE ── */}
+                {(aromas.length > 0 || secondaryAromas.length > 0 || tastes.length > 0 || terpenes.length > 0) && contentModules.aromas && (
+                    <Section idx="03" title="Profil aromatique · terpènes">
+                        <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.section}px` }}>
+                            <ChipGroup title="Arômes dominants" items={aromas} variant="primary" />
+                            <ChipGroup title="Arômes secondaires · goûts" items={secondaryAromas.length > 0 ? secondaryAromas : tastes} variant="default" />
+                        </div>
+                        {terpenes.length > 0 && <div style={{ marginTop: spacing.element }}><ChipGroup title="Terpènes" items={terpenes} variant="default" /></div>}
+                    </Section>
+                )}
+
+                {/* ── 04 · DONNÉES LABORATOIRE & CURING ── */}
+                {labCells.length > 0 && (
+                    <Section idx="04" title="Données laboratoire & curing">
+                        <div className="grid" style={{ gridTemplateColumns: `repeat(${stacked ? Math.min(2, grid.cols) : grid.cols}, 1fr)`, gap: 1, background: lineSoft, border: `1px solid ${lineSoft}`, borderRadius: 9, overflow: 'hidden' }}>
+                            {labCells.map((c, i) => <DataCell key={i} {...c} />)}
+                        </div>
+                    </Section>
+                )}
+
+                {/* Gisement complémentaire piloté par le registre (récolte, culture, usage, procédés…) —
+                    non couvert par le spec (cas simple), conservé pour ne perdre aucune donnée réelle. */}
                 <GisementSections
                     reviewData={reviewData}
                     contentModules={contentModules}
                     groups={GISEMENT_GROUPS}
                     Section={Section}
-                    colors={colors}
+                    colors={{ accent, textPrimary, textSecondary, title: titleColor }}
                     fontSize={fontSize}
                     spacing={spacing}
                     groupIcons={GISEMENT_ICONS}
                 />
 
-                {/* Pipelines (full width) */}
-                {(() => {
-                    // Filtre partagé avec ModernCompactTemplate/BlogArticleTemplate (exportMakerHelpers.js)
-                    // — nécessaire pour que la pagination répartisse bien un pipeline par page dédiée
-                    // au lieu de tout réafficher sur chaque page.
-                    const visiblePipelines = filterVisiblePipelines(pipelines, contentModules);
-                    if (visiblePipelines.length === 0) return null;
-                    return (
-                        <Section title="Processus de Production" icon="⚗️">
-                            <div>
-                                {visiblePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} />)}
-                            </div>
-                        </Section>
-                    );
-                })()}
+                {/* Pipelines (production) */}
+                {visiblePipelines.length > 0 && (
+                    <Section title="Processus de production">
+                        {visiblePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} />)}
+                    </Section>
+                )}
 
-                {/* Vue interactive PhenoHunt (généalogie) — le composant gère lui-même son
-                    titre et se masque entièrement si aucun arbre n'est lié (évite un
-                    titre de section vide pendant/après le fetch async) */}
+                {/* Vues interactives — se masquent elles-mêmes si aucune donnée liée */}
                 {contentModules.phenoHuntView !== false && (
                     <div style={{ marginBottom: `${spacing.section}px` }}>
-                        <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
+                        <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.section} accentColor={accent} titleColor={titleColor} />
                     </div>
                 )}
-
-                {/* Vue interactive Chaîne de production — même logique de masquage async */}
                 {contentModules.productionChainView !== false && (
                     <div style={{ marginBottom: `${spacing.section}px` }}>
-                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
+                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.section} accentColor={accent} titleColor={titleColor} />
                     </div>
                 )}
-
-                {/* Vue interactive Pipelines (grilles cliquables) */}
                 {contentModules.pipelineInteractiveView !== false && (() => {
-                    const activeTimelines = TIMELINE_PIPELINES.filter(t => reviewData[t.dataKey] && reviewData[t.configKey]);
+                    const activeTimelines = TIMELINE_PIPELINES.filter((t) => reviewData[t.dataKey] && reviewData[t.configKey]);
                     if (activeTimelines.length === 0) return null;
                     return (
-                        <Section title="Pipelines — vue détaillée" icon="📅">
+                        <Section title="Pipelines — vue détaillée">
                             <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.section}px` }}>
-                                {activeTimelines.map(t => (
-                                    <PipelineMiniGrid
-                                        key={t.type}
-                                        type={t.type}
-                                        name={t.name}
-                                        icon={t.icon}
-                                        timelineData={reviewData[t.dataKey]}
-                                        timelineConfig={reviewData[t.configKey]}
-                                        accentColor={colors.accent}
-                                    />
+                                {activeTimelines.map((t) => (
+                                    <PipelineMiniGrid key={t.type} type={t.type} name={t.name} icon={t.icon} timelineData={reviewData[t.dataKey]} timelineConfig={reviewData[t.configKey]} accentColor={accent} />
                                 ))}
                             </div>
                         </Section>
                     );
                 })()}
 
-                {/* Extra Data */}
+                {/* Caractéristiques supplémentaires (overflow) */}
                 {contentModules.extraData && extraData.length > 0 && (
-                    <Section title="Caractéristiques Détaillées" icon="📊">
-                        <div className={`grid grid-cols-${grid.cols}`} style={{ gap: `${spacing.gap}px` }}>
-                            {extraData.map((d, i) => (
-                                <InfoCard key={i} label={d.label} value={d.value} icon={d.icon} size="small" />
-                            ))}
+                    <Section title="Caractéristiques détaillées">
+                        <div className="grid" style={{ gridTemplateColumns: `repeat(${grid.cols}, 1fr)`, gap: 1, background: lineSoft, border: `1px solid ${lineSoft}`, borderRadius: 9, overflow: 'hidden' }}>
+                            {extraData.map((d, i) => <DataCell key={i} label={d.label} value={d.value} />)}
                         </div>
                     </Section>
                 )}
 
-                {/* Footer */}
-                <div
-                    className="flex justify-between items-center"
-                    style={{
-                        borderTop: `${isSquare ? 1 : 2}px solid ${colorWithOpacity(colors.accent, 20)}`,
-                        paddingTop: `${spacing.element}px`,
-                        marginTop: `${spacing.section}px`,
-                        flexShrink: 0
-                    }}
-                >
-                    {contentModules.author && (
-                        <div style={{ fontSize: `${fontSize.text}px`, color: colors.textSecondary }}>
-                            Rédigé par{' '}
-                            <span style={{ fontWeight: '600', color: colors.textPrimary }}>
-                                {reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme'}
-                            </span>
+                {/* ── PIED ── */}
+                <div style={{
+                    display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
+                    paddingTop: `${spacing.element}px`, marginTop: `${spacing.section}px`,
+                    borderTop: `1px solid ${line}`, flexShrink: 0,
+                }}>
+                    {reviewData.id && (
+                        <div style={{ background: '#fff', padding: 3, borderRadius: 4, lineHeight: 0, flexShrink: 0 }}>
+                            <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={36} level="M" />
                         </div>
                     )}
-
-                    {contentModules.date && reviewData.date && (
-                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
-                            {formatDate(reviewData.date)}
-                        </div>
-                    )}
+                    <div style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, color: textSecondary }}>
+                        <b style={{ color: textPrimary }}>Identifiant interne — non réglementaire.</b>
+                        {lotCode && <><br />Généré par Terpologie Export Maker · doc {lotCode}</>}
+                    </div>
+                    <div style={{ marginLeft: 'auto', fontFamily: DISPLAY, fontSize: `${fontSize.text}px`, fontWeight: 600, color: textSecondary }}>
+                        TERPO<span style={{ color: accent }}>LOGIE</span>
+                    </div>
                 </div>
 
-                {/* Identifiant de lot — répond au constat le plus fondamental de l'étude de marché
-                    traçabilité (aucun système du marché comparé ne fonctionne sans identifiant
-                    unique de lot). Dérivé de l'id de la review, jamais stocké séparément — voir
-                    client/src/utils/lotCode.js pour le design et l'avertissement sur sa portée
-                    (identifiant de confort interne, pas un tag réglementaire). */}
-                {reviewData.id && (
-                    <div
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            marginTop: `${spacing.element}px`,
-                            paddingTop: `${spacing.element}px`,
-                            borderTop: `1px solid ${colorWithOpacity(colors.textSecondary, 15)}`,
-                        }}
-                        title="Identifiant interne Reviews-Maker — pas un numéro de traçabilité officiel"
-                    >
-                        <div style={{ background: '#fff', padding: '3px', borderRadius: '4px', lineHeight: 0, flexShrink: 0 }}>
-                            <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={40} level="M" />
-                        </div>
-                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
-                            <div style={{ fontFamily: 'monospace', fontWeight: '600', color: colors.textPrimary }}>{getLotCode(reviewData.id)}</div>
-                            <div style={{ fontSize: `${fontSize.small - 2}px`, opacity: 0.7 }}>Identifiant interne — non réglementaire</div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Section Debug - Visible si URL contient ?debug=1 */}
+                {/* Debug — visible si ?debug=1 */}
                 {typeof window !== 'undefined' && window.location.search.includes('debug=1') && (
                     <div className="mt-8 p-4 bg-black/50 rounded-xl border border-yellow-500/30">
                         <h4 className="text-yellow-400 font-bold mb-2">🔧 Debug - Données disponibles</h4>
@@ -984,7 +643,3 @@ DetailedCardTemplate.propTypes = {
     reviewData: PropTypes.object.isRequired,
     dimensions: PropTypes.object.isRequired,
 };
-
-
-
-

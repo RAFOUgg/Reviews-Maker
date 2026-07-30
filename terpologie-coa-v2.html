@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Terpologie — Fiche Technique v2</title>
+<style>
+/* ============================================================
+   TERPOLOGIE — COA / Fiche Technique  ·  Direction v2
+   Design tokens : ground the identity in resin + plant + lab-paper
+   ============================================================ */
+:root{
+  /* — surfaces — */
+  --ink:#0E1512;          /* deep charcoal-green, near-black       */
+  --ink-2:#16201B;        /* raised surface                        */
+  --ink-3:#1E2B24;        /* card                                  */
+  --line:#2C3A32;         /* hairline divider                      */
+  --line-soft:#233029;
+
+  /* — paper mode (print / documents) — */
+  --paper:#F5F2E9;
+  --paper-ink:#1A211D;
+  --paper-line:#D8D2C2;
+
+  /* — brand accents (used with restraint) — */
+  --resin:#C9922E;        /* trichome amber — THE accent for scores */
+  --resin-hi:#E9B450;
+  --plant:#3E7C5A;        /* botanical green — verified / pass      */
+  --plant-hi:#5BA57C;
+  --clay:#B5533A;         /* terracotta — caution / low             */
+  --clay-hi:#D0714F;
+
+  /* — text — */
+  --tx:#EDEAE0;
+  --tx-2:#A9B2AA;
+  --tx-3:#6E7A72;
+
+  /* — type — */
+  --sans:"Inter","Helvetica Neue",Arial,sans-serif;
+  --mono:"JetBrains Mono","SF Mono",ui-monospace,Menlo,monospace;
+  --disp:"Space Grotesk","Inter",sans-serif;
+
+  --r:14px; --r-sm:9px;
+}
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  font-family:var(--sans);
+  background:
+    radial-gradient(900px 500px at 20% -10%, rgba(62,124,90,.10), transparent 60%),
+    radial-gradient(700px 500px at 100% 0%, rgba(201,146,46,.08), transparent 55%),
+    var(--ink);
+  color:var(--tx);
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  padding:34px 20px 80px;
+}
+
+/* ---------- doc controls (not part of export) ---------- */
+.controls{max-width:1180px;margin:0 auto 26px;display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.controls h1{font-family:var(--disp);font-size:15px;font-weight:600;letter-spacing:.06em;color:var(--tx-2);text-transform:uppercase;margin-right:auto}
+.controls h1 b{color:var(--resin-hi)}
+.seg{display:flex;background:var(--ink-2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.seg button{font-family:var(--mono);font-size:11.5px;color:var(--tx-2);background:none;border:0;padding:7px 14px;border-radius:999px;cursor:pointer;transition:.18s}
+.seg button.on{background:var(--resin);color:#22160a;font-weight:600}
+.seg button:hover:not(.on){color:var(--tx)}
+
+/* ============================================================
+   THE CERTIFICATE
+   ============================================================ */
+.coa{
+  max-width:1180px;margin:0 auto;
+  background:var(--ink-2);
+  border:1px solid var(--line);
+  border-radius:var(--r);
+  overflow:hidden;
+  box-shadow:0 40px 90px -40px rgba(0,0,0,.8);
+}
+
+/* ---- 1 · MASTHEAD : the hero is trust + identity ---- */
+.mast{
+  display:grid;grid-template-columns:1.05fr .95fr;
+  border-bottom:1px solid var(--line);
+}
+.mast-l{padding:34px 38px;position:relative}
+.brandrow{display:flex;align-items:center;gap:10px;margin-bottom:26px}
+.mark{width:26px;height:26px;border-radius:7px;background:
+   conic-gradient(from 210deg,var(--resin),var(--plant),var(--resin));
+   position:relative;flex:0 0 auto}
+.mark::after{content:"";position:absolute;inset:6px;border-radius:3px;background:var(--ink-2)}
+.brandrow .bn{font-family:var(--disp);font-weight:700;letter-spacing:.02em;font-size:14px}
+.brandrow .bn span{color:var(--tx-3);font-weight:500}
+.doctype{margin-left:auto;font-family:var(--mono);font-size:10px;letter-spacing:.14em;color:var(--plant-hi);border:1px solid var(--line);padding:5px 10px;border-radius:6px;text-transform:uppercase}
+
+.category{font-family:var(--mono);font-size:11px;letter-spacing:.28em;color:var(--resin-hi);text-transform:uppercase;margin-bottom:8px}
+.strain{font-family:var(--disp);font-weight:700;font-size:52px;line-height:.98;letter-spacing:-.02em;margin-bottom:6px}
+.subline{color:var(--tx-2);font-size:14px}
+.subline b{color:var(--tx);font-weight:600}
+
+.meta-strip{display:flex;gap:26px;margin-top:26px;flex-wrap:wrap}
+.meta-strip .m{}
+.meta-strip .m .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--tx-3);text-transform:uppercase}
+.meta-strip .m .v{font-family:var(--disp);font-size:17px;font-weight:600;margin-top:2px}
+.meta-strip .m .v.pass{color:var(--plant-hi)}
+.meta-strip .m .v.warn{color:var(--clay-hi)}
+
+/* global score — the one big number, but earned */
+.gscore{position:absolute;right:34px;bottom:30px;text-align:right}
+.gscore .lbl{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--tx-3);text-transform:uppercase}
+.gscore .n{font-family:var(--disp);font-weight:700;font-size:44px;line-height:1;color:var(--resin-hi)}
+.gscore .n small{font-size:19px;color:var(--tx-3)}
+
+.mast-r{position:relative;background:#0a0f0c;min-height:290px;overflow:hidden}
+.mast-r img,.mast-r .ph{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.mast-r .ph{display:flex;align-items:center;justify-content:center;
+  background:
+   repeating-linear-gradient(45deg,#12191400 0 12px,#1a241d55 12px 24px),
+   radial-gradient(circle at 50% 40%,#25332b,#0d1310);}
+.mast-r .ph span{font-family:var(--mono);font-size:11px;color:var(--tx-3);letter-spacing:.1em}
+.mast-r::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(90deg,rgba(14,21,18,.9),transparent 22%);}
+
+/* ---- section shell ---- */
+.sec{padding:26px 38px}
+.sec + .sec{border-top:1px solid var(--line-soft)}
+.sec-h{display:flex;align-items:baseline;gap:12px;margin-bottom:20px}
+.sec-h .idx{font-family:var(--mono);font-size:11px;color:var(--resin);letter-spacing:.05em}
+.sec-h h2{font-family:var(--disp);font-size:15px;font-weight:600;letter-spacing:.03em;text-transform:uppercase}
+.sec-h .rule{flex:1;height:1px;background:linear-gradient(90deg,var(--line),transparent)}
+
+/* ============================================================
+   2 · SENSORY SCORES  — the core fix
+   grouped by family · color-coded by value · number attached
+   ============================================================ */
+.families{display:grid;grid-template-columns:repeat(3,1fr);gap:26px}
+.fam{}
+.fam-h{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--line-soft)}
+.fam-h .dot{width:8px;height:8px;border-radius:50%}
+.fam-h .nm{font-family:var(--disp);font-size:12.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--tx)}
+.fam-h .avg{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--tx-2)}
+
+.metric{margin-bottom:11px}
+.metric .top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
+.metric .lab{font-size:12px;color:var(--tx-2)}
+.metric .num{font-family:var(--mono);font-size:12px;font-weight:600}
+.track{height:6px;border-radius:99px;background:#0c110e;overflow:hidden;position:relative}
+.fill{height:100%;border-radius:99px;position:relative}
+/* value-coded fill colors set inline via class */
+.fill.hi{background:linear-gradient(90deg,var(--plant),var(--plant-hi))}
+.fill.mid{background:linear-gradient(90deg,var(--resin),var(--resin-hi))}
+.fill.lo{background:linear-gradient(90deg,var(--clay),var(--clay-hi))}
+
+/* ============================================================
+   3 · POTENCY  — cannabinoid bars, real values, real units
+   ============================================================ */
+.potency{display:grid;grid-template-columns:1.4fr 1fr;gap:34px;align-items:start}
+.cannab .row{display:grid;grid-template-columns:70px 1fr 62px;align-items:center;gap:14px;padding:9px 0;border-bottom:1px solid var(--line-soft)}
+.cannab .row:last-child{border-bottom:0}
+.cannab .cn{font-family:var(--mono);font-size:12.5px;font-weight:600;color:var(--tx)}
+.cannab .bar{height:9px;background:#0c110e;border-radius:99px;overflow:hidden}
+.cannab .bar i{display:block;height:100%;border-radius:99px;background:linear-gradient(90deg,var(--resin),var(--resin-hi))}
+.cannab .row.total .bar i{background:linear-gradient(90deg,var(--plant),var(--plant-hi))}
+.cannab .pc{font-family:var(--mono);font-size:13px;text-align:right;color:var(--tx)}
+.cannab .row.total{border-top:1px solid var(--line);margin-top:4px;padding-top:12px}
+.cannab .row.total .cn,.cannab .row.total .pc{color:var(--plant-hi)}
+
+/* radar */
+.radar-wrap{background:var(--ink-3);border:1px solid var(--line-soft);border-radius:var(--r-sm);padding:14px;display:flex;flex-direction:column;align-items:center}
+.radar-wrap .rt{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--tx-3);text-transform:uppercase;align-self:flex-start;margin-bottom:2px}
+
+/* ============================================================
+   4 · TERPENES / AROMA  — categorized chips w/ hierarchy
+   ============================================================ */
+.aroma{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.chipgroup .cg-h{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--tx-3);text-transform:uppercase;margin-bottom:9px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{font-size:12px;padding:5px 11px;border-radius:99px;border:1px solid var(--line);
+  background:var(--ink-3);color:var(--tx);display:inline-flex;align-items:center;gap:6px}
+.chip.primary{border-color:rgba(201,146,46,.5);background:rgba(201,146,46,.12);color:var(--resin-hi)}
+.chip .w{font-family:var(--mono);font-size:10px;color:var(--tx-3)}
+
+/* ============================================================
+   5 · LAB DATA GRID  — measurements as a real grid, not prose
+   ============================================================ */
+.grid-data{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line-soft);border:1px solid var(--line-soft);border-radius:var(--r-sm);overflow:hidden}
+.cell{background:var(--ink-3);padding:13px 14px}
+.cell .k{font-family:var(--mono);font-size:9.5px;letter-spacing:.1em;color:var(--tx-3);text-transform:uppercase;margin-bottom:4px}
+.cell .v{font-family:var(--disp);font-size:16px;font-weight:600}
+.cell .v small{font-size:11px;color:var(--tx-3);font-weight:400}
+.cell .v.ok{color:var(--plant-hi)} .cell .v.no{color:var(--clay-hi)}
+
+/* ---- footer ---- */
+.foot{padding:18px 38px;border-top:1px solid var(--line);display:flex;align-items:center;gap:18px;flex-wrap:wrap;background:#0c110e}
+.foot .fq{width:40px;height:40px;border-radius:6px;background:
+  repeating-linear-gradient(0deg,#EDEAE0 0 3px,#0c110e 3px 6px),
+  repeating-linear-gradient(90deg,#EDEAE0 0 3px,transparent 3px 6px);mix-blend-mode:screen;opacity:.7;flex:0 0 auto}
+.foot .ft{font-family:var(--mono);font-size:10.5px;color:var(--tx-3);letter-spacing:.03em}
+.foot .ft b{color:var(--tx-2)}
+.foot .fbrand{margin-left:auto;font-family:var(--disp);font-size:12px;color:var(--tx-2);font-weight:600;letter-spacing:.02em}
+.foot .fbrand span{color:var(--resin)}
+
+/* ============================================================
+   PAPER MODE  (documents / print export)
+   ============================================================ */
+body.paper{background:#2a2a26}
+body.paper .coa{background:var(--paper);color:var(--paper-ink);border-color:var(--paper-line);box-shadow:0 30px 80px -30px rgba(0,0,0,.6)}
+body.paper .mast,body.paper .sec+.sec,body.paper .sec-h .rule,
+body.paper .fam-h,body.paper .metric,body.paper .cannab .row,
+body.paper .grid-data,body.paper .cell,body.paper .foot{border-color:var(--paper-line)!important}
+body.paper .strain,body.paper .cell .v,body.paper .meta-strip .m .v{color:var(--paper-ink)}
+body.paper .lab,body.paper .subline,body.paper .fam-h .avg,body.paper .cell .k,
+body.paper .metric .lab,body.paper .sec-h .idx,body.paper .brandrow .bn{color:#4a5049}
+body.paper .track,body.paper .cannab .bar{background:#e6e0d1}
+body.paper .radar-wrap,body.paper .cell,body.paper .chip{background:#eae5d7;border-color:var(--paper-line)}
+body.paper .foot{background:#ece7d9}
+body.paper h2,body.paper .fam-h .nm{color:var(--paper-ink)}
+body.paper .doctype{color:var(--plant);border-color:var(--paper-line)}
+
+/* responsive */
+@media(max-width:820px){
+  .mast{grid-template-columns:1fr}
+  .families,.aroma,.potency{grid-template-columns:1fr}
+  .grid-data{grid-template-columns:repeat(2,1fr)}
+  .strain{font-size:38px}
+  .gscore{position:static;text-align:left;margin-top:18px}
+  .sec,.mast-l{padding:22px}
+}
+@media(prefers-reduced-motion:no-preference){
+  .fill,.cannab .bar i{transition:width .9s cubic-bezier(.2,.7,.2,1)}
+}
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <h1>Terpologie · <b>Fiche Technique</b> — direction v2</h1>
+  <div class="seg" id="mode">
+    <button class="on" data-m="screen">Écran</button>
+    <button data-m="paper">Document / Print</button>
+  </div>
+</div>
+
+<article class="coa" id="coa">
+
+  <!-- 1 · MASTHEAD -->
+  <header class="mast">
+    <div class="mast-l">
+      <div class="brandrow">
+        <div class="mark"></div>
+        <div class="bn">TERPOLOGIE <span>/ Serre Dub</span></div>
+        <div class="doctype">Fiche technique · COA</div>
+      </div>
+      <div class="category">Hash · Solventless</div>
+      <div class="strain">Jiattela</div>
+      <div class="subline">Producteur <b>Jad</b> · Lot <b>JTL-2607-A</b> · 26 juil. 2026</div>
+
+      <div class="meta-strip">
+        <div class="m"><div class="k">Type</div><div class="v">Hash</div></div>
+        <div class="m"><div class="k">Consommation</div><div class="v">Combustion</div></div>
+        <div class="m"><div class="k">Labo accrédité</div><div class="v warn">Non</div></div>
+        <div class="m"><div class="k">Certificat</div><div class="v pass">Disponible</div></div>
+      </div>
+
+      <div class="gscore">
+        <div class="lbl">Note globale</div>
+        <div class="n">7.6<small>/10</small></div>
+      </div>
+    </div>
+    <div class="mast-r">
+      <div class="ph"><span>[ visuel produit 4:3 ]</span></div>
+    </div>
+  </header>
+
+  <!-- 2 · SENSORY -->
+  <section class="sec">
+    <div class="sec-h"><span class="idx">01</span><h2>Évaluation sensorielle</h2><span class="rule"></span></div>
+    <div class="families" id="families"></div>
+  </section>
+
+  <!-- 3 · POTENCY -->
+  <section class="sec">
+    <div class="sec-h"><span class="idx">02</span><h2>Profil cannabinoïde</h2><span class="rule"></span></div>
+    <div class="potency">
+      <div class="cannab" id="cannab"></div>
+      <div class="radar-wrap">
+        <div class="rt">Empreinte sensorielle</div>
+        <svg id="radar" viewBox="0 0 260 240" width="100%"></svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4 · AROMA -->
+  <section class="sec">
+    <div class="sec-h"><span class="idx">03</span><h2>Profil aromatique · terpènes</h2><span class="rule"></span></div>
+    <div class="aroma">
+      <div class="chipgroup">
+        <div class="cg-h">Arômes dominants</div>
+        <div class="chips">
+          <span class="chip primary">Citron <span class="w">·dom</span></span>
+          <span class="chip primary">Bergamote</span>
+          <span class="chip">Orange</span>
+          <span class="chip">Pin</span>
+          <span class="chip">Terreux</span>
+        </div>
+      </div>
+      <div class="chipgroup">
+        <div class="cg-h">Arômes secondaires · goûts</div>
+        <div class="chips">
+          <span class="chip">Miel</span>
+          <span class="chip">Caramel</span>
+          <span class="chip">Bonbon</span>
+          <span class="chip">Poivre</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5 · LAB GRID -->
+  <section class="sec">
+    <div class="sec-h"><span class="idx">04</span><h2>Données laboratoire &amp; curing</h2><span class="rule"></span></div>
+    <div class="grid-data">
+      <div class="cell"><div class="k">Récipient</div><div class="v">Verre <small>· opaque</small></div></div>
+      <div class="cell"><div class="k">Volume produit</div><div class="v">10 <small>mL</small></div></div>
+      <div class="cell"><div class="k">Humidité cible</div><div class="v">47 <small>%</small></div></div>
+      <div class="cell"><div class="k">Température</div><div class="v">4 <small>°C</small></div></div>
+      <div class="cell"><div class="k">Circulation air</div><div class="v ok">Scellé</div></div>
+      <div class="cell"><div class="k">Burping</div><div class="v">Quotidien</div></div>
+      <div class="cell"><div class="k">Activité de l'eau</div><div class="v ok">0.58 <small>a<sub>w</sub></small></div></div>
+      <div class="cell"><div class="k">Microbien</div><div class="v ok">Conforme</div></div>
+    </div>
+  </section>
+
+  <footer class="foot">
+    <div class="fq"></div>
+    <div class="ft"><b>Identifiant interne — non réglementaire.</b><br>Généré par Terpologie Export Maker · doc JTL-2607-A · vérifier via terpologie.eu/coa</div>
+    <div class="fbrand">TERPO<span>LOGIE</span></div>
+  </footer>
+
+</article>
+
+<script>
+/* ---------- data model (this is what a template consumes) ---------- */
+const SENSORY = [
+  {fam:"Visuel & texture", color:"var(--resin)", metrics:[
+    {l:"Aspect visuel",v:7.0},{l:"Dureté",v:9.0},{l:"Densité",v:5.0},
+    {l:"Collant",v:9.0},{l:"Malléabilité",v:4.0},{l:"Melting",v:10.0}]},
+  {fam:"Odeur & arôme", color:"var(--plant)", metrics:[
+    {l:"Intensité",v:8.0},{l:"Complexité",v:9.0},{l:"Fidélité cultivar",v:6.0},
+    {l:"Fraîcheur",v:8.0}]},
+  {fam:"Goût & effets", color:"var(--clay)", metrics:[
+    {l:"Intensité goût",v:9.0},{l:"Agressivité",v:8.0},{l:"Montée",v:5.0},
+    {l:"Intensité effet",v:5.0},{l:"Durée",v:6.0}]},
+];
+const CANNAB = [
+  {n:"THC",v:18.4},{n:"THCA",v:62.1},{n:"CBD",v:0.3},
+  {n:"CBG",v:1.2},{n:"CBN",v:0.4},
+];
+const RADAR = [ /* the 4-axis quick fingerprint */
+  {a:"Visuel",v:7.0},{a:"Odeur",v:8.0},{a:"Texture",v:7.9},
+  {a:"Goût",v:8.5},{a:"Effets",v:5.0},{a:"Arôme",v:9.0},
+];
+
+/* colour by value: <5 lo / 5-7.5 mid / >7.5 hi */
+const band = v => v>=7.5?"hi":v>=5?"mid":"lo";
+
+/* render sensory families */
+const F = document.getElementById('families');
+SENSORY.forEach(fam=>{
+  const avg = (fam.metrics.reduce((s,m)=>s+m.v,0)/fam.metrics.length).toFixed(1);
+  const rows = fam.metrics.map(m=>`
+    <div class="metric">
+      <div class="top"><span class="lab">${m.l}</span><span class="num">${m.v.toFixed(1)}</span></div>
+      <div class="track"><div class="fill ${band(m.v)}" style="width:${m.v*10}%"></div></div>
+    </div>`).join('');
+  F.insertAdjacentHTML('beforeend',`
+    <div class="fam">
+      <div class="fam-h"><span class="dot" style="background:${fam.color}"></span>
+        <span class="nm">${fam.fam}</span><span class="avg">moy ${avg}</span></div>
+      ${rows}
+    </div>`);
+});
+
+/* cannabinoids */
+const C = document.getElementById('cannab');
+const max = Math.max(...CANNAB.map(c=>c.v));
+CANNAB.forEach(c=>{
+  C.insertAdjacentHTML('beforeend',`
+    <div class="row"><span class="cn">${c.n}</span>
+      <span class="bar"><i style="width:${c.v/max*100}%"></i></span>
+      <span class="pc">${c.v.toFixed(1)}%</span></div>`);
+});
+C.insertAdjacentHTML('beforeend',`
+  <div class="row total"><span class="cn">Total</span>
+    <span class="bar"><i style="width:100%"></i></span>
+    <span class="pc">${CANNAB.reduce((s,c)=>s+c.v,0).toFixed(1)}%</span></div>`);
+
+/* radar */
+(function(){
+  const svg=document.getElementById('radar');
+  const cx=130,cy=118,R=82,N=RADAR.length;
+  const pt=(i,r)=>{const a=-Math.PI/2+i*2*Math.PI/N;return[cx+r*Math.cos(a),cy+r*Math.sin(a)]};
+  let g='';
+  for(let ring=1;ring<=4;ring++){
+    const pts=RADAR.map((_,i)=>pt(i,R*ring/4).join(',')).join(' ');
+    g+=`<polygon points="${pts}" fill="none" stroke="var(--line)" stroke-width="1"/>`;
+  }
+  RADAR.forEach((d,i)=>{const[x,y]=pt(i,R);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="var(--line)" stroke-width="1"/>`;});
+  const poly=RADAR.map((d,i)=>pt(i,R*d.v/10).join(',')).join(' ');
+  g+=`<polygon points="${poly}" fill="rgba(201,146,46,.20)" stroke="var(--resin-hi)" stroke-width="2"/>`;
+  RADAR.forEach((d,i)=>{const[x,y]=pt(i,R*d.v/10);g+=`<circle cx="${x}" cy="${y}" r="2.6" fill="var(--resin-hi)"/>`;});
+  RADAR.forEach((d,i)=>{const[x,y]=pt(i,R+16);
+    g+=`<text x="${x}" y="${y}" fill="var(--tx-3)" font-size="9" font-family="var(--mono)" text-anchor="middle" dominant-baseline="middle">${d.a}</text>`;});
+  svg.innerHTML=g;
+})();
+
+/* mode toggle */
+document.getElementById('mode').addEventListener('click',e=>{
+  const b=e.target.closest('button'); if(!b)return;
+  document.querySelectorAll('#mode button').forEach(x=>x.classList.remove('on'));
+  b.classList.add('on');
+  document.body.classList.toggle('paper', b.dataset.m==='paper');
+});
+</script>
+</body>
+</html>

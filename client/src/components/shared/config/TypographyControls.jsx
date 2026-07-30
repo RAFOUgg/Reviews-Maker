@@ -12,7 +12,11 @@ const FONT_FAMILIES = [
     'Playfair Display',
     'Merriweather',
     'Raleway',
-    'Source Sans Pro'
+    'Source Sans Pro',
+    // Ajoutée 2026-07-30 pour la Fiche Technique Détaillée v2 (specs-direction-artistique.md) —
+    // seule nouvelle police proposée au choix libre ; JetBrains Mono (données/chiffres) est câblée
+    // en dur dans le template plutôt qu'exposée ici, cf. exportMakerHelpers.js.
+    'Space Grotesk',
 ];
 
 const FONT_WEIGHTS = [
