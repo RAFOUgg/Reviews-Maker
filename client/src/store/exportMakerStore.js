@@ -1,12 +1,12 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS } from './exportMakerConstants';
+import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS, TEMPLATE_DEFAULT_IDENTITY } from './exportMakerConstants';
 
 // Note: COLOR_PALETTES et DEFAULT_TEMPLATES sont maintenant importés depuis exportMakerConstants.js
 // pour éviter les problèmes de références circulaires et les re-renders infinis
 
 // Les constantes sont maintenant réexportées pour maintenir la compatibilité
-export { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS };
+export { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS, TEMPLATE_DEFAULT_IDENTITY };
 export { DEFAULT_CONFIG };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -64,6 +64,15 @@ const DEFAULT_CONFIG = {
     // Template sélectionné
     template: 'modernCompact',
     ratio: '1:1',
+
+    // Verrouillage de config par template (2026-07-30) : tant que `templateLocked` est vrai,
+    // Typographie/Couleurs/Contenu/Image&Logo restent en lecture seule dans l'UI (ConfigPane) —
+    // choisir un template applique VRAIMENT son identité visuelle par défaut au lieu de laisser
+    // les réglages précédents "survivre" silencieusement. `unlockTemplateConfig()` (action
+    // ci-dessous) est le seul moyen de repasser à `false`. `loadPreset()`/`applyConfig()` posent
+    // toujours `false` : un préréglage chargé ou une review déjà configurée est par nature déjà
+    // personnalisé(e), jamais reverrouillé(e) automatiquement.
+    templateLocked: true,
 
     // Typographie
     typography: {
@@ -368,6 +377,15 @@ export function resolveExportMakerConfig(savedConfig) {
         ...DEFAULT_CONFIG,
         ...(savedConfig || {}),
         contentModules: resolveContentModules(savedConfig?.contentModules),
+        // `templateLocked` (2026-07-30) ne doit PAS hériter du défaut `true` de DEFAULT_CONFIG ici
+        // comme les autres clés : une review sauvegardée AVANT ce chantier n'a jamais eu cette clé
+        // du tout, et sa config est par définition déjà une personnalisation existante (pas un
+        // template fraîchement choisi) — la traiter comme verrouillée regriserait à tort ses
+        // contrôles. Seule une review qui a explicitement ENREGISTRÉ `templateLocked` (vrai ou
+        // faux, depuis ce chantier) voit cette valeur respectée telle quelle.
+        templateLocked: savedConfig && Object.prototype.hasOwnProperty.call(savedConfig, 'templateLocked')
+            ? savedConfig.templateLocked
+            : false,
     };
 }
 
@@ -392,19 +410,25 @@ export const useExportMakerStore = create(
             reviewData: null,
 
             // Actions pour modifier la configuration
+            //
+            // Choisir un template applique désormais VRAIMENT son identité par défaut — typo,
+            // couleurs ET contentModules (remplacement, plus une simple fusion partielle des
+            // modules comme avant le 2026-07-30) — et reverrouille la config (`templateLocked:
+            // true`). Sans ça, changer de template ne changeait pas l'apparence si l'utilisateur
+            // avait déjà personnalisé police/couleurs, et rien ne distinguait "config encore
+            // fidèle au template" de "config dérivée".
             setTemplate: (templateId) => set((state) => {
-                const newRatio = (get().templates[templateId]?.defaultRatio || DEFAULT_TEMPLATES[templateId]?.defaultRatio || '1:1');
+                const templateDef = get().templates[templateId] || DEFAULT_TEMPLATES[templateId];
+                const newRatio = templateDef?.defaultRatio || '1:1';
 
-                // Auto-configure contentModules based on template preset
+                const identity = TEMPLATE_DEFAULT_IDENTITY[templateId];
+                const palette = identity ? COLOR_PALETTES[identity.defaultPalette] : null;
+
                 const preset = TEMPLATE_MODULE_PRESETS[templateId];
-                let newModules = { ...state.config.contentModules };
+                let newModules = { ...DEFAULT_CONFIG.contentModules };
                 if (preset) {
-                    if (preset.enable) {
-                        preset.enable.forEach(m => { newModules[m] = true; });
-                    }
-                    if (preset.disable) {
-                        preset.disable.forEach(m => { newModules[m] = false; });
-                    }
+                    if (preset.enable) preset.enable.forEach(m => { newModules[m] = true; });
+                    if (preset.disable) preset.disable.forEach(m => { newModules[m] = false; });
                 }
 
                 return {
@@ -413,29 +437,45 @@ export const useExportMakerStore = create(
                         template: templateId,
                         ratio: newRatio,
                         contentModules: newModules,
+                        typography: identity
+                            ? { ...DEFAULT_CONFIG.typography, ...identity.defaultTypography }
+                            : { ...DEFAULT_CONFIG.typography },
+                        colors: palette
+                            ? { ...DEFAULT_CONFIG.colors, palette: identity.defaultPalette, ...palette }
+                            : { ...DEFAULT_CONFIG.colors },
+                        templateLocked: true,
                     }
                 };
             }),
+
+            // Sort la config du verrou template — seul moyen de repasser `templateLocked` à false
+            // sans passer par `loadPreset`/`applyConfig` (qui l'exemptent déjà automatiquement).
+            unlockTemplateConfig: () => set((state) => ({
+                config: { ...state.config, templateLocked: false }
+            })),
 
             setRatio: (ratio) => set((state) => ({
                 config: { ...state.config, ratio }
             })),
 
-            updateTypography: (updates) => set((state) => ({
-                config: {
-                    ...state.config,
-                    typography: { ...state.config.typography, ...updates }
+            // Les actions ci-dessous sont des no-op tant que `templateLocked` est vrai — filet de
+            // sécurité en plus de la désactivation des contrôles côté UI (ConfigPane), pour qu'un
+            // futur appel programmatique ne puisse pas non plus dériver silencieusement une config
+            // encore verrouillée sur son template.
+            updateTypography: (updates) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: { ...state.config, typography: { ...state.config.typography, ...updates } }
                 }
-            })),
+            )),
 
-            updateColors: (updates) => set((state) => ({
-                config: {
-                    ...state.config,
-                    colors: { ...state.config.colors, ...updates }
+            updateColors: (updates) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: { ...state.config, colors: { ...state.config.colors, ...updates } }
                 }
-            })),
+            )),
 
             applyColorPalette: (paletteName) => {
+                if (get().config.templateLocked) return;
                 const palette = COLOR_PALETTES[paletteName];
                 if (!palette) return;
 
@@ -451,41 +491,40 @@ export const useExportMakerStore = create(
                 }));
             },
 
-            toggleContentModule: (moduleName) => set((state) => ({
-                config: {
-                    ...state.config,
-                    contentModules: {
-                        ...state.config.contentModules,
-                        [moduleName]: !state.config.contentModules[moduleName]
+            toggleContentModule: (moduleName) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: {
+                        ...state.config,
+                        contentModules: {
+                            ...state.config.contentModules,
+                            [moduleName]: !state.config.contentModules[moduleName]
+                        }
                     }
                 }
-            })),
+            )),
 
             // Set all content modules at once (for presets)
-            setContentModules: (modules) => set((state) => ({
-                config: {
-                    ...state.config,
-                    contentModules: { ...state.config.contentModules, ...modules }
+            setContentModules: (modules) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: { ...state.config, contentModules: { ...state.config.contentModules, ...modules } }
                 }
-            })),
+            )),
 
-            reorderModules: (newOrder) => set((state) => ({
-                config: { ...state.config, moduleOrder: newOrder }
-            })),
+            reorderModules: (newOrder) => set((state) => (
+                state.config.templateLocked ? state : { config: { ...state.config, moduleOrder: newOrder } }
+            )),
 
-            updateImage: (updates) => set((state) => ({
-                config: {
-                    ...state.config,
-                    image: { ...state.config.image, ...updates }
+            updateImage: (updates) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: { ...state.config, image: { ...state.config.image, ...updates } }
                 }
-            })),
+            )),
 
-            updateBranding: (updates) => set((state) => ({
-                config: {
-                    ...state.config,
-                    branding: { ...state.config.branding, ...updates }
+            updateBranding: (updates) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: { ...state.config, branding: { ...state.config.branding, ...updates } }
                 }
-            })),
+            )),
 
             updatePagination: (updates) => set((state) => ({
                 config: {
@@ -495,17 +534,20 @@ export const useExportMakerStore = create(
             })),
 
             // Per-section style override
-            updateSectionStyle: (sectionKey, updates) => set((state) => ({
-                config: {
-                    ...state.config,
-                    sectionStyles: {
-                        ...state.config.sectionStyles,
-                        [sectionKey]: { ...(state.config.sectionStyles?.[sectionKey] || {}), ...updates }
+            updateSectionStyle: (sectionKey, updates) => set((state) => (
+                state.config.templateLocked ? state : {
+                    config: {
+                        ...state.config,
+                        sectionStyles: {
+                            ...state.config.sectionStyles,
+                            [sectionKey]: { ...(state.config.sectionStyles?.[sectionKey] || {}), ...updates }
+                        }
                     }
                 }
-            })),
+            )),
 
             resetSectionStyle: (sectionKey) => set((state) => {
+                if (state.config.templateLocked) return state;
                 const { [sectionKey]: _, ...rest } = state.config.sectionStyles || {};
                 return { config: { ...state.config, sectionStyles: rest } };
             }),
@@ -580,8 +622,9 @@ export const useExportMakerStore = create(
                 const preset = get().presets.find(p => p.id === presetId);
                 if (!preset) return;
 
+                // Un préréglage chargé est par nature déjà personnalisé — jamais reverrouillé.
                 set({
-                    config: { ...preset.config },
+                    config: { ...preset.config, templateLocked: false },
                     activePreset: presetId
                 });
             },
@@ -635,9 +678,17 @@ export const useExportMakerStore = create(
             }),
 
             // Applique une configuration Export Maker arbitraire (ex: template sauvegardé
-            // sélectionné depuis Bibliothèque > Templates) sans passer par un preset local.
+            // sélectionné depuis Bibliothèque > Templates, ou config déjà persistée d'une review
+            // qu'on rouvre en édition) sans passer par un preset local. `templateLocked` fait
+            // partie de `config` depuis le 2026-07-30 et est donc déjà correctement sauvegardé/
+            // rechargé avec le reste — on respecte cette valeur si présente (une review sauvegardée
+            // juste après avoir choisi un template, sans le personnaliser, doit rouvrir verrouillée
+            // elle aussi) ; seul un `config` sans cette clé du tout (review sauvegardée AVANT ce
+            // chantier, ou config construit à la main) retombe sur `false` — la traiter comme
+            // verrouillée par défaut regriserait à tort des contrôles sur d'anciennes reviews dont
+            // la config est en réalité déjà personnalisée à la main.
             applyConfig: (config) => set({
-                config: { ...DEFAULT_CONFIG, ...config },
+                config: { ...DEFAULT_CONFIG, ...config, templateLocked: config?.templateLocked ?? false },
                 activePreset: null
             }),
 
@@ -730,6 +781,7 @@ export const useExportMakerConfig = () => useExportMakerStore((state) => state.c
 export const useExportMakerPresets = () => useExportMakerStore((state) => state.presets);
 export const useExportMakerActions = () => useExportMakerStore((state) => ({
     setTemplate: state.setTemplate,
+    unlockTemplateConfig: state.unlockTemplateConfig,
     setRatio: state.setRatio,
     updateTypography: state.updateTypography,
     updateColors: state.updateColors,

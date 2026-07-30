@@ -150,6 +150,30 @@ export const TEMPLATE_MODULE_PRESETS = {
             'terpenes',
         ],
     },
+    // Absent avant le 2026-07-30 (asymétrie trouvée en audit) : sélectionner ce template ne
+    // touchait donc jamais `contentModules`. `TraceabilityReportTemplate.jsx` ne rend déjà que les
+    // sections avec des données réelles (cf. son propre commentaire de tête), donc "tout activé"
+    // est sans risque — même liste large que `detailedCard`.
+    traceabilityReport: {
+        enable: [
+            'title', 'mainImage', 'images', 'cultivar', 'cultivarsList',
+            'farm', 'hashmaker', 'type', 'breeder', 'strainType', 'genetics',
+            'thcLevel', 'cbdLevel', 'terpenes',
+            'couleurScore', 'densiteVisuelle', 'trichomesScore', 'moisissureScore', 'grainesScore',
+            'couleurTransparence', 'pureteVisuelle',
+            'intensiteAromeScore', 'complexiteAromeScore', 'fideliteAromeScore', 'aromas', 'secondaryAromas',
+            'dureteScore', 'densiteTactileScore', 'elasticiteScore', 'collantScore',
+            'malleabiliteScore', 'friabiliteScore', 'meltingScore', 'residuScore', 'viscositeScore',
+            'intensiteGoutScore', 'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
+            'monteeScore', 'intensiteEffetScore', 'effects', 'dureeEffet',
+            'curing',
+            'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
+            'fertilizationPipeline', 'substratMix', 'processing',
+            'cultureTimelineData', 'cultureTimelineConfig',
+            'recipe', 'ingredients',
+        ],
+        disable: [],
+    },
 };
 
 // Templates de base avec leurs configurations
@@ -201,4 +225,21 @@ export const DEFAULT_TEMPLATES = {
         defaultRatio: 'A4',
         supportedRatios: ['A4']
     }
+};
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// IDENTITÉ VISUELLE PAR DÉFAUT — verrouillage de config par template (2026-07-30)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Avant ce chantier, choisir un template ne touchait QUE `contentModules` (via
+// TEMPLATE_MODULE_PRESETS ci-dessus) — police/couleurs restaient inchangées, donc changer de
+// template ne changeait pas vraiment l'apparence si l'utilisateur avait déjà personnalisé l'un ou
+// l'autre. `defaultPalette` référence une entrée de `COLOR_PALETTES` (jamais dupliquée en dur) ;
+// `defaultTypography` ne liste que ce qui diffère des valeurs de base (`DEFAULT_CONFIG.typography`
+// dans exportMakerStore.js), fusionné par-dessus au moment de l'application.
+export const TEMPLATE_DEFAULT_IDENTITY = {
+    modernCompact: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
+    detailedCard: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
+    blogArticle: { defaultPalette: 'elegant', defaultTypography: { fontFamily: 'Merriweather', titleWeight: '700' } },
+    socialStory: { defaultPalette: 'sunset', defaultTypography: { fontFamily: 'Poppins', titleWeight: '800' } },
+    traceabilityReport: { defaultPalette: 'ocean', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
 };
