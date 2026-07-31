@@ -93,7 +93,6 @@ export default function ExportMakerContextMenu() {
     const resetSectionStyle = useExportMakerStore((s) => s.resetSectionStyle);
     const toggleContentModule = useExportMakerStore((s) => s.toggleContentModule);
     const sectionStyles = useExportMakerStore((s) => s.config?.sectionStyles || {});
-    const templateLocked = useExportMakerStore((s) => s.config?.templateLocked);
 
     const closeMenu = useCallback(() => {
         setMenuPos(null);
@@ -124,12 +123,6 @@ export default function ExportMakerContextMenu() {
             e.preventDefault();
             e.stopPropagation();
 
-            // Config verrouillée sur le template (2026-07-30) : ce menu appelle directement
-            // `updateSectionStyle`/`toggleContentModule`, en no-op côté store tant que verrouillé
-            // (cf. exportMakerStore.js) — autant ne pas l'ouvrir du tout plutôt que laisser
-            // l'utilisateur cliquer des options qui ne feront rien silencieusement.
-            if (templateLocked) return;
-
             const sectionKey = moduleEl.getAttribute('data-export-maker-section') || moduleEl.getAttribute('data-export-maker-score');
             const sectionLabel = moduleEl.getAttribute('data-export-maker-label') || sectionKey;
 
@@ -141,7 +134,7 @@ export default function ExportMakerContextMenu() {
         };
         document.addEventListener('contextmenu', handler);
         return () => document.removeEventListener('contextmenu', handler);
-    }, [templateLocked]);
+    }, []);
 
     const applySectionStyle = useCallback((styleKey, value) => {
         if (!targetInfo) return;

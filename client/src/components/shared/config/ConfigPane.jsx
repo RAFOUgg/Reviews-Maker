@@ -1,7 +1,7 @@
 import { motion } from 'framer-motion';
-import { LayoutGrid, Type, Palette, ListChecks, Image as ImageIcon, Bookmark, Files, Lock } from 'lucide-react';
+import { LayoutGrid, Type, Palette, ListChecks, Image as ImageIcon, Bookmark, Files, Lock, Pencil } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
-import { LiquidTabs, LiquidButton } from '../../ui/LiquidUI';
+import { LiquidTabs } from '../../ui/LiquidUI';
 import TemplateSelector from './TemplateSelector';
 import TypographyControls from './TypographyControls';
 import ColorPaletteControls from './ColorPaletteControls';
@@ -23,20 +23,18 @@ const BASE_PANELS = [
     { id: 'presets', label: 'Préréglages', icon: Bookmark },
 ];
 
-// Onglets dont le contenu est piloté par l'identité par défaut du template — verrouillés tant
-// que `config.templateLocked` est vrai (2026-07-30). "Template" reste toujours actif (changer de
-// template redémarre le verrou avec ses propres défauts) ; "Pagination" a son propre verrou
-// indépendant (`shouldAutoLockPagination`) ; "Préréglages" reste utilisable (sauvegarder/charger
-// un préréglage ne dérive pas le template, et charger un préréglage déverrouille de toute façon).
+// Onglets dont le contenu est piloté par l'identité par défaut du template — affichent le badge
+// d'état (verrouillé/personnalisé) tant qu'on y est. "Template" reste à part (changer de template
+// redémarre le verrou avec ses propres défauts) ; "Pagination" a son propre verrou indépendant
+// (`shouldAutoLockPagination`) ; "Préréglages" n'a pas de notion de verrou.
 const LOCKABLE_TABS = new Set(['content', 'typography', 'colors', 'image']);
 
 export default function ConfigPane() {
     const activePanel = useExportMakerStore((state) => state.activePanel);
     const setActivePanel = useExportMakerStore((state) => state.setActivePanel);
     const templateLocked = useExportMakerStore((state) => state.config.templateLocked);
-    const unlockTemplateConfig = useExportMakerStore((state) => state.unlockTemplateConfig);
 
-    const isLocked = templateLocked && LOCKABLE_TABS.has(activePanel);
+    const showStatusBadge = LOCKABLE_TABS.has(activePanel);
 
     return (
         <div className="h-full min-h-0 flex flex-col" style={{ background: 'var(--app-bg, transparent)' }}>
@@ -55,20 +53,13 @@ export default function ConfigPane() {
                 />
             </div>
 
-            {/* Bandeau de verrouillage — n'apparaît que sur les onglets pilotés par le template
-                (Contenu/Typographie/Couleurs/Image&Logo), tant que la config n'a pas été
-                explicitement personnalisée. Même motif visuel (badge + action) que le verrou de
-                pagination déjà existant, pour rester cohérent avec le seul autre précédent de
-                "verrou" dans Export Maker. */}
-            {isLocked && (
-                <div className="flex items-center justify-between gap-3 px-4 py-2.5 border-b border-amber-400/20 bg-amber-400/10">
-                    <div className="flex items-center gap-2 text-xs text-amber-200/90">
-                        <Lock size={14} className="flex-shrink-0" />
-                        <span>Config liée au template — modifiez-la pour la personnaliser</span>
-                    </div>
-                    <LiquidButton size="sm" variant="outline" onClick={unlockTemplateConfig}>
-                        Personnaliser
-                    </LiquidButton>
+            {/* Badge d'état — non bloquant (Chantier C1, 2026-07-30) : le premier changement sur un
+                onglet piloté par le template déverrouille désormais automatiquement la config (voir
+                exportMakerStore.js) — ce badge informe seulement, il ne grise/bloque plus rien. */}
+            {showStatusBadge && (
+                <div className={`flex items-center gap-2 px-4 py-1.5 text-xs border-b ${templateLocked ? 'text-amber-200/80 border-amber-400/15 bg-amber-400/5' : 'text-emerald-200/80 border-emerald-400/15 bg-emerald-400/5'}`}>
+                    {templateLocked ? <Lock size={12} className="flex-shrink-0" /> : <Pencil size={12} className="flex-shrink-0" />}
+                    <span>{templateLocked ? 'Config de template — le premier réglage la personnalisera' : 'Personnalisé'}</span>
                 </div>
             )}
 
@@ -80,8 +71,6 @@ export default function ConfigPane() {
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -10 }}
                     transition={{ duration: 0.2 }}
-                    className={isLocked ? 'pointer-events-none opacity-40 select-none' : ''}
-                    aria-disabled={isLocked || undefined}
                 >
                     {activePanel === 'template' && <TemplateSelector />}
                     {activePanel === 'typography' && <TypographyControls />}

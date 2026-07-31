@@ -162,7 +162,7 @@ export function GisementSections({ reviewData, contentModules, groups, Section, 
             const hasRecipe = (Array.isArray(reviewData.ingredients) && reviewData.ingredients.length) || (Array.isArray(reviewData.etapesPreparation) && reviewData.etapesPreparation.length);
             if (!on || !hasRecipe) return null;
             return (
-                <Section key={group} title={GROUP_LABELS[group]} icon={groupIcons[group] || '🍯'}>
+                <Section key={group} title={GROUP_LABELS[group]} icon={groupIcons[group] || '🍯'} moduleId={`gisement:${group}`}>
                     <RecipeBlock reviewData={reviewData} fontSize={fontSize} colors={colors} spacing={spacing} />
                 </Section>
             );
@@ -185,7 +185,7 @@ export function GisementSections({ reviewData, contentModules, groups, Section, 
         if (rows.length === 0) return null;
 
         return (
-            <Section key={group} title={GROUP_LABELS[group]} icon={groupIcons[group] || '📊'}>
+            <Section key={group} title={GROUP_LABELS[group]} icon={groupIcons[group] || '📊'} moduleId={`gisement:${group}`}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: `${spacing.gap}px` }}>
                     {rows.map(({ field, value }) => (
                         <div key={field.key} style={{

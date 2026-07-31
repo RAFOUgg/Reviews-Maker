@@ -13,6 +13,7 @@ import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
+import { useAdaptivePages } from '../../../hooks/useAdaptivePages';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -241,6 +242,23 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
     // vers `PagedPreviewPane` les ignorait tant que `pagesEnabled` n'était pas coché à la main.
     const effectivePagesActive = pagesEnabled || shouldAutoLockPagination(reviewData);
+
+    // Pagination adaptative (Chantier D, 2026-07-31) : cette 3e surface (aperçu live Export Maker
+    // Studio) utilisait jusqu'ici `loadDefaultPages` (statique) comme les deux autres — remplacée
+    // ici par une vraie mesure de hauteur pour `detailedCard` (voir `useAdaptivePages.js`, qui gère
+    // lui-même le repli statique pendant/à défaut de mesure). Mode Custom exempt (le hook le gère
+    // en interne via `isCustomMode`).
+    const setPages = useExportMakerPagesStore((state) => state.setPages);
+    const { pages: adaptivePagesResult, isAdaptive } = useAdaptivePages(reviewData, config, {
+        enabled: effectivePagesActive && !isCustomMode,
+    });
+    useEffect(() => {
+        if (isAdaptive && adaptivePagesResult.length > 1) {
+            setPages(adaptivePagesResult);
+        }
+        // Sinon : les pages statiques déjà chargées par `loadDefaultPages` (effet ci-dessus) restent
+        // en place — pas de régression pendant la mesure ou si elle échoue/est non concluante.
+    }, [isAdaptive, adaptivePagesResult, setPages]);
 
     // Plein écran réel : superpose la Fullscreen API du navigateur au mode CSS existant
     // (`isPreviewFullscreen`, jusqu'ici jamais câblé à aucun bouton) qui masque déjà le panneau de
@@ -530,6 +548,26 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                                 Appliquer
+                            </motion.button>
+                        )}
+
+                        {/* Bouton Personnaliser la mise en page — point d'entrée du Mode Custom
+                            (Chantier C2, 2026-07-30), absent avant ce jour : `isCustomMode` ne
+                            pouvait jusqu'ici être activé qu'en rouvrant une review déjà sauvegardée
+                            ainsi (aucun bouton). Bascule vers le canevas de glisser-déposer libre
+                            (ContentPanel + CustomLayoutPane) ; ré-appuyer revient au rendu template. */}
+                        {showPreview && (
+                            <motion.button
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={() => setIsCustomMode((v) => !v)}
+                                className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${isCustomMode ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400'}`}
+                                title={isCustomMode ? 'Revenir au template' : 'Personnaliser la mise en page (glisser-déposer libre)'}
+                            >
+                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0H5a2 2 0 01-2-2v-4m6 6h10a2 2 0 002-2v-4m-6-4h6m-6 4h6" />
+                                </svg>
+                                {isCustomMode ? 'Mode template' : 'Personnaliser la mise en page'}
                             </motion.button>
                         )}
 

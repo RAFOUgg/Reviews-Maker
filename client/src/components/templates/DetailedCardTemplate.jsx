@@ -13,14 +13,16 @@ import {
     getResponsiveAdjustments,
     SEMANTIC_SCORE_COLORS,
     getScoreBand,
+    RATIO_DIMENSIONS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
-import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
-import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
+import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
+import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
 import SensoryRadar from './sections/SensoryRadar';
+import CultureStatsChart from './sections/CultureStatsChart';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 
@@ -94,6 +96,18 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const { typography, colors, contentModules, image, branding } = config;
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, isPortrait, isA4, fontSize, padding, spacing, limits, grid } = responsive;
+
+    // Pagination adaptative (Chantier D, 2026-07-31) : `config.pageModuleIds` (Set/array d'ids ou
+    // absent) restreint quels blocs s'affichent sur CETTE page — orthogonal aux booléens
+    // `contentModules` existants (qui pilotent "ce champ est-il activé par l'utilisateur du tout",
+    // indépendamment de la pagination). Absent (rendu normal/non paginé/pages statiques) : tout
+    // s'affiche, comportement 100% identique à avant ce chantier. Voir `Section` plus bas et les
+    // blocs non-Section (masthead, canevas, pipelines) qui portent chacun leur propre `data-module`
+    // pour la mesure réelle de hauteur (`measureDetailedCardModules.js`).
+    const pageModuleIds = config.pageModuleIds
+        ? (config.pageModuleIds instanceof Set ? config.pageModuleIds : new Set(config.pageModuleIds))
+        : null;
+    const isPageOn = (moduleId) => !pageModuleIds || pageModuleIds.has(moduleId);
 
     // Mode papier = ratio A4 (cf. tableau d'adaptation par format du spec : Document/PDF → mode
     // papier ; tous les autres ratios → mode écran). Pas ajouté à `getResponsiveAdjustments`
@@ -182,16 +196,23 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // Titre de section — numéroté (spec) ou non (sections réelles hors périmètre du spec, ex.
     // pipelines/généalogie/données complémentaires), toujours un simple filet + libellé, jamais
     // de carte/verre (la direction v2 abandonne délibérément le glassmorphism).
-    const Section = ({ idx, title, children }) => (
-        <div style={{ padding: `${spacing.section}px 0`, borderTop: `1px solid ${lineSoft}` }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: spacing.element * 2 }}>
-                {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accent, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
-                <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
-                <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
+    // `moduleId` (optionnel) : identifiant de pagination adaptative — porte `data-module` (mesure
+    // réelle de hauteur) et se masque si `pageModuleIds` est posé et ne le contient pas. Les
+    // `Section` sans `moduleId` (aucune section n'en manque volontairement aujourd'hui) resteraient
+    // toujours visibles, par sécurité (mieux vaut un doublon qu'une disparition silencieuse).
+    const Section = ({ idx, title, moduleId, children }) => {
+        if (moduleId && !isPageOn(moduleId)) return null;
+        return (
+            <div data-module={moduleId || undefined} style={{ padding: `${spacing.section}px 0`, borderTop: `1px solid ${lineSoft}` }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: spacing.element * 2 }}>
+                    {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accent, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
+                    <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
+                    <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
+                </div>
+                {children}
             </div>
-            {children}
-        </div>
-    );
+        );
+    };
 
     const Metric = ({ label, value }) => {
         const band = getScoreBand(value);
@@ -326,11 +347,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
-    const PipelineTimeline = ({ pipeline }) => {
+    const PipelineTimeline = ({ pipeline, moduleId }) => {
         const rawSteps = pipeline.rawSteps || pipeline.steps.map((s) => ({ label: s }));
         const pipelineType = PIPELINE_TYPE_BY_KEY[pipeline.key] || pipeline.key;
         return (
-            <div style={{ marginBottom: `${spacing.element}px` }}>
+            <div data-module={moduleId} style={{ marginBottom: `${spacing.element}px` }}>
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: spacing.element,
                     marginBottom: spacing.gap + 2,
@@ -393,12 +414,20 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const stacked = isPortrait || isSquare;
     const visiblePipelines = filterVisiblePipelines(pipelines, contentModules);
 
+    // ── Statistiques de culture (Chantier A, 2026-07-30) ──────────────────────────────────
+    // Largeur explicite dérivée des dimensions réelles du canevas (pas de `ResponsiveContainer`
+    // Recharts, jamais testé dans le pipeline `html-to-image` — cf. plan) : le canevas exporté a
+    // une taille en pixels fixe et connue (`RATIO_DIMENSIONS`), donc pas besoin de mesure au runtime.
+    const canvasDims = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+    const cultureSteps = Array.isArray(reviewData.cultureTimelineData) ? reviewData.cultureTimelineData : null;
+    const chartWidth = Math.round((canvasDims.width - padding.container * 2) * (stacked ? 1 : 0.9));
+
     return (
         <div className="relative w-full h-full overflow-auto" style={{ background: bg, fontFamily: 'Inter, sans-serif', color: textPrimary, padding: `${padding.container}px` }}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full h-full flex flex-col">
 
                 {/* ── MASTHEAD ── */}
-                <div style={{
+                {isPageOn('masthead') && <div data-module="masthead" style={{
                     display: 'flex', flexDirection: stacked ? 'column' : 'row',
                     gap: stacked ? spacing.section : 0,
                     background: surface,
@@ -466,11 +495,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F5F2E9' : '#0E1512', 85)}, transparent 22%)` }} />}
                         </div>
                     )}
-                </div>
+                </div>}
 
                 {/* ── 01 · ÉVALUATION SENSORIELLE ── */}
                 {families.length > 0 && (
-                    <Section idx="01" title="Évaluation sensorielle">
+                    <Section idx="01" title="Évaluation sensorielle" moduleId="sensoryEvaluation">
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : `repeat(${families.length}, 1fr)`, gap: `${spacing.section}px` }}>
                             {families.map((f, i) => <FamilyBlock key={i} title={f.title} dot={f.dot} metrics={f.metrics} />)}
                         </div>
@@ -479,7 +508,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* ── 02 · PROFIL CANNABINOÏDE ── */}
                 {(cannabinoidItems.length > 0 || radarAxes.length >= 3) && (
-                    <Section idx="02" title="Profil cannabinoïde">
+                    <Section idx="02" title="Profil cannabinoïde" moduleId="cannabinoidProfile">
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : '1.4fr 1fr', gap: `${spacing.section}px`, alignItems: 'start' }}>
                             {cannabinoidItems.length > 0 && (() => {
                                 const max = Math.max(...cannabinoidItems.map((c) => c.value));
@@ -517,7 +546,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* ── 03 · PROFIL AROMATIQUE ── */}
                 {(aromas.length > 0 || secondaryAromas.length > 0 || tastes.length > 0 || terpenes.length > 0) && contentModules.aromas && (
-                    <Section idx="03" title="Profil aromatique · terpènes">
+                    <Section idx="03" title="Profil aromatique · terpènes" moduleId="aromaticProfile">
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.section}px` }}>
                             <ChipGroup title="Arômes dominants" items={aromas} variant="primary" />
                             <ChipGroup title="Arômes secondaires · goûts" items={secondaryAromas.length > 0 ? secondaryAromas : tastes} variant="default" />
@@ -528,10 +557,33 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* ── 04 · DONNÉES LABORATOIRE & CURING ── */}
                 {labCells.length > 0 && (
-                    <Section idx="04" title="Données laboratoire & curing">
+                    <Section idx="04" title="Données laboratoire & curing" moduleId="labData">
                         <div className="grid" style={{ gridTemplateColumns: `repeat(${stacked ? Math.min(2, grid.cols) : grid.cols}, 1fr)`, gap: 1, background: lineSoft, border: `1px solid ${lineSoft}`, borderRadius: 9, overflow: 'hidden' }}>
                             {labCells.map((c, i) => <DataCell key={i} {...c} />)}
                         </div>
+                    </Section>
+                )}
+
+                {/* Commentaire — texte libre du rédacteur (`review.description`, le seul champ de
+                    commentaire réellement peuplé de l'app — `notes`/`comments`/`conclusion`/
+                    `recommendations`/`warnings` sont des clés `contentModules` mortes, sans colonne
+                    Prisma ni formulaire qui les alimente, cf. audit 2026-07-30). Retiré par erreur
+                    lors de la refonte COA v2 (aucune régression de données voulue) — réintroduit. */}
+                {contentModules.description && reviewData.description && (
+                    <Section title="Commentaire" moduleId="description">
+                        <p style={{ fontSize: `${fontSize.text}px`, color: textSecondary, lineHeight: 1.6, fontStyle: 'italic' }}>
+                            « {reviewData.description} »
+                        </p>
+                    </Section>
+                )}
+
+                {/* Statistiques de culture — tendance des paramètres environnementaux (température,
+                    humidité, CO2, PPFD, pH/EC…) sur la timeline de culture. Ne s'affiche que si au
+                    moins 2 étapes ont des valeurs numériques (une tendance a besoin d'≥2 points) —
+                    `CultureStatsChart` se masque lui-même sinon. */}
+                {contentModules.pipelineInteractiveView !== false && cultureSteps && (
+                    <Section title="Statistiques de culture" moduleId="cultureStats">
+                        <CultureStatsChart steps={cultureSteps} pipelineType="culture" width={chartWidth} height={isSquare ? 180 : 220} textColor={textSecondary} lineColor={lineSoft} />
                     </Section>
                 )}
 
@@ -548,29 +600,38 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     groupIcons={GISEMENT_ICONS}
                 />
 
-                {/* Pipelines (production) */}
-                {visiblePipelines.length > 0 && (
-                    <Section title="Processus de production">
-                        {visiblePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} />)}
-                    </Section>
-                )}
+                {/* Pipelines (production) — chaque pipeline porte son propre `data-module`
+                    (`pipeline:<key>`) pour que la pagination adaptative puisse répartir Culture/
+                    Curing/Extraction/Séparation/Purification sur des pages différentes selon leur
+                    volume réel (au lieu du découpage fixe par ratio d'avant ce chantier). */}
+                {(() => {
+                    const pagePipelines = visiblePipelines.filter((p) => isPageOn(`pipeline:${p.key}`));
+                    if (pagePipelines.length === 0) return null;
+                    return (
+                        <Section title="Processus de production">
+                            {pagePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} moduleId={`pipeline:${p.key}`} />)}
+                        </Section>
+                    );
+                })()}
 
-                {/* Vues interactives — se masquent elles-mêmes si aucune donnée liée */}
-                {contentModules.phenoHuntView !== false && (
-                    <div style={{ marginBottom: `${spacing.section}px` }}>
-                        <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.section} accentColor={accent} titleColor={titleColor} />
+                {/* Vues interactives — vrais canevas React Flow en lecture seule (Chantier B,
+                    2026-07-30 ; état 100% local, cf. commentaires des composants pour le
+                    raisonnement d'isolation) ; se masquent elles-mêmes si aucune donnée liée. */}
+                {contentModules.phenoHuntView !== false && isPageOn('genealogyCanvas') && (
+                    <div data-module="genealogyCanvas" style={{ marginBottom: `${spacing.section}px` }}>
+                        <ReadOnlyGenealogyCanvas reviewData={reviewData} height={isSquare ? 260 : 340} accentColor={accent} titleColor={titleColor} textColor={textSecondary} />
                     </div>
                 )}
-                {contentModules.productionChainView !== false && (
-                    <div style={{ marginBottom: `${spacing.section}px` }}>
-                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.section} accentColor={accent} titleColor={titleColor} />
+                {contentModules.productionChainView !== false && isPageOn('productionChainCanvas') && (
+                    <div data-module="productionChainCanvas" style={{ marginBottom: `${spacing.section}px` }}>
+                        <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 200 : 260} accentColor={accent} titleColor={titleColor} textColor={textSecondary} />
                     </div>
                 )}
                 {contentModules.pipelineInteractiveView !== false && (() => {
                     const activeTimelines = TIMELINE_PIPELINES.filter((t) => reviewData[t.dataKey] && reviewData[t.configKey]);
                     if (activeTimelines.length === 0) return null;
                     return (
-                        <Section title="Pipelines — vue détaillée">
+                        <Section title="Pipelines — vue détaillée" moduleId="pipelineDetailGrids">
                             <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.section}px` }}>
                                 {activeTimelines.map((t) => (
                                     <PipelineMiniGrid key={t.type} type={t.type} name={t.name} icon={t.icon} timelineData={reviewData[t.dataKey]} timelineConfig={reviewData[t.configKey]} accentColor={accent} />
@@ -582,7 +643,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Caractéristiques supplémentaires (overflow) */}
                 {contentModules.extraData && extraData.length > 0 && (
-                    <Section title="Caractéristiques détaillées">
+                    <Section title="Caractéristiques détaillées" moduleId="extraData">
                         <div className="grid" style={{ gridTemplateColumns: `repeat(${grid.cols}, 1fr)`, gap: 1, background: lineSoft, border: `1px solid ${lineSoft}`, borderRadius: 9, overflow: 'hidden' }}>
                             {extraData.map((d, i) => <DataCell key={i} label={d.label} value={d.value} />)}
                         </div>

@@ -28,7 +28,7 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false }) {
     let TemplateComponent = TEMPLATES[config.template];
     const templatesMeta = useExportMakerStore((state) => state.templates);
     const adaptedReviewData = buildExportReviewData(reviewData);
@@ -46,16 +46,24 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
 
     const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
 
-    // Filtrer les modules si on est en mode page
-    const filteredConfig = activeModules && pageMode ? {
-        ...config,
-        contentModules: Object.fromEntries(
-            Object.entries(config.contentModules).map(([key, value]) => [
-                key,
-                activeModules.includes(key) ? value : false
-            ])
-        )
-    } : config;
+    // Filtrer les modules si on est en mode page. `pageModuleIds` (pagination adaptative, Chantier D
+    // 2026-07-31) est un mécanisme DISTINCT et prioritaire des anciens `activeModules` : les ids
+    // adaptatifs (`masthead`, `pipeline:xxx`, `gisement:xxx`...) ne correspondent pas au vocabulaire
+    // `contentModules` filtré ci-dessous — leur appliquer le même filtrage forcerait à `false` tout
+    // champ non nommé identiquement (title/image/rating/...), cassant l'affichage. Pour une page
+    // adaptative, `contentModules` reste donc intact (les réglages utilisateur globaux) et c'est
+    // `DetailedCardTemplate`'s `isPageOn()` (piloté par `pageModuleIds`) qui restreint le contenu.
+    const filteredConfig = pageModuleIds
+        ? { ...config, pageModuleIds }
+        : (activeModules && pageMode ? {
+            ...config,
+            contentModules: Object.fromEntries(
+                Object.entries(config.contentModules).map(([key, value]) => [
+                    key,
+                    activeModules.includes(key) ? value : false
+                ])
+            )
+        } : config);
 
     if (!TemplateComponent) {
         return (
@@ -116,6 +124,7 @@ TemplateRenderer.propTypes = {
     }).isRequired,
     reviewData: PropTypes.object.isRequired,
     activeModules: PropTypes.arrayOf(PropTypes.string),
+    pageModuleIds: PropTypes.arrayOf(PropTypes.string),
     pageMode: PropTypes.bool,
     canvasId: PropTypes.string,
     className: PropTypes.string,

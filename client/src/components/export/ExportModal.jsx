@@ -8,8 +8,9 @@ import { exportCanvasesToVideo, downloadVideo } from '../../utils/videoExporter'
 import { Film } from 'lucide-react';
 // Heavy libs (html-to-image, jspdf) are loaded dynamically inside handlers
 import { useExportMakerStore, resolveExportMakerConfig } from '../../store/exportMakerStore';
-import { useExportMakerPagesStore, getDefaultPages } from '../../store/exportMakerPagesStore';
+import { useExportMakerPagesStore } from '../../store/exportMakerPagesStore';
 import { shouldAutoLockPagination } from '../../utils/exportMakerHelpers';
+import { useAdaptivePages } from '../../hooks/useAdaptivePages';
 import { useStore } from '../../store/useStore';
 import { preloadFonts, preloadSpecificFont } from '../../utils/fontPreloader.js';
 import {
@@ -120,11 +121,16 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // rendre un unique canevas qui débordera silencieusement.
     const sessionPagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
     const sessionPages = useExportMakerPagesStore((state) => state.pages);
-    const autoPages = useMemo(() => {
-        if (sessionPagesEnabled && sessionPages.length > 1) return null; // session déjà active, prioritaire
-        if (!shouldAutoLockPagination(reviewData)) return null; // contenu peu dense : page unique suffit
-        return getDefaultPages(reviewData?.type, config?.ratio);
-    }, [sessionPagesEnabled, sessionPages, reviewData, config?.ratio]);
+    const noSessionPages = !(sessionPagesEnabled && sessionPages.length > 1);
+    // Pagination adaptative (Chantier D, 2026-07-31) : pour `detailedCard`, remplace le lookup
+    // statique `getDefaultPages` par une vraie mesure de hauteur (voir `useAdaptivePages.js`) — le
+    // hook retombe lui-même sur `getDefaultPages` pendant/à défaut de mesure, donc aucun risque
+    // d'export vide. `enabled` désactive tout calcul (mesure incluse) quand une session de pages est
+    // déjà active OU que le contenu est trop léger pour justifier une pagination.
+    const { pages: adaptivePages } = useAdaptivePages(reviewData, config, {
+        enabled: noSessionPages && shouldAutoLockPagination(reviewData),
+    });
+    const autoPages = noSessionPages && shouldAutoLockPagination(reviewData) ? adaptivePages : null;
     const pages = (sessionPagesEnabled && sessionPages.length > 1) ? sessionPages : (autoPages || []);
     const hasMultiplePages = pages.length > 1;
     const pageDims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];
@@ -732,6 +738,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                 canvasId={`export-maker-page-${i}`}
                                 className="export-maker-page"
                                 activeModules={page.modules}
+                                pageModuleIds={page.adaptive ? page.modules : undefined}
                                 pageMode
                             />
                         </div>

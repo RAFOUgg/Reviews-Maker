@@ -1,11 +1,21 @@
 import PropTypes from 'prop-types';
 import FieldRenderer from '../../forms/FieldRendererClean';
-import { DRAGGABLE_FIELDS } from './ContentPanel';
+import { findFieldDef } from './ContentPanel';
+import { summarizeCellFields } from '../../../utils/chainCellPipelines';
 import {
     asArray,
     extractLabel,
     colorWithOpacity,
 } from '../../../utils/exportMakerHelpers';
+
+// Traduit la clé de pipeline vers l'identifiant de type attendu par `summarizeCellFields` — même
+// mapping que `DetailedCardTemplate.jsx`/les autres templates réels.
+const PIPELINE_TYPE_BY_KEY = {
+    cultureTimelineData: 'culture', pipelineGlobal: 'culture', cultureTimeline: 'culture',
+    curingTimelineData: 'curing', pipelineCuring: 'curing', curingTimeline: 'curing',
+    extractionTimelineData: 'extraction', pipelineExtraction: 'extraction',
+    separationTimelineData: 'separation', pipelineSeparation: 'separation',
+};
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // CUSTOM TEMPLATE — Zone-based drag-drop rendering with quality data display
@@ -32,10 +42,15 @@ export default function CustomTemplate({ config, reviewData, dimensions }) {
         const val = resolveValue(reviewData, key);
 
         // Pipelines (timelines culture/curing/extraction/séparation) — steps riches (objets avec
-        // date/température/humidité/note), pas de simples tags aplatis comme le ferait le `default`
+        // date/température/humidité/note), pas de simples tags aplatis comme le ferait le `default`.
+        // Métriques lues via `summarizeCellFields` (même logique de référence que les 5 templates
+        // réels/le canevas Chaîne de production) plutôt que des noms de champs devinés à la main
+        // (`step.temperature`/`step.humidity` ne correspondaient pas aux vrais noms enregistrés par
+        // les formulaires — 7e occurrence de ce bug déjà documenté cette session, corrigée ici).
         if (findFieldDef(key)?.type === 'pipeline') {
             const steps = asArray(val);
             if (steps.length === 0) return null;
+            const pipelineType = PIPELINE_TYPE_BY_KEY[key] || 'culture';
             return (
                 <div key={key} className="col-span-12" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                     <span style={{ fontSize: `${(typography.textSize || 14) - 2}px`, color: colors.textSecondary }}>
@@ -47,9 +62,9 @@ export default function CustomTemplate({ config, reviewData, dimensions }) {
                             const label = isObj
                                 ? (step.label || step.date || step.semaine || step.phase || step.jour || `${i + 1}`)
                                 : extractLabel(step);
-                            const temp = isObj ? (step.temperature ?? step.temp) : null;
-                            const humidity = isObj ? (step.humidity ?? step.humidite) : null;
-                            const tooltip = [temp != null ? `${temp}°C` : '', humidity != null ? `${humidity}%` : ''].filter(Boolean).join(' · ');
+                            const tooltip = isObj
+                                ? summarizeCellFields(pipelineType, step).map((f) => `${f.label} : ${f.value}`).join(' · ')
+                                : '';
                             return (
                                 <span key={i} title={tooltip || undefined} style={{
                                     fontSize: `${(typography.textSize || 14) - 2}px`, padding: '2px 8px', borderRadius: '12px',
@@ -314,16 +329,6 @@ function renderCustomLayout(layout, reviewData, colors, typography) {
             </div>
         );
     });
-}
-
-function findFieldDef(id) {
-    for (const k in DRAGGABLE_FIELDS) {
-        const arr = DRAGGABLE_FIELDS[k];
-        if (!Array.isArray(arr)) continue;
-        const found = arr.find(f => f.id === id);
-        if (found) return found;
-    }
-    return { id, label: id, icon: '🔲', type: 'text' };
 }
 
 CustomTemplate.propTypes = {

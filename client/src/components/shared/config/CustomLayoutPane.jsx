@@ -8,19 +8,12 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { DRAGGABLE_FIELDS } from './ContentPanel';
+import { findFieldDef } from './ContentPanel';
 import FieldRenderer from '../../forms/FieldRendererClean';
 
-// Helper pour récupérer la définition d'un champ
-const getFieldDefFromId = (id) => {
-    for (const section in DRAGGABLE_FIELDS) {
-        const arr = DRAGGABLE_FIELDS[section];
-        if (!Array.isArray(arr)) continue;
-        const found = arr.find(f => f.id === id);
-        if (found) return found;
-    }
-    return { id, label: id, icon: '🔲', type: 'text' };
-};
+// Helper pour récupérer la définition d'un champ — délègue à `findFieldDef` (ContentPanel.jsx),
+// dérivé de `fieldRegistry.js` (Chantier C2, 2026-07-30).
+const getFieldDefFromId = (id) => findFieldDef(id);
 
 // Helper pour récupérer la valeur d'un champ
 const getFieldValueFromData = (id, reviewData) => {
@@ -74,6 +67,10 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                 left: `${position.x}%`,
                 top: `${position.y}%`,
                 width: `${width}%`,
+                // Hauteur réellement appliquée (Chantier C2, 2026-07-30) — la prop `height` était
+                // jusqu'ici stockée/persistée sans jamais être utilisée dans aucun style ; chaque
+                // champ posé gardait une hauteur "auto" (min-height 40px) quel que soit `height`.
+                height: height ? `${height}%` : 'auto',
                 zIndex: 10,
                 boxSizing: 'border-box',
                 minWidth: 0
@@ -81,12 +78,59 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
         >
             <div
                 ref={combinedRef}
-                className={`relative bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl ${isZone ? 'border-dashed border-2 border-purple-500/50' : 'border-blue-500/50'} ${isOver ? 'border-green-500 bg-green-500/20' : ''}`}
+                className={`relative w-full h-full bg-gray-800/90 backdrop-blur-sm p-3 rounded-lg border shadow-xl ${isZone ? 'border-dashed border-2 border-purple-500/50' : 'border-blue-500/50'} ${isOver ? 'border-green-500 bg-green-500/20' : ''}`}
                 style={{
                     minHeight: '40px',
-                    transform: `rotate(${rotation}deg)`
+                    transform: `rotate(${rotation}deg)`,
+                    overflow: 'auto',
                 }}
             >
+                {/* Poignée de déplacement — glisser pour repositionner un champ déjà posé
+                    (Chantier C2, 2026-07-30) : absente avant ce jour, seul le dépôt initial
+                    déterminait la position, jamais modifiable ensuite. Même technique (mousedown/
+                    mousemove/mouseup bruts sur `.export-maker-canvas-resize-parent`) que la poignée
+                    de redimensionnement déjà existante, pour rester cohérent avec le style du
+                    fichier plutôt que d'introduire un 2e mécanisme de drag (dnd-kit) qui
+                    interférerait avec les zones de dépôt actives du canevas. */}
+                <div
+                    onMouseDown={(e) => {
+                        e.stopPropagation();
+                        const startX = e.clientX;
+                        const startY = e.clientY;
+                        const startPos = position;
+
+                        const onMove = (evt) => {
+                            const parent = document.querySelector('.export-maker-canvas-resize-parent');
+                            if (!parent) return;
+                            const rect = parent.getBoundingClientRect();
+                            const deltaX = ((evt.clientX - startX) / rect.width) * 100;
+                            const deltaY = ((evt.clientY - startY) / rect.height) * 100;
+                            onUpdate?.({
+                                position: {
+                                    x: Math.max(0, Math.min(95, startPos.x + deltaX)),
+                                    y: Math.max(0, Math.min(95, startPos.y + deltaY)),
+                                },
+                            });
+                        };
+                        const onUp = () => {
+                            window.removeEventListener('mousemove', onMove);
+                            window.removeEventListener('mouseup', onUp);
+                        };
+                        window.addEventListener('mousemove', onMove);
+                        window.addEventListener('mouseup', onUp);
+                    }}
+                    className="absolute -top-2 -left-2 w-6 h-6 bg-purple-600 hover:bg-purple-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow-lg z-20 cursor-move"
+                    title="Déplacer"
+                    data-testid="placed-field-drag-handle"
+                >
+                    {/* Icône croix 4 directions — plus reconnaissable comme poignée de déplacement
+                        que les 3 barres précédentes (trouvées peu discoverable en vérification
+                        Playwright, 2026-07-31 : contraste gris-sur-gris trop faible sur capture). */}
+                    <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v18M3 12h18M7 7l-3 -3m0 0l0 4m0 -4l4 0M17 7l3 -3m0 0l0 4m0 -4l-4 0M7 17l-3 3m0 0l4 0m-4 0l0 -4M17 17l3 3m0 0l-4 0m4 0l0 -4" />
+                    </svg>
+                </div>
+
                 {/* Bouton supprimer */}
                 <button
                     onClick={() => onRemove(field.id)}
@@ -144,20 +188,27 @@ function PlacedField({ field, value, onRemove, position, width = 25, height = 20
                     <FieldRenderer field={field} value={value} compact={true} />
                 )}
 
-                {/* Resize handle bottom-right */}
+                {/* Poignée de redimensionnement bas-droite — largeur ET hauteur (Chantier C2,
+                    2026-07-30) : seule la largeur était modifiable avant ce jour, la hauteur restait
+                    "auto" quel que soit le glisser (cf. note sur `height` ci-dessus). */}
                 <div
                     onMouseDown={(e) => {
                         e.stopPropagation();
                         const startX = e.clientX;
+                        const startY = e.clientY;
                         const startWidth = width;
+                        const startHeight = height || 20;
 
                         const onMove = (evt) => {
                             const parent = document.querySelector('.export-maker-canvas-resize-parent');
                             if (parent) {
                                 const rect = parent.getBoundingClientRect();
-                                const deltaX = evt.clientX - startX;
-                                const deltaW = (deltaX / rect.width) * 100;
-                                onUpdate?.({ width: Math.max(10, Math.min(90, startWidth + deltaW)) });
+                                const deltaW = ((evt.clientX - startX) / rect.width) * 100;
+                                const deltaH = ((evt.clientY - startY) / rect.height) * 100;
+                                onUpdate?.({
+                                    width: Math.max(10, Math.min(90, startWidth + deltaW)),
+                                    height: Math.max(6, Math.min(90, startHeight + deltaH)),
+                                });
                             }
                         };
 

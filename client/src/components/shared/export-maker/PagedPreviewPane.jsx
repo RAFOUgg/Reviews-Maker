@@ -187,7 +187,13 @@ export default function PagedPreviewPane({ autoActive = false }) {
                     >
                         {/* Template renderer avec modules filtrés selon la page */}
                         <div ref={previewRef}>
-                            {renderScaledCanvas({ config, reviewData, activeModules: currentPage.modules, pageMode: true })}
+                            {renderScaledCanvas({
+                                config,
+                                reviewData,
+                                activeModules: currentPage.modules,
+                                pageModuleIds: currentPage.adaptive ? currentPage.modules : undefined,
+                                pageMode: true,
+                            })}
                         </div>
                     </motion.div>
                 </AnimatePresence>

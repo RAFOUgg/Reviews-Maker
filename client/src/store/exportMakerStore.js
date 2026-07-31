@@ -458,30 +458,29 @@ export const useExportMakerStore = create(
                 config: { ...state.config, ratio }
             })),
 
-            // Les actions ci-dessous sont des no-op tant que `templateLocked` est vrai — filet de
-            // sécurité en plus de la désactivation des contrôles côté UI (ConfigPane), pour qu'un
-            // futur appel programmatique ne puisse pas non plus dériver silencieusement une config
-            // encore verrouillée sur son template.
-            updateTypography: (updates) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: { ...state.config, typography: { ...state.config.typography, ...updates } }
-                }
-            )),
+            // Chantier C1 (2026-07-30) — revient sur le comportement initial du verrou (correctif
+            // #9, "contrôles désactivés + bouton Personnaliser") : la première modification sur
+            // un onglet Contenu/Typographie/Couleurs/Image&Logo déverrouille désormais AUTOMATIQUEMENT
+            // la config (pose `templateLocked:false`) puis applique le changement, au lieu de
+            // l'ignorer silencieusement. Décision utilisateur explicite ("lorsqu'on modifie un
+            // paramètre → passer direct en mode personnalisé"). `unlockTemplateConfig()` reste
+            // disponible pour un déverrouillage explicite sans toucher à aucun réglage.
+            updateTypography: (updates) => set((state) => ({
+                config: { ...state.config, templateLocked: false, typography: { ...state.config.typography, ...updates } }
+            })),
 
-            updateColors: (updates) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: { ...state.config, colors: { ...state.config.colors, ...updates } }
-                }
-            )),
+            updateColors: (updates) => set((state) => ({
+                config: { ...state.config, templateLocked: false, colors: { ...state.config.colors, ...updates } }
+            })),
 
             applyColorPalette: (paletteName) => {
-                if (get().config.templateLocked) return;
                 const palette = COLOR_PALETTES[paletteName];
                 if (!palette) return;
 
                 set((state) => ({
                     config: {
                         ...state.config,
+                        templateLocked: false,
                         colors: {
                             ...state.config.colors,
                             palette: paletteName,
@@ -491,40 +490,33 @@ export const useExportMakerStore = create(
                 }));
             },
 
-            toggleContentModule: (moduleName) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: {
-                        ...state.config,
-                        contentModules: {
-                            ...state.config.contentModules,
-                            [moduleName]: !state.config.contentModules[moduleName]
-                        }
+            toggleContentModule: (moduleName) => set((state) => ({
+                config: {
+                    ...state.config,
+                    templateLocked: false,
+                    contentModules: {
+                        ...state.config.contentModules,
+                        [moduleName]: !state.config.contentModules[moduleName]
                     }
                 }
-            )),
+            })),
 
             // Set all content modules at once (for presets)
-            setContentModules: (modules) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: { ...state.config, contentModules: { ...state.config.contentModules, ...modules } }
-                }
-            )),
+            setContentModules: (modules) => set((state) => ({
+                config: { ...state.config, templateLocked: false, contentModules: { ...state.config.contentModules, ...modules } }
+            })),
 
-            reorderModules: (newOrder) => set((state) => (
-                state.config.templateLocked ? state : { config: { ...state.config, moduleOrder: newOrder } }
-            )),
+            reorderModules: (newOrder) => set((state) => ({
+                config: { ...state.config, templateLocked: false, moduleOrder: newOrder }
+            })),
 
-            updateImage: (updates) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: { ...state.config, image: { ...state.config.image, ...updates } }
-                }
-            )),
+            updateImage: (updates) => set((state) => ({
+                config: { ...state.config, templateLocked: false, image: { ...state.config.image, ...updates } }
+            })),
 
-            updateBranding: (updates) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: { ...state.config, branding: { ...state.config.branding, ...updates } }
-                }
-            )),
+            updateBranding: (updates) => set((state) => ({
+                config: { ...state.config, templateLocked: false, branding: { ...state.config.branding, ...updates } }
+            })),
 
             updatePagination: (updates) => set((state) => ({
                 config: {
@@ -534,22 +526,20 @@ export const useExportMakerStore = create(
             })),
 
             // Per-section style override
-            updateSectionStyle: (sectionKey, updates) => set((state) => (
-                state.config.templateLocked ? state : {
-                    config: {
-                        ...state.config,
-                        sectionStyles: {
-                            ...state.config.sectionStyles,
-                            [sectionKey]: { ...(state.config.sectionStyles?.[sectionKey] || {}), ...updates }
-                        }
+            updateSectionStyle: (sectionKey, updates) => set((state) => ({
+                config: {
+                    ...state.config,
+                    templateLocked: false,
+                    sectionStyles: {
+                        ...state.config.sectionStyles,
+                        [sectionKey]: { ...(state.config.sectionStyles?.[sectionKey] || {}), ...updates }
                     }
                 }
-            )),
+            })),
 
             resetSectionStyle: (sectionKey) => set((state) => {
-                if (state.config.templateLocked) return state;
                 const { [sectionKey]: _, ...rest } = state.config.sectionStyles || {};
-                return { config: { ...state.config, sectionStyles: rest } };
+                return { config: { ...state.config, templateLocked: false, sectionStyles: rest } };
             }),
 
             // Gestion des préréglages — persistés localement (réactivité immédiate) ET côté
