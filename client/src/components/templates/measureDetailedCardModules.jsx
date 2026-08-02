@@ -1,6 +1,7 @@
 import { createRoot } from 'react-dom/client';
 import DetailedCardTemplate from './DetailedCardTemplate';
 import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
+import { buildExportReviewData } from '../../utils/exportDataAdapter';
 
 // Délai de stabilisation avant mesure — même ordre de grandeur que le délai déjà utilisé ailleurs
 // dans Export Maker pour laisser React Flow terminer son `fitView()` avant capture
@@ -57,7 +58,15 @@ export function measureDetailedCardModules(reviewData, config) {
             // `pageModuleIds: null` explicite : tout doit être visible pour être mesuré, quel que
             // soit un éventuel appel imbriqué avec une pagination déjà active sur `config`.
             const measureConfig = { ...config, pageModuleIds: null };
-            root.render(<DetailedCardTemplate config={measureConfig} reviewData={reviewData} dimensions={dims} />);
+            // `buildExportReviewData` (même adaptateur que `TemplateRenderer.jsx`) — sans lui,
+            // `extractPipelines()` ne trouve jamais `pipelineGlobal`/`pipelineCuring`/... (des clés
+            // SYNTHÉTISÉES par l'adaptateur, absentes du `reviewData` brut) : le module pipeline
+            // mesure une hauteur nulle/absente, donc `pageModuleIds` ne le contient jamais, et
+            // "Processus de production"/"Statistiques de culture" disparaissent silencieusement de
+            // l'aperçu Studio (mesuré) même s'ils s'affichent très bien via le bouton "Exporter"
+            // autonome (qui, lui, applique déjà l'adaptateur) — bug trouvé en vérification 2026-08-02.
+            const adaptedReviewData = buildExportReviewData(reviewData);
+            root.render(<DetailedCardTemplate config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />);
         } catch (err) {
             if (host.parentNode) host.parentNode.removeChild(host);
             reject(err);

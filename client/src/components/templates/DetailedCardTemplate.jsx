@@ -597,7 +597,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 200 : 260} accentColor={accent} titleColor={titleColor} textColor={textSecondary} />
                     </div>
                 )}
-                {contentModules.pipelineInteractiveView !== false && (() => {
+                {/* Off par défaut (`pipelineDetailGrids`) : cette grille compacte affiche la même
+                    donnée que "Processus de production" (PipelineStepFields) juste au-dessus, en
+                    détail complet — redondance trouvée en audit 2026-08-02, laissée en option pour
+                    qui préfère une vue résumée en plus. */}
+                {contentModules.pipelineDetailGrids === true && (() => {
                     const activeTimelines = TIMELINE_PIPELINES.filter((t) => reviewData[t.dataKey] && reviewData[t.configKey]);
                     if (activeTimelines.length === 0) return null;
                     return (

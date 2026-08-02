@@ -255,6 +255,12 @@ const DEFAULT_CONFIG = {
         phenoHuntView: true,
         productionChainView: true,
         pipelineInteractiveView: true,
+        // `pipelineDetailGrids` (PipelineMiniGrid, cases colorées compactes) affichait EXACTEMENT la
+        // même donnée que la section "Processus de production" (PipelineStepFields, détail complet
+        // texte) juste au-dessus, par défaut simultanément — redondance trouvée lors de l'audit
+        // 2026-08-02 (Phase A du plan de finition). Off par défaut désormais (l'un ou l'autre, pas
+        // les deux) ; `pipelineInteractiveView` ne pilote plus que "Statistiques de culture".
+        pipelineDetailGrids: false,
 
         // === CONTENU TEXTE ===
         conclusion: true,

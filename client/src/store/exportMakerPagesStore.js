@@ -29,6 +29,15 @@ import { persist } from 'zustand/middleware';
 // eux-mêmes si la review n'a pas de généalogie/chaîne liée, et une page dédiée uniquement à ça
 // produirait une page blanche pour la majorité des reviews qui n'en ont pas — la dernière page a
 // toujours au moins `description`/`author`/`date`, jamais vide).
+// 8e occurrence (2026-08-02, audit systématique demandé par l'utilisateur — Phase A du plan de
+// finition Export Maker) : `mainImage` (la VRAIE clé lue par ModernCompact/BlogArticle/SocialStory
+// pour la photo principale — les pages listaient `image`, jamais lu par aucun de ces 3 templates)
+// n'apparaissait dans AUCUNE page d'AUCUN type/ratio — la photo principale disparaissait donc de
+// TOUT export paginé de ces 3 templates, silencieusement. `category`/`phenotypeCode`/`parentage`/
+// `indicaRatio`/`strainType` avaient le même trou sur plusieurs types/ratios (ces champs sont lus
+// par du code PARTAGÉ entre les 4 types dans ModernCompact/BlogArticle, donc ajoutés partout où
+// cultivar/breeder/hashmaker apparaissent déjà, pas seulement pour Fleur). `extraData` comblé sur
+// les ratios/types où il manquait encore.
 export const PAGE_TEMPLATES = {
     'Fleur': {
         '1:1': [
@@ -36,19 +45,19 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Page de couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'info',
                 label: 'Infos',
                 icon: 'ℹ️',
-                modules: ['cultivar', 'breeder', 'farm', 'strainType']
+                modules: ['cultivar', 'breeder', 'farm', 'strainType', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'curing',
@@ -74,7 +83,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Page de couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -106,13 +115,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating']
+                modules: ['image', 'mainImage', 'title', 'rating', 'category']
             },
             {
                 id: 'info',
                 label: 'Informations',
                 icon: 'ℹ️',
-                modules: ['type', 'cultivar', 'breeder', 'farm', 'strainType']
+                modules: ['type', 'cultivar', 'breeder', 'farm', 'strainType', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'ratings',
@@ -124,7 +133,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture-curing',
                 label: 'Culture & Curing',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'curing', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'curing', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'details',
@@ -138,7 +147,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -150,7 +159,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'description', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'description', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
             },
             {
                 id: 'curing',
@@ -164,7 +173,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'cultivar', 'breeder', 'farm', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'culture',
@@ -202,19 +211,19 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'info',
                 label: 'Infos',
                 icon: 'ℹ️',
-                modules: ['hashmaker', 'cultivarsList', 'texture']
+                modules: ['hashmaker', 'cultivarsList', 'texture', 'strainType', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'separation',
                 label: 'Séparation',
                 icon: '🔬',
-                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
+                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime', 'extraData']
             },
             {
                 id: 'purification',
@@ -246,7 +255,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -264,7 +273,7 @@ export const PAGE_TEMPLATES = {
                 id: 'separation',
                 label: 'Séparation',
                 icon: '🔬',
-                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
+                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime', 'extraData']
             },
             {
                 id: 'purification',
@@ -284,13 +293,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'info',
                 label: 'Infos',
                 icon: 'ℹ️',
-                modules: ['hashmaker', 'cultivarsList']
+                modules: ['hashmaker', 'cultivarsList', 'strainType', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -302,7 +311,7 @@ export const PAGE_TEMPLATES = {
                 id: 'production',
                 label: 'Production',
                 icon: '⚗️',
-                modules: ['pipelineSeparation', 'pipelinePurification', 'curing', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
+                modules: ['pipelineSeparation', 'pipelinePurification', 'curing', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime', 'extraData']
             },
             {
                 id: 'details',
@@ -316,7 +325,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'hashmaker', 'cultivarsList', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -328,7 +337,7 @@ export const PAGE_TEMPLATES = {
                 id: 'separation',
                 label: 'Séparation',
                 icon: '🔬',
-                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime']
+                modules: ['pipelineSeparation', 'methodeSeparation', 'nombrePasses', 'temperatureEau', 'tailleMailles', 'typeMatierePremiere', 'rendementEstime', 'extraData']
             },
             {
                 id: 'purification',
@@ -358,19 +367,19 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'info',
                 label: 'Infos',
                 icon: 'ℹ️',
-                modules: ['breeder', 'cultivarsList', 'texture']
+                modules: ['breeder', 'cultivarsList', 'texture', 'strainType', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['pipelineExtraction', 'methodeExtraction']
+                modules: ['pipelineExtraction', 'methodeExtraction', 'extraData']
             },
             {
                 id: 'purification',
@@ -402,7 +411,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'breeder', 'cultivarsList']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'breeder', 'cultivarsList', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -420,7 +429,7 @@ export const PAGE_TEMPLATES = {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['pipelineExtraction', 'methodeExtraction']
+                modules: ['pipelineExtraction', 'methodeExtraction', 'extraData']
             },
             {
                 id: 'purification',
@@ -440,13 +449,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'info',
                 label: 'Infos',
                 icon: 'ℹ️',
-                modules: ['breeder', 'cultivarsList']
+                modules: ['breeder', 'cultivarsList', 'strainType', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -458,7 +467,7 @@ export const PAGE_TEMPLATES = {
                 id: 'production',
                 label: 'Production',
                 icon: '⚗️',
-                modules: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'curing', 'methodeExtraction']
+                modules: ['pipelineExtraction', 'pipelinePurification', 'purgevide', 'curing', 'methodeExtraction', 'extraData']
             },
             {
                 id: 'details',
@@ -472,7 +481,7 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'breeder', 'cultivarsList']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'breeder', 'cultivarsList', 'strainType', 'category', 'phenotypeCode', 'parentage', 'indicaRatio']
             },
             {
                 id: 'evaluation',
@@ -484,7 +493,7 @@ export const PAGE_TEMPLATES = {
                 id: 'extraction',
                 label: 'Extraction',
                 icon: '🔬',
-                modules: ['pipelineExtraction', 'methodeExtraction']
+                modules: ['pipelineExtraction', 'methodeExtraction', 'extraData']
             },
             {
                 id: 'purification',
@@ -512,13 +521,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'recipe',
                 label: 'Recette',
                 icon: '📖',
-                modules: ['typeProduit', 'breeder', 'recipe']
+                modules: ['typeProduit', 'breeder', 'recipe', 'extraData', 'strainType', 'indicaRatio']
             },
             {
                 id: 'taste-effects',
@@ -538,13 +547,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'breeder']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'breeder', 'category', 'strainType', 'indicaRatio']
             },
             {
                 id: 'recipe',
                 label: 'Recette',
                 icon: '📖',
-                modules: ['typeProduit', 'recipe', 'goutIntensity']
+                modules: ['typeProduit', 'recipe', 'goutIntensity', 'extraData']
             },
             {
                 id: 'effects',
@@ -558,13 +567,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'category']
             },
             {
                 id: 'recipe',
                 label: 'Recette',
                 icon: '📖',
-                modules: ['typeProduit', 'breeder', 'recipe']
+                modules: ['typeProduit', 'breeder', 'recipe', 'extraData', 'strainType', 'indicaRatio']
             },
             {
                 id: 'taste-effects',
@@ -584,13 +593,13 @@ export const PAGE_TEMPLATES = {
                 id: 'cover',
                 label: 'Couverture',
                 icon: '📸',
-                modules: ['image', 'title', 'rating', 'type', 'breeder']
+                modules: ['image', 'mainImage', 'title', 'rating', 'type', 'breeder', 'category', 'strainType', 'indicaRatio']
             },
             {
                 id: 'recipe-effects',
                 label: 'Recette & Effets',
                 icon: '📖',
-                modules: ['typeProduit', 'recipe', 'goutIntensity', 'saveursProduit', 'effects', 'dureeEffet']
+                modules: ['typeProduit', 'recipe', 'goutIntensity', 'saveursProduit', 'effects', 'dureeEffet', 'extraData']
             },
             {
                 id: 'experience',

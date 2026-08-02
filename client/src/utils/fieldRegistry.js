@@ -92,7 +92,8 @@ const REGISTRY = [
     // Vues interactives (rendues par un code dédié du template ; togglables ici, opt-out par défaut)
     { key: 'phenoHuntView', label: 'Arbre généalogique', group: 'presentation', type: 'view', sources: ['geneticTreeId', 'parentage'] },
     { key: 'productionChainView', label: 'Chaîne de production', group: 'presentation', type: 'view', sources: ['parentFlowerReviewId', 'sourceLineage'] },
-    { key: 'pipelineInteractiveView', label: 'Pipelines détaillés', group: 'presentation', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
+    { key: 'pipelineInteractiveView', label: 'Statistiques de culture', group: 'presentation', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
+    { key: 'pipelineDetailGrids', label: 'Pipelines — vue compacte (en plus du détail complet)', group: 'presentation', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
 
     // ── GENERAL ────────────────────────────────────────────────────────────────
     { key: 'title', label: 'Nom', group: 'general', type: 'text', sources: ['holderName', 'nomCommercial', 'nomProduit', 'title', 'name'] },
