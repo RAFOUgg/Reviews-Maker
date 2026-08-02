@@ -70,7 +70,7 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
         const canAdapt = enabled && reviewData && config
             && ADAPTIVE_TEMPLATES.has(template)
             && !isCustomMode
-            && shouldAutoLockPagination(reviewData);
+            && shouldAutoLockPagination(reviewData, template);
         if (!canAdapt) return;
 
         const cacheKey = `${reviewId}|${template}|${ratio}|${contentModulesSignature}|${JSON.stringify(config.typography || {})}`;

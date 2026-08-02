@@ -1,15 +1,12 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
-import { DndContext, DragOverlay, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useExportMakerStore, resolveExportMakerConfig } from '../../../store/exportMakerStore';
 import { useExportConfigSave } from '../../../hooks/useExportConfigSave';
 import { useToast } from '../../shared/ToastContainer';
 import ConfigPane from '../config/ConfigPane';
 import PreviewPane from '../preview/PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
-import CustomLayoutPane from '../config/CustomLayoutPane';
-import ContentPanel from '../config/ContentPanel';
 import ExportModal from '../../export/ExportModal';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
@@ -217,11 +214,6 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     const toast = useToast();
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
-    const [isCustomMode, setIsCustomMode] = useState(false); // Nouveau: mode template vs custom
-    const [customLayout, setCustomLayout] = useState([]); // Layout custom pour drag & drop
-    const [activeDragId, setActiveDragId] = useState(null); // ID du champ en cours de drag
-    const [isCanvasOver, setIsCanvasOver] = useState(false); // Canvas est survolé
-    const canvasRef = useRef(null);
     const modalRef = useRef(null);
     const seededConfigForReviewId = useRef(null);
     const setReviewData = useExportMakerStore((state) => state.setReviewData);
@@ -241,16 +233,15 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // avant son propre correctif (2026-07-27). `loadDefaultPages` est déjà appelé
     // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
     // vers `PagedPreviewPane` les ignorait tant que `pagesEnabled` n'était pas coché à la main.
-    const effectivePagesActive = pagesEnabled || shouldAutoLockPagination(reviewData);
+    const effectivePagesActive = pagesEnabled || shouldAutoLockPagination(reviewData, config.template);
 
     // Pagination adaptative (Chantier D, 2026-07-31) : cette 3e surface (aperçu live Export Maker
     // Studio) utilisait jusqu'ici `loadDefaultPages` (statique) comme les deux autres — remplacée
     // ici par une vraie mesure de hauteur pour `detailedCard` (voir `useAdaptivePages.js`, qui gère
-    // lui-même le repli statique pendant/à défaut de mesure). Mode Custom exempt (le hook le gère
-    // en interne via `isCustomMode`).
+    // lui-même le repli statique pendant/à défaut de mesure).
     const setPages = useExportMakerPagesStore((state) => state.setPages);
     const { pages: adaptivePagesResult, isAdaptive } = useAdaptivePages(reviewData, config, {
-        enabled: effectivePagesActive && !isCustomMode,
+        enabled: effectivePagesActive,
     });
     useEffect(() => {
         if (isAdaptive && adaptivePagesResult.length > 1) {
@@ -284,15 +275,6 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
         }
     }, [isPreviewFullscreen, togglePreviewFullscreen]);
 
-    // Configurer les sensors pour @dnd-kit
-    const sensors = useSensors(
-        useSensor(PointerSensor, {
-            activationConstraint: {
-                distance: 8, // 8px de mouvement avant activation du drag
-            },
-        })
-    );
-
     useEffect(() => {
         if (reviewData) {
             // Utiliser la fonction de normalisation centralisée
@@ -322,23 +304,6 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                 }
             }
 
-            // Charger le layout personnalisé s'il existe depuis la review
-            if (reviewData.exportMakerCustomLayout) {
-                try {
-                    const parsed = typeof reviewData.exportMakerCustomLayout === 'string'
-                        ? JSON.parse(reviewData.exportMakerCustomLayout)
-                        : reviewData.exportMakerCustomLayout;
-                    setCustomLayout(Array.isArray(parsed) ? parsed : []);
-                } catch (err) {
-                    console.warn('Failed to parse exportMakerCustomLayout', err);
-                }
-            }
-
-            // Si la review a été sauvegardée en mode custom, activer le mode custom
-            if (reviewData.exportMakerLayoutMode === 'custom') {
-                setIsCustomMode(true);
-            }
-
             // Charger les pages par défaut
             if (reviewData.type && config.ratio) {
                 loadDefaultPages(reviewData.type, config.ratio);
@@ -363,119 +328,14 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                 // persisté comme "exportMakerPreset" sinon le badge "Aperçu requis" de la
                 // bibliothèque ne disparaît jamais après un Appliquer
                 exportMakerPreset: activePreset || config.template,
-                customLayout: isCustomMode ? customLayout : null, // Sauvegarder le layout custom
-                layoutMode: isCustomMode ? 'custom' : 'template'
             });
         }
         toast.success('✅ Aperçu appliqué — pense à sauvegarder la review pour le conserver');
         onClose();
     };
 
-    const handleLayoutChange = (newLayout) => {
-        setCustomLayout(newLayout);
-    };
-
-    const handleAddZone = () => {
-        const id = `zone-${Date.now()}`;
-        const zone = {
-            id,
-            type: 'zone',
-            label: 'Zone',
-            position: { x: 10, y: 10 },
-            width: 40,
-            height: 25,
-            rotation: 0,
-            assignedFields: []
-        };
-        setCustomLayout(prev => [...prev, zone]);
-    };
-
-    // ============================================================================
-    // GESTION DU DRAG & DROP AVEC @dnd-kit
-    // ============================================================================
-
-    const handleDragStart = useCallback((event) => {
-        const { active } = event;
-        setActiveDragId(active.id);
-    }, []);
-
-    const handleDragOver = useCallback((event) => {
-        const { over } = event;
-        // Vérifier si on survole le canvas
-        setIsCanvasOver(over?.id === 'canvas-drop-zone');
-    }, []);
-
-    const handleDragEnd = useCallback((event) => {
-        const { active, over } = event;
-        console.log('🏁 DragEnd:', { activeId: active.id, overId: over?.id });
-        setActiveDragId(null);
-        setIsCanvasOver(false);
-
-        // Si on a droppé sur le canvas
-        if (over?.id === 'canvas-drop-zone' && active.data?.current?.field) {
-            const field = active.data.current.field;
-
-            // Calculer la position relative au canvas
-            const canvasElement = document.querySelector('.export-maker-canvas-resize-parent');
-            if (canvasElement && event.activatorEvent) {
-                const rect = canvasElement.getBoundingClientRect();
-                const clientX = event.activatorEvent.clientX || 0;
-                const clientY = event.activatorEvent.clientY || 0;
-
-                // Position en pourcentage
-                const x = Math.max(5, Math.min(75, ((clientX - rect.left) / rect.width) * 100));
-                const y = Math.max(5, Math.min(75, ((clientY - rect.top) / rect.height) * 100));
-
-                // Ajouter le champ au layout
-                const alreadyPlaced = customLayout.find(pf => pf.id === field.id);
-                if (alreadyPlaced) {
-                    // Mettre à jour la position
-                    setCustomLayout(prev => prev.map(pf =>
-                        pf.id === field.id ? { ...pf, position: { x, y } } : pf
-                    ));
-                } else {
-                    // Ajouter le nouveau champ
-                    setCustomLayout(prev => [...prev, {
-                        ...field,
-                        position: { x, y },
-                        width: 25,
-                        height: 20,
-                        rotation: 0
-                    }]);
-                }
-            }
-        }
-
-        // Si on a droppé sur une zone
-        if (over?.data?.current?.type === 'zone' && active.data?.current?.field) {
-            const zoneId = over.data.current.zoneId;
-            const fieldToAssign = active.data.current.field;
-
-            setCustomLayout(prev => prev.map(pf => {
-                if (pf.id === zoneId) {
-                    const assignedFields = Array.from(new Set([...(pf.assignedFields || []), fieldToAssign.id]));
-                    return { ...pf, assignedFields };
-                }
-                // Si le champ était placé directement, le retirer
-                if (pf.id === fieldToAssign.id) {
-                    return null;
-                }
-                return pf;
-            }).filter(Boolean));
-        }
-    }, [customLayout]);
-
-    // Données normalisées pour les composants enfants
-    const normalizedData = normalizeReviewData(reviewData);
-
     return (
-        <DndContext
-            sensors={sensors}
-            collisionDetection={closestCenter}
-            onDragStart={handleDragStart}
-            onDragOver={handleDragOver}
-            onDragEnd={handleDragEnd}
-        >
+        <>
             <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -551,26 +411,6 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                             </motion.button>
                         )}
 
-                        {/* Bouton Personnaliser la mise en page — point d'entrée du Mode Custom
-                            (Chantier C2, 2026-07-30), absent avant ce jour : `isCustomMode` ne
-                            pouvait jusqu'ici être activé qu'en rouvrant une review déjà sauvegardée
-                            ainsi (aucun bouton). Bascule vers le canevas de glisser-déposer libre
-                            (ContentPanel + CustomLayoutPane) ; ré-appuyer revient au rendu template. */}
-                        {showPreview && (
-                            <motion.button
-                                whileHover={{ scale: 1.02 }}
-                                whileTap={{ scale: 0.98 }}
-                                onClick={() => setIsCustomMode((v) => !v)}
-                                className={`px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all ${isCustomMode ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/30' : 'bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-amber-100 dark:hover:bg-amber-900/30 hover:text-amber-600 dark:hover:text-amber-400'}`}
-                                title={isCustomMode ? 'Revenir au template' : 'Personnaliser la mise en page (glisser-déposer libre)'}
-                            >
-                                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 3H5a2 2 0 00-2 2v4m6-6h10a2 2 0 012 2v4M9 3v18m0 0H5a2 2 0 01-2-2v-4m6 6h10a2 2 0 002-2v-4m-6-4h6m-6 4h6" />
-                                </svg>
-                                {isCustomMode ? 'Mode template' : 'Personnaliser la mise en page'}
-                            </motion.button>
-                        )}
-
                         {/* Bouton Export */}
                         <motion.button
                             whileHover={{ scale: 1.02 }}
@@ -586,7 +426,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
                         {/* Bouton Plein écran — API Fullscreen du navigateur + masque le panneau de
                             config pour que l'aperçu prenne toute la modale (voir handleToggleFullscreen) */}
-                        {showPreview && !isCustomMode && (
+                        {showPreview && (
                             <motion.button
                                 whileHover={{ scale: 1.05 }}
                                 whileTap={{ scale: 0.95 }}
@@ -635,38 +475,6 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                             >
                                 <ConfigPane />
                             </motion.div>
-                        ) : isCustomMode ? (
-                            // MODE CUSTOM : ContentPanel + CustomLayoutPane
-                            <motion.div
-                                key="custom-mode"
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                exit={{ opacity: 0 }}
-                                className="flex h-full"
-                            >
-                                {/* Content Panel - Left */}
-                                <div className="w-80 flex-shrink-0 overflow-hidden">
-                                    <ContentPanel
-                                        reviewData={normalizedData}
-                                        placedFields={customLayout}
-                                        onFieldSelect={(item) => {
-                                            if (item?.type === 'zone') {
-                                                handleAddZone();
-                                            }
-                                        }}
-                                    />
-                                </div>
-
-                                {/* Custom Layout Canvas - Right */}
-                                <div ref={canvasRef} className="flex-1 overflow-hidden">
-                                    <CustomLayoutPane
-                                        reviewData={normalizedData}
-                                        layout={customLayout}
-                                        onLayoutChange={handleLayoutChange}
-                                        isCanvasOver={isCanvasOver}
-                                    />
-                                </div>
-                            </motion.div>
                         ) : isPreviewFullscreen ? (
                             // MODE TEMPLATE PLEIN ÉCRAN
                             <motion.div
@@ -713,16 +521,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                     <ExportModal onClose={() => setShowExportModal(false)} />
                 )}
             </AnimatePresence>
-
-            {/* Drag Overlay - Affiche l'élément en cours de drag */}
-            <DragOverlay>
-                {activeDragId ? (
-                    <div className="text-white px-3 py-2 rounded-lg shadow-2xl text-sm font-medium opacity-90">
-                        📦 {activeDragId}
-                    </div>
-                ) : null}
-            </DragOverlay>
-        </DndContext>
+        </>
     );
 }
 

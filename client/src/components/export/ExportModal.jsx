@@ -128,9 +128,9 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // d'export vide. `enabled` désactive tout calcul (mesure incluse) quand une session de pages est
     // déjà active OU que le contenu est trop léger pour justifier une pagination.
     const { pages: adaptivePages } = useAdaptivePages(reviewData, config, {
-        enabled: noSessionPages && shouldAutoLockPagination(reviewData),
+        enabled: noSessionPages && shouldAutoLockPagination(reviewData, config?.template),
     });
-    const autoPages = noSessionPages && shouldAutoLockPagination(reviewData) ? adaptivePages : null;
+    const autoPages = noSessionPages && shouldAutoLockPagination(reviewData, config?.template) ? adaptivePages : null;
     const pages = (sessionPagesEnabled && sessionPages.length > 1) ? sessionPages : (autoPages || []);
     const hasMultiplePages = pages.length > 1;
     const pageDims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];

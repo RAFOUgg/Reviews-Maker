@@ -410,6 +410,15 @@ export const useExportMakerStore = create(
             // Configuration actuelle
             config: { ...DEFAULT_CONFIG },
 
+            // Config souvenue par template (2026-08-02), en mémoire pour la session d'édition en
+            // cours uniquement (jamais persisté — voir `partialize` plus bas) : basculer entre
+            // templates ne doit plus écraser la personnalisation déjà faite sur un template si on y
+            // revient plus tard dans la même session. Clé = id de template, valeur = dernier `config`
+            // complet actif pour ce template. Remise à zéro à chaque review chargée (`applyConfig`)
+            // ou config réinitialisée (`resetConfig`) — la mémoire ne doit pas fuiter d'une review à
+            // l'autre.
+            configByTemplate: {},
+
             // Préréglages sauvegardés
             presets: [],
             activePreset: null,
@@ -428,7 +437,23 @@ export const useExportMakerStore = create(
             // true`). Sans ça, changer de template ne changeait pas l'apparence si l'utilisateur
             // avait déjà personnalisé police/couleurs, et rien ne distinguait "config encore
             // fidèle au template" de "config dérivée".
+            // Basculer de template restaure désormais la config souvenue de ce template si on l'a
+            // déjà visité dans cette session (`configByTemplate`, 2026-08-02) — sinon (première
+            // visite) calcule les défauts du template comme avant (identité TEMPLATE_DEFAULT_IDENTITY
+            // + preset de modules + verrouillage). Dans les deux cas, la config qu'on quitte est
+            // d'abord sauvegardée dans sa propre case pour pouvoir y revenir plus tard intacte.
             setTemplate: (templateId) => set((state) => {
+                const outgoingId = state.config.template;
+                const configByTemplate = {
+                    ...state.configByTemplate,
+                    ...(outgoingId ? { [outgoingId]: state.config } : {}),
+                };
+
+                const remembered = configByTemplate[templateId];
+                if (remembered) {
+                    return { config: remembered, configByTemplate };
+                }
+
                 const templateDef = get().templates[templateId] || DEFAULT_TEMPLATES[templateId];
                 const newRatio = templateDef?.defaultRatio || '1:1';
 
@@ -442,21 +467,21 @@ export const useExportMakerStore = create(
                     if (preset.disable) preset.disable.forEach(m => { newModules[m] = false; });
                 }
 
-                return {
-                    config: {
-                        ...state.config,
-                        template: templateId,
-                        ratio: newRatio,
-                        contentModules: newModules,
-                        typography: identity
-                            ? { ...DEFAULT_CONFIG.typography, ...identity.defaultTypography }
-                            : { ...DEFAULT_CONFIG.typography },
-                        colors: palette
-                            ? { ...DEFAULT_CONFIG.colors, palette: identity.defaultPalette, ...palette }
-                            : { ...DEFAULT_CONFIG.colors },
-                        templateLocked: true,
-                    }
+                const freshConfig = {
+                    ...state.config,
+                    template: templateId,
+                    ratio: newRatio,
+                    contentModules: newModules,
+                    typography: identity
+                        ? { ...DEFAULT_CONFIG.typography, ...identity.defaultTypography }
+                        : { ...DEFAULT_CONFIG.typography },
+                    colors: palette
+                        ? { ...DEFAULT_CONFIG.colors, palette: identity.defaultPalette, ...palette }
+                        : { ...DEFAULT_CONFIG.colors },
+                    templateLocked: true,
                 };
+
+                return { config: freshConfig, configByTemplate: { ...configByTemplate, [templateId]: freshConfig } };
             }),
 
             // Sort la config du verrou template — seul moyen de repasser `templateLocked` à false
@@ -624,10 +649,14 @@ export const useExportMakerStore = create(
                 if (!preset) return;
 
                 // Un préréglage chargé est par nature déjà personnalisé — jamais reverrouillé.
-                set({
-                    config: { ...preset.config, templateLocked: false },
+                const loaded = { ...preset.config, templateLocked: false };
+                set((state) => ({
+                    config: loaded,
+                    // Mémorisée pour son propre template aussi, sinon un aller-retour vers ce
+                    // template dans la même session perdrait le préréglage au profit de ses défauts.
+                    configByTemplate: loaded.template ? { ...state.configByTemplate, [loaded.template]: loaded } : state.configByTemplate,
                     activePreset: presetId
-                });
+                }));
             },
 
             deletePreset: (presetId) => {
@@ -672,9 +701,11 @@ export const useExportMakerStore = create(
 
             setReviewData: (data) => set({ reviewData: data }),
 
-            // Réinitialiser à la configuration par défaut
+            // Réinitialiser à la configuration par défaut — `configByTemplate` vidée avec, sinon un
+            // ancien template resterait "souvenu" avec une config d'une session/review précédente.
             resetConfig: () => set({
                 config: { ...DEFAULT_CONFIG },
+                configByTemplate: {},
                 activePreset: null
             }),
 
@@ -688,23 +719,21 @@ export const useExportMakerStore = create(
             // chantier, ou config construit à la main) retombe sur `false` — la traiter comme
             // verrouillée par défaut regriserait à tort des contrôles sur d'anciennes reviews dont
             // la config est en réalité déjà personnalisée à la main.
-            applyConfig: (config) => set({
-                config: { ...DEFAULT_CONFIG, ...config, templateLocked: config?.templateLocked ?? false },
-                activePreset: null
+            applyConfig: (config) => set((state) => {
+                const merged = { ...DEFAULT_CONFIG, ...config, templateLocked: config?.templateLocked ?? false };
+                return {
+                    config: merged,
+                    // Nouvelle review/config chargée : la mémoire par template repart de zéro (pas de
+                    // fuite entre reviews) mais se souvient déjà de CE template avec la config qu'on
+                    // vient de charger, pour qu'un aller-retour immédiat vers ce même template dans la
+                    // session le retrouve tel quel plutôt que ses défauts génériques.
+                    configByTemplate: merged.template ? { [merged.template]: merged } : {},
+                    activePreset: null
+                };
             }),
 
             // Obtenir les templates et palettes disponibles
             getTemplates: () => get().templates,
-            registerTemplate: (id, data) => set((state) => ({
-                templates: { ...state.templates, [id]: { id, ...data } }
-            })),
-            unregisterTemplate: (id) => set((state) => ({
-                templates: Object.keys(state.templates).reduce((acc, k) => {
-                    if (k === id) return acc;
-                    acc[k] = state.templates[k];
-                    return acc;
-                }, {})
-            })),
             getColorPalettes: () => COLOR_PALETTES
         }),
         {

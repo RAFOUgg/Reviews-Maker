@@ -145,14 +145,19 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
 
     return (
         <div
-            className="w-full h-full flex flex-col"
+            className="w-full flex flex-col"
             data-report-ready={eventsReady ? 'true' : 'false'}
             style={{
+                // Ce template est un rapport continu, toujours rendu en hauteur naturelle par
+                // `TemplateRenderer` (`effectiveAllowOverflow`) — `h-full`/`overflowY:auto` créaient
+                // une zone scrollable dont le contenu hors-écran ne survivait jamais à une capture
+                // PNG statique (trouvé 2026-08-02 : rapport quasi vide en export réel).
+                minHeight: '100%',
                 backgroundColor: colors.background,
                 padding: `${padding.container}px`,
                 fontFamily: typography.fontFamily,
                 color: colors.textPrimary,
-                overflowY: 'auto',
+                overflow: 'visible',
             }}
         >
             {/* En-tête : identité + identifiant de lot/QR (Chantier 8) */}

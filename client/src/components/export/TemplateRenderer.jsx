@@ -1,11 +1,9 @@
 import PropTypes from 'prop-types';
-import { useExportMakerStore } from '../../store/exportMakerStore';
 import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
 import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
 import TraceabilityReportTemplate from '../templates/TraceabilityReportTemplate';
-import CustomTemplate from '../shared/config/CustomTemplate';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 
 // Mapping des templates
@@ -15,8 +13,6 @@ const TEMPLATES = {
     blogArticle: BlogArticleTemplate,
     socialStory: SocialStoryTemplate,
     traceabilityReport: TraceabilityReportTemplate
-    ,
-    custom: CustomTemplate
 };
 
 // Ratios et dimensions
@@ -30,21 +26,23 @@ const RATIO_DIMENSIONS = {
 
 export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false }) {
     let TemplateComponent = TEMPLATES[config.template];
-    const templatesMeta = useExportMakerStore((state) => state.templates);
     const adaptedReviewData = buildExportReviewData(reviewData);
 
-    // If the configured template is a registered custom template (layout=custom) use CustomTemplate
-    if (!TemplateComponent && templatesMeta?.[config.template]?.layout === 'custom') {
-        // fallback to generic custom template
-        TemplateComponent = CustomTemplate;
-    }
-
-    // If the stored review explicitly selected a custom layout mode, force the CustomTemplate
-    if (reviewData?.exportMakerLayoutMode === 'custom') {
-        TemplateComponent = CustomTemplate;
+    // Mode Custom (glisser-déposer libre) retiré du produit (2026-08-02) — une review sauvegardée
+    // avant ce retrait (config.template === 'custom' ou exportMakerLayoutMode === 'custom') retombe
+    // sur Fiche Détaillée plutôt que sur l'écran d'erreur générique "Template non trouvé" ci-dessous,
+    // qui reste lui réservé à un véritable id de template inconnu/invalide.
+    if (config.template === 'custom' || reviewData?.exportMakerLayoutMode === 'custom') {
+        TemplateComponent = TEMPLATES.detailedCard;
     }
 
     const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+
+    // `traceabilityReport` est un rapport continu (Sections non filtrées par page, cf.
+    // `shouldAutoLockPagination`) — toujours traité comme un document qui grandit avec son contenu,
+    // quel que soit l'appelant, plutôt qu'un canevas à hauteur fixe qui couperait silencieusement
+    // tout ce qui dépasse (même bug de fond que celui corrigé 2026-07-27 sur /r/:id).
+    const effectiveAllowOverflow = allowOverflow || config.template === 'traceabilityReport';
 
     // Filtrer les modules si on est en mode page. `pageModuleIds` (pagination adaptative, Chantier D
     // 2026-07-31) est un mécanisme DISTINCT et prioritaire des anciens `activeModules` : les ids
@@ -64,6 +62,14 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                 ])
             )
         } : config);
+
+    // `allowOverflow` : pas de hauteur fixe à annoncer via `data-height` — `ExportModal.jsx`'s
+    // `prepareCapture()` lit `dataset.height` en PRIORITÉ sur la vraie hauteur mesurée
+    // (`offsetHeight`) ; `undefined` fait omettre l'attribut par React, pour que ce repli s'applique
+    // et capture toute la hauteur réellement grandie plutôt qu'un cadre à la taille nominale du
+    // ratio qui laissait ~46% d'espace vide (ou aurait coupé le contenu sur une review plus dense) —
+    // trouvé en vérification 2026-08-02 sur le rapport de traçabilité.
+    const capturedHeight = effectiveAllowOverflow ? undefined : dimensions.height;
 
     if (!TemplateComponent) {
         return (
@@ -85,7 +91,7 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             id={canvasId}
             className={className || undefined}
             data-width={dimensions.width}
-            data-height={dimensions.height}
+            data-height={capturedHeight}
             data-ratio={config.ratio}
             style={{
                 width: dimensions.width,
@@ -94,9 +100,9 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                 // bloquée y coupait silencieusement tout contenu dépassant les dimensions du ratio
                 // (bug corrigé 2026-07-27). Les consommateurs de capture (ExportModal, MiniPreview)
                 // gardent le comportement à hauteur fixe, requis pour produire une image/PDF net.
-                height: allowOverflow ? 'auto' : dimensions.height,
-                minHeight: allowOverflow ? dimensions.height : undefined,
-                overflow: allowOverflow ? 'visible' : 'hidden',
+                height: effectiveAllowOverflow ? 'auto' : dimensions.height,
+                minHeight: effectiveAllowOverflow ? dimensions.height : undefined,
+                overflow: effectiveAllowOverflow ? 'visible' : 'hidden',
                 position: 'relative',
                 isolation: 'isolate',
             }}

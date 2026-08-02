@@ -630,9 +630,16 @@ function hasAnyTimelineData(reviewData) {
  * silencieusement par le canevas à hauteur fixe).
  * @param {Object} reviewData - reviewData BRUT (pré-adaptateur : `cultureTimelineData` etc. tels
  *   que renvoyés par l'API, pas les champs `pipelineGlobal`/... synthétisés par l'adaptateur).
+ * @param {string} [template] - `config.template` courant. `traceabilityReport` est un rapport
+ *   continu (Section non filtrées par `contentModules`, contrairement aux 4 autres templates) —
+ *   le découper en N pages `PAGE_TEMPLATES` produit N pages avec le MÊME contenu intégral dupliqué
+ *   plutôt qu'un contenu réparti (trouvé 2026-08-02 : rapport quasi vide/tronqué en export réel).
+ *   Toujours rendu comme un seul document qui grandit (`allowOverflow`, TemplateRenderer.jsx) au
+ *   lieu d'être scindé.
  */
-export function shouldAutoLockPagination(reviewData) {
+export function shouldAutoLockPagination(reviewData, template) {
     if (!reviewData) return false;
+    if (template === 'traceabilityReport') return false;
     const categoryCount = reviewData.categoryRatings ? Object.keys(reviewData.categoryRatings).length : 0;
     const aromasCount = Array.isArray(reviewData.aromas) ? reviewData.aromas.length : 0;
     const effectsCount = Array.isArray(reviewData.effects) ? reviewData.effects.length : 0;

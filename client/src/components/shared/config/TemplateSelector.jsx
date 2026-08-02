@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
-import { Check, Layers, X } from 'lucide-react';
-import { useExportMakerStore, DEFAULT_TEMPLATES } from '../../../store/exportMakerStore';
+import { Check } from 'lucide-react';
+import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
@@ -13,9 +13,7 @@ export default function TemplateSelector() {
     const reviewData = useExportMakerStore((state) => state.reviewData);
     const setTemplate = useExportMakerStore((state) => state.setTemplate);
     const setRatio = useExportMakerStore((state) => state.setRatio);
-    const registerTemplate = useExportMakerStore((state) => state.registerTemplate);
     const templates = useExportMakerStore((state) => state.templates);
-    const unregisterTemplate = useExportMakerStore((state) => state.unregisterTemplate);
     const setActivePanel = useExportMakerStore((state) => state.setActivePanel);
 
     const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
@@ -23,7 +21,7 @@ export default function TemplateSelector() {
     const togglePagesMode = useExportMakerPagesStore((state) => state.togglePagesMode);
     const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
 
-    const isOverflow = shouldAutoLockPagination(reviewData);
+    const isOverflow = shouldAutoLockPagination(reviewData, config.template);
     const isPaginationSupported = PAGINATION_SUPPORTED_TEMPLATES.includes(config.template) || isOverflow;
     // Auto-lock: overflow data on compact format forces pagination
     const isPaginationLocked = isOverflow && (config.ratio === '1:1' || config.ratio === '9:16');
@@ -60,26 +58,6 @@ export default function TemplateSelector() {
             </div>
 
             {/* Galerie de templates */}
-            <div className="flex items-center justify-end">
-                <LiquidButton
-                    size="sm"
-                    icon={Layers}
-                    onClick={() => {
-                        const id = prompt('ID du template (ex: my-custom-template)');
-                        if (!id) return;
-                        const name = prompt('Nom du template (ex: Ma mise en page)') || id;
-                        registerTemplate(id, {
-                            name,
-                            description: 'Template personnalisé',
-                            layout: 'custom',
-                            defaultRatio: '1:1',
-                            supportedRatios: ['1:1', '16:9']
-                        });
-                    }}
-                >
-                    Créer Template
-                </LiquidButton>
-            </div>
             <div className="grid grid-cols-1 gap-2">
                 {Object.values(templates).map((template) => (
                     <motion.button
@@ -101,16 +79,6 @@ export default function TemplateSelector() {
                             <div className="flex items-center gap-2 flex-shrink-0">
                                 {config.template === template.id && (
                                     <Check className="w-5 h-5 text-purple-400" />
-                                )}
-                                {!DEFAULT_TEMPLATES[template.id] && (
-                                    <button
-                                        type="button"
-                                        title="Supprimer le template"
-                                        onClick={(e) => { e.stopPropagation(); if (window.confirm(`Supprimer le template ${template.name}?`)) unregisterTemplate(template.id); }}
-                                        className="p-1 rounded bg-red-500/15 text-red-400 hover:bg-red-500/25"
-                                    >
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
                                 )}
                             </div>
                         </div>
