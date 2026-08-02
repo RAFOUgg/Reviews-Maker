@@ -16,7 +16,9 @@ import {
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
-import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
+import ScoreMetric from './sections/ScoreMetric';
+import { CannabinoidGrid } from './sections/RegistrySections';
 
 // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que ModernCompactTemplate
@@ -32,7 +34,7 @@ const PIPELINE_TYPE_BY_KEY = {
     separationTimelineData: 'separation',
 };
 const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
-import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
+import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 
 /**
  * BlogArticleTemplate - Template article de blog professionnel
@@ -292,24 +294,12 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Quick Facts Box */}
-                {(contentModules.thcLevel || contentModules.cbdLevel || contentModules.strainType) && (
+                {(contentModules.strainType || contentModules.indicaRatio) && (
                     <div style={styles.infoBox}>
                         <h3 style={{ fontSize: `${fontSize.text + 2}px`, fontWeight: '700', color: colors.title, marginBottom: `${spacing.element * 2}px` }}>
                             📊 Fiche Technique Rapide
                         </h3>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            {contentModules.thcLevel && reviewData.thcLevel && (
-                                <div>
-                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>THC</div>
-                                    <div style={{ fontSize: `${fontSize.text + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.thcLevel}%</div>
-                                </div>
-                            )}
-                            {contentModules.cbdLevel && reviewData.cbdLevel && (
-                                <div>
-                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>CBD</div>
-                                    <div style={{ fontSize: `${fontSize.text + 4}px`, fontWeight: '700', color: colors.accent }}>{reviewData.cbdLevel}%</div>
-                                </div>
-                            )}
                             {contentModules.strainType && reviewData.strainType && (
                                 <div>
                                     <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>Type</div>
@@ -326,21 +316,16 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     </div>
                 )}
 
+                {/* Profil cannabinoïde complet (THC/CBD + THCA/CBDA/CBG/CBC/CBN/THCV si renseignés) */}
+                <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+
                 {/* Category Ratings */}
                 {contentModules.categoryRatings && categoryRatings.length > 0 && (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>🎯 Évaluation Détaillée</h2>
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                        <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                             {categoryRatings.map((r, i) => (
-                                <div key={i} className="text-center p-4 rounded-2xl" style={{
-                                    backgroundColor: colorWithOpacity(colors.accent, 8),
-                                    border: `1px solid ${colorWithOpacity(colors.accent, 20)}`,
-                                    boxShadow: `inset 0 1px 1px ${colorWithOpacity('#ffffff', 12)}`,
-                                }}>
-                                    <div style={{ fontSize: '28px', marginBottom: '8px' }}>{r.icon}</div>
-                                    <div style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary }}>{r.label}</div>
-                                    <div style={{ fontSize: `${fontSize.text + 6}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
-                                </div>
+                                <ScoreMetric key={i} label={r.label} value={r.value} icon={r.icon} fontSize={fontSize.text - 1} colors={colors} />
                             ))}
                         </div>
                     </div>
@@ -536,14 +521,14 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
                 {contentModules.phenoHuntView !== false && (
                     <div style={styles.section}>
-                        <GenealogyMiniView reviewData={reviewData} compact={false} sectionFontSize={fontSize.text + 1} accentColor={colors.accent} titleColor={colors.title} />
+                        <ReadOnlyGenealogyCanvas reviewData={reviewData} height={170} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
                     </div>
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
                 {contentModules.productionChainView !== false && (
                     <div style={styles.section}>
-                        <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.text + 1} accentColor={colors.accent} titleColor={colors.title} />
+                        <ReadOnlyProductionChainCanvas reviewData={reviewData} height={170} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
                     </div>
                 )}
 

@@ -17,8 +17,10 @@ import {
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
-import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
-import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
+import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
+import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
+import ScoreMetric from './sections/ScoreMetric';
+import { CannabinoidGrid } from './sections/RegistrySections';
 
 // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que DetailedCardTemplate.
@@ -346,12 +348,13 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 </div>
             )}
 
-            {/* Infos principales (THC, CBD, Category) */}
-            {(contentModules.thcLevel || contentModules.cbdLevel || contentModules.category) && (
+            {/* Profil cannabinoïde complet (THC/CBD + THCA/CBDA/CBG/CBC/CBN/THCV si renseignés) —
+                remplace les 2 cartes THC/CBD isolées par la grille déjà partagée avec Fiche Détaillée
+                (`CannabinoidGrid`, RegistrySections.jsx) plutôt que de ne montrer que 2 valeurs sur 8. */}
+            <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+            {contentModules.category && reviewData.category && (
                 <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px`, flexShrink: 0 }}>
-                    {contentModules.thcLevel && reviewData.thcLevel && renderInfoCard('THC', `${reviewData.thcLevel}%`, '🔬')}
-                    {contentModules.cbdLevel && reviewData.cbdLevel && renderInfoCard('CBD', `${reviewData.cbdLevel}%`, '💊')}
-                    {contentModules.category && reviewData.category && renderInfoCard('Catégorie', reviewData.category, '📂')}
+                    {renderInfoCard('Catégorie', reviewData.category, '📂')}
                 </div>
             )}
 
@@ -382,13 +385,9 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             {/* Category Ratings */}
             {contentModules.categoryRatings && (
                 categoryRatings.length > 0 ? (
-                    <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.element}px`, flexShrink: 0 }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: isSquare ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.element}px`, flexShrink: 0 }}>
                         {categoryRatings.map((r, i) => (
-                            <div key={i} className="text-center">
-                                <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{r.icon}</span>
-                                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>{r.label}</div>
-                                <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.accent }}>{r.value.toFixed(1)}</div>
-                            </div>
+                            <ScoreMetric key={i} label={r.label} value={r.value} icon={r.icon} fontSize={fontSize.small} colors={colors} compact={isSquare} />
                         ))}
                     </div>
                 ) : renderEmptyHint('📊', 'Notes par catégorie')
@@ -510,12 +509,12 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
             {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
             {contentModules.phenoHuntView !== false && (
-                <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.small} accentColor={colors.accent} titleColor={colors.title} />
+                <ReadOnlyGenealogyCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
             )}
 
             {/* Vue interactive Chaîne de production — même logique de masquage async */}
             {contentModules.productionChainView !== false && (
-                <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.small} accentColor={colors.accent} titleColor={colors.title} />
+                <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
             )}
 
             {/* Description */}

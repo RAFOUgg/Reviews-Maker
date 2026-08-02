@@ -8,10 +8,11 @@ import {
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
-import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
-import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
+import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
+import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import TemplateSection from './sections/TemplateSection';
+import { CannabinoidGrid, getCannabinoidItems } from './sections/RegistrySections';
 
 const BUSINESS_TYPE_LABELS = {
     farm: 'Ferme', laboratory: 'Laboratoire', extractor: 'Extracteur',
@@ -211,6 +212,14 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 </div>
             )}
 
+            {/* Profil cannabinoïde — absent de ce template jusqu'ici alors que la grille est déjà
+                partagée avec Fiche Détaillée (`CannabinoidGrid`, RegistrySections.jsx). */}
+            {getCannabinoidItems(reviewData, config.contentModules).length > 0 && (
+                <Section title="Profil cannabinoïde" icon="🧪">
+                    <CannabinoidGrid reviewData={reviewData} contentModules={config.contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+                </Section>
+            )}
+
             {/* Bilan matière (Chantier 3) */}
             {massBalanceRows.length > 0 && (
                 <Section title="Bilan matière" icon="⚖️">
@@ -231,11 +240,11 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
             )}
 
             {/* Chaîne de production (vue interactive existante) */}
-            <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
+            <ReadOnlyProductionChainCanvas reviewData={reviewData} height={340} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
 
             {/* Généalogie / PhenoHunt */}
             <div style={{ marginTop: `${spacing.section}px` }}>
-                <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.section} accentColor={colors.accent} titleColor={colors.title} />
+                <ReadOnlyGenealogyCanvas reviewData={reviewData} height={340} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
             </div>
 
             {/* Pipelines documentés */}

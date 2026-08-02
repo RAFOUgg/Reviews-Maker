@@ -197,6 +197,17 @@ const DEFAULT_CONFIG = {
         // === NIVEAUX THC/CBD ===
         thcLevel: true,
         cbdLevel: true,
+        // Cannabinoïdes secondaires (CannabinoidGrid, RegistrySections.jsx) — ajoutés 2026-08-02 en
+        // même temps que thcLevel/cbdLevel dans PAGE_TEMPLATES (exportMakerPagesStore.js), mais
+        // oubliés ici dans un premier temps : `TemplateRenderer`'s filtre par page ne force à `false`
+        // QUE les clés déjà présentes dans `contentModules` — une clé absente d'ici passe outre le
+        // filtrage et reste visible sur TOUTES les pages d'un export paginé au lieu d'une seule.
+        thcaLevel: true,
+        cbdaLevel: true,
+        cbgLevel: true,
+        cbcLevel: true,
+        cbnLevel: true,
+        thcvLevel: true,
         strainType: true,
         indicaRatio: true,
         sativaRatio: true,

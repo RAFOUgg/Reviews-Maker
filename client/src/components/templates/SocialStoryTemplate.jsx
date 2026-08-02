@@ -8,8 +8,9 @@ import {
     getResponsiveAdjustments,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
-import GenealogyMiniView from '../export/interactive/GenealogyMiniView';
-import ProductionChainMiniView from '../export/interactive/ProductionChainMiniView';
+import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
+import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
+import ScoreMetric from './sections/ScoreMetric';
 
 /**
  * SocialStoryTemplate - Template optimisé pour les stories Instagram/TikTok
@@ -82,32 +83,9 @@ export default function SocialStoryTemplate({ config, reviewData }) {
         </div>
     );
 
-    const renderCategoryBar = (cat) => {
-        const pct = Math.min(100, (cat.value / 10) * 100);
-        // Une seule couleur accent (comme ModernCompactTemplate/DetailedCardTemplate) plutôt qu'un
-        // dégradé de teintes en dur déconnecté de la palette choisie.
-        return (
-            <div key={cat.key} style={{ marginBottom: 8 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
-                    <span style={{ fontSize: fontSize.text, color: whiteMuted, display: 'flex', alignItems: 'center', gap: 5 }}>
-                        <span>{cat.icon}</span>
-                        <span style={{ fontWeight: 500 }}>{cat.label}</span>
-                    </span>
-                    <span style={{ fontSize: fontSize.text, fontWeight: 700, color: accent }}>
-                        {cat.value.toFixed(1)}
-                    </span>
-                </div>
-                <div style={{ height: 5, borderRadius: 3, background: whiteDim, overflow: 'hidden' }}>
-                    <div style={{
-                        width: `${pct}%`, height: '100%',
-                        background: `linear-gradient(90deg, ${colorWithOpacity(accent, 80)}, ${accent})`,
-                        borderRadius: 3,
-                        transition: 'width 0.6s ease'
-                    }} />
-                </div>
-            </div>
-        );
-    };
+    const renderCategoryBar = (cat) => (
+        <ScoreMetric key={cat.key} label={cat.label} value={cat.value} icon={cat.icon} fontSize={fontSize.text} colors={{ textSecondary: colors.textSecondary || white }} compact />
+    );
 
     // Une seule couleur accent pour tous les tags (comme les autres templates), plutôt qu'une
     // teinte en dur différente par catégorie (effets/arômes/goûts) déconnectée de la palette.
@@ -314,12 +292,12 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié.
                     Format story très contraint verticalement : mode compact, pas de section dédiée. */}
                 {contentModules.phenoHuntView !== false && (
-                    <GenealogyMiniView reviewData={reviewData} compact sectionFontSize={fontSize.small} accentColor={accent} titleColor={colors.title || white} />
+                    <ReadOnlyGenealogyCanvas reviewData={reviewData} height={200} accentColor={accent} titleColor={colors.title || white} textColor={colors.textSecondary || white} />
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
                 {contentModules.productionChainView !== false && (
-                    <ProductionChainMiniView reviewData={reviewData} sectionFontSize={fontSize.small} accentColor={accent} titleColor={colors.title || white} />
+                    <ReadOnlyProductionChainCanvas reviewData={reviewData} height={200} accentColor={accent} titleColor={colors.title || white} textColor={colors.textSecondary || white} />
                 )}
 
                 {/* Spacer */}
