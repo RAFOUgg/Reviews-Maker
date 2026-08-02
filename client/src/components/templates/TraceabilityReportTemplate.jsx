@@ -12,11 +12,22 @@ import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProduct
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import TemplateSection from './sections/TemplateSection';
-import { CannabinoidGrid, getCannabinoidItems } from './sections/RegistrySections';
+import { CannabinoidGrid, getCannabinoidItems, GisementSections } from './sections/RegistrySections';
 
 const BUSINESS_TYPE_LABELS = {
     farm: 'Ferme', laboratory: 'Laboratoire', extractor: 'Extracteur',
     manufacturer: 'Fabricant', distributor: 'Distributeur', other: 'Producteur',
+};
+
+// Même liste que DetailedCardTemplate.jsx (source de vérité du "gisement" complet) — 'lab' exclu
+// (déjà son propre badge de confiance ci-dessous). Léger recouvrement volontaire assumé entre
+// 'harvest' (poidsBrut/poidsNet, groupe complet) et "Bilan matière" (mêmes 2 champs + rendement% et
+// finalWeight/servings/poidsParPortion) — 'harvest' apporte aussi trichomes*/modeRecolte, réellement
+// absents jusqu'ici ; ne pas exclure le groupe entier pour éviter 2 valeurs déjà affichées ailleurs.
+const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
+const GISEMENT_ICONS = {
+    harvest: '🌾', culture: '🌱', usage: '💨',
+    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
 };
 
 const LAB_METHOD_LABELS = {
@@ -130,6 +141,20 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     const hasLabInfo = reviewData.labName || reviewData.labMethod || reviewData.labAccredited;
     const hasTrustInfo = reviewData.producerVerified || hasLabInfo;
 
+    // Détail labo/curing complet — le badge "Confiance" ci-dessous reste un résumé rapide (Chantier
+    // 5, volontairement compact) ; un rapport de TRAÇABILITÉ doit aussi porter le détail complet
+    // (date d'analyse, certificats, norme d'accréditation) que Fiche Détaillée affiche déjà via sa
+    // grille §04 — absent de ce template jusqu'ici (gap trouvé en audit 2026-08-02, Phase B).
+    const labDetailCells = [
+        reviewData.labName && { label: 'Laboratoire', value: reviewData.labName },
+        reviewData.labMethod && { label: "Méthode d'analyse", value: LAB_METHOD_LABELS[reviewData.labMethod] || reviewData.labMethod },
+        (reviewData.labAccredited !== undefined && reviewData.labAccredited !== null) && { label: 'Accrédité', value: reviewData.labAccredited ? 'Oui' : 'Non' },
+        reviewData.labAccreditationStandard && { label: "Norme d'accréditation", value: reviewData.labAccreditationStandard },
+        reviewData.labAnalysisDate && { label: "Date d'analyse", value: formatDate(reviewData.labAnalysisDate) },
+        reviewData.labReportUrl && { label: "Certificat d'analyse", value: 'Disponible' },
+        reviewData.terpeneFileUrl && { label: 'Certificat terpènes', value: 'Disponible' },
+    ].filter(Boolean);
+
     // Délègue à `TemplateSection.jsx` (partagé avec `DetailedCardTemplate.jsx`, qui définissait
     // l'original) — props ajustées pour préserver le rendu exact déjà en place ici (fontWeight 700,
     // bordure 2px/opacité 35, gap 8/paddingBottom 6 en dur plutôt que `spacing.gap`).
@@ -153,7 +178,12 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 // une zone scrollable dont le contenu hors-écran ne survivait jamais à une capture
                 // PNG statique (trouvé 2026-08-02 : rapport quasi vide en export réel).
                 minHeight: '100%',
-                backgroundColor: colors.background,
+                // `background` (pas `backgroundColor`) : `colors.background` est un dégradé CSS
+                // (`linear-gradient(...)`) pour 6 des 7 palettes — `backgroundColor` n'accepte pas
+                // les dégradés, échoue silencieusement (aucune erreur, juste un fond transparent/noir
+                // au lieu de la palette configurée). Bug pré-existant, trouvé en vérifiant Phase B
+                // 2026-08-02 (repéré via la nouvelle section labo, mais présent sur tout le document).
+                background: colors.background,
                 padding: `${padding.container}px`,
                 fontFamily: typography.fontFamily,
                 color: colors.textPrimary,
@@ -217,6 +247,21 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 </div>
             )}
 
+            {/* Données laboratoire & curing — détail complet, complémentaire au badge "Confiance"
+                ci-dessus (résumé rapide seulement). */}
+            {labDetailCells.length > 0 && (
+                <Section title="Données laboratoire & curing" icon="🔬">
+                    <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(140px, 1fr))`, gap: 6 }}>
+                        {labDetailCells.map((c, i) => (
+                            <div key={i} style={{ background: colorWithOpacity(colors.accent, 6), borderRadius: 8, padding: '6px 10px' }}>
+                                <div style={{ fontSize: `${Math.max(9, fontSize.small - 2)}px`, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c.label}</div>
+                                <div style={{ fontSize: `${fontSize.text}px`, fontWeight: 700, color: colors.textPrimary }}>{c.value}</div>
+                            </div>
+                        ))}
+                    </div>
+                </Section>
+            )}
+
             {/* Profil cannabinoïde — absent de ce template jusqu'ici alors que la grille est déjà
                 partagée avec Fiche Détaillée (`CannabinoidGrid`, RegistrySections.jsx). */}
             {getCannabinoidItems(reviewData, config.contentModules).length > 0 && (
@@ -243,6 +288,20 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                     </div>
                 </Section>
             )}
+
+            {/* Gisement complémentaire piloté par le registre (récolte, culture, usage, procédés,
+                recette, données complémentaires) — absent de ce template jusqu'ici alors que Fiche
+                Détaillée l'affiche déjà via le même composant partagé (`GisementSections`). */}
+            <GisementSections
+                reviewData={reviewData}
+                contentModules={config.contentModules}
+                groups={GISEMENT_GROUPS}
+                Section={Section}
+                colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
+                fontSize={fontSize}
+                spacing={spacing}
+                groupIcons={GISEMENT_ICONS}
+            />
 
             {/* Chaîne de production (vue interactive existante) */}
             <ReadOnlyProductionChainCanvas reviewData={reviewData} height={340} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />

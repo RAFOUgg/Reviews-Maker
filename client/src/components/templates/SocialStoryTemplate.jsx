@@ -11,6 +11,25 @@ import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
+import { GisementSections } from './sections/RegistrySections';
+
+// Phase B du plan de finition Export Maker (2026-08-02) : contrairement aux 3 autres templates
+// (rollout complet des 8 groupes gisement), Story reste un format 9:16 très contraint verticalement,
+// pensé pour être glanceable — décision actée avec l'utilisateur : UN SEUL groupe pertinent selon le
+// type de produit (pas les 8), pour ne pas transformer une story en document dense.
+const RELEVANT_GROUP_BY_TYPE = {
+    flower: { group: 'harvest', label: 'Récolte', icon: '🌾' },
+    hash: { group: 'separation', label: 'Séparation', icon: '🧊' },
+    concentrate: { group: 'extraction', label: 'Extraction', icon: '⚗️' },
+    edible: { group: 'recipe', label: 'Recette', icon: '🍯' },
+};
+function normalizeReviewType(type) {
+    const t = (type || '').toLowerCase();
+    if (t.includes('hash')) return 'hash';
+    if (t.includes('concentr')) return 'concentrate';
+    if (t.includes('edible') || t.includes('comestible')) return 'edible';
+    return 'flower';
+}
 
 /**
  * SocialStoryTemplate - Template optimisé pour les stories Instagram/TikTok
@@ -116,7 +135,13 @@ export default function SocialStoryTemplate({ config, reviewData }) {
             position: 'relative',
         }}>
             {/* ── HERO IMAGE ── */}
-            {contentModules.mainImage !== false && mainImage ? (
+            {/* Bug trouvé 2026-08-03 (Phase B) : le placeholder emoji (branche `else` ci-dessous)
+                était rendu inconditionnellement dès que `mainImage` était falsy — y compris quand
+                `contentModules.mainImage === false` (page paginée qui exclut délibérément le hero,
+                cf. PAGE_TEMPLATES). Résultat observé en vérification : un gros 🌿 esseulé occupant
+                38% d'une page par ailleurs quasi vide. Le hero (image OU placeholder) ne se rend
+                plus du tout si la page a explicitement désactivé `mainImage`. */}
+            {contentModules.mainImage === false ? null : mainImage ? (
                 <div style={{ position: 'relative', width: '100%', flex: '0 0 38%', overflow: 'hidden' }}>
                     <img
                         src={mainImage}
@@ -252,6 +277,42 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         {categoryRatings.map((cat) => renderCategoryBar(cat))}
                     </div>
                 )}
+
+                {/* Labo — résumé compact (texte, pas de grille), gap trouvé en audit 2026-08-02 :
+                    aucune donnée labo n'apparaissait sur Story alors qu'un rapport de traçabilité en
+                    a besoin même en format court. */}
+                {(reviewData.labName || reviewData.labMethod || reviewData.labAccredited !== undefined) && (
+                    <div style={{ fontSize: fontSize.small, color: whiteMuted }}>
+                        🔬 {[reviewData.labName, reviewData.labAccredited ? 'accrédité' : null].filter(Boolean).join(' · ')}
+                    </div>
+                )}
+
+                {/* Un seul groupe gisement pertinent selon le type de produit (voir
+                    RELEVANT_GROUP_BY_TYPE) — sous-ensemble volontairement réduit, pas le rollout
+                    complet des 3 autres templates (format trop contraint pour les 8 groupes). */}
+                {(() => {
+                    const rel = RELEVANT_GROUP_BY_TYPE[normalizeReviewType(reviewData.type)];
+                    if (!rel) return null;
+                    const Section = ({ children }) => (
+                        <div>
+                            <div style={{ fontSize: fontSize.small, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                                {rel.icon} {rel.label}
+                            </div>
+                            {children}
+                        </div>
+                    );
+                    return (
+                        <GisementSections
+                            reviewData={reviewData}
+                            contentModules={contentModules}
+                            groups={[rel.group]}
+                            Section={Section}
+                            colors={{ accent, textPrimary: white, textSecondary: whiteMuted, title: colors.title || white }}
+                            fontSize={fontSize}
+                            spacing={responsive.spacing}
+                        />
+                    );
+                })()}
 
                 {/* Effects */}
                 {contentModules.effects && effects.length > 0 && (

@@ -251,6 +251,37 @@ const DEFAULT_CONFIG = {
         rendementEstime: true,
         methodeExtraction: true,
 
+        // === CULTURE (métadonnées, hors pipeline — groupe `culture` de fieldRegistry.js) ===
+        // Ajoutées 2026-08-03 (Phase B) : `substratMix` était la SEULE clé du groupe `culture`
+        // déjà présente ici — les 6 autres (mode/espace/durée/saison/dates de culture) manquaient
+        // depuis toujours, donc `isModuleOn()` les traitait comme actives sur CHAQUE page une fois
+        // `GisementSections` câblée dans ModernCompactTemplate/BlogArticleTemplate (duplication
+        // silencieuse sur toutes les pages au lieu d'une seule, même symptôme déjà documenté
+        // ci-dessus pour harvest/separation/extraction).
+        cultureMode: true,
+        cultureSpaceType: true,
+        cultureDuration: true,
+        cultureSeason: true,
+        cultureStartDate: true,
+        cultureEndDate: true,
+
+        // === USAGE (groupe `usage` de fieldRegistry.js — jamais gaté ici avant ce jour) ===
+        // Même bug que ci-dessus : ces 8 clés n'existaient nulle part dans `contentModules`, donc
+        // toujours "actives" sur chaque page dès qu'un template listait `GisementSections`.
+        consumptionMethod: true,
+        dosage: true,
+        dosageUnit: true,
+        effectOnset: true,
+        effectProfiles: true,
+        sideEffects: true,
+        preferredUse: true,
+        foodIntakeStatus: true,
+
+        // === RECETTE (groupe `recipe`, Comestible — `recipe` lui-même était déjà gaté, pas ses
+        // 2 sous-champs bruts rendus par GisementSections) ===
+        ingredients: true,
+        etapesPreparation: true,
+
         // === VUES INTERACTIVES (Fiche Détaillée uniquement) ===
         phenoHuntView: true,
         productionChainView: true,

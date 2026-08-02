@@ -14,7 +14,7 @@
  * type et reconstruire categoryRatings à partir des sous-scores /10. Point de branchement
  * unique : TemplateRenderer.jsx (+ ExportModal pour le figement de traçabilité).
  */
-import { asArray, safeParse } from './exportMakerHelpers';
+import { asArray, safeParse, extractLabel } from './exportMakerHelpers';
 import { getFieldRegistry, normalizeProductType } from './fieldRegistry';
 
 function pick(...values) {
@@ -144,9 +144,16 @@ function build(reviewDataRaw) {
         setOrDelete(adapted, f.key, coerce(f.type, raw));
     }
 
-    // cultivar : dernier recours sur le premier cultivar de la liste
+    // cultivar : dernier recours sur le premier cultivar de la liste — `cultivarsList` contient des
+    // entrées riches `{name, role}` (cf. Cultivar structuré, audit génétique 2026-07-02), pas des
+    // chaînes brutes. Bug trouvé 2026-08-03 en vérifiant Phase B (crash React "Objects are not
+    // valid as a React child" reproductible sur toute review sans `cultivar` propre mais avec un
+    // `cultivarsList` structuré — plantait toute la page "Infos"/l'export multi-pages des templates
+    // qui rendent `reviewData.cultivar` comme texte simple, ex. ModernCompactTemplate). `extractLabel`
+    // (déjà utilisé partout ailleurs pour ce même type d'entrée) extrait la chaîne affichable au lieu
+    // de propager l'objet brut.
     if (adapted.cultivar === undefined && Array.isArray(adapted.cultivarsList) && adapted.cultivarsList.length) {
-        setOrDelete(adapted, 'cultivar', adapted.cultivarsList[0]);
+        setOrDelete(adapted, 'cultivar', extractLabel(adapted.cultivarsList[0]));
     }
 
     // categoryRatings : reconstruire depuis les sous-scores, sinon préserver l'existant

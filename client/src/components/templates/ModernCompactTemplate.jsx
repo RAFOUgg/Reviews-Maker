@@ -9,8 +9,6 @@ import {
     extractCategoryRatings,
     extractPipelines,
     filterVisiblePipelines,
-    extractSubstrat,
-    extractExtraData,
     getResponsiveAdjustments,
     colorWithOpacity,
     getGlassTokens,
@@ -20,8 +18,17 @@ import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
-import { CannabinoidGrid } from './sections/RegistrySections';
+import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
 import PipelineStepFields from './sections/PipelineStepFields';
+
+// Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — liste complète
+// (comme DetailedCardTemplate.jsx) : aucun de ces groupes n'a de rendu spécifique existant dans ce
+// template (contrairement à BlogArticleTemplate, qui garde sa propre section "Substrat" à part).
+const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
+const GISEMENT_ICONS = {
+    harvest: '🌾', culture: '🌱', usage: '💨',
+    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
+};
 
 // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que DetailedCardTemplate.
@@ -68,8 +75,6 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const effects = asArray(reviewData.effects).slice(0, limits.maxTags);
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
-    const substrat = extractSubstrat(reviewData.substratMix);
-    const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
     // Image principale - respect du sélecteur d'index
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
@@ -185,6 +190,17 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             <div style={{ fontSize: `${fontSize.text}px`, fontWeight: '700', color: colors.accent }}>
                 {value}
             </div>
+        </div>
+    );
+
+    // Adaptateur `Section` compatible avec `GisementSections` (RegistrySections.jsx) — reprend le
+    // patron "libellé centré + contenu" déjà utilisé partout ailleurs dans ce template (ex. bloc
+    // Terpènes juste au-dessus), pour que le gisement de données (Phase B du plan de finition
+    // Export Maker) s'intègre sans rien réinventer.
+    const Section = ({ title, icon, children }) => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>{icon} {title}</div>
+            {children}
         </div>
     );
 
@@ -359,13 +375,14 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             )}
 
             {/* Provenance */}
-            {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker || contentModules.phenotypeCode) && (
+            {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker || contentModules.phenotypeCode || contentModules.cultivarsList) && (
                 <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     {contentModules.cultivar && reviewData.cultivar && renderInfoCard('Cultivar', reviewData.cultivar, '🌱')}
                     {contentModules.breeder && reviewData.breeder && renderInfoCard('Breeder', reviewData.breeder, '🧬')}
                     {contentModules.farm && reviewData.farm && renderInfoCard('Farm', reviewData.farm, '🏡')}
                     {contentModules.hashmaker && reviewData.hashmaker && renderInfoCard('Hash Maker', reviewData.hashmaker, '👨‍🔬')}
                     {contentModules.phenotypeCode && reviewData.phenotypeCode && renderInfoCard('Phénotype', reviewData.phenotypeCode, '🔬')}
+                    {contentModules.cultivarsList && cultivars.length > 0 && renderInfoCard('Cultivars', cultivars.map((c) => extractLabel(c)).join(', '), '🧬')}
                 </div>
             )}
 
@@ -440,6 +457,20 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     {renderTags(terpenes)}
                 </div>
             )}
+
+            {/* Gisement complémentaire (récolte, culture, usage, procédés, recette, données
+                complémentaires) — absent de ce template jusqu'ici alors que Fiche Détaillée
+                l'affiche déjà via le même composant partagé (`GisementSections`). */}
+            <GisementSections
+                reviewData={reviewData}
+                contentModules={contentModules}
+                groups={GISEMENT_GROUPS}
+                Section={Section}
+                colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
+                fontSize={fontSize}
+                spacing={spacing}
+                groupIcons={GISEMENT_ICONS}
+            />
 
             {/* Pipelines — riche avec métriques. `pipelines` (déjà filtré par
                 `filterVisiblePipelines(extractPipelines(reviewData), contentModules)` ci-dessus,

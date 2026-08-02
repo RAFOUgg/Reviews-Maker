@@ -18,8 +18,16 @@ import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
-import { CannabinoidGrid } from './sections/RegistrySections';
+import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
 import PipelineStepFields from './sections/PipelineStepFields';
+
+// Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — 'culture' exclu :
+// `substratMix` (le seul champ 'culture' déjà affiché ici) a déjà sa propre section riche
+// ("Composition du Substrat", barres de progression) plus bas ; le rendu générique en liste de
+// GisementSections le dupliquerait dans un style plus pauvre juste à côté. 'overflow' exclu pour la
+// même raison : la section "Caractéristiques Avancées" existante couvre déjà ce rôle.
+const GISEMENT_GROUPS = ['harvest', 'usage', 'separation', 'extraction', 'purification', 'recipe'];
+const GISEMENT_ICONS = { harvest: '🌾', usage: '💨', separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯' };
 
 // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que ModernCompactTemplate
@@ -136,6 +144,17 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
             margin: `${spacing.section * 1.6}px 0`,
         },
     };
+
+    // Adaptateur `Section` compatible avec `GisementSections` (RegistrySections.jsx) — reprend
+    // exactement le patron `styles.section`/`styles.sectionTitle` déjà utilisé ~10x dans ce fichier,
+    // pour que le gisement de données (récolte/culture/usage/procédés/recette/complémentaires,
+    // Phase B du plan de finition Export Maker) s'intègre visuellement sans rien réinventer.
+    const Section = ({ title, icon, children }) => (
+        <div style={styles.section}>
+            <h2 style={styles.sectionTitle}>{icon} {title}</h2>
+            {children}
+        </div>
+    );
 
     // Render étoiles inline
     const renderStarsInline = () => {
@@ -332,7 +351,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Provenance */}
-                {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker) && (
+                {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker || contentModules.cultivarsList) && (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>🌱 Provenance</h2>
                         <div className="grid grid-cols-2 gap-4">
@@ -347,6 +366,9 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             )}
                             {contentModules.hashmaker && reviewData.hashmaker && (
                                 <p style={styles.paragraph}><strong>Hash Maker :</strong> {reviewData.hashmaker}</p>
+                            )}
+                            {contentModules.cultivarsList && cultivars.length > 0 && (
+                                <p style={{ ...styles.paragraph, gridColumn: '1 / -1' }}><strong>Cultivars :</strong> {cultivars.map((c) => extractLabel(c)).join(', ')}</p>
                             )}
                         </div>
                     </div>
@@ -471,6 +493,20 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         })}
                     </div>
                 )}
+
+                {/* Gisement complémentaire (récolte, usage, procédés, recette) — absent de ce
+                    template jusqu'ici alors que Fiche Détaillée l'affiche déjà via le même
+                    composant partagé (`GisementSections`, RegistrySections.jsx). */}
+                <GisementSections
+                    reviewData={reviewData}
+                    contentModules={contentModules}
+                    groups={GISEMENT_GROUPS}
+                    Section={Section}
+                    colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
+                    fontSize={fontSize}
+                    spacing={spacing}
+                    groupIcons={GISEMENT_ICONS}
+                />
 
                 {/* Substrat */}
                 {contentModules.substratMix && substrat.length > 0 && (

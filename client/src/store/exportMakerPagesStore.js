@@ -38,6 +38,17 @@ import { persist } from 'zustand/middleware';
 // par du code PARTAGÉ entre les 4 types dans ModernCompact/BlogArticle, donc ajoutés partout où
 // cultivar/breeder/hashmaker apparaissent déjà, pas seulement pour Fleur). `extraData` comblé sur
 // les ratios/types où il manquait encore.
+// 9e occurrence (2026-08-03, Phase B) : les 16 clés `culture`/`usage`/`recipe` (mode/espace/durée/
+// saison/dates de culture, consommation/dosage/déclenchement/profils d'effet/effets secondaires/
+// usage recommandé/estomac, ingrédients/étapes de préparation) venaient d'être ajoutées à
+// `DEFAULT_CONFIG.contentModules` (`exportMakerStore.js`) — sans entrée ici, une clé fraîchement
+// gatée disparaîtrait de TOUTES les pages au lieu d'apparaître sur UNE seule. Placées : les 6 clés
+// `culture` sur la page "Culture"/"Culture & Curing" déjà existante de Fleur (à côté de `substratMix`,
+// seul champ du groupe déjà présent) ; les 7 clés `usage` communes à tous types (aucune restriction
+// `types` sauf `foodIntakeStatus`) sur la dernière page de chaque type/ratio (déjà la page
+// "expérience"/"détails" qui porte `dureeEffet`/`effects`) ; `foodIntakeStatus` (edible uniquement)
+// sur la même dernière page de Comestible ; `ingredients`/`etapesPreparation` (edible) sur la page
+// "recette" déjà existante de Comestible, à côté de la clé de synthèse `recipe`.
 export const PAGE_TEMPLATES = {
     'Fleur': {
         '1:1': [
@@ -57,7 +68,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet', 'cultureMode', 'cultureSpaceType', 'cultureDuration', 'cultureSeason', 'cultureStartDate', 'cultureEndDate']
             },
             {
                 id: 'curing',
@@ -75,7 +86,7 @@ export const PAGE_TEMPLATES = {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['description', 'terpenes', 'dureeEffet', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'terpenes', 'dureeEffet', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '16:9': [
@@ -101,13 +112,13 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet', 'cultureMode', 'cultureSpaceType', 'cultureDuration', 'cultureSeason', 'cultureStartDate', 'cultureEndDate']
             },
             {
                 id: 'curing',
                 label: 'Curing & Maturation',
                 icon: '🔥',
-                modules: ['curing', 'author', 'date', 'phenoHuntView', 'productionChainView']
+                modules: ['curing', 'author', 'date', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '9:16': [
@@ -133,13 +144,13 @@ export const PAGE_TEMPLATES = {
                 id: 'culture-curing',
                 label: 'Culture & Curing',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'curing', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'curing', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet', 'cultureMode', 'cultureSpaceType', 'cultureDuration', 'cultureSeason', 'cultureStartDate', 'cultureEndDate']
             },
             {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['description', 'tastes', 'terpenes', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'tastes', 'terpenes', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '4:3': [
@@ -159,13 +170,13 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'description', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'description', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet', 'cultureMode', 'cultureSpaceType', 'cultureDuration', 'cultureSeason', 'cultureStartDate', 'cultureEndDate']
             },
             {
                 id: 'curing',
                 label: 'Curing & Maturation',
                 icon: '🔥',
-                modules: ['curing', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['curing', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         'A4': [
@@ -179,7 +190,7 @@ export const PAGE_TEMPLATES = {
                 id: 'culture',
                 label: 'Culture',
                 icon: '🌱',
-                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet']
+                modules: ['substratMix', 'fertilizationPipeline', 'extraData', 'trichomesTranslucides', 'trichomesLaiteux', 'trichomesAmbres', 'modeRecolte', 'poidsBrut', 'poidsNet', 'cultureMode', 'cultureSpaceType', 'cultureDuration', 'cultureSeason', 'cultureStartDate', 'cultureEndDate']
             },
             {
                 id: 'curing',
@@ -197,7 +208,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails complets',
                 icon: '📝',
-                modules: ['description', 'dureeEffet', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'author', 'date', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'dureeEffet', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'author', 'date', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ]
     },
@@ -247,7 +258,7 @@ export const PAGE_TEMPLATES = {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '16:9': [
@@ -285,7 +296,7 @@ export const PAGE_TEMPLATES = {
                 id: 'curing',
                 label: 'Curing & Maturation',
                 icon: '🔥',
-                modules: ['curing', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['curing', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '9:16': [
@@ -317,7 +328,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['tastes', 'texture', 'description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['tastes', 'texture', 'description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '4:3': [
@@ -355,7 +366,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ]
     },
@@ -403,7 +414,7 @@ export const PAGE_TEMPLATES = {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['description', 'terpenes', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'terpenes', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '16:9': [
@@ -441,7 +452,7 @@ export const PAGE_TEMPLATES = {
                 id: 'curing',
                 label: 'Curing & Maturation',
                 icon: '🔥',
-                modules: ['curing', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['curing', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '9:16': [
@@ -473,7 +484,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['tastes', 'texture', 'description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['tastes', 'texture', 'description', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ],
         '4:3': [
@@ -511,7 +522,7 @@ export const PAGE_TEMPLATES = {
                 id: 'details',
                 label: 'Détails',
                 icon: '📝',
-                modules: ['description', 'terpenes', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'terpenes', 'author', 'date', 'thcLevel', 'cbdLevel', 'thcaLevel', 'cbdaLevel', 'cbgLevel', 'cbcLevel', 'cbnLevel', 'thcvLevel', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse']
             }
         ]
     },
@@ -527,7 +538,7 @@ export const PAGE_TEMPLATES = {
                 id: 'recipe',
                 label: 'Recette',
                 icon: '📖',
-                modules: ['typeProduit', 'breeder', 'recipe', 'extraData', 'strainType', 'indicaRatio']
+                modules: ['typeProduit', 'breeder', 'recipe', 'extraData', 'strainType', 'indicaRatio', 'ingredients', 'etapesPreparation']
             },
             {
                 id: 'taste-effects',
@@ -539,7 +550,7 @@ export const PAGE_TEMPLATES = {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['description', 'author', 'date', 'phenoHuntView', 'productionChainView']
+                modules: ['description', 'author', 'date', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse', 'foodIntakeStatus']
             }
         ],
         '16:9': [
@@ -553,13 +564,13 @@ export const PAGE_TEMPLATES = {
                 id: 'recipe',
                 label: 'Recette',
                 icon: '📖',
-                modules: ['typeProduit', 'recipe', 'goutIntensity', 'extraData']
+                modules: ['typeProduit', 'recipe', 'goutIntensity', 'extraData', 'ingredients', 'etapesPreparation']
             },
             {
                 id: 'effects',
                 label: 'Effets & Expérience',
                 icon: '💥',
-                modules: ['effects', 'saveursProduit', 'saveursCannabis', 'dureeEffet', 'description', 'author', 'date', 'phenoHuntView', 'productionChainView']
+                modules: ['effects', 'saveursProduit', 'saveursCannabis', 'dureeEffet', 'description', 'author', 'date', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse', 'foodIntakeStatus']
             }
         ],
         '9:16': [
@@ -573,7 +584,7 @@ export const PAGE_TEMPLATES = {
                 id: 'recipe',
                 label: 'Recette',
                 icon: '📖',
-                modules: ['typeProduit', 'breeder', 'recipe', 'extraData', 'strainType', 'indicaRatio']
+                modules: ['typeProduit', 'breeder', 'recipe', 'extraData', 'strainType', 'indicaRatio', 'ingredients', 'etapesPreparation']
             },
             {
                 id: 'taste-effects',
@@ -585,7 +596,7 @@ export const PAGE_TEMPLATES = {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['saveursCannabis', 'description', 'author', 'date', 'phenoHuntView', 'productionChainView']
+                modules: ['saveursCannabis', 'description', 'author', 'date', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse', 'foodIntakeStatus']
             }
         ],
         '4:3': [
@@ -599,13 +610,13 @@ export const PAGE_TEMPLATES = {
                 id: 'recipe-effects',
                 label: 'Recette & Effets',
                 icon: '📖',
-                modules: ['typeProduit', 'recipe', 'goutIntensity', 'saveursProduit', 'effects', 'dureeEffet', 'extraData']
+                modules: ['typeProduit', 'recipe', 'goutIntensity', 'saveursProduit', 'effects', 'dureeEffet', 'extraData', 'ingredients', 'etapesPreparation']
             },
             {
                 id: 'experience',
                 label: 'Expérience',
                 icon: '✨',
-                modules: ['saveursCannabis', 'description', 'author', 'date', 'phenoHuntView', 'productionChainView']
+                modules: ['saveursCannabis', 'description', 'author', 'date', 'phenoHuntView', 'productionChainView', 'consumptionMethod', 'dosage', 'dosageUnit', 'effectOnset', 'effectProfiles', 'sideEffects', 'preferredUse', 'foodIntakeStatus']
             }
         ]
     }
