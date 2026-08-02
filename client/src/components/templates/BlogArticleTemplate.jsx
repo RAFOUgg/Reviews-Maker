@@ -19,6 +19,7 @@ import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid } from './sections/RegistrySections';
+import PipelineStepFields from './sections/PipelineStepFields';
 
 // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que ModernCompactTemplate
@@ -33,7 +34,6 @@ const PIPELINE_TYPE_BY_KEY = {
     pipelineSeparation: 'separation',
     separationTimelineData: 'separation',
 };
-const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 
 /**
@@ -452,21 +452,16 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                         {rawSteps.map((step, j) => {
                                             const label = step.label || step.date || step.semaine || step.phase || step.jour || `Étape ${j + 1}`;
                                             const fields = summarizeCellFields(pipelineType, step);
-                                            const noteField = fields.find((f) => NOTE_KEYS.has(f.key));
-                                            const metricFields = fields.filter((f) => f !== noteField);
                                             return (
-                                                <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '7px 10px', backgroundColor: colorWithOpacity(colors.accent, j % 2 === 0 ? 6 : 10), borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(j * 4, 35))}`, borderRadius: '0 8px 8px 0' }}>
+                                                <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '8px 10px', backgroundColor: colorWithOpacity(colors.accent, j % 2 === 0 ? 6 : 10), borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(j * 4, 35))}`, borderRadius: '0 8px 8px 0' }}>
                                                     <span style={{ flexShrink: 0, padding: '3px 7px', backgroundColor: colorWithOpacity(colors.accent, 22), borderRadius: 6, fontSize: '12px', fontWeight: '700', color: colors.accent, textAlign: 'center', whiteSpace: 'nowrap' }}>
                                                         {String(label)}
                                                     </span>
-                                                    <div style={{ flex: 1, display: 'flex', flexWrap: 'wrap', gap: 4, alignItems: 'center' }}>
-                                                        {metricFields.map((f) => (
-                                                            <span key={f.key} style={{ padding: '2px 6px', borderRadius: 4, backgroundColor: colorWithOpacity(colors.accent, 12), fontSize: '11px', color: colors.textSecondary }}>
-                                                                {f.label} : {f.value}
-                                                            </span>
-                                                        ))}
-                                                        {noteField && <div style={{ flex: '1 0 100%', fontSize: '11px', color: colors.textSecondary, fontStyle: 'italic', marginTop: 2 }}>💬 {noteField.value}</div>}
-                                                    </div>
+                                                    <PipelineStepFields
+                                                        fields={fields}
+                                                        fontSize={fontSize.small}
+                                                        colors={{ textSecondary: colors.textSecondary, textPrimary: colors.textPrimary }}
+                                                    />
                                                 </div>
                                             );
                                         })}

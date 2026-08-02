@@ -78,7 +78,20 @@ export const COLOR_PALETTES = {
 // ci-dessous sont celles réellement lues par `RegistrySections.jsx`/`DetailedCardTemplate.jsx`.
 export const TEMPLATE_MODULE_PRESETS = {
     modernCompact: {
-        // Essentiel seulement — aperçu compact
+        // Essentiel seulement — aperçu compact. Les 4 clés de pipeline (fertilizationPipeline/
+        // pipelineSeparation/pipelinePurification/pipelineExtraction) sont dans `enable`, pas
+        // `disable` — ce preset datait d'avant que `ModernCompactTemplate.jsx` gagne son propre
+        // rendu riche de pipeline ("Pipelines — riche avec métriques", 2026-07-27/28, avec
+        // `summarizeCellFields`/`PipelineStepFields`, au même niveau de détail que BlogArticle/
+        // DetailedCard) et n'avait jamais été mis à jour en conséquence. Conséquence trouvée le
+        // 2026-08-02 : sélectionner Moderne Compact désactivait `fertilizationPipeline` dans
+        // `contentModules` de façon GLOBALE (pas juste par page) — sans pagination, le pipeline
+        // Culture ne s'affichait donc jamais dans ce template ; avec pagination (le cas courant),
+        // la page dédiée "Culture" du gabarit `PAGE_TEMPLATES` (qui ne contient QUE des clés de
+        // pipeline/récolte, aucune autre section n'y étant jamais lue par ce template — voir
+        // `substrat`/`extraData`, calculés mais jamais rendus ici) se retrouvait 100% vide, alors
+        // que la même review/page fonctionnait sur BlogArticleTemplate/DetailedCardTemplate (dont
+        // les presets, eux, gardent ces clés actives).
         enable: [
             'title', 'mainImage', 'images', 'cultivar', 'cultivarsList',
             'farm', 'hashmaker', 'type',
@@ -89,12 +102,12 @@ export const TEMPLATE_MODULE_PRESETS = {
             'intensiteGoutScore', 'agressiviteScore',
             'monteeScore', 'intensiteEffetScore', 'effects',
             'curing',
+            'fertilizationPipeline', 'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
         ],
         disable: [
             'breeder', 'strainType', 'genetics',
             'cultureTimelineData', 'cultureTimelineConfig',
-            'pipelineSeparation', 'pipelinePurification', 'pipelineExtraction',
-            'fertilizationPipeline', 'substratMix', 'processing',
+            'substratMix', 'processing',
             'recipe', 'ingredients',
             'complexiteAromeScore', 'fideliteAromeScore', 'secondaryAromas',
             'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',

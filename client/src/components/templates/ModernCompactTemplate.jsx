@@ -21,6 +21,7 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid } from './sections/RegistrySections';
+import PipelineStepFields from './sections/PipelineStepFields';
 
 // Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
 // attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que DetailedCardTemplate.
@@ -34,7 +35,6 @@ const PIPELINE_TYPE_BY_KEY = {
     pipelineSeparation: 'separation',
     separationTimelineData: 'separation',
 };
-const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
 
 /**
  * ModernCompactTemplate - Template moderne et compact
@@ -441,8 +441,14 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 </div>
             )}
 
-            {/* Pipelines — riche avec métriques */}
-            {pipelines.length > 0 && (contentModules.pipelines !== false) && (
+            {/* Pipelines — riche avec métriques. `pipelines` (déjà filtré par
+                `filterVisiblePipelines(extractPipelines(reviewData), contentModules)` ci-dessus,
+                clé par clé réelle : fertilizationPipeline/pipelineCuring/pipelineExtraction/...) est
+                la seule porte de visibilité pertinente ici — `contentModules.pipelines` n'existe nulle
+                part dans `DEFAULT_CONFIG.contentModules` (vérifié 2026-08-02), donc `!== false` était
+                toujours vrai : condition redondante/trompeuse, retirée (BlogArticleTemplate.jsx n'a
+                d'ailleurs jamais eu cette 2e moitié de condition). */}
+            {pipelines.length > 0 && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
                     {pipelines.map((p, pi) => {
@@ -476,27 +482,25 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                     résumés via `summarizeCellFields` (même logique que le canevas Chaîne de
                                     production) plutôt que des noms devinés qui ne correspondaient pas aux
                                     vrais champs enregistrés par les formulaires (bug 2026-07-27). */}
-                                <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                                <div style={{ padding: `${spacing.gap}px`, display: 'flex', flexDirection: 'column', gap: 6 }}>
                                     {steps.map((step, si) => {
                                         const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
                                         const fields = summarizeCellFields(pipelineType, step);
-                                        const noteField = fields.find((f) => NOTE_KEYS.has(f.key));
-                                        const metricFields = fields.filter((f) => f !== noteField);
                                         return (
                                             <div key={si} style={{
-                                                display: 'flex', gap: 6, alignItems: 'flex-start', flexWrap: 'wrap',
-                                                padding: '4px 6px',
+                                                display: 'flex', gap: 8, alignItems: 'flex-start',
+                                                padding: '5px 7px',
                                                 borderLeft: `2px solid ${colorWithOpacity(colors.accent, 40 + Math.min(si * 5, 40))}`,
                                             }}>
-                                                <span style={{ fontSize: `${fontSize.small}px`, fontWeight: '700', color: colors.accent }}>
+                                                <span style={{ fontSize: `${fontSize.small}px`, fontWeight: '700', color: colors.accent, flexShrink: 0 }}>
                                                     {String(label)}
                                                 </span>
-                                                {metricFields.map((f) => (
-                                                    <span key={f.key} style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
-                                                        {f.label} : {f.value}
-                                                    </span>
-                                                ))}
-                                                {noteField && <span style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontStyle: 'italic', flexBasis: '100%' }}>💬 {noteField.value}</span>}
+                                                <PipelineStepFields
+                                                    fields={fields}
+                                                    compact={isSquare}
+                                                    fontSize={fontSize.small}
+                                                    colors={{ textSecondary: colors.textSecondary, textPrimary: colors.textPrimary }}
+                                                />
                                             </div>
                                         );
                                     })}

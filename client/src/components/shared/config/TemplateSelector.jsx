@@ -125,7 +125,12 @@ export default function TemplateSelector() {
                     })}
                 </div>
             </div>
-            {/* ── PAGINATION TOGGLE ── */}
+            {/* ── PAGINATION TOGGLE ── masqué pour `traceabilityReport` : ce template est toujours
+                rendu comme un document continu (shouldAutoLockPagination l'exempte explicitement,
+                2026-08-02) — le contrôle restait affiché et fonctionnel en apparence (créait une
+                session de N pages) sans jamais varier le contenu d'une page à l'autre, un contrôle
+                trompeur plutôt qu'un vrai bug de rendu (trouvé en vérification). */}
+            {config.template !== 'traceabilityReport' && (
             <div className={`liquid-card p-4 ${isPaginationLocked ? 'ring-2 ring-amber-400/60' : pagesEnabled ? 'ring-2 ring-indigo-400/60' : ''}`}>
                 <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">
@@ -164,6 +169,7 @@ export default function TemplateSelector() {
                     </motion.div>
                 )}
             </div>
+            )}
         </div>
     );
 }

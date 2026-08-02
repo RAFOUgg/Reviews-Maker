@@ -23,6 +23,7 @@ import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
 import SensoryRadar from './sections/SensoryRadar';
 import CultureStatsChart from './sections/CultureStatsChart';
+import PipelineStepFields from './sections/PipelineStepFields';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 
@@ -283,36 +284,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
-    // Icônes best-effort par identifiant de champ de pipeline (purement cosmétique).
-    const METRIC_ICONS = {
-        temperature: '🌡️', temp: '🌡️', temperatureDay: '🌡️', temperatureNight: '🌡️', temperatureEau: '🌡️',
-        humidity: '💧', ambientHumidity: '💧', humidite: '💧', hr: '💧',
-        co2: '☁️', co2Ppm: '☁️', vpd: '💨',
-        ppfd: '☀️', lightType: '☀️',
-        ph: '🧪', ec: '🧪',
-        container: '🫙', recipient: '🫙',
-        packaging: '📦', emballage: '📦',
-        action: '⚡', event: '⚡', evenement: '⚡',
-        method: '⚙️', methode: '⚙️', spaceType: '🏠', seedType: '🌱',
-    };
-    const NOTE_KEYS = new Set(['note', 'comment', 'commentaire']);
-
     const StepCard = ({ step, index, pipelineType }) => {
         const label = step.label || step.date || step.semaine || step.phase || step.jour || `${index + 1}`;
         const fields = summarizeCellFields(pipelineType, step);
-        const noteField = fields.find((f) => NOTE_KEYS.has(f.key));
-        const metricFields = fields.filter((f) => f !== noteField);
 
         return (
             <div style={{
-                display: 'flex', gap: isSquare ? 6 : 8, alignItems: 'flex-start',
-                padding: `${isSquare ? 6 : 8}px ${isSquare ? 8 : 10}px`,
+                display: 'flex', gap: isSquare ? 8 : 10, alignItems: 'flex-start',
+                padding: `${isSquare ? 8 : 10}px ${isSquare ? 10 : 12}px`,
                 background: surface,
+                borderRadius: 8,
                 borderLeft: `3px solid ${accent}`,
             }}>
                 <div style={{
                     flexShrink: 0, textAlign: 'center',
-                    padding: `3px ${isSquare ? 7 : 9}px`,
+                    padding: `4px ${isSquare ? 7 : 9}px`,
                     background: colorWithOpacity(accent, 16),
                     borderRadius: isSquare ? 5 : 7,
                     fontFamily: MONO,
@@ -321,28 +307,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 }}>
                     {String(label)}
                 </div>
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {metricFields.length > 0 && (
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                            {metricFields.map((f) => (
-                                <span key={f.key} style={{
-                                    display: 'inline-flex', alignItems: 'center', gap: 3,
-                                    padding: '3px 7px', borderRadius: 5,
-                                    background: colorWithOpacity(accent, 8),
-                                    border: `1px solid ${line}`,
-                                    fontSize: `${fontSize.small}px`, color: textSecondary,
-                                }}>
-                                    {METRIC_ICONS[f.key] || '•'} {f.label} : <span style={{ fontFamily: MONO }}>{f.value}</span>
-                                </span>
-                            ))}
-                        </div>
-                    )}
-                    {noteField && (
-                        <div style={{ fontSize: `${fontSize.small}px`, color: textSecondary, fontStyle: 'italic', lineHeight: '1.4' }}>
-                            💬 {noteField.value}
-                        </div>
-                    )}
-                </div>
+                <PipelineStepFields
+                    fields={fields}
+                    compact={isSquare}
+                    fontSize={fontSize.small}
+                    colors={{ textSecondary, textPrimary }}
+                />
             </div>
         );
     };

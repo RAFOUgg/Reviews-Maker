@@ -22,12 +22,30 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
     const cells = generatePipelineCells(config, type);
     if (cells.length === 0) return null;
 
+    // Trouve la ou les entrées réelles correspondant à une case générée par `generatePipelineCells`.
+    // Bug trouvé 2026-08-02 : pour les pipelines à intervalle 'phases' (culture/curing/séparation/
+    // extraction — voir `generatePipelineCells`), la case générée a `timestamp` = l'id de phase
+    // (`'phase-1'`...) MAIS les entrées réellement enregistrées par `PipelineDragDropView.jsx`
+    // portent cet id de phase dans leur propre champ `phase`, pas dans `timestamp` — `timestamp`
+    // y est un compteur d'occurrence (une phase peut avoir plusieurs entrées, ex. "Semaine 1" et
+    // "Semaine 2" toutes deux `phase: 'phase-1'`) ou un ancien identifiant `'legacy-phase-X'` sur
+    // les entrées créées avant une restructuration de formulaire. En ne comparant que sur
+    // `timestamp`, AUCUNE entrée ne matchait jamais une case de phase — "0/13 documentées" même
+    // avec des données réelles. Les pipelines à intervalle non-phase (jour/semaine/date/heure/...)
+    // continuent, eux, à écrire `timestamp` au même format que la case (`'day-3'`...), donc le
+    // matching par `timestamp` reste tenté en premier ; `phase` est un repli, pas un remplacement.
+    // Plusieurs entrées peuvent matcher la même case de phase (plusieurs semaines dans une même
+    // phase) — leurs champs sont fusionnés (dernière entrée prioritaire en cas de collision de clé)
+    // plutôt que de n'en montrer arbitrairement qu'une seule.
     const getCellFields = (timestamp) => {
-        const entry = data.find(d => d.timestamp === timestamp);
-        if (!entry) return null;
-        const fields = entry.data && typeof entry.data === 'object' ? { ...entry.data } : {};
-        Object.keys(entry).forEach(k => {
-            if (!['timestamp', 'date', 'label', 'phase', 'data', '_meta'].includes(k)) fields[k] = entry[k];
+        const matches = data.filter(d => d && (String(d.timestamp) === String(timestamp) || String(d.phase) === String(timestamp)));
+        if (matches.length === 0) return null;
+        const fields = {};
+        matches.forEach(entry => {
+            if (entry.data && typeof entry.data === 'object') Object.assign(fields, entry.data);
+            Object.keys(entry).forEach(k => {
+                if (!['timestamp', 'date', 'label', 'phase', 'data', '_meta'].includes(k)) fields[k] = entry[k];
+            });
         });
         return fields;
     };

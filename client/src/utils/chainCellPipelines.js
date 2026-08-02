@@ -81,8 +81,14 @@ export function getPipelineDefsForReviewType(reviewType) {
 
 // Métadonnée d'un champ (label/type/unit/options) pour construire un input d'édition — même
 // source que le formulaire de création (config *SidebarContent.js), pas de schéma dupliqué.
+// Repli sur `LEGACY_CULTURE_FIELD_ALIASES` (défini plus bas) pour les clés orphelines — sans ça,
+// un appelant de `getFieldMeta` (ex. `CultureStatsChart.jsx`) affiche encore la clé brute alors que
+// `summarizeCellFields`, qui appelle ce même repli, l'affiche correctement juste à côté sur la même
+// fiche (bug trouvé en vérification 2026-08-02).
 export function getFieldMeta(pipelineType, key) {
-    return FIELD_LOOKUPS[pipelineType]?.(key) || null
+    return FIELD_LOOKUPS[pipelineType]?.(key)
+        || (pipelineType === 'culture' ? LEGACY_CULTURE_FIELD_ALIASES[key] : null)
+        || null
 }
 
 // Convertit une config *SidebarContent.js (sections → items) au format attendu par
@@ -223,6 +229,24 @@ export function formatCellTimestamp(timestamp, config) {
     return ts
 }
 
+// Alias de champs "orphelins" (2026-08-02) : `temperature`/`humidity`/`co2Ppm`/`ph`/`ec` étaient
+// écrits par un ancien formulaire de saisie culture (`UnifiedPipeline.jsx`, supprimé du repo,
+// remplacé par `CulturePipelineDragDrop.jsx`/`cultureSidebarContent.js` avec des ids restructurés
+// `temperatureDay`/`temperatureNight`/`humidityDay`/`humidityNight`/`co2Level`) — confirmé par
+// recherche (aucun code vivant ni mort dans le repo ne produit encore ces clés ; seule la donnée
+// déjà enregistrée sur des reviews réelles antérieures au changement de formulaire les porte
+// encore). Sans repli, ces champs s'affichaient en clé brute non traduite ("co2Ppm : 800" au lieu
+// de "CO₂ : 800 ppm") dans tout export réel — trouvé sur une review de production (capture
+// utilisateur), pas seulement une donnée de test. `ph`/`ec` n'ont aucun équivalent actuel (jamais
+// remplacés par le nouveau formulaire), donc pas seulement un alias mais un vrai libellé neuf.
+const LEGACY_CULTURE_FIELD_ALIASES = {
+    temperature: { label: 'Température', unit: '°C' },
+    humidity: { label: 'Humidité', unit: '%' },
+    co2Ppm: { label: 'CO₂', unit: 'ppm' },
+    ph: { label: 'pH', unit: '' },
+    ec: { label: 'EC', unit: 'mS/cm' },
+}
+
 // Résumé lisible des champs remplis d'une cellule (ex: "Température: 22°C") — utilise les
 // mêmes libellés/unités que le formulaire de création (config *SidebarContent.js).
 export function summarizeCellFields(pipelineType, entry) {
@@ -230,7 +254,7 @@ export function summarizeCellFields(pipelineType, entry) {
     return Object.keys(entry || {})
         .filter(k => !META_KEYS.has(k) && entry[k] !== null && entry[k] !== undefined && entry[k] !== '')
         .map(k => {
-            const field = lookup?.(k)
+            const field = lookup?.(k) || (pipelineType === 'culture' ? LEGACY_CULTURE_FIELD_ALIASES[k] : null)
             const label = field?.label || k
             const unit = field?.unit ? ` ${field.unit}` : ''
             let value = entry[k]
@@ -457,7 +481,7 @@ export function getPipelineFillSummary(reviewFlat, reviewType) {
 
 /**
  * Point d'entrée unique du picker : dispatch selon la catégorie (timeline de pipeline vs
- * "Autres données" vs "Recette") — évite à ChainCellPickerModal de connaître ces distinctions.
+ * "Autres données" vs "Recette") — évite à ChainDataImportModal de connaître ces distinctions.
  */
 export function getCellsForPipelineDef(reviewFlat, pipelineDef, reviewType) {
     if (!pipelineDef) return []

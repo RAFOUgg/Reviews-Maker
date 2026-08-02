@@ -136,6 +136,24 @@ export default function PageManager({ embedded = false }) {
         loadDefaultPages(reviewType, currentRatio);
     };
 
+    // `traceabilityReport` est toujours rendu comme un document continu (`shouldAutoLockPagination`
+    // l'exempte explicitement, 2026-08-02) — le toggle "Activer la pagination" restait ici pleinement
+    // fonctionnel en apparence (crée une vraie session de N pages) sans jamais faire varier le
+    // contenu d'une page à l'autre, un contrôle trompeur plutôt qu'un vrai bug de rendu (trouvé en
+    // vérification). Retour anticipé plutôt que de garder chaque condition `pagesEnabled` ci-dessous
+    // individuellement inoffensive mais confuse.
+    if (config?.template === 'traceabilityReport') {
+        return (
+            <div className={embedded ? '' : 'h-full flex items-center justify-center p-4'}>
+                <div className="liquid-card p-4 text-center">
+                    <p className="text-xs text-white/60">
+                        Le Rapport de Traçabilité est toujours un document continu — la pagination ne s'y applique pas.
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={`flex flex-col ${embedded ? 'space-y-4' : 'h-full'}`}>
 
