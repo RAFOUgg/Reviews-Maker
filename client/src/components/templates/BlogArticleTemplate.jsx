@@ -65,6 +65,13 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const { isSquare, isA4, fontSize, padding, spacing, limits } = responsive;
     const glass = getGlassTokens(colors);
 
+    // Pagination adaptative (Phase C du plan de finition Export Maker, 2026-08-03) — même contrat
+    // que `DetailedCardTemplate.jsx` (le template pilote).
+    const pageModuleIds = config.pageModuleIds
+        ? (config.pageModuleIds instanceof Set ? config.pageModuleIds : new Set(config.pageModuleIds))
+        : null;
+    const isPageOn = (moduleId) => !pageModuleIds || pageModuleIds.has(moduleId);
+
     // Extraction des données - passer reviewData pour fallbacks
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = filterVisiblePipelines(extractPipelines(reviewData), contentModules);
@@ -149,12 +156,15 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     // exactement le patron `styles.section`/`styles.sectionTitle` déjà utilisé ~10x dans ce fichier,
     // pour que le gisement de données (récolte/culture/usage/procédés/recette/complémentaires,
     // Phase B du plan de finition Export Maker) s'intègre visuellement sans rien réinventer.
-    const Section = ({ title, icon, children }) => (
-        <div style={styles.section}>
-            <h2 style={styles.sectionTitle}>{icon} {title}</h2>
-            {children}
-        </div>
-    );
+    const Section = ({ title, icon, moduleId, children }) => {
+        if (moduleId && !isPageOn(moduleId)) return null;
+        return (
+            <div data-module={moduleId || undefined} style={styles.section}>
+                <h2 style={styles.sectionTitle}>{icon} {title}</h2>
+                {children}
+            </div>
+        );
+    };
 
     // Render étoiles inline
     const renderStarsInline = () => {
@@ -210,6 +220,9 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 transition={{ duration: 0.6 }}
                 className="max-w-4xl mx-auto"
             >
+                {/* Masthead : en-tête + image à la une + introduction, un seul `data-module`
+                    (pagination adaptative, Phase C) pour rester groupés sur la première page. */}
+                {isPageOn('masthead') && <div data-module="masthead">
                 {/* Header */}
                 <header className="mb-10">
                     {/* Category & Type */}
@@ -311,10 +324,11 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         </p>
                     </div>
                 )}
+                </div>}
 
                 {/* Quick Facts Box */}
-                {(contentModules.strainType || contentModules.indicaRatio) && (
-                    <div style={styles.infoBox}>
+                {isPageOn('sensoryEvaluation') && (contentModules.strainType || contentModules.indicaRatio) && (
+                    <div data-module="sensoryEvaluation" style={styles.infoBox}>
                         <h3 style={{ fontSize: `${fontSize.text + 2}px`, fontWeight: '700', color: colors.title, marginBottom: `${spacing.element * 2}px` }}>
                             📊 Fiche Technique Rapide
                         </h3>
@@ -335,12 +349,17 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     </div>
                 )}
 
-                {/* Profil cannabinoïde complet (THC/CBD + THCA/CBDA/CBG/CBC/CBN/THCV si renseignés) */}
-                <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+                {/* Profil cannabinoïde complet (THC/CBD + THCA/CBDA/CBG/CBC/CBN/THCV si renseignés) —
+                    isolé sur sa propre page comme DetailedCardTemplate.jsx (grille dense). */}
+                {isPageOn('cannabinoidProfile') && (
+                    <div data-module="cannabinoidProfile">
+                        <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+                    </div>
+                )}
 
                 {/* Category Ratings */}
-                {contentModules.categoryRatings && categoryRatings.length > 0 && (
-                    <div style={styles.section}>
+                {isPageOn('sensoryEvaluation') && contentModules.categoryRatings && categoryRatings.length > 0 && (
+                    <div data-module="sensoryEvaluation" style={styles.section}>
                         <h2 style={styles.sectionTitle}>🎯 Évaluation Détaillée</h2>
                         <div className="grid grid-cols-2 gap-x-8 gap-y-1">
                             {categoryRatings.map((r, i) => (
@@ -351,8 +370,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Provenance */}
-                {(contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker || contentModules.cultivarsList) && (
-                    <div style={styles.section}>
+                {isPageOn('provenance') && (contentModules.cultivar || contentModules.breeder || contentModules.farm || contentModules.hashmaker || contentModules.cultivarsList) && (
+                    <div data-module="provenance" style={styles.section}>
                         <h2 style={styles.sectionTitle}>🌱 Provenance</h2>
                         <div className="grid grid-cols-2 gap-4">
                             {contentModules.cultivar && reviewData.cultivar && (
@@ -374,6 +393,10 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     </div>
                 )}
 
+                {/* Profil aromatique : sensoriel + effets + terpènes regroupés sous un seul
+                    `data-module` (pagination adaptative, Phase C) — même id que
+                    `DetailedCardTemplate.jsx`. */}
+                {isPageOn('aromaticProfile') && <div data-module="aromaticProfile">
                 {/* Sensory Profile */}
                 {((contentModules.aromas && (aromas.length > 0 || secondaryAromas.length > 0)) || (contentModules.tastes !== false && (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0))) && (
                     <div style={styles.section}>
@@ -437,20 +460,28 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         {renderTags(terpenes)}
                     </div>
                 )}
+                </div>}
 
                 {/* Pipelines — toutes les étapes, toujours en détail (pas de mode compact en
                     carrés sans texte, pas de troncature de libellé) ; champs résumés via
                     `summarizeCellFields` (même logique que le canevas Chaîne de production)
                     plutôt que des noms de champs devinés qui ne correspondaient pas aux vrais
                     noms enregistrés par les formulaires (co2Ppm/ambientHumidity/ph/ec…). */}
-                {pipelines.length > 0 && (
+                {(() => {
+                    // Chaque pipeline porte son propre `data-module` (`pipeline:<key>`, même
+                    // vocabulaire que DetailedCardTemplate.jsx) — la pagination adaptative peut
+                    // ainsi répartir Culture/Curing/Extraction/Séparation sur des pages différentes
+                    // selon leur volume réel (Phase C).
+                    const pagePipelines = pipelines.filter((p) => isPageOn(`pipeline:${p.key}`));
+                    if (pagePipelines.length === 0) return null;
+                    return (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>⚗️ Processus de Production</h2>
-                        {pipelines.map((p, pi) => {
+                        {pagePipelines.map((p, pi) => {
                             const rawSteps = p.rawSteps || p.steps.map(s => ({ label: s }));
                             const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
                             return (
-                                <div key={pi} className="mb-6">
+                                <div key={pi} data-module={`pipeline:${p.key}`} className="mb-6">
                                     <div style={{
                                         display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
                                         padding: '10px 16px',
@@ -492,7 +523,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             );
                         })}
                     </div>
-                )}
+                    );
+                })()}
 
                 {/* Gisement complémentaire (récolte, usage, procédés, recette) — absent de ce
                     template jusqu'ici alors que Fiche Détaillée l'affiche déjà via le même
@@ -509,8 +541,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 />
 
                 {/* Substrat */}
-                {contentModules.substratMix && substrat.length > 0 && (
-                    <div style={styles.section}>
+                {isPageOn('substrat') && contentModules.substratMix && substrat.length > 0 && (
+                    <div data-module="substrat" style={styles.section}>
                         <h2 style={styles.sectionTitle}>🪴 Composition du Substrat</h2>
                         <div className="space-y-2">
                             {substrat.map((s, i) => (
@@ -531,8 +563,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Extra Data */}
-                {contentModules.extraData && extraData.length > 0 && (
-                    <div style={styles.section}>
+                {isPageOn('extraData') && contentModules.extraData && extraData.length > 0 && (
+                    <div data-module="extraData" style={styles.section}>
                         <h2 style={styles.sectionTitle}>📊 Caractéristiques Avancées</h2>
                         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                             {extraData.map((d, i) => (
@@ -550,15 +582,15 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
 
                 {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
-                {contentModules.phenoHuntView !== false && (
-                    <div style={styles.section}>
+                {contentModules.phenoHuntView !== false && isPageOn('genealogyCanvas') && (
+                    <div data-module="genealogyCanvas" style={styles.section}>
                         <ReadOnlyGenealogyCanvas reviewData={reviewData} height={170} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
                     </div>
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
-                {contentModules.productionChainView !== false && (
-                    <div style={styles.section}>
+                {contentModules.productionChainView !== false && isPageOn('productionChainCanvas') && (
+                    <div data-module="productionChainCanvas" style={styles.section}>
                         <ReadOnlyProductionChainCanvas reviewData={reviewData} height={170} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
                     </div>
                 )}

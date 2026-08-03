@@ -64,6 +64,16 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const { isSquare, isPortrait, isLandscape, fontSize, padding, spacing, limits } = responsive;
     const glass = getGlassTokens(colors);
 
+    // Pagination adaptative (Phase C du plan de finition Export Maker, 2026-08-03) — même contrat
+    // que `DetailedCardTemplate.jsx` (le template pilote) : `config.pageModuleIds` (Set/array d'ids
+    // ou absent) restreint quels blocs s'affichent sur CETTE page, orthogonal aux booléens
+    // `contentModules` existants. Absent (rendu normal/non paginé/mesure) : tout s'affiche, comme
+    // avant ce chantier.
+    const pageModuleIds = config.pageModuleIds
+        ? (config.pageModuleIds instanceof Set ? config.pageModuleIds : new Set(config.pageModuleIds))
+        : null;
+    const isPageOn = (moduleId) => !pageModuleIds || pageModuleIds.has(moduleId);
+
     // Données extraites - passer reviewData pour fallbacks
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const pipelines = filterVisiblePipelines(extractPipelines(reviewData), contentModules);
@@ -197,12 +207,15 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     // patron "libellé centré + contenu" déjà utilisé partout ailleurs dans ce template (ex. bloc
     // Terpènes juste au-dessus), pour que le gisement de données (Phase B du plan de finition
     // Export Maker) s'intègre sans rien réinventer.
-    const Section = ({ title, icon, children }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
-            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>{icon} {title}</div>
-            {children}
-        </div>
-    );
+    const Section = ({ title, icon, moduleId, children }) => {
+        if (moduleId && !isPageOn(moduleId)) return null;
+        return (
+            <div data-module={moduleId || undefined} style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
+                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>{icon} {title}</div>
+                {children}
+            </div>
+        );
+    };
 
     // Render branding
     const renderBranding = () => {
@@ -340,6 +353,11 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     const renderContent = () => (
         <>
+            {/* Masthead : titre/type/note/profil cannabinoïde/catégorie/provenance/parentage — un
+                seul bloc `data-module="masthead"` (pagination adaptative, Phase C) pour rester
+                groupé sur la première page, comme la couverture de `DetailedCardTemplate.jsx`. */}
+            {isPageOn('masthead') && (
+            <div data-module="masthead" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.element}px`, flexShrink: 0 }}>
             {/* Titre + Type */}
             <div className="text-center" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                 {contentModules.type && reviewData.type && (
@@ -398,18 +416,26 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     </div>
                 ) : null;
             })()}
+            </div>
+            )}
 
             {/* Category Ratings */}
-            {contentModules.categoryRatings && (
-                categoryRatings.length > 0 ? (
+            {isPageOn('sensoryEvaluation') && contentModules.categoryRatings && (
+                <div data-module="sensoryEvaluation">
+                {categoryRatings.length > 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: isSquare ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.element}px`, flexShrink: 0 }}>
                         {categoryRatings.map((r, i) => (
                             <ScoreMetric key={i} label={r.label} value={r.value} icon={r.icon} fontSize={fontSize.small} colors={colors} compact={isSquare} />
                         ))}
                     </div>
-                ) : renderEmptyHint('📊', 'Notes par catégorie')
+                ) : renderEmptyHint('📊', 'Notes par catégorie')}
+                </div>
             )}
 
+            {/* Profil aromatique : effets/arômes/goûts/terpènes regroupés sous un seul `data-module`
+                (pagination adaptative, Phase C) — même id que `DetailedCardTemplate.jsx`. */}
+            {isPageOn('aromaticProfile') && (
+            <div data-module="aromaticProfile" style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.element}px`, flexShrink: 0 }}>
             {/* Effects */}
             {contentModules.effects && (
                 effects.length > 0 ? (
@@ -457,6 +483,8 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     {renderTags(terpenes)}
                 </div>
             )}
+            </div>
+            )}
 
             {/* Gisement complémentaire (récolte, culture, usage, procédés, recette, données
                 complémentaires) — absent de ce template jusqu'ici alors que Fiche Détaillée
@@ -479,14 +507,21 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 part dans `DEFAULT_CONFIG.contentModules` (vérifié 2026-08-02), donc `!== false` était
                 toujours vrai : condition redondante/trompeuse, retirée (BlogArticleTemplate.jsx n'a
                 d'ailleurs jamais eu cette 2e moitié de condition). */}
-            {pipelines.length > 0 && (
+            {(() => {
+                // Chaque pipeline porte son propre `data-module` (`pipeline:<key>`, même vocabulaire
+                // que DetailedCardTemplate.jsx) — la pagination adaptative peut ainsi répartir
+                // Culture/Curing/Extraction/Séparation sur des pages différentes selon leur volume
+                // réel, au lieu du bloc "Pipelines" monolithique d'avant ce chantier (Phase C).
+                const pagePipelines = pipelines.filter((p) => isPageOn(`pipeline:${p.key}`));
+                if (pagePipelines.length === 0) return null;
+                return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
-                    {pipelines.map((p, pi) => {
+                    {pagePipelines.map((p, pi) => {
                         const steps = p.rawSteps || p.steps.map(s => ({ label: s }));
                         const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
                         return (
-                            <div key={pi} style={{
+                            <div key={pi} data-module={`pipeline:${p.key}`} style={{
                                 borderRadius: isSquare ? 16 : 20,
                                 background: glass.background,
                                 border: `1px solid ${glass.border}`,
@@ -540,21 +575,27 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         );
                     })}
                 </div>
-            )}
+                );
+            })()}
 
             {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
-            {contentModules.phenoHuntView !== false && (
-                <ReadOnlyGenealogyCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
+            {contentModules.phenoHuntView !== false && isPageOn('genealogyCanvas') && (
+                <div data-module="genealogyCanvas">
+                    <ReadOnlyGenealogyCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
+                </div>
             )}
 
             {/* Vue interactive Chaîne de production — même logique de masquage async */}
-            {contentModules.productionChainView !== false && (
-                <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
+            {contentModules.productionChainView !== false && isPageOn('productionChainCanvas') && (
+                <div data-module="productionChainCanvas">
+                    <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
+                </div>
             )}
 
             {/* Description */}
-            {contentModules.description && reviewData.description && (
+            {contentModules.description && reviewData.description && isPageOn('description') && (
                 <p
+                    data-module="description"
                     style={{
                         ...styles.text,
                         textAlign: 'center',

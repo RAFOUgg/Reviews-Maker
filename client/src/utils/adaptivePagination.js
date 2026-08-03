@@ -30,6 +30,19 @@ export const MODULE_META = {
     productionChainCanvas: { label: 'Chaîne de production', icon: '⚙️' },
     pipelineDetailGrids: { label: 'Pipelines — détail', icon: '🗓️' },
     extraData: { label: 'Données complémentaires', icon: '➕' },
+    // Ids propres au rollout Phase C (2026-08-03) sur ModernCompact/BlogArticle/SocialStory —
+    // pas de composant Section commun entre les 3 templates statiques, donc chacun a introduit
+    // localement l'id qui correspond le mieux à sa propre structure plutôt que de forcer un
+    // vocabulaire partagé qui n'aurait pas matché leur mise en page réelle.
+    identity: { label: 'Identité', icon: '🪪' },
+    provenance: { label: 'Provenance', icon: '📍' },
+    substrat: { label: 'Substrat', icon: '🪴' },
+    // Distinct de `cannabinoidProfile` (grille dense 8 cannabinoïdes, forcée isolée ci-dessous) :
+    // paire de mini-cartes THC/CBD sur SocialStory, volontairement PAS isolée pour rester compacte.
+    thcCbdMini: { label: 'THC/CBD', icon: '🧪' },
+    // Photo hero SEULE (SocialStory) — distinct de `masthead` (bloc combiné photo+titre+note des
+    // autres templates), volontairement PAS isolée pour pouvoir se combiner avec `identity`.
+    heroImage: { label: 'Photo', icon: '📸' },
     'gisement:harvest': { label: 'Récolte', icon: '🌾' },
     'gisement:culture': { label: 'Culture', icon: '🌱' },
     'gisement:usage': { label: 'Usage', icon: '💨' },

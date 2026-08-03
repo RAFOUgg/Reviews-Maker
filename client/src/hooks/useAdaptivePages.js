@@ -4,10 +4,13 @@ import { shouldAutoLockPagination, getResponsiveAdjustments } from '../utils/exp
 import { computeAdaptivePages } from '../utils/adaptivePagination';
 import { measureDetailedCardModules } from '../components/templates/measureDetailedCardModules';
 
-// Pilote (2026-07-31) : la pagination adaptative n'est câblée QUE pour `detailedCard`, cohérent
-// avec le reste de la refonte DA "COA v2" qui a commencé par un template pilote avant tout rollout
-// éventuel. Les 4 autres templates gardent `PAGE_TEMPLATES` (statique, `getDefaultPages`).
-const ADAPTIVE_TEMPLATES = new Set(['detailedCard']);
+// Pilote (2026-07-31) : la pagination adaptative a d'abord été câblée sur `detailedCard` seul,
+// cohérent avec le reste de la refonte DA "COA v2" qui a commencé par un template pilote avant
+// tout rollout. Étendue (Phase C, 2026-08-03) à `modernCompact`/`blogArticle`/`socialStory` — les
+// 3 templates statiques restants équipés du même contrat `data-module`/`isPageOn` (voir
+// `measureDetailedCardModules.jsx`/`TEMPLATE_COMPONENTS`). `traceabilityReport` reste hors
+// pagination (document continu qui défile, jamais paginé — voir `shouldAutoLockPagination`).
+const ADAPTIVE_TEMPLATES = new Set(['detailedCard', 'modernCompact', 'blogArticle', 'socialStory']);
 
 // Cache partagé de mesure (Chantier D, correctif 2026-07-31) : `ExportMakerPanel.jsx` (aperçu
 // Studio) et `ExportModal.jsx` (export standalone/pages hors-écran) montent CHACUN leur propre

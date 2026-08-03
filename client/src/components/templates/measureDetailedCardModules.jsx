@@ -1,13 +1,23 @@
 import { createRoot } from 'react-dom/client';
 import DetailedCardTemplate from './DetailedCardTemplate';
+import ModernCompactTemplate from './ModernCompactTemplate';
+import BlogArticleTemplate from './BlogArticleTemplate';
+import SocialStoryTemplate from './SocialStoryTemplate';
 import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 
-// Délai de stabilisation avant mesure — même ordre de grandeur que le délai déjà utilisé ailleurs
-// dans Export Maker pour laisser React Flow terminer son `fitView()` avant capture
-// (`ProductionChainCanvas.handleExportSVG`) ; couvre aussi le chargement de l'image principale et
-// le premier paint de Recharts (`CultureStatsChart`).
-const STABILIZE_DELAY_MS = 700;
+// Délai de stabilisation avant mesure — couvre le chargement de l'image principale, le premier
+// paint de Recharts (`CultureStatsChart`) et React Flow qui termine son `fitView()`.
+// Durci 700ms → 1500ms (Phase C, rollout à 3 templates supplémentaires, 2026-08-03) :
+// `ReadOnlyGenealogyCanvas`/`ReadOnlyProductionChainCanvas` font CHACUN jusqu'à 2 fetch réseau
+// séquentiels (liste puis détail) avant de poser leurs données en state et se rendre — tant que ces
+// fetch n'ont pas résolu, le composant rend `null` (hauteur mesurée nulle), et `computeAdaptivePages`
+// exclut silencieusement tout module dont la hauteur mesurée est ~0 (`entries.filter(h > 4)`), le
+// pire des modes de défaillance déjà documenté sur ce chantier (disparition, pas débordement). Trouvé
+// en vérification (Story Social Media, ratio 1:1) : "Chaîne de production" absent de tout export
+// alors que présent en 9:16 pour la même review — course perdue entre les 2 fetch et le délai de
+// stabilisation. 700ms ne laissait pas de marge pour 2 aller-retours réseau séquentiels.
+const STABILIZE_DELAY_MS = 1500;
 
 // `document.fonts.ready` (Font Loading API, tous navigateurs évergreens) — la Fiche Technique
 // Détaillée charge Space Grotesk/JetBrains Mono via Google Fonts (`client/index.html`, correctif
@@ -22,13 +32,29 @@ function waitForFonts() {
     return document.fonts.ready.catch(() => {});
 }
 
+// Registre des composants de template mesurables (Phase C du plan de finition Export Maker,
+// 2026-08-03) — `measureTemplateModules` était jusqu'ici câblé en dur sur `DetailedCardTemplate`
+// (pilote de la pagination adaptative). Généralisé pour accepter n'importe quel template déjà
+// équipé du même contrat (`data-module` sur ses blocs + `isPageOn(pageModuleIds)`), sans dupliquer
+// la logique de montage hors-écran/mesure/nettoyage ci-dessous pour chacun.
+const TEMPLATE_COMPONENTS = {
+    detailedCard: DetailedCardTemplate,
+    modernCompact: ModernCompactTemplate,
+    blogArticle: BlogArticleTemplate,
+    socialStory: SocialStoryTemplate,
+};
+
+export function registerMeasurableTemplate(id, Component) {
+    TEMPLATE_COMPONENTS[id] = Component;
+}
+
 /**
- * Mesure réellement la hauteur rendue de chaque bloc `data-module` de `DetailedCardTemplate` — un
- * mécanisme qui n'existait nulle part dans le code avant ce chantier (`getResponsiveAdjustments` ne
- * fait que redimensionner en place, jamais mesurer). Monte un rendu complet (tous les modules
- * activés, `pageModuleIds` désactivé) dans un conteneur hors-écran à la largeur réelle du ratio
- * ciblé, attend la stabilisation, lit `getBoundingClientRect()` sur chaque `[data-module]`, puis
- * démonte et nettoie.
+ * Mesure réellement la hauteur rendue de chaque bloc `data-module` du template ciblé
+ * (`config.template`) — un mécanisme qui n'existait nulle part dans le code avant ce chantier
+ * (`getResponsiveAdjustments` ne fait que redimensionner en place, jamais mesurer). Monte un rendu
+ * complet (tous les modules activés, `pageModuleIds` désactivé) dans un conteneur hors-écran à la
+ * largeur réelle du ratio ciblé, attend la stabilisation, lit `getBoundingClientRect()` sur chaque
+ * `[data-module]`, puis démonte et nettoie.
  *
  * @param {Object} reviewData
  * @param {Object} config - config Export Maker (template/ratio/typography/colors/contentModules...)
@@ -40,6 +66,7 @@ export function measureDetailedCardModules(reviewData, config) {
             resolve(new Map());
             return;
         }
+        const TemplateComponent = TEMPLATE_COMPONENTS[config?.template] || DetailedCardTemplate;
         const dims = RATIO_DIMENSIONS[config?.ratio] || RATIO_DIMENSIONS['1:1'];
 
         const host = document.createElement('div');
@@ -66,7 +93,7 @@ export function measureDetailedCardModules(reviewData, config) {
             // l'aperçu Studio (mesuré) même s'ils s'affichent très bien via le bouton "Exporter"
             // autonome (qui, lui, applique déjà l'adaptateur) — bug trouvé en vérification 2026-08-02.
             const adaptedReviewData = buildExportReviewData(reviewData);
-            root.render(<DetailedCardTemplate config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />);
+            root.render(<TemplateComponent config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />);
         } catch (err) {
             if (host.parentNode) host.parentNode.removeChild(host);
             reject(err);

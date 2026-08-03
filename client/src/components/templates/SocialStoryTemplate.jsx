@@ -54,6 +54,13 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { fontSize, limits } = responsive;
 
+    // Pagination adaptative (Phase C du plan de finition Export Maker, 2026-08-03) — même contrat
+    // que `DetailedCardTemplate.jsx` (le template pilote).
+    const pageModuleIds = config.pageModuleIds
+        ? (config.pageModuleIds instanceof Set ? config.pageModuleIds : new Set(config.pageModuleIds))
+        : null;
+    const isPageOn = (moduleId) => !pageModuleIds || pageModuleIds.has(moduleId);
+
     // Données
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData).slice(0, limits.maxCategoryRatings);
     const aromas = asArray(reviewData.aromas).slice(0, limits.maxTags);
@@ -141,8 +148,16 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 cf. PAGE_TEMPLATES). Résultat observé en vérification : un gros 🌿 esseulé occupant
                 38% d'une page par ailleurs quasi vide. Le hero (image OU placeholder) ne se rend
                 plus du tout si la page a explicitement désactivé `mainImage`. */}
-            {contentModules.mainImage === false ? null : mainImage ? (
-                <div style={{ position: 'relative', width: '100%', flex: '0 0 38%', overflow: 'hidden' }}>
+            {/* id `heroImage` DÉLIBÉRÉMENT distinct de `masthead` (utilisé par DetailedCard/
+                ModernCompact pour un bloc COMBINÉ photo+titre+note) : ici le hero n'est QUE la
+                photo, sans texte — le forcer dans `ALWAYS_ISOLATE` produisait une page 1 quasi
+                vide (photo seule, grand espace en dessous) puisque le titre/note vivent dans le
+                module `identity` juste après, qui ne pouvait jamais la rejoindre (bug trouvé en
+                vérification Phase C, 2026-08-03). Pas d'isolement forcé ici : `heroImage` peut se
+                combiner avec `identity` si le budget de page le permet, recréant une vraie page de
+                couverture photo+titre+note. */}
+            {!isPageOn('heroImage') ? null : contentModules.mainImage === false ? null : mainImage ? (
+                <div data-module="heroImage" style={{ position: 'relative', width: '100%', flex: '0 0 38%', overflow: 'hidden' }}>
                     <img
                         src={mainImage}
                         alt=""
@@ -183,7 +198,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 </div>
             ) : (
                 /* Placeholder si pas d'image */
-                <div style={{
+                <div data-module="heroImage" style={{
                     flex: '0 0 38%',
                     background: colorWithOpacity(accent, 15),
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -197,6 +212,10 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 flex: 1, display: 'flex', flexDirection: 'column',
                 padding: `${responsive.padding.container}px`, overflow: 'hidden', gap: responsive.spacing.section,
             }}>
+                {/* Identité : titre/cultivar/farm + note — un seul `data-module` (pagination
+                    adaptative, Phase C). */}
+                {isPageOn('identity') && (
+                <div data-module="identity" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {/* Title & meta */}
                 <div>
                     {contentModules.title && title && (
@@ -235,11 +254,18 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         </span>
                     </div>
                 )}
+                </div>
+                )}
 
-                {/* THC / CBD */}
-                {(contentModules.thcLevel || contentModules.cbdLevel) &&
+                {/* THC / CBD — id DÉLIBÉRÉMENT distinct de `cannabinoidProfile` (utilisé par
+                    DetailedCard/BlogArticle pour la grille complète 8 cannabinoïdes) : ce bloc n'est
+                    qu'une paire de mini-cartes, pas la grille dense qui justifie l'isolement forcé
+                    de `ALWAYS_ISOLATE` (`adaptivePagination.js`) — réutiliser le même id forçait ce
+                    petit bloc seul sur sa propre page, coincé entre `masthead` et le reste, produisant
+                    des pages quasi vides (bug trouvé en vérification Phase C, 2026-08-03). */}
+                {isPageOn('thcCbdMini') && (contentModules.thcLevel || contentModules.cbdLevel) &&
                     (reviewData.thcLevel || reviewData.cbdLevel || reviewData.thc || reviewData.cbd) && (
-                        <div style={{ display: 'flex', gap: 10 }}>
+                        <div data-module="thcCbdMini" style={{ display: 'flex', gap: 10 }}>
                             {(reviewData.thcLevel || reviewData.thc) && (
                                 <div style={{
                                     flex: 1, padding: '8px 12px', borderRadius: 14,
@@ -268,8 +294,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     )}
 
                 {/* Category Rating Bars */}
-                {contentModules.categoryRatings && categoryRatings.length > 0 && (
-                    <div style={{
+                {isPageOn('sensoryEvaluation') && contentModules.categoryRatings && categoryRatings.length > 0 && (
+                    <div data-module="sensoryEvaluation" style={{
                         padding: '10px 14px', borderRadius: 16,
                         background: cardBg, border: `1px solid ${cardBorder}`,
                         ...cardGlassStyle,
@@ -281,20 +307,22 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Labo — résumé compact (texte, pas de grille), gap trouvé en audit 2026-08-02 :
                     aucune donnée labo n'apparaissait sur Story alors qu'un rapport de traçabilité en
                     a besoin même en format court. */}
-                {(reviewData.labName || reviewData.labMethod || reviewData.labAccredited !== undefined) && (
-                    <div style={{ fontSize: fontSize.small, color: whiteMuted }}>
+                {isPageOn('labData') && (reviewData.labName || reviewData.labMethod || reviewData.labAccredited !== undefined) && (
+                    <div data-module="labData" style={{ fontSize: fontSize.small, color: whiteMuted }}>
                         🔬 {[reviewData.labName, reviewData.labAccredited ? 'accrédité' : null].filter(Boolean).join(' · ')}
                     </div>
                 )}
 
                 {/* Un seul groupe gisement pertinent selon le type de produit (voir
                     RELEVANT_GROUP_BY_TYPE) — sous-ensemble volontairement réduit, pas le rollout
-                    complet des 3 autres templates (format trop contraint pour les 8 groupes). */}
+                    complet des 3 autres templates (format trop contraint pour les 8 groupes). Le
+                    groupe varie par type de review, donc son `data-module` (`gisement:<groupe>`)
+                    aussi — même vocabulaire que les autres templates. */}
                 {(() => {
                     const rel = RELEVANT_GROUP_BY_TYPE[normalizeReviewType(reviewData.type)];
-                    if (!rel) return null;
+                    if (!rel || !isPageOn(`gisement:${rel.group}`)) return null;
                     const Section = ({ children }) => (
-                        <div>
+                        <div data-module={`gisement:${rel.group}`}>
                             <div style={{ fontSize: fontSize.small, color: whiteMuted, fontWeight: 600, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                                 {rel.icon} {rel.label}
                             </div>
@@ -314,6 +342,9 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     );
                 })()}
 
+                {/* Effets/arômes/goûts regroupés sous un seul `data-module` (pagination adaptative,
+                    Phase C) — même id que les 2 autres templates. */}
+                {isPageOn('aromaticProfile') && <div data-module="aromaticProfile" style={{ display: 'flex', flexDirection: 'column', gap: responsive.spacing.element }}>
                 {/* Effects */}
                 {contentModules.effects && effects.length > 0 && (
                     <div>
@@ -349,16 +380,21 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         </div>
                     </div>
                 )}
+                </div>}
 
                 {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié.
                     Format story très contraint verticalement : mode compact, pas de section dédiée. */}
-                {contentModules.phenoHuntView !== false && (
-                    <ReadOnlyGenealogyCanvas reviewData={reviewData} height={200} accentColor={accent} titleColor={colors.title || white} textColor={colors.textSecondary || white} />
+                {contentModules.phenoHuntView !== false && isPageOn('genealogyCanvas') && (
+                    <div data-module="genealogyCanvas">
+                        <ReadOnlyGenealogyCanvas reviewData={reviewData} height={200} accentColor={accent} titleColor={colors.title || white} textColor={colors.textSecondary || white} />
+                    </div>
                 )}
 
                 {/* Vue interactive Chaîne de production — même logique de masquage async */}
-                {contentModules.productionChainView !== false && (
-                    <ReadOnlyProductionChainCanvas reviewData={reviewData} height={200} accentColor={accent} titleColor={colors.title || white} textColor={colors.textSecondary || white} />
+                {contentModules.productionChainView !== false && isPageOn('productionChainCanvas') && (
+                    <div data-module="productionChainCanvas">
+                        <ReadOnlyProductionChainCanvas reviewData={reviewData} height={200} accentColor={accent} titleColor={colors.title || white} textColor={colors.textSecondary || white} />
+                    </div>
                 )}
 
                 {/* Spacer */}
