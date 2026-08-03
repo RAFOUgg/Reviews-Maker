@@ -249,8 +249,14 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             // Layout paysage : image à gauche, contenu à droite
             return (
                 <div className="flex h-full" style={{ gap: `${spacing.section}px` }}>
-                    {/* Image */}
-                    {contentModules.mainImage !== false && mainImage && (() => {
+                    {/* Image — `data-module="mainImage"` + `isPageOn()` (Phase C, correctif 2026-08-03) :
+                        ce bloc n'avait jusqu'ici AUCUN id mesurable et se rendait sans condition sur
+                        CHAQUE page adaptative — sa hauteur (jusqu'à 100% de la colonne) n'était donc
+                        jamais comptée dans le budget de `computeAdaptivePages`, provoquant un
+                        débordement systématique du canevas (contenu réellement plus haut que mesuré)
+                        et un nombre de pages gonflé artificiellement (trouvé en vérification sur une
+                        review réelle en prod, ratio 1:1). */}
+                    {contentModules.mainImage !== false && mainImage && isPageOn('mainImage') && (() => {
                         const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
                         const imageFrameStyle = {
                             border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
@@ -262,7 +268,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         };
                         if (showGallery) {
                             return (
-                                <div className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
+                                <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
                                     {reviewData.images.slice(0, 2).map((img, ii) => (
                                         <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
                                             <img src={img} alt="" className="w-full h-full object-cover" />
@@ -272,7 +278,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             );
                         }
                         return (
-                            <div className="flex-shrink-0 w-2/5 h-full">
+                            <div data-module="mainImage" className="flex-shrink-0 w-2/5 h-full">
                                 <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
                                     <img src={mainImage} alt="" className="w-full h-full object-cover" />
                                 </div>
@@ -291,11 +297,19 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         // Layout portrait/carré : vertical — adaptatif selon la quantité de contenu
         return (
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
-                {/* Image */}
-                {contentModules.mainImage !== false && (() => {
+                {/* Image — `data-module="mainImage"` + `isPageOn()` (Phase C, correctif 2026-08-03) :
+                    ce bloc n'avait jusqu'ici AUCUN id mesurable et se rendait sans condition sur
+                    CHAQUE page adaptative — sa hauteur (jusqu'à `responsive.image.maxHeight`,
+                    souvent une part importante du canevas en 1:1) n'était donc jamais comptée dans
+                    le budget de `computeAdaptivePages`, provoquant un débordement systématique
+                    (contenu réellement plus haut que mesuré, rendu "scrollable"/coupé) et un nombre
+                    de pages gonflé artificiellement (trouvé en vérification sur une review réelle en
+                    prod, template Moderne Compact, ratio 1:1). */}
+                {contentModules.mainImage !== false && isPageOn('mainImage') && (() => {
                     if (!mainImage) {
                         return (
                             <div
+                                data-module="mainImage"
                                 className="w-full flex-shrink-0 flex items-center justify-center"
                                 style={{
                                     borderRadius: `${responsive.image.borderRadius}px`,
@@ -320,7 +334,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     };
                     if (showGallery) {
                         return (
-                            <div className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
+                            <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
                                 {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
                                         <img src={img} alt="" className="w-full h-full object-cover" />
@@ -331,6 +345,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     }
                     return (
                         <div
+                            data-module="mainImage"
                             className="w-full flex-shrink-0 overflow-hidden"
                             style={{
                                 borderRadius: `${responsive.image.borderRadius}px`,
@@ -632,7 +647,15 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
     return (
         <div className="relative w-full h-full overflow-hidden" style={styles.container}>
-            <div className={`w-full h-full ${isSquare || isPortrait ? 'overflow-y-auto' : 'overflow-hidden'}`}>
+            {/* `overflow-hidden` inconditionnel, jamais `overflow-y-auto` (corrigé 2026-08-03, retour
+                utilisateur sur un export réel en prod, ratio 1:1) : ce fallback datait d'avant la
+                pagination adaptative (Phase C) — désormais câblée sur ce template, elle est censée
+                éliminer tout débordement en amont. Un scroll interne masquait silencieusement du
+                contenu (dont l'image principale, dont la hauteur n'était alors même pas comptée
+                dans le budget de pagination — cf. `data-module="mainImage"` ci-dessus) au lieu de le
+                répartir sur une page supplémentaire, contraire au principe "aucun rendu ne doit être
+                scrollable". */}
+            <div className="w-full h-full overflow-hidden">
                 {renderLayout()}
             </div>
             {renderBranding()}

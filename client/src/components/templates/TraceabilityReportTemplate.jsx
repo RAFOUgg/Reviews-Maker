@@ -4,14 +4,16 @@ import {
     colorWithOpacity,
     formatDate,
     getResponsiveAdjustments,
+    safeParse,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
+import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
-import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import TemplateSection from './sections/TemplateSection';
+import PipelineStepFields from './sections/PipelineStepFields';
 import { CannabinoidGrid, getCannabinoidItems, GisementSections } from './sections/RegistrySections';
 
 const BUSINESS_TYPE_LABELS = {
@@ -311,17 +313,56 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 <ReadOnlyGenealogyCanvas reviewData={reviewData} height={340} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
             </div>
 
-            {/* Pipelines documentés */}
+            {/* Pipelines documentés — grille de cellules affichant directement les données de
+                chaque étape (icône/libellé/valeur, via `PipelineStepFields`, déjà le composant
+                partagé utilisé par les 4 autres templates), plutôt que l'ancienne grille de
+                pastilles `PipelineMiniGrid` (interactive "cliquer pour révéler", pertinente dans
+                l'aperçu Studio mais MUETTE une fois figée en export statique — un rapport de
+                traçabilité en PDF/PNG ne peut pas être cliqué). Corrigé 2026-08-03 suite à un
+                retour utilisateur sur un export réel en prod. */}
             {activeTimelines.length > 0 && (
-                <Section title="Pipelines documentés" icon="📅">
+                <Section title="Processus de production" icon="📅">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.section }}>
-                        {activeTimelines.map(t => (
-                            <PipelineMiniGrid
-                                key={t.type} type={t.type} name={t.name} icon={t.icon}
-                                timelineData={reviewData[t.dataKey]} timelineConfig={reviewData[t.configKey]}
-                                accentColor={colors.accent}
-                            />
-                        ))}
+                        {activeTimelines.map((t) => {
+                            const steps = safeParse(reviewData[t.dataKey], []);
+                            if (!Array.isArray(steps) || steps.length === 0) return null;
+                            return (
+                                <div key={t.type}>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: spacing.gap,
+                                        marginBottom: 6, fontSize: `${fontSize.text}px`, fontWeight: 700, color: colors.title,
+                                    }}>
+                                        <span>{t.icon}</span>
+                                        <span style={{ flex: 1 }}>{t.name}</span>
+                                        <span style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: 600 }}>{steps.length} étapes</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
+                                        {steps.map((step, si) => {
+                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
+                                            const fields = summarizeCellFields(t.type, step);
+                                            return (
+                                                <div key={si} style={{
+                                                    background: colorWithOpacity(colors.accent, 6),
+                                                    borderRadius: 8,
+                                                    padding: '8px 10px',
+                                                    borderLeft: `3px solid ${colors.accent}`,
+                                                }}>
+                                                    <div style={{ fontSize: `${fontSize.small}px`, fontWeight: 700, color: colors.accent, marginBottom: 4 }}>
+                                                        {String(label)}
+                                                    </div>
+                                                    <PipelineStepFields
+                                                        fields={fields}
+                                                        compact
+                                                        fontSize={fontSize.small}
+                                                        colors={{ textSecondary: colors.textSecondary, textPrimary: colors.textPrimary }}
+                                                    />
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </Section>
             )}

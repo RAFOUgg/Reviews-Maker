@@ -392,8 +392,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const cultureSteps = Array.isArray(reviewData.cultureTimelineData) ? reviewData.cultureTimelineData : null;
     const chartWidth = Math.round((canvasDims.width - padding.container * 2) * (stacked ? 1 : 0.9));
 
+    // `overflow-hidden`, jamais `overflow-auto` (corrigé 2026-08-03, retour utilisateur sur un
+    // export réel en prod) : ce canevas est déjà à hauteur fixe (`TemplateRenderer.jsx`) et la
+    // pagination adaptative est censée éliminer tout débordement en amont — un scroll interne
+    // masquait silencieusement du contenu dans l'aperçu Studio au lieu de le rendre visible via
+    // une page supplémentaire, contraire au principe "aucun rendu ne doit être scrollable".
     return (
-        <div className="relative w-full h-full overflow-auto" style={{ background: bg, fontFamily: 'Inter, sans-serif', color: textPrimary, padding: `${padding.container}px` }}>
+        <div className="relative w-full h-full overflow-hidden" style={{ background: bg, fontFamily: 'Inter, sans-serif', color: textPrimary, padding: `${padding.container}px` }}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full h-full flex flex-col">
 
                 {/* ── MASTHEAD ── */}

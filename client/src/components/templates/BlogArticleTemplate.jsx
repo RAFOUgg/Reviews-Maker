@@ -62,7 +62,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
 
     // 🎯 Calcul des ajustements responsifs selon le ratio
     const responsive = getResponsiveAdjustments(config.ratio, typography);
-    const { isSquare, isA4, fontSize, padding, spacing, limits } = responsive;
+    const { isSquare, fontSize, padding, spacing, limits } = responsive;
     const glass = getGlassTokens(colors);
 
     // Pagination adaptative (Phase C du plan de finition Export Maker, 2026-08-03) — même contrat
@@ -207,7 +207,11 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
 
     return (
         <div
-            className={`w-full h-full ${isA4 ? 'overflow-auto' : 'overflow-hidden'}`}
+            // `overflow-hidden` inconditionnel, jamais `overflow-auto` (corrigé 2026-08-03, retour
+            // utilisateur) : la pagination adaptative (Phase C) couvre désormais aussi le ratio A4
+            // pour ce template — un scroll interne masquait silencieusement du contenu débordant
+            // au lieu de le répartir sur une page supplémentaire.
+            className="w-full h-full overflow-hidden"
             style={{
                 background: colors.background,
                 fontFamily: typography.fontFamily,

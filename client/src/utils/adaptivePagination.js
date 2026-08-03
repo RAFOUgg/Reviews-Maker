@@ -43,6 +43,11 @@ export const MODULE_META = {
     // Photo hero SEULE (SocialStory) — distinct de `masthead` (bloc combiné photo+titre+note des
     // autres templates), volontairement PAS isolée pour pouvoir se combiner avec `identity`.
     heroImage: { label: 'Photo', icon: '📸' },
+    // Image principale de ModernCompact — contrairement aux autres templates, où l'image est
+    // imbriquée DANS le bloc `masthead` mesuré (DetailedCard/BlogArticle), ici elle est un bloc
+    // frère séparé (mise en page landscape/portrait distincte) : id propre, forcée isolée ci-dessous
+    // (ALWAYS_ISOLATE) pour ne jamais dépendre d'un calcul de budget précis avec le contenu voisin.
+    mainImage: { label: 'Image', icon: '📸' },
     'gisement:harvest': { label: 'Récolte', icon: '🌾' },
     'gisement:culture': { label: 'Culture', icon: '🌱' },
     'gisement:usage': { label: 'Usage', icon: '💨' },
@@ -100,7 +105,7 @@ const BUDGET_SAFETY_FACTOR = 0.70;
 // Seul risque résiduel : un de CES modules, à lui seul, peut encore déborder sa propre page dédiée —
 // c'est la limite déjà documentée et acceptée (un bloc plus grand qu'une page occupe sa page en
 // débordant), pas la perte silencieuse de contenu partagé avec des voisins qu'on corrige ici.
-const ALWAYS_ISOLATE = new Set(['masthead', 'cannabinoidProfile', 'cultureStats']);
+const ALWAYS_ISOLATE = new Set(['masthead', 'cannabinoidProfile', 'cultureStats', 'mainImage']);
 
 export function computeAdaptivePages(moduleHeights, ratio, containerPadding) {
     const dims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
