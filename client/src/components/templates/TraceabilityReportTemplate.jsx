@@ -8,6 +8,7 @@ import {
     safeParse,
     isLightColor,
     ACCENT_TEXT_COLORS,
+    readableFontSize,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
@@ -261,7 +262,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                     <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(140px, 1fr))`, gap: 6 }}>
                         {labDetailCells.map((c, i) => (
                             <div key={i} style={{ background: colorWithOpacity(colors.accent, 6), borderRadius: 8, padding: '6px 10px' }}>
-                                <div style={{ fontSize: `${Math.max(9, fontSize.small - 2)}px`, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c.label}</div>
+                                <div style={{ fontSize: `${readableFontSize(fontSize.small - 2)}px`, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c.label}</div>
                                 <div style={{ fontSize: `${fontSize.text}px`, fontWeight: 700, color: colors.textPrimary }}>{c.value}</div>
                             </div>
                         ))}

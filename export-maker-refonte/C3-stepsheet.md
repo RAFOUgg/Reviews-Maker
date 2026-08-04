@@ -2,7 +2,9 @@
 
 > **Version 2**, après la revue critique `B4-revue-critique.md`. La version 1 comportait 15 étapes construites sur 3 prémisses fausses : une bibliothèque d'atomes à créer de zéro (elle existe — R1), une table de densité « identique à l'existant » qui contenait 5 valeurs fausses (R3/R4), et des clés de score inexistantes (R2). Le séquencement change en conséquence.
 >
-> Décisions figées : **D1** interactivité = aperçu Studio uniquement · **D2** PDF = image rastérisée par page · **D3** territoire « Lab Clinique Sombre » sur les 5 templates.
+> Décisions : ~~**D1** interactivité = aperçu Studio uniquement~~ **ANNULÉE le 2026-08-04** · **D2** PDF = image rastérisée par page · ~~**D3** territoire « Lab Clinique Sombre »~~ remplacée le 2026-08-04 par l'alignement sur la DA du site (LiquidUI).
+>
+> **D1 était fausse.** Elle figurait en tête de ce stepsheet comme une « décision utilisateur » sans jamais avoir été tracée nulle part — signalé comme non sourcé dans `B4-revue-critique.md` (§Décisions à consigner). L'utilisateur a confirmé le 2026-08-04 qu'il a toujours voulu un rendu interactif : *« pourquoi le rendu n'est pas interactif comme voulu ? je souhaite que le rendu soit un site html propre »*. Le rendu vivant devient un chantier de premier plan — voir `C4-matrice.md` §5 (deux modes de rendu). Leçon : une décision non tracée ne doit pas être traitée comme acquise.
 
 ## Ce qui change par rapport à la v1
 

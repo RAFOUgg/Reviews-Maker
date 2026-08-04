@@ -417,7 +417,9 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                             </strong>
                         </span>
                     )}
-                    <span style={{ fontSize: fontSize.small, color: whiteDim, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+                    {/* `whiteDim` est une opacité de 22%, pensée pour des filets décoratifs :
+                        appliquée à du texte elle donne 1.71:1, très en dessous du seuil AA. */}
+                    <span style={{ fontSize: fontSize.small, color: whiteMuted, letterSpacing: '0.05em', textTransform: 'uppercase' }}>
                         terpologie.eu
                     </span>
                 </div>

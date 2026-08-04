@@ -1,6 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import PropTypes from 'prop-types';
 import { getFieldMeta } from '../../../utils/chainCellPipelines';
+import { MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
 
 // Palette de lignes — reprend les 3 signaux de la direction v2 (résine/plante/terracotta) puis
 // des teintes neutres de repli, plutôt que d'inventer une nouvelle palette arc-en-ciel.
@@ -56,10 +57,10 @@ export default function CultureStatsChart({ steps, pipelineType, width = 560, he
     return (
         <LineChart width={width} height={height} data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -12 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={lineColor} />
-            <XAxis dataKey="index" stroke={textColor} tick={{ fontSize: 10, fill: textColor }} />
-            <YAxis stroke={textColor} tick={{ fontSize: 10, fill: textColor }} />
-            <Tooltip contentStyle={{ background: '#16201B', border: `1px solid ${lineColor}`, borderRadius: 8, fontSize: 11 }} labelStyle={{ color: textColor }} />
-            <Legend wrapperStyle={{ fontSize: 10, color: textColor }} />
+            <XAxis dataKey="index" stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} />
+            <YAxis stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} />
+            <Tooltip contentStyle={{ background: '#16201B', border: `1px solid ${lineColor}`, borderRadius: 8, fontSize: MIN_FONT_PX }} labelStyle={{ color: textColor }} />
+            <Legend wrapperStyle={{ fontSize: MIN_FONT_PX, color: textColor }} />
             {dataKeys.map((key, idx) => (
                 <Line key={key} type="monotone" dataKey={key} stroke={LINE_COLORS[idx % LINE_COLORS.length]} strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} isAnimationActive={false} />
             ))}

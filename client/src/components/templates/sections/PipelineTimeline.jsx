@@ -1,6 +1,6 @@
 import PropTypes from 'prop-types';
 import { detectPipelineConstants, summarizeCellFields } from '../../../utils/chainCellPipelines';
-import { colorWithOpacity } from '../../../utils/exportMakerHelpers';
+import { colorWithOpacity, readableFontSize } from '../../../utils/exportMakerHelpers';
 import PipelineStepFields from './PipelineStepFields';
 
 /**
@@ -58,7 +58,7 @@ function ConstantsBanner({ items, compact, fontSize, colors }) {
             borderRadius: compact ? 8 : 10,
         }}>
             <span style={{
-                fontSize: `${Math.max(9, fontSize - 2)}px`,
+                fontSize: `${readableFontSize(fontSize - 2)}px`,
                 textTransform: 'uppercase',
                 letterSpacing: '0.08em',
                 color: colors.accentText || colors.textSecondary,
@@ -69,7 +69,7 @@ function ConstantsBanner({ items, compact, fontSize, colors }) {
             </span>
             {items.map((item) => (
                 <span key={item.key} style={{ display: 'inline-flex', alignItems: 'baseline', gap: 4, minWidth: 0 }}>
-                    <span style={{ fontSize: `${Math.max(9, fontSize - 2)}px`, color: colors.textSecondary, whiteSpace: 'nowrap' }}>
+                    <span style={{ fontSize: `${readableFontSize(fontSize - 2)}px`, color: colors.textSecondary, whiteSpace: 'nowrap' }}>
                         {item.label}
                     </span>
                     <span style={{
@@ -121,13 +121,17 @@ function StepCard({ step, index, pipelineType, hiddenKeys, compact, fontSize, co
                 fontFamily: "'JetBrains Mono', ui-monospace, monospace",
                 fontSize: `${fontSize}px`,
                 fontWeight: 700,
-                color: colors.accentText || colors.accent,
+                // Texte sur fond DÉJÀ teinté d'accent : la nuance 400 de l'accent s'y détache
+                // mal (mesuré 3.44:1 sur Moderne Compact, 3.92:1 sur Article de Blog — sous le
+                // seuil AA, 215 occurrences à l'audit). L'identité accentuée reste portée par le
+                // fond et la bordure de la pastille ; le texte, lui, doit être lisible.
+                color: colors.textPrimary,
                 whiteSpace: 'nowrap',
             }}>
                 {stepLabel(step, index)}
             </div>
             {isConform ? (
-                <span style={{ fontSize: `${Math.max(9, fontSize - 1)}px`, color: colors.textSecondary, fontStyle: 'italic' }}>
+                <span style={{ fontSize: `${readableFontSize(fontSize - 1)}px`, color: colors.textSecondary, fontStyle: 'italic' }}>
                     conditions nominales
                 </span>
             ) : (
@@ -262,7 +266,11 @@ export default function PipelineTimeline({
                 <span style={{
                     fontFamily: "'JetBrains Mono', ui-monospace, monospace",
                     fontSize: `${fontSize.small}px`,
-                    color: colors.accentText || colors.accent,
+                    // Texte sur fond DÉJÀ teinté d'accent : la nuance 400 de l'accent s'y détache
+                // mal (mesuré 3.44:1 sur Moderne Compact, 3.92:1 sur Article de Blog — sous le
+                // seuil AA, 215 occurrences à l'audit). L'identité accentuée reste portée par le
+                // fond et la bordure de la pastille ; le texte, lui, doit être lisible.
+                color: colors.textPrimary,
                     background: colorWithOpacity(colors.accent, 16),
                     padding: '2px 7px',
                     borderRadius: 20,
@@ -296,7 +304,7 @@ export default function PipelineTimeline({
                             margin: `${spacing.gap}px 0 ${spacing.gap}px`,
                         }}>
                             <span style={{
-                                fontSize: `${Math.max(9, fontSize.small - 1)}px`,
+                                fontSize: `${readableFontSize(fontSize.small - 1)}px`,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.08em',
                                 fontWeight: 700,
@@ -308,7 +316,7 @@ export default function PipelineTimeline({
                             <span style={{ flex: 1, height: 1, background: colors.line }} />
                             <span style={{
                                 fontFamily: "'JetBrains Mono', ui-monospace, monospace",
-                                fontSize: `${Math.max(9, fontSize.small - 1)}px`,
+                                fontSize: `${readableFontSize(fontSize.small - 1)}px`,
                                 color: colors.textSecondary,
                             }}>
                                 {chunk.phaseTotal}

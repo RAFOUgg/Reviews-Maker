@@ -21,7 +21,9 @@ import { RATIO_DIMENSIONS } from './exportMakerHelpers';
 export const MODULE_META = {
     masthead: { label: 'Couverture', icon: '📸' },
     sensoryEvaluation: { label: 'Évaluation sensorielle', icon: '⭐' },
-    cannabinoidProfile: { label: 'Profil cannabinoïde', icon: '🧪' },
+    cannabinoidProfile: { label: 'Profil cannabinoïde', icon: '🧪' }, // encore utilisé par BlogArticle
+    cannabinoidGrid: { label: 'Profil cannabinoïde', icon: '🧪' },
+    sensoryRadar: { label: 'Empreinte sensorielle', icon: '🕸️' },
     aromaticProfile: { label: 'Profil aromatique', icon: '🌸' },
     labData: { label: 'Données laboratoire & curing', icon: '🔬' },
     description: { label: 'Commentaire', icon: '💬' },
@@ -132,7 +134,23 @@ const BUDGET_SAFETY_FACTOR = 0.92;
 // `cannabinoidProfile` (grille + radar SVG) et `cultureStats` (Recharts) restent isolés : leur
 // mesure a réellement échoué par le passé, et leur contenu disparaissait SILENCIEUSEMENT — un mode
 // de défaillance bien pire qu'une page peu remplie.
-const ALWAYS_ISOLATE = new Set(['cannabinoidProfile', 'cultureStats']);
+// Vidé le 2026-08-04, sur mesure de l'audit outillé (règle E6).
+//
+// L'isolement forcé était un contournement : `cannabinoidProfile` et `cultureStats` perdaient
+// silencieusement leur contenu en cohabitant, on les a donc mis chacun sur sa page. Le prix mesuré
+// est lourd — `cultureStats` seul remplit 31% d'une page, et `cannabinoidProfile`, insécable à
+// 1038px sur un canevas de 800px, débordait à 131% MALGRÉ son isolement. Isoler ne réglait donc
+// même pas le cas qui l'avait motivé.
+//
+// Traité à la racine à la place : `cannabinoidProfile` est scindé en `cannabinoidGrid` +
+// `sensoryRadar` (DetailedCardTemplate.jsx), deux blocs de taille raisonnable que le packer sait
+// répartir. Et les deux causes historiques d'imprécision de mesure ont disparu depuis (polices
+// préchargées, mesure et capture concordantes).
+//
+// Le mécanisme est conservé — vide — parce qu'il reste le bon outil si un widget composite se
+// révélait à nouveau non mesurable. Mais il ne doit plus servir à masquer un bloc trop gros :
+// dans ce cas, la réponse est de le rendre sécable.
+const ALWAYS_ISOLATE = new Set();
 
 // Un tronçon de pipeline porte un id `<module>#<n>` (cf. PipelineTimeline.jsx) : les règles
 // d'isolement et de libellé s'appliquent au module de base, pas au numéro de tronçon.

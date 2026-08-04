@@ -20,6 +20,7 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
+import { templateSection } from '../../store/exportMakerConstants';
 import PipelineTimeline from './sections/PipelineTimeline';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — liste complète
@@ -327,6 +328,17 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             </div>
                         );
                     }
+                    // Piste explorée puis RETIRÉE le 2026-08-05 : faire absorber le vide par
+                    // l'image (`flex: 1 1 auto`). Mesuré — elle améliorait 3 combinaisons sur 4
+                    // (9:16 Comestible 25 % → 97 %) mais faisait passer Fleur 1:1 de 88,6 % à
+                    // 122,3 %, soit un DÉBORDEMENT donc une perte de contenu. Sur une carte non
+                    // paginable, ce qui déborde est définitivement perdu : inacceptable pour
+                    // gagner du remplissage ailleurs.
+                    //
+                    // Le vide résiduel du 9:16 n'est pas un problème de taille d'image mais de
+                    // COMPOSITION : une carte de 1080×1920 demande une mise en page propre à ce
+                    // format, pas la mise en page du carré étirée. C'est le chantier « un design
+                    // par couple template × format » de la matrice C4.
                     return (
                         <div
                             data-module="mainImage"
@@ -485,10 +497,10 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             </div>
             )}
 
-            {/* Gisement complémentaire (récolte, culture, usage, procédés, recette, données
-                complémentaires) — absent de ce template jusqu'ici alors que Fiche Détaillée
-                l'affiche déjà via le même composant partagé (`GisementSections`). */}
-            <GisementSections
+            {/* Gisement complémentaire — HORS CONTRAT pour ce template (matrice C4) : Moderne
+                Compact est une carte glanceable, pas un dossier technique. Il l'affichait, et
+                comme la carte ne se pagine pas, le contenu débordait à 313 % en 1:1. */}
+            {templateSection('modernCompact', 'gisement') && <GisementSections
                 reviewData={reviewData}
                 contentModules={contentModules}
                 groups={GISEMENT_GROUPS}
@@ -497,7 +509,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 fontSize={fontSize}
                 spacing={spacing}
                 groupIcons={GISEMENT_ICONS}
-            />
+            />}
 
             {/* Pipelines — riche avec métriques. `pipelines` (déjà filtré par
                 `filterVisiblePipelines(extractPipelines(reviewData), contentModules)` ci-dessus,
@@ -511,6 +523,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 // que DetailedCardTemplate.jsx) — la pagination adaptative peut ainsi répartir
                 // Culture/Curing/Extraction/Séparation sur des pages différentes selon leur volume
                 // réel, au lieu du bloc "Pipelines" monolithique d'avant ce chantier (Phase C).
+                if (!templateSection('modernCompact', 'pipelines')) return null;
                 const pagePipelines = pipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id.startsWith(`pipeline:${p.key}#`)));
                 if (pagePipelines.length === 0) return null;
                 return (
@@ -543,14 +556,14 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             })()}
 
             {/* Vue interactive PhenoHunt (généalogie) — se masque elle-même si aucun arbre lié */}
-            {contentModules.phenoHuntView !== false && isPageOn('genealogyCanvas') && (
+            {templateSection('modernCompact', 'canvases') && contentModules.phenoHuntView !== false && isPageOn('genealogyCanvas') && (
                 <div data-module="genealogyCanvas">
                     <ReadOnlyGenealogyCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
                 </div>
             )}
 
             {/* Vue interactive Chaîne de production — même logique de masquage async */}
-            {contentModules.productionChainView !== false && isPageOn('productionChainCanvas') && (
+            {templateSection('modernCompact', 'canvases') && contentModules.productionChainView !== false && isPageOn('productionChainCanvas') && (
                 <div data-module="productionChainCanvas">
                     <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 220 : 260} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
                 </div>

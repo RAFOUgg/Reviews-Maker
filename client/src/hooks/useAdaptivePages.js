@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { getDefaultPages } from '../store/exportMakerPagesStore';
+import { TEMPLATE_PAGINATION } from '../store/exportMakerConstants';
 import { shouldAutoLockPagination, getResponsiveAdjustments } from '../utils/exportMakerHelpers';
 import { computeAdaptivePages } from '../utils/adaptivePagination';
 import { measureDetailedCardModules } from '../components/templates/measureDetailedCardModules';
@@ -10,7 +11,12 @@ import { measureDetailedCardModules } from '../components/templates/measureDetai
 // 3 templates statiques restants équipés du même contrat `data-module`/`isPageOn` (voir
 // `measureDetailedCardModules.jsx`/`TEMPLATE_COMPONENTS`). `traceabilityReport` reste hors
 // pagination (document continu qui défile, jamais paginé — voir `shouldAutoLockPagination`).
-const ADAPTIVE_TEMPLATES = new Set(['detailedCard', 'modernCompact', 'blogArticle', 'socialStory']);
+// Dérivé du contrat de pagination (matrice C4) plutôt que listé en dur : `modernCompact` et
+// `socialStory` en sortent — ce sont des CARTES, elles ne se paginent pas. Mesuré avant cette
+// règle : Story produisait 6 pages dont trois remplies à 4,1 %.
+const ADAPTIVE_TEMPLATES = new Set(
+    Object.entries(TEMPLATE_PAGINATION).filter(([, on]) => on).map(([id]) => id)
+);
 
 // Cache partagé de mesure (Chantier D, correctif 2026-07-31) : `ExportMakerPanel.jsx` (aperçu
 // Studio) et `ExportModal.jsx` (export standalone/pages hors-écran) montent CHACUN leur propre

@@ -1,0 +1,3 @@
+# Rapports d'exécution : horodatés, propres à une machine et à un jeu de données.
+# Ce qui compte est versionné (les règles et le pilote), pas les sorties.
+reports/

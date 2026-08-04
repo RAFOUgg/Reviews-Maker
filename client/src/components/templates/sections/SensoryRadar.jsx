@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
 
 /**
  * SensoryRadar — radar SVG générique à N axes (2026-07-30, Fiche Technique Détaillée v2,
@@ -52,7 +53,7 @@ export default function SensoryRadar({
                 x={x}
                 y={y}
                 fill={textColor}
-                fontSize="9.5"
+                fontSize={MIN_FONT_PX}
                 fontFamily='"JetBrains Mono", monospace'
                 textAnchor="middle"
                 dominantBaseline="middle"

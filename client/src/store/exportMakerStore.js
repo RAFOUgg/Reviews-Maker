@@ -1,6 +1,22 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS, TEMPLATE_DEFAULT_IDENTITY } from './exportMakerConstants';
+import { useStore } from './useStore';
+import { getAllowedTemplates } from '../hooks/useAccountFeatures';
+
+/**
+ * Le type de compte vit dans `useStore` (session), pas dans ce store (config de rendu). On le lit
+ * hors composant via `getState()` — `useAccountFeatures` est un hook, inutilisable ici.
+ * Même normalisation que le hook, source de vérité unique pour la liste : `getAllowedTemplates`.
+ */
+function isTemplateAllowedForCurrentAccount(templateId) {
+    const { accountType, user } = useStore.getState();
+    const normalized = String(accountType || '').toLowerCase();
+    const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin');
+    const isProducer = isAdmin || ['producteur', 'producer', 'beta_tester'].includes(normalized);
+    const isInfluencer = isAdmin || ['influenceur', 'influencer'].includes(normalized);
+    return getAllowedTemplates({ isProducer, isInfluencer }).includes(templateId);
+}
 
 // Note: COLOR_PALETTES et DEFAULT_TEMPLATES sont maintenant importés depuis exportMakerConstants.js
 // pour éviter les problèmes de références circulaires et les re-renders infinis
@@ -486,6 +502,16 @@ export const useExportMakerStore = create(
             // + preset de modules + verrouillage). Dans les deux cas, la config qu'on quitte est
             // d'abord sauvegardée dans sa propre case pour pouvoir y revenir plus tard intacte.
             setTemplate: (templateId) => set((state) => {
+                // Gating par type de compte (2026-08-04). Le grisage dans `TemplateSelector.jsx`
+                // est un confort d'interface, pas une garantie : `setTemplate` est aussi appelée
+                // depuis le menu contextuel, le chargement d'un préréglage et la restauration
+                // d'une config sauvegardée. La garde est ici pour couvrir tous ces chemins.
+                // Ce n'est pas une frontière de sécurité (le client reste modifiable) — les droits
+                // qui engagent la facturation sont validés côté serveur.
+                if (!isTemplateAllowedForCurrentAccount(templateId)) {
+                    console.warn(`[ExportMaker] Template "${templateId}" non autorisé pour ce type de compte — changement ignoré.`);
+                    return {};
+                }
                 const outgoingId = state.config.template;
                 const configByTemplate = {
                     ...state.configByTemplate,
@@ -498,7 +524,13 @@ export const useExportMakerStore = create(
                 }
 
                 const templateDef = get().templates[templateId] || DEFAULT_TEMPLATES[templateId];
-                const newRatio = templateDef?.defaultRatio || '1:1';
+                // Le ratio par défaut du template doit lui-même être supporté : depuis la matrice
+                // C4, chaque template n'accepte plus qu'un sous-ensemble de formats (une carte
+                // sociale n'a rien à faire en A4, un COA dense n'a rien à faire dans un carré de
+                // 800px). On retombe sur le premier format autorisé si le défaut ne l'est plus.
+                const supported = templateDef?.supportedRatios || [];
+                const preferred = templateDef?.defaultRatio;
+                const newRatio = supported.includes(preferred) ? preferred : (supported[0] || '1:1');
 
                 const identity = TEMPLATE_DEFAULT_IDENTITY[templateId];
                 const palette = identity ? COLOR_PALETTES[identity.defaultPalette] : null;

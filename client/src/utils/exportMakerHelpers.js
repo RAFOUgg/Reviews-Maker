@@ -3,6 +3,7 @@
  * Ces fonctions sont partagées entre tous les templates et renderers
  */
 import { getFieldLabel } from './fieldRegistry';
+import { isTemplatePaginable } from '../store/exportMakerConstants';
 
 /**
  * Parse une valeur JSON de manière sécurisée
@@ -179,6 +180,92 @@ export const SEMANTIC_SCORE_TEXT_COLORS = {
 // signature de LiquidUI, `--liquid-primary`) ne fait que 4.42:1 sur le fond de l'app et 4.22:1
 // sur `dark.bg` : c'est une couleur de SURFACE (bordures, glows, aplats), pas de texte. Pour un
 // libellé accentué, utiliser la nuance 400 comme le fait déjà `LiquidBadge`.
+// Plancher de lisibilité — SOURCE UNIQUE (2026-08-04, audit C5 règle E2).
+//
+// `getResponsiveAdjustments` applique déjà un plancher sur `fontSize.text`/`fontSize.small`, mais
+// les composants recalculaient ensuite leur propre taille en aval (`Math.max(9, small - 2)`,
+// `fontSize: 9.5`, `fontSize: 10`…), chacun avec son plancher improvisé. L'audit outillé a relevé
+// 204 violations sur 36 combinaisons — des libellés à 9,5 / 10,2 / 11 px sur les 5 templates.
+//
+// Une fiche technique reste un document à LIRE : sous 12px, un libellé de mesure n'est plus
+// consultable, et l'export rastérisé n'a pas de zoom pour compenser.
+export const MIN_FONT_PX = 12;
+
+/** Taille de police jamais inférieure au plancher de lisibilité. À utiliser partout où une taille
+ *  est dérivée d'une autre (`small - 2`, etc.) plutôt que de réinventer un `Math.max` local. */
+export function readableFontSize(px) {
+    const n = Number(px);
+    return Number.isFinite(n) ? Math.max(MIN_FONT_PX, n) : MIN_FONT_PX;
+}
+
+// ── Garantie de contraste (2026-08-05) ───────────────────────────────────────────────────────
+//
+// L'accent de palette est choisi par l'utilisateur ; on ne peut ni l'ignorer ni le remplacer par
+// une teinte imposée. Mais posé en TEXTE sur un fond clair (mode papier A4), il descend à 2.48:1 —
+// illisible sur un document destiné à l'impression, mesuré sur 16 éléments.
+//
+// `ensureReadable` conserve la TEINTE choisie et ne corrige que la luminosité, du strict nécessaire
+// pour atteindre le seuil. L'utilisateur garde sa couleur, le lecteur garde un texte lisible.
+
+function srgbToLinear(v) {
+    const c = v / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+}
+
+function parseHex(color) {
+    if (typeof color !== 'string') return null;
+    const hex = color.trim().replace('#', '');
+    if (hex.length === 3) {
+        return { r: parseInt(hex[0] + hex[0], 16), g: parseInt(hex[1] + hex[1], 16), b: parseInt(hex[2] + hex[2], 16) };
+    }
+    if (hex.length === 6) {
+        return { r: parseInt(hex.slice(0, 2), 16), g: parseInt(hex.slice(2, 4), 16), b: parseInt(hex.slice(4, 6), 16) };
+    }
+    return null;
+}
+
+const toHex = ({ r, g, b }) => '#' + [r, g, b]
+    .map((v) => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('');
+
+/** Luminance relative WCAG d'une couleur hex. */
+export function relativeLuminance(color) {
+    const c = parseHex(color);
+    if (!c) return null;
+    return 0.2126 * srgbToLinear(c.r) + 0.7152 * srgbToLinear(c.g) + 0.0722 * srgbToLinear(c.b);
+}
+
+/** Ratio de contraste WCAG entre deux couleurs hex opaques. */
+export function contrastRatio(a, b) {
+    const l1 = relativeLuminance(a);
+    const l2 = relativeLuminance(b);
+    if (l1 === null || l2 === null) return null;
+    return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+/**
+ * Renvoie la couleur la plus proche de `color` atteignant `target` de contraste sur `background`.
+ * On s'éloigne du fond : vers le noir si le fond est clair, vers le blanc s'il est sombre.
+ * Retourne `color` inchangée si elle est déjà conforme, ou si une couleur est illisible.
+ */
+export function ensureReadable(color, background, target = 4.5) {
+    const current = contrastRatio(color, background);
+    if (current === null) return color;
+    if (current >= target) return color;
+
+    const base = parseHex(color);
+    const bgLum = relativeLuminance(background);
+    const towardBlack = bgLum > 0.5; // fond clair → assombrir le texte
+    for (let i = 1; i <= 100; i++) {
+        const t = i / 100;
+        const candidate = towardBlack
+            ? { r: base.r * (1 - t), g: base.g * (1 - t), b: base.b * (1 - t) }
+            : { r: base.r + (255 - base.r) * t, g: base.g + (255 - base.g) * t, b: base.b + (255 - base.b) * t };
+        const hex = toHex(candidate);
+        if (contrastRatio(hex, background) >= target) return hex;
+    }
+    return towardBlack ? '#000000' : '#ffffff';
+}
+
 // Pile de repli typographique — alignée sur celle du site (tailwind.config.js > fontFamily.sans).
 const FONT_FALLBACK = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif";
 const MONO_FALLBACK = "ui-monospace, Menlo, Consolas, monospace";
@@ -703,7 +790,11 @@ function hasAnyTimelineData(reviewData) {
  */
 export function shouldAutoLockPagination(reviewData, template) {
     if (!reviewData) return false;
-    if (template === 'traceabilityReport') return false;
+    // Un template non paginable ne se pagine JAMAIS, quelle que soit la densité des données
+    // (matrice C4). La densité déclenchait auparavant la pagination sur tous les templates, y
+    // compris les cartes — d'où les 3 pages à 4 % mesurées sur Story. Ce qui ne tient pas dans
+    // une carte doit en être exclu, pas reporté sur une page suivante.
+    if (!isTemplatePaginable(template)) return false;
     const categoryCount = reviewData.categoryRatings ? Object.keys(reviewData.categoryRatings).length : 0;
     const aromasCount = Array.isArray(reviewData.aromas) ? reviewData.aromas.length : 0;
     const effectsCount = Array.isArray(reviewData.effects) ? reviewData.effects.length : 0;
@@ -1055,7 +1146,18 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
         // Tailles d'images
         image: {
             maxWidth: isSquare ? '100%' : '300px',
-            maxHeight: isSquare ? '180px' : isPortrait ? '220px' : '300px',
+            // Hauteur d'image pensée en PROPORTION du canevas, pas en pixels absolus (2026-08-05).
+            //
+            // Le plafond unique de 220px pour tout format portrait donnait 27 % de la hauteur en
+            // 1:1 (800px) mais seulement 11 % en 9:16 (1920px) — d'où une carte verticale remplie
+            // à 25 % avec une vignette perdue en haut. Une carte n'est pas un carré étiré : la
+            // proportion de l'image doit rester constante d'un format à l'autre.
+            //
+            // `isA4` AVANT `isPortrait` : A4 (1754×2480) satisfait aussi la condition portrait, et
+            // placé après il hériterait de la valeur 9:16 — c'est le piège déjà rencontré sur le
+            // facteur d'échelle. Un document A4 garde une image modérée : elle y accompagne le
+            // texte, elle ne le domine pas.
+            maxHeight: isSquare ? '180px' : isA4 ? '380px' : isPortrait ? '660px' : '300px',
             borderRadius: isSquare ? 8 : 12,
         },
 

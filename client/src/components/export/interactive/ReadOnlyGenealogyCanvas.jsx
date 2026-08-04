@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { safeParse } from '../../../utils/exportMakerHelpers';
+import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
 
 // Nœud minimal en lecture seule — pas de réutilisation de `CultivarNode.jsx` (le vrai nœud
 // d'édition), qui embarque des hooks de drag de handle/waypoint pensés pour l'édition interactive
@@ -22,7 +22,7 @@ function GenealogyNode({ data }) {
             <Handle type="target" position={Position.Top} style={{ visibility: 'hidden' }} />
             {data.label}
             {data.genetics?.type && (
-                <div style={{ fontSize: 10, fontWeight: 400, opacity: 0.85, marginTop: 2, textTransform: 'capitalize' }}>{data.genetics.type}</div>
+                <div style={{ fontSize: MIN_FONT_PX, fontWeight: 400, opacity: 0.85, marginTop: 2, textTransform: 'capitalize' }}>{data.genetics.type}</div>
             )}
             <Handle type="source" position={Position.Bottom} style={{ visibility: 'hidden' }} />
         </div>
@@ -81,7 +81,7 @@ export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, acce
             type: 'smoothstep',
             label: e.relationshipType !== 'pairing' ? e.relationshipType : undefined,
             style: { stroke: accentColor },
-            labelStyle: { fill: textColor, fontSize: 10 },
+            labelStyle: { fill: textColor, fontSize: MIN_FONT_PX },
         }));
         return { rfNodes: nodes, rfEdges: edges };
     }, [tree, accentColor, textColor]);

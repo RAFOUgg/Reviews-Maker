@@ -221,7 +221,7 @@ export const DEFAULT_TEMPLATES = {
         description: 'Design épuré et moderne, idéal pour les réseaux sociaux',
         layout: 'compact',
         defaultRatio: '1:1',
-        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4'],
+        supportedRatios: ['1:1', '16:9', '9:16'],
         // Zones par défaut (x,y in %, width/height in % relative to canvas)
         defaultZones: [
             { id: 'zone-title', label: 'Titre', type: 'zone', position: { x: 50, y: 8 }, width: 80, height: 12, placeholder: 'title' },
@@ -236,7 +236,7 @@ export const DEFAULT_TEMPLATES = {
         description: 'Présentation complète avec tous les détails de la review',
         layout: 'detailed',
         defaultRatio: '16:9',
-        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
+        supportedRatios: ['16:9', '4:3', 'A4']
     },
     blogArticle: {
         id: 'blogArticle',
@@ -244,7 +244,7 @@ export const DEFAULT_TEMPLATES = {
         description: 'Format long adapté aux blogs et documentation',
         layout: 'article',
         defaultRatio: 'A4',
-        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
+        supportedRatios: ['16:9', 'A4']
     },
     socialStory: {
         id: 'socialStory',
@@ -252,7 +252,7 @@ export const DEFAULT_TEMPLATES = {
         description: 'Format vertical pour Instagram et TikTok',
         layout: 'story',
         defaultRatio: '9:16',
-        supportedRatios: ['1:1', '16:9', '9:16', '4:3', 'A4']
+        supportedRatios: ['9:16', '1:1']
     },
     traceabilityReport: {
         id: 'traceabilityReport',
@@ -293,3 +293,80 @@ export const TEMPLATE_DEFAULT_IDENTITY = {
     socialStory: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '800' } },
     traceabilityReport: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
 };
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAGINATION PAR TEMPLATE — matrice C4 (2026-08-04)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Un template n'est pas un rendu générique paramétrable : c'est un contrat. Moderne Compact et
+// Story sont des CARTES — une carte ne se pagine pas, ce qui n'y tient pas en est exclu, jamais
+// reporté sur une page 2.
+//
+// Mesuré avant cette règle (audit outillé, règle E6) : Story produisait 6 pages remplies à
+// 49,3 / 4,1 / 4,1 / 4,1 / 32,4 / 16,8 % — trois pages à 4 %. Ce n'était pas un défaut de
+// calibrage mais l'absence de ce contrat.
+//
+// `traceabilityReport` reste à `false` : la matrice C4 le veut paginé, mais il est aujourd'hui
+// construit comme un document continu (exempté de `shouldAutoLockPagination`, absent des
+// templates adaptatifs). Le basculer est un chantier distinct, pas un drapeau à retourner.
+export const TEMPLATE_PAGINATION = {
+    modernCompact: false,
+    socialStory: false,
+    detailedCard: true,
+    blogArticle: true,
+    traceabilityReport: false,
+};
+
+/** Ce template accepte-t-il d'être réparti sur plusieurs pages ? */
+export function isTemplatePaginable(templateId) {
+    return TEMPLATE_PAGINATION[templateId] === true;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// CONTRAT DE CONTENU PAR TEMPLATE — matrice C4 (2026-08-04)
+// ═══════════════════════════════════════════════════════════════════════════════
+// Un template déclare CE QU'IL REND. Ce n'est pas un réglage cosmétique : c'est ce qui rend un
+// template viable ou non. Mesuré avant ce contrat, une fois la pagination retirée des cartes
+// (Compact/Story ne se paginent pas) : Moderne Compact débordait à 313 % en 1:1 et 142 % en 9:16,
+// parce qu'il rendait encore pipelines, canevas et gisement complet dans une carte unique.
+//
+// Décision utilisateur actée : sur un template non paginable, ce qui ne tient pas est EXCLU,
+// jamais reporté sur une page suivante. Le contrat ci-dessous est cette exclusion.
+//
+// Valeurs : true = rendu complet · false = absent · 'compact'/'summary'/'grid'/'single' = variante.
+// Les booléens `contentModules` restent une couche SECONDAIRE : ils permettent à l'utilisateur de
+// retirer une section prévue au contrat, jamais d'en ajouter une hors contrat.
+export const TEMPLATE_SECTIONS = {
+    modernCompact: {
+        sensory: 'compact', cannabinoids: 'compact',
+        pipelines: false, canvases: false, gisement: false, lotCode: false,
+    },
+    socialStory: {
+        sensory: 'compact', cannabinoids: 'compact',
+        pipelines: false, canvases: false, gisement: 'single', lotCode: false,
+    },
+    blogArticle: {
+        sensory: true, cannabinoids: true,
+        pipelines: 'summary', canvases: false, gisement: true, lotCode: false,
+    },
+    detailedCard: {
+        sensory: true, cannabinoids: true,
+        pipelines: 'grid', canvases: true, gisement: true, lotCode: true,
+    },
+    traceabilityReport: {
+        // Document de traçabilité, pas de dégustation : pas de sections sensorielles (décision
+        // utilisateur, « on se concentre sur le technique »).
+        sensory: false, cannabinoids: true,
+        pipelines: 'grid', canvases: true, gisement: true, lotCode: true,
+    },
+};
+
+/**
+ * Ce template rend-il cette section ? Retourne la variante ('compact', 'grid'…) ou false.
+ * Un template inconnu rend tout — un template non déclaré ne doit pas perdre silencieusement
+ * son contenu.
+ */
+export function templateSection(templateId, section) {
+    const contract = TEMPLATE_SECTIONS[templateId];
+    if (!contract) return true;
+    return contract[section] ?? false;
+}

@@ -77,9 +77,37 @@ export function useAccountFeatures() {
         canAccessPresetTemplatesOnly: isAmateur,
         hasExportLimit: isAmateur, // Max 5 exports/mois
         cannotAccessPremiumFeatures: isAmateur,
+
+        // ========== TEMPLATES EXPORT MAKER (2026-08-04) ==========
+        // Source unique de l'accès aux templates de rendu. Jusqu'ici AUCUN gating n'existait :
+        // `TemplateSelector.jsx` proposait les 5 templates à tout le monde, y compris ceux qui
+        // rendent des sections réservées aux producteurs (généalogie, pipeline de culture) — un
+        // amateur pouvait choisir la Fiche Technique Détaillée alors qu'il ne peut même pas saisir
+        // les données qu'elle affiche.
+        allowedTemplates: getAllowedTemplates({ isProducer, isInfluencer }),
     }
 
     return features
+}
+
+/**
+ * Templates de rendu accessibles selon le type de compte.
+ *
+ *   Amateur     → Moderne Compact
+ *   Influenceur → Moderne Compact · Article de Blog · Story Social Media
+ *   Producteur  → les 5 (seul à avoir les sections PRO : généalogie, culture, traçabilité)
+ *
+ * Le producteur est testé en premier : un compte producteur est aussi influenceur au sens des
+ * droits cumulés, il doit obtenir la liste complète et non celle de l'influenceur.
+ */
+export function getAllowedTemplates({ isProducer, isInfluencer }) {
+    if (isProducer) {
+        return ['modernCompact', 'detailedCard', 'blogArticle', 'socialStory', 'traceabilityReport']
+    }
+    if (isInfluencer) {
+        return ['modernCompact', 'blogArticle', 'socialStory']
+    }
+    return ['modernCompact']
 }
 
 /**

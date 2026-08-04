@@ -1,12 +1,13 @@
 import { motion } from 'framer-motion';
-import { Check } from 'lucide-react';
+import { Check, Lock } from 'lucide-react';
+import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
+import { isTemplatePaginable } from '../../../store/exportMakerConstants';
 
-// Templates that support pagination (multi-page) — detailed/full templates
-const PAGINATION_SUPPORTED_TEMPLATES = ['detailedCard', 'blogArticle'];
+// Capacité de pagination — même source que le moteur de rendu (matrice C4), plus de liste locale.
 
 export default function TemplateSelector() {
     const config = useExportMakerStore((state) => state.config);
@@ -16,13 +17,22 @@ export default function TemplateSelector() {
     const templates = useExportMakerStore((state) => state.templates);
     const setActivePanel = useExportMakerStore((state) => state.setActivePanel);
 
+    // Gating par type de compte (2026-08-04) : amateur → Moderne Compact ; influenceur → +Blog
+    // +Story ; producteur → les 5. Les templates non autorisés restent VISIBLES mais verrouillés —
+    // les masquer priverait l'utilisateur de la raison de monter en offre.
+    const { allowedTemplates, isAmateur, isInfluenceur } = useAccountFeatures();
+    const requiredTierLabel = (templateId) => {
+        if (templateId === 'traceabilityReport' || templateId === 'detailedCard') return 'Producteur';
+        return isAmateur ? 'Influenceur' : 'Producteur';
+    };
+
     const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
     const pagesCount = useExportMakerPagesStore((state) => state.pages.length);
     const togglePagesMode = useExportMakerPagesStore((state) => state.togglePagesMode);
     const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
 
     const isOverflow = shouldAutoLockPagination(reviewData, config.template);
-    const isPaginationSupported = PAGINATION_SUPPORTED_TEMPLATES.includes(config.template) || isOverflow;
+    const isPaginationSupported = isTemplatePaginable(config.template);
     // Auto-lock: overflow data on compact format forces pagination
     const isPaginationLocked = isOverflow && (config.ratio === '1:1' || config.ratio === '9:16');
 
@@ -59,13 +69,18 @@ export default function TemplateSelector() {
 
             {/* Galerie de templates */}
             <div className="grid grid-cols-1 gap-2">
-                {Object.values(templates).map((template) => (
+                {Object.values(templates).map((template) => {
+                    const isAllowed = allowedTemplates.includes(template.id);
+                    return (
                     <motion.button
                         key={template.id}
-                        whileHover={{ scale: 1.01 }}
-                        whileTap={{ scale: 0.99 }}
-                        onClick={() => setTemplate(template.id)}
-                        className={`liquid-card p-3 text-left ${config.template === template.id ? 'ring-2 ring-purple-500' : ''}`}
+                        whileHover={isAllowed ? { scale: 1.01 } : {}}
+                        whileTap={isAllowed ? { scale: 0.99 } : {}}
+                        onClick={() => isAllowed && setTemplate(template.id)}
+                        disabled={!isAllowed}
+                        aria-disabled={!isAllowed}
+                        title={isAllowed ? undefined : `Réservé aux comptes ${requiredTierLabel(template.id)}`}
+                        className={`liquid-card p-3 text-left ${config.template === template.id ? 'ring-2 ring-purple-500' : ''} ${isAllowed ? '' : 'opacity-45 cursor-not-allowed'}`}
                     >
                         <div className="flex items-start justify-between mb-1.5">
                             <div>
@@ -77,8 +92,14 @@ export default function TemplateSelector() {
                                 </p>
                             </div>
                             <div className="flex items-center gap-2 flex-shrink-0">
-                                {config.template === template.id && (
+                                {config.template === template.id && isAllowed && (
                                     <Check className="w-5 h-5 text-purple-400" />
+                                )}
+                                {!isAllowed && (
+                                    <span className="flex items-center gap-1 text-[10px] font-semibold text-amber-300/90 bg-amber-400/10 border border-amber-400/25 px-1.5 py-0.5 rounded-full whitespace-nowrap">
+                                        <Lock className="w-3 h-3" />
+                                        {requiredTierLabel(template.id)}
+                                    </span>
                                 )}
                             </div>
                         </div>
@@ -94,7 +115,8 @@ export default function TemplateSelector() {
                             ))}
                         </div>
                     </motion.button>
-                ))}
+                    );
+                })}
             </div>
 
             {/* Sélecteur de ratio */}
@@ -130,7 +152,7 @@ export default function TemplateSelector() {
                 2026-08-02) — le contrôle restait affiché et fonctionnel en apparence (créait une
                 session de N pages) sans jamais varier le contenu d'une page à l'autre, un contrôle
                 trompeur plutôt qu'un vrai bug de rendu (trouvé en vérification). */}
-            {config.template !== 'traceabilityReport' && (
+            {isTemplatePaginable(config.template) && (
             <div className={`liquid-card p-4 ${isPaginationLocked ? 'ring-2 ring-amber-400/60' : pagesEnabled ? 'ring-2 ring-indigo-400/60' : ''}`}>
                 <div className="flex items-center justify-between">
                     <div className="flex-1 min-w-0">

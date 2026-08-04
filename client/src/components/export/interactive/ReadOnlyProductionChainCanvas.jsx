@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { safeParse } from '../../../utils/exportMakerHelpers';
+import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
 
 const TYPE_ICONS = { flower: '🌸', hash: '🟤', concentrate: '💎', edible: '🍬' };
 
@@ -102,7 +102,7 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
             type: 'smoothstep',
             label: e.technique || undefined,
             style: { stroke: accentColor },
-            labelStyle: { fill: textColor, fontSize: 10 },
+            labelStyle: { fill: textColor, fontSize: MIN_FONT_PX },
         }));
         return { rfNodes: nodes, rfEdges: edges };
     }, [chain, accentColor, textColor, reviewType, reviewId]);

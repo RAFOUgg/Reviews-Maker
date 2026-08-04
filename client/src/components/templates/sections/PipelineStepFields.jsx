@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { readableFontSize } from '../../../utils/exportMakerHelpers';
 
 // Icônes best-effort par identifiant de champ de pipeline (purement cosmétique) — source unique,
 // auparavant dupliquée (et partiellement absente) entre DetailedCardTemplate/ModernCompactTemplate/
@@ -35,13 +36,16 @@ export default function PipelineStepFields({ fields, compact = false, fontSize, 
             {metricFields.length > 0 && (
                 <div style={{
                     display: 'grid',
-                    gridTemplateColumns: `repeat(auto-fill, minmax(${compact ? 88 : 106}px, 1fr))`,
+                    // Élargi le 2026-08-04 : au plancher de 12px, des libellés réels comme « Humidité
+                    // ambiante » (131px) ou « Température » (91px) ne tenaient plus dans des
+                    // colonnes de 88-106px et étaient coupés à l'ellipse (audit, règle E3).
+                    gridTemplateColumns: `repeat(auto-fill, minmax(${compact ? 132 : 150}px, 1fr))`,
                     gap: compact ? 4 : 6,
                 }}>
                     {metricFields.map((f) => (
                         <div key={f.key} style={{ minWidth: 0 }}>
                             <div style={{
-                                fontSize: `${Math.max(9, fontSize - 2)}px`,
+                                fontSize: `${readableFontSize(fontSize - 2)}px`,
                                 color: colors.textSecondary,
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.03em',

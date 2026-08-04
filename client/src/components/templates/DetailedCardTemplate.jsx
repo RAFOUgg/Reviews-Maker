@@ -14,8 +14,11 @@ import {
     SEMANTIC_SCORE_COLORS,
     SEMANTIC_SCORE_TEXT_COLORS,
     ACCENT_TEXT_COLORS,
+    ensureReadable,
     getScoreBand,
     RATIO_DIMENSIONS,
+    MIN_FONT_PX,
+    readableFontSize,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
@@ -138,6 +141,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // Variante AA de l'accent pour le TEXTE : l'accent de palette (violet-500 par défaut) est une
     // couleur de surface, il échoue AA en petit texte sur le fond de l'app (4.42:1).
     const accentText = isPaperMode ? ACCENT_TEXT_COLORS.onPaper : ACCENT_TEXT_COLORS.onDark;
+    // Accent de la palette UTILISATEUR rendu lisible sur le fond réellement en place : la teinte
+    // choisie est conservée, seule la luminosité est corrigée du strict nécessaire. Sans ça, un
+    // accent posé en texte sur le papier crème tombait à 2.48:1 (16 éléments mesurés).
+    // Cible 4.8 et non 4.5 : le calcul se fait sur le fond de PAGE, alors que ces libellés
+    // reposent souvent sur `surface`, légèrement plus sombre. Sans cette marge, le résultat
+    // tombait à 4.38:1 — conforme sur le papier nu, juste en dessous sur les encadrés.
+    const accentReadable = ensureReadable(accent, isPaperMode ? '#F8FAFC' : '#0b1220', 4.8);
 
     // Extraction des données
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
@@ -219,7 +229,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         return (
             <div data-module={moduleId || undefined} style={{ padding: `${spacing.section}px 0`, borderTop: `1px solid ${lineSoft}` }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: spacing.element * 2 }}>
-                    {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accent, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
+                    {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accentReadable, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
                     <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
                     <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
                 </div>
@@ -266,7 +276,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         if (!items || items.length === 0) return null;
         return (
             <div>
-                <div style={{ fontFamily: MONO, fontSize: `${Math.max(9, fontSize.small - 1)}px`, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase', marginBottom: spacing.gap + 2 }}>{title}</div>
+                <div style={{ fontFamily: MONO, fontSize: `${readableFontSize(fontSize.small - 1)}px`, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase', marginBottom: spacing.gap + 2 }}>{title}</div>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
                     {items.map((it, i) => (
                         <span key={i} style={{
@@ -289,9 +299,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         const statusColor = status === 'ok' ? scoreText.hi : status === 'warn' ? scoreText.lo : textPrimary;
         return (
             <div style={{ background: surface, padding: `${padding.card * 0.8}px ${padding.card}px` }}>
-                <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.1em', color: textSecondary, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+                <div style={{ fontFamily: MONO, fontSize: MIN_FONT_PX, letterSpacing: '0.1em', color: textSecondary, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
                 <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 2}px`, fontWeight: 600, color: statusColor }}>
-                    {value}{unit && <span style={{ fontSize: 11, color: textSecondary, fontWeight: 400 }}> {unit}</span>}
+                    {value}{unit && <span style={{ fontSize: MIN_FONT_PX, color: textSecondary, fontWeight: 400 }}> {unit}</span>}
                 </div>
             </div>
         );
@@ -391,7 +401,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         </div>
 
                         {contentModules.category && (reviewData.category || reviewData.type) && (
-                            <div style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, letterSpacing: '0.2em', color: accent, textTransform: 'uppercase' }}>
+                            <div style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, letterSpacing: '0.2em', color: accentReadable, textTransform: 'uppercase' }}>
                                 {reviewData.category || reviewData.type}
                             </div>
                         )}
@@ -412,7 +422,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             <div style={{ display: 'flex', gap: spacing.section, marginTop: spacing.gap, flexWrap: 'wrap' }}>
                                 {metaItems.map((m, i) => (
                                     <div key={i}>
-                                        <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase' }}>{m.label}</div>
+                                        <div style={{ fontFamily: MONO, fontSize: MIN_FONT_PX, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase' }}>{m.label}</div>
                                         <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 1}px`, fontWeight: 600, marginTop: 2, color: m.status === 'ok' ? scoreText.hi : m.status === 'warn' ? scoreText.lo : titleColor }}>
                                             {m.value}
                                         </div>
@@ -423,8 +433,8 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                         {contentModules.rating && reviewData.rating != null && !isNaN(parseFloat(reviewData.rating)) && (
                             <div style={{ marginTop: stacked ? spacing.gap : 0, textAlign: stacked ? 'left' : 'right', ...(stacked ? {} : { position: 'absolute', right: padding.section, bottom: padding.section }) }}>
-                                <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.14em', color: textSecondary, textTransform: 'uppercase' }}>Note globale</div>
-                                <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${Math.round(fontSize.title * 0.85)}px`, lineHeight: 1, color: accent }}>
+                                <div style={{ fontFamily: MONO, fontSize: MIN_FONT_PX, letterSpacing: '0.14em', color: textSecondary, textTransform: 'uppercase' }}>Note globale</div>
+                                <div style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${Math.round(fontSize.title * 0.85)}px`, lineHeight: 1, color: accentReadable }}>
                                     {parseFloat(reviewData.rating).toFixed(1)}<span style={{ fontSize: `${fontSize.text + 3}px`, color: textSecondary }}>/10</span>
                                 </div>
                             </div>
@@ -448,10 +458,15 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </Section>
                 )}
 
-                {/* ── 02 · PROFIL CANNABINOÏDE ── */}
-                {(cannabinoidItems.length > 0 || radarAxes.length >= 3) && (
-                    <Section idx="02" title="Profil cannabinoïde" moduleId="cannabinoidProfile">
-                        <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : '1.4fr 1fr', gap: `${spacing.section}px`, alignItems: 'start' }}>
+                {/* ── 02 · PROFIL CANNABINOÏDE ──
+                    Scindé en DEUX modules paginables le 2026-08-04 (audit, règle E6) : réunis, la
+                    grille et le radar mesuraient 1038px sur un canevas de 800px en 1:1 — un bloc
+                    insécable plus grand qu'une page, qui débordait à 131% quoi qu'on fasse du
+                    budget de pagination. Séparés, le packer les répartit normalement. Même
+                    principe que le découpage des pipelines en tronçons. */}
+                {cannabinoidItems.length > 0 && (
+                    <Section idx="02" title="Profil cannabinoïde" moduleId="cannabinoidGrid">
+                        <div className="grid" style={{ gridTemplateColumns: '1fr', gap: `${spacing.section}px`, alignItems: 'start' }}>
                             {cannabinoidItems.length > 0 && (() => {
                                 const max = Math.max(...cannabinoidItems.map((c) => c.value));
                                 const total = cannabinoidItems.reduce((s, c) => s + c.value, 0);
@@ -476,12 +491,23 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     </div>
                                 );
                             })()}
-                            {radarAxes.length >= 3 && (
-                                <div style={{ background: surface, border: `1px solid ${lineSoft}`, borderRadius: 9, padding: 14, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                    <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase', alignSelf: 'flex-start', marginBottom: 2 }}>Empreinte sensorielle</div>
-                                    <SensoryRadar axes={radarAxes} accentColor={accent} lineColor={line} textColor={textSecondary} size={isSquare ? 200 : 240} />
-                                </div>
-                            )}
+                        </div>
+                    </Section>
+                )}
+
+                {/* Empreinte sensorielle — module distinct de la grille cannabinoïde (cf. ci-dessus). */}
+                {radarAxes.length >= 3 && (
+                    <Section title="Empreinte sensorielle" moduleId="sensoryRadar">
+                        {/* Largeur BORNÉE à la taille nominale du radar : son SVG est en
+                            `width="100%"` sur un viewBox carré, donc dans un conteneur pleine
+                            largeur il s'étire à ~700px de côté. Mesuré avant garde-fou : 823px de
+                            haut sur un canevas de 800px, soit 105% de débordement. Il était
+                            jusqu'ici bridé par sa colonne de grille — en le sortant dans son
+                            propre module, il fallait rétablir cette contrainte explicitement. */}
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ width: isSquare ? 200 : 240, maxWidth: '100%' }}>
+                                <SensoryRadar axes={radarAxes} accentColor={accent} lineColor={line} textColor={textSecondary} size={isSquare ? 200 : 240} />
+                            </div>
                         </div>
                     </Section>
                 )}
@@ -612,7 +638,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         {lotCode && <><br />Généré par Terpologie Export Maker · doc {lotCode}</>}
                     </div>
                     <div style={{ marginLeft: 'auto', fontFamily: DISPLAY, fontSize: `${fontSize.text}px`, fontWeight: 600, color: textSecondary }}>
-                        TERPO<span style={{ color: accent }}>LOGIE</span>
+                        TERPO<span style={{ color: accentReadable }}>LOGIE</span>
                     </div>
                 </div>
 
