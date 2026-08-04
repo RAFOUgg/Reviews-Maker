@@ -1,0 +1,159 @@
+/*
+ * Export Maker — variables CSS de référence, dérivées de C1-tokens.json.
+ * Territoire "LiquidUI" (B2 révisé) = la direction artistique du SITE.
+ *
+ * Révision 2026-08-04 (v3) : territoire changé sur décision utilisateur — les rendus portent
+ * désormais la DA de l'app, pas une identité séparée. Toutes les couleurs sont reprises telles
+ * quelles de `apple-liquid-glass.css` / `theme-tokens.css` / `tailwind.config.js`.
+ * Conservé de la v2 : clés de score alignées sur les clés réelles (hi/mid/lo, cf. B4 > R2),
+ * séparation surface/texte pour le contraste AA (B4 > R5), table de densité exacte (B4 > R3/R4).
+ */
+
+:root {
+  /* ── Fond (recette de --app-bg, theme-tokens.css) ── */
+  --em-bg: radial-gradient(700px 420px at 50% 28%, rgba(255, 255, 255, 0.02), rgba(0, 0, 0, 0.5) 38%, rgba(0, 0, 0, 0.95) 100%);
+  --em-bg-solid: #0b1220;
+
+  /* ── Texte ── */
+  --em-ink: #E6EEF8;      /* --text-primary */
+  --em-title: #FFFFFF;    /* --text-title */
+  --em-muted: #CBD5E1;    /* dark.muted */
+
+  /* ── Verre (apple-liquid-glass.css :root) ── */
+  --em-glass-bg: rgba(255, 255, 255, 0.06);
+  --em-glass-bg-hover: rgba(255, 255, 255, 0.09);
+  --em-glass-border: rgba(255, 255, 255, 0.12);
+  --em-glass-border-highlight: rgba(255, 255, 255, 0.25);
+  --em-glass-shadow: rgba(0, 0, 0, 0.4);
+  --em-glass-filter: blur(24px) saturate(150%);
+
+  /* ── Accent ──
+     #8B5CF6 (--liquid-primary) est une couleur de SURFACE : mesuré à 4.42:1 sur le fond de
+     l'app, il échoue AA en texte. Pour un libellé accentué, utiliser --em-accent-text
+     (nuance 400) — c'est déjà ce que fait LiquidBadge dans l'UI du site. */
+  --em-accent: #8B5CF6;
+  --em-accent-text: #A78BFA;   /* 6.88:1 */
+  --em-accent-2: #06B6D4;      /* --liquid-secondary */
+  --em-accent-2-text: #22D3EE;
+
+  /* ── Bandes sémantiques — FIXES, jamais surchargées par la palette ──
+     Teintes du système sémantique de l'app (LiquidBadge/LiquidAlert), pas des teintes inventées
+     pour l'export. SURFACE = nuance 500 (seuil 3:1) · TEXTE = nuance 400 (seuil AA 4.5:1). */
+  --em-score-hi: #10B981;   /* emerald-500 */
+  --em-score-mid: #F59E0B;  /* amber-500 */
+  --em-score-lo: #EF4444;   /* red-500 */
+
+  --em-score-hi-text: #34D399;   /* emerald-400 — 10.44:1 */
+  --em-score-mid-text: #FBBF24;  /* amber-400 — 12.02:1 */
+  --em-score-lo-text: #F87171;   /* red-400 — 7.26:1 */
+
+  /* ── Typographie ──
+     Le site utilise une pile système ; Inter en est l'équivalent web fidèle et rend l'export
+     déterministe (une pile système donnerait un rendu différent par poste client). */
+  --em-font: Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  --em-font-mono: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace;
+
+  /* Échelle à scaleFactor = 1 (A4). Planchers durs : text >= 14px, small >= 12px. */
+  --em-scale-title: 32px;
+  --em-scale-subtitle: 22px;
+  --em-scale-section: 18px;
+  --em-scale-text: 14px;
+  --em-scale-small: 12px;
+
+  /* ── Espacement — base 4/8 ── */
+  --em-space-1: 4px;
+  --em-space-2: 8px;
+  --em-space-3: 12px;
+  --em-space-4: 16px;
+  --em-space-5: 20px;
+  --em-space-6: 24px;
+  --em-space-7: 32px;
+  --em-space-8: 48px;
+
+  /* ── Rayons (alignés sur .liquid-card = 24px) ── */
+  --em-radius-card: 24px;
+  --em-radius-card-sm: 16px;
+  --em-radius-chip: 999px;
+  --em-radius-image: 16px;
+
+  /* ── Ombres (apple-liquid-glass.css + tailwind boxShadow) ── */
+  --em-shadow-card:
+    0 4px 24px -4px rgba(0, 0, 0, 0.4),
+    0 12px 48px -12px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.1),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.2);
+  --em-shadow-glass: 0 8px 32px 0 rgba(139, 92, 246, 0.15);
+  --em-shadow-glow: 0 0 20px rgba(139, 92, 246, 0.5);
+
+  /* ── Motion (aperçu Studio uniquement, jamais l'export figé) ── */
+  --em-motion-duration: 180ms;
+  --em-motion-easing: cubic-bezier(0.25, 0.46, 0.45, 0.94); /* easing "apple" du site */
+}
+
+/*
+ * Mode papier — activé sur ratio A4. Échelle neutre slate du site (tailwind), pas le crème du
+ * territoire "certificat de laboratoire" abandonné. Les accents passent en nuances 600/700,
+ * seules à tenir 4.5:1 sur fond clair.
+ */
+[data-em-mode="paper"] {
+  --em-bg: none;
+  --em-bg-solid: #F8FAFC;   /* slate-50 */
+  --em-glass-bg: #F1F5F9;   /* slate-100 — pas de flou sur papier */
+  --em-glass-border: #CBD5E1;
+  --em-glass-filter: none;
+  --em-ink: #0F172A;        /* slate-900 */
+  --em-title: #0F172A;
+  --em-muted: #475569;      /* slate-600 */
+
+  --em-accent-text: #9333EA;     /* violet-600 — 5.14:1 */
+  --em-score-hi-text: #047857;   /* emerald-700 — 5.24:1 */
+  --em-score-mid-text: #B45309;  /* amber-700 — 4.80:1 */
+  --em-score-lo-text: #DC2626;   /* red-600 — 4.62:1 */
+}
+
+/*
+ * Densité par ratio — appliquée via [data-em-ratio] posé par ExportFrame sur le conteneur racine.
+ * Transcription EXACTE de getResponsiveAdjustments, y compris là où le comportement est
+ * contre-intuitif : `isA4` n'est testé que pour scaleFactor / padding.container / grid.cols.
+ * Partout ailleurs A4 tombe dans la branche isPortrait (2480 > 1754 × 1.2) — d'où section=16 et
+ * non 20, maxTags=4 et non 6. Ne PAS "corriger" ces valeurs sans décision explicite : ce sont
+ * celles qui sont en production aujourd'hui.
+ */
+[data-em-ratio="1:1"] {
+  --em-scale-factor: 0.7;
+  --em-padding-container: 16px; --em-padding-section: 8px; --em-padding-card: 8px;
+  --em-gap-section: 12px; --em-gap-element: 6px; --em-gap: 4px;
+  --em-grid-cols: 2; --em-max-tags: 3; --em-description-lines: 2;
+  --em-image-max-height: 180px; --em-image-radius: 8px;
+}
+[data-em-ratio="16:9"] {
+  --em-scale-factor: 0.9;
+  --em-padding-container: 24px; --em-padding-section: 12px; --em-padding-card: 12px;
+  --em-gap-section: 20px; --em-gap-element: 8px; --em-gap: 6px;
+  --em-grid-cols: 3; --em-max-tags: 6; --em-description-lines: 4;
+  --em-image-max-height: 300px; --em-image-radius: 12px;
+}
+[data-em-ratio="9:16"] {
+  --em-scale-factor: 0.8;
+  --em-padding-container: 20px; --em-padding-section: 12px; --em-padding-card: 12px;
+  --em-gap-section: 16px; --em-gap-element: 8px; --em-gap: 6px;
+  --em-grid-cols: 2; --em-max-tags: 4; --em-description-lines: 3;
+  --em-image-max-height: 220px; --em-image-radius: 12px;
+}
+[data-em-ratio="4:3"] {
+  --em-scale-factor: 0.9;  /* 0.9, PAS 0.85 — 4:3 est isLandscape (cf. B4 > R3) */
+  --em-padding-container: 24px; --em-padding-section: 12px; --em-padding-card: 12px;
+  --em-gap-section: 20px; --em-gap-element: 8px; --em-gap: 6px;
+  --em-grid-cols: 3; --em-max-tags: 6; --em-description-lines: 4;
+  --em-image-max-height: 300px; --em-image-radius: 12px;
+}
+[data-em-ratio="A4"] {
+  --em-scale-factor: 1.0;
+  --em-padding-container: 48px; --em-padding-section: 12px; --em-padding-card: 12px;
+  --em-gap-section: 16px;  /* via isPortrait — pas 20px */
+  --em-gap-element: 8px; --em-gap: 6px;
+  --em-grid-cols: 4;
+  --em-max-tags: 4;          /* via isPortrait — pas 6 */
+  --em-description-lines: 3; /* via isPortrait — pas 4 */
+  --em-image-max-height: 220px; --em-image-radius: 12px;
+}

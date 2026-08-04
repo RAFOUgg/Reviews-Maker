@@ -137,10 +137,17 @@ export function colorWithOpacity(color, opacity) {
 // 3 couleurs sont FIXES et indépendantes de la palette — un signal de lecture stable (comme un
 // badge "vérifié" toujours vert) plutôt qu'une teinte de marque. Réutilisable par les autres
 // templates lors d'un futur rollout de cette direction artistique.
+// 2026-08-04 — RÉALIGNÉ sur la direction artistique réelle de l'app (LiquidUI). Les 3 teintes
+// précédentes (vert plante / ambre résine / terracotta) venaient du territoire "certificat de
+// laboratoire" de la Fiche Technique v2, qui n'existait nulle part ailleurs dans le produit.
+// Ces valeurs sont désormais celles du système sémantique déjà utilisé par l'UI du site
+// (`LiquidBadge`, `LiquidAlert`) : emerald / amber / red aux nuances 500 (surface) et 400 (texte).
+//
+// SURFACE (barres, points, aplats, dégradés) — seuil WCAG 3:1.
 export const SEMANTIC_SCORE_COLORS = {
-    hi: '#3E7C5A',  // vert plante — conforme / bon score
-    mid: '#C9922E', // ambre résine — score moyen
-    lo: '#B5533A',  // terracotta — score bas / attention
+    hi: '#10B981',  // emerald-500 — conforme / bon score
+    mid: '#F59E0B', // amber-500 — score moyen
+    lo: '#EF4444',  // red-500 — score bas / attention
 };
 
 /** Bande sémantique d'un score /10 selon la règle du spec : ≥7.5 hi, ≥5 mid, sinon lo. */
@@ -150,6 +157,63 @@ export function getScoreBand(value) {
     if (n >= 7.5) return 'hi';
     if (n >= 5) return 'mid';
     return 'lo';
+}
+
+// Variantes TEXTE des bandes sémantiques (audit de contraste B3 §7 / B4 > R5).
+//
+// Ce n'est pas une invention de ce chantier : c'est la règle que l'UI du site applique déjà.
+// `LiquidBadge` (LiquidUI.jsx) écrit `bg-emerald-500/20 text-emerald-400` — surface en nuance 500,
+// TEXTE en nuance 400. Les templates d'export, eux, utilisaient la même couleur pour les deux, ce
+// qui plaçait les valeurs chiffrées (12-16px) sous le seuil AA de 4.5:1 sur les 5 templates
+// (ScoreMetric.jsx est partagé). Ces variantes rétablissent la règle du design system.
+//
+// Mode papier : nuances 600/700, seules à tenir 4.5:1 sur un fond clair.
+export const SEMANTIC_SCORE_TEXT_COLORS = {
+    // sur fond sombre de l'app (#07070f → #0F172A) : 10.44 / 12.02 / 7.26
+    onDark: { hi: '#34D399', mid: '#FBBF24', lo: '#F87171' },
+    // sur papier slate-50 (#F8FAFC) : 5.24 / 4.80 / 4.62
+    onPaper: { hi: '#047857', mid: '#B45309', lo: '#DC2626' },
+};
+
+// Accent violet de l'app — MÊME distinction surface/texte. `#8B5CF6` (violet-500, l'accent
+// signature de LiquidUI, `--liquid-primary`) ne fait que 4.42:1 sur le fond de l'app et 4.22:1
+// sur `dark.bg` : c'est une couleur de SURFACE (bordures, glows, aplats), pas de texte. Pour un
+// libellé accentué, utiliser la nuance 400 comme le fait déjà `LiquidBadge`.
+// Pile de repli typographique — alignée sur celle du site (tailwind.config.js > fontFamily.sans).
+const FONT_FALLBACK = "-apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', Roboto, sans-serif";
+const MONO_FALLBACK = "ui-monospace, Menlo, Consolas, monospace";
+
+/**
+ * Construit une pile CSS complète à partir du nom de police choisi par l'utilisateur.
+ *
+ * `config.typography.fontFamily` ne contient qu'un NOM ('Inter'), et les templates le posaient
+ * tel quel en `font-family`. Sans famille générique en fin de pile, un échec ou un simple retard
+ * de chargement de la police web ne dégrade pas vers une sans-serif système mais vers le SERIF
+ * générique du navigateur — constaté sur un export PNG réel le 2026-08-04, où toute la fiche
+ * sortait en serif alors que la police demandée était Inter.
+ */
+export function resolveFontStack(family) {
+    const name = (family || '').trim();
+    if (!name) return FONT_FALLBACK;
+    const quoted = /\s/.test(name) ? `'${name}'` : name;
+    if (/mono/i.test(name)) return `${quoted}, ${MONO_FALLBACK}`;
+    return `${quoted}, ${FONT_FALLBACK}`;
+}
+
+export const ACCENT_TEXT_COLORS = {
+    onDark: '#A78BFA',  // violet-400 — 6.88:1 sur #0b1220
+    onPaper: '#9333EA', // violet-600 — 5.14:1 sur #F8FAFC
+};
+
+/**
+ * Couleur conforme AA pour un score affiché EN TEXTE. Utiliser `SEMANTIC_SCORE_COLORS` pour les
+ * surfaces (barres, points, aplats), cette fonction dès qu'il s'agit d'un caractère.
+ * @param {number|string} value - score /10
+ * @param {boolean} paper - true en mode papier A4 (fond crème)
+ */
+export function getScoreTextColor(value, paper = false) {
+    const band = getScoreBand(value);
+    return (paper ? SEMANTIC_SCORE_TEXT_COLORS.onPaper : SEMANTIC_SCORE_TEXT_COLORS.onDark)[band];
 }
 
 // Recette de verre LiquidUI (`apple-liquid-glass.css` — .liquid-card) traduite pour les templates
@@ -938,7 +1002,13 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
     // la condition portrait (hauteur > largeur×1.2), donc placé après `isPortrait` il n'atteint
     // JAMAIS sa propre branche : A4 héritait silencieusement de l'échelle du format 9:16 (0.8) au
     // lieu de la sienne (1.0), sous-dimensionné pour un format 2x plus grand pensé pour l'impression.
-    const scaleFactor = isSquare ? 0.7 : isA4 ? 1.0 : isPortrait ? 0.8 : isLandscape ? 0.9 : 0.85;
+    // NB : la branche finale `: 0.85` qui existait ici était INATTEIGNABLE — elle n'aurait été
+    // atteinte que par un ratio ni carré, ni A4, ni portrait, ni paysage, c'est-à-dire strictement
+    // entre 1:1.2 et 1.2:1 sans être 1:1. Aucun des 5 ratios de `RATIO_DIMENSIONS` n'y correspond.
+    // Retirée le 2026-08-04 : une valeur de repli jamais atteinte n'est pas un filet de sécurité,
+    // c'est une fausse piste pour qui relit cette cascade (elle avait déjà induit en erreur la
+    // transcription en table de ce fichier, qui donnait 0.85 au format 4:3 au lieu de 0.9).
+    const scaleFactor = isSquare ? 0.7 : isA4 ? 1.0 : isPortrait ? 0.8 : 0.9;
 
     return {
         // Facteurs d'échelle
@@ -975,12 +1045,12 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
             small: Math.max(12, Math.round((baseTypography.textSize || 14) * scaleFactor * 0.85)),
         },
 
-        // Layout
-        layout: {
-            columns: isSquare ? 1 : isPortrait ? 1 : 2,
-            imageHeight: isSquare ? '25%' : isPortrait ? '30%' : '40%',
-            contentHeight: isSquare ? '70%' : '60%',
-        },
+        // `layout` (columns / imageHeight / contentHeight) supprimé le 2026-08-04 : relevé
+        // exhaustif dans `client/src` — ZÉRO consommateur. Ces 3 valeurs étaient calculées à chaque
+        // rendu des 5 templates sans que personne ne les lise. Elles avaient en prime failli servir
+        // de fondation à `ExportFrame` (la spec C2 faisait piloter le Masthead par
+        // `ExportFrame.columns`), c'est-à-dire à un champ mort. Pour un choix d'empilement, utiliser
+        // `isSquare`/`isPortrait`, qui sont eux réellement consommés.
 
         // Tailles d'images
         image: {

@@ -2,22 +2,28 @@ import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidSelect, LiquidButton } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
 
+// 2026-08-04 — liste réduite aux polices RÉELLEMENT chargées (`client/index.html`).
+//
+// Cette liste en proposait 11 dont une seule était chargée : choisir 'Merriweather' ou 'Poppins'
+// n'avait aucun effet visible, le navigateur retombait silencieusement sur une police système,
+// sans aucun avertissement. Les 3 polices ci-dessous sont les 3 rôles du territoire visuel retenu
+// (moodboard B2) : display, corps, données chiffrées.
 const FONT_FAMILIES = [
-    'Inter',
-    'Roboto',
-    'Open Sans',
-    'Montserrat',
-    'Poppins',
-    'Lato',
-    'Playfair Display',
-    'Merriweather',
-    'Raleway',
-    'Source Sans Pro',
-    // Ajoutée 2026-07-30 pour la Fiche Technique Détaillée v2 (specs-direction-artistique.md) —
-    // seule nouvelle police proposée au choix libre ; JetBrains Mono (données/chiffres) est câblée
-    // en dur dans le template plutôt qu'exposée ici, cf. exportMakerHelpers.js.
-    'Space Grotesk',
+    'Inter',          // défaut — équivalent web de la pile système du site (SF Pro / -apple-system)
+    'Space Grotesk',  // display alternatif
+    'JetBrains Mono', // données, chasse tabulaire
 ];
+
+// Une review sauvegardée avant ce jour peut porter une police retirée de la liste (ex. 'Inter').
+// On la conserve comme option — sinon le sélecteur s'afficherait vide et le premier changement
+// non lié écraserait silencieusement son réglage — mais explicitement signalée comme non chargée.
+function buildFontOptions(currentFamily) {
+    const options = FONT_FAMILIES.map((font) => ({ value: font, label: font }));
+    if (currentFamily && !FONT_FAMILIES.includes(currentFamily)) {
+        options.push({ value: currentFamily, label: `${currentFamily} (non chargée)` });
+    }
+    return options;
+}
 
 const FONT_WEIGHTS = [
     { value: '300', label: 'Light' },
@@ -28,7 +34,6 @@ const FONT_WEIGHTS = [
     { value: '800', label: 'Extra Bold' }
 ];
 
-const FONT_FAMILY_OPTIONS = FONT_FAMILIES.map((font) => ({ value: font, label: font }));
 
 export default function TypographyControls() {
     const config = useExportMakerStore((state) => state.config);
@@ -49,7 +54,7 @@ export default function TypographyControls() {
             {/* Famille de police */}
             <LiquidSelect
                 label="Police de caractères"
-                options={FONT_FAMILY_OPTIONS}
+                options={buildFontOptions(config.typography.fontFamily)}
                 value={config.typography.fontFamily}
                 onChange={(val) => updateTypography({ fontFamily: val })}
             />

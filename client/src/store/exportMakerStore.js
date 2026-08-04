@@ -76,6 +76,8 @@ const DEFAULT_CONFIG = {
 
     // Typographie
     typography: {
+        // 'Inter' est désormais réellement chargée (client/index.html, 2026-08-04) — jusque-là ce
+        // défaut se rendait dans une police système. C'est l'équivalent web de la pile du site.
         fontFamily: 'Inter',
         titleSize: 32,
         textSize: 16,
@@ -85,14 +87,18 @@ const DEFAULT_CONFIG = {
         textColor: '#e0e0e0'
     },
 
-    // Couleurs
+    // Couleurs — DÉRIVÉES de COLOR_PALETTES, jamais recopiées.
+    //
+    // Ce bloc était auparavant une copie manuelle qui s'annonçait `palette: 'modern'` tout en
+    // portant des valeurs sans aucun rapport avec `COLOR_PALETTES.modern` (accent or `#ffd700`,
+    // dégradé différent) : une seconde source de vérité divergente pour la palette par défaut.
+    // Conséquence concrète, vue sur un export réel le 2026-08-04 : réaligner `COLOR_PALETTES.modern`
+    // sur la DA du site n'avait AUCUN effet sur le rendu par défaut, qui ne lisait jamais la palette.
     colors: {
         palette: 'modern',
-        background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f1a 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#e0e0e0',
-        accent: '#ffd700',
-        title: '#ffffff'
+        ...COLOR_PALETTES.modern,
+        // `name` est un libellé d'UI, pas un token de rendu.
+        name: undefined,
     },
 
     // ═══════════════════════════════════════════════════════════════════════

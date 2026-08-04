@@ -15,7 +15,18 @@
          volontairement limité à ces 2 nouvelles polices, le gap préexistant reste noté pour plus tard. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+    <!-- 2026-08-04 : Inter ajoutée. C'est l'équivalent web fidèle de la pile de polices du SITE
+         (`-apple-system` / `SF Pro Display`, cf. tailwind.config.js > fontFamily.sans) — les
+         rendus d'export sont désormais alignés sur la DA de l'app plutôt que sur une identité
+         typographique séparée. Elle devient la police des 5 templates.
+         Le gap noté ci-dessus est clos du même coup : TEMPLATE_DEFAULT_IDENTITY et la liste de
+         TypographyControls ne proposent plus QUE des polices réellement chargées ici — 4 des 5
+         templates avaient jusqu'ici pour défaut une police fantôme (Inter/Merriweather/Poppins)
+         et rendaient donc leur identité par défaut dans un repli système.
+         Space Grotesk : conservée (display alternatif, déjà choisie sur des reviews existantes).
+         JetBrains Mono : conservée, besoin fonctionnel (chasse tabulaire pour les colonnes de
+         chiffres) — l'app n'a pas de police mono dans sa pile. -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
 
     <!-- FORCE RESET ORCHARD STORAGE - EXECUTES BEFORE REACT -->
     <script>

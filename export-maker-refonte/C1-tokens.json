@@ -1,0 +1,181 @@
+{
+  "$schema": "Export Maker — Design Tokens — territoire \"LiquidUI\" (B2 révisé, = la DA du site)",
+  "$revision": "2026-08-04 (v3) — territoire changé sur décision utilisateur : les rendus portent la DA du SITE, pas une identité séparée. Toutes les valeurs de couleur sont désormais reprises telles quelles des feuilles canoniques de l'app (apple-liquid-glass.css / theme-tokens.css / tailwind.config.js), jamais ré-échantillonnées. La v2 corrigeait déjà la revue critique B4 (R2 clés de score, R3/R4 densité, R5 contraste) — ces corrections sont conservées.",
+  "$scope": "S'applique aux 5 templates. Les palettes restent swappables par l'utilisateur (onglet Couleurs) — ce fichier définit la palette PAR DÉFAUT + les tokens FIXES qui ne changent jamais avec la palette.",
+
+  "color": {
+    "$sources": {
+      "glass": "client/src/assets/apple-liquid-glass.css (:root)",
+      "semantic": "client/src/assets/theme-tokens.css (:root)",
+      "scale": "client/tailwind.config.js (theme.extend.colors)",
+      "rule": "client/src/components/ui/LiquidUI.jsx — LiquidBadge : `bg-<c>-500/20 text-<c>-400`, la règle surface/texte du design system"
+    },
+
+    "base": {
+      "bg": "radial-gradient(700px 420px at 50% 28%, rgba(255,255,255,0.02), rgba(0,0,0,0.5) 38%, rgba(0,0,0,0.95) 100%)",
+      "bgSolid": "#0b1220",
+      "bgDarkest": "#07070f",
+      "ink": "#E6EEF8",
+      "title": "#FFFFFF",
+      "muted": "#CBD5E1",
+      "glassBg": "rgba(255,255,255,0.06)",
+      "glassBgHover": "rgba(255,255,255,0.09)",
+      "glassBorder": "rgba(255,255,255,0.12)",
+      "glassBorderHighlight": "rgba(255,255,255,0.25)",
+      "glassShadow": "rgba(0,0,0,0.4)"
+    },
+
+    "accent": {
+      "$comment": "MESURÉ : #8B5CF6 (--liquid-primary, l'accent signature du site) ne fait que 4.42:1 sur #0b1220 et 4.22:1 sur dark.bg — il ÉCHOUE AA en texte. Ce n'est pas un défaut de l'app : LiquidBadge met déjà le texte en nuance 400. C'est la règle que les templates d'export ne respectaient pas.",
+      "surface": { "hex": "#8B5CF6", "role": "Bordures, glows, aplats, dégradés — jamais du texte" },
+      "text": { "onDark": "#A78BFA", "onPaper": "#9333EA", "$ratios": "6.88:1 sur #0b1220 · 5.14:1 sur #F8FAFC" },
+      "secondary": { "hex": "#06B6D4", "text": "#22D3EE", "$comment": "--liquid-secondary (cyan), accent secondaire de l'app" }
+    },
+
+    "paper": {
+      "$comment": "Mode papier A4 — réaligné sur l'échelle neutre slate du site (tailwind) plutôt que sur le crème du territoire abandonné.",
+      "bg": "#F8FAFC",
+      "surface": "#F1F5F9",
+      "line": "#CBD5E1",
+      "lineSoft": "#E2E8F0",
+      "ink": "#0F172A",
+      "inkMuted": "#475569"
+    },
+
+    "semanticScore": {
+      "$comment": "FIXE — indépendant de la palette active. Clés `hi`/`mid`/`lo` : ce sont les clés RÉELLES de SEMANTIC_SCORE_COLORS. Ne JAMAIS écrire good/mid/low (cf. B4 > R2). Les teintes ne sont plus inventées pour l'export : ce sont celles du système sémantique de l'app (LiquidBadge/LiquidAlert : emerald/amber/red).",
+      "surface": {
+        "$comment": "Barres, pastilles, points, aplats — seuil WCAG 3:1.",
+        "hi": { "hex": "#10B981", "scale": "emerald-500", "threshold": ">= 7.5" },
+        "mid": { "hex": "#F59E0B", "scale": "amber-500", "threshold": ">= 5.0" },
+        "lo": { "hex": "#EF4444", "scale": "red-500", "threshold": "< 5.0" }
+      },
+      "text": {
+        "$comment": "OBLIGATOIRE dès que la couleur porte du TEXTE (seuil AA 4.5). Nuances 400 sur fond sombre — exactement ce que fait LiquidBadge. Nuances 600/700 sur papier, seules à tenir sur fond clair.",
+        "onDark": { "hi": "#34D399", "mid": "#FBBF24", "lo": "#F87171", "$ratios": "10.44 / 12.02 / 7.26 sur #0b1220" },
+        "onPaper": { "hi": "#047857", "mid": "#B45309", "lo": "#DC2626", "$ratios": "5.24 / 4.80 / 4.62 sur #F8FAFC" }
+      }
+    },
+
+    "palettesExisting": {
+      "$comment": "COLOR_PALETTES (exportMakerConstants.js). 7 entrées : modern, nature, ocean, sunset, elegant, minimal, resin. `modern` (nommée « Terpologie ») a été RÉALIGNÉE sur les valeurs réelles du site et devient le défaut des 5 templates — auparavant chaque template avait une palette différente, donc changer de template changeait l'identité de marque du rendu. `resin` reste sélectionnable, simplement plus par défaut.",
+      "count": 7,
+      "default": "modern"
+    }
+  },
+
+  "typography": {
+    "$rationale": "Le site n'utilise PAS de police web : sa pile est système (`-apple-system, BlinkMacSystemFont, SF Pro Display, Segoe UI…`, tailwind.config.js > fontFamily.sans). Un export ne peut pas s'en contenter — il est rasterisé sur la machine du client, donc une pile système produirait un rendu différent par poste. Inter est l'équivalent web fidèle de cette pile : c'est le compromis qui respecte la DA du site tout en gardant un export déterministe.",
+    "$resolved": "R6 clos — les 5 identités par défaut et le défaut du store pointent désormais vers Inter, réellement chargée. La liste de TypographyControls est réduite aux 3 polices chargées, avec conservation d'une police héritée non chargée sous le label « (non chargée) » pour ne pas écraser le réglage d'une review antérieure.",
+    "families": {
+      "display": { "stack": "Inter, -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif", "loaded": true, "role": "Titres, masthead, corps — une seule police pour les 5 templates" },
+      "body": { "stack": "= display", "loaded": true, "role": "Identique au display : le site ne distingue pas les deux" },
+      "mono": { "stack": "'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace", "loaded": true, "role": "Valeurs chiffrées, tabulaire (font-variant-numeric: tabular-nums). Seule exception assumée à la pile du site — besoin fonctionnel d'alignement de colonnes, l'app n'a pas de mono." },
+      "displayAlt": { "stack": "'Space Grotesk', ui-sans-serif, sans-serif", "loaded": true, "role": "Display alternatif proposé au choix, plus par défaut" }
+    },
+    "weights": { "display": [400, 500, 600, 700, 800], "mono": [400, 500, 600] },
+    "scale": {
+      "$comment": "Formules RÉELLES de getResponsiveAdjustments (exportMakerHelpers.js:970) — transcrites, pas approximées. `base` = config.typography de l'utilisateur (défauts titleSize 32, textSize 14).",
+      "formulas": {
+        "title": "round(base.titleSize * scaleFactor)",
+        "subtitle": "round(base.titleSize * scaleFactor * 0.7)",
+        "section": "round(base.titleSize * scaleFactor * 0.55)",
+        "text": "max(14, round(base.textSize * scaleFactor))",
+        "small": "max(12, round(base.textSize * scaleFactor * 0.85))"
+      },
+      "floors": { "text": 14, "small": 12, "$comment": "Planchers durs, jamais franchis quel que soit le ratio — décision utilisateur actée (correctif 2026-07-27). Noter que le plancher `text` est 14, pas 12 comme l'indiquait la version antérieure de ce fichier." }
+    }
+  },
+
+  "spacing": { "unit": 4, "scale": [4, 8, 12, 16, 20, 24, 32, 48] },
+
+  "radius": {
+    "$comment": "Rayon de carte aligné sur `.liquid-card` (apple-liquid-glass.css) = 24px, et non 14px comme le proposait la version antérieure de ce fichier.",
+    "card": 24, "cardSmall": 16, "chip": 999, "image": 16
+  },
+
+  "glass": {
+    "$comment": "Recette exacte de `.liquid-card` (apple-liquid-glass.css:106). `getGlassTokens()` (exportMakerHelpers.js:192) la reproduit DÉJÀ fidèlement (0.06 / 0.12 / 0.25 / rgba(0,0,0,0.4)) — cette fonction n'est donc plus à déprécier comme le prévoyait le stepsheet v1, elle redevient une fondation.",
+    "backdropFilter": "blur(24px) saturate(150%)",
+    "shadow": "0 4px 24px -4px rgba(0,0,0,0.4), 0 12px 48px -12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.1), inset 0 -1px 1px rgba(0,0,0,0.2)",
+    "shadowAccent": "0 8px 32px 0 rgba(139,92,246,0.15)",
+    "$scope": "Réservé aux GRANDES surfaces (sections, panneaux). Jamais sur un chip/badge — hiérarchie réelle de LiquidUI : LiquidCard a du flou, LiquidChip/LiquidBadge n'en ont pas."
+  },
+
+  "shadow": {
+    "card": "0 4px 24px -4px rgba(0,0,0,0.4), 0 12px 48px -12px rgba(0,0,0,0.5)",
+    "glow": "0 0 20px rgba(139,92,246,0.5)",
+    "$comment": "R9 résolu : le `boxShadow: 0 0 6px` de ScoreMetric.jsx a été retiré — un halo sur une barre de 4-5px ne portait aucune information et se rasterisait mal. Le glow reste légitime sur les grandes surfaces (c'est `boxShadow.glow` du site), pas sur les micro-éléments."
+  },
+
+  "density": {
+    "$comment": "TRANSCRIPTION EXHAUSTIVE ET VÉRIFIÉE de getResponsiveAdjustments (exportMakerHelpers.js:926), valeur par valeur, ratio par ratio. Objectif : permettre une reformalisation en table SANS changement de comportement. La version antérieure de ce fichier contenait 5 valeurs fausses (4:3 scaleFactor, et 4 valeurs A4).",
+    "$trapDocumented": "Le piège structurel : `isA4` n'est testé QUE dans 3 expressions (scaleFactor, padding.container, grid.cols). Partout ailleurs, A4 (1754×2480) tombe dans la branche `isPortrait` car 2480 > 1754×1.2. C'est ce qui a produit le bug de 2026-07-29 — et la version antérieure de ce fichier a reproduit exactement la même erreur en supposant qu'A4 gagnait partout. La table ci-dessous encode le comportement RÉEL, y compris là où il est contre-intuitif (marqué $viaPortrait).",
+    "byRatio": {
+      "1:1": {
+        "dimensions": [800, 800], "flags": ["isSquare"],
+        "scaleFactor": 0.7,
+        "padding": { "container": 16, "section": 8, "card": 8 },
+        "spacing": { "section": 12, "element": 6, "gap": 4 },
+        "layout": { "columns": 1, "imageHeight": "25%", "contentHeight": "70%" },
+        "image": { "maxWidth": "100%", "maxHeight": "180px", "borderRadius": 8 },
+        "limits": { "maxTags": 3, "maxCategoryRatings": 4, "maxInfoCards": 4, "descriptionLines": 2 },
+        "grid": { "cols": 2 }
+      },
+      "16:9": {
+        "dimensions": [1920, 1080], "flags": ["isLandscape"],
+        "scaleFactor": 0.9,
+        "padding": { "container": 24, "section": 12, "card": 12 },
+        "spacing": { "section": 20, "element": 8, "gap": 6 },
+        "layout": { "columns": 2, "imageHeight": "40%", "contentHeight": "60%" },
+        "image": { "maxWidth": "300px", "maxHeight": "300px", "borderRadius": 12 },
+        "limits": { "maxTags": 6, "maxCategoryRatings": 5, "maxInfoCards": 6, "descriptionLines": 4 },
+        "grid": { "cols": 3 }
+      },
+      "9:16": {
+        "dimensions": [1080, 1920], "flags": ["isPortrait"],
+        "scaleFactor": 0.8,
+        "padding": { "container": 20, "section": 12, "card": 12 },
+        "spacing": { "section": 16, "element": 8, "gap": 6 },
+        "layout": { "columns": 1, "imageHeight": "30%", "contentHeight": "60%" },
+        "image": { "maxWidth": "300px", "maxHeight": "220px", "borderRadius": 12 },
+        "limits": { "maxTags": 4, "maxCategoryRatings": 5, "maxInfoCards": 6, "descriptionLines": 3 },
+        "grid": { "cols": 2 }
+      },
+      "4:3": {
+        "dimensions": [1600, 1200], "flags": ["isLandscape"],
+        "scaleFactor": 0.9,
+        "$correction": "0.9, PAS 0.85 (erreur de la version antérieure). 1600 > 1200×1.2 = 1440, donc isLandscape est vrai et la branche 0.9 gagne. La branche finale `: 0.85` de la cascade est INATTEIGNABLE pour les 5 ratios de RATIO_DIMENSIONS — code mort à supprimer explicitement, jamais à transcrire comme valeur de repli.",
+        "padding": { "container": 24, "section": 12, "card": 12 },
+        "spacing": { "section": 20, "element": 8, "gap": 6 },
+        "layout": { "columns": 2, "imageHeight": "40%", "contentHeight": "60%" },
+        "image": { "maxWidth": "300px", "maxHeight": "300px", "borderRadius": 12 },
+        "limits": { "maxTags": 6, "maxCategoryRatings": 5, "maxInfoCards": 6, "descriptionLines": 4 },
+        "grid": { "cols": 3 }
+      },
+      "A4": {
+        "dimensions": [1754, 2480], "flags": ["isA4", "isPortrait"], "mode": "paper",
+        "scaleFactor": 1.0,
+        "padding": { "container": 48, "section": 12, "card": 12 },
+        "spacing": { "section": 16, "element": 8, "gap": 6, "$viaPortrait": "section=16 et non 20 — `spacing.section` ne teste pas isA4, A4 tombe dans la branche isPortrait." },
+        "layout": { "columns": 1, "imageHeight": "30%", "contentHeight": "60%", "$viaPortrait": "columns=1 et non 2 — même raison." },
+        "image": { "maxWidth": "300px", "maxHeight": "220px", "borderRadius": 12, "$viaPortrait": "maxHeight=220px et non 300px." },
+        "limits": { "maxTags": 4, "maxCategoryRatings": 5, "maxInfoCards": 6, "descriptionLines": 3, "$viaPortrait": "maxTags=4 et descriptionLines=3 — et non 6/4." },
+        "grid": { "cols": 4 }
+      }
+    },
+    "deadKeys": {
+      "$comment": "R4 — `layout.columns`/`imageHeight`/`contentHeight` sont calculés par getResponsiveAdjustments mais consommés par AUCUN des 5 templates (0 occurrence). À traiter comme candidat suppression, jamais comme fondation d'un nouveau composant. La version antérieure de ce fichier exposait `columns` comme token, et C2 y faisait piloter le Masthead — sur une valeur morte.",
+      "keys": ["layout.columns", "layout.imageHeight", "layout.contentHeight"]
+    },
+    "consumedKeys": {
+      "$comment": "Relevé réel des accès dans les 5 templates (35 occurrences) — ce que l'ExportFrame DOIT fournir, sous peine d'`undefined` en cascade.",
+      "keys": ["scaleFactor", "isSquare", "isPortrait", "isLandscape", "isA4", "padding.*", "spacing.*", "fontSize.*", "image.maxHeight", "image.borderRadius", "limits.maxTags", "limits.maxCategoryRatings", "limits.maxInfoCards", "limits.descriptionLines", "grid.cols"]
+    }
+  },
+
+  "motion": {
+    "$comment": "Décision D1 : motion réservée à l'aperçu Studio interactif (accordéons/tooltips), jamais à l'export figé.",
+    "accordion": { "duration": "180ms", "easing": "cubic-bezier(0.25,0.46,0.45,0.94)" }
+  }
+}

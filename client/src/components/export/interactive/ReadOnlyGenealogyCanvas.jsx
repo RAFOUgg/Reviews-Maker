@@ -43,7 +43,7 @@ const nodeTypes = { cultivar: GenealogyNode };
  * canevas d'édition PhenoHunt — élimine par construction le risque de collision entre plusieurs
  * canevas montés simultanément (repéré en auditant avant d'implémenter).
  */
-export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, accentColor = '#C9922E', titleColor, textColor = '#A9B2AA' }) {
+export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, accentColor = '#A78BFA', titleColor, textColor = '#CBD5E1' }) {
     const treeId = reviewData?.geneticTreeId || reviewData?.flowerData?.geneticTreeId;
     const [tree, setTree] = useState(null);
     const [loading, setLoading] = useState(false);

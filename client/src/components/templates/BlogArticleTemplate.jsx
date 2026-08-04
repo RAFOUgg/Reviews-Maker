@@ -12,14 +12,15 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
+    resolveFontStack,
     getGlassTokens,
+    ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
-import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
-import PipelineStepFields from './sections/PipelineStepFields';
+import PipelineTimeline from './sections/PipelineTimeline';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — 'culture' exclu :
 // `substratMix` (le seul champ 'culture' déjà affiché ici) a déjà sa propre section riche
@@ -29,19 +30,6 @@ import PipelineStepFields from './sections/PipelineStepFields';
 const GISEMENT_GROUPS = ['harvest', 'usage', 'separation', 'extraction', 'purification', 'recipe'];
 const GISEMENT_ICONS = { harvest: '🌾', usage: '💨', separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯' };
 
-// Traduit la clé du pipeline (`extractPipelines`, ex. `pipelineGlobal`) vers l'identifiant de type
-// attendu par `summarizeCellFields` (chainCellPipelines.js) — même mapping que ModernCompactTemplate
-// / DetailedCardTemplate.
-const PIPELINE_TYPE_BY_KEY = {
-    pipelineGlobal: 'culture',
-    cultureTimeline: 'culture',
-    pipelineCuring: 'curing',
-    curingTimeline: 'curing',
-    pipelineExtraction: 'extraction',
-    extractionTimelineData: 'extraction',
-    pipelineSeparation: 'separation',
-    separationTimelineData: 'separation',
-};
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 
 /**
@@ -64,6 +52,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { isSquare, fontSize, padding, spacing, limits } = responsive;
     const glass = getGlassTokens(colors);
+    // Variante AA de l'accent pour le TEXTE (l'accent de palette est une couleur de surface).
+    const accentText = glass.isLight ? ACCENT_TEXT_COLORS.onPaper : ACCENT_TEXT_COLORS.onDark;
 
     // Pagination adaptative (Phase C du plan de finition Export Maker, 2026-08-03) — même contrat
     // que `DetailedCardTemplate.jsx` (le template pilote).
@@ -214,7 +204,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
             className="w-full h-full overflow-hidden"
             style={{
                 background: colors.background,
-                fontFamily: typography.fontFamily,
+                fontFamily: resolveFontStack(typography.fontFamily),
                 padding: `${padding.container}px`,
             }}
         >
@@ -466,66 +456,40 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 )}
                 </div>}
 
-                {/* Pipelines — toutes les étapes, toujours en détail (pas de mode compact en
-                    carrés sans texte, pas de troncature de libellé) ; champs résumés via
-                    `summarizeCellFields` (même logique que le canevas Chaîne de production)
-                    plutôt que des noms de champs devinés qui ne correspondaient pas aux vrais
-                    noms enregistrés par les formulaires (co2Ppm/ambientHumidity/ph/ec…). */}
+                {/* Pipelines — rendus par le composant partagé `sections/PipelineTimeline.jsx`
+                    (2026-08-04) : bandeau de conditions constantes + étapes réduites à leurs
+                    deltas. Ce template réimplémentait auparavant sa propre boucle, comme 3 autres. */}
                 {(() => {
                     // Chaque pipeline porte son propre `data-module` (`pipeline:<key>`, même
                     // vocabulaire que DetailedCardTemplate.jsx) — la pagination adaptative peut
                     // ainsi répartir Culture/Curing/Extraction/Séparation sur des pages différentes
                     // selon leur volume réel (Phase C).
-                    const pagePipelines = pipelines.filter((p) => isPageOn(`pipeline:${p.key}`));
+                    const pagePipelines = pipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id.startsWith(`pipeline:${p.key}#`)));
                     if (pagePipelines.length === 0) return null;
                     return (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>⚗️ Processus de Production</h2>
-                        {pagePipelines.map((p, pi) => {
-                            const rawSteps = p.rawSteps || p.steps.map(s => ({ label: s }));
-                            const pipelineType = PIPELINE_TYPE_BY_KEY[p.key] || p.key;
-                            return (
-                                <div key={pi} data-module={`pipeline:${p.key}`} className="mb-6">
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10,
-                                        padding: '10px 16px',
-                                        background: glass.background,
-                                        border: `1px solid ${glass.border}`,
-                                        borderRadius: 16,
-                                        backdropFilter: 'blur(24px) saturate(150%)',
-                                        WebkitBackdropFilter: 'blur(24px) saturate(150%)',
-                                        boxShadow: [
-                                            `0 4px 24px -4px ${glass.shadow}`,
-                                            `inset 0 1px 1px ${glass.borderHighlight}`,
-                                        ].join(', '),
-                                    }}>
-                                        <span style={{ fontSize: '20px' }}>{p.icon}</span>
-                                        <h3 style={{ fontSize: `${fontSize.text + 1}px`, fontWeight: '700', color: colors.textPrimary, flex: 1 }}>{p.name}</h3>
-                                        <span style={{ fontSize: `${fontSize.text - 2}px`, color: colors.accent, fontWeight: '600', padding: '2px 8px', backgroundColor: colorWithOpacity(colors.accent, 20), borderRadius: 20 }}>
-                                            {rawSteps.length} étapes
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                        {rawSteps.map((step, j) => {
-                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `Étape ${j + 1}`;
-                                            const fields = summarizeCellFields(pipelineType, step);
-                                            return (
-                                                <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', padding: '8px 10px', backgroundColor: colorWithOpacity(colors.accent, j % 2 === 0 ? 6 : 10), borderLeft: `3px solid ${colorWithOpacity(colors.accent, 50 + Math.min(j * 4, 35))}`, borderRadius: '0 8px 8px 0' }}>
-                                                    <span style={{ flexShrink: 0, padding: '3px 7px', backgroundColor: colorWithOpacity(colors.accent, 22), borderRadius: 6, fontSize: '12px', fontWeight: '700', color: colors.accent, textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                                        {String(label)}
-                                                    </span>
-                                                    <PipelineStepFields
-                                                        fields={fields}
-                                                        fontSize={fontSize.small}
-                                                        colors={{ textSecondary: colors.textSecondary, textPrimary: colors.textPrimary }}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {pagePipelines.map((p) => (
+                            <PipelineTimeline
+                                key={p.key}
+                                pipeline={p}
+                                moduleId={`pipeline:${p.key}`}
+                                isPageOn={isPageOn}
+                                paged={!!pageModuleIds}
+                                fontSize={{ text: fontSize.text + 1, small: fontSize.small }}
+                                spacing={{ element: spacing.element, gap: spacing.gap }}
+                                colors={{
+                                    textPrimary: colors.textPrimary,
+                                    textSecondary: colors.textSecondary,
+                                    title: colors.textPrimary,
+                                    accent: colors.accent,
+                                    accentText,
+                                    surface: colorWithOpacity(colors.accent, 10),
+                                    line: glass.border,
+                                }}
+                                glass={glass}
+                            />
+                        ))}
                     </div>
                     );
                 })()}

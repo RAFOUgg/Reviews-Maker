@@ -48,7 +48,7 @@ const nodeTypes = { chain: ChainNode };
  * global partagé par le vrai canevas d'édition, incompatible avec plusieurs instances montées en
  * même temps (page de lignée multi-review, galerie) sans collision d'état.
  */
-export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320, accentColor = '#C9922E', titleColor, textColor = '#A9B2AA' }) {
+export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320, accentColor = '#A78BFA', titleColor, textColor = '#CBD5E1' }) {
     const reviewId = reviewData?.id;
     const reviewType = normalizeReviewType(reviewData?.type);
     const [chain, setChain] = useState(null);

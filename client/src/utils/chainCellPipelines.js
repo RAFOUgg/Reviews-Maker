@@ -73,7 +73,14 @@ const DEFAULT_PHASES_BY_PIPELINE = {
 
 // Clés techniques posées par PipelineDragDropView sur chaque entrée de timeline, à ignorer
 // quand on résume le contenu d'une cellule (cf. PipelineDragDropView.jsx, ex. ligne 1359).
-const META_KEYS = new Set(['timestamp', 'label', 'date', 'phase', '_meta'])
+//
+// `cellLabel` ajoutée le 2026-08-04 : c'est le libellé d'affichage produit par
+// `generateTimelineCells()` juste au-dessus (`{ timestamp, cellLabel }`), pas une donnée saisie.
+// Son absence ici le faisait remonter comme un champ de mesure — chaque étape de chaque pipeline
+// affichait une fiche parasite « CELLLABEL / J1 » sur les 4 templates d'export. Le défaut est
+// antérieur à la refonte du rendu des pipelines ; il passait inaperçu tant que les vraies valeurs
+// étaient répétées sur chaque étape et le noyaient.
+const META_KEYS = new Set(['timestamp', 'label', 'cellLabel', 'date', 'phase', '_meta'])
 
 export function getPipelineDefsForReviewType(reviewType) {
     return REVIEW_TYPE_PIPELINES[reviewType] || []
@@ -261,6 +268,90 @@ export function summarizeCellFields(pipelineType, entry) {
             if (Array.isArray(value)) value = value.join(', ')
             return { key: k, label, value: `${value}${unit}` }
         })
+}
+
+// Champs qui ne doivent JAMAIS être remontés en constante : deux commentaires identiques sont une
+// coïncidence rédactionnelle, pas une condition de culture stable. Même ensemble que
+// `NOTE_FIELD_KEYS` (PipelineStepFields.jsx), redéclaré ici pour ne pas créer de dépendance d'un
+// util vers un composant.
+const NON_CONSTANT_KEYS = new Set(['note', 'comment', 'commentaire'])
+
+// Seuils de détection. 0.8 : un champ identique sur au moins 80% des étapes qui le renseignent est
+// une constante — pas 100%, sinon une seule saisie divergente sur 20 ferait disparaître la
+// bannière et on retomberait sur la répétition intégrale. 3 : sous 3 étapes renseignées,
+// « constant » n'a aucun sens statistique et masquerait de l'information.
+const CONSTANT_RATIO_THRESHOLD = 0.8
+const CONSTANT_MIN_STEPS = 3
+
+/**
+ * Détecte les champs dont la valeur est constante à travers les étapes d'un pipeline.
+ *
+ * Motivation (symptôme central de la refonte Export Maker) : une culture de 25 jours saisie à
+ * 24 °C / 68 % / 888 ppm produit 25 cartes d'étape strictement identiques — la fiche est longue
+ * sans porter aucune information. On remonte ces valeurs UNE fois dans un bandeau, et chaque étape
+ * n'affiche plus que ce qui la distingue.
+ *
+ * Lit exclusivement la sortie de `summarizeCellFields` (libellés/unités déjà résolus par les
+ * configs *SidebarContent.js) — aucun nom de champ n'est deviné ici, conformément au fil rouge du
+ * projet (6 occurrences documentées de bugs par vocabulaire supposé).
+ *
+ * @param {string} pipelineType - 'culture' | 'curing' | 'extraction' | 'separation' | 'purification'
+ * @param {Array<object>} steps - étapes brutes du pipeline (cellules)
+ * @returns {{ constants: Array<{key,label,value}>, constantKeysByStep: Array<Set<string>> }}
+ *   `constants` : à afficher une seule fois en bandeau.
+ *   `constantKeysByStep` : pour chaque étape, les clés à MASQUER (celles qui portent bien la
+ *   valeur constante). Une étape divergente conserve son champ — c'est son delta.
+ */
+export function detectPipelineConstants(pipelineType, steps) {
+    const list = Array.isArray(steps) ? steps : []
+    const empty = { constants: [], constantKeysByStep: list.map(() => new Set()) }
+    if (list.length < CONSTANT_MIN_STEPS) return empty
+
+    // Champs résumés par étape, indexés par clé — une seule passe de summarizeCellFields.
+    const perStep = list.map(step => {
+        const byKey = new Map()
+        for (const f of summarizeCellFields(pipelineType, step)) byKey.set(f.key, f)
+        return byKey
+    })
+
+    // Pour chaque clé rencontrée : quelle valeur domine, et sur quelle proportion des étapes qui
+    // la renseignent ?
+    const occurrences = new Map()
+    perStep.forEach(byKey => {
+        byKey.forEach((field, key) => {
+            if (NON_CONSTANT_KEYS.has(key)) return
+            if (!occurrences.has(key)) occurrences.set(key, { field, counts: new Map(), total: 0 })
+            const entry = occurrences.get(key)
+            entry.total += 1
+            entry.counts.set(field.value, (entry.counts.get(field.value) || 0) + 1)
+        })
+    })
+
+    const constants = []
+    const constantValueByKey = new Map()
+    occurrences.forEach((entry, key) => {
+        if (entry.total < CONSTANT_MIN_STEPS) return
+        let bestValue = null
+        let bestCount = 0
+        entry.counts.forEach((count, value) => {
+            if (count > bestCount) { bestCount = count; bestValue = value }
+        })
+        if (bestCount / entry.total < CONSTANT_RATIO_THRESHOLD) return
+        constants.push({ key, label: entry.field.label, value: bestValue })
+        constantValueByKey.set(key, bestValue)
+    })
+
+    // Une étape ne masque un champ que si elle porte RÉELLEMENT la valeur constante. Si elle
+    // diverge, le champ reste visible sur cette étape : c'est précisément l'information utile.
+    const constantKeysByStep = perStep.map(byKey => {
+        const hidden = new Set()
+        constantValueByKey.forEach((value, key) => {
+            if (byKey.get(key)?.value === value) hidden.add(key)
+        })
+        return hidden
+    })
+
+    return { constants, constantKeysByStep }
 }
 
 // Sections de données déjà renseignées sur la fiche (pas des pipelines) — noms de colonnes

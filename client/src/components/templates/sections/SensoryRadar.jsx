@@ -14,7 +14,7 @@ import PropTypes from 'prop-types';
  */
 export default function SensoryRadar({
     axes,
-    accentColor = '#C9922E',
+    accentColor = '#A78BFA',
     lineColor = '#2C3A32',
     textColor = '#6E7A72',
     size = 260,

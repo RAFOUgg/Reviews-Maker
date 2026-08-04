@@ -3,13 +3,22 @@
 
 // Palettes de couleurs harmonieuses prédéfinies
 export const COLOR_PALETTES = {
+    // Palette "Terpologie" — RÉALIGNÉE le 2026-08-04 sur la direction artistique réelle du site
+    // (LiquidUI). Les valeurs ne sont pas approchées à l'œil : elles sont reprises telles quelles
+    // des 2 feuilles canoniques de l'app.
+    //   background   → recette de `--app-bg` (theme-tokens.css) posée sur `--app-bg-solid` #0b1220
+    //   textPrimary  → `--text-primary` (theme-tokens.css)
+    //   textSecondary→ `dark.muted` (tailwind.config.js)
+    //   accent       → violet-400, nuance TEXTE du système (cf. ACCENT_TEXT_COLORS) — l'accent
+    //                  signature `--liquid-primary` #8B5CF6 est réservé aux surfaces/glows, il
+    //                  échoue AA en texte sur ce fond (4.42:1).
     modern: {
         name: 'Terpologie',
-        background: 'linear-gradient(135deg, #0D0D1A 0%, #1A1A2E 50%, #16213E 100%)',
-        textPrimary: '#ffffff',
-        textSecondary: '#94A3B8',
+        background: 'radial-gradient(700px 420px at 50% 28%, rgba(255,255,255,0.02), rgba(0,0,0,0.5) 38%, rgba(0,0,0,0.95) 100%), #0b1220',
+        textPrimary: '#E6EEF8',
+        textSecondary: '#CBD5E1',
         accent: '#A78BFA',
-        title: '#ffffff'
+        title: '#FFFFFF'
     },
     nature: {
         name: 'Nature',
@@ -265,9 +274,22 @@ export const DEFAULT_TEMPLATES = {
 // `defaultTypography` ne liste que ce qui diffère des valeurs de base (`DEFAULT_CONFIG.typography`
 // dans exportMakerStore.js), fusionné par-dessus au moment de l'application.
 export const TEMPLATE_DEFAULT_IDENTITY = {
+    // 2026-08-04 — identités par défaut UNIFIÉES sur la direction artistique du site (LiquidUI).
+    //
+    // Deux problèmes corrigés d'un coup :
+    //   1. Les 5 templates avaient chacun une palette par défaut différente (modern/resin/elegant/
+    //      sunset/ocean) — changer de template changeait l'identité de marque du rendu. Les
+    //      templates doivent se différencier par leur MISE EN PAGE, pas par leur palette.
+    //   2. 4 de ces 5 entrées pointaient vers une police jamais chargée (Inter/Merriweather/
+    //      Poppins) : l'identité PAR DÉFAUT de 4 templates sur 5 se rendait dans un repli système.
+    //
+    // 'Inter' est désormais réellement chargée (client/index.html) : c'est l'équivalent web fidèle
+    // de la pile système du site (`-apple-system`/`SF Pro Display`, tailwind.config.js > fontFamily).
+    // Les palettes `resin`/`elegant`/`sunset`/`ocean` restent sélectionnables, simplement plus par
+    // défaut.
     modernCompact: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
-    detailedCard: { defaultPalette: 'resin', defaultTypography: { fontFamily: 'Space Grotesk', titleWeight: '700' } },
-    blogArticle: { defaultPalette: 'elegant', defaultTypography: { fontFamily: 'Merriweather', titleWeight: '700' } },
-    socialStory: { defaultPalette: 'sunset', defaultTypography: { fontFamily: 'Poppins', titleWeight: '800' } },
-    traceabilityReport: { defaultPalette: 'ocean', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
+    detailedCard: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
+    blogArticle: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
+    socialStory: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '800' } },
+    traceabilityReport: { defaultPalette: 'modern', defaultTypography: { fontFamily: 'Inter', titleWeight: '700' } },
 };

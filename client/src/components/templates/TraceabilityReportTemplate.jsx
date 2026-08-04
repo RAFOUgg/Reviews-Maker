@@ -4,16 +4,18 @@ import {
     colorWithOpacity,
     formatDate,
     getResponsiveAdjustments,
+    resolveFontStack,
     safeParse,
+    isLightColor,
+    ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
-import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import TemplateSection from './sections/TemplateSection';
-import PipelineStepFields from './sections/PipelineStepFields';
+import PipelineTimeline from './sections/PipelineTimeline';
 import { CannabinoidGrid, getCannabinoidItems, GisementSections } from './sections/RegistrySections';
 
 const BUSINESS_TYPE_LABELS = {
@@ -129,6 +131,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     const { typography, colors } = config;
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { fontSize, padding, spacing } = responsive;
+    // Variante AA de l'accent pour le TEXTE — l'accent de palette est une couleur de surface
+    // (violet-500 par défaut : 4.42:1 sur le fond de l'app, sous le seuil AA en petit texte).
+    const accentText = isLightColor(colors.textPrimary) ? ACCENT_TEXT_COLORS.onDark : ACCENT_TEXT_COLORS.onPaper;
 
     const mainImage = resolveImageUrl(
         (Array.isArray(reviewData.images) && reviewData.images.length > 0)
@@ -187,7 +192,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 // 2026-08-02 (repéré via la nouvelle section labo, mais présent sur tout le document).
                 background: colors.background,
                 padding: `${padding.container}px`,
-                fontFamily: typography.fontFamily,
+                fontFamily: resolveFontStack(typography.fontFamily),
                 color: colors.textPrimary,
                 overflow: 'visible',
             }}
@@ -326,41 +331,26 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                         {activeTimelines.map((t) => {
                             const steps = safeParse(reviewData[t.dataKey], []);
                             if (!Array.isArray(steps) || steps.length === 0) return null;
+                            // `t.type` est DÉJÀ l'identifiant attendu par summarizeCellFields
+                            // ('culture'/'curing'/…), pas une clé d'extractPipelines : le repli
+                            // `PIPELINE_TYPE_BY_KEY[key] || key` du composant partagé le résout.
                             return (
-                                <div key={t.type}>
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: spacing.gap,
-                                        marginBottom: 6, fontSize: `${fontSize.text}px`, fontWeight: 700, color: colors.title,
-                                    }}>
-                                        <span>{t.icon}</span>
-                                        <span style={{ flex: 1 }}>{t.name}</span>
-                                        <span style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: 600 }}>{steps.length} étapes</span>
-                                    </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 8 }}>
-                                        {steps.map((step, si) => {
-                                            const label = step.label || step.date || step.semaine || step.phase || step.jour || `${si + 1}`;
-                                            const fields = summarizeCellFields(t.type, step);
-                                            return (
-                                                <div key={si} style={{
-                                                    background: colorWithOpacity(colors.accent, 6),
-                                                    borderRadius: 8,
-                                                    padding: '8px 10px',
-                                                    borderLeft: `3px solid ${colors.accent}`,
-                                                }}>
-                                                    <div style={{ fontSize: `${fontSize.small}px`, fontWeight: 700, color: colors.accent, marginBottom: 4 }}>
-                                                        {String(label)}
-                                                    </div>
-                                                    <PipelineStepFields
-                                                        fields={fields}
-                                                        compact
-                                                        fontSize={fontSize.small}
-                                                        colors={{ textSecondary: colors.textSecondary, textPrimary: colors.textPrimary }}
-                                                    />
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </div>
+                                <PipelineTimeline
+                                    key={t.type}
+                                    pipeline={{ key: t.type, name: t.name, icon: t.icon, rawSteps: steps }}
+                                    compact
+                                    fontSize={{ text: fontSize.text, small: fontSize.small }}
+                                    spacing={{ element: spacing.section, gap: spacing.gap }}
+                                    colors={{
+                                        textPrimary: colors.textPrimary,
+                                        textSecondary: colors.textSecondary,
+                                        title: colors.title,
+                                        accent: colors.accent,
+                                        accentText,
+                                        surface: colorWithOpacity(colors.accent, 6),
+                                        line: colorWithOpacity(colors.textSecondary, 20),
+                                    }}
+                                />
                             );
                         })}
                     </div>

@@ -4,7 +4,10 @@ import { getFieldMeta } from '../../../utils/chainCellPipelines';
 
 // Palette de lignes — reprend les 3 signaux de la direction v2 (résine/plante/terracotta) puis
 // des teintes neutres de repli, plutôt que d'inventer une nouvelle palette arc-en-ciel.
-const LINE_COLORS = ['#C9922E', '#3E7C5A', '#B5533A', '#38BDF8', '#A78BFA'];
+// Séries alignées sur la DA du site (LiquidUI) : nuances 400 des accents de l'app — violet
+// (`--liquid-primary`), cyan (`--liquid-secondary`), emerald, amber, red. Toutes tiennent AA sur
+// le fond sombre de l'app (≥ 6.4:1), contrairement aux nuances 500 utilisées en surface.
+const LINE_COLORS = ['#A78BFA', '#22D3EE', '#34D399', '#FBBF24', '#F87171'];
 
 // Mêmes clés que `META_KEYS` dans `chainCellPipelines.js` (non exporté) — jamais des mesures.
 const META_KEYS = new Set(['timestamp', 'label', 'date', 'phase', '_meta']);
@@ -25,7 +28,7 @@ const META_KEYS = new Set(['timestamp', 'label', 'date', 'phase', '_meta']);
  * le graphique ne s'affichait jamais sur une review réelle, silencieusement masqué par son propre
  * garde-fou `dataKeys.length === 0`).
  */
-export default function CultureStatsChart({ steps, pipelineType, width = 560, height = 220, textColor = '#A9B2AA', lineColor = '#2C3A32' }) {
+export default function CultureStatsChart({ steps, pipelineType, width = 560, height = 220, textColor = '#CBD5E1', lineColor = 'rgba(255,255,255,0.12)' }) {
     if (!Array.isArray(steps) || steps.length < 2) return null;
 
     const chartData = steps.map((step, i) => {

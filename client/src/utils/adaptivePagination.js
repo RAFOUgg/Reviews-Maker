@@ -93,7 +93,21 @@ const SECTION_HEADER_OVERHEAD = 40;
 // une page suivante), pas juste débordant proprement. Conforme à la préférence déjà actée par
 // l'utilisateur sur ce même template (correctif post-déploiement, pipelines) : préférer une fiche
 // plus longue (plus de pages) à la moindre perte de contenu.
-const BUDGET_SAFETY_FACTOR = 0.70;
+// Recalibré 0.70 → 0.92 le 2026-08-04, sur mesure et non au jugé.
+//
+// Deux causes de la sous-estimation qui justifiait 0.70 ont été supprimées depuis :
+//   1. Les polices web n'étaient chargées qu'à la première utilisation. La MESURE les attendait
+//      (`document.fonts.ready` après montage), mais la CAPTURE, elle, s'exécutait avant leur
+//      arrivée — les deux travaillaient donc sur des métriques différentes. Les polices sont
+//      désormais préchargées au démarrage (`main.jsx`), mesure et rendu concordent.
+//   2. Les pipelines étaient insécables : un module de 1229px sur un canevas de 800px débordait
+//      quoi qu'il arrive, et aucune marge n'y pouvait rien. Ils sont maintenant découpés en
+//      tronçons paginables.
+//
+// Relevé de contrôle (Playwright, pages réellement rendues) : sur 5 pages, aucune n'était
+// sur-remplie — l'écart mesure/rendu était nul à l'arrondi près. 8% de marge couvre le sous-pixel
+// et la variance de rendu, sans transformer chaque page en tiers de page.
+const BUDGET_SAFETY_FACTOR = 0.92;
 
 // Isolement forcé (2026-07-31, 3e tour de vérification) : même à 70% de marge, `cannabinoidProfile`
 // (grille + radar SVG, empilés verticalement en formats étroits/carrés) et `cultureStats` (graphique
@@ -105,14 +119,49 @@ const BUDGET_SAFETY_FACTOR = 0.70;
 // Seul risque résiduel : un de CES modules, à lui seul, peut encore déborder sa propre page dédiée —
 // c'est la limite déjà documentée et acceptée (un bloc plus grand qu'une page occupe sa page en
 // débordant), pas la perte silencieuse de contenu partagé avec des voisins qu'on corrige ici.
-const ALWAYS_ISOLATE = new Set(['masthead', 'cannabinoidProfile', 'cultureStats', 'mainImage']);
+// Recalibré le 2026-08-04 sur MESURE réelle, plus sur prudence.
+//
+// Relevé du remplissage effectif de chaque page rendue (Playwright, review réelle, ratio 1:1) avant
+// cette passe : masthead seul = 30% de la page, description seule = 7%, deux petites sections = 38%
+// — et AUCUNE page n'était sur-remplie. La marge et l'isolement protégeaient donc contre un risque
+// qui ne se matérialisait pas, au prix d'un document deux fois trop long. Un export commercialement
+// présentable ne peut pas comporter des pages remplies à 7%.
+//
+// `masthead` et `mainImage` sortent de l'isolement : ce sont des blocs simples (texte, image), dont
+// la hauteur se mesure sans ambiguïté — rien à voir avec les deux widgets composites ci-dessous.
+// `cannabinoidProfile` (grille + radar SVG) et `cultureStats` (Recharts) restent isolés : leur
+// mesure a réellement échoué par le passé, et leur contenu disparaissait SILENCIEUSEMENT — un mode
+// de défaillance bien pire qu'une page peu remplie.
+const ALWAYS_ISOLATE = new Set(['cannabinoidProfile', 'cultureStats']);
+
+// Un tronçon de pipeline porte un id `<module>#<n>` (cf. PipelineTimeline.jsx) : les règles
+// d'isolement et de libellé s'appliquent au module de base, pas au numéro de tronçon.
+function baseModuleId(id) {
+    const hash = id.indexOf('#');
+    return hash === -1 ? id : id.slice(0, hash);
+}
+
+function resolveMeta(id) {
+    return MODULE_META[baseModuleId(id)] || { label: baseModuleId(id), icon: '📄' };
+}
 
 export function computeAdaptivePages(moduleHeights, ratio, containerPadding) {
     const dims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     const budget = Math.max(200, (dims.height - containerPadding * 2) * BUDGET_SAFETY_FACTOR);
 
-    const entries = Array.from(moduleHeights.entries())
+    const all = Array.from(moduleHeights.entries())
         .filter(([, h]) => Number.isFinite(h) && h > 4); // hauteur ~0 = module absent (pas de données)
+
+    // En-têtes de pipeline (`<module>#hdr`) : reportés sur chaque page portant un tronçon du même
+    // pipeline, ils ne sont donc PAS des modules à placer mais un coût fixe à réserver une fois par
+    // page et par pipeline. Les omettre du budget faisait croire au packer qu'il restait de la place
+    // qui n'existait pas (mesuré : ~124px non comptés par page de pipeline).
+    const headerHeights = new Map();
+    const entries = [];
+    for (const [id, h] of all) {
+        if (id.endsWith('#hdr')) headerHeights.set(id.slice(0, -4), h);
+        else entries.push([id, h]);
+    }
     if (entries.length === 0) return [];
 
     const pages = [];
@@ -121,24 +170,36 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding) {
 
     const startPage = (firstId) => {
         if (current) pages.push(current);
-        const meta = MODULE_META[firstId] || { label: firstId, icon: '📄' };
-        current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true };
+        const meta = resolveMeta(firstId);
+        current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true, bases: new Set() };
         currentHeight = 0;
+    };
+
+    // Coût de l'en-tête à réserver si ce module est le premier de son pipeline sur la page visée.
+    const headerCostOn = (page, id) => {
+        const base = baseModuleId(id);
+        if (!headerHeights.has(base)) return 0;
+        return page && page.bases.has(base) ? 0 : headerHeights.get(base);
     };
 
     for (const [id, rawHeight] of entries) {
         const height = rawHeight + SECTION_HEADER_OVERHEAD;
-        const isolated = ALWAYS_ISOLATE.has(id);
+        const isolated = ALWAYS_ISOLATE.has(baseModuleId(id));
         // Un module isolé démarre TOUJOURS sa propre page ; les modules suivants ne doivent pas non
         // plus rejoindre SA page (sinon on recrée le même risque de perte pour le voisin suivant) —
         // `current.solo` marque une page occupée par un module isolé comme définitivement close.
-        const fitsCurrent = current && !current.solo && !isolated && (currentHeight + height <= budget);
+        const fitsCurrent = current && !current.solo && !isolated
+            && (currentHeight + height + headerCostOn(current, id) <= budget);
         if (!fitsCurrent) startPage(id);
         if (isolated) current.solo = true;
+        currentHeight += headerCostOn(current, id);
+        current.bases.add(baseModuleId(id));
         current.modules.push(id);
         currentHeight += height;
     }
     if (current) pages.push(current);
 
-    return pages;
+    // `bases` est un accumulateur interne au packing — un Set ne se sérialise pas en JSON (il
+    // deviendrait `{}` en traversant le store de pages), on ne le laisse pas fuiter dans la sortie.
+    return pages.map(({ bases, ...page }) => page); // eslint-disable-line no-unused-vars
 }

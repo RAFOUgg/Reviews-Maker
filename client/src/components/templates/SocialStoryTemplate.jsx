@@ -6,6 +6,7 @@ import {
     extractCategoryRatings,
     colorWithOpacity,
     getResponsiveAdjustments,
+    resolveFontStack,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
@@ -134,7 +135,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
         <div style={{
             width: '100%', height: '100%',
             background: bg,
-            fontFamily: typography?.fontFamily || 'Inter, sans-serif',
+            // Repli aligné sur la pile de polices du site (tailwind.config.js > fontFamily.sans).
+            fontFamily: resolveFontStack(typography?.fontFamily),
             color: white,
             display: 'flex',
             flexDirection: 'column',

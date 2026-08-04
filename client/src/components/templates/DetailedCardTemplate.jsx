@@ -12,18 +12,19 @@ import {
     colorWithOpacity,
     getResponsiveAdjustments,
     SEMANTIC_SCORE_COLORS,
+    SEMANTIC_SCORE_TEXT_COLORS,
+    ACCENT_TEXT_COLORS,
     getScoreBand,
     RATIO_DIMENSIONS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
-import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
 import SensoryRadar from './sections/SensoryRadar';
 import CultureStatsChart from './sections/CultureStatsChart';
-import PipelineStepFields from './sections/PipelineStepFields';
+import PipelineTimeline from './sections/PipelineTimeline';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 
@@ -56,34 +57,35 @@ const TIMELINE_PIPELINES = [
     { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
 ];
 
-// Traduit la clé du pipeline (`extractPipelines`) vers l'identifiant de type attendu par
-// `summarizeCellFields` (chainCellPipelines.js) — même mapping que les autres templates.
-const PIPELINE_TYPE_BY_KEY = {
-    pipelineGlobal: 'culture',
-    cultureTimeline: 'culture',
-    pipelineCuring: 'curing',
-    curingTimeline: 'curing',
-    pipelineExtraction: 'extraction',
-    extractionTimelineData: 'extraction',
-    pipelineSeparation: 'separation',
-    separationTimelineData: 'separation',
-};
-
-const DISPLAY = '"Space Grotesk", "Inter", sans-serif';
+// Aligné sur la pile de polices du SITE (tailwind.config.js > fontFamily.sans : -apple-system,
+// SF Pro Display…). Inter en tête est l'équivalent web fidèle de cette pile et est réellement
+// chargée depuis le 2026-08-04 (client/index.html) — auparavant ce template imposait Space Grotesk,
+// une identité typographique qui n'existait nulle part ailleurs dans le produit.
+const DISPLAY = 'Inter, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif';
+const BODY = DISPLAY;
+// Seule exception assumée : l'app n'a pas de police mono, mais les colonnes de chiffres ont besoin
+// d'une chasse tabulaire pour s'aligner. Besoin fonctionnel, pas un choix d'identité.
 const MONO = '"JetBrains Mono", "SF Mono", ui-monospace, monospace';
 
 /**
- * DetailedCardTemplate — Fiche Technique Détaillée, direction artistique v2 (2026-07-30,
- * specs-direction-artistique.md + terpologie-coa-v2.html). Remplace le glassmorphism (livré
- * 2026-07-29) par une identité "certificat de laboratoire" : fond charcoal-vert par défaut
- * (palette "Résine"), 3 bandes sémantiques FIXES pour les scores (vert conforme / ambre moyen /
- * terracotta bas — `SEMANTIC_SCORE_COLORS`, indépendantes de la palette active), Space Grotesk
- * pour les titres, JetBrains Mono pour tous les chiffres/données (chasse tabulaire). Un seul gros
- * chiffre du document : la note globale.
+ * DetailedCardTemplate — Fiche Technique Détaillée.
  *
- * Mode papier (impression/document) déclenché automatiquement sur le ratio A4 — fond crème/encre
- * sombre/filets fins, les accents (résine/plante/terracotta + accent de palette) restent
- * identiques entre écran et papier (cf. spec §2).
+ * STRUCTURE (issue de la DA v2 du 2026-07-30, specs-direction-artistique.md) : masthead stable,
+ * sections numérotées 01-04, un seul gros chiffre dans le document (la note globale), chiffres en
+ * chasse tabulaire, bandes sémantiques de score indépendantes de la palette active. Cette
+ * organisation de l'information est conservée.
+ *
+ * COULEURS ET TYPOGRAPHIE — réalignées le 2026-08-04 sur la direction artistique du SITE
+ * (LiquidUI) : le territoire "certificat de laboratoire" (charcoal-vert, ambre résine, Space
+ * Grotesk) était une identité isolée, qui n'existait nulle part ailleurs dans le produit — un
+ * utilisateur passant de l'app à sa fiche exportée changeait de marque. Désormais : palette
+ * "Terpologie" dérivée de `theme-tokens.css`/`apple-liquid-glass.css`, accent violet, bandes
+ * sémantiques emerald/amber/red (le système déjà utilisé par `LiquidBadge`/`LiquidAlert`), pile de
+ * polices du site (Inter). Seule la chasse mono des chiffres est conservée — besoin fonctionnel.
+ *
+ * Mode papier (impression) déclenché automatiquement sur le ratio A4 — échelle neutre slate du
+ * site (slate-50 papier / slate-900 encre), accents en nuances 600/700, seules à tenir AA sur
+ * fond clair.
  */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
     if (!config || !reviewData) {
@@ -117,14 +119,25 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const isLightScreenPalette = !colors.background?.includes('gradient');
     const tint = (isPaperMode || isLightScreenPalette) ? '#000000' : '#ffffff';
 
-    const bg = isPaperMode ? '#F5F2E9' : colors.background;
-    const surface = isPaperMode ? '#EAE5D7' : colorWithOpacity(tint, isLightScreenPalette ? 4 : 5);
-    const line = isPaperMode ? '#D8D2C2' : colorWithOpacity(tint, 11);
-    const lineSoft = isPaperMode ? '#DCD6C6' : colorWithOpacity(tint, 7);
-    const textPrimary = isPaperMode ? '#1A211D' : (colors.textPrimary || '#EDEAE0');
-    const textSecondary = isPaperMode ? '#4a5049' : (colors.textSecondary || '#A9B2AA');
-    const titleColor = isPaperMode ? '#1A211D' : (colors.title || textPrimary);
-    const accent = colors.accent || '#C9922E';
+    // Mode papier réaligné sur l'échelle neutre du site (slate de tailwind.config.js) plutôt que
+    // sur le crème/charcoal du territoire "certificat de laboratoire" abandonné : slate-50 pour le
+    // papier, slate-900 pour l'encre, slate-200/100 pour les filets.
+    const bg = isPaperMode ? '#F8FAFC' : colors.background;
+    const surface = isPaperMode ? '#F1F5F9' : colorWithOpacity(tint, isLightScreenPalette ? 4 : 5);
+    const line = isPaperMode ? '#CBD5E1' : colorWithOpacity(tint, 11);
+    const lineSoft = isPaperMode ? '#E2E8F0' : colorWithOpacity(tint, 7);
+    const textPrimary = isPaperMode ? '#0F172A' : (colors.textPrimary || '#E6EEF8');
+    const textSecondary = isPaperMode ? '#475569' : (colors.textSecondary || '#CBD5E1');
+    const titleColor = isPaperMode ? '#0F172A' : (colors.title || textPrimary);
+    const accent = colors.accent || '#A78BFA';
+    // Bandes sémantiques : `SEMANTIC_SCORE_COLORS` reste la couleur des SURFACES (barres, points,
+    // dégradés — seuil WCAG 3:1) ; `scoreText` est la variante conforme AA (4.5:1) obligatoire dès
+    // qu'un score colore du TEXTE. Cf. audit B3 §7 : hi/lo étaient à 3.73/3.76 en texte, et en mode
+    // papier l'accent ambre tombe à 2.44 sur crème.
+    const scoreText = isPaperMode ? SEMANTIC_SCORE_TEXT_COLORS.onPaper : SEMANTIC_SCORE_TEXT_COLORS.onDark;
+    // Variante AA de l'accent pour le TEXTE : l'accent de palette (violet-500 par défaut) est une
+    // couleur de surface, il échoue AA en petit texte sur le fond de l'app (4.42:1).
+    const accentText = isPaperMode ? ACCENT_TEXT_COLORS.onPaper : ACCENT_TEXT_COLORS.onDark;
 
     // Extraction des données
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
@@ -273,7 +286,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     };
 
     const DataCell = ({ label, value, unit, status }) => {
-        const statusColor = status === 'ok' ? SEMANTIC_SCORE_COLORS.hi : status === 'warn' ? SEMANTIC_SCORE_COLORS.lo : textPrimary;
+        const statusColor = status === 'ok' ? scoreText.hi : status === 'warn' ? scoreText.lo : textPrimary;
         return (
             <div style={{ background: surface, padding: `${padding.card * 0.8}px ${padding.card}px` }}>
                 <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.1em', color: textSecondary, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
@@ -284,70 +297,24 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
-    const StepCard = ({ step, index, pipelineType }) => {
-        const label = step.label || step.date || step.semaine || step.phase || step.jour || `${index + 1}`;
-        const fields = summarizeCellFields(pipelineType, step);
-
-        return (
-            <div style={{
-                display: 'flex', gap: isSquare ? 8 : 10, alignItems: 'flex-start',
-                padding: `${isSquare ? 8 : 10}px ${isSquare ? 10 : 12}px`,
-                background: surface,
-                borderRadius: 8,
-                borderLeft: `3px solid ${accent}`,
-            }}>
-                <div style={{
-                    flexShrink: 0, textAlign: 'center',
-                    padding: `4px ${isSquare ? 7 : 9}px`,
-                    background: colorWithOpacity(accent, 16),
-                    borderRadius: isSquare ? 5 : 7,
-                    fontFamily: MONO,
-                    fontSize: `${fontSize.small}px`, fontWeight: '700',
-                    color: accent, whiteSpace: 'nowrap',
-                }}>
-                    {String(label)}
-                </div>
-                <PipelineStepFields
-                    fields={fields}
-                    compact={isSquare}
-                    fontSize={fontSize.small}
-                    colors={{ textSecondary, textPrimary }}
-                />
-            </div>
-        );
-    };
-
-    const PipelineTimeline = ({ pipeline, moduleId }) => {
-        const rawSteps = pipeline.rawSteps || pipeline.steps.map((s) => ({ label: s }));
-        const pipelineType = PIPELINE_TYPE_BY_KEY[pipeline.key] || pipeline.key;
-        return (
-            <div data-module={moduleId} style={{ marginBottom: `${spacing.element}px` }}>
-                <div style={{
-                    display: 'flex', alignItems: 'center', gap: spacing.element,
-                    marginBottom: spacing.gap + 2,
-                    padding: `${isSquare ? 5 : 7}px ${isSquare ? 8 : 12}px`,
-                    background: surface,
-                    borderRadius: isSquare ? 8 : 10,
-                }}>
-                    <span style={{ fontSize: isSquare ? '16px' : '20px' }}>{pipeline.icon}</span>
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 1 }}>
-                        <span style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text}px`, fontWeight: '700', color: titleColor }}>{pipeline.name}</span>
-                        {pipeline.configMeta && <span style={{ fontSize: `${fontSize.small}px`, color: textSecondary }}>{pipeline.configMeta}</span>}
-                    </div>
-                    <span style={{
-                        fontFamily: MONO, fontSize: `${fontSize.small}px`, color: accent,
-                        background: colorWithOpacity(accent, 16),
-                        padding: '2px 7px', borderRadius: 20, fontWeight: '600',
-                    }}>
-                        {rawSteps.length} étape{rawSteps.length > 1 ? 's' : ''}
-                    </span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                    {rawSteps.map((step, i) => <StepCard key={i} step={step} index={i} pipelineType={pipelineType} />)}
-                </div>
-            </div>
-        );
-    };
+    // StepCard/PipelineTimeline locaux remplacés le 2026-08-04 par le composant partagé
+    // `sections/PipelineTimeline.jsx` : la même boucle était réimplémentée dans 4 templates, et
+    // c'est elle qui produisait le symptôme central (25 etapes a 24 C / 68 % / 888 ppm rendues en
+    // 25 cartes identiques). Le composant partagé y ajoute le bandeau de conditions constantes et
+    // le groupement par phase.
+    const renderPipeline = (pipeline, moduleId) => (
+        <PipelineTimeline
+            key={moduleId}
+            pipeline={pipeline}
+            moduleId={moduleId}
+            isPageOn={isPageOn}
+            paged={!!pageModuleIds}
+            compact={isSquare}
+            fontSize={{ text: fontSize.text, small: fontSize.small }}
+            spacing={{ element: spacing.element, gap: spacing.gap }}
+            colors={{ textPrimary, textSecondary, title: titleColor, accent, accentText, surface, line }}
+        />
+    );
 
     const renderBranding = () => {
         if (!branding?.enabled || !branding?.logoUrl) return null;
@@ -398,7 +365,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // masquait silencieusement du contenu dans l'aperçu Studio au lieu de le rendre visible via
     // une page supplémentaire, contraire au principe "aucun rendu ne doit être scrollable".
     return (
-        <div className="relative w-full h-full overflow-hidden" style={{ background: bg, fontFamily: 'Inter, sans-serif', color: textPrimary, padding: `${padding.container}px` }}>
+        <div className="relative w-full h-full overflow-hidden" style={{ background: bg, fontFamily: BODY, color: textPrimary, padding: `${padding.container}px` }}>
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full h-full flex flex-col">
 
                 {/* ── MASTHEAD ── */}
@@ -418,7 +385,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${fontSize.small + 1}px`, color: titleColor }}>
                                 TERPOLOGIE{producerName && <span style={{ color: textSecondary, fontWeight: 500 }}> / {producerName}</span>}
                             </span>
-                            <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small - 1}px`, letterSpacing: '0.1em', color: SEMANTIC_SCORE_COLORS.hi, border: `1px solid ${line}`, padding: '4px 9px', borderRadius: 6, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                            <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small - 1}px`, letterSpacing: '0.1em', color: scoreText.hi, border: `1px solid ${line}`, padding: '4px 9px', borderRadius: 6, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                 Fiche technique · COA
                             </span>
                         </div>
@@ -446,7 +413,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 {metaItems.map((m, i) => (
                                     <div key={i}>
                                         <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase' }}>{m.label}</div>
-                                        <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 1}px`, fontWeight: 600, marginTop: 2, color: m.status === 'ok' ? SEMANTIC_SCORE_COLORS.hi : m.status === 'warn' ? SEMANTIC_SCORE_COLORS.lo : titleColor }}>
+                                        <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 1}px`, fontWeight: 600, marginTop: 2, color: m.status === 'ok' ? scoreText.hi : m.status === 'warn' ? scoreText.lo : titleColor }}>
                                             {m.value}
                                         </div>
                                     </div>
@@ -467,7 +434,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     {contentModules.mainImage !== false && mainImage && (
                         <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', minHeight: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
                             <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ position: stacked ? 'static' : 'absolute', inset: 0 }} />
-                            {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F5F2E9' : '#0E1512', 85)}, transparent 22%)` }} />}
+                            {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F8FAFC' : '#0b1220', 85)}, transparent 22%)` }} />}
                         </div>
                     )}
                 </div>}
@@ -500,11 +467,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                             </div>
                                         ))}
                                         <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 56px', alignItems: 'center', gap: 12, borderTop: `1px solid ${line}`, marginTop: 4, paddingTop: 12 }}>
-                                            <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, fontWeight: 700, color: SEMANTIC_SCORE_COLORS.hi }}>Total</span>
+                                            <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, fontWeight: 700, color: scoreText.hi }}>Total</span>
                                             <span style={{ height: 9, borderRadius: 99, background: line, overflow: 'hidden', display: 'block' }}>
                                                 <span style={{ display: 'block', height: '100%', width: '100%', borderRadius: 99, background: SEMANTIC_SCORE_COLORS.hi }} />
                                             </span>
-                                            <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, textAlign: 'right', fontWeight: 700, color: SEMANTIC_SCORE_COLORS.hi }}>{total.toFixed(1)}%</span>
+                                            <span style={{ fontFamily: MONO, fontSize: `${fontSize.small + 1}px`, textAlign: 'right', fontWeight: 700, color: scoreText.hi }}>{total.toFixed(1)}%</span>
                                         </div>
                                     </div>
                                 );
@@ -580,11 +547,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     Curing/Extraction/Séparation/Purification sur des pages différentes selon leur
                     volume réel (au lieu du découpage fixe par ratio d'avant ce chantier). */}
                 {(() => {
-                    const pagePipelines = visiblePipelines.filter((p) => isPageOn(`pipeline:${p.key}`));
+                    const pagePipelines = visiblePipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id.startsWith(`pipeline:${p.key}#`)));
                     if (pagePipelines.length === 0) return null;
                     return (
                         <Section title="Processus de production">
-                            {pagePipelines.map((p, i) => <PipelineTimeline key={i} pipeline={p} moduleId={`pipeline:${p.key}`} />)}
+                            {pagePipelines.map((p) => renderPipeline(p, `pipeline:${p.key}`))}
                         </Section>
                     );
                 })()}
