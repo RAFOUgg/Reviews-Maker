@@ -241,7 +241,14 @@ export default function SocialStoryTemplate({ config, reviewData }) {
 
             {/* ── CONTENT AREA ── */}
             <div style={{
-                flex: 1, display: 'flex', flexDirection: 'column',
+                // `0 0 auto` et NON `flex: 1` : le hero au-dessus est élastique (`1 1 38%`). Tant
+                // que les deux grandissaient, ils se partageaient le mou proportionnellement et le
+                // vide se logeait SOUS le pied de page — mesuré à 72-78 % de remplissage en 9:16,
+                // l'échelle butant déjà sur sa borne haute. En figeant le contenu à sa hauteur
+                // naturelle, tout le mou revient au hero : c'est l'image qui absorbe, pas le texte
+                // qui grossit. Sur une review dense, le rapport s'inverse — le hero cède
+                // (`flex-shrink: 1`, sans plancher) et `FitToFill` réduit l'échelle.
+                flex: '0 0 auto', display: 'flex', flexDirection: 'column',
                 padding: `${responsive.padding.container}px`, overflow: 'hidden', gap: responsive.spacing.section,
             }}>
                 {/* Identité : titre/cultivar/farm + note — un seul `data-module` (pagination

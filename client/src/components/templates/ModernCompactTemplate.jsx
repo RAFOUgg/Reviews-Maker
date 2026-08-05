@@ -334,24 +334,33 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             </div>
                         );
                     }
-                    // Piste explorée puis RETIRÉE le 2026-08-05 : faire absorber le vide par
-                    // l'image (`flex: 1 1 auto`). Mesuré — elle améliorait 3 combinaisons sur 4
-                    // (9:16 Comestible 25 % → 97 %) mais faisait passer Fleur 1:1 de 88,6 % à
-                    // 122,3 %, soit un DÉBORDEMENT donc une perte de contenu. Sur une carte non
-                    // paginable, ce qui déborde est définitivement perdu : inacceptable pour
-                    // gagner du remplissage ailleurs.
+                    // IMAGE ÉLASTIQUE. Cette piste avait été retirée le 2026-08-05 : elle
+                    // améliorait 3 combinaisons sur 4 mais faisait déborder Fleur 1:1 à 122,3 %,
+                    // soit une perte définitive de contenu sur une carte non paginable.
                     //
-                    // Le vide résiduel du 9:16 n'est pas un problème de taille d'image mais de
-                    // COMPOSITION : une carte de 1080×1920 demande une mise en page propre à ce
-                    // format, pas la mise en page du carré étirée. C'est le chantier « un design
-                    // par couple template × format » de la matrice C4.
+                    // Elle est reprise parce que la condition qui la rendait dangereuse a disparu.
+                    // `FitToFill` mesurait alors des conteneurs flex étirés et ne pouvait PAS
+                    // rétrécir (corrigé le même jour) : rien ne rattrapait un dépassement. Il
+                    // mesure désormais le contenu réel et réduit l'échelle en cas de dépassement.
+                    // L'image peut donc prendre le mou sans risquer la coupe.
+                    //
+                    // `maxHeight` CONSERVÉ comme plafond. Le retirer a été essayé et mesuré : la
+                    // boîte prend alors sa hauteur naturelle et le carré dense passe de 98 % à
+                    // 105,7 % de débordement. Le `flex` gouverne la croissance dans l'espace
+                    // disponible, le `maxHeight` empêche l'image de manger la carte.
                     return (
                         <div
                             data-module="mainImage"
-                            className="w-full flex-shrink-0 overflow-hidden"
+                            className="w-full overflow-hidden"
                             style={{
-                                borderRadius: `${responsive.image.borderRadius}px`,
+                                // `minHeight: 0` — un plancher à 60 % de la hauteur d'image a été
+                                // essayé et mesuré : il empêchait l'image de céder sur une review
+                                // dense et ramenait Fleur 1:1 à 105,7 % de débordement. L'image
+                                // doit pouvoir grandir ET rétrécir ; `flex-basis: auto` lui garde
+                                // sa taille naturelle tant que la place existe.
+                                flex: '1 1 auto', minHeight: 0,
                                 maxHeight: responsive.image.maxHeight,
+                                borderRadius: `${responsive.image.borderRadius}px`,
                                 ...imageFrameStyle,
                             }}
                         >

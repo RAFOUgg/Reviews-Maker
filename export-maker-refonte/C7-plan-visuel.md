@@ -113,6 +113,75 @@ Matrice complète, exports PNG réels téléchargés et inspectés, checklist «
 
 ---
 
+## 2bis. Journal
+
+### Phase 2 — Débordements ✅ (2026-08-05, déployé `c516ac35`)
+
+**Diagnostic en UNE mesure**, après trois échecs par inférence. Sonde ajoutée au harnais
+(`run.mjs`, `fitProbe`) : `scale=0.900 avail=800 contenu=913` — exactement la borne basse.
+
+Deux découvertes, dans cet ordre :
+
+1. **Le bridage n'était pas corrigeable.** `natural = 913/0,9 = 1014` pour 800 disponibles :
+   il aurait fallu descendre à 0,79, soit 9,5px effectifs. Le contenu était trop haut de 27 %.
+   → Retrait de contenu sur le carré (sensoriel, gisement, labo), même précédent que Moderne
+   Compact. Une première tentative — retirer gisement + labo seuls — s'est révélée **inerte à la
+   mesure** (ces blocs ne se rendaient pas sur la review testée) ; c'est le détail sensoriel qui
+   pesait.
+
+2. **`FitToFill` ne pouvait que rétrécir.** `contenu = avail` à l'unité près sur 8 combinaisons,
+   dont des pages remplies à 73 %. Il mesurait les enfants de premier niveau — des conteneurs flex
+   étirés dont le bas vaut toujours celui du canevas. Il mesure désormais les blocs de contenu.
+   Les échelles varient enfin dans les deux sens.
+
+| | avant | après |
+|---|---|---|
+| Story 1:1 flower/dense | **114,1 %** ✖ | 95,6 % |
+| Story 9:16 flower/dense | 91,3 % | 96,7 % |
+| Story 1:1 flower/minimal | 81,3 % | 86,8 % |
+| Compact 1:1 flower/dense | 83,1 % | 98 % |
+| Contraste (badge de type) | 3,04:1 ✖ | conforme |
+
+16 combinaisons mesurées, **0 erreur**. Remplissage 72–98 % contre 53–114 %.
+
+**Reste** : les 9:16 plafonnent à 72–78 % avec l'échelle bloquée sur la borne HAUTE (1,45/1,35).
+Monter la borne grossirait le texte ; c'est l'image élastique qui doit prendre le relais — phase 3.
+
+### Phase 3 — Image élastique ✅ (2026-08-05)
+
+Le vide de la phase 2 venait d'une échelle bloquée sur sa borne HAUTE : le mécanisme voulait
+grossir le texte faute d'autre chose à faire. C'est l'image qui devait prendre cette place.
+
+Deux changements, chacun validé par mesure :
+
+1. **Story** — le hero était déjà élastique, mais le conteneur de contenu était lui aussi en
+   `flex: 1` : les deux se partageaient le mou et le vide se logeait sous le pied de page. Contenu
+   figé à sa hauteur naturelle (`0 0 auto`), tout le mou revient au hero.
+2. **Moderne Compact** — image passée en `flex: 1 1 auto`, et surtout `imageShare` rendu
+   franchement différent par format. Le carré est contraint en hauteur (l'image y concurrence le
+   texte), le portrait a du mou : 0,42 → **0,50** en 1:1, 0,40 → **0,65** en 9:16.
+
+**Deux fausses pistes, écartées par la mesure** (aucune n'a survécu) : un plancher `minHeight` à
+60 % — inerte ; le retrait pur et simple de `maxHeight` — remplissage à 96-99 % mais le carré
+dense passait à 105,7 %, soit un débordement. Le plafond devait être conservé et *calibré par
+format*, pas supprimé.
+
+| | début de session | phase 2 | phase 3 |
+|---|---|---|---|
+| Compact 1:1 | 66–83 % | 88,5–98 % | **97,7–98 %** |
+| Compact 9:16 | 54–67 % | 72–90 % | **96,7 %** |
+| Compact 16:9 | 98 % | — | **97,8 %** |
+| Story 1:1 | 64–90 % (dont 114 % ✖) | 86,8–95,6 % | **89,7 %** |
+| Story 9:16 | 50–61 % | 77,9–96,7 % | **95,1 %** |
+
+18 combinaisons mesurées, **0 erreur, aucun débordement**. Moderne Compact est terminé sur ses
+3 ratios.
+
+**Reste** : Story 1:1 plafonne à 89,7 %, échelle sur la borne haute — son hero utilise un
+`flex-basis` propre (38 %) et non `imageShare`. À aligner sur le même mécanisme.
+
+---
+
 ## 3. Ce qui reste hors de ces phases
 
 - Traçabilité réellement paginé (déclaré `false` aujourd'hui).

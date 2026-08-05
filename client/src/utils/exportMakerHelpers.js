@@ -1113,9 +1113,18 @@ export function isFieldRelevant(type, field) {
 // une seule colonne laisse mécaniquement la moitié basse vide, ce qui est le défaut observé sur
 // Fiche Technique en 16:9 et 4:3.
 export const FORMAT_LAYOUT = {
-    '1:1':  { imageShare: 0.42, columns: 1, orientation: 'square' },
+    // `imageShare` sert de PLAFOND à l'image, désormais élastique (`flex: 1 1 auto`) : elle prend
+    // le mou laissé par le contenu, sans jamais dépasser cette part de la hauteur du canevas.
+    //
+    // Le plafond ne peut pas être uniforme. Mesuré le 2026-08-05 en le retirant purement et
+    // simplement : le remplissage montait à 96-99 % sur presque tout, mais le carré dense passait
+    // à 105,7 % — un débordement, donc une perte définitive de contenu sur une carte non
+    // paginable. Le carré est contraint en hauteur, l'image y entre en concurrence directe avec le
+    // texte ; le portrait a du mou à revendre et c'est là que se logeaient les zones vides
+    // (72 % mesurés). D'où des parts franchement différentes.
+    '1:1':  { imageShare: 0.50, columns: 1, orientation: 'square' },
     '16:9': { imageShare: 0.45, columns: 2, orientation: 'landscape' },
-    '9:16': { imageShare: 0.40, columns: 1, orientation: 'portrait' },
+    '9:16': { imageShare: 0.65, columns: 1, orientation: 'portrait' },
     '4:3':  { imageShare: 0.40, columns: 2, orientation: 'landscape' },
     'A4':   { imageShare: 0.20, columns: 1, orientation: 'document' },
 };
