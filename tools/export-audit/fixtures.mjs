@@ -2,8 +2,9 @@
  * Jeux de données d'audit — les 3 densités du plan C5 §4, pour les 4 types de review.
  *
  * Chaque densité cible une classe de défaut précise :
- *   minimal — le strict requis, sans photo ni pipeline → débusque les blocs vides, les titres
- *             orphelins et les mises en page qui supposent des données présentes.
+ *   minimal — le strict RÉELLEMENT atteignable : photo (obligatoire à l'enregistrement côté
+ *             produit) + nom, sans note, sans arôme, sans pipeline → débusque les blocs vides et
+ *             les mises en page qui supposent plus de données qu'il n'en existe.
  *   nominal — une review réaliste complète → le cas courant.
  *   dense   — pipelines longs, tous champs remplis → débusque débordements et pertes de contenu.
  *
@@ -125,9 +126,17 @@ export async function createFixture(baseApi, type, density) {
     const body = buildFixture(type, density);
     const fd = new FormData();
     for (const [k, v] of Object.entries(body)) fd.append(k, String(v));
-    // `minimal` reste volontairement SANS photo : c'est son rôle de débusquer les mises en page
-    // qui supposent une image présente (placeholder occupant une page entière, cadre vide…).
-    if (density !== 'minimal') fd.append('images', tinyPngBlob(), 'audit-fixture.png');
+    // TOUTES les densités portent une photo, y compris `minimal` (corrigé le 2026-08-05).
+    //
+    // Elle en était exclue pour débusquer les mises en page supposant une image — ce qui a bien
+    // servi (placeholder occupant une page entière, corrigé). Mais le produit rend la photo du
+    // produit fini OBLIGATOIRE à l'enregistrement : une review sans photo ne peut pas exister.
+    // Mesurer contre ce cas revenait à optimiser un scénario impossible, et faisait remonter des
+    // remplissages de 13 % qui ne se produiront jamais.
+    //
+    // `minimal` garde son rôle : le strict minimum RÉELLEMENT atteignable — photo + nom, sans
+    // note, sans arôme, sans pipeline.
+    fd.append('images', tinyPngBlob(), 'audit-fixture.png');
     const res = await fetch(`${baseApi}/api/${ENDPOINT[type]}`, { method: 'POST', body: fd });
     if (!res.ok) throw new Error(`Création ${type}/${density} : HTTP ${res.status} — ${(await res.text()).slice(0, 200)}`);
     const json = await res.json();

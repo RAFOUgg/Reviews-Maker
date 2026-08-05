@@ -15,6 +15,7 @@ import {
     SEMANTIC_SCORE_TEXT_COLORS,
     ACCENT_TEXT_COLORS,
     ensureReadable,
+    getFormatLayout,
     blendOver,
     getScoreBand,
     RATIO_DIMENSIONS,
@@ -150,6 +151,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // tombait à 4.38:1 — conforme sur le papier nu, juste en dessous sur les encadrés.
     const pageBg = isPaperMode ? '#F8FAFC' : '#0b1220';
     const accentReadable = ensureReadable(accent, pageBg, 4.8);
+    const formatLayout = getFormatLayout(config.ratio);
+    const sectionFlow = formatLayout.columns > 1
+        ? { columnCount: formatLayout.columns, columnGap: `${spacing.section}px`, flex: 1, minHeight: 0 }
+        : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
+
     // Un chip d'arôme repose sur `accent` à 12 % au-dessus du fond, pas sur le fond nu : on
     // évalue le contraste contre cette surface réelle. Sans ça, 4.44:1 pour un seuil à 4.5.
     const chipBg = blendOver(accent, pageBg, 12);
@@ -233,7 +239,14 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const Section = ({ idx, title, moduleId, children }) => {
         if (moduleId && !isPageOn(moduleId)) return null;
         return (
-            <div data-module={moduleId || undefined} style={{ padding: `${spacing.section}px 0`, borderTop: `1px solid ${lineSoft}` }}>
+            <div data-module={moduleId || undefined} style={{
+                padding: `${spacing.section}px 0`,
+                borderTop: `1px solid ${lineSoft}`,
+                // Insécable : en flux multi-colonnes, une section coupée en deux produirait un
+                // titre orphelin en bas d'une colonne et son contenu en haut de la suivante.
+                breakInside: 'avoid',
+                WebkitColumnBreakInside: 'avoid',
+            }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: spacing.element * 2 }}>
                     {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accentReadable, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
                     <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
@@ -460,6 +473,14 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     )}
                 </div>}
 
+                {/* FLUX DES SECTIONS — en deux colonnes sur les formats larges (16:9, 4:3).
+                    Empilées en une seule colonne, elles laissaient mécaniquement la moitié basse
+                    de la page vide sur ces formats : un canevas 1920×1080 est large et bas, une
+                    pile verticale n'en occupe que le tiers gauche. `columnCount` fait couler les
+                    sections dans la largeur disponible ; `breakInside: avoid` (posé sur `Section`)
+                    empêche qu'une section soit coupée entre deux colonnes. */}
+                <div style={sectionFlow}>
+
                 {/* ── 01 · ÉVALUATION SENSORIELLE ── */}
                 {families.length > 0 && (
                     <Section idx="01" title="Évaluation sensorielle" moduleId="sensoryEvaluation">
@@ -675,6 +696,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         </div>
                     </div>
                 )}
+                </div>
             </motion.div>
 
             {renderBranding()}

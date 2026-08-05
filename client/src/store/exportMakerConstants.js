@@ -337,8 +337,16 @@ export function isTemplatePaginable(templateId) {
 // retirer une section prévue au contrat, jamais d'en ajouter une hors contrat.
 export const TEMPLATE_SECTIONS = {
     modernCompact: {
-        sensory: 'compact', cannabinoids: 'compact',
+        sensory: 'compact', cannabinoids: 'compact', description: true,
         pipelines: false, canvases: false, gisement: false, lotCode: false,
+        // Surcharges PAR FORMAT — un carré de 800×800 n'a pas la hauteur d'une story de 1920.
+        // Mesuré avant cette règle : une review Fleur dense débordait de 8 % en 1:1, et sur une
+        // carte non paginable ce qui déborde est définitivement perdu. Décision actée : un carré
+        // porte l'essentiel glanceable (photo, identité, note, cannabinoïdes, arômes) ; le détail
+        // sensoriel et le commentaire sont réservés aux formats qui ont la place.
+        byFormat: {
+            '1:1': { sensory: false, description: false },
+        },
     },
     socialStory: {
         sensory: 'compact', cannabinoids: 'compact',
@@ -365,8 +373,11 @@ export const TEMPLATE_SECTIONS = {
  * Un template inconnu rend tout — un template non déclaré ne doit pas perdre silencieusement
  * son contenu.
  */
-export function templateSection(templateId, section) {
+export function templateSection(templateId, section, ratio) {
     const contract = TEMPLATE_SECTIONS[templateId];
     if (!contract) return true;
+    // La surcharge de format prime : c'est elle qui exprime « ce format n'a pas la place ».
+    const override = ratio && contract.byFormat && contract.byFormat[ratio];
+    if (override && section in override) return override[section];
     return contract[section] ?? false;
 }

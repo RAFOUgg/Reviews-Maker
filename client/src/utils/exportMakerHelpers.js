@@ -1098,6 +1098,33 @@ export function isFieldRelevant(type, field) {
  * @param {Object} baseTypography - Tailles de base de la typographie
  * @returns {Object} Ajustements pour padding, fontSize, spacing, etc.
  */
+// ── Contrat de mise en page par FORMAT (2026-08-05) ───────────────────────────────────────────
+//
+// Jusqu'ici, la taille de l'image principale était régie par TROIS systèmes indépendants :
+// `responsive.image.maxHeight` (Moderne Compact), `maxHeight: '500px'` en dur (Article de Blog),
+// `96px` en dur (Rapport de Traçabilité). Corriger l'un ne touchait pas les autres — d'où des
+// rendus où l'image écrase la page sur certains templates et reste une vignette sur d'autres.
+//
+// Une part de hauteur, pas une valeur en pixels : c'est le seul moyen qu'un même template garde
+// la même ALLURE d'un format à l'autre. 500px valent 62 % d'un carré de 800 et 20 % d'un A4 de
+// 2480 — le même nombre produit deux mises en page sans rapport.
+//
+// `columns` : les formats larges (16:9, 4:3) ont la place pour deux colonnes. Les y empiler en
+// une seule colonne laisse mécaniquement la moitié basse vide, ce qui est le défaut observé sur
+// Fiche Technique en 16:9 et 4:3.
+export const FORMAT_LAYOUT = {
+    '1:1':  { imageShare: 0.42, columns: 1, orientation: 'square' },
+    '16:9': { imageShare: 0.45, columns: 2, orientation: 'landscape' },
+    '9:16': { imageShare: 0.40, columns: 1, orientation: 'portrait' },
+    '4:3':  { imageShare: 0.40, columns: 2, orientation: 'landscape' },
+    'A4':   { imageShare: 0.20, columns: 1, orientation: 'document' },
+};
+
+/** Contrat de mise en page d'un format. Repli sur le carré pour un ratio inconnu. */
+export function getFormatLayout(ratio) {
+    return FORMAT_LAYOUT[ratio] || FORMAT_LAYOUT['1:1'];
+}
+
 export function getResponsiveAdjustments(ratio, baseTypography = {}) {
     const dimensions = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     const area = dimensions.width * dimensions.height;
@@ -1177,16 +1204,21 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
             // placé après il hériterait de la valeur 9:16 — c'est le piège déjà rencontré sur le
             // facteur d'échelle. Un document A4 garde une image modérée : elle y accompagne le
             // texte, elle ne le domine pas.
-            maxHeight: isSquare ? '180px' : isA4 ? '380px' : isPortrait ? '660px' : '300px',
+            // Dérivé de `FORMAT_LAYOUT[ratio].imageShare` : une seule règle pour les 5 templates,
+            // au lieu des trois systèmes divergents d'avant (cf. commentaire du contrat ci-dessus).
+            maxHeight: `${Math.round(dimensions.height * getFormatLayout(ratio).imageShare)}px`,
             borderRadius: isSquare ? 8 : 12,
         },
 
         // Limites d'affichage
         limits: {
-            maxTags: isSquare ? 3 : isPortrait ? 4 : 6,
-            maxCategoryRatings: isSquare ? 4 : 5,
+            // Le 9:16 fait 1920px de haut : il a la place d'en montrer plus, et le lui refuser
+            // était la cause de son sous-remplissage (60 % mesuré). `isA4` traité AVANT `isPortrait`
+            // — un document garde une densité de lecture, il ne s'allonge pas indéfiniment.
+            maxTags: isSquare ? 3 : isA4 ? 4 : isPortrait ? 8 : 6,
+            maxCategoryRatings: isSquare ? 4 : (isPortrait && !isA4) ? 9 : 5,
             maxInfoCards: isSquare ? 4 : 6,
-            descriptionLines: isSquare ? 2 : isPortrait ? 3 : 4,
+            descriptionLines: isSquare ? 2 : isA4 ? 3 : isPortrait ? 8 : 4,
         },
 
         // Grid

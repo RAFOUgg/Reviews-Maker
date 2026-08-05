@@ -11,6 +11,7 @@ import {
     filterVisiblePipelines,
     getResponsiveAdjustments,
     resolveFontStack,
+    readableFontSize,
     colorWithOpacity,
     getGlassTokens,
     ACCENT_TEXT_COLORS,
@@ -22,6 +23,7 @@ import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
 import { templateSection } from '../../store/exportMakerConstants';
 import PipelineTimeline from './sections/PipelineTimeline';
+import FitToFill from './frame/FitToFill';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — liste complète
 // (comme DetailedCardTemplate.jsx) : aucun de ces groupes n'a de rendu spécifique existant dans ce
@@ -178,7 +180,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             backgroundColor: colorWithOpacity(colors.textSecondary, 5),
         }}>
             <span style={{ fontSize: `${fontSize.small}px`, opacity: 0.5 }}>{icon}</span>
-            <span style={{ fontSize: `${fontSize.small * 0.85}px`, color: colors.textSecondary, opacity: 0.45, fontStyle: 'italic' }}>
+            <span style={{ fontSize: `${readableFontSize(fontSize.small * 0.85)}px`, color: colors.textSecondary, opacity: 0.45, fontStyle: 'italic' }}>
                 {text}
             </span>
         </div>
@@ -287,8 +289,12 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             );
         }
 
-        // Layout portrait/carré : vertical — adaptatif selon la quantité de contenu
+        // Layout portrait/carré : vertical — adaptatif selon la quantité de contenu.
+        // `FitToFill` ajuste l'échelle pour occuper la hauteur réelle : une carte ne se paginant
+        // pas, c'est le seul moyen d'atteindre un remplissage constant quel que soit le volume de
+        // données (mesuré de 53 % à 98 % selon la combinaison avant ce composant).
         return (
+            <FitToFill min={0.9} max={1.35}>
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                 {/* Image — `data-module="mainImage"` + `isPageOn()` (Phase C, correctif 2026-08-03) :
                     ce bloc n'avait jusqu'ici AUCUN id mesurable et se rendait sans condition sur
@@ -359,6 +365,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     {renderContent()}
                 </div>
             </div>
+            </FitToFill>
         );
     };
 
@@ -430,8 +437,9 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             </div>
             )}
 
-            {/* Category Ratings */}
-            {isPageOn('sensoryEvaluation') && contentModules.categoryRatings && (
+            {/* Évaluation sensorielle détaillée — soumise au contrat PAR FORMAT : absente du
+                carré, qui n'a pas la hauteur (cf. TEMPLATE_SECTIONS.modernCompact.byFormat). */}
+            {templateSection('modernCompact', 'sensory', config.ratio) && isPageOn('sensoryEvaluation') && contentModules.categoryRatings && (
                 <div data-module="sensoryEvaluation">
                 {categoryRatings.length > 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: isSquare ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.element}px`, flexShrink: 0 }}>
@@ -570,7 +578,8 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             )}
 
             {/* Description */}
-            {contentModules.description && reviewData.description && isPageOn('description') && (
+            {/* Commentaire — même règle : réservé aux formats qui ont la place. */}
+            {templateSection('modernCompact', 'description', config.ratio) && contentModules.description && reviewData.description && isPageOn('description') && (
                 <p
                     data-module="description"
                     style={{

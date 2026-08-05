@@ -13,6 +13,7 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { GisementSections } from './sections/RegistrySections';
+import FitToFill from './frame/FitToFill';
 
 // Phase B du plan de finition Export Maker (2026-08-02) : contrairement aux 3 autres templates
 // (rollout complet des 8 groupes gisement), Story reste un format 9:16 très contraint verticalement,
@@ -131,7 +132,11 @@ export default function SocialStoryTemplate({ config, reviewData }) {
         </span>
     );
 
+    // Story ne se pagine pas (matrice C4) : `FitToFill` ajuste l'échelle pour occuper la hauteur
+    // réelle, comme sur Moderne Compact. Bornes légèrement plus larges — une story est un format
+    // d'affiche, la variation de taille y est attendue.
     return (
+        <FitToFill min={0.9} max={1.45}>
         <div style={{
             width: '100%', height: '100%',
             background: bg,
@@ -159,7 +164,17 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 combiner avec `identity` si le budget de page le permet, recréant une vraie page de
                 couverture photo+titre+note. */}
             {!isPageOn('heroImage') ? null : contentModules.mainImage === false ? null : mainImage ? (
-                <div data-module="heroImage" style={{ position: 'relative', width: '100%', flex: '0 0 38%', overflow: 'hidden' }}>
+                <div data-module="heroImage" style={{
+                    position: 'relative', width: '100%', overflow: 'hidden',
+                    // Hero ÉLASTIQUE : l'échelle de `FitToFill` est bornée pour préserver la
+                    // lisibilité ; quand elle sature (contenu très pauvre — photo + nom seuls),
+                    // c'est la photo qui absorbe le reste. `object-fit: cover` la fait grandir
+                    // sans déformation, et un hero plus haut sert le format story.
+                    // Ni `minHeight` ni `flex-basis` figé : le hero grandit quand le contenu est
+                    // pauvre ET cède quand il est dense. Avec un plancher à 38 %, une review dense
+                    // débordait à 114 % — sur une carte, ce qui déborde est perdu.
+                    flex: '1 1 38%', minHeight: 0,
+                }}>
                     <img
                         src={mainImage}
                         alt=""
@@ -425,6 +440,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 </div>
             </div>
         </div>
+        </FitToFill>
     );
 }
 

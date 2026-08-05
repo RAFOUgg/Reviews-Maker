@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { ensureReadable, contrastRatio, relativeLuminance, blendOver } from '../exportMakerHelpers';
+import { ensureReadable, contrastRatio, relativeLuminance, blendOver, getFormatLayout } from '../exportMakerHelpers';
 
 const PAPER = '#F8FAFC';
 const DARK = '#0b1220';
@@ -66,5 +66,40 @@ describe('blendOver — surface teintée', () => {
 
     it('tolère une entrée non hex', () => {
         expect(blendOver('rgba(1,2,3,1)', '#F8FAFC', 12)).toBe('#F8FAFC');
+    });
+});
+
+describe('FORMAT_LAYOUT — source unique de mise en page par format', () => {
+    it('couvre les 5 formats réels', () => {
+        ['1:1', '16:9', '9:16', '4:3', 'A4'].forEach((r) => {
+            expect(getFormatLayout(r)).toBeDefined();
+            expect(getFormatLayout(r).imageShare).toBeGreaterThan(0);
+        });
+    });
+
+    it('exprime l\'image en PART du canevas, pas en pixels', () => {
+        // C'est le point : 500px valaient 62 % d'un carré et 20 % d'un A4. Une part garde la
+        // même allure d'un format à l'autre.
+        ['1:1', '16:9', '9:16', '4:3', 'A4'].forEach((r) => {
+            expect(getFormatLayout(r).imageShare).toBeLessThan(1);
+        });
+    });
+
+    it('réserve la moins grande part à l\'A4 — un document reste du texte', () => {
+        const a4 = getFormatLayout('A4').imageShare;
+        ['1:1', '16:9', '9:16', '4:3'].forEach((r) => {
+            expect(a4).toBeLessThan(getFormatLayout(r).imageShare);
+        });
+    });
+
+    it('prévoit deux colonnes sur les formats larges', () => {
+        expect(getFormatLayout('16:9').columns).toBe(2);
+        expect(getFormatLayout('4:3').columns).toBe(2);
+        expect(getFormatLayout('9:16').columns).toBe(1);
+        expect(getFormatLayout('A4').columns).toBe(1);
+    });
+
+    it('retombe sur le carré pour un ratio inconnu', () => {
+        expect(getFormatLayout('7:3')).toEqual(getFormatLayout('1:1'));
     });
 });

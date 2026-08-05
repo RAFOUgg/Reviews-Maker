@@ -288,9 +288,9 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     if (showGallery) {
                         return (
                             <figure className="mb-10">
-                                <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: reviewData.images.length >= 3 ? '2fr 1fr 1fr' : reviewData.images.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: '420px', ...imageFrameStyle }}>
+                                <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: reviewData.images.length >= 3 ? '2fr 1fr 1fr' : reviewData.images.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
                                     {reviewData.images.slice(0, 4).map((img, ii) => (
-                                        <img key={ii} src={img} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? '420px' : '208px' }} />
+                                        <img key={ii} src={img} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
                                     ))}
                                 </div>
                             </figure>
@@ -299,7 +299,10 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     return (
                         <figure className="mb-10">
                             <div className="overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
-                                <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ maxHeight: '500px', objectFit: 'cover' }} />
+                                {/* Hauteur dérivée du contrat de format (FORMAT_LAYOUT) et non plus d'un 500px en dur :
+                                    le même nombre valait 62 % d'un carré et 20 % d'un A4, donc deux mises en
+                                    page sans rapport pour un seul template. */}
+                                <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ maxHeight: responsive.image.maxHeight, objectFit: 'cover' }} />
                             </div>
                             {reviewData.cultivar && (
                                 <figcaption style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary, marginTop: '12px', textAlign: 'center' }}>

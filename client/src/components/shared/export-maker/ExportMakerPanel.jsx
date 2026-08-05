@@ -11,6 +11,7 @@ import ExportModal from '../../export/ExportModal';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
 import { useAdaptivePages } from '../../../hooks/useAdaptivePages';
+import { isTemplatePaginable } from '../../../store/exportMakerConstants';
 
 /**
  * Normalise les données d'une review pour s'assurer que tous les champs
@@ -233,7 +234,13 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // avant son propre correctif (2026-07-27). `loadDefaultPages` est déjà appelé
     // inconditionnellement ci-dessous : les pages existent déjà dans le store, seul le routage
     // vers `PagedPreviewPane` les ignorait tant que `pagesEnabled` n'était pas coché à la main.
-    const effectivePagesActive = pagesEnabled || shouldAutoLockPagination(reviewData, config.template);
+    // Le contrat de pagination (matrice C4) prime sur l'interrupteur manuel. `pagesEnabled` est
+    // persistant et global à la session : activé sur Fiche Technique puis suivi d'une bascule vers
+    // Moderne Compact, il faisait paginer une CARTE — constaté en production, Compact affiché en
+    // 4/6 pages alors qu'il est déclaré non paginable. Une carte ne se pagine pas, quel que soit
+    // l'état hérité d'un autre template.
+    const effectivePagesActive = isTemplatePaginable(config.template)
+        && (pagesEnabled || shouldAutoLockPagination(reviewData, config.template));
 
     // Pagination adaptative (Chantier D, 2026-07-31) : cette 3e surface (aperçu live Export Maker
     // Studio) utilisait jusqu'ici `loadDefaultPages` (statique) comme les deux autres — remplacée

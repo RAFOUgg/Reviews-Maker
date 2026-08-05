@@ -132,6 +132,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     const { typography, colors } = config;
     const responsive = getResponsiveAdjustments(config.ratio, typography);
     const { fontSize, padding, spacing } = responsive;
+    // Un tiers de la part d'image du format, plafonné : la vignette suit l'échelle du
+    // document sans jamais devenir un hero.
+    const thumbSize = Math.min(220, Math.round(parseInt(responsive.image.maxHeight, 10) / 3));
     // Variante AA de l'accent pour le TEXTE — l'accent de palette est une couleur de surface
     // (violet-500 par défaut : 4.42:1 sur le fond de l'app, sous le seuil AA en petit texte).
     const accentText = isLightColor(colors.textPrimary) ? ACCENT_TEXT_COLORS.onDark : ACCENT_TEXT_COLORS.onPaper;
@@ -200,8 +203,11 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
         >
             {/* En-tête : identité + identifiant de lot/QR (Chantier 8) */}
             <div style={{ display: 'flex', gap: spacing.section, marginBottom: `${spacing.section}px` }}>
+                {/* Vignette d'identité : 96px en dur donnaient une image quasi invisible sur un A4 de
+                    2480px. Dimensionnée sur le contrat de format, bornée pour rester une vignette —
+                    un rapport de traçabilité reste un document de texte, l'image l'accompagne. */}
                 {mainImage && (
-                    <img src={mainImage} alt="" style={{ width: 96, height: 96, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
+                    <img src={mainImage} alt="" style={{ width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
                 )}
                 <div style={{ flex: 1 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>

@@ -12,7 +12,7 @@
  * très longs pipelines, documentée dans CLAUDE.md — pas une régression de ce chantier).
  */
 
-import { RATIO_DIMENSIONS } from './exportMakerHelpers';
+import { RATIO_DIMENSIONS, getFormatLayout } from './exportMakerHelpers';
 
 // Libellés/icônes de page pour chaque id de module mesurable — reprend le vocabulaire déjà utilisé
 // par `PAGE_TEMPLATES` là où un équivalent existait, pour rester familier dans l'UI (liste de pages,
@@ -165,7 +165,11 @@ function resolveMeta(id) {
 
 export function computeAdaptivePages(moduleHeights, ratio, containerPadding) {
     const dims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
-    const budget = Math.max(200, (dims.height - containerPadding * 2) * BUDGET_SAFETY_FACTOR);
+    // Le budget est une hauteur CUMULÉE de modules. Sur un format à deux colonnes, une page en
+    // absorbe donc environ le double — l'ignorer ferait paginer comme si la page n'en tenait
+    // qu'une, produisant deux fois trop de pages toutes à moitié vides.
+    const { columns } = getFormatLayout(ratio);
+    const budget = Math.max(200, (dims.height - containerPadding * 2) * BUDGET_SAFETY_FACTOR * columns);
 
     const all = Array.from(moduleHeights.entries())
         .filter(([, h]) => Number.isFinite(h) && h > 4); // hauteur ~0 = module absent (pas de données)
