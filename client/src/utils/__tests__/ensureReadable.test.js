@@ -92,11 +92,15 @@ describe('FORMAT_LAYOUT — source unique de mise en page par format', () => {
         });
     });
 
-    it('prévoit deux colonnes sur les formats larges', () => {
+    it('prévoit deux colonnes partout sauf en portrait', () => {
         expect(getFormatLayout('16:9').columns).toBe(2);
         expect(getFormatLayout('4:3').columns).toBe(2);
         expect(getFormatLayout('9:16').columns).toBe(1);
-        expect(getFormatLayout('A4').columns).toBe(1);
+        // A4 est passé de 1 à 2 colonnes le 2026-08-05. Ce test figeait la décision inverse :
+        // 1754px de large en une colonne produisaient des lignes de ~175 caractères (mesuré,
+        // règle E5 ; la cible typographique est 45-90) et laissaient les dernières pages à
+        // moitié vides. Le portrait reste la seule exception — il n'a pas la largeur pour deux.
+        expect(getFormatLayout('A4').columns).toBe(2);
     });
 
     it('retombe sur le carré pour un ratio inconnu', () => {
