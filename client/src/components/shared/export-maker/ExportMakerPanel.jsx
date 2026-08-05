@@ -240,7 +240,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // ici par une vraie mesure de hauteur pour `detailedCard` (voir `useAdaptivePages.js`, qui gère
     // lui-même le repli statique pendant/à défaut de mesure).
     const setPages = useExportMakerPagesStore((state) => state.setPages);
-    const { pages: adaptivePagesResult, isAdaptive } = useAdaptivePages(reviewData, config, {
+    const { pages: adaptivePagesResult, isAdaptive, isMeasuring } = useAdaptivePages(reviewData, config, {
         enabled: effectivePagesActive,
     });
     useEffect(() => {
@@ -484,7 +484,9 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                {effectivePagesActive ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} /> : <PreviewPane />}
+                                {effectivePagesActive
+                                    ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
+                                    : <PreviewPane />}
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT
@@ -507,7 +509,9 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
                                 {/* Preview Pane - Right */}
                                 <div className="flex-1 overflow-hidden min-w-0 min-h-[300px]">
-                                    {effectivePagesActive ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} /> : <PreviewPane />}
+                                    {effectivePagesActive
+                                    ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
+                                    : <PreviewPane />}
                                 </div>
                             </motion.div>
                         )}

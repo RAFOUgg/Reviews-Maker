@@ -243,6 +243,26 @@ export function contrastRatio(a, b) {
 }
 
 /**
+ * Aplatit `color` posée à `opacityPct` % au-dessus de `background` (deux couleurs hex opaques).
+ *
+ * Nécessaire pour juger le contraste d'un texte posé sur une SURFACE TEINTÉE : un chip d'arôme
+ * repose sur `accent` à 12 % au-dessus du fond de page, pas sur le fond de page. Évaluer le
+ * contraste contre le fond de page donnait 4.44:1 là où le seuil est 4.5 — un écart invisible en
+ * raisonnement, mesurable en pratique.
+ */
+export function blendOver(color, background, opacityPct) {
+    const fg = parseHex(color);
+    const bg = parseHex(background);
+    if (!fg || !bg) return background;
+    const a = Math.max(0, Math.min(100, opacityPct)) / 100;
+    return toHex({
+        r: fg.r * a + bg.r * (1 - a),
+        g: fg.g * a + bg.g * (1 - a),
+        b: fg.b * a + bg.b * (1 - a),
+    });
+}
+
+/**
  * Renvoie la couleur la plus proche de `color` atteignant `target` de contraste sur `background`.
  * On s'éloigne du fond : vers le noir si le fond est clair, vers le blanc s'il est sombre.
  * Retourne `color` inchangée si elle est déjà conforme, ou si une couleur est illisible.

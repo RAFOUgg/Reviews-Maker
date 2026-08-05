@@ -39,7 +39,7 @@ function useScaleToFit(canvasW, canvasH, padding = 48) {
  *   pages à la main — `pagesEnabled` reste `false` dans ce cas, donc le repli non-paginé
  *   ci-dessous doit aussi en tenir compte, pas seulement `pagesEnabled`.
  */
-export default function PagedPreviewPane({ autoActive = false }) {
+export default function PagedPreviewPane({ autoActive = false, measuring = false }) {
     const previewRef = useRef(null);
     const [direction, setDirection] = useState(0);
 
@@ -167,6 +167,17 @@ export default function PagedPreviewPane({ autoActive = false }) {
         >
             {/* Zone canevas */}
             <div ref={areaRef} className="flex-1 min-h-0 w-full flex items-center justify-center p-6 relative">
+                {/* Pendant la mesure, on n'affiche PAS la mise en page de repli : elle est presque
+                    toujours différente du résultat final, et l'afficher produisait un reflow visible
+                    quelques secondes après l'ouverture (« 1/5 » qui devenait « 1/8 » avec un contenu
+                    différent). Mieux vaut annoncer un calcul en cours qu'un résultat qu'on sait faux. */}
+                {measuring && (
+                    <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-3
+                                    bg-gray-900/70 backdrop-blur-sm">
+                        <div className="w-8 h-8 rounded-full border-2 border-white/20 border-t-purple-400 animate-spin" />
+                        <p className="text-sm text-white/70">Calcul de la mise en page…</p>
+                    </div>
+                )}
                 <AnimatePresence initial={false} custom={direction} mode="wait">
                     <motion.div
                         key={currentPageIndex}
@@ -258,6 +269,8 @@ export default function PagedPreviewPane({ autoActive = false }) {
 
 PagedPreviewPane.propTypes = {
     autoActive: PropTypes.bool,
+    /** Mesure de pagination en cours — masque l'aperçu provisoire. */
+    measuring: PropTypes.bool,
 };
 
 

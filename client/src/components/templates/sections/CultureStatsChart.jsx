@@ -1,7 +1,7 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 import PropTypes from 'prop-types';
 import { getFieldMeta } from '../../../utils/chainCellPipelines';
-import { MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
+import { MIN_FONT_PX, ensureReadable } from '../../../utils/exportMakerHelpers';
 
 // Palette de lignes — reprend les 3 signaux de la direction v2 (résine/plante/terracotta) puis
 // des teintes neutres de repli, plutôt que d'inventer une nouvelle palette arc-en-ciel.
@@ -29,8 +29,14 @@ const META_KEYS = new Set(['timestamp', 'label', 'date', 'phase', '_meta']);
  * le graphique ne s'affichait jamais sur une review réelle, silencieusement masqué par son propre
  * garde-fou `dataKeys.length === 0`).
  */
-export default function CultureStatsChart({ steps, pipelineType, width = 560, height = 220, textColor = '#CBD5E1', lineColor = 'rgba(255,255,255,0.12)' }) {
+export default function CultureStatsChart({ steps, pipelineType, width = 560, height = 220, textColor = '#CBD5E1', lineColor = 'rgba(255,255,255,0.12)', background = '#0b1220' }) {
     if (!Array.isArray(steps) || steps.length < 2) return null;
+
+    // Recharts colore le TEXTE de légende avec la couleur de la série. `LINE_COLORS` étant des
+    // nuances 400 pensées pour le fond sombre, ces libellés tombaient à 1.6–2.6:1 en mode papier
+    // (mesuré sur l'export A4). On adapte la teinte au fond réellement utilisé : les courbes
+    // restent reconnaissables, les libellés redeviennent lisibles.
+    const seriesColors = LINE_COLORS.map((c) => ensureReadable(c, background, 4.8));
 
     const chartData = steps.map((step, i) => {
         const row = { index: i + 1 };
@@ -62,7 +68,7 @@ export default function CultureStatsChart({ steps, pipelineType, width = 560, he
             <Tooltip contentStyle={{ background: '#16201B', border: `1px solid ${lineColor}`, borderRadius: 8, fontSize: MIN_FONT_PX }} labelStyle={{ color: textColor }} />
             <Legend wrapperStyle={{ fontSize: MIN_FONT_PX, color: textColor }} />
             {dataKeys.map((key, idx) => (
-                <Line key={key} type="monotone" dataKey={key} stroke={LINE_COLORS[idx % LINE_COLORS.length]} strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} isAnimationActive={false} />
+                <Line key={key} type="monotone" dataKey={key} stroke={seriesColors[idx % seriesColors.length]} strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} isAnimationActive={false} />
             ))}
         </LineChart>
     );
@@ -75,4 +81,6 @@ CultureStatsChart.propTypes = {
     height: PropTypes.number,
     textColor: PropTypes.string,
     lineColor: PropTypes.string,
+    /** Fond réellement utilisé — sert à garantir la lisibilité des libellés de légende. */
+    background: PropTypes.string,
 };

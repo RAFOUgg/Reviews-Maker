@@ -15,6 +15,7 @@ import {
     SEMANTIC_SCORE_TEXT_COLORS,
     ACCENT_TEXT_COLORS,
     ensureReadable,
+    blendOver,
     getScoreBand,
     RATIO_DIMENSIONS,
     MIN_FONT_PX,
@@ -147,7 +148,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // Cible 4.8 et non 4.5 : le calcul se fait sur le fond de PAGE, alors que ces libellés
     // reposent souvent sur `surface`, légèrement plus sombre. Sans cette marge, le résultat
     // tombait à 4.38:1 — conforme sur le papier nu, juste en dessous sur les encadrés.
-    const accentReadable = ensureReadable(accent, isPaperMode ? '#F8FAFC' : '#0b1220', 4.8);
+    const pageBg = isPaperMode ? '#F8FAFC' : '#0b1220';
+    const accentReadable = ensureReadable(accent, pageBg, 4.8);
+    // Un chip d'arôme repose sur `accent` à 12 % au-dessus du fond, pas sur le fond nu : on
+    // évalue le contraste contre cette surface réelle. Sans ça, 4.44:1 pour un seuil à 4.5.
+    const chipBg = blendOver(accent, pageBg, 12);
+    const accentOnChip = ensureReadable(accent, chipBg, 4.6);
 
     // Extraction des données
     const categoryRatings = extractCategoryRatings(reviewData.categoryRatings, reviewData);
@@ -285,7 +291,9 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             borderRadius: 99,
                             border: `1px solid ${variant === 'primary' ? colorWithOpacity(accent, 50) : line}`,
                             background: variant === 'primary' ? colorWithOpacity(accent, 12) : surface,
-                            color: variant === 'primary' ? accent : textPrimary,
+                            // `accentReadable` et non `accent` : sur le papier crème, un chip
+                            // d'arôme en accent de palette tombait à 2.35:1 (mesuré).
+                            color: variant === 'primary' ? accentOnChip : textPrimary,
                         }}>
                             {extractLabel(it)}
                         </span>
@@ -296,7 +304,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     };
 
     const DataCell = ({ label, value, unit, status }) => {
-        const statusColor = status === 'ok' ? scoreText.hi : status === 'warn' ? scoreText.lo : textPrimary;
+        // Évalué sur `surface` (le fond de la cellule) et non sur le fond de page : la bande
+        // sémantique y perdait 0,2 point de contraste et passait sous le seuil (4.41:1).
+        const rawStatus = status === 'ok' ? scoreText.hi : status === 'warn' ? scoreText.lo : textPrimary;
+        const statusColor = isPaperMode ? ensureReadable(rawStatus, surface, 4.6) : rawStatus;
         return (
             <div style={{ background: surface, padding: `${padding.card * 0.8}px ${padding.card}px` }}>
                 <div style={{ fontFamily: MONO, fontSize: MIN_FONT_PX, letterSpacing: '0.1em', color: textSecondary, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
@@ -551,7 +562,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     `CultureStatsChart` se masque lui-même sinon. */}
                 {contentModules.pipelineInteractiveView !== false && cultureSteps && (
                     <Section title="Statistiques de culture" moduleId="cultureStats">
-                        <CultureStatsChart steps={cultureSteps} pipelineType="culture" width={chartWidth} height={isSquare ? 180 : 220} textColor={textSecondary} lineColor={lineSoft} />
+                        <CultureStatsChart steps={cultureSteps} pipelineType="culture" width={chartWidth} height={isSquare ? 180 : 220} textColor={textSecondary} lineColor={lineSoft} background={bg} />
                     </Section>
                 )}
 

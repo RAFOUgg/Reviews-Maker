@@ -55,12 +55,20 @@ function getCachedMeasurement(cacheKey, reviewData, config) {
  * @param {Object} config - config Export Maker courante
  * @param {Object} [options]
  * @param {boolean} [options.enabled=true] - permet à l'appelant de désactiver le calcul (ex. pagination pas active)
- * @returns {{ pages: Array, isAdaptive: boolean }}
+ * @returns {{ pages: Array, isAdaptive: boolean, isMeasuring: boolean }}
+ *
+ * `isMeasuring` (2026-08-05) : vrai tant que la mesure est en cours. Le hook pose immédiatement
+ * un repli STATIQUE (`getDefaultPages`) pour qu'un export déclenché tout de suite ne soit jamais
+ * vide — mais ce repli est presque toujours FAUX, et le remplacer ~2 s plus tard produisait un
+ * reflow visible : l'aperçu affichait « 1/5 » puis basculait à « 1/8 » avec un contenu différent.
+ * Les consommateurs qui AFFICHENT (aperçu Studio) doivent attendre `isMeasuring === false` plutôt
+ * que de montrer une mise en page qu'on sait provisoire ; ceux qui EXPORTENT gardent le repli.
  */
 export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
     const [state, setState] = useState(() => ({
         pages: getDefaultPages(reviewData?.type, config?.ratio),
         isAdaptive: false,
+        isMeasuring: false,
     }));
     const requestIdRef = useRef(0);
 
@@ -74,12 +82,14 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
         requestIdRef.current += 1;
         const requestId = requestIdRef.current;
 
-        setState({ pages: getDefaultPages(reviewData?.type, ratio), isAdaptive: false });
-
         const canAdapt = enabled && reviewData && config
             && ADAPTIVE_TEMPLATES.has(template)
             && !isCustomMode
             && shouldAutoLockPagination(reviewData, template);
+        // L'état est posé APRÈS avoir déterminé si une mesure va suivre : sans ça, on annonçait
+        // `isMeasuring: false` avec un repli statique pendant deux secondes, exactement le reflow
+        // qu'on cherche à supprimer.
+        setState({ pages: getDefaultPages(reviewData?.type, ratio), isAdaptive: false, isMeasuring: canAdapt });
         if (!canAdapt) return;
 
         const cacheKey = `${reviewId}|${template}|${ratio}|${contentModulesSignature}|${JSON.stringify(config.typography || {})}`;
@@ -89,12 +99,18 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
                 const { padding } = getResponsiveAdjustments(ratio, config.typography);
                 const adaptivePages = computeAdaptivePages(heights, ratio, padding.container);
                 if (adaptivePages.length >= 2) {
-                    setState({ pages: adaptivePages, isAdaptive: true });
+                    setState({ pages: adaptivePages, isAdaptive: true, isMeasuring: false });
+                } else {
+                    setState((prev) => ({ ...prev, isMeasuring: false }));
                 }
                 // Sinon : on garde le repli statique déjà posé plus haut (contenu trop léger pour
                 // que la mesure produise plus d'une page, ou mesure vide).
             })
-            .catch(() => { /* mesure échouée — repli statique déjà posé, pas d'export vide */ });
+            .catch(() => {
+                // Mesure échouée — le repli statique reste en place (jamais d'export vide), mais on
+                // libère l'affichage : mieux vaut une mise en page approchée qu'un écran bloqué.
+                if (requestIdRef.current === requestId) setState((prev) => ({ ...prev, isMeasuring: false }));
+            });
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [reviewId, template, ratio, isCustomMode, contentModulesSignature, enabled]);
 
