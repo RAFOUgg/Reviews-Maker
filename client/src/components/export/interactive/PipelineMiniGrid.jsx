@@ -74,13 +74,25 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                             onClick={() => setSelected(isSelected ? null : cell.timestamp)}
                             title={cell.label}
                             style={{
-                                width: 22, height: 22, borderRadius: 5,
+                                // Cellules PORTANT leur numéro d'étape. Elles étaient des carrés
+                                // vides de 22px : l'information n'apparaissait qu'au clic, ce qui
+                                // convient à un rendu interactif mais vide la grille de tout sens
+                                // dans un export figé (PNG/PDF). C'est le motif « carrés colorés
+                                // sans aucun texte » que le projet avait déjà rejeté le
+                                // 2026-07-27. La grille doit rester lisible dans les DEUX modes.
+                                minWidth: 26, height: 26, borderRadius: 6,
+                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: 12, fontWeight: 600, lineHeight: 1,
+                                fontVariantNumeric: 'tabular-nums',
+                                color: hasData ? accentColor : colorWithOpacity(accentColor, 45),
                                 backgroundColor: colorWithOpacity(accentColor, hasData ? 55 : 15),
                                 border: isSelected ? `2px solid ${accentColor}` : `1px solid ${colorWithOpacity(accentColor, hasData ? 45 : 20)}`,
                                 cursor: hasData ? 'pointer' : 'default',
-                                padding: 0,
+                                padding: '0 4px',
                             }}
-                        />
+                        >
+                            {cell.shortLabel || cell.label?.replace(/[^0-9]/g, '') || ''}
+                        </button>
                     );
                 })}
             </div>

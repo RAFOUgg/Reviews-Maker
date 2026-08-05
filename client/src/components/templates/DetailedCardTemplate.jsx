@@ -26,6 +26,7 @@ import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
+import { noteWithEmoji } from '../../utils/noteEmoji';
 import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
 import SensoryRadar from './sections/SensoryRadar';
 import CultureStatsChart from './sections/CultureStatsChart';
@@ -308,7 +309,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             // d'arôme en accent de palette tombait à 2.35:1 (mesuré).
                             color: variant === 'primary' ? accentOnChip : textPrimary,
                         }}>
-                            {extractLabel(it)}
+                            {noteWithEmoji(extractLabel(it))}
                         </span>
                     ))}
                 </div>
@@ -336,7 +337,35 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // c'est elle qui produisait le symptôme central (25 etapes a 24 C / 68 % / 888 ppm rendues en
     // 25 cartes identiques). Le composant partagé y ajoute le bandeau de conditions constantes et
     // le groupement par phase.
-    const renderPipeline = (pipeline, moduleId) => (
+    // GRILLE DE CELLULES par défaut, comme dans les formulaires de saisie. La redondance
+    // grille/liste avait été tranchée le 2026-08-02 en gardant la LISTE — mauvais arbitrage,
+    // constaté sur capture le 2026-08-05 : une culture de 25 jours produisait 25 lignes
+    // « TEMPÉRATURE JOUR · 24 °C » empilées sur toute la hauteur, illisibles et laissant la moitié
+    // droite de la page vide. La grille dit la même chose en une poignée de cellules, avec la
+    // grammaire visuelle que l'utilisateur connaît déjà de la saisie.
+    //
+    // La liste détaillée reste disponible en basculant `pipelineDetailGrids` sur `false`.
+    const renderPipeline = (pipeline, moduleId) => {
+        if (contentModules.pipelineDetailGrids !== false) {
+            const t = TIMELINE_PIPELINES.find((x) => pipeline.key?.includes(x.type))
+                || TIMELINE_PIPELINES.find((x) => reviewData[x.dataKey]);
+            if (t && reviewData[t.dataKey] && reviewData[t.configKey]) {
+                return (
+                    <div key={moduleId} data-module={moduleId} style={{ marginBottom: `${spacing.element}px` }}>
+                        <PipelineMiniGrid
+                            type={t.type} name={t.name} icon={t.icon}
+                            timelineData={reviewData[t.dataKey]}
+                            timelineConfig={reviewData[t.configKey]}
+                            accentColor={accent}
+                        />
+                    </div>
+                );
+            }
+        }
+        return renderPipelineList(pipeline, moduleId);
+    };
+
+    const renderPipelineList = (pipeline, moduleId) => (
         <PipelineTimeline
             key={moduleId}
             pipeline={pipeline}
@@ -627,11 +656,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         <ReadOnlyProductionChainCanvas reviewData={reviewData} height={isSquare ? 200 : 260} accentColor={accent} titleColor={titleColor} textColor={textSecondary} />
                     </div>
                 )}
-                {/* Off par défaut (`pipelineDetailGrids`) : cette grille compacte affiche la même
-                    donnée que "Processus de production" (PipelineStepFields) juste au-dessus, en
-                    détail complet — redondance trouvée en audit 2026-08-02, laissée en option pour
-                    qui préfère une vue résumée en plus. */}
-                {contentModules.pipelineDetailGrids === true && (() => {
+                {/* Section SUPPRIMÉE de l'affichage par défaut : depuis le 2026-08-05, la grille
+                    EST la représentation principale, rendue dans "Processus de production" par
+                    `renderPipeline`. La garder ici la ferait apparaître deux fois — c'est la
+                    redondance même que l'audit du 2026-08-02 avait relevée, dans l'autre sens. */}
+                {false && (() => {
                     const activeTimelines = TIMELINE_PIPELINES.filter((t) => reviewData[t.dataKey] && reviewData[t.configKey]);
                     if (activeTimelines.length === 0) return null;
                     return (

@@ -17,6 +17,7 @@ import {
     ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
+import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
@@ -163,8 +164,12 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
 
         return (
             <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px` }}>
+                {/* `noteWithEmoji` plutôt que le libellé brut : les formulaires enregistrent des
+                    identifiants (`floral-hibiscus`, `anti-depression`) que le rendu affichait tels
+                    quels. Il retourne l'emoji ET le vrai libellé issus des mêmes tables que la
+                    saisie (`aromasWheel`/`effects`/`tasteNotes`/`odorNotes`). */}
                 {items.map((item, i) => (
-                    <span key={i} style={styles.tag}>{extractLabel(item)}</span>
+                    <span key={i} style={styles.tag}>{noteWithEmoji(extractLabel(item))}</span>
                 ))}
             </div>
         );

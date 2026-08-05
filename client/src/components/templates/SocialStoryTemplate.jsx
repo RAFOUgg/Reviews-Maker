@@ -11,6 +11,7 @@ import {
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { templateSection } from '../../store/exportMakerConstants';
+import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
@@ -135,7 +136,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
             border: `1px solid ${colorWithOpacity(accent, 40)}`,
             whiteSpace: 'nowrap',
         }}>
-            {extractLabel(item)}
+            {noteWithEmoji(extractLabel(item))}
         </span>
     );
 

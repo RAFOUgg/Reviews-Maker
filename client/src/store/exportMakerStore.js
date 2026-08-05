@@ -308,12 +308,17 @@ const DEFAULT_CONFIG = {
         phenoHuntView: true,
         productionChainView: true,
         pipelineInteractiveView: true,
-        // `pipelineDetailGrids` (PipelineMiniGrid, cases colorées compactes) affichait EXACTEMENT la
-        // même donnée que la section "Processus de production" (PipelineStepFields, détail complet
-        // texte) juste au-dessus, par défaut simultanément — redondance trouvée lors de l'audit
-        // 2026-08-02 (Phase A du plan de finition). Off par défaut désormais (l'un ou l'autre, pas
-        // les deux) ; `pipelineInteractiveView` ne pilote plus que "Statistiques de culture".
-        pipelineDetailGrids: false,
+        // `pipelineDetailGrids` arbitre entre DEUX représentations du même pipeline : la grille de
+        // cellules (`PipelineMiniGrid`, celle des formulaires de saisie) et la liste détaillée
+        // (`PipelineTimeline`). Les deux s'affichaient simultanément jusqu'à l'audit du
+        // 2026-08-02, qui a tranché en faveur de la liste.
+        //
+        // Arbitrage INVERSÉ le 2026-08-05, sur capture : une culture de 25 jours produisait
+        // 25 lignes « TEMPÉRATURE JOUR · 24 °C » empilées sur toute la hauteur de la page,
+        // illisibles, laissant la moitié droite vide. La grille dit la même chose en quelques
+        // cellules, avec la grammaire visuelle déjà connue de la saisie. La liste reste accessible
+        // en basculant ce drapeau sur `false`.
+        pipelineDetailGrids: true,
 
         // === CONTENU TEXTE ===
         conclusion: true,

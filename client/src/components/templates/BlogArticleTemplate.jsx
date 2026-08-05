@@ -17,6 +17,7 @@ import {
     ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
+import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
@@ -179,7 +180,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const renderTags = (items) => (
         <div className="flex flex-wrap">
             {items.map((item, i) => (
-                <span key={i} style={styles.tag}>{extractLabel(item)}</span>
+                <span key={i} style={styles.tag}>{noteWithEmoji(extractLabel(item))}</span>
             ))}
         </div>
     );
