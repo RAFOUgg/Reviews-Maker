@@ -43,9 +43,8 @@ import ChainAnnotationContextMenu from './ChainAnnotationContextMenu';
 import CellDropMenu from './CellDropMenu';
 import ChainEdgeFormModal from './ChainEdgeFormModal';
 import ChainFormModal from './ChainFormModal';
-import ChainCellPickerModal from './ChainCellPickerModal';
+import ChainDataImportModal from './ChainDataImportModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
-import ChainMediaPickerModal from './ChainMediaPickerModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import ConfirmModal from '../shared/ConfirmModal';
@@ -1360,8 +1359,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 {showMediaBubbleImport && (
                     <MediaBubbleImportModal onImport={handleImportMediaBubble} onClose={() => setShowMediaBubbleImport(false)} />
                 )}
-                {store.cellPicker && <ChainCellPickerModal />}
-                {store.mediaPicker && <ChainMediaPickerModal />}
+                {store.dataImportModal && <ChainDataImportModal />}
                 {store.editingCell && <ChainCellEditorModal />}
                 {store.mediaModalTarget && (() => {
                     const { targetType, targetId } = store.mediaModalTarget;

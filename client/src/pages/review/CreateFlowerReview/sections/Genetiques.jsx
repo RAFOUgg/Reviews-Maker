@@ -473,6 +473,111 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
         setSidebarContextMenu(null)
     }
 
+    // Formulaire d'édition des métadonnées cultivar (breeder/type/génération/sexe/relations/pheno
+    // code) — injecté DANS le bandeau latéral droit du canvas (UnifiedGeneticsCanvas.renderNodeExtra),
+    // pas affiché sous l'arbre : le panneau latéral est le seul endroit où l'utilisateur regarde
+    // déjà en cliquant un nœud (cf. node-info-panel), donc c'est là que ces champs doivent vivre.
+    const renderCultivarMetadataPanel = (node) => (
+        <div className="pt-3 mt-3 border-t border-white/10 space-y-3">
+            <h4 className="text-xs font-semibold text-violet-300 uppercase tracking-wide flex items-center gap-1.5">
+                <Edit2 className="w-3.5 h-3.5" />
+                Métadonnées : {node?.cultivarName || 'Cultivar'}
+            </h4>
+
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-white/60 uppercase tracking-wide">Breeder</label>
+                <input
+                    type="text"
+                    value={nodeEditMeta.breeder}
+                    onChange={(e) => handleNodeMetaUpdate({ breeder: e.target.value })}
+                    className="liquid-input w-full text-xs"
+                    placeholder="DNA Genetics..."
+                />
+            </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-white/60 uppercase tracking-wide">Type</label>
+                <select
+                    value={nodeEditMeta.type}
+                    onChange={(e) => handleNodeMetaUpdate({ type: e.target.value })}
+                    className="liquid-input liquid-select w-full text-xs"
+                >
+                    <option value="" className="bg-[#12121a] text-white">Sélectionner...</option>
+                    <option value="indica" className="bg-[#12121a] text-white">🌙 Indica</option>
+                    <option value="sativa" className="bg-[#12121a] text-white">☀️ Sativa</option>
+                    <option value="hybrid" className="bg-[#12121a] text-white">⚖️ Hybride</option>
+                    <option value="ruderalis" className="bg-[#12121a] text-white">🌾 Ruderalis</option>
+                    <option value="hemp" className="bg-[#12121a] text-white">🌿 Chanvre (Hemp)</option>
+                </select>
+            </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-white/60 uppercase tracking-wide">Génération</label>
+                <select
+                    value={nodeEditMeta.generation}
+                    onChange={(e) => handleNodeMetaUpdate({ generation: e.target.value })}
+                    className="liquid-input liquid-select w-full text-xs"
+                >
+                    <option value="" className="bg-[#12121a] text-white">Non précisé</option>
+                    <option value="P" className="bg-[#12121a] text-white">P (Parentale)</option>
+                    <option value="F1" className="bg-[#12121a] text-white">F1</option>
+                    <option value="F2" className="bg-[#12121a] text-white">F2</option>
+                    <option value="F3" className="bg-[#12121a] text-white">F3</option>
+                    <option value="F4" className="bg-[#12121a] text-white">F4</option>
+                    <option value="BX1" className="bg-[#12121a] text-white">BX1 (Rétrocroisement 1)</option>
+                    <option value="BX2" className="bg-[#12121a] text-white">BX2 (Rétrocroisement 2)</option>
+                    <option value="BX3" className="bg-[#12121a] text-white">BX3 (Rétrocroisement 3)</option>
+                    <option value="S1" className="bg-[#12121a] text-white">S1 (Selfing)</option>
+                    <option value="IBL" className="bg-[#12121a] text-white">IBL (lignée stabilisée)</option>
+                    <option value="other" className="bg-[#12121a] text-white">Autre</option>
+                </select>
+            </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-white/60 uppercase tracking-wide">Sexe</label>
+                <select
+                    value={nodeEditMeta.sex}
+                    onChange={(e) => handleNodeMetaUpdate({ sex: e.target.value })}
+                    className="liquid-input liquid-select w-full text-xs"
+                >
+                    <option value="unknown" className="bg-[#12121a] text-white">❓ Inconnu / non sexé</option>
+                    <option value="female" className="bg-[#12121a] text-white">♀ Femelle</option>
+                    <option value="male" className="bg-[#12121a] text-white">♂ Mâle</option>
+                </select>
+            </div>
+
+            <div className="space-y-1.5">
+                <label className="text-[11px] font-medium text-white/60 uppercase tracking-wide">Relation généalogique</label>
+                <div className="flex flex-wrap gap-1.5">
+                    {['clone élite', 'seed run', 'selfed (S1)', 'BX1', 'BX2', 'polyhybride'].map(tag => {
+                        const isActive = (nodeEditMeta.relations || []).includes(tag)
+                        return (
+                            <button
+                                key={tag}
+                                type="button"
+                                onClick={() => toggleRelationTag(tag)}
+                                className={`px-2 py-1 text-[10px] rounded-full transition-all border ${isActive
+                                    ? 'bg-violet-500/40 text-white border-violet-400'
+                                    : 'bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border-white/10'
+                                    }`}
+                            >
+                                {tag}
+                            </button>
+                        )
+                    })}
+                </div>
+            </div>
+
+            <div className="pt-2 border-t border-white/10">
+                <PhenoCodeGenerator
+                    value={nodeEditMeta.phenotypeCode}
+                    onChange={(code) => handleNodeMetaUpdate({ phenotypeCode: code })}
+                    userId={user?.id}
+                />
+            </div>
+        </div>
+    )
+
     return (
         <>
         <LiquidCard glow="purple" padding="sm">
@@ -845,6 +950,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                                 <UnifiedGeneticsCanvas
                                     treeId={selectedTreeId}
                                     readOnly={false}
+                                    renderNodeExtra={renderCultivarMetadataPanel}
                                 />
                             </ReactFlowProvider>
                         ) : (
@@ -880,120 +986,6 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                     </div>
                 </div>
             </div>
-
-            {/* SECTION METADATA (si nœud sélectionné) */}
-            <AnimatePresence>
-                {selectedNode && (
-                    <motion.div
-                        initial={{ opacity: 0, height: 0, marginTop: 0 }}
-                        animate={{ opacity: 1, height: 'auto', marginTop: 16 }}
-                        exit={{ opacity: 0, height: 0, marginTop: 0 }}
-                        className="p-4 bg-gradient-to-br from-violet-500/10 to-indigo-500/10 border border-violet-500/20 rounded-xl space-y-4 backdrop-blur-sm"
-                    >
-                        <h4 className="text-sm font-semibold text-violet-300 flex items-center gap-2">
-                            <Edit2 className="w-4 h-4" />
-                            Métadonnées : {selectedNode.cultivarName || selectedNode.data?.cultivarName || 'Cultivar'}
-                        </h4>
-
-                        {/* Breeder & Type */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Breeder</label>
-                                <input
-                                    type="text"
-                                    value={nodeEditMeta.breeder}
-                                    onChange={(e) => handleNodeMetaUpdate({ breeder: e.target.value })}
-                                    className="liquid-input w-full text-sm"
-                                    placeholder="DNA Genetics..."
-                                />
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Type</label>
-                                <select
-                                    value={nodeEditMeta.type}
-                                    onChange={(e) => handleNodeMetaUpdate({ type: e.target.value })}
-                                    className="liquid-input liquid-select w-full text-sm"
-                                >
-                                    <option value="" className="bg-[#12121a] text-white">Sélectionner...</option>
-                                    <option value="indica" className="bg-[#12121a] text-white">🌙 Indica</option>
-                                    <option value="sativa" className="bg-[#12121a] text-white">☀️ Sativa</option>
-                                    <option value="hybrid" className="bg-[#12121a] text-white">⚖️ Hybride</option>
-                                    <option value="ruderalis" className="bg-[#12121a] text-white">🌾 Ruderalis</option>
-                                    <option value="hemp" className="bg-[#12121a] text-white">🌿 Chanvre (Hemp)</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Génération</label>
-                                <select
-                                    value={nodeEditMeta.generation}
-                                    onChange={(e) => handleNodeMetaUpdate({ generation: e.target.value })}
-                                    className="liquid-input liquid-select w-full text-sm"
-                                >
-                                    <option value="" className="bg-[#12121a] text-white">Non précisé</option>
-                                    <option value="P" className="bg-[#12121a] text-white">P (Parentale)</option>
-                                    <option value="F1" className="bg-[#12121a] text-white">F1</option>
-                                    <option value="F2" className="bg-[#12121a] text-white">F2</option>
-                                    <option value="F3" className="bg-[#12121a] text-white">F3</option>
-                                    <option value="F4" className="bg-[#12121a] text-white">F4</option>
-                                    <option value="BX1" className="bg-[#12121a] text-white">BX1 (Rétrocroisement 1)</option>
-                                    <option value="BX2" className="bg-[#12121a] text-white">BX2 (Rétrocroisement 2)</option>
-                                    <option value="BX3" className="bg-[#12121a] text-white">BX3 (Rétrocroisement 3)</option>
-                                    <option value="S1" className="bg-[#12121a] text-white">S1 (Selfing)</option>
-                                    <option value="IBL" className="bg-[#12121a] text-white">IBL (lignée stabilisée)</option>
-                                    <option value="other" className="bg-[#12121a] text-white">Autre</option>
-                                </select>
-                            </div>
-
-                            <div className="space-y-2">
-                                <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Sexe</label>
-                                <select
-                                    value={nodeEditMeta.sex}
-                                    onChange={(e) => handleNodeMetaUpdate({ sex: e.target.value })}
-                                    className="liquid-input liquid-select w-full text-sm"
-                                >
-                                    <option value="unknown" className="bg-[#12121a] text-white">❓ Inconnu / non sexé</option>
-                                    <option value="female" className="bg-[#12121a] text-white">♀ Femelle</option>
-                                    <option value="male" className="bg-[#12121a] text-white">♂ Mâle</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Genetic Relations Tags */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-medium text-white/60 uppercase tracking-wide">Relation Généalogique</label>
-                            <div className="flex flex-wrap gap-2">
-                                {['clone élite', 'seed run', 'selfed (S1)', 'BX1', 'BX2', 'polyhybride'].map(tag => {
-                                    const isActive = (nodeEditMeta.relations || []).includes(tag)
-                                    return (
-                                        <button
-                                            key={tag}
-                                            type="button"
-                                            onClick={() => toggleRelationTag(tag)}
-                                            className={`px-3 py-1.5 text-xs rounded-full transition-all border ${isActive
-                                                ? 'bg-violet-500/40 text-white border-violet-400'
-                                                : 'bg-white/10 text-white/70 hover:bg-violet-500/30 hover:text-white border-white/10'
-                                                }`}
-                                        >
-                                            {tag}
-                                        </button>
-                                    )
-                                })}
-                            </div>
-                        </div>
-
-                        {/* Pheno Code */}
-                        <div className="pt-3 border-t border-white/10">
-                            <PhenoCodeGenerator
-                                value={nodeEditMeta.phenotypeCode}
-                                onChange={(code) => handleNodeMetaUpdate({ phenotypeCode: code })}
-                                userId={user?.id}
-                            />
-                        </div>
-                    </motion.div>
-                )}
-            </AnimatePresence>
         </LiquidCard>
         <ConfirmModal
             open={confirmDeleteTree.open}

@@ -186,17 +186,6 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding) {
     }
     if (entries.length === 0) return [];
 
-    const pages = [];
-    let current = null;
-    let currentHeight = 0;
-
-    const startPage = (firstId) => {
-        if (current) pages.push(current);
-        const meta = resolveMeta(firstId);
-        current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true, bases: new Set() };
-        currentHeight = 0;
-    };
-
     // Coût de l'en-tête à réserver si ce module est le premier de son pipeline sur la page visée.
     const headerCostOn = (page, id) => {
         const base = baseModuleId(id);
@@ -204,22 +193,61 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding) {
         return page && page.bases.has(base) ? 0 : headerHeights.get(base);
     };
 
-    for (const [id, rawHeight] of entries) {
-        const height = rawHeight + SECTION_HEADER_OVERHEAD;
-        const isolated = ALWAYS_ISOLATE.has(baseModuleId(id));
-        // Un module isolé démarre TOUJOURS sa propre page ; les modules suivants ne doivent pas non
-        // plus rejoindre SA page (sinon on recrée le même risque de perte pour le voisin suivant) —
-        // `current.solo` marque une page occupée par un module isolé comme définitivement close.
-        const fitsCurrent = current && !current.solo && !isolated
-            && (currentHeight + height + headerCostOn(current, id) <= budget);
-        if (!fitsCurrent) startPage(id);
-        if (isolated) current.solo = true;
-        currentHeight += headerCostOn(current, id);
-        current.bases.add(baseModuleId(id));
-        current.modules.push(id);
-        currentHeight += height;
+    /** Packing séquentiel « premier qui rentre » sous un budget de hauteur donné. */
+    const pack = (cap) => {
+        const pages = [];
+        let current = null;
+        let currentHeight = 0;
+
+        const startPage = (firstId) => {
+            if (current) pages.push(current);
+            const meta = resolveMeta(firstId);
+            current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true, bases: new Set() };
+            currentHeight = 0;
+        };
+
+        for (const [id, rawHeight] of entries) {
+            const height = rawHeight + SECTION_HEADER_OVERHEAD;
+            const isolated = ALWAYS_ISOLATE.has(baseModuleId(id));
+            // Un module isolé démarre TOUJOURS sa propre page ; les modules suivants ne doivent pas
+            // non plus rejoindre SA page (sinon on recrée le même risque de perte pour le voisin
+            // suivant) — `current.solo` marque une page occupée par un module isolé comme close.
+            const fitsCurrent = current && !current.solo && !isolated
+                && (currentHeight + height + headerCostOn(current, id) <= cap);
+            if (!fitsCurrent) startPage(id);
+            if (isolated) current.solo = true;
+            currentHeight += headerCostOn(current, id);
+            current.bases.add(baseModuleId(id));
+            current.modules.push(id);
+            currentHeight += height;
+        }
+        if (current) pages.push(current);
+        return pages;
+    };
+
+    let pages = pack(budget);
+
+    // RÉÉQUILIBRAGE. Le « premier qui rentre » remplit chaque page au maximum et laisse à la
+    // DERNIÈRE tout ce qui reste — mesuré le 2026-08-05 sur la Fiche Technique 16:9 : page 1 à
+    // 76,9 %, page 2 à 30,1 %. Le nombre de pages est pourtant le bon ; c'est la répartition qui
+    // est mauvaise.
+    //
+    // On cherche donc le plus PETIT budget qui produit encore ce même nombre de pages. Réduire le
+    // budget force le packer à couper plus tôt, donc à étaler le contenu sur toutes les pages au
+    // lieu de saturer les premières. Recherche dichotomique bornée : la borne basse est la moyenne
+    // parfaite (total / nombre de pages), qu'aucun packing ne peut battre.
+    if (pages.length > 1) {
+        const total = entries.reduce((sum, [, h]) => sum + h + SECTION_HEADER_OVERHEAD, 0);
+        let lo = Math.max(200, total / pages.length);
+        let hi = budget;
+        let best = pages;
+        for (let i = 0; i < 12 && hi - lo > 8; i += 1) {
+            const mid = (lo + hi) / 2;
+            const attempt = pack(mid);
+            if (attempt.length <= pages.length) { best = attempt; hi = mid; } else { lo = mid; }
+        }
+        pages = best;
     }
-    if (current) pages.push(current);
 
     // `bases` est un accumulateur interne au packing — un Set ne se sérialise pas en JSON (il
     // deviendrait `{}` en traversant le store de pages), on ne le laisse pas fuiter dans la sortie.

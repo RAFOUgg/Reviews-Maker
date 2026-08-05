@@ -88,13 +88,8 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
 
     const attachedCells = Array.isArray(node?.cellData) ? node.cellData : [];
 
-    const handleImportCells = () => {
-        store.openCellPicker('node', [nodeId]);
-        onClose();
-    };
-
-    const handleImportMedia = () => {
-        store.openMediaPicker('node', [nodeId]);
+    const handleImportData = () => {
+        store.openDataImport('node', [nodeId]);
         onClose();
     };
 
@@ -110,11 +105,6 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
 
     const handlePasteCells = () => {
         store.pasteCells('node', [nodeId]);
-        onClose();
-    };
-
-    const handleEditCell = (cell) => {
-        store.openCellEditor('node', nodeId, cell);
         onClose();
     };
 
@@ -155,21 +145,17 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                         🎯 Centrer la vue sur ce nœud
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    <button className="context-menu-item" onClick={handleImportData} style={{ fontWeight: 600 }}>
+                        <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Importer une donnée...
+                    </button>
                     <button className="context-menu-item" onClick={handleAddDirectCell}>
                         <Plus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                        Ajouter des données directement...
-                    </button>
-                    <button className="context-menu-item" onClick={handleImportCells}>
-                        <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                        Importer des cellules de pipeline...
+                        Saisir manuellement...
                     </button>
                     <button className="context-menu-item" onClick={handleOpenMedia}>
                         <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
-                    </button>
-                    <button className="context-menu-item" onClick={handleImportMedia}>
-                        <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                        Importer depuis les reviews de la chaîne...
                     </button>
                     {attachedCells.length > 0 && (
                         <button className="context-menu-item" onClick={handleCopyAllCells}>
@@ -183,16 +169,9 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                             Coller {store.cellClipboard.length} cellule{store.cellClipboard.length > 1 ? 's' : ''} ici
                         </button>
                     )}
-                    {attachedCells.length > 0 && (
-                        <>
-                            <div style={{ padding: '4px 12px', fontSize: '11px', color: '#888' }}>Cellules attachées</div>
-                            {attachedCells.map(cell => (
-                                <button key={cell.id} className="context-menu-item" onClick={() => handleEditCell(cell)} title="Éditer / retirer cette cellule">
-                                    ✏️ {cell.pipelineLabel} — {cell.cellLabel}
-                                </button>
-                            ))}
-                        </>
-                    )}
+                    {/* La liste détaillée des cellules attachées (édition individuelle) vit dans le
+                        panneau latéral du canevas (sélection de ce nœud), pas ici — la dupliquer dans
+                        ce menu le faisait déborder sans fin sur une chaîne dense. */}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                     <button className="context-menu-item danger" onClick={handleRemove}>
                         🗑️ Retirer du graphe

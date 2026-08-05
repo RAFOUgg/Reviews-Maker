@@ -1126,7 +1126,11 @@ export const FORMAT_LAYOUT = {
     '16:9': { imageShare: 0.45, columns: 2, orientation: 'landscape' },
     '9:16': { imageShare: 0.65, columns: 1, orientation: 'portrait' },
     '4:3':  { imageShare: 0.40, columns: 2, orientation: 'landscape' },
-    'A4':   { imageShare: 0.20, columns: 1, orientation: 'document' },
+    // A4 en DEUX colonnes. Il fait 1754px de large : en une seule colonne, une ligne de texte
+    // atteint ~175 caractères (mesuré, règle E5 — la cible typographique est 45-90). C'est aussi ce
+    // qui laissait ses dernières pages à moitié vides, une page absorbant deux fois moins de
+    // contenu qu'elle ne le pourrait. Deux colonnes corrigent les deux à la fois.
+    'A4':   { imageShare: 0.20, columns: 2, orientation: 'document' },
 };
 
 /** Contrat de mise en page d'un format. Repli sur le carré pour un ratio inconnu. */

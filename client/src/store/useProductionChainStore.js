@@ -38,18 +38,19 @@ const useProductionChainStore = create(
             edgeFormData: null,
 
             // STATE - CELL DATA (import de cellules de pipeline vers un nœud/liaison)
-            // cellPicker : { targetType: 'node'|'edge', targetIds: string[] } | null
-            cellPicker: null,
+            // dataImportModal : { targetType: 'node'|'edge', targetIds: string[] } | null — picker
+            // unifié (ChainDataImportModal.jsx), remplace les anciens cellPicker/mediaPicker séparés
+            // (2026-07-30) : un seul point d'entrée "Importer une donnée" avec des onglets Pipeline/
+            // Photo-Vidéo/Document, une recherche dans toute la bibliothèque de l'utilisateur (pas
+            // seulement les reviews déjà présentes sur ce canevas), et un groupe "Réutiliser depuis
+            // ce canevas" (cellules/médias déjà attachés ailleurs sur CETTE chaîne).
+            dataImportModal: null,
             // cellClipboard : cellules copiées (sans id — un nouvel id est généré à chaque collage)
             cellClipboard: [],
             // editingCell : { targetType: 'node'|'edge', targetId: string, cell: object } | null
             editingCell: null,
             // mediaModalTarget : { targetType: 'node'|'edge', targetId: string } | null
             mediaModalTarget: null,
-            // mediaPicker : { targetType: 'node'|'edge', targetIds: string[] } | null — import groupé
-            // de photos/vidéos déjà présentes dans les reviews des nœuds de CETTE chaîne (pas besoin
-            // de re-uploader), même triplet open/close que cellPicker.
-            mediaPicker: null,
 
             // STATE - REVIEW SUMMARY CACHE (résumé pipeline dérivé de la review liée à un nœud,
             // pour le hover/panneau du canvas — clé par reviewId, pas par chaîne : une review est
@@ -826,18 +827,11 @@ const useProductionChainStore = create(
             // ============================================================================
             // targetIds peut être vide (ouverture depuis le fond du canvas) — la modale laisse
             // alors choisir librement les cibles parmi tous les nœuds/liaisons de la chaîne.
-            openCellPicker: (targetType, targetIds = []) => {
+            openDataImport: (targetType, targetIds = []) => {
                 const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
-                set({ cellPicker: { targetType, targetIds: ids } });
+                set({ dataImportModal: { targetType, targetIds: ids } });
             },
-
-            closeCellPicker: () => set({ cellPicker: null }),
-
-            openMediaPicker: (targetType, targetIds = []) => {
-                const ids = Array.isArray(targetIds) ? targetIds : [targetIds];
-                set({ mediaPicker: { targetType, targetIds: ids } });
-            },
-            closeMediaPicker: () => set({ mediaPicker: null }),
+            closeDataImport: () => set({ dataImportModal: null }),
 
             openCellEditor: (targetType, targetId, cell) => set({ editingCell: { targetType, targetId, cell } }),
             closeCellEditor: () => set({ editingCell: null }),
@@ -1110,7 +1104,7 @@ const useProductionChainStore = create(
                     nodes: [],
                     edges: [],
                     annotations: [],
-                    cellPicker: null,
+                    dataImportModal: null,
                     editingCell: null,
                     mediaModalTarget: null
                 });
@@ -1128,7 +1122,7 @@ const useProductionChainStore = create(
                     selectedEdgeId: null,
                     showEdgeForm: false,
                     edgeFormData: null,
-                    cellPicker: null,
+                    dataImportModal: null,
                     cellClipboard: [],
                     editingCell: null,
                     mediaModalTarget: null,

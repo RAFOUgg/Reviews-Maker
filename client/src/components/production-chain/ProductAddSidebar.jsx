@@ -30,7 +30,7 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
     const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_STORAGE_KEY) === '1');
     // Onglet "Fichiers" : parcourt photos/vidéos/PDF de TOUTES les reviews de l'utilisateur (pas
     // seulement celles déjà présentes sur ce canvas) — simple navigation, contrairement à
-    // ChainMediaPickerModal qui attache réellement un fichier à un nœud/liaison.
+    // ChainDataImportModal qui attache réellement un fichier à un nœud/liaison.
     const [activeTab, setActiveTab] = useState('reviews'); // 'reviews' | 'files'
     const [fileTypeFilter, setFileTypeFilter] = useState('all'); // 'all' | 'photo' | 'video' | 'pdf'
 

@@ -67,7 +67,7 @@ const RELATIONSHIP_TYPE_LABELS = {
     pairing: 'Couple parental (liaison)'
 };
 
-const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
+const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = null }) => {
     const store = useGeneticsStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
     const { isMobile } = useResponsiveLayout();
@@ -648,6 +648,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false }) => {
                                         )}
                                     </div>
                                 )}
+                                {renderNodeExtra && renderNodeExtra(selectedNode)}
                             </>
                         )}
 

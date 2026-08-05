@@ -9,7 +9,7 @@
 
 import React, { useEffect, useRef } from 'react';
 import { useReactFlow } from 'reactflow';
-import { RotateCcw, Download, Image as ImageIcon } from 'lucide-react';
+import { RotateCcw, Download } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
 const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
@@ -27,15 +27,10 @@ const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, [onClose]);
 
-    const handleImportBulk = () => {
+    const handleImportData = () => {
         // Aucune cible pré-sélectionnée — la modale laisse choisir librement parmi tous les
         // nœuds/liaisons de la chaîne (import groupé "vers plusieurs bulles/liaisons").
-        store.openCellPicker('node', []);
-        onClose();
-    };
-
-    const handleImportMedia = () => {
-        store.openMediaPicker('node', []);
+        store.openDataImport('node', []);
         onClose();
     };
 
@@ -49,15 +44,9 @@ const ChainPaneContextMenu = ({ x, y, onClose, readOnly }) => {
                 Centrer / Réinitialiser le zoom
             </button>
             {!readOnly && (
-                <button className="context-menu-item" onClick={handleImportBulk}>
+                <button className="context-menu-item" onClick={handleImportData}>
                     <Download className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
-                    Importer des cellules vers plusieurs bulles/liaisons...
-                </button>
-            )}
-            {!readOnly && (
-                <button className="context-menu-item" onClick={handleImportMedia}>
-                    <ImageIcon className="inline w-3.5 h-3.5 mr-1.5" style={{ verticalAlign: '-2px' }} />
-                    Importer des photos/vidéos des reviews de la chaîne...
+                    Importer une donnée vers plusieurs bulles/liaisons...
                 </button>
             )}
         </div>

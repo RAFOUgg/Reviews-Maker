@@ -237,7 +237,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // réelle de hauteur) et se masque si `pageModuleIds` est posé et ne le contient pas. Les
     // `Section` sans `moduleId` (aucune section n'en manque volontairement aujourd'hui) resteraient
     // toujours visibles, par sécurité (mieux vaut un doublon qu'une disparition silencieuse).
-    const Section = ({ idx, title, moduleId, children }) => {
+    // `icon` remplace l'ancien `idx` ("01", "02"…). Cette numérotation venait du spec COA du
+    // 2026-07-30, une identité « certificat de laboratoire » abandonnée depuis lors du
+    // réalignement sur LiquidUI : elle n'existe nulle part ailleurs dans le produit (règle G4 de
+    // l'audit). Une pastille d'icône reprend en revanche la grammaire des FORMULAIRES de saisie,
+    // que l'utilisateur connaît déjà — et donne du repère visuel plutôt qu'un compteur.
+    const Section = ({ icon, title, moduleId, children }) => {
         if (moduleId && !isPageOn(moduleId)) return null;
         return (
             <div data-module={moduleId || undefined} style={{
@@ -248,8 +253,16 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 breakInside: 'avoid',
                 WebkitColumnBreakInside: 'avoid',
             }}>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: spacing.element * 2 }}>
-                    {idx && <span style={{ fontFamily: MONO, fontSize: fontSize.small, color: accentReadable, letterSpacing: '0.05em', flexShrink: 0 }}>{idx}</span>}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: spacing.element * 2 }}>
+                    {icon && (
+                        <span style={{
+                            flexShrink: 0, width: 26, height: 26, borderRadius: 8,
+                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: fontSize.small,
+                            background: colorWithOpacity(accent, 16),
+                            border: `1px solid ${colorWithOpacity(accent, 30)}`,
+                        }}>{icon}</span>
+                    )}
                     <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
                     <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
                 </div>
@@ -448,7 +461,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             <span style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${fontSize.small + 1}px`, color: titleColor }}>
                                 TERPOLOGIE{producerName && <span style={{ color: textSecondary, fontWeight: 500 }}> / {producerName}</span>}
                             </span>
-                            <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small - 1}px`, letterSpacing: '0.1em', color: scoreText.hi, border: `1px solid ${line}`, padding: '4px 9px', borderRadius: 6, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
+                            <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${readableFontSize(fontSize.small - 1)}px`, letterSpacing: '0.1em', color: scoreText.hi, border: `1px solid ${line}`, padding: '4px 9px', borderRadius: 6, textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                                 Fiche technique · COA
                             </span>
                         </div>
@@ -512,7 +525,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* ── 01 · ÉVALUATION SENSORIELLE ── */}
                 {families.length > 0 && (
-                    <Section idx="01" title="Évaluation sensorielle" moduleId="sensoryEvaluation">
+                    <Section icon="👁️" title="Évaluation sensorielle" moduleId="sensoryEvaluation">
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : `repeat(${families.length}, 1fr)`, gap: `${spacing.section}px` }}>
                             {families.map((f, i) => <FamilyBlock key={i} title={f.title} dot={f.dot} metrics={f.metrics} />)}
                         </div>
@@ -526,7 +539,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     budget de pagination. Séparés, le packer les répartit normalement. Même
                     principe que le découpage des pipelines en tronçons. */}
                 {cannabinoidItems.length > 0 && (
-                    <Section idx="02" title="Profil cannabinoïde" moduleId="cannabinoidGrid">
+                    <Section icon="🧪" title="Profil cannabinoïde" moduleId="cannabinoidGrid">
                         <div className="grid" style={{ gridTemplateColumns: '1fr', gap: `${spacing.section}px`, alignItems: 'start' }}>
                             {cannabinoidItems.length > 0 && (() => {
                                 const max = Math.max(...cannabinoidItems.map((c) => c.value));
@@ -575,7 +588,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* ── 03 · PROFIL AROMATIQUE ── */}
                 {(aromas.length > 0 || secondaryAromas.length > 0 || tastes.length > 0 || terpenes.length > 0) && contentModules.aromas && (
-                    <Section idx="03" title="Profil aromatique · terpènes" moduleId="aromaticProfile">
+                    <Section icon="🌸" title="Profil aromatique · terpènes" moduleId="aromaticProfile">
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.section}px` }}>
                             <ChipGroup title="Arômes dominants" items={aromas} variant="primary" />
                             <ChipGroup title="Arômes secondaires · goûts" items={secondaryAromas.length > 0 ? secondaryAromas : tastes} variant="default" />
@@ -586,7 +599,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* ── 04 · DONNÉES LABORATOIRE & CURING ── */}
                 {labCells.length > 0 && (
-                    <Section idx="04" title="Données laboratoire & curing" moduleId="labData">
+                    <Section icon="🔬" title="Données laboratoire & curing" moduleId="labData">
                         <div className="grid" style={{ gridTemplateColumns: `repeat(${stacked ? Math.min(2, grid.cols) : grid.cols}, 1fr)`, gap: 1, background: lineSoft, border: `1px solid ${lineSoft}`, borderRadius: 9, overflow: 'hidden' }}>
                             {labCells.map((c, i) => <DataCell key={i} {...c} />)}
                         </div>

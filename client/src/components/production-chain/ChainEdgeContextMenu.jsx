@@ -62,8 +62,8 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
 
     const attachedCells = Array.isArray(edge?.cellData) ? edge.cellData : [];
 
-    const handleImportCells = () => {
-        store.openCellPicker('edge', [edgeId]);
+    const handleImportData = () => {
+        store.openDataImport('edge', [edgeId]);
         onClose();
     };
 
@@ -82,20 +82,10 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
-    const handleEditCell = (cell) => {
-        store.openCellEditor('edge', edgeId, cell);
-        onClose();
-    };
-
     const mediaCount = Array.isArray(edge?.media) ? edge.media.length : 0;
 
     const handleOpenMedia = () => {
         store.openMediaModal('edge', edgeId);
-        onClose();
-    };
-
-    const handleImportMedia = () => {
-        store.openMediaPicker('edge', [edgeId]);
         onClose();
     };
 
@@ -122,21 +112,17 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
                         🔀 Inverser la direction
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    <button className="context-menu-item" onClick={handleImportData} style={{ fontWeight: 600 }}>
+                        <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                        Importer une donnée...
+                    </button>
                     <button className="context-menu-item" onClick={handleAddDirectCell}>
                         <Plus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                        Ajouter des données directement...
-                    </button>
-                    <button className="context-menu-item" onClick={handleImportCells}>
-                        <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                        Importer des cellules de pipeline...
+                        Saisir manuellement...
                     </button>
                     <button className="context-menu-item" onClick={handleOpenMedia}>
                         <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
-                    </button>
-                    <button className="context-menu-item" onClick={handleImportMedia}>
-                        <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
-                        Importer depuis les reviews de la chaîne...
                     </button>
                     {attachedCells.length > 0 && (
                         <button className="context-menu-item" onClick={handleCopyAllCells}>
@@ -149,16 +135,6 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
                             <Clipboard size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                             Coller {store.cellClipboard.length} cellule{store.cellClipboard.length > 1 ? 's' : ''} ici
                         </button>
-                    )}
-                    {attachedCells.length > 0 && (
-                        <>
-                            <div style={{ padding: '4px 12px', fontSize: '11px', color: '#888' }}>Cellules attachées</div>
-                            {attachedCells.map(cell => (
-                                <button key={cell.id} className="context-menu-item" onClick={() => handleEditCell(cell)} title="Éditer / retirer cette cellule">
-                                    ✏️ {cell.pipelineLabel} — {cell.cellLabel}
-                                </button>
-                            ))}
-                        </>
                     )}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>
