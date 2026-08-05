@@ -290,7 +290,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             <figure className="mb-10">
                                 <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: reviewData.images.length >= 3 ? '2fr 1fr 1fr' : reviewData.images.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
                                     {reviewData.images.slice(0, 4).map((img, ii) => (
-                                        <img key={ii} src={img} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
+                                        <img key={ii} src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
                                     ))}
                                 </div>
                             </figure>

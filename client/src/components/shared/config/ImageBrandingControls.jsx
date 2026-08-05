@@ -4,6 +4,7 @@ import { Check, Folder } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidButton, LiquidInput, LiquidToggle } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
+import { resolveImageUrl } from '../../../utils/export-maker/resolveImageUrl';
 
 const IMAGE_FILTERS = [
     { id: 'none', name: 'Aucun', preview: '🎨' },
@@ -104,7 +105,7 @@ export default function ImageBrandingControls() {
                                         className={`relative rounded-xl overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-purple-500 shadow-lg shadow-purple-500/30' : 'border-white/15 opacity-60 hover:opacity-100 hover:border-purple-400'}`}
                                         style={{ width: '64px', height: '64px' }}
                                     >
-                                        <img src={imgUrl} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                        <img src={resolveImageUrl(imgUrl)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
                                         {selectedIdx === idx && (
                                             <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
                                                 <Check className="w-5 h-5 text-white drop-shadow" strokeWidth={3} />

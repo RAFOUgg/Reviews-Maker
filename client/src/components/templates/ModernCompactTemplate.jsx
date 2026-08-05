@@ -266,7 +266,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                 <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
                                     {reviewData.images.slice(0, 2).map((img, ii) => (
                                         <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
-                                            <img src={img} alt="" className="w-full h-full object-cover" />
+                                            <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" />
                                         </div>
                                     ))}
                                 </div>
@@ -328,7 +328,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
                                 {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
-                                        <img src={img} alt="" className="w-full h-full object-cover" />
+                                        <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" />
                                     </div>
                                 ))}
                             </div>
