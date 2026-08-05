@@ -50,14 +50,21 @@ export default function PipelineStepFields({ fields, compact = false, fontSize, 
                                 textTransform: 'uppercase',
                                 letterSpacing: '0.03em',
                                 display: 'flex',
-                                alignItems: 'center',
+                                alignItems: 'flex-start',
                                 gap: 3,
                                 marginBottom: 1,
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
+                                // Le libellé PASSE À LA LIGNE au lieu d'être coupé à l'ellipse.
+                                // Élargir la colonne avait déjà été tenté le 2026-08-04 (88→150px)
+                                // et n'a tenu que jusqu'au passage de l'A4 en deux colonnes, qui
+                                // les a resserrées : « Humidité ambiante » réclamait 131px dans
+                                // 122px. Une largeur de colonne ne peut pas suivre indéfiniment la
+                                // longueur des libellés — mieux vaut deux lignes qu'un mot coupé,
+                                // le projet ayant pour principe de ne rien tronquer.
+                                whiteSpace: 'normal',
+                                lineHeight: 1.15,
                             }}>
                                 <span style={{ flexShrink: 0 }}>{PIPELINE_FIELD_ICONS[f.key] || '•'}</span>
-                                <span style={{ overflow: 'hidden', textOverflow: 'ellipsis' }}>{f.label}</span>
+                                <span>{f.label}</span>
                             </div>
                             <div style={{
                                 fontFamily: "'JetBrains Mono', ui-monospace, monospace",

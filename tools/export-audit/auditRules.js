@@ -166,6 +166,7 @@
             violations.push({
                 rule, severity, message,
                 selector: el ? describe(el) : null,
+                path: el ? ancestry(el) : null,
                 ...(extra || {}),
             });
         };
@@ -201,7 +202,11 @@
                     if (ratio < need) {
                         push('E1', 'error',
                             `Contraste ${ratio.toFixed(2)}:1 < ${need}:1 requis (${fontSize.toFixed(0)}px)`,
-                            el, { ratio: +ratio.toFixed(2), required: need, text: text.slice(0, 40) });
+                            // `fg`/`bg` rapportés : sans eux, corriger un contraste revient à
+                            // deviner quelle déclaration de couleur est en cause parmi celles qui
+                            // se ressemblent. Deux tentatives inertes le 2026-08-06 avant ajout.
+                            el, { ratio: +ratio.toFixed(2), required: need, text: text.slice(0, 40),
+                                fg: cs.color, bg: bgInfo.raw || String(bgInfo.color) });
                     }
                 }
 
@@ -321,6 +326,26 @@
             ? '.' + el.className.trim().split(/\s+/).slice(0, 2).join('.')
             : '';
         return el.tagName.toLowerCase() + cls;
+    }
+
+    /**
+     * Chemin remontant jusqu'au module englobant.
+     *
+     * `describe` seul rend « div » ou « span » — de quoi confirmer qu'il y a un défaut, pas de quoi
+     * TROUVER le code fautif. Deux corrections du 2026-08-06 ont visé le mauvais site de rendu
+     * faute de cette information, et sont reparties inertes. Le chemin dit dans quelle section du
+     * template chercher.
+     */
+    function ancestry(el) {
+        const parts = [];
+        let cur = el;
+        for (let i = 0; i < 8 && cur && cur.tagName; i += 1) {
+            const mod = cur.getAttribute && cur.getAttribute('data-module');
+            if (mod) { parts.unshift(`[${mod}]`); break; }
+            parts.unshift(describe(cur));
+            cur = cur.parentElement;
+        }
+        return parts.join(' > ');
     }
 
     /** Agrège les violations par règle — la vue utile pour décider quoi corriger en premier. */

@@ -173,7 +173,12 @@ export const SEMANTIC_SCORE_TEXT_COLORS = {
     // sur fond sombre de l'app (#07070f → #0F172A) : 10.44 / 12.02 / 7.26
     onDark: { hi: '#34D399', mid: '#FBBF24', lo: '#F87171' },
     // sur papier slate-50 (#F8FAFC) : 5.24 / 4.80 / 4.62
-    onPaper: { hi: '#047857', mid: '#B45309', lo: '#DC2626' },
+    // `lo` passé de red-600 (#DC2626) à red-700 le 2026-08-06. Ses deux voisins étaient DÉJÀ en
+    // nuance 700 (emerald-700, amber-700) — le rouge était le seul resté en 600, et le seul à
+    // tomber sous le seuil AA (mesuré à 4,41:1 sur « Non disponible », seuil 4,5). Le commentaire
+    // du mode papier annonçait pourtant « accents en nuances 600/700, seules à tenir AA sur fond
+    // clair » : c'était une incohérence, pas un choix.
+    onPaper: { hi: '#047857', mid: '#B45309', lo: '#B91C1C' },
 };
 
 // Accent violet de l'app — MÊME distinction surface/texte. `#8B5CF6` (violet-500, l'accent

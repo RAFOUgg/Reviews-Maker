@@ -330,11 +330,17 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         );
     };
 
+    // Couleur d'un statut ok/warn, garantie lisible sur le fond où elle est POSÉE. Le fond compte :
+    // la même teinte perd ~0,2 point de contraste entre le fond de page et `surface`, assez pour
+    // passer sous le seuil. Factorisée parce qu'elle a deux sites d'appel (cellules de données et
+    // méta-données du masthead) et que le second l'avait oubliée.
+    const statusTextOn = (status, background, fallback = textPrimary) => {
+        const raw = status === 'ok' ? scoreText.hi : status === 'warn' ? scoreText.lo : fallback;
+        return isPaperMode ? ensureReadable(raw, background, 4.6) : raw;
+    };
+
     const DataCell = ({ label, value, unit, status }) => {
-        // Évalué sur `surface` (le fond de la cellule) et non sur le fond de page : la bande
-        // sémantique y perdait 0,2 point de contraste et passait sous le seuil (4.41:1).
-        const rawStatus = status === 'ok' ? scoreText.hi : status === 'warn' ? scoreText.lo : textPrimary;
-        const statusColor = isPaperMode ? ensureReadable(rawStatus, surface, 4.6) : rawStatus;
+        const statusColor = statusTextOn(status, surface);
         return (
             <div style={{ background: surface, padding: `${padding.card * 0.8}px ${padding.card}px` }}>
                 <div style={{ fontFamily: MONO, fontSize: MIN_FONT_PX, letterSpacing: '0.1em', color: textSecondary, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
@@ -489,7 +495,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 {metaItems.map((m, i) => (
                                     <div key={i}>
                                         <div style={{ fontFamily: MONO, fontSize: MIN_FONT_PX, letterSpacing: '0.12em', color: textSecondary, textTransform: 'uppercase' }}>{m.label}</div>
-                                        <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 1}px`, fontWeight: 600, marginTop: 2, color: m.status === 'ok' ? scoreText.hi : m.status === 'warn' ? scoreText.lo : titleColor }}>
+                                        {/* Même garde de contraste que `DataCell` : la bande
+                                            sémantique passe sous le seuil en mode papier (mesuré
+                                            à 4,41:1 sur « Non disponible »). La règle existait
+                                            déjà dans `DataCell` mais pas ici — deuxième site de
+                                            rendu du même code couleur, une seule branche protégée.
+                                            Ici le fond est celui de la PAGE, pas `surface`. */}
+                                        <div style={{ fontFamily: DISPLAY, fontSize: `${fontSize.text + 1}px`, fontWeight: 600, marginTop: 2, color: statusTextOn(m.status, bg, titleColor) }}>
                                             {m.value}
                                         </div>
                                     </div>
