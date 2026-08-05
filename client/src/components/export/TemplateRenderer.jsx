@@ -32,7 +32,12 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
     // avant ce retrait (config.template === 'custom' ou exportMakerLayoutMode === 'custom') retombe
     // sur Fiche Détaillée plutôt que sur l'écran d'erreur générique "Template non trouvé" ci-dessous,
     // qui reste lui réservé à un véritable id de template inconnu/invalide.
-    if (config.template === 'custom' || reviewData?.exportMakerLayoutMode === 'custom') {
+    // Le repli ne s'applique QUE si aucun template valide n'est sélectionné. Il était auparavant
+    // déclenché par `exportMakerLayoutMode === 'custom'` seul : toute review sauvegardée du temps du
+    // Mode Custom voyait donc son choix de template ÉCRASÉ vers Fiche Technique, silencieusement et
+    // définitivement — le sélecteur affichait bien Moderne Compact, le rendu montrait autre chose.
+    // Un choix explicite et valide de l'utilisateur prime toujours sur un drapeau hérité.
+    if (!TemplateComponent && (config.template === 'custom' || reviewData?.exportMakerLayoutMode === 'custom')) {
         TemplateComponent = TEMPLATES.detailedCard;
     }
 
