@@ -7,8 +7,10 @@ import {
     colorWithOpacity,
     getResponsiveAdjustments,
     resolveFontStack,
+    ensureReadable,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
+import { templateSection } from '../../store/exportMakerConstants';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
@@ -86,6 +88,11 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     // blanc en dur : ce template assumait jusqu'ici toujours un fond sombre, cassant illisible sur
     // la palette claire "minimal" (texte blanc sur fond clair).
     const white = colors.textPrimary || '#ffffff';
+    // Surface opaque de référence pour les pastilles posées SUR la photo. `colors.background` peut
+    // être un dégradé (valeur par défaut de ce template) : `ensureReadable` attend une couleur
+    // solide, on retombe donc sur la teinte sombre du dégradé plutôt que de lui passer une chaîne
+    // qu'il ne sait pas interpréter.
+    const badgeSurface = /^#|^rgb/.test(String(colors.background || '')) ? colors.background : '#1a1a2e';
     const whiteMuted = colorWithOpacity(colors.textSecondary || white, 70);
     const whiteDim = colorWithOpacity(colors.textSecondary || white, 22);
     const cardBg = colorWithOpacity(colors.textPrimary || white, 8);
@@ -195,9 +202,17 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         <div style={{
                             position: 'absolute', top: 16, left: 16,
                             padding: '4px 12px', borderRadius: 20,
-                            background: colorWithOpacity(accent, 85),
+                            // Pastille SOMBRE + texte accentué, pas l'inverse : du blanc sur
+                            // l'accent violet clair à 85 % mesurait 3,04:1 (audit 2026-08-05),
+                            // sous le seuil de 4,5:1. Le fond étant une PHOTO, aucune couleur
+                            // translucide ne donne de contraste déterministe — d'où une surface
+                            // quasi opaque dérivée du fond du canevas, contre laquelle
+                            // `ensureReadable` peut garantir le rapport. C'est aussi l'idiome
+                            // réel de `LiquidChip` (fond sombre translucide, texte accentué).
+                            background: colorWithOpacity(badgeSurface, 88),
                             fontSize: fontSize.small, fontWeight: 700, letterSpacing: '0.08em',
-                            textTransform: 'uppercase', color: white,
+                            textTransform: 'uppercase',
+                            color: ensureReadable(accent, badgeSurface),
                         }}>
                             {productType}
                         </div>
@@ -311,7 +326,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     )}
 
                 {/* Category Rating Bars */}
-                {isPageOn('sensoryEvaluation') && contentModules.categoryRatings && categoryRatings.length > 0 && (
+                {templateSection('socialStory', 'sensory', config.ratio) !== false
+                    && isPageOn('sensoryEvaluation') && contentModules.categoryRatings && categoryRatings.length > 0 && (
                     <div data-module="sensoryEvaluation" style={{
                         padding: '10px 14px', borderRadius: 16,
                         background: cardBg, border: `1px solid ${cardBorder}`,
@@ -324,7 +340,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 {/* Labo — résumé compact (texte, pas de grille), gap trouvé en audit 2026-08-02 :
                     aucune donnée labo n'apparaissait sur Story alors qu'un rapport de traçabilité en
                     a besoin même en format court. */}
-                {isPageOn('labData') && (reviewData.labName || reviewData.labMethod || reviewData.labAccredited !== undefined) && (
+                {templateSection('socialStory', 'labData', config.ratio) !== false
+                    && isPageOn('labData') && (reviewData.labName || reviewData.labMethod || reviewData.labAccredited !== undefined) && (
                     <div data-module="labData" style={{ fontSize: fontSize.small, color: whiteMuted }}>
                         🔬 {[reviewData.labName, reviewData.labAccredited ? 'accrédité' : null].filter(Boolean).join(' · ')}
                     </div>
@@ -336,6 +353,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     groupe varie par type de review, donc son `data-module` (`gisement:<groupe>`)
                     aussi — même vocabulaire que les autres templates. */}
                 {(() => {
+                    if (templateSection('socialStory', 'gisement', config.ratio) === false) return null;
                     const rel = RELEVANT_GROUP_BY_TYPE[normalizeReviewType(reviewData.type)];
                     if (!rel || !isPageOn(`gisement:${rel.group}`)) return null;
                     const Section = ({ children }) => (
@@ -415,10 +433,18 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 )}
 
                 {/* Spacer */}
-                <div style={{ flex: 1 }} />
+                {/* PAS d'espaceur `flex: 1` ici. Il poussait le pied de page tout en bas, si bien
+                    que la mesure de `FitToFill` valait TOUJOURS la hauteur disponible — le
+                    composant ne pouvait donc que rétrécir (quand un bloc dépasse), jamais
+                    agrandir. Mesuré le 2026-08-05 : `scale=1.000` avec `contenu = avail` sur les
+                    4 combinaisons, dont deux à 77-80 % de remplissage. Sans espaceur, le contenu
+                    s'empile depuis le haut, la mesure reflète sa hauteur réelle, et l'échelle
+                    monte pour occuper la place. */}
 
-                {/* Footer */}
-                <div style={{
+                {/* Footer — `data-fit-tail` : il vit hors des `[data-module]`, il doit pourtant
+                    entrer dans la mesure de `FitToFill`, sans quoi la hauteur naturelle est
+                    sous-estimée et l'échelle surestimée. */}
+                <div data-fit-tail style={{
                     display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                     paddingTop: 10,
                     borderTop: `1px solid ${whiteDim}`,

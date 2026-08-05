@@ -116,7 +116,30 @@ async function auditCurrent(page) {
             ? canvases
             : [document.querySelector('#export-maker-canvas')].filter(Boolean);
         if (!targets.length) return null;
-        return targets.map((el) => window.__exportAudit.auditRender(el, { paged: true }));
+        const out = targets.map((el) => window.__exportAudit.auditRender(el, { paged: true }));
+        // Sonde `FitToFill` — l'inférence depuis le remplissage n'a jamais permis de diagnostiquer
+        // un débordement (3 tentatives infructueuses sur Story 1:1). On lit l'état RÉEL du
+        // composant : si `scale` vaut exactement la borne, c'est le bridage qui bloque, pas la
+        // mesure. Cf. C7 §0.2.
+        const fit = document.querySelector('[data-fit-scale]');
+        if (fit && out[0]) {
+            out[0].fitProbe = {
+                scale: fit.getAttribute('data-fit-scale'),
+                avail: fit.clientHeight,
+                contentBottom: (() => {
+                    const inner = fit.firstElementChild;
+                    if (!inner) return null;
+                    const top = inner.getBoundingClientRect().top;
+                    const scope = inner.firstElementChild || inner;
+                    let b = 0;
+                    [...scope.children, ...inner.querySelectorAll('[data-module]')].forEach((el) => {
+                        b = Math.max(b, el.getBoundingClientRect().bottom - top);
+                    });
+                    return Math.round(b);
+                })(),
+            };
+        }
+        return out;
     });
 }
 
@@ -177,6 +200,10 @@ async function auditReview(page, subject) {
                 `${pages.length}p · ${errors} err · ${all.length - errors} warn` +
                 (fills.length ? ` · remplissage ${fills.join('/')}%` : '')
             );
+            if (pages[0]?.fitProbe) {
+                const f = pages[0].fitProbe;
+                console.log(`        ↳ fit: scale=${f.scale} avail=${f.avail} contenu=${f.contentBottom}`);
+            }
             for (const s of summarize(all)) {
                 if (!s.error) continue; // seules les erreurs au fil de l'eau ; les avert. sont dans le JSON
                 console.log(`        ${s.rule} ×${s.error} — ${s.sample}`);

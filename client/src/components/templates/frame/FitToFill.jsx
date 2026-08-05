@@ -51,13 +51,18 @@ export default function FitToFill({ min = 0.9, max = 1.3, enabled = true, childr
             if (!available) return;
             const top = inner.getBoundingClientRect().top;
             let bottom = 0;
-            // On mesure TOUS les blocs de premier niveau du template, pas seulement les
-            // `[data-module]` : Story place son pied de page (auteur, terpologie.eu) hors de ces
-            // blocs, il échappait donc à la mesure. Résultat : hauteur naturelle sous-estimée,
-            // échelle surestimée, et un débordement à 114 % sur une review dense.
+            // On mesure les blocs de CONTENU (`[data-module]`, plus tout élément marqué
+            // `data-fit-tail` comme le pied de page de Story, qui vit hors des modules).
+            //
+            // Surtout PAS les enfants de premier niveau : ce sont des conteneurs flex étirés
+            // (`flex: 1`, `height: 100%`), dont le bas vaut toujours celui du canevas. Mesuré le
+            // 2026-08-05 : `contenu = avail` à l'unité près sur les 8 combinaisons de Story, y
+            // compris celles remplies à 73 %. Le composant ne pouvait donc que RÉTRÉCIR — quand un
+            // module dépasse du conteneur — et jamais agrandir, ce qui laissait tous les
+            // sous-remplissages en l'état. C'est la cause des zones vides résiduelles.
+            const candidates = [...inner.querySelectorAll('[data-module], [data-fit-tail]')];
             const scope = inner.firstElementChild || inner;
-            const candidates = [...scope.children, ...inner.querySelectorAll('[data-module]')];
-            candidates.forEach((el) => {
+            (candidates.length ? candidates : [...scope.children]).forEach((el) => {
                 bottom = Math.max(bottom, el.getBoundingClientRect().bottom - top);
             });
             if (bottom <= 0) return;

@@ -351,6 +351,24 @@ export const TEMPLATE_SECTIONS = {
     socialStory: {
         sensory: 'compact', cannabinoids: 'compact',
         pipelines: false, canvases: false, gisement: 'single', lotCode: false,
+        // Même raisonnement que Moderne Compact ci-dessus, et même précédent : le carré manque de
+        // hauteur. Sonde `FitToFill` du 2026-08-05 sur Fleur dense en 1:1 : `avail=800`,
+        // `contenu=913`, `scale=0.900` — exactement la borne basse. La mesure était juste ; c'est
+        // le bridage d'échelle qui empêchait de compenser, et sur une carte non paginable les
+        // 113px excédentaires sont définitivement perdus.
+        //
+        // Le bridage ne peut rien y faire : `natural = 913/0,9 = 1014`, il faudrait descendre à
+        // 0,79 — soit 9,5px effectifs, franchement illisible. Le contenu est trop haut de 27 %,
+        // il faut en RETIRER. (Première tentative mesurée inerte : retirer gisement + labo n'a
+        // rien changé, ces blocs ne se rendaient pas sur la review testée.)
+        //
+        // On retire donc le détail sensoriel — 5 barres de catégorie, le bloc réellement
+        // volumineux — exactement comme Moderne Compact en 1:1. Le score global reste affiché
+        // dans l'identité. Gisement et labo suivent, comme les moins « glanceable » d'un post
+        // carré. Tout cela reste présent en 9:16, qui a la hauteur pour l'accueillir.
+        byFormat: {
+            '1:1': { sensory: false, gisement: false, labData: false },
+        },
     },
     blogArticle: {
         sensory: true, cannabinoids: true,
