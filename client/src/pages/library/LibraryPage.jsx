@@ -124,6 +124,18 @@ export default function LibraryPage() {
     const { isProducteur: isProducer } = useAccountFeatures()
     const [activeTab, setActiveTab] = useState(() => searchParams.get('tab') || 'overview')
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+    // Filtres transportés par les raccourcis de la Vue d'ensemble vers l'onglet Reviews
+    // (ex. cliquer la pastille "Hash" ou la stat "Publiques" ouvre la liste déjà filtrée).
+    const [reviewsFilters, setReviewsFilters] = useState(null)
+
+    // Navigation inter-onglets. `options.filters` est optionnel : toute navigation sans
+    // filtres (sidebar, barre mobile, accès rapide) repart d'une liste non filtrée.
+    const goToTab = (tabId, options = {}) => {
+        setActiveTab(tabId)
+        setReviewsFilters(
+            options.filters ? { ...options.filters, token: Date.now() } : null
+        )
+    }
 
     // Vérifier authentification
     useEffect(() => {
@@ -145,11 +157,11 @@ export default function LibraryPage() {
     const renderTab = () => {
         switch (activeTab) {
             case 'overview':
-                return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={setActiveTab} />
+                return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={goToTab} />
             case 'reviews':
-                return <ReviewsTab />
+                return <ReviewsTab initialFilters={reviewsFilters} />
             case 'company':
-                return isProducer ? <CompanyTab onNavigate={setActiveTab} /> : null
+                return isProducer ? <CompanyTab onNavigate={goToTab} /> : null
             case 'cultivars':
                 return isProducer ? <CultivarsTab /> : null
             case 'templates':
@@ -161,7 +173,7 @@ export default function LibraryPage() {
             case 'stats':
                 return <StatsTab userTier={user?.accountType} />
             default:
-                return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={setActiveTab} />
+                return <OverviewTab isProducer={isProducer} username={user?.username} onNavigate={goToTab} />
         }
     }
 
@@ -203,7 +215,7 @@ export default function LibraryPage() {
                             return (
                                 <button
                                     key={tab.id}
-                                    onClick={() => setActiveTab(tab.id)}
+                                    onClick={() => goToTab(tab.id)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
                                         ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                         : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -233,7 +245,7 @@ export default function LibraryPage() {
                                     return (
                                         <button
                                             key={tab.id}
-                                            onClick={() => setActiveTab(tab.id)}
+                                            onClick={() => goToTab(tab.id)}
                                             className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all ${isActive
                                                 ? 'bg-purple-500/20 text-purple-400 border border-purple-500/30'
                                                 : 'text-white/60 hover:text-white hover:bg-white/5'
@@ -370,7 +382,7 @@ export default function LibraryPage() {
                         return (
                             <button
                                 key={tab.id}
-                                onClick={() => setActiveTab(tab.id)}
+                                onClick={() => goToTab(tab.id)}
                                 className={`flex-1 min-w-[60px] flex flex-col items-center justify-center gap-0.5 py-2.5 px-1 transition-all relative ${isActive
                                     ? 'text-purple-400'
                                     : 'text-white/40 active:text-white/70'

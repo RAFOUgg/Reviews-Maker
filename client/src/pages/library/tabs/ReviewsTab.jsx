@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom'
 import { useToast } from '../../../components/shared/ToastContainer'
 import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { parseImages } from '../../../utils/imageUtils'
+import { isSameReviewType, reviewEditPath } from '../../../utils/reviewTypeMeta'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
@@ -37,13 +38,11 @@ const PRODUCT_TYPES = [
     { id: 'edible', label: 'Comestibles', icon: Cookie, color: 'pink' },
 ]
 
-// Mapping DB type → slug de route d'édition
-const TYPE_TO_ROUTE = {
-    'Fleurs': 'flower',
-    'hash': 'hash',
-    'concentrate': 'concentrate',
-    'edible': 'edible',
-}
+// La route d'édition est dérivée du type canonique par reviewEditPath() (reviewTypeMeta.js) :
+// la table locale `TYPE_TO_ROUTE` qui vivait ici ne couvrait qu'une graphie par type, et son
+// repli `type.toLowerCase()` produisait des routes inexistantes (/edit/concentré/...) pour les
+// lignes stockées en français. Ne pas réintroduire de table de correspondance locale.
+const editPathFor = reviewEditPath
 
 // Hash/Concentrate/Edible n'ont pas de champ mainImage sur la review de base (stocké sur leur
 // propre sous-table) — mais reviewFormatter.js remonte déjà toutes leurs photos dans review.images
@@ -131,7 +130,18 @@ const VISIBILITY_FILTERS = [
     { id: 'private', label: 'Privées' },
 ]
 
-export default function ReviewsTab() {
+// Borne basse de la période "récente", identique au calcul serveur de `reviews.thisMonth`
+// (server-new/routes/library.js) : une fenêtre glissante d'un mois.
+export const RECENT_PERIOD_START = () => new Date(new Date().setMonth(new Date().getMonth() - 1))
+
+/**
+ * `initialFilters` : filtres pré-appliqués à l'ouverture de l'onglet, utilisés par les
+ * raccourcis de la Vue d'ensemble (cliquer "Publiques" ou une pastille de type ouvre
+ * directement la liste correspondante). Forme : { type, visibility, period, token }.
+ * `token` change à chaque navigation pour ré-appliquer les filtres même si le composant
+ * n'est pas remonté.
+ */
+export default function ReviewsTab({ initialFilters = null }) {
     const navigate = useNavigate()
     const toast = useToast()
 
@@ -140,11 +150,23 @@ export default function ReviewsTab() {
     const [loading, setLoading] = useState(true)
     const [viewMode, setViewMode] = useState('grid')
     const [confirmDelete, setConfirmDelete] = useState({ open: false, reviewId: null })
-    const [typeFilter, setTypeFilter] = useState('all')
-    const [visibilityFilter, setVisibilityFilter] = useState('all')
+    const [typeFilter, setTypeFilter] = useState(initialFilters?.type || 'all')
+    const [visibilityFilter, setVisibilityFilter] = useState(initialFilters?.visibility || 'all')
+    // 'all' | 'month' — pas de contrôle dédié dans la barre de filtres : uniquement posé par
+    // le raccourci "Ce mois-ci" de la Vue d'ensemble, et retirable via la bannière ci-dessous.
+    const [periodFilter, setPeriodFilter] = useState(initialFilters?.period || 'all')
     const [searchQuery, setSearchQuery] = useState('')
     const [sortBy, setSortBy] = useState('createdAt')
     const [sortOrder, setSortOrder] = useState('desc')
+
+    const filtersToken = initialFilters?.token
+    useEffect(() => {
+        if (!filtersToken) return
+        setTypeFilter(initialFilters?.type || 'all')
+        setVisibilityFilter(initialFilters?.visibility || 'all')
+        setPeriodFilter(initialFilters?.period || 'all')
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [filtersToken])
 
     // Construire les cartes de lignée (parent→enfant) à partir du sourceLineage
     const { parentsOf, childrenOf, lineageChains, reviewMap } = useMemo(() => {
@@ -217,11 +239,21 @@ export default function ReviewsTab() {
     // Filtrer et trier les reviews
     const filteredReviews = reviews
         .filter(review => {
-            // Filtre par type
-            if (typeFilter !== 'all' && review.type !== typeFilter) return false
+            // Filtre par type — comparaison par famille et non par égalité stricte : la base
+            // contient plusieurs graphies pour un même produit ('hash'/'Hash',
+            // 'concentrate'/'Concentré', 'edible'/'Comestible'), cf. reviewTypeMeta.js.
+            if (typeFilter !== 'all' && !isSameReviewType(review.type, typeFilter)) return false
             // Filtre par visibilité
             if (visibilityFilter === 'public' && !review.isPublic) return false
             if (visibilityFilter === 'private' && review.isPublic) return false
+            // Filtre par période — MÊME définition que le compteur "Ce mois-ci" de
+            // /api/library/stats (library.js:735) : une fenêtre GLISSANTE d'un mois
+            // (createdAt >= aujourd'hui - 1 mois), pas le mois calendaire en cours.
+            // Toute autre définition ici ferait diverger le nombre affiché sur la Vue
+            // d'ensemble du nombre de cartes réellement listées après le raccourci.
+            if (periodFilter === 'month' && new Date(review.createdAt) < RECENT_PERIOD_START()) {
+                return false
+            }
             // Filtre par recherche
             if (searchQuery) {
                 const query = searchQuery.toLowerCase()
@@ -353,7 +385,7 @@ export default function ReviewsTab() {
                                     </span>
                                     {!review.isPublic && !review.exportMakerPreset && (
                                         <button
-                                            onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}?openExport=1`)}
+                                            onClick={() => navigate(editPathFor(review, { openExport: true }))}
                                             className="px-2 py-0.5 rounded text-xs font-bold bg-amber-500/20 text-amber-400 hover:bg-amber-500/30 transition-colors"
                                             title="Créer un aperçu avec Export Maker pour pouvoir publier"
                                         >
@@ -396,7 +428,7 @@ export default function ReviewsTab() {
                                     <ExternalLink className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}`)}
+                                    onClick={() => navigate(editPathFor(review))}
                                     className="p-2 rounded-lg hover:bg-white/10 text-white/50 hover:text-amber-400 transition-colors"
                                     title="Modifier"
                                 >
@@ -454,7 +486,7 @@ export default function ReviewsTab() {
                                     <ExternalLink className="w-4 h-4" />
                                 </button>
                                 <button
-                                    onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}`)}
+                                    onClick={() => navigate(editPathFor(review))}
                                     className="p-2 rounded-lg bg-white/10 backdrop-blur text-white hover:bg-amber-500/50 transition-colors"
                                 >
                                     <Edit className="w-4 h-4" />
@@ -492,7 +524,7 @@ export default function ReviewsTab() {
                             <button
                                 onClick={(e) => {
                                     e.stopPropagation();
-                                    navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}?openExport=1`);
+                                    navigate(editPathFor(review, { openExport: true }));
                                 }}
                                 className="absolute top-11 right-2 px-2 py-1 rounded-lg bg-amber-500/80 backdrop-blur text-white text-xs font-bold hover:bg-amber-500 transition-colors"
                                 title="Créer un aperçu avec Export Maker pour pouvoir publier"
@@ -554,7 +586,7 @@ export default function ReviewsTab() {
                                 <ExternalLink className="w-3.5 h-3.5" />
                             </button>
                             <button
-                                onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[review.type] || review.type.toLowerCase()}/${review.id}`)}
+                                onClick={() => navigate(editPathFor(review))}
                                 className="p-1.5 rounded-lg bg-white/5 text-amber-400/70 active:bg-amber-500/20 text-xs flex flex-col items-center gap-0.5"
                                 title="Modifier"
                             >
@@ -621,14 +653,39 @@ export default function ReviewsTab() {
 
     return (
         <div className="space-y-4">
+            {/* ── Filtre de période posé par un raccourci de la Vue d'ensemble ──
+                Aucun contrôle ne l'expose dans la barre de filtres : sans cette bannière,
+                l'utilisateur verrait une liste tronquée sans savoir pourquoi. */}
+            {periodFilter === 'month' && (
+                <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-500/10 border border-purple-500/25">
+                    <Clock className="w-4 h-4 text-purple-400 shrink-0" />
+                    <span className="text-sm text-white/80">
+                        Filtré sur le dernier mois
+                        <span className="text-white/40"> — {filteredReviews.length} review{filteredReviews.length > 1 ? 's' : ''}</span>
+                    </span>
+                    <button
+                        onClick={() => setPeriodFilter('all')}
+                        className="ml-auto text-xs text-purple-300 hover:text-white px-2 py-1 rounded-lg hover:bg-white/10 transition-colors shrink-0"
+                    >
+                        Retirer le filtre
+                    </button>
+                </div>
+            )}
+
             {/* ── Filtres par type – défilants sur mobile ── */}
             <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1 -mx-1 px-1">
                 {PRODUCT_TYPES.map((type) => {
                     const Icon = type.icon
                     const isActive = typeFilter === type.id
+                    // Comptés sur le même périmètre que la liste affichée : sinon, avec un
+                    // filtre de période actif, les pastilles annonceraient plus de reviews
+                    // que la grille n'en montre.
+                    const countable = periodFilter === 'month'
+                        ? reviews.filter(r => new Date(r.createdAt) >= RECENT_PERIOD_START())
+                        : reviews
                     const count = type.id === 'all'
-                        ? reviews.length
-                        : reviews.filter(r => r.type === type.id).length
+                        ? countable.length
+                        : countable.filter(r => isSameReviewType(r.type, type.id)).length
 
                     return (
                         <button
@@ -712,7 +769,7 @@ export default function ReviewsTab() {
                                 return (
                                     <div key={reviewId} className="flex items-center gap-1.5">
                                         <button
-                                            onClick={() => navigate(`/edit/${TYPE_TO_ROUTE[r.type] || r.type?.toLowerCase()}/${r.id}`)}
+                                            onClick={() => navigate(editPathFor(r))}
                                             className={`flex items-center gap-1 px-2 py-1 rounded-lg bg-${tc?.color || 'purple'}-500/20 text-${tc?.color || 'purple'}-300 text-xs font-medium hover:bg-${tc?.color || 'purple'}-500/30 transition-colors border border-${tc?.color || 'purple'}-500/20`}
                                         >
                                             <Icon className="w-3 h-3" />
