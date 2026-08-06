@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { colorWithOpacity, getScoreBand, getScoreTextColor, SEMANTIC_SCORE_COLORS } from '../../../utils/exportMakerHelpers';
+import { readableFontSize, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
 
 /**
  * ScoreMetric — barre de score /10 avec bande sémantique de couleur (vert/ambre/terracotta,
@@ -19,6 +20,10 @@ export default function ScoreMetric({ label, value, icon, max = 10, fontSize, co
     const barColor = SEMANTIC_SCORE_COLORS[band];
     const valueColor = getScoreTextColor(normalized, paper);
     const pct = Math.max(0, Math.min(100, (numValue / max) * 100));
+    // Taille de la note, dérivée de celle du libellé. `fontSize` arrive tantôt en nombre, tantôt en
+    // chaîne « 14px » selon l'appelant — on ne suppose ni l'un ni l'autre.
+    const basePx = typeof fontSize === 'number' ? fontSize : parseFloat(String(fontSize)) || MIN_FONT_PX;
+    const scoreFontSize = `${readableFontSize(basePx * 1.35)}px`;
     const trackColor = colorWithOpacity(colors.textSecondary, 15);
 
     return (
@@ -28,7 +33,12 @@ export default function ScoreMetric({ label, value, icon, max = 10, fontSize, co
                     {icon && <span style={{ flexShrink: 0 }}>{icon}</span>}
                     <span style={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</span>
                 </span>
-                <span style={{ fontSize, fontWeight: 700, color: valueColor, flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
+                {/* La NOTE est plus grosse que son libellé. Les deux partageaient la même taille :
+                    aucune hiérarchie, alors que la note est la donnée et le libellé son contexte —
+                    signalé par l'utilisateur (« agrandir les notes objectives des goûts »). Le
+                    facteur reste modéré (1,35) pour ne pas déséquilibrer les cartes compactes, et
+                    passe par `readableFontSize` qui garantit le plancher de lisibilité. */}
+                <span style={{ fontSize: scoreFontSize, fontWeight: 700, color: valueColor, flexShrink: 0, fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
                     {numValue.toFixed(1)}
                 </span>
             </div>
