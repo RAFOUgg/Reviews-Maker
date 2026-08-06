@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import ProductionChainCanvas from '../../production-chain/ProductionChainCanvas';
+import { ScopedChainStoreProvider } from '../../../store/scopedCanvasStores';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
@@ -56,6 +58,7 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
     const reviewId = reviewData?.id;
     const reviewType = normalizeReviewType(reviewData?.type);
     const [chain, setChain] = useState(null);
+    const [chainId, setChainId] = useState(null);
     const [detail, setDetail] = useState(null);
     const interactive = useIsInteractive();
 
@@ -68,6 +71,7 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
                 if (!listRes.ok) return;
                 const chains = await listRes.json();
                 if (!Array.isArray(chains) || chains.length === 0 || cancelled) return;
+                if (!cancelled) setChainId(chains[0].id);
                 const chainRes = await fetch(`/api/production-chains/chains/${chains[0].id}`, { credentials: 'include' });
                 if (!chainRes.ok || cancelled) return;
                 const full = await chainRes.json();
@@ -130,24 +134,14 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
             }}>
                 <span>🔗</span> Chaîne de production
             </h3>
+            {/* LE canevas de l'app, en lecture seule — plus une reconstruction. Le doublon
+                n'existait que parce que le store était un singleton : deux canevas montés
+                ensemble se mélangeaient. `ScopedChainStoreProvider` donne à celui-ci son
+                état à lui, ce qui lève ce blocage. */}
             <div style={{ height, border: '1px solid rgba(128,128,128,0.2)', borderRadius: 9, overflow: 'hidden' }}>
-                <ReactFlowProvider>
-                    <ReactFlow
-                        nodes={rfNodes}
-                        edges={rfEdges}
-                        nodeTypes={nodeTypes}
-                        fitView
-                        proOptions={{ hideAttribution: true }}
-                        nodesDraggable={false}
-                        nodesConnectable={false}
-                        elementsSelectable={true}
-                        zoomOnDoubleClick={false}
-                        onNodeClick={interactive ? (_, node) => setDetail(node.data) : undefined}
-                    >
-                        <Background color={textColor} gap={16} />
-                        <Controls showInteractive={false} />
-                    </ReactFlow>
-                </ReactFlowProvider>
+                <ScopedChainStoreProvider>
+                    <ProductionChainCanvas chainId={chainId} readOnly />
+                </ScopedChainStoreProvider>
             </div>
 
             {/* Détail d'une étape de la chaîne. Strictement ADDITIF : le canevas imprime déjà le
