@@ -1,5 +1,5 @@
 import React, { useEffect, useState, Suspense } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ReactFlowProvider } from 'reactflow'
 import { parseImages } from '../../utils/imageUtils'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
@@ -17,7 +17,11 @@ import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../compo
 export default function ReviewDetailPage() {
     const { id } = useParams()
     const navigate = useNavigate()
+    const location = useLocation()
     const toast = useToast()
+    // `key === 'default'` = premier écran de la session de navigation (lien direct,
+    // rechargement) : il n'y a rien derrière, on retombe alors sur la galerie.
+    const canGoBack = location.key !== 'default'
     const { user, isAuthenticated } = useStore()
     const [review, setReview] = useState(null)
     const [loading, setLoading] = useState(true)
@@ -124,11 +128,11 @@ export default function ReviewDetailPage() {
                 {/* Header with Back & Edit Buttons */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <button
-                        onClick={() => navigate('/gallery')}
+                        onClick={() => canGoBack ? navigate(-1) : navigate('/gallery')}
                         className="flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
                     >
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-                        <span>Retour à la galerie</span>
+                        <span>{canGoBack ? 'Retour' : 'Retour à la galerie'}</span>
                     </button>
 
                     {isAuthenticated && user?.id === review?.authorId && (

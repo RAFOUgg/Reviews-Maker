@@ -68,14 +68,44 @@ qui garantit qu'un futur champ de formulaire y apparaîtra seul.
 Agrandir, icônes superposées, effet de profondeur, photos d'étape rendues.
 *Sortie* : une cellule de la vue est indiscernable d'une cellule de formulaire.
 
-### C10-3 — Faire de la Vue Détaillée le rendu écran d'Export Maker
+### C10-3 — Faire de la Vue Détaillée le rendu écran d'Export Maker — **livré 2026-08-06**
 `/r/:id` et l'aperçu Studio basculent dessus. La configuration (contenus, couleurs, typo) doit la
 piloter comme elle pilote les templates.
 *Sortie* : le rendu écran et la vue publique sont le même composant.
 
-### C10-4 — Les templates deviennent le mode FICHIER
+**Ce qui a été fait, et le trou qu'il a fallu combler d'abord** — en basculant `/r/:id` sur la Vue
+Détaillée, on lui avait fait perdre trois blocs que la Fiche Technique Détaillée rendait déjà :
+le **canevas de généalogie**, le **canevas de chaîne de production** et les **statistiques de
+culture**. Autrement dit, la page publique d'une review tracée n'affichait plus sa traçabilité —
+le cœur du produit. Les mêmes composants (`ReadOnlyGenealogyCanvas`, `ReadOnlyProductionChain
+Canvas`, `CultureStatsChart`, `SensoryRadar`) sont désormais montés dans la Vue Détaillée, pas
+réimplémentés. Les deux canevas se masquent d'eux-mêmes quand la review n'a ni arbre ni chaîne et
+portent déjà leur propre titre : ils sont enveloppés dans `AutoHideCard`, qui observe le conteneur
+plutôt que de dupliquer la question « y a-t-il une chaîne ? », connue seulement après leur fetch.
+
+La configuration pilote maintenant réellement la vue : `contentModules` (jusque-là figé à `{}`,
+donc l'onglet Contenu était inerte sur le rendu écran), `colors.accent`/`textPrimary`/
+`textSecondary` et `typography.fontFamily`/`textSize`. Les tailles de titre restent celles de la
+mise en page fluide — la Vue Détaillée a sa propre hiérarchie en `rem`, qu'un facteur global
+casserait ; `textSize` pilote en revanche la partie dense en données (`GisementSections`), qui
+prend déjà ses tailles en pixels comme dans les templates.
+
+`resolveConfigForReview()` (`exportMakerStore.js`) a été extraite de `SingleReviewCard.jsx` pour
+que toutes les surfaces écran résolvent la config de la même façon.
+
+*Non touché volontairement* : `/review/:id` (page de détail interne) monte la Vue Détaillée **sans**
+config, donc tous les modules actifs. C'est la page de travail de l'auteur : y appliquer un filtre
+de contenu destiné à la diffusion publique masquerait des données qu'il s'attend à voir.
+
+### C10-4 — Les templates deviennent le mode FICHIER — **livré 2026-08-06**
 Les 5 templates restent la sortie PNG/PDF. La pagination et le calibrage leur restent réservés.
 *Sortie* : plus d'ambiguïté sur ce que chaque surface doit faire.
+
+Matérialisé par une bascule **Écran / Fichier** dans l'en-tête du Studio (`ExportMakerPanel.jsx`,
+`ScreenPreviewPane.jsx`). « Écran » est le défaut : c'est le rendu que voient réellement les
+visiteurs. « Fichier » montre le canevas à taille fixe paginé — le seul mode où ratio, pagination
+et calibrage ont un sens, et le seul que capture le bouton Exporter. Les deux aperçus coexistent
+au lieu de se remplacer : ils répondent à deux questions différentes.
 
 ---
 

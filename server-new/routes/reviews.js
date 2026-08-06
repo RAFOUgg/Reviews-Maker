@@ -78,6 +78,14 @@ router.get('/', optionalAuth, asyncHandler(async (req, res) => {
                     discordId: true
                 }
             },
+            // Hash/Concentré/Comestible stockent les photos de la section 1 sur leur propre
+            // sous-table (`photos`), pas sur `Review.images` comme Fleur — sans ce select,
+            // formatReview() ne peut pas appliquer son repli et la galerie publique n'a AUCUNE
+            // photo de couverture pour ces 3 types. Uniquement la colonne `photos` : le reste de
+            // la sous-table (trames de pipeline en JSON) alourdirait la liste pour rien.
+            hashData: { select: { photos: true } },
+            concentrateData: { select: { photos: true } },
+            edibleData: { select: { photos: true } },
             likes: true // Inclure tous les likes pour calculer les stats
         },
         orderBy: { [safeSortBy]: safeOrder }
