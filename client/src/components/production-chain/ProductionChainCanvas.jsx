@@ -23,7 +23,9 @@ import {
 import { toSvg } from 'html-to-image';
 import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
-import useProductionChainStore from '../../store/useProductionChainStore';
+// Store du CONTEXTE s'il existe, singleton global sinon — voir `scopedCanvasStores.jsx`.
+// L'édition ne fournit aucun contexte, elle garde donc exactement le comportement d'avant.
+import { useChainStore } from '../../store/scopedCanvasStores';
 import { summarizeCellFields } from '../../utils/chainCellPipelines';
 import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
@@ -125,7 +127,7 @@ function formatChainEventDate(iso) {
 }
 
 const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
-    const store = useProductionChainStore();
+    const store = useChainStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
     const rfStoreApi = useStoreApi();
     const navigate = useNavigate();

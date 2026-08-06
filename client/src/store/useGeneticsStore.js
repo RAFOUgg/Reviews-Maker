@@ -5,15 +5,22 @@
  * Gère: arbres, nœuds, arêtes, sélection, modification, état UI
  */
 
-import { create } from 'zustand';
+import { create, createStore } from 'zustand';
 import { devtools } from 'zustand/middleware';
 
 // Configuration API
 const API_BASE = '/api/genetics';
 
-const useGeneticsStore = create(
-    devtools(
-        (set, get) => ({
+// Créateur extrait le 2026-08-06. Le store était un SINGLETON : deux canevas montés
+// simultanément (page de lignée, chaînes reliées) écrivaient dans le même état et se
+// mélangeaient — c'est ce qui avait imposé d'écrire des canevas en lecture seule séparés
+// plutôt que de réutiliser les vrais.
+//
+// Extraction purement ADDITIVE : l'export par défaut reste le même singleton, donc les 35
+// fichiers qui le consomment (dont toute l'ÉDITION PhenoHunt et Chaîne de production) ne
+// changent pas d'un caractère. `createGeneticsStore()` fabrique en plus une instance isolée,
+// destinée aux rendus qui en montent plusieurs.
+const creator = (set, get) => ({
             // ============================================================================
             // STATE - TREES
             // ============================================================================
@@ -712,9 +719,11 @@ const useGeneticsStore = create(
                     treeError: null
                 });
             }
-        }),
-        { name: 'GeneticsStore' }
-    )
-);
+});
+
+const useGeneticsStore = create(devtools(creator, { name: 'GeneticsStore' }));
+
+/** Instance ISOLÉE, pour un rendu qui monte plusieurs canevas à la fois. */
+export const createGeneticsStore = () => createStore(devtools(creator, { name: 'GeneticsStoreScoped' }));
 
 export default useGeneticsStore;
