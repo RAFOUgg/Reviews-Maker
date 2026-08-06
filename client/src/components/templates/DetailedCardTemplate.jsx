@@ -15,7 +15,7 @@ import {
     SEMANTIC_SCORE_TEXT_COLORS,
     ACCENT_TEXT_COLORS,
     ensureReadable,
-    getFormatLayout,
+    getTemplateColumns,
     blendOver,
     getScoreBand,
     RATIO_DIMENSIONS,
@@ -152,9 +152,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // tombait à 4.38:1 — conforme sur le papier nu, juste en dessous sur les encadrés.
     const pageBg = isPaperMode ? '#F8FAFC' : '#0b1220';
     const accentReadable = ensureReadable(accent, pageBg, 4.8);
-    const formatLayout = getFormatLayout(config.ratio);
-    const sectionFlow = formatLayout.columns > 1
-        ? { columnCount: formatLayout.columns, columnGap: `${spacing.section}px`, flex: 1, minHeight: 0 }
+    // `getTemplateColumns` et non `getFormatLayout().columns` : la même source doit servir ici et
+    // dans le budget de pagination, sans quoi les deux divergent — c'est cette divergence qui a
+    // coupé du contenu sur Article de Blog (budget doublé, rendu sur une seule colonne).
+    const templateColumns = getTemplateColumns('detailedCard', config.ratio);
+    const sectionFlow = templateColumns > 1
+        ? { columnCount: templateColumns, columnGap: `${spacing.section}px`, flex: 1, minHeight: 0 }
         : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
 
     // Un chip d'arôme repose sur `accent` à 12 % au-dessus du fond, pas sur le fond nu : on

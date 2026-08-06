@@ -298,10 +298,18 @@
             if (bottom > 0 && rootRect.height > 0) {
                 const fill = (bottom / rootRect.height) * 100;
                 stats.fillPercent = +fill.toFixed(1);
-                if (fill < 65) {
+                // Au-delà de 100 %, le dernier module dépasse le bas du canevas : sur une page à
+                // taille fixe, ce qui dépasse est COUPÉ, donc définitivement perdu à l'export.
+                // C'est le défaut le plus grave que cette règle puisse voir — il était pourtant
+                // classé en simple avertissement jusqu'au 2026-08-06, ce qui a fait passer pour
+                // bon un Article de Blog rendu à 134 %. Une règle qui affiche en vert un export
+                // amputé est pire qu'une règle absente : elle donne une garantie fausse.
+                if (fill > 100) {
+                    push('E6', 'error', `Page remplie à ${fill.toFixed(1)}% — contenu coupé`, rootEl, { fill: +fill.toFixed(1) });
+                } else if (fill < 65) {
                     push('E6', 'error', `Page remplie à ${fill.toFixed(1)}% (cible 65–95%)`, rootEl, { fill: +fill.toFixed(1) });
                 } else if (fill > 95) {
-                    push('E6', 'warn', `Page remplie à ${fill.toFixed(1)}% — risque de débordement`, rootEl, { fill: +fill.toFixed(1) });
+                    push('E6', 'warn', `Page remplie à ${fill.toFixed(1)}% — marge faible`, rootEl, { fill: +fill.toFixed(1) });
                 }
             }
         }

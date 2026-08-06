@@ -1139,6 +1139,26 @@ export const FORMAT_LAYOUT = {
 };
 
 /** Contrat de mise en page d'un format. Repli sur le carré pour un ratio inconnu. */
+/**
+ * Templates qui font RÉELLEMENT couler leur contenu en colonnes (`columnCount`).
+ *
+ * `FORMAT_LAYOUT.columns` exprime ce qu'un format PERMET ; ceci exprime ce qu'un template en FAIT.
+ * Les deux ont divergé et c'est ce qui a coupé du contenu : la pagination multipliait son budget de
+ * hauteur par le nombre de colonnes du format, alors que seul `detailedCard` coule vraiment en
+ * colonnes. `blogArticle` recevait donc un budget double tout en empilant sur une seule colonne —
+ * mesuré le 2026-08-06 en 16:9 : trois pages rendues à 134 %, 121 % et 117 %, soit du contenu
+ * définitivement coupé à l'export.
+ *
+ * D'où cette source unique, à consommer PARTOUT plutôt que `getFormatLayout(ratio).columns` seul.
+ */
+const MULTICOLUMN_TEMPLATES = new Set(['detailedCard']);
+
+/** Nombre de colonnes réellement utilisé par un template à un ratio donné. */
+export function getTemplateColumns(templateId, ratio) {
+    if (!MULTICOLUMN_TEMPLATES.has(templateId)) return 1;
+    return getFormatLayout(ratio).columns;
+}
+
 export function getFormatLayout(ratio) {
     return FORMAT_LAYOUT[ratio] || FORMAT_LAYOUT['1:1'];
 }

@@ -97,7 +97,7 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
             .then((heights) => {
                 if (requestIdRef.current !== requestId) return; // une mesure plus récente a démarré entre-temps
                 const { padding } = getResponsiveAdjustments(ratio, config.typography);
-                const adaptivePages = computeAdaptivePages(heights, ratio, padding.container);
+                const adaptivePages = computeAdaptivePages(heights, ratio, padding.container, template);
                 if (adaptivePages.length >= 2) {
                     setState({ pages: adaptivePages, isAdaptive: true, isMeasuring: false });
                 } else {
