@@ -41,6 +41,14 @@ export default function ChainCanvasToolbar({
     onNextMatch,
     onPrevMatch,
 }) {
+    // En LECTURE SEULE, aucune barre : ni outils, ni recherche, ni filtres. Seul le premier bloc
+    // était gardé — le champ « Rechercher un produit ou une technique… » et ses filtres
+    // s'affichaient donc PAR-DESSUS la chaîne dans les rendus, la masquant en partie (constaté sur
+    // captures utilisateur le 2026-08-06, sur Article de Blog, Story et Traçabilité).
+    //
+    // Une barre de recherche dans une fiche exportée n'a aucun sens : elle serait figée dans le PNG.
+    if (readOnly) return null;
+
     return (
         <>
             {!readOnly && (
