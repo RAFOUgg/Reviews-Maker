@@ -506,7 +506,12 @@ const PipelineGridView = ({
                 {staticRender ? (
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: `repeat(${Math.max(1, columns)}, minmax(0, 1fr))`,
+                        // Plus de colonnes qu'en édition. Là-bas une case est une CIBLE À CLIQUER,
+                        // donc large ; dans un rendu figé elle n'est qu'un repère de lecture. En
+                        // gardant les 7 colonnes de l'édition, 25 étapes occupaient quatre grandes
+                        // rangées et faisaient passer la Fiche Technique 16:9 de 2 à 5 pages, dont
+                        // deux quasi vides. Même apparence, densité adaptée au support.
+                        gridTemplateColumns: `repeat(${Math.max(1, Math.min(14, (cellIndices || []).length || 1))}, minmax(0, 1fr))`,
                     }}>
                         {(cellIndices || []).map((_, cellIndex) => (
                             <div key={cellIndex} style={{ aspectRatio: '1 / 1', padding: 2 }}>

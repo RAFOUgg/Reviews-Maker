@@ -4,6 +4,7 @@ import { safeParse, colorWithOpacity } from '../../../utils/exportMakerHelpers';
 import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
 import { LiquidModal } from '@/components/ui/LiquidUI';
 import { useCanvasTooltip, affordance } from './InteractiveContext';
+import PipelineGridView from '../../pipelines/views/PipelineGridView';
 
 // Au-delà de ce nombre de mesures, le panneau en ligne sous la grille devient un pavé qui
 // déborde la page : le détail part alors dans une modale (vocabulaire d'interaction du plan C8,
@@ -59,6 +60,15 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
         return fields;
     };
 
+    // `PipelineGridView` attend ses cases indexées par POSITION ; nos données sont indexées par
+    // `timestamp`. Adaptation ici plutôt que dans la grille : c'est notre format qui est
+    // particulier, pas le sien.
+    const gridCells = cells.reduce((acc, c, i) => {
+        const f = getCellFields(c.timestamp);
+        if (f && Object.keys(f).length > 0) acc[i] = f;
+        return acc;
+    }, {});
+
     const filledCount = cells.filter(c => {
         const f = getCellFields(c.timestamp);
         return f && Object.keys(f).length > 0;
@@ -71,66 +81,27 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                 <span style={{ flex: 1 }}>{name}</span>
                 <span style={{ fontSize: 12, opacity: 0.7 }}>{filledCount}/{cells.length} documentées</span>
             </div>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 3, position: 'relative' }}>
-                {cells.map((cell) => {
+            {/* LA grille des formulaires, en lecture seule et rendu statique — plus une imitation.
+                `staticRender` court-circuite la virtualisation `react-window`, qui ne monte que les
+                lignes visibles et ferait perdre les cases hors écran à la capture PNG. */}
+            <PipelineGridView
+                cells={gridCells}
+                config={config}
+                cellIndices={cells.map((_, i) => i)}
+                readonly
+                staticRender
+                canAddMore={false}
+                onCellClick={(index) => {
+                    if (!interactive) return;
+                    const cell = cells[index];
+                    if (!cell) return;
                     const fields = getCellFields(cell.timestamp);
-                    const hasData = fields && Object.keys(fields).length > 0;
-                    const isSelected = selected === cell.timestamp;
-                    const entryCount = hasData ? Object.keys(fields).filter((k) => !['timestamp', 'date'].includes(k)).length : 0;
-                    // Infobulle : le nom complet de l'étape (la case ne porte que son numéro) et
-                    // le nombre de mesures qu'elle contient. Le détail lui-même reste accessible
-                    // sans interaction, sous la grille (`PipelineStepFields` dans les templates).
-                    const tip = (
-                        <div>
-                            <div style={{ fontWeight: 700, marginBottom: 3 }}>{cell.label}</div>
-                            <div style={{ opacity: 0.85 }}>
-                                {hasData ? `${entryCount} mesure${entryCount > 1 ? 's' : ''} enregistrée${entryCount > 1 ? 's' : ''}` : 'Étape non documentée'}
-                            </div>
-                            {hasData && (
-                                <div style={{ marginTop: 4, opacity: 0.6, fontSize: 12 }}>
-                                    {entryCount > INLINE_FIELD_LIMIT ? 'Cliquez pour le détail complet' : 'Cliquez pour le détail'}
-                                </div>
-                            )}
-                        </div>
-                    );
-                    const openCell = () => {
-                        if (!hasData) return;
-                        if (entryCount > INLINE_FIELD_LIMIT) {
-                            setModalCell(cell.timestamp);
-                        } else {
-                            setSelected(isSelected ? null : cell.timestamp);
-                        }
-                    };
-                    return (
-                        <button
-                            key={cell.id}
-                            type="button"
-                            onClick={interactive ? openCell : undefined}
-                            {...bind(tip)}
-                            title={cell.label}
-                            style={{
-                                // Cellules PORTANT leur numéro d'étape. Elles étaient des carrés
-                                // vides de 22px : l'information n'apparaissait qu'au clic, ce qui
-                                // convient à un rendu interactif mais vide la grille de tout sens
-                                // dans un export figé (PNG/PDF). C'est le motif « carrés colorés
-                                // sans aucun texte » que le projet avait déjà rejeté le
-                                // 2026-07-27. La grille doit rester lisible dans les DEUX modes.
-                                minWidth: 26, height: 26, borderRadius: 6,
-                                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: 12, fontWeight: 600, lineHeight: 1,
-                                fontVariantNumeric: 'tabular-nums',
-                                color: hasData ? accentColor : colorWithOpacity(accentColor, 45),
-                                backgroundColor: colorWithOpacity(accentColor, hasData ? 55 : 15),
-                                border: isSelected ? `2px solid ${accentColor}` : `1px solid ${colorWithOpacity(accentColor, hasData ? 45 : 20)}`,
-                                padding: '0 4px',
-                                ...(interactive && hasData ? affordance(true, { kind: 'click' }) : { cursor: 'default' }),
-                            }}
-                        >
-                            {cell.shortLabel || cell.label?.replace(/[^0-9]/g, '') || ''}
-                        </button>
-                    );
-                })}
-            </div>
+                    const count = fields ? Object.keys(fields).filter((k) => !['timestamp', 'date'].includes(k)).length : 0;
+                    if (count === 0) return;
+                    if (count > INLINE_FIELD_LIMIT) setModalCell(cell.timestamp);
+                    else setSelected(selected === cell.timestamp ? null : cell.timestamp);
+                }}
+            />
             {selected && (() => {
                 const cell = cells.find(c => c.timestamp === selected);
                 const fields = getCellFields(selected) || {};
