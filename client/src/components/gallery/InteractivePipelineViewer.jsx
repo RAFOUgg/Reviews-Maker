@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LiquidCard } from '../ui/LiquidUI';
 // Base d'icônes unique de l'app — mêmes icônes que les formulaires et les templates d'export.
 import { getFieldIcon } from '../../utils/fieldIcons';
+// LE composant média des formulaires, réutilisé tel quel — pas une seconde implémentation.
+import PipelineCellMediaPreview from '../pipelines/core/PipelineCellMediaPreview';
 import { ChevronLeft, ChevronRight, X, Thermometer, Droplets, Wind, Sun, Package, FlaskConical, Calendar, Clock, Beaker } from 'lucide-react';
 
 /**
@@ -74,6 +76,8 @@ function getMetricUnit(key) {
 const EXCLUDED_KEYS = new Set([
     'label', 'phase', 'semaine', 'date', 'jour', '_cellKey', 'timestamp',
     'id', 'key', 'index', 'order', 'isEmpty', 'isActive',
+    // `media` est la galerie photo/vidéo de la cellule, pas une mesure : rendue en FOND de case.
+    'media', 'cellLabel',
 ]);
 
 function extractMetrics(step) {
@@ -273,6 +277,18 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                                     }}
                                     title={label}
                                 >
+                                    {/* PHOTO/VIDÉO de l'étape en fond de case, avec voile sombre —
+                                        exactement le rendu des formulaires
+                                        (`PipelineCellMediaPreview` + dégradé). Les médias étaient
+                                        purement absents de cette vue : « il n'affiche pas les
+                                        images dans les pipelines ». */}
+                                    {Array.isArray(step.media) && step.media.length > 0 && (
+                                        <span className="absolute inset-0 rounded-[10px] overflow-hidden" style={{ zIndex: 0 }}>
+                                            <PipelineCellMediaPreview media={step.media} />
+                                            <span className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/25 to-black/10" />
+                                        </span>
+                                    )}
+
                                     {/* ICÔNES DE DONNÉE SUPERPOSÉES, en 2×2 dans les coins, avec
                                         ombre portée pour la profondeur — le langage visuel de
                                         `CellEmojiOverlay` des formulaires, repris tel quel plutôt

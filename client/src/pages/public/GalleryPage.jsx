@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { LiquidCard, LiquidChip, LiquidInput, LiquidButton } from '@/components/ui/LiquidUI';
 import ExportMakerCardRenderer from '../../components/gallery/ExportMakerCardRenderer';
+import ReviewCoverMedia from '../../components/gallery/ReviewCoverMedia';
+import { extractReviewCoverMedia } from '../../utils/reviewFilesAggregator';
 
 // Types de produits avec icônes
 const PRODUCT_TYPES = [
@@ -197,10 +199,17 @@ export default function GalleryPage() {
                 onContextMenu={(e) => handleContextMenu(e, review)}
                 onClick={() => handleViewReview(review.id)}
               >
-                <ExportMakerCardRenderer
-                  reviewData={review}
-                  exportMakerConfig={review.exportMakerConfig}
-                />
+                {/* Couverture = photos/vidéos du produit fini (section 1). Une review sans aucune
+                    photo retombe sur sa fiche Export Maker, qui reste une vignette valable — mieux
+                    qu'une carte vide. */}
+                {extractReviewCoverMedia(review).length > 0 ? (
+                  <ReviewCoverMedia review={review} />
+                ) : (
+                  <ExportMakerCardRenderer
+                    reviewData={review}
+                    exportMakerConfig={review.exportMakerConfig}
+                  />
+                )}
               </div>
             ))}
           </div>

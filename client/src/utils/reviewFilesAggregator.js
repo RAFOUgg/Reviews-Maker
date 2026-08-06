@@ -93,6 +93,38 @@ function extractPipelineFiles(review) {
 }
 
 /**
+ * Médias de la section 1 « Informations générales » (photos/vidéos du produit fini, 1 à 4) —
+ * `review.images` côté Fleur, `photos` de la sous-table pour Hash/Concentré/Comestible, déjà
+ * fusionnés à la racine par formatReview(). C'est la couverture canonique d'une review : la
+ * galerie publique s'en sert telle quelle, extractReviewFiles() la place en tête de ses fichiers.
+ * @param {object} review - Review formatée par le backend.
+ * @returns {Array<{key, reviewId, reviewType, reviewLabel, url, type}>}
+ */
+export function extractReviewCoverMedia(review) {
+    if (!review) return [];
+    const label = review.cultivars || review.name || review.holderName || 'Sans nom';
+    const reviewType = review.type || review.reviewType;
+
+    const images = Array.isArray(review.images) ? review.images : [];
+    return images.reduce((acc, img, index) => {
+        const raw = typeof img === 'string' ? img : (img?.url || img?.preview || '');
+        if (!raw) return acc;
+        const url = getImageUrl(raw);
+        acc.push({
+            key: `${review.id}-media-${index}`,
+            reviewId: review.id,
+            reviewType,
+            reviewLabel: label,
+            url,
+            // `img` peut être une entrée d'upload encore en mémoire (`{type:'video'}`, cf.
+            // usePhotoUpload.js) ou un simple filename rechargé depuis la base — on couvre les deux.
+            type: (typeof img === 'object' && img?.type === 'video') || isVideoUrl(url) ? 'video' : 'photo'
+        });
+        return acc;
+    }, []);
+}
+
+/**
  * @param {object} review - Review déjà flattenée par le backend (formatReview) : `images` déjà
  * fusionné depuis la bonne sous-table, `labReportUrl`/`terpeneFileUrl` remontés à la racine.
  * @returns {Array<{key, reviewId, reviewType, reviewLabel, url, type, label}>}
@@ -101,22 +133,7 @@ export function extractReviewFiles(review) {
     if (!review) return [];
     const label = review.cultivars || review.name || review.holderName || 'Sans nom';
     const reviewType = review.type || review.reviewType;
-    const files = [];
-
-    const images = Array.isArray(review.images) ? review.images : [];
-    images.forEach((img, index) => {
-        const raw = typeof img === 'string' ? img : (img?.url || img?.preview || '');
-        if (!raw) return;
-        const url = getImageUrl(raw);
-        files.push({
-            key: `${review.id}-media-${index}`,
-            reviewId: review.id,
-            reviewType,
-            reviewLabel: label,
-            url,
-            type: isVideoUrl(url) ? 'video' : 'photo'
-        });
-    });
+    const files = [...extractReviewCoverMedia(review)];
 
     if (review.labReportUrl) {
         files.push({
