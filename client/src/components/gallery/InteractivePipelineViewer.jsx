@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { LiquidCard } from '../ui/LiquidUI';
+// Base d'icônes unique de l'app — mêmes icônes que les formulaires et les templates d'export.
+import { getFieldIcon } from '../../utils/fieldIcons';
 import { ChevronLeft, ChevronRight, X, Thermometer, Droplets, Wind, Sun, Package, FlaskConical, Calendar, Clock, Beaker } from 'lucide-react';
 
 /**
@@ -248,9 +250,13 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                                     onMouseLeave={() => setHoveredStep(null)}
                                     className="relative group"
                                     style={{
-                                        width: 32,
-                                        height: 32,
-                                        borderRadius: 6,
+                                        // 32×32 auparavant, avec un libellé tronqué à 3 caractères
+                                        // en 9px — d'où les « Éta » illisibles signalés par
+                                        // l'utilisateur. Une cellule doit porter son libellé ENTIER
+                                        // et ses icônes de donnée, comme dans les formulaires.
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 10,
                                         border: isSelected
                                             ? '2px solid rgba(168, 85, 247, 0.8)'
                                             : isHovered
@@ -267,9 +273,48 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                                     }}
                                     title={label}
                                 >
-                                    <span className="text-[9px] font-semibold text-white/60">
-                                        {String(label).slice(0, 3)}
+                                    {/* ICÔNES DE DONNÉE SUPERPOSÉES, en 2×2 dans les coins, avec
+                                        ombre portée pour la profondeur — le langage visuel de
+                                        `CellEmojiOverlay` des formulaires, repris tel quel plutôt
+                                        que réinventé. */}
+                                    {(() => {
+                                        const cellMetrics = extractMetrics(step).slice(0, 4);
+                                        const corners = [
+                                            { top: 2, left: 3 }, { top: 2, right: 3 },
+                                            { bottom: 2, left: 3 }, { bottom: 2, right: 3 },
+                                        ];
+                                        return cellMetrics.map((m, mi) => (
+                                            <span
+                                                key={m.key}
+                                                style={{
+                                                    position: 'absolute',
+                                                    ...corners[mi],
+                                                    fontSize: 11,
+                                                    lineHeight: 1,
+                                                    zIndex: 10 - mi,
+                                                    filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.45))',
+                                                }}
+                                            >
+                                                {getFieldIcon(m.key)}
+                                            </span>
+                                        ));
+                                    })()}
+                                    <span className="text-[11px] font-semibold text-white/80" style={{ position: 'relative', zIndex: 1 }}>
+                                        {label}
                                     </span>
+                                    {/* Badge « +N » quand la cellule porte plus de 4 mesures. */}
+                                    {extractMetrics(step).length > 4 && (
+                                        <span style={{
+                                            position: 'absolute', bottom: -4, right: -4,
+                                            fontSize: 9, fontWeight: 700, color: '#fff',
+                                            background: 'rgba(249,115,22,0.95)', borderRadius: 999,
+                                            width: 16, height: 16, display: 'flex',
+                                            alignItems: 'center', justifyContent: 'center',
+                                            boxShadow: '0 1px 3px rgba(0,0,0,0.4)', zIndex: 20,
+                                        }}>
+                                            +{extractMetrics(step).length - 4}
+                                        </span>
+                                    )}
                                 </motion.button>
                             );
                         })}
