@@ -3,8 +3,30 @@ import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubs
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind } from 'lucide-react'
 import InteractivePipelineViewer from './InteractivePipelineViewer'
+import { GisementSections } from '../templates/sections/RegistrySections'
+import { GROUP_ICONS } from '../../utils/fieldIcons'
 import UserMention from '../shared/UserMention'
 import TrustBadge from '../shared/TrustBadge'
+
+// Groupes du registre rendus dans la Vue Détaillée. Liste identique à celle des templates
+// d'export, 'overflow' compris — c'est lui qui fait remonter automatiquement tout champ de
+// formulaire que le registre ne couvre pas encore.
+const REGISTRY_GROUPS = [
+    'analytics', 'lab', 'visual', 'smell', 'texture', 'taste', 'effects', 'usage',
+    'genetics', 'culture', 'harvest', 'separation', 'extraction', 'purification', 'recipe', 'overflow',
+];
+
+/** En-tête de groupe au style de la page (titre cyan souligné), attendu par `GisementSections`. */
+function RegistrySection({ title, icon, children }) {
+    return (
+        <div className="mb-6 last:mb-0">
+            <h3 className="text-lg font-bold text-cyan-400 mb-3 border-b border-white/10 pb-2 flex items-center gap-2">
+                <span>{icon}</span>{title}
+            </h3>
+            {children}
+        </div>
+    );
+}
 
 export default function ReviewFullDisplay({ review }) {
     const [lightboxImg, setLightboxImg] = useState(null)
@@ -239,51 +261,34 @@ export default function ReviewFullDisplay({ review }) {
                 </LiquidCard>
             )}
 
-            {/* Extra Data (Champs techniques) */}
-            {extraData.length > 0 && (
-                <LiquidCard glow="cyan" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <FlaskConical className="w-5 h-5 text-cyan-400" />
-                        Données Techniques
-                    </h2>
+            {/* DONNÉES TECHNIQUES — pilotées par le REGISTRE (`fieldRegistry.js`), plus par une
+                taxonomie écrite à la main.
 
-                    {/* Group par catégorie */}
-                    {['culture', 'visual', 'quality', 'texture', 'smoke', 'sensory', 'effects', 'process'].map(catKey => {
-                        const catData = extraData.filter(d => d.category === catKey)
-                        if (catData.length === 0) return null
+                Cette section listait des catégories codées en dur (`quality`, `smoke`, `sensory`,
+                `process`) qui ne correspondent à AUCUN groupe réel du registre. Résultat : tout ce
+                qui est analytique, laboratoire, odeurs, goûts, récolte, usage, séparation ou
+                extraction n'avait nulle part où s'afficher et disparaissait de la vue — c'est le
+                « il manque beaucoup de données des forms » signalé par l'utilisateur.
 
-                        const catNames = {
-                            culture: 'Culture',
-                            visual: 'Visuel',
-                            quality: 'Qualité',
-                            texture: 'Texture',
-                            smoke: 'Fumée',
-                            sensory: 'Sensoriel',
-                            effects: 'Effets',
-                            process: 'Process'
-                        }
-
-                        return (
-                            <div key={catKey} className="mb-6 last:mb-0">
-                                <h3 className="text-lg font-bold text-cyan-400 mb-3 border-b border-white/10 pb-2">
-                                    {catNames[catKey]}
-                                </h3>
-                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                                    {catData.map(field => (
-                                        <div key={field.key} className="flex items-center gap-2 bg-white/5 rounded-lg px-3 py-2 border border-white/5">
-                                            <span className="text-lg">{field.icon}</span>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="text-xs text-white/50">{field.label}</div>
-                                                <div className="text-sm font-semibold text-white truncate">{field.value}</div>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    })}
-                </LiquidCard>
-            )}
+                `GisementSections` est le composant déjà utilisé par les 5 templates d'export : il
+                dérive ses groupes du registre et rattrape par `getOverflowFields()` tout champ
+                nouveau. Un champ ajouté à un formulaire apparaîtra donc ici sans qu'on y touche. */}
+            <LiquidCard glow="cyan" padding="lg">
+                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                    <FlaskConical className="w-5 h-5 text-cyan-400" />
+                    Données Techniques
+                </h2>
+                <GisementSections
+                    reviewData={review}
+                    contentModules={{}}
+                    groups={REGISTRY_GROUPS}
+                    groupIcons={GROUP_ICONS}
+                    Section={RegistrySection}
+                    colors={{ accent: '#22D3EE', textPrimary: '#F1F5F9', textSecondary: '#94A3B8', title: '#F1F5F9' }}
+                    fontSize={{ text: 14, small: 12, section: 16 }}
+                    spacing={{ section: 20, element: 10, gap: 6 }}
+                />
+            </LiquidCard>
 
             {/* Pipelines - Interactive */}
             {pipelines.length > 0 && (
