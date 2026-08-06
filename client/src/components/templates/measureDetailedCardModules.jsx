@@ -2,6 +2,7 @@ import { createRoot } from 'react-dom/client';
 import DetailedCardTemplate from './DetailedCardTemplate';
 import ModernCompactTemplate from './ModernCompactTemplate';
 import BlogArticleTemplate from './BlogArticleTemplate';
+import TraceabilityReportTemplate from './TraceabilityReportTemplate';
 import SocialStoryTemplate from './SocialStoryTemplate';
 import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
@@ -43,6 +44,7 @@ const TEMPLATE_COMPONENTS = {
     modernCompact: ModernCompactTemplate,
     blogArticle: BlogArticleTemplate,
     socialStory: SocialStoryTemplate,
+    traceabilityReport: TraceabilityReportTemplate,
 };
 
 export function registerMeasurableTemplate(id, Component) {

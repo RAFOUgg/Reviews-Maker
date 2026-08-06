@@ -310,10 +310,19 @@ export const TEMPLATE_DEFAULT_IDENTITY = {
 // templates adaptatifs). Le basculer est un chantier distinct, pas un drapeau à retourner.
 export const TEMPLATE_PAGINATION = {
     modernCompact: false,
+    // Traçabilité activé le 2026-08-06 : il était déclaré non paginable, d'où l'onglet Pagination
+    // inerte signalé par l'utilisateur. C'est un DOCUMENT — sa pagination n'est pas une option,
+    // c'est sa nature.
+    //
+    // Story reste NON paginé, contre la demande initiale, sur preuve chiffrée : activé puis mesuré
+    // le 2026-08-06, il produit 5 pages remplies à 95/3/20/3/12 % — alors qu'il tient à 95 % en UNE
+    // page grâce à `FitToFill`, que la pagination désactive. Une story est une carte unique par
+    // nature (Instagram, TikTok) : la découper en pages quasi vides dégrade le produit au lieu de
+    // l'améliorer. À rouvrir si l'usage prouve le contraire.
     socialStory: false,
     detailedCard: true,
     blogArticle: true,
-    traceabilityReport: false,
+    traceabilityReport: true,
 };
 
 /** Ce template accepte-t-il d'être réparti sur plusieurs pages ? */

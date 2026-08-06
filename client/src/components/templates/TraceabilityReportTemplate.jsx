@@ -17,6 +17,8 @@ import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProduct
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import TemplateSection from './sections/TemplateSection';
 import PipelineTimeline from './sections/PipelineTimeline';
+// Base d'icônes unique — 4e et dernière copie locale de la même table supprimée.
+import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { CannabinoidGrid, getCannabinoidItems, GisementSections } from './sections/RegistrySections';
 
 const BUSINESS_TYPE_LABELS = {
@@ -30,10 +32,6 @@ const BUSINESS_TYPE_LABELS = {
 // finalWeight/servings/poidsParPortion) — 'harvest' apporte aussi trichomes*/modeRecolte, réellement
 // absents jusqu'ici ; ne pas exclure le groupe entier pour éviter 2 valeurs déjà affichées ailleurs.
 const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
-const GISEMENT_ICONS = {
-    harvest: '🌾', culture: '🌱', usage: '💨',
-    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
-};
 
 const LAB_METHOD_LABELS = {
     hplc: 'HPLC', gc: 'GC', gcms: 'GC-MS', hplcms: 'HPLC-MS', other: 'Autre méthode',
@@ -169,7 +167,17 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     // Délègue à `TemplateSection.jsx` (partagé avec `DetailedCardTemplate.jsx`, qui définissait
     // l'original) — props ajustées pour préserver le rendu exact déjà en place ici (fontWeight 700,
     // bordure 2px/opacité 35, gap 8/paddingBottom 6 en dur plutôt que `spacing.gap`).
-    const Section = ({ title, icon, children }) => (
+    // Pagination adaptative — même contrat que les 4 autres templates : `config.pageModuleIds`
+    // restreint les blocs de CETTE page. Absent (rendu continu) : tout s'affiche.
+    const pageModuleIds = config.pageModuleIds
+        ? (config.pageModuleIds instanceof Set ? config.pageModuleIds : new Set(config.pageModuleIds))
+        : null;
+    const isPageOn = (moduleId) => !pageModuleIds || pageModuleIds.has(moduleId);
+
+    const Section = ({ title, icon, moduleId, children }) => {
+        if (moduleId && !isPageOn(moduleId)) return null;
+        return (
+        <div data-module={moduleId || undefined}>
         <TemplateSection
             title={title} icon={icon}
             fontSize={fontSize} spacing={spacing} padding={padding} colors={colors}
@@ -177,7 +185,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
         >
             {children}
         </TemplateSection>
-    );
+        </div>
+        );
+    };
 
     return (
         <div
@@ -264,7 +274,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
             {/* Données laboratoire & curing — détail complet, complémentaire au badge "Confiance"
                 ci-dessus (résumé rapide seulement). */}
             {labDetailCells.length > 0 && (
-                <Section title="Données laboratoire & curing" icon="🔬">
+                <Section moduleId="labData" title="Données laboratoire & curing" icon="🔬">
                     <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(140px, 1fr))`, gap: 6 }}>
                         {labDetailCells.map((c, i) => (
                             <div key={i} style={{ background: colorWithOpacity(colors.accent, 6), borderRadius: 8, padding: '6px 10px' }}>
@@ -279,14 +289,14 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
             {/* Profil cannabinoïde — absent de ce template jusqu'ici alors que la grille est déjà
                 partagée avec Fiche Détaillée (`CannabinoidGrid`, RegistrySections.jsx). */}
             {getCannabinoidItems(reviewData, config.contentModules).length > 0 && (
-                <Section title="Profil cannabinoïde" icon="🧪">
+                <Section moduleId="cannabinoidGrid" title="Profil cannabinoïde" icon="🧪">
                     <CannabinoidGrid reviewData={reviewData} contentModules={config.contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
                 </Section>
             )}
 
             {/* Bilan matière (Chantier 3) */}
             {massBalanceRows.length > 0 && (
-                <Section title="Bilan matière" icon="⚖️">
+                <Section moduleId="massBalance" title="Bilan matière" icon="⚖️">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {massBalanceRows.map(row => (
                             <div key={row.label} style={{
@@ -314,16 +324,18 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
                 fontSize={fontSize}
                 spacing={spacing}
-                groupIcons={GISEMENT_ICONS}
+                groupIcons={GROUP_ICONS}
             />
 
             {/* Chaîne de production (vue interactive existante) */}
+            {isPageOn('productionChainCanvas') && <div data-module="productionChainCanvas">
             <ReadOnlyProductionChainCanvas reviewData={reviewData} height={340} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
+            </div>}
 
             {/* Généalogie / PhenoHunt */}
-            <div style={{ marginTop: `${spacing.section}px` }}>
+            {isPageOn('genealogyCanvas') && <div data-module="genealogyCanvas" style={{ marginTop: `${spacing.section}px` }}>
                 <ReadOnlyGenealogyCanvas reviewData={reviewData} height={340} accentColor={colors.accent} titleColor={colors.title} textColor={colors.textSecondary} />
-            </div>
+            </div>}
 
             {/* Pipelines documentés — grille de cellules affichant directement les données de
                 chaque étape (icône/libellé/valeur, via `PipelineStepFields`, déjà le composant
@@ -333,7 +345,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 traçabilité en PDF/PNG ne peut pas être cliqué). Corrigé 2026-08-03 suite à un
                 retour utilisateur sur un export réel en prod. */}
             {activeTimelines.length > 0 && (
-                <Section title="Processus de production" icon="📅">
+                <Section moduleId="pipelines" title="Processus de production" icon="📅">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.section }}>
                         {activeTimelines.map((t) => {
                             const steps = safeParse(reviewData[t.dataKey], []);
@@ -366,7 +378,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
 
             {/* Journal d'événements (Chantier 1/2/4) */}
             {events.length > 0 && (
-                <Section title="Journal d'événements" icon="📜">
+                <Section moduleId="eventLog" title="Journal d'événements" icon="📜">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                         {events.slice(0, 30).map(event => {
                             const derivedBadges = evaluateChainEventRules(event);

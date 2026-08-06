@@ -32,6 +32,10 @@ export const MODULE_META = {
     productionChainCanvas: { label: 'Chaîne de production', icon: '⚙️' },
     pipelineDetailGrids: { label: 'Pipelines — détail', icon: '🗓️' },
     extraData: { label: 'Données complémentaires', icon: '➕' },
+    // Rapport de Traçabilité (paginé depuis le 2026-08-06)
+    massBalance: { label: 'Bilan matière', icon: '⚖️' },
+    eventLog: { label: "Journal d'événements", icon: '📜' },
+    pipelines: { label: 'Processus de production', icon: '📅' },
     // Ids propres au rollout Phase C (2026-08-03) sur ModernCompact/BlogArticle/SocialStory —
     // pas de composant Section commun entre les 3 templates statiques, donc chacun a introduit
     // localement l'id qui correspond le mieux à sa propre structure plutôt que de forcer un
