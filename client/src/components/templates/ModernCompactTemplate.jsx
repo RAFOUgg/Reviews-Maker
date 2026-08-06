@@ -17,6 +17,9 @@ import {
     ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
+// Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
+// (Article de Blog n'avait ni `culture` ni `overflow`).
+import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
@@ -30,10 +33,6 @@ import FitToFill from './frame/FitToFill';
 // (comme DetailedCardTemplate.jsx) : aucun de ces groupes n'a de rendu spécifique existant dans ce
 // template (contrairement à BlogArticleTemplate, qui garde sa propre section "Substrat" à part).
 const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
-const GISEMENT_ICONS = {
-    harvest: '🌾', culture: '🌱', usage: '💨',
-    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
-};
 
 
 /**
@@ -530,7 +529,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
                 fontSize={fontSize}
                 spacing={spacing}
-                groupIcons={GISEMENT_ICONS}
+                groupIcons={GROUP_ICONS}
             />}
 
             {/* Pipelines — riche avec métriques. `pipelines` (déjà filtré par

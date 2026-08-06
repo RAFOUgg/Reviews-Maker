@@ -23,6 +23,9 @@ import {
     readableFontSize,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
+// Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
+// (Article de Blog n'avait ni `culture` ni `overflow`).
+import { GROUP_ICONS } from '../../utils/fieldIcons';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
@@ -41,10 +44,6 @@ import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 // extractExtraData). Les retirer d'ici évite la duplication ; tous les autres groupes restent pour
 // ne perdre aucune donnée réelle non couverte par le spec (celui-ci ne modélise qu'un cas simple).
 const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extraction', 'purification', 'recipe', 'overflow'];
-const GISEMENT_ICONS = {
-    harvest: '🌾', culture: '🌱', usage: '💨',
-    separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯', overflow: '➕',
-};
 
 const LAB_METHOD_LABELS = {
     hplc: 'HPLC',
@@ -654,7 +653,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     colors={{ accent, textPrimary, textSecondary, title: titleColor }}
                     fontSize={fontSize}
                     spacing={spacing}
-                    groupIcons={GISEMENT_ICONS}
+                    groupIcons={GROUP_ICONS}
                 />
 
                 {/* Pipelines (production) — chaque pipeline porte son propre `data-module`

@@ -4,17 +4,11 @@ import { readableFontSize } from '../../../utils/exportMakerHelpers';
 // Icônes best-effort par identifiant de champ de pipeline (purement cosmétique) — source unique,
 // auparavant dupliquée (et partiellement absente) entre DetailedCardTemplate/ModernCompactTemplate/
 // BlogArticleTemplate.
-export const PIPELINE_FIELD_ICONS = {
-    temperature: '🌡️', temp: '🌡️', temperatureDay: '🌡️', temperatureNight: '🌡️', temperatureEau: '🌡️',
-    humidity: '💧', ambientHumidity: '💧', humidityDay: '💧', humidityNight: '💧', humidite: '💧', hr: '💧',
-    co2: '☁️', co2Ppm: '☁️', co2Level: '☁️', vpd: '💨',
-    ppfd: '☀️', lightType: '☀️',
-    ph: '🧪', ec: '🧪',
-    container: '🫙', recipient: '🫙',
-    packaging: '📦', emballage: '📦',
-    action: '⚡', event: '⚡', evenement: '⚡',
-    method: '⚙️', methode: '⚙️', spaceType: '🏠', seedType: '🌱',
-};
+// Table absorbée le 2026-08-06 dans `utils/fieldIcons.js`, base d'icônes unique de l'app. Elle ne
+// couvrait que les champs de pipeline : le même champ pouvait donc avoir une icône ici et aucune
+// ailleurs. Réexportée sous son ancien nom pour ne casser aucun appelant existant.
+export { FIELD_ICONS as PIPELINE_FIELD_ICONS } from '../../../utils/fieldIcons';
+import { getFieldIcon } from '../../../utils/fieldIcons';
 
 export const NOTE_FIELD_KEYS = new Set(['note', 'comment', 'commentaire']);
 
@@ -63,7 +57,7 @@ export default function PipelineStepFields({ fields, compact = false, fontSize, 
                                 whiteSpace: 'normal',
                                 lineHeight: 1.15,
                             }}>
-                                <span style={{ flexShrink: 0 }}>{PIPELINE_FIELD_ICONS[f.key] || '•'}</span>
+                                <span style={{ flexShrink: 0 }}>{getFieldIcon(f.key)}</span>
                                 <span>{f.label}</span>
                             </div>
                             <div style={{

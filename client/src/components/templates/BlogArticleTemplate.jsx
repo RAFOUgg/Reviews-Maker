@@ -17,6 +17,9 @@ import {
     ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
+// Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
+// (Article de Blog n'avait ni `culture` ni `overflow`).
+import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
@@ -29,7 +32,6 @@ import PipelineTimeline from './sections/PipelineTimeline';
 // GisementSections le dupliquerait dans un style plus pauvre juste à côté. 'overflow' exclu pour la
 // même raison : la section "Caractéristiques Avancées" existante couvre déjà ce rôle.
 const GISEMENT_GROUPS = ['harvest', 'usage', 'separation', 'extraction', 'purification', 'recipe'];
-const GISEMENT_ICONS = { harvest: '🌾', usage: '💨', separation: '🧊', extraction: '⚗️', purification: '💧', recipe: '🍯' };
 
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 
@@ -509,7 +511,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
                     fontSize={fontSize}
                     spacing={spacing}
-                    groupIcons={GISEMENT_ICONS}
+                    groupIcons={GROUP_ICONS}
                 />
 
                 {/* Substrat */}
