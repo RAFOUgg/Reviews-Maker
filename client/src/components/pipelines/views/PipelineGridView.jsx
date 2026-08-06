@@ -28,7 +28,13 @@ const PipelineGridView = ({
     selectedCells = [],
     readonly = false,
     onAddCells,
-    canAddMore = true
+    canAddMore = true,
+    // Rendu STATIQUE : toutes les cellules posées d'un coup, sans virtualisation ni défilement
+    // interne. `react-window` ne monte que les lignes visibles — indispensable pour éditer une
+    // culture de 90 jours sans ramer, mais fatal à l'export : la capture ne verrait que les
+    // premières lignes et perdrait le reste sans aucun signal. Les deux chemins partagent le même
+    // `renderCell`, donc la grille de l'export est celle des formulaires, pas une imitation.
+    staticRender = false
 }) => {
     const [hoveredCell, setHoveredCell] = useState(null);
     const [dragOverCell, setDragOverCell] = useState(null);
@@ -430,10 +436,89 @@ const PipelineGridView = ({
         return 'grid grid-cols-[repeat(auto-fill,minmax(3.5rem,1fr))] gap-2 auto-rows-[minmax(3.5rem,auto)]';
     };
 
+    // Rendu d'UNE cellule, partagé par les deux chemins d'affichage (grille virtualisée en
+    // édition, grille CSS complète en export). Extrait le 2026-08-06 : sans ce partage, la
+    // grille de l'export serait une imitation de celle des formulaires — c'est justement ce
+    // qu'il fallait supprimer.
+    const renderCell = (cellIndex, style) => {
+                        const cellData = cells[cellIndex];
+        const intensity = getCellIntensity(cellData);
+        const isSelected = selectedCells.includes(cellIndex);
+        const isHovered = hoveredCell === cellIndex;
+        const isDragOver = dragOverCell === cellIndex && draggedContent;
+        const miniIcons = getMiniIcons(cellData);
+        const phaseIcon = getPhaseIcon(cellIndex);
+
+        return (
+            <div style={{ ...style, padding: 4 }} key={cellIndex}>
+                <motion.div
+                    data-testid={`pipeline-cell-${cellIndex}`}
+                    whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.12, zIndex: 10 }}
+                    whileTap={{ scale: 0.98 }}
+                    onPointerDown={(e) => {
+                        // pointerdown is more reliable than click for detecting modifier keys
+                        if ((e.ctrlKey || e.metaKey) && e.button === 0) {
+                            e.preventDefault();
+                            const newSelection = isSelected
+                                ? selectedCells.filter(i => i !== cellIndex)
+                                : [...selectedCells, cellIndex];
+                            onCellClick(cellIndex, { multi: true, selected: newSelection });
+                        }
+                    }}
+                    onClick={(e) => {
+                        // keep existing click behaviour (open modal / single select)
+                        if (e.ctrlKey || e.metaKey) {
+                            const newSelection = isSelected
+                                ? selectedCells.filter(i => i !== cellIndex)
+                                : [...selectedCells, cellIndex];
+                            onCellClick(cellIndex, { multi: true, selected: newSelection });
+                        } else {
+                            onCellClick(cellIndex);
+                        }
+                    }}
+                    onMouseEnter={() => setHoveredCell(cellIndex)}
+                    onMouseLeave={() => setHoveredCell(null)}
+                    onDragOver={(e) => handleDragOver(e, cellIndex)}
+                    onDragLeave={handleDragLeave}
+                    onDrop={(e) => handleDrop(e, cellIndex)}
+                    title={getTooltipContent(cellIndex, cellData)}
+                    style={{ width: '100%', height: '100%' }}
+                    className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                >
+                    {/* Top: label / phase */}
+                    <div className="w-full flex items-start justify-between gap-2">
+                        <div className="text-sm font-semibold text-white truncate max-w-[75%]">{getCellLabel(cellIndex)}</div>
+                        <div className="text-xs text-gray-400">{/* small metadata */}</div>
+                    </div>
+
+                    {/* Middle: icons / summary */}
+                    <div className="w-full flex-1 flex items-start pt-2">
+                        <div className="flex gap-1 flex-wrap">
+                            {miniIcons.length > 0 ? miniIcons.map((icon, idx) => (
+                                <span key={idx} className="text-xs leading-none" style={{ lineHeight: 1 }}>{icon}</span>
+                            )) : (
+                                <span className="text-xs text-gray-600 opacity-50">&nbsp;</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Bottom: small footer / config indicator */}
+                    <div className="w-full flex items-center justify-between pt-2">
+                        <div className="text-xs text-gray-400">{cellData && cellData._meta ? cellData._meta.count : ''}</div>
+                        {isSelected && (
+                            <div className="w-3 h-3 rounded-full border-2 border-white"></div>
+                        )}
+                    </div>
+                </motion.div>
+            </div>
+        );
+    };
+
     return (
         <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0 overscroll-contain" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
-            {/* Zoom controls */}
-            <div className="flex items-center justify-end gap-2 mb-2">
+            {/* Zoom controls — masqués en lecture seule : un curseur de zoom n'a pas de sens dans
+                un rendu figé, et il serait capturé tel quel dans le PNG exporté. */}
+            <div className={`items-center justify-end gap-2 mb-2 ${readonly || staticRender ? 'hidden' : 'flex'}`}>
                 <button onClick={() => setZoom(z => Math.max(0.5, +(z - 0.1).toFixed(2)))} className="px-2 py-1 bg-white/5 rounded">-</button>
                 <input
                     type="range"
@@ -450,7 +535,18 @@ const PipelineGridView = ({
             {/* Grid - controlled via computed columns/cellSize */}
             <div ref={gridRef} data-testid="pipeline-grid-wrapper" className="w-full" style={{ width: '100%', boxSizing: 'border-box' }}>
                 {/* Virtualized grid using react-window */}
-                {gridWidth > 0 && gridHeight > 0 ? (
+                {staticRender ? (
+                    <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: `repeat(${Math.max(1, columns)}, minmax(0, 1fr))`,
+                    }}>
+                        {(cellIndices || []).map((_, cellIndex) => (
+                            <div key={cellIndex} style={{ aspectRatio: '1 / 1', padding: 2 }}>
+                                {renderCell(cellIndex, { position: 'relative', width: '100%', height: '100%' })}
+                            </div>
+                        ))}
+                    </div>
+                ) : gridWidth > 0 && gridHeight > 0 ? (
                     <RVGrid
                         columnCount={columns}
                         columnWidth={columnWidthState}
@@ -463,77 +559,7 @@ const PipelineGridView = ({
                         {({ columnIndex, rowIndex, style }) => {
                             const cellIndex = rowIndex * columns + columnIndex;
                             if (cellIndex >= (cellIndices ? cellIndices.length : 0)) return null;
-                            const cellData = cells[cellIndex];
-                            const intensity = getCellIntensity(cellData);
-                            const isSelected = selectedCells.includes(cellIndex);
-                            const isHovered = hoveredCell === cellIndex;
-                            const isDragOver = dragOverCell === cellIndex && draggedContent;
-                            const miniIcons = getMiniIcons(cellData);
-                            const phaseIcon = getPhaseIcon(cellIndex);
-
-                            return (
-                                <div style={{ ...style, padding: 4 }} key={cellIndex}>
-                                    <motion.div
-                                        data-testid={`pipeline-cell-${cellIndex}`}
-                                        whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.12, zIndex: 10 }}
-                                        whileTap={{ scale: 0.98 }}
-                                        onPointerDown={(e) => {
-                                            // pointerdown is more reliable than click for detecting modifier keys
-                                            if ((e.ctrlKey || e.metaKey) && e.button === 0) {
-                                                e.preventDefault();
-                                                const newSelection = isSelected
-                                                    ? selectedCells.filter(i => i !== cellIndex)
-                                                    : [...selectedCells, cellIndex];
-                                                onCellClick(cellIndex, { multi: true, selected: newSelection });
-                                            }
-                                        }}
-                                        onClick={(e) => {
-                                            // keep existing click behaviour (open modal / single select)
-                                            if (e.ctrlKey || e.metaKey) {
-                                                const newSelection = isSelected
-                                                    ? selectedCells.filter(i => i !== cellIndex)
-                                                    : [...selectedCells, cellIndex];
-                                                onCellClick(cellIndex, { multi: true, selected: newSelection });
-                                            } else {
-                                                onCellClick(cellIndex);
-                                            }
-                                        }}
-                                        onMouseEnter={() => setHoveredCell(cellIndex)}
-                                        onMouseLeave={() => setHoveredCell(null)}
-                                        onDragOver={(e) => handleDragOver(e, cellIndex)}
-                                        onDragLeave={handleDragLeave}
-                                        onDrop={(e) => handleDrop(e, cellIndex)}
-                                        title={getTooltipContent(cellIndex, cellData)}
-                                        style={{ width: '100%', height: '100%' }}
-                                        className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
-                                    >
-                                        {/* Top: label / phase */}
-                                        <div className="w-full flex items-start justify-between gap-2">
-                                            <div className="text-sm font-semibold text-white truncate max-w-[75%]">{getCellLabel(cellIndex)}</div>
-                                            <div className="text-xs text-gray-400">{/* small metadata */}</div>
-                                        </div>
-
-                                        {/* Middle: icons / summary */}
-                                        <div className="w-full flex-1 flex items-start pt-2">
-                                            <div className="flex gap-1 flex-wrap">
-                                                {miniIcons.length > 0 ? miniIcons.map((icon, idx) => (
-                                                    <span key={idx} className="text-xs leading-none" style={{ lineHeight: 1 }}>{icon}</span>
-                                                )) : (
-                                                    <span className="text-xs text-gray-600 opacity-50">&nbsp;</span>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        {/* Bottom: small footer / config indicator */}
-                                        <div className="w-full flex items-center justify-between pt-2">
-                                            <div className="text-xs text-gray-400">{cellData && cellData._meta ? cellData._meta.count : ''}</div>
-                                            {isSelected && (
-                                                <div className="w-3 h-3 rounded-full border-2 border-white"></div>
-                                            )}
-                                        </div>
-                                    </motion.div>
-                                </div>
-                            );
+                            return renderCell(cellIndex, style);
                         }}
                     </RVGrid>
                 ) : (
