@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import SingleReviewCard from '../../components/export/SingleReviewCard'
+import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
 
 /**
  * Lien HTML vivant partageable (Chantier B de la finalisation Export Maker) — contrairement à un
@@ -51,7 +51,20 @@ export default function PublicRenderPage() {
                 background: '#0a0a0f', padding: 16, boxSizing: 'border-box',
             }}
         >
-            <SingleReviewCard reviewData={review} canvasId="public-render-canvas" />
+            {/* RENDU ÉCRAN = la Vue Détaillée (C10). Cette page montait auparavant
+                `SingleReviewCard`, c'est-à-dire un canevas à taille FIXE (1920×1080…) rétréci au
+                `transform: scale` : une image mise à l'échelle, dont le texte devenait minuscule
+                sur mobile au lieu de se recomposer, et dont rien n'était cliquable.
+
+                La Vue Détaillée est fluide, bâtie sur les composants réels de l'app, et ses
+                cellules de pipeline s'ouvrent. Décision de l'utilisateur le 2026-08-06 : « ce
+                style de rendu doit être utilisé pour Export Maker ».
+
+                Les 5 templates à canevas fixe restent le mode FICHIER (PNG/PDF/SVG), où la
+                pagination et le calibrage gardent tout leur sens. */}
+            <div style={{ width: '100%', maxWidth: 1100 }}>
+                <ReviewFullDisplay review={review} />
+            </div>
             <Link
                 to={`/r/${id}/lineage`}
                 style={{
