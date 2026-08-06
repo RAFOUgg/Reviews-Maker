@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import UnifiedGeneticsCanvas from '../../genetics/UnifiedGeneticsCanvas';
+import { ScopedGeneticsStoreProvider } from '../../../store/scopedCanvasStores';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
@@ -102,23 +104,20 @@ export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, acce
             }}>
                 <span>🧬</span> Généalogie (PhenoHunt) — {tree.name || 'Arbre Généalogique'}
             </h3>
+            {/* LE canevas PhenoHunt de l'app, en lecture seule. Le doublon n'existait que
+                parce que le store était un singleton — verrou levé par
+                `ScopedGeneticsStoreProvider`, qui lui donne son état à lui. */}
             <div style={{ height, border: '1px solid rgba(128,128,128,0.2)', borderRadius: 9, overflow: 'hidden' }}>
+                {/* `ReactFlowProvider` INDISPENSABLE : les vrais canevas le supposent fourni par
+                    leur page (`GraphCanvasShell` le pose en édition). Sans lui, React Flow
+                    lève « Seems like you have not used zustand provider as an ancestor » et
+                    RIEN ne s'affiche — attrapé en vérification le 2026-08-06, après un
+                    déploiement où la mesure d'export n'avait rien vu (les fixtures d'audit
+                    n'ont ni chaîne ni arbre). */}
                 <ReactFlowProvider>
-                    <ReactFlow
-                        nodes={rfNodes}
-                        edges={rfEdges}
-                        nodeTypes={nodeTypes}
-                        fitView
-                        proOptions={{ hideAttribution: true }}
-                        nodesDraggable={false}
-                        nodesConnectable={false}
-                        elementsSelectable={true}
-                        zoomOnDoubleClick={false}
-                        onNodeClick={interactive ? (_, node) => setDetail(node.data) : undefined}
-                    >
-                        <Background color={textColor} gap={16} />
-                        <Controls showInteractive={false} />
-                    </ReactFlow>
+                <ScopedGeneticsStoreProvider>
+                    <UnifiedGeneticsCanvas treeId={treeId} readOnly />
+                </ScopedGeneticsStoreProvider>
                 </ReactFlowProvider>
             </div>
 

@@ -25,7 +25,9 @@ import { Sprout, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
-import useGeneticsStore from '../../store/useGeneticsStore';
+// Store du CONTEXTE s'il existe, singleton global sinon — l'édition ne fournit aucun
+// contexte, son comportement est donc inchangé par construction.
+import { useGeneticsCanvasStore } from '../../store/scopedCanvasStores';
 import useResponsiveLayout from '../../hooks/useResponsiveLayout';
 import CultivarNode from './CultivarNode';
 import PhenoEdge from './PhenoEdge';
@@ -68,7 +70,7 @@ const RELATIONSHIP_TYPE_LABELS = {
 };
 
 const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = null }) => {
-    const store = useGeneticsStore();
+    const store = useGeneticsCanvasStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
     const { isMobile } = useResponsiveLayout();
 

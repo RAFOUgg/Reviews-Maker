@@ -139,9 +139,17 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
                 ensemble se mélangeaient. `ScopedChainStoreProvider` donne à celui-ci son
                 état à lui, ce qui lève ce blocage. */}
             <div style={{ height, border: '1px solid rgba(128,128,128,0.2)', borderRadius: 9, overflow: 'hidden' }}>
+                {/* `ReactFlowProvider` INDISPENSABLE : les vrais canevas le supposent fourni par
+                    leur page (`GraphCanvasShell` le pose en édition). Sans lui, React Flow
+                    lève « Seems like you have not used zustand provider as an ancestor » et
+                    RIEN ne s'affiche — attrapé en vérification le 2026-08-06, après un
+                    déploiement où la mesure d'export n'avait rien vu (les fixtures d'audit
+                    n'ont ni chaîne ni arbre). */}
+                <ReactFlowProvider>
                 <ScopedChainStoreProvider>
                     <ProductionChainCanvas chainId={chainId} readOnly />
                 </ScopedChainStoreProvider>
+                </ReactFlowProvider>
             </div>
 
             {/* Détail d'une étape de la chaîne. Strictement ADDITIF : le canevas imprime déjà le
