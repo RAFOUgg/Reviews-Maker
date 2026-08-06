@@ -103,15 +103,27 @@ canevas coexistent donc **déjà**, et c'est exactement pour cela que les copies
 avaient été écrites. Une chaîne fusionnée n'est pas rattrapable avec une mémoire partagée unique :
 le scoping des stores cesse d'être une option d'hygiène pour devenir un prérequis fonctionnel.
 
-### La donnée nécessaire existe déjà — rien à inventer
-| Brique | Ce qu'elle apporte |
-|---|---|
-| `sourceLineage` (JSON sur Hash/Concentré/Comestible) | Quelle review provient de quelle(s) autre(s) |
-| `ChainNode.reviewType` + `reviewId` | Un nœud de chaîne désigne une review précise |
-| `GET /api/reviews/:id/lineage` | Remonte déjà la chaîne ascendante, avec garde anti-cycle et contrôle d'accès par nœud |
+### La liaison passe par les CANEVAS, et par eux seuls
 
-Le point de jonction est donc **déductible** : là où la chaîne du produit aval porte un nœud
-référençant la review amont, on raccorde la sortie de la chaîne amont.
+**Décision de l'utilisateur, 2026-08-06** : *« la liaison se fait uniquement par le biais des canevas
+PhenoHunt et production, obligatoirement, car ce sont les seuls endroits où l'on lie des produits
+entre eux. »*
+
+C'est plus précis que l'approche envisagée d'abord. Vérifié en base :
+
+| Source | Ce qu'elle apporte |
+|---|---|
+| `ChainNode.reviewId` + `reviewType` | Un nœud de chaîne désigne **quelle** review, et **où** dans la chaîne |
+| `GenNode.sourceReviewId` | Idem côté généalogie |
+| `sourceLineage` (JSON de review) | Dit seulement « B vient de A » — **sans indiquer le point de raccord** |
+
+Le nœud de canevas est donc le seul porteur d'une jonction *exploitable* : il désigne à la fois le
+produit amont ET l'endroit exact du raccordement. `sourceLineage` reste utile pour la page de
+lignage (savoir quelles fiches empiler) mais **ne sert pas** à construire le graphe fusionné.
+
+Conséquence pratique : deux produits dont les chaînes ne se référencent pas mutuellement dans un
+canevas ne se rejoignent pas au rendu — même si `sourceLineage` les relie. C'est voulu : la
+jonction est une information que l'utilisateur pose explicitement, pas une déduction.
 
 ### A-bis-1 — Modèle de fusion
 Définir la règle de raccordement (quel nœud de sortie vers quel nœud d'entrée), le comportement
