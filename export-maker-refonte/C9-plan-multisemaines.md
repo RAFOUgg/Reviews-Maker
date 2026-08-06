@@ -58,6 +58,27 @@ Suppression des deux `ReadOnly*Canvas`. Les canevas réels en `readOnly`, avec l
 comparaison de captures côte à côte.
 
 ### A3 — Basculer sur la vraie grille de pipeline
+
+> **Blocage identifié le 2026-08-06, avant implémentation.** `PipelineGridView` a bien un prop
+> `readonly` — mais il rend ses cellules dans une grille **virtualisée** (`react-window`), c'est-à-dire
+> une fenêtre de hauteur fixe à défilement interne qui ne monte que les lignes visibles.
+>
+> Parfait pour éditer une culture de 90 jours. **Inutilisable tel quel pour un export** : la capture
+> ne verrait que les premières lignes et perdrait silencieusement le reste — le mode de défaillance
+> le plus coûteux de ce projet.
+>
+> **Solution retenue** : donner au composant un mode `staticRender` qui contourne `RVGrid` et pose
+> toutes les cellules dans une grille CSS simple, **les deux chemins partageant le même rendu de
+> cellule** (fonction `renderCell` extraite). La grille de l'export devient alors celle des
+> formulaires au pixel près, et non une imitation — c'est exactement la demande.
+>
+> **Précaution** : ce composant sert les formulaires d'édition réels. L'extraction doit être faite
+> à iso-rendu, avec vérification du parcours de saisie avant/après, pas glissée dans une passe
+> d'export.
+>
+> Deux affordances d'édition sont par ailleurs à masquer en lecture seule : le curseur de zoom et
+> le bouton « + » d'ajout de cases (ce dernier est déjà gardé par `!readonly`).
+
 `PipelineGridView` en lecture seule, avec le vocabulaire d'interaction déjà acté (C8 §3) :
 infobulle au survol, modale au clic au-delà de 6 mesures.
 **Contrainte non négociable** (C8 §1) : la projection statique. Une grille dont la donnée n'est
