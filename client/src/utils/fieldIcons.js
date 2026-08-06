@@ -127,7 +127,17 @@ export const FIELD_ICONS = {
     arrosage: '🚿', irrigation: '🚿', volumeEau: '🚿',
     engrais: '🧪', fertilisation: '🧪', nutriments: '🧪',
     taille: '✂️', defoliation: '🍃', palissage: '🪢',
-    note: '📝', comment: '📝', commentaire: '📝',
+    note: '📝', comment: '📝', commentaire: '📝', notes: '📝',
+
+    // ── Clés récupérées de la table locale de `PipelineGridView` (la 5e), absorbée le 2026-08-06.
+    //    Elles n'existaient QUE là : les perdre en centralisant aurait dégradé la grille.
+    ventilation: '🌀', light: '💡', lightHours: '💡', lightPower: '⚡', lightDistance: '📏',
+    irrigationType: '🚿', waterVolume: '🚿',
+    fertilizer: '🧪', fertilizerType: '🧪', fertilizationFrequency: '🧪',
+    training: '✂️', trainingMethod: '✂️', trainingLST: '✂️', trainingHST: '✂️',
+    morphology: '📏', plantHeight: '📏', plantVolume: '📊',
+    harvest: '⚖️', harvestDate: '📅', containerType: '📦',
+    propagationMethod: '🌱', substrateType: '🏔️', substrateVolume: '🏔️', potVolume: '🪴',
 };
 
 /**

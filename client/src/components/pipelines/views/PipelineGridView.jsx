@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { Grid as RVGrid } from 'react-window';
 import { CULTURE_PHASES } from '../../../config/pipelinePhases';
 import './PipelineGridView.css';
+import { getFieldIcon, FIELD_ICONS } from '../../../utils/fieldIcons';
 
 /**
  * PipelineGridView - Grille de cases style GitHub commits
@@ -289,49 +290,16 @@ const PipelineGridView = ({
         // Nouveau format: cellData contient directement les données (temperature, humidity, etc.)
         // Ancien format: cellData.contents = [{type, label, value}]
 
-        const iconMap = {
-            temperature: '🌡️',
-            humidity: '💧',
-            co2: '🫧',
-            ventilation: '🌀',
-            light: '💡',
-            lightType: '💡',
-            lightHours: '💡',
-            irrigation: '💧',
-            irrigationType: '💧',
-            waterVolume: '💧',
-            fertilizer: '🧪',
-            fertilizerType: '🧪',
-            training: '✂️',
-            trainingMethod: '✂️',
-            trainingLST: '✂️',
-            trainingHST: '✂️',
-            morphology: '📏',
-            plantHeight: '📏',
-            plantVolume: '📊',
-            harvest: '⚖️',
-            harvestDate: '📅',
-            containerType: '📦',
-            packaging: '📦',
-            curingType: '🌡️',
-            notes: '📝',
-            ph: '⚗️',
-            ec: '⚡',
-            propagationMethod: '🌱',
-            substrateType: '🏔️',
-            substrateVolume: '🏔️',
-            potVolume: '🪴',
-            lightPower: '⚡',
-            lightDistance: '📏',
-            fertilizationFrequency: '🧪'
-        };
+        // Table d'icônes locale supprimée le 2026-08-06 : c'était la CINQUIÈME de l'app pour la
+        // même chose. Elle vit désormais dans `utils/fieldIcons.js`, complétée des clés qui
+        // n'existaient qu'ici (morphologie, palissage, substrat, propagation…).
 
         const icons = [];
 
         // Si ancien format avec contents
         if (cellData.contents && Array.isArray(cellData.contents)) {
             cellData.contents.slice(0, 3).forEach(c => {
-                const icon = c.icon || iconMap[c.type] || iconMap[c.key] || '📍';
+                const icon = c.icon || FIELD_ICONS[c.type] || FIELD_ICONS[c.key] || '📍';
                 icons.push(icon);
             });
         }
@@ -339,7 +307,7 @@ const PipelineGridView = ({
         else {
             for (const key in cellData) {
                 if (key === 'timestamp' || key === '_meta' || !cellData[key]) continue;
-                const icon = iconMap[key];
+                const icon = FIELD_ICONS[key];
                 if (icon && icons.length < 3) {
                     icons.push(icon);
                 }
