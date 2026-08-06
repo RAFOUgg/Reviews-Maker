@@ -91,6 +91,50 @@ Les hauteurs ont changé : re-mesurer toute la matrice et réajuster les budgets
 
 ---
 
+## Lot A-bis — Chaînes de production reliées entre reviews (semaines 2-3)
+
+**Fonctionnalité demandée le 2026-08-06, non prévue jusqu'ici.** Afficher deux produits liés avec
+**leurs chaînes de production qui se rejoignent** — pas deux chaînes côte à côte, une seule chaîne
+continue traversant les deux produits.
+
+### Pourquoi cela rend le lot A1 obligatoire
+`/r/:id/lineage` empile déjà N fiches complètes, chacune portant son propre canevas. Plusieurs
+canevas coexistent donc **déjà**, et c'est exactement pour cela que les copies à mémoire locale
+avaient été écrites. Une chaîne fusionnée n'est pas rattrapable avec une mémoire partagée unique :
+le scoping des stores cesse d'être une option d'hygiène pour devenir un prérequis fonctionnel.
+
+### La donnée nécessaire existe déjà — rien à inventer
+| Brique | Ce qu'elle apporte |
+|---|---|
+| `sourceLineage` (JSON sur Hash/Concentré/Comestible) | Quelle review provient de quelle(s) autre(s) |
+| `ChainNode.reviewType` + `reviewId` | Un nœud de chaîne désigne une review précise |
+| `GET /api/reviews/:id/lineage` | Remonte déjà la chaîne ascendante, avec garde anti-cycle et contrôle d'accès par nœud |
+
+Le point de jonction est donc **déductible** : là où la chaîne du produit aval porte un nœud
+référençant la review amont, on raccorde la sortie de la chaîne amont.
+
+### A-bis-1 — Modèle de fusion
+Définir la règle de raccordement (quel nœud de sortie vers quel nœud d'entrée), le comportement
+quand un maillon est inaccessible (déjà géré en placeholder côté API), et celui quand une review
+amont n'a **pas** de chaîne.
+*Sortie* : règle écrite et validée avant code.
+
+### A-bis-2 — Graphe fusionné
+Construire un graphe unique à partir de N chaînes : préfixage des identifiants de nœuds par review
+(deux chaînes peuvent avoir des ids identiques), arêtes de jonction, disposition par produit
+(bandes ou couleurs distinguant à qui appartient chaque segment).
+*Sortie* : une chaîne à 3 niveaux (Fleur → Hash → Concentré) rendue comme un seul graphe continu.
+
+### A-bis-3 — Intégration au rendu
+Où l'afficher : sur `/r/:id/lineage` en remplacement des canevas isolés, et en option dans le
+Rapport de Traçabilité — c'est précisément son objet.
+*Sortie* : vérifié sur une chaîne réelle à 3 niveaux, et sur PNG exporté.
+
+**Risque propre** : une chaîne fusionnée est bien plus large qu'une chaîne seule. Sa hauteur et sa
+largeur rendues conditionnent la pagination — d'où sa place **avant** le lot B, pas après.
+
+---
+
 ## Lot B — Pagination universelle (semaine 3)
 
 **Bug 1 signalé** : le bouton ne fait rien, et il est absent pour Story et Traçabilité. Cause
