@@ -124,7 +124,7 @@ export default function ReviewDetailPage() {
                 {/* Header with Back & Edit Buttons */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <button
-                        onClick={() => navigate('/')}
+                        onClick={() => navigate('/gallery')}
                         className="flex items-center gap-2 text-white/60 hover:text-white transition-colors group"
                     >
                         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />

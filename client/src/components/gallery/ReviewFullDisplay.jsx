@@ -1,12 +1,17 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/exportMakerHelpers'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
-import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind } from 'lucide-react'
+import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind, GitBranch, Workflow, Radar as RadarIcon, LineChart } from 'lucide-react'
 import InteractivePipelineViewer from './InteractivePipelineViewer'
-import { GisementSections } from '../templates/sections/RegistrySections'
+import { GisementSections, isModuleOn } from '../templates/sections/RegistrySections'
 import { GROUP_ICONS } from '../../utils/fieldIcons'
 import UserMention from '../shared/UserMention'
 import TrustBadge from '../shared/TrustBadge'
+import SensoryRadar from '../templates/sections/SensoryRadar'
+import CultureStatsChart from '../templates/sections/CultureStatsChart'
+import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas'
+import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas'
+import { DEFAULT_CONFIG } from '../../store/exportMakerStore'
 
 // Groupes du registre rendus dans la Vue Détaillée. Liste identique à celle des templates
 // d'export, 'overflow' compris — c'est lui qui fait remonter automatiquement tout champ de
@@ -16,11 +21,55 @@ const REGISTRY_GROUPS = [
     'genetics', 'culture', 'harvest', 'separation', 'extraction', 'purification', 'recipe', 'overflow',
 ];
 
-/** En-tête de groupe au style de la page (titre cyan souligné), attendu par `GisementSections`. */
+/**
+ * Tokens de rendu dérivés de la config Export Maker (C10-3 : « la configuration doit la piloter
+ * comme elle pilote les templates »). Les 5 templates lisent déjà `config.colors`/`typography` ;
+ * la Vue Détaillée les ignorait entièrement (accent cyan et tailles codés en dur), donc changer de
+ * palette ou de police dans le Studio n'avait aucun effet sur le rendu écran.
+ *
+ * On ne dérive QUE les tokens qui ont un sens ici : l'accent, les couleurs de texte et la
+ * typographie. Le fond et les surfaces restent ceux de LiquidUI — la Vue Détaillée est l'UI réelle
+ * de l'app, pas un canevas à fond peint comme les templates de fichier.
+ */
+function useRenderTokens(config) {
+    return useMemo(() => {
+        const colors = { ...DEFAULT_CONFIG.colors, ...(config?.colors || {}) };
+        const typography = { ...DEFAULT_CONFIG.typography, ...(config?.typography || {}) };
+        const contentModules = { ...DEFAULT_CONFIG.contentModules, ...(config?.contentModules || {}) };
+        // La Vue Détaillée porte sa propre hiérarchie typographique (classes Tailwind, en rem) :
+        // `titleSize`/`textSize` ne peuvent pas la redimensionner globalement sans casser la mise
+        // en page fluide. Ils pilotent en revanche `GisementSections`, la partie dense en données,
+        // qui prend déjà ses tailles en pixels comme dans les templates de fichier.
+        const base = Math.max(11, Math.min(22, typography.textSize || 16));
+        return {
+            colors,
+            typography,
+            contentModules,
+            accent: colors.accent,
+            textPrimary: colors.textPrimary,
+            textSecondary: colors.textSecondary,
+            titleColor: colors.title || colors.textPrimary,
+            registryFontSize: { text: base - 2, small: base - 4, section: base },
+            fontFamily: `'${typography.fontFamily}', Inter, system-ui, sans-serif`,
+        };
+    }, [config]);
+}
+
+/**
+ * En-tête de groupe au style de la page, attendu par `GisementSections`.
+ *
+ * La couleur vient de la variable CSS `--vd-accent` posée par le conteneur racine, PAS d'une prop :
+ * `GisementSections` reçoit ce composant en prop `Section`, donc le définir dans le corps de
+ * `ReviewFullDisplay` (pour lui passer l'accent en portée) en changerait l'identité à chaque rendu
+ * et remonterait tout le sous-arbre — infobulles et observateurs de taille compris.
+ */
 function RegistrySection({ title, icon, children }) {
     return (
         <div className="mb-6 last:mb-0">
-            <h3 className="text-lg font-bold text-cyan-400 mb-3 border-b border-white/10 pb-2 flex items-center gap-2">
+            <h3
+                className="text-lg font-bold mb-3 border-b border-white/10 pb-2 flex items-center gap-2"
+                style={{ color: 'var(--vd-accent)' }}
+            >
                 <span>{icon}</span>{title}
             </h3>
             {children}
@@ -28,10 +77,70 @@ function RegistrySection({ title, icon, children }) {
     );
 }
 
-export default function ReviewFullDisplay({ review }) {
+/** Section de la Vue Détaillée : carte LiquidUI, titre à l'accent de la palette configurée. */
+function ViewSection({ icon: Icon, title, glow = 'purple', children }) {
+    return (
+        <LiquidCard glow={glow} padding="lg">
+            <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                <Icon className="w-5 h-5" style={{ color: 'var(--vd-accent)' }} />
+                {title}
+            </h2>
+            {children}
+        </LiquidCard>
+    );
+}
+
+/**
+ * Carte qui disparaît tant que son contenu ne rend rien.
+ *
+ * Les deux canevas de traçabilité chargent leur graphe en asynchrone et se masquent eux-mêmes
+ * (`return null`) quand la review n'a ni arbre ni chaîne — et ils portent déjà leur propre titre.
+ * Les envelopper dans une section titrée classique produirait donc un double titre, et une carte
+ * vide sur toute review sans traçabilité. On observe le conteneur plutôt que de dupliquer ici la
+ * logique « y a-t-il une chaîne ? », qui vit dans le canevas et n'est connue qu'après son fetch.
+ */
+function AutoHideCard({ glow, children }) {
+    const ref = useRef(null);
+    const [hasContent, setHasContent] = useState(false);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const check = () => setHasContent(el.childElementCount > 0);
+        check();
+        const mo = new MutationObserver(check);
+        mo.observe(el, { childList: true });
+        return () => mo.disconnect();
+    }, []);
+    return (
+        <LiquidCard glow={glow} padding="lg" className={hasContent ? '' : 'hidden'}>
+            <div ref={ref}>{children}</div>
+        </LiquidCard>
+    );
+}
+
+/** Largeur réellement disponible — les graphiques Recharts exigent une largeur en pixels. */
+function useMeasuredWidth() {
+    const ref = useRef(null);
+    const [width, setWidth] = useState(0);
+    useEffect(() => {
+        const el = ref.current;
+        if (!el) return;
+        const ro = new ResizeObserver(([entry]) => setWidth(Math.round(entry.contentRect.width)));
+        ro.observe(el);
+        return () => ro.disconnect();
+    }, []);
+    return { ref, width };
+}
+
+export default function ReviewFullDisplay({ review, config }) {
     const [lightboxImg, setLightboxImg] = useState(null)
     const [lightboxIdx, setLightboxIdx] = useState(0)
+    const tokens = useRenderTokens(config)
+    const chart = useMeasuredWidth()
     if (!review) return null
+
+    const { accent, textSecondary, titleColor, contentModules, fontFamily } = tokens
+    const isOn = (key) => isModuleOn(contentModules, key)
 
     // Parse des données JSON avec protection contre les erreurs
     let categoryRatings = []
@@ -101,8 +210,29 @@ export default function ReviewFullDisplay({ review }) {
     const terpenes = parseArray(review.terpenes)
     const images = parseArray(review.images)
 
+    // Axes du radar : mêmes 6 axes que la Fiche Technique Détaillée (`DetailedCardTemplate.jsx`),
+    // dont le 6e « Arôme » dérivé d'une sous-métrique réelle de la catégorie odeur — repris tel
+    // quel plutôt que recalculé autrement, pour que les deux surfaces disent la même chose.
+    const categoryByKey = Object.fromEntries(categoryRatings.map((c) => [c.key, c]))
+    const aromeSubDetail = categoryByKey.smell?.subDetails?.find(
+        (s) => s.key === 'complexiteAromas' || s.key === 'intensiteAromatique' || s.key === 'aromasIntensity'
+    )
+    const radarAxes = [
+        categoryByKey.visual && { label: 'Visuel', value: categoryByKey.visual.value },
+        categoryByKey.smell && { label: 'Odeur', value: categoryByKey.smell.value },
+        categoryByKey.texture && { label: 'Texture', value: categoryByKey.texture.value },
+        categoryByKey.taste && { label: 'Goût', value: categoryByKey.taste.value },
+        categoryByKey.effects && { label: 'Effets', value: categoryByKey.effects.value },
+        (aromeSubDetail || categoryByKey.smell) && { label: 'Arôme', value: aromeSubDetail?.value ?? categoryByKey.smell?.value },
+    ].filter(Boolean)
+
+    const cultureSteps = Array.isArray(review.cultureTimelineData) ? review.cultureTimelineData : null
+
     return (
-        <div className="space-y-6">
+        <div
+            className="space-y-6"
+            style={{ '--vd-accent': accent, fontFamily }}
+        >
             {/* Header Section */}
             <LiquidCard glow="purple" padding="lg">
                 <div className="grid md:grid-cols-2 gap-6">
@@ -131,7 +261,7 @@ export default function ReviewFullDisplay({ review }) {
                         {/* Note globale */}
                         <div className="bg-gradient-to-br from-purple-500/20 to-pink-500/20 border border-purple-500/30 rounded-xl p-4">
                             <div className="flex items-center gap-4">
-                                <div className="text-5xl sm:text-6xl font-black bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                                <div className="text-5xl sm:text-6xl font-black" style={{ color: accent }}>
                                     {displayScore}
                                 </div>
                                 <div>
@@ -213,7 +343,7 @@ export default function ReviewFullDisplay({ review }) {
                 </div>
 
                 {/* Description */}
-                {review.description && (
+                {review.description && isOn('description') && (
                     <>
                         <LiquidDivider className="my-6" />
                         <div>
@@ -228,12 +358,8 @@ export default function ReviewFullDisplay({ review }) {
             </LiquidCard>
 
             {/* Category Ratings */}
-            {categoryRatings.length > 0 && (
-                <LiquidCard glow="amber" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <Star className="w-5 h-5 text-amber-400" />
-                        Notes par Catégorie
-                    </h2>
+            {categoryRatings.length > 0 && isOn('categoryRatings') && (
+                <ViewSection icon={Star} title="Notes par Catégorie" glow="amber">
                     <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
                         {categoryRatings.map(cat => (
                             <div key={cat.key} className="bg-white/5 rounded-xl p-4 border border-white/10">
@@ -242,7 +368,7 @@ export default function ReviewFullDisplay({ review }) {
                                         <span className="text-2xl">{cat.icon}</span>
                                         <span className="font-semibold text-white">{cat.label}</span>
                                     </div>
-                                    <span className="text-2xl font-bold text-amber-400">{cat.value}/10</span>
+                                    <span className="text-2xl font-bold" style={{ color: accent }}>{cat.value}/10</span>
                                 </div>
                                 <LiquidRating value={cat.value / 10} max={1} color="amber" />
                                 {cat.subDetails && cat.subDetails.length > 0 && (
@@ -258,7 +384,22 @@ export default function ReviewFullDisplay({ review }) {
                             </div>
                         ))}
                     </div>
-                </LiquidCard>
+                </ViewSection>
+            )}
+
+            {/* Empreinte sensorielle — mêmes axes que la Fiche Technique Détaillée. */}
+            {radarAxes.length >= 3 && isOn('categoryRatings') && (
+                <ViewSection icon={RadarIcon} title="Empreinte Sensorielle" glow="amber">
+                    <div className="flex justify-center">
+                        <SensoryRadar
+                            axes={radarAxes}
+                            accentColor={accent}
+                            lineColor="rgba(255,255,255,0.12)"
+                            textColor={textSecondary}
+                            size={280}
+                        />
+                    </div>
+                </ViewSection>
             )}
 
             {/* DONNÉES TECHNIQUES — pilotées par le REGISTRE (`fieldRegistry.js`), plus par une
@@ -273,30 +414,25 @@ export default function ReviewFullDisplay({ review }) {
                 `GisementSections` est le composant déjà utilisé par les 5 templates d'export : il
                 dérive ses groupes du registre et rattrape par `getOverflowFields()` tout champ
                 nouveau. Un champ ajouté à un formulaire apparaîtra donc ici sans qu'on y touche. */}
-            <LiquidCard glow="cyan" padding="lg">
-                <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                    <FlaskConical className="w-5 h-5 text-cyan-400" />
-                    Données Techniques
-                </h2>
+            <ViewSection icon={FlaskConical} title="Données Techniques" glow="cyan">
+                {/* `contentModules` VIENT de la config Export Maker (C10-3), il était figé à `{}` :
+                    désactiver un champ dans l'onglet Contenu du Studio n'avait donc aucun effet
+                    sur le rendu écran, alors que le même réglage pilote déjà les 5 templates. */}
                 <GisementSections
                     reviewData={review}
-                    contentModules={{}}
+                    contentModules={contentModules}
                     groups={REGISTRY_GROUPS}
                     groupIcons={GROUP_ICONS}
                     Section={RegistrySection}
-                    colors={{ accent: '#22D3EE', textPrimary: '#F1F5F9', textSecondary: '#94A3B8', title: '#F1F5F9' }}
-                    fontSize={{ text: 14, small: 12, section: 16 }}
+                    colors={{ accent, textPrimary: tokens.textPrimary, textSecondary, title: titleColor }}
+                    fontSize={tokens.registryFontSize}
                     spacing={{ section: 20, element: 10, gap: 6 }}
                 />
-            </LiquidCard>
+            </ViewSection>
 
             {/* Pipelines - Interactive */}
-            {pipelines.length > 0 && (
-                <LiquidCard glow="green" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <FlaskConical className="w-5 h-5 text-green-400" />
-                        Pipelines & Processus
-                    </h2>
+            {pipelines.length > 0 && isOn('pipelineInteractiveView') && (
+                <ViewSection icon={FlaskConical} title="Pipelines & Processus" glow="green">
                     <div className="space-y-6">
                         {pipelines.map(pipeline => {
                             // Get the raw pipeline data for interactive viewer
@@ -311,16 +447,63 @@ export default function ReviewFullDisplay({ review }) {
                             );
                         })}
                     </div>
-                </LiquidCard>
+                </ViewSection>
+            )}
+
+            {/* Statistiques de culture — se masque lui-même s'il n'y a pas ≥2 points numériques.
+                Recharts exige une largeur en pixels : `chart.ref` la mesure, il n'y a pas de
+                dimension de canevas connue d'avance comme dans les templates de fichier. */}
+            {cultureSteps && isOn('pipelineInteractiveView') && (
+                <ViewSection icon={LineChart} title="Statistiques de Culture" glow="green">
+                    <div ref={chart.ref} className="w-full">
+                        {chart.width > 0 && (
+                            <CultureStatsChart
+                                steps={cultureSteps}
+                                pipelineType="culture"
+                                width={chart.width}
+                                height={240}
+                                textColor={textSecondary}
+                                lineColor="rgba(255,255,255,0.12)"
+                                background="transparent"
+                            />
+                        )}
+                    </div>
+                </ViewSection>
+            )}
+
+            {/* TRAÇABILITÉ — les deux canevas réels, en lecture seule.
+
+                Ils étaient rendus par la Fiche Technique Détaillée mais ABSENTS de la Vue
+                Détaillée : en basculant `/r/:id` sur cette vue (C10-3), la généalogie et la chaîne
+                de production — le cœur du produit — disparaissaient de la page publique. Mêmes
+                composants que les templates, pas une seconde implémentation. */}
+            {isOn('phenoHuntView') && (
+                <AutoHideCard glow="purple">
+                    <ReadOnlyGenealogyCanvas
+                        reviewData={review}
+                        height={420}
+                        accentColor={accent}
+                        titleColor={titleColor}
+                        textColor={textSecondary}
+                    />
+                </AutoHideCard>
+            )}
+
+            {isOn('productionChainView') && (
+                <AutoHideCard glow="cyan">
+                    <ReadOnlyProductionChainCanvas
+                        reviewData={review}
+                        height={420}
+                        accentColor={accent}
+                        titleColor={titleColor}
+                        textColor={textSecondary}
+                    />
+                </AutoHideCard>
             )}
 
             {/* Cultivars List */}
-            {cultivarsList.length > 0 && (
-                <LiquidCard glow="green" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <Leaf className="w-5 h-5 text-green-400" />
-                        Cultivars Utilisés
-                    </h2>
+            {cultivarsList.length > 0 && isOn('cultivarsList') && (
+                <ViewSection icon={Leaf} title="Cultivars Utilisés" glow="green">
                     <div className="space-y-3">
                         {cultivarsList.map((cult, idx) => (
                             <div key={idx} className="bg-white/5 rounded-xl p-4 border border-white/10">
@@ -341,25 +524,26 @@ export default function ReviewFullDisplay({ review }) {
                                         )}
                                     </div>
                                     {cult.percentage && (
-                                        <div className="text-2xl font-bold text-green-400">{cult.percentage}%</div>
+                                        <div className="text-2xl font-bold" style={{ color: accent }}>{cult.percentage}%</div>
                                     )}
                                 </div>
                             </div>
                         ))}
                     </div>
-                </LiquidCard>
+                </ViewSection>
             )}
 
-            {/* Profil Sensoriel - Arômes, Goûts, Effets, Terpènes */}
-            {(aromas.length > 0 || secondaryAromas.length > 0 || tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || effects.length > 0 || terpenes.length > 0) && (
-                <LiquidCard glow="pink" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-5 flex items-center gap-2">
-                        <Flower2 className="w-5 h-5 text-pink-400" />
-                        Profil Sensoriel
-                    </h2>
+            {/* Profil Sensoriel - Arômes, Goûts, Effets, Terpènes. Chaque bloc suit sa propre clé
+                `contentModules` (`aromas`/`tastes`/`effects`/`terpenes`), les mêmes que les
+                templates de fichier — la carte disparaît si les quatre sont désactivées. */}
+            {((aromas.length > 0 || secondaryAromas.length > 0) && isOn('aromas')
+                || (tastes.length > 0 || dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0) && isOn('tastes')
+                || effects.length > 0 && isOn('effects')
+                || terpenes.length > 0 && isOn('terpenes')) && (
+                <ViewSection icon={Flower2} title="Profil Sensoriel" glow="pink">
                     <div className="grid sm:grid-cols-2 gap-6">
                         {/* Arômes */}
-                        {aromas.length > 0 && (
+                        {aromas.length > 0 && isOn('aromas') && (
                             <div>
                                 <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     🌸 Arômes dominants
@@ -387,7 +571,7 @@ export default function ReviewFullDisplay({ review }) {
                         )}
 
                         {/* Goûts */}
-                        {(dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || tastes.length > 0) && (
+                        {(dryPuffNotes.length > 0 || inhalationNotes.length > 0 || exhalationNotes.length > 0 || tastes.length > 0) && isOn('tastes') && (
                             <div>
                                 <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     👅 Goûts
@@ -441,7 +625,7 @@ export default function ReviewFullDisplay({ review }) {
                         )}
 
                         {/* Effets */}
-                        {effects.length > 0 && (
+                        {effects.length > 0 && isOn('effects') && (
                             <div>
                                 <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     ⚡ Effets ressentis
@@ -457,7 +641,7 @@ export default function ReviewFullDisplay({ review }) {
                         )}
 
                         {/* Terpènes */}
-                        {terpenes.length > 0 && (
+                        {terpenes.length > 0 && isOn('terpenes') && (
                             <div>
                                 <h3 className="text-sm font-semibold text-white/60 uppercase tracking-wider mb-3 flex items-center gap-2">
                                     🧪 Terpènes
@@ -472,36 +656,28 @@ export default function ReviewFullDisplay({ review }) {
                             </div>
                         )}
                     </div>
-                </LiquidCard>
+                </ViewSection>
             )}
 
             {/* Substrat */}
-            {substrat && substrat.length > 0 && (
-                <LiquidCard glow="amber" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <Leaf className="w-5 h-5 text-amber-400" />
-                        Substrat
-                    </h2>
+            {substrat && substrat.length > 0 && isOn('substratMix') && (
+                <ViewSection icon={Leaf} title="Substrat" glow="amber">
                     <div className="flex flex-wrap gap-3">
                         {substrat.map((sub, idx) => (
                             <div key={idx} className="bg-white/5 rounded-xl px-4 py-3 border border-white/10">
                                 <div className="font-semibold text-white">{sub.name}</div>
                                 {sub.percentage && (
-                                    <div className="text-sm text-amber-400 font-bold">{sub.percentage}%</div>
+                                    <div className="text-sm font-bold" style={{ color: accent }}>{sub.percentage}%</div>
                                 )}
                             </div>
                         ))}
                     </div>
-                </LiquidCard>
+                </ViewSection>
             )}
 
             {/* Galerie d'images - interactive with lightbox */}
-            {images.length > 1 && (
-                <LiquidCard glow="purple" padding="lg">
-                    <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                        <ImageIcon className="w-5 h-5 text-purple-400" />
-                        Galerie
-                    </h2>
+            {images.length > 1 && isOn('images') && (
+                <ViewSection icon={ImageIcon} title="Galerie" glow="purple">
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {images.map((img, idx) => (
                             <button
@@ -523,7 +699,7 @@ export default function ReviewFullDisplay({ review }) {
                             </button>
                         ))}
                     </div>
-                </LiquidCard>
+                </ViewSection>
             )}
 
             {/* Lightbox */}

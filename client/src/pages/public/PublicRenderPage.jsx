@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
+import { resolveConfigForReview } from '../../store/exportMakerStore'
 
 /**
  * Lien HTML vivant partageable (Chantier B de la finalisation Export Maker) — contrairement à un
@@ -18,6 +19,9 @@ export default function PublicRenderPage() {
     const { id } = useParams()
     const [review, setReview] = useState(null)
     const [notFound, setNotFound] = useState(false)
+    // La config Export Maker enregistrée sur la review pilote le rendu écran exactement comme elle
+    // pilote les templates de fichier (C10-3) : palette, police, et modules de contenu actifs.
+    const config = useMemo(() => (review ? resolveConfigForReview(review, 'detailedCard') : null), [review])
 
     useEffect(() => {
         let active = true
@@ -63,7 +67,7 @@ export default function PublicRenderPage() {
                 Les 5 templates à canevas fixe restent le mode FICHIER (PNG/PDF/SVG), où la
                 pagination et le calibrage gardent tout leur sens. */}
             <div style={{ width: '100%', maxWidth: 1100 }}>
-                <ReviewFullDisplay review={review} />
+                <ReviewFullDisplay review={review} config={config} />
             </div>
             <Link
                 to={`/r/${id}/lineage`}

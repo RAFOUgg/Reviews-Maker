@@ -1,8 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import TemplateRenderer from './TemplateRenderer'
-import { resolveExportMakerConfig } from '../../store/exportMakerStore'
-import { DEFAULT_TEMPLATES } from '../../store/exportMakerConstants'
+import { resolveConfigForReview } from '../../store/exportMakerStore'
 
 const RATIO_DIMS = {
     '1:1': { width: 800, height: 800 },
@@ -25,19 +24,10 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
     const [scale, setScale] = useState(1)
     const [contentHeight, setContentHeight] = useState(0)
 
-    const config = (() => {
-        const fallback = { template: 'detailedCard', ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio }
-        if (!reviewData?.exportMakerConfig) return resolveExportMakerConfig(fallback)
-        try {
-            const saved = typeof reviewData.exportMakerConfig === 'string' ? JSON.parse(reviewData.exportMakerConfig) : reviewData.exportMakerConfig
-            // Répare un exportMakerConfig sauvegardé avant l'ajout de nouvelles clés à
-            // DEFAULT_CONFIG.contentModules — sinon les sections "opt-in" (cultivarsList,
-            // aromas, terpenes…) disparaissent silencieusement sur une review pourtant pleine.
-            return resolveExportMakerConfig(saved)
-        } catch {
-            return resolveExportMakerConfig(fallback)
-        }
-    })()
+    // Répare au passage un exportMakerConfig sauvegardé avant l'ajout de nouvelles clés à
+    // DEFAULT_CONFIG.contentModules — sinon les sections "opt-in" (cultivarsList, aromas,
+    // terpenes…) disparaissent silencieusement sur une review pourtant pleine.
+    const config = resolveConfigForReview(reviewData, 'detailedCard')
     const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']
 
     // Mise à l'échelle sur la LARGEUR uniquement — la fiche est un document vivant censé défiler

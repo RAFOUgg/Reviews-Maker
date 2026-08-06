@@ -464,6 +464,26 @@ export function resolveExportMakerConfig(savedConfig) {
     };
 }
 
+/**
+ * Config Export Maker effective d'une review chargée depuis l'API — `exportMakerConfig` y arrive
+ * tantôt en objet, tantôt en chaîne JSON (cf. `liftExportMakerFromExtra` côté serveur), et peut
+ * être absente ou périmée. Extraite de `SingleReviewCard.jsx` (2026-08-06) pour que TOUTES les
+ * surfaces de rendu écran — page publique `/r/:id`, page de lignée, aperçu Studio — résolvent la
+ * config de la même façon, plutôt que chacune sa variante.
+ */
+export function resolveConfigForReview(reviewData, fallbackTemplate = 'detailedCard') {
+    const fallback = { template: fallbackTemplate, ratio: DEFAULT_TEMPLATES[fallbackTemplate]?.defaultRatio };
+    if (!reviewData?.exportMakerConfig) return resolveExportMakerConfig(fallback);
+    try {
+        const saved = typeof reviewData.exportMakerConfig === 'string'
+            ? JSON.parse(reviewData.exportMakerConfig)
+            : reviewData.exportMakerConfig;
+        return resolveExportMakerConfig(saved);
+    } catch {
+        return resolveExportMakerConfig(fallback);
+    }
+}
+
 export const useExportMakerStore = create(
     persist(
         (set, get) => ({

@@ -642,6 +642,11 @@ export const useExportMakerPagesStore = create(
         (set, get) => ({
             // État
             pagesEnabled: false, // Mode pages activé/désactivé
+            // Refus EXPLICITE de pagination, distinct de « pas encore activée ».
+            // Sans lui, l'interrupteur était inopérant dès que `shouldAutoLockPagination` était
+            // vrai : la pagination s'appliquait automatiquement, l'interrupteur restait affiché
+            // ÉTEINT, et le clic était annulé — « le bouton de pagination n'est pas lié ».
+            paginationDisabled: false,
             currentPageIndex: 0, // Page actuellement affichée
             pages: [], // Liste des pages de la review actuelle
 
@@ -650,6 +655,9 @@ export const useExportMakerPagesStore = create(
             /**
              * Active ou désactive le mode multi-pages
              */
+            /** Refuse (ou ré-autorise) la pagination automatique. */
+            setPaginationDisabled: (v) => set({ paginationDisabled: !!v }),
+
             togglePagesMode: () => set((state) => {
                 const enabled = !state.pagesEnabled;
                 console.log('📄 togglePagesMode:', { enabled, currentPagesCount: state.pages.length });
@@ -745,6 +753,7 @@ export const useExportMakerPagesStore = create(
             name: PAGES_STORAGE_KEY,
             partialize: (state) => ({
                 pagesEnabled: state.pagesEnabled,
+                paginationDisabled: state.paginationDisabled,
                 pages: state.pages
             }),
             // Validation et correction des données lors de la restauration

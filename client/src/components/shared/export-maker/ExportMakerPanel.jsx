@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import PropTypes from 'prop-types';
 import { useExportMakerStore, resolveExportMakerConfig } from '../../../store/exportMakerStore';
@@ -7,6 +7,7 @@ import { useToast } from '../../shared/ToastContainer';
 import ConfigPane from '../config/ConfigPane';
 import PreviewPane from '../preview/PreviewPane';
 import PagedPreviewPane from './PagedPreviewPane';
+import ScreenPreviewPane from './ScreenPreviewPane';
 import ExportModal from '../../export/ExportModal';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
@@ -215,6 +216,11 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     const toast = useToast();
     const [showExportModal, setShowExportModal] = useState(false);
     const [showPreview, setShowPreview] = useState(true);
+    // ÉCRAN vs FICHIER (C10-3/C10-4) : deux sorties distinctes du même réglage, et le Studio doit
+    // montrer l'une ou l'autre explicitement. « Écran » est le défaut parce que c'est le rendu que
+    // voit le public (`/r/:id`, galerie) ; « Fichier » reste le seul mode où pagination, ratio et
+    // calibrage ont un sens, et c'est lui que capture le bouton Exporter.
+    const [previewMode, setPreviewMode] = useState('screen');
     const modalRef = useRef(null);
     const seededConfigForReviewId = useRef(null);
     const setReviewData = useExportMakerStore((state) => state.setReviewData);
@@ -227,6 +233,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
     // Pages store
     const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
+    const paginationDisabled = useExportMakerPagesStore((state) => state.paginationDisabled);
     const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
     // Aperçu live paginé même sans activation manuelle, si le contenu est dense — sans ça,
     // l'aperçu Export Maker (la surface la plus regardée en configurant un export) coupait
@@ -239,7 +246,12 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // Moderne Compact, il faisait paginer une CARTE — constaté en production, Compact affiché en
     // 4/6 pages alors qu'il est déclaré non paginable. Une carte ne se pagine pas, quel que soit
     // l'état hérité d'un autre template.
+    // Mêmes données que celles poussées dans le store pour les templates de fichier — l'aperçu
+    // écran ne doit pas lire une 2e normalisation qui divergerait.
+    const normalizedReview = useMemo(() => normalizeReviewData(reviewData), [reviewData]);
+
     const effectivePagesActive = isTemplatePaginable(config.template)
+        && !paginationDisabled
         && (pagesEnabled || shouldAutoLockPagination(reviewData, config.template));
 
     // Pagination adaptative (Chantier D, 2026-07-31) : cette 3e surface (aperçu live Export Maker
@@ -387,6 +399,32 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                     </div>
 
                     <div className="flex items-center gap-1.5">
+                        {/* Bascule ÉCRAN / FICHIER — la répartition des rôles actée en C10 : le
+                            rendu écran est la Vue Détaillée (fluide, interactive, celle du lien
+                            public), le rendu fichier est le template à canevas fixe que capture
+                            l'export. Sans cet interrupteur, le Studio ne montrait QUE le second,
+                            alors que le premier est ce que voient les visiteurs. */}
+                        {showPreview && (
+                            <div className="flex items-center rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5 mr-1">
+                                {[
+                                    { id: 'screen', label: 'Écran', title: 'Vue Détaillée — le rendu du lien public /r/:id' },
+                                    { id: 'file', label: 'Fichier', title: 'Template à canevas fixe — ce que produit l\'export PNG/PDF' },
+                                ].map((mode) => (
+                                    <button
+                                        key={mode.id}
+                                        onClick={() => setPreviewMode(mode.id)}
+                                        title={mode.title}
+                                        className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${previewMode === mode.id
+                                            ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 shadow-sm'
+                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+                                            }`}
+                                    >
+                                        {mode.label}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Bouton Publier */}
                         {onPublish && (
                             <motion.button
@@ -491,9 +529,11 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                {effectivePagesActive
-                                    ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
-                                    : <PreviewPane />}
+                                {previewMode === 'screen'
+                                    ? <ScreenPreviewPane reviewData={normalizedReview} config={config} />
+                                    : effectivePagesActive
+                                        ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
+                                        : <PreviewPane />}
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT
@@ -516,9 +556,11 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
                                 {/* Preview Pane - Right */}
                                 <div className="flex-1 overflow-hidden min-w-0 min-h-[300px]">
-                                    {effectivePagesActive
-                                    ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
-                                    : <PreviewPane />}
+                                    {previewMode === 'screen'
+                                        ? <ScreenPreviewPane reviewData={normalizedReview} config={config} />
+                                        : effectivePagesActive
+                                            ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
+                                            : <PreviewPane />}
                                 </div>
                             </motion.div>
                         )}

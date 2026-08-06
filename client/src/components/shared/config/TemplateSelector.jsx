@@ -28,6 +28,8 @@ export default function TemplateSelector() {
 
     const pagesEnabled = useExportMakerPagesStore((state) => state.pagesEnabled);
     const pagesCount = useExportMakerPagesStore((state) => state.pages.length);
+    const paginationDisabled = useExportMakerPagesStore((state) => state.paginationDisabled);
+    const setPaginationDisabled = useExportMakerPagesStore((state) => state.setPaginationDisabled);
     const togglePagesMode = useExportMakerPagesStore((state) => state.togglePagesMode);
     const loadDefaultPages = useExportMakerPagesStore((state) => state.loadDefaultPages);
 
@@ -36,10 +38,22 @@ export default function TemplateSelector() {
     // Auto-lock: overflow data on compact format forces pagination
     const isPaginationLocked = isOverflow && (config.ratio === '1:1' || config.ratio === '9:16');
 
+    // L'interrupteur reflète l'état EFFECTIF (manuel OU automatique) et l'inverse dans les deux
+    // sens. Auparavant il affichait `pagesEnabled` seul : quand la pagination automatique
+    // s'appliquait, il restait ÉTEINT alors que le rendu était bel et bien paginé, et le clic
+    // était purement annulé — « le bouton de pagination n'est pas lié ».
+    const effectivePagination = !paginationDisabled && (pagesEnabled || isPaginationLocked);
+
     const handlePaginationToggle = () => {
-        if (isPaginationLocked && !pagesEnabled) return; // Can't turn off when locked
+        if (effectivePagination) {
+            // Éteindre : refus explicite, qui prime aussi sur l'automatique.
+            setPaginationDisabled(true);
+            if (pagesEnabled) togglePagesMode();
+            return;
+        }
+        setPaginationDisabled(false);
         const willEnable = !pagesEnabled;
-        togglePagesMode();
+        if (willEnable) togglePagesMode();
         if (willEnable) {
             loadDefaultPages(reviewData?.type, config.ratio);
             // Switch to Pagination tab
@@ -176,9 +190,9 @@ export default function TemplateSelector() {
                     </div>
 
                     <LiquidToggle
-                        checked={pagesEnabled}
+                        checked={effectivePagination}
                         onChange={handlePaginationToggle}
-                        disabled={isPaginationLocked && !pagesEnabled && !isPaginationSupported}
+                        disabled={!isPaginationSupported}
                     />
                 </div>
 
