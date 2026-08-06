@@ -19,6 +19,12 @@ import { getFieldIcon, FIELD_ICONS } from '../../../utils/fieldIcons';
  * ✅ Support pagination
  */
 
+// Côté minimal d'une case en rendu FIGÉ (export/galerie). Mesuré sur le contenu réel d'une case
+// documentée — libellé, rangée d'icônes, pied — qui demande ~78px de haut ; en dessous, la case
+// coupe son propre contenu. Sert à la fois de largeur minimale de colonne (`auto-fit`) et de
+// hauteur minimale, ce qui donne une case nominalement carrée mais libre de grandir.
+const STATIC_CELL_MIN_PX = 78;
+
 const PipelineGridView = ({
     cells = {},
     config,
@@ -283,6 +289,17 @@ const PipelineGridView = ({
         return 'bg-green-400 border-green-300';
     };
 
+    // Couleur du TEXTE de la case, dérivée de la même échelle d'intensité que son fond.
+    // Aux intensités hautes le fond devient un vert clair (green-500/80, green-400) sur lequel du
+    // texte blanc tombe à 3,5:1 — mesuré le 2026-08-06, 64 occurrences sur une seule fiche exportée.
+    // Le seuil est à 3 parce que c'est là que le fond bascule du vert sombre au vert vif :
+    // en dessous (green-900/40, green-700/60), c'est le blanc qui est lisible et l'encre sombre qui
+    // ne le serait pas. Dérivé de `intensity` et non écrit case par case, pour que fond et texte ne
+    // puissent pas diverger.
+    const getIntensityTextClass = (intensity, isSelected, isHovered, isDragOver) => (
+        (!isSelected && !isHovered && !isDragOver && intensity >= 3) ? 'text-gray-900' : 'text-white'
+    );
+
     // Mini-icônes résumées dans la case
     const getMiniIcons = (cellData) => {
         if (!cellData) return [];
@@ -453,10 +470,14 @@ const PipelineGridView = ({
                     style={{ width: '100%', height: '100%' }}
                     className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
                 >
-                    {/* Top: label / phase */}
+                    {/* Top: label / phase.
+                        `max-w-[75%]` retiré : il réservait de la place à un voisin qui n'affiche
+                        rien (le `div` de métadonnées ci-dessous est vide depuis toujours). Sur les
+                        petites cases — mesuré sur le format 4:3 — cette réserve coupait les
+                        libellés à deux chiffres : « 12 » s'exportait « 1 », 18 cases atteintes sur
+                        une seule fiche. Un libellé qui MENT est pire qu'un libellé absent. */}
                     <div className="w-full flex items-start justify-between gap-2">
-                        <div className="text-sm font-semibold text-white truncate max-w-[75%]">{getCellLabel(cellIndex)}</div>
-                        <div className="text-xs text-gray-400">{/* small metadata */}</div>
+                        <div className={`text-sm font-semibold truncate ${getIntensityTextClass(intensity, isSelected, isHovered, isDragOver)}`}>{getCellLabel(cellIndex)}</div>
                     </div>
 
                     {/* Middle: icons / summary */}
@@ -483,7 +504,13 @@ const PipelineGridView = ({
     };
 
     return (
-        <div className="flex-1 p-4 overflow-y-auto overflow-x-hidden bg-gray-900/30 min-h-0 overscroll-contain" data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
+        // Rendu figé : AUCUN défilement. Le conteneur d'édition est une zone qui scrolle dans une
+        // hauteur contrainte ; conservé tel quel à l'export, il coupait la grille et rasterisait sa
+        // barre de défilement DANS le PNG — vu sur un export réel en 4:3, la seconde rangée de la
+        // culture (étapes 15 à 25) tronquée à mi-hauteur, ascenseur compris. Aucune règle d'audit ne
+        // pouvait le voir : E4 compare la hauteur de la PAGE, pas celle d'un conteneur interne.
+        // En rendu figé le bloc prend sa hauteur naturelle, que la pagination mesure ensuite.
+        <div className={`flex-1 p-4 bg-gray-900/30 overscroll-contain ${staticRender ? 'overflow-visible' : 'overflow-y-auto overflow-x-hidden min-h-0'}`} data-testid="pipeline-scroll" ref={scrollRef} style={{ minWidth: 0 }}>
             {/* Zoom controls — masqués en lecture seule : un curseur de zoom n'a pas de sens dans
                 un rendu figé, et il serait capturé tel quel dans le PNG exporté. */}
             <div className={`items-center justify-end gap-2 mb-2 ${readonly || staticRender ? 'hidden' : 'flex'}`}>
@@ -511,11 +538,23 @@ const PipelineGridView = ({
                         // gardant les 7 colonnes de l'édition, 25 étapes occupaient quatre grandes
                         // rangées et faisaient passer la Fiche Technique 16:9 de 2 à 5 pages, dont
                         // deux quasi vides. Même apparence, densité adaptée au support.
-                        gridTemplateColumns: `repeat(${Math.max(1, Math.min(14, (cellIndices || []).length || 1))}, minmax(0, 1fr))`,
+                        //
+                        // Le nombre de colonnes est DÉRIVÉ de la largeur disponible, plus fixé à 14.
+                        // Fixé, il ne tenait plus dès que la grille s'est retrouvée dans une colonne
+                        // de demi-page (flux à deux colonnes du 2026-08-05) : des cases de ~47px pour
+                        // un contenu qui en demande ~78, donc coupées — et comme la feuille de style
+                        // pose `overflow-x: hidden !important` sur ce conteneur, CSS en déduit
+                        // `overflow-y: auto` et une barre de défilement partait dans le PNG.
+                        // `auto-fit` s'adapte seul à la largeur réelle, sans mesure ni constante.
+                        gridTemplateColumns: `repeat(auto-fit, minmax(${STATIC_CELL_MIN_PX}px, 1fr))`,
                     }}>
                         {(cellIndices || []).map((_, cellIndex) => (
-                            <div key={cellIndex} style={{ aspectRatio: '1 / 1', padding: 2 }}>
-                                {renderCell(cellIndex, { position: 'relative', width: '100%', height: '100%' })}
+                            // `minHeight` plutôt qu'`aspectRatio: 1/1` : une case carrée impose sa
+                            // hauteur depuis sa largeur et coupe donc son propre contenu dès que la
+                            // colonne se resserre. Le carré reste la forme NOMINALE (la largeur
+                            // minimale vaut la hauteur minimale), mais la case peut grandir.
+                            <div key={cellIndex} style={{ minHeight: STATIC_CELL_MIN_PX, padding: 2 }}>
+                                {renderCell(cellIndex, { position: 'relative', width: '100%', height: '100%', minHeight: STATIC_CELL_MIN_PX - 4 })}
                             </div>
                         ))}
                     </div>
@@ -572,11 +611,17 @@ const PipelineGridView = ({
                 </div>
             )}
 
-            {/* Info */}
-            <div className="mt-4 p-3 bg-gray-800/50 rounded-lg text-sm text-gray-400">
-                <p>💡 <strong>Astuce</strong>: Maintenez Ctrl/Cmd et cliquez pour sélectionner plusieurs cases</p>
-                <p className="mt-1">🎨 La couleur indique la densité de données: gris = vide, vert clair → vert foncé = peu → beaucoup</p>
-            </div>
+            {/* Aide à la SAISIE — même raison que les contrôles de zoom ci-dessus : « Maintenez
+                Ctrl/Cmd et cliquez » n'a aucun sens dans un document figé, et partait tel quel dans
+                le PNG/PDF exporté. Resté invisible tant que la grille elle-même ne se rendait pas
+                sur les pages paginées (bug du filtre de pipeline, corrigé le 2026-08-06) ; apparu
+                à la mesure dès que le contenu est revenu. */}
+            {!(readonly || staticRender) && (
+                <div className="mt-4 p-3 bg-gray-800/50 rounded-lg text-sm text-gray-400">
+                    <p>💡 <strong>Astuce</strong>: Maintenez Ctrl/Cmd et cliquez pour sélectionner plusieurs cases</p>
+                    <p className="mt-1">🎨 La couleur indique la densité de données: gris = vide, vert clair → vert foncé = peu → beaucoup</p>
+                </div>
+            )}
         </div>
     );
 };

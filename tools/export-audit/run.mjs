@@ -139,6 +139,12 @@ async function auditCurrent(page) {
                 })(),
             };
         }
+        // Sonde de pagination — même principe que `fitProbe` : le remplissage seul ne dit jamais
+        // POURQUOI une page déborde. On lit le budget réellement appliqué et le coût de chaque
+        // module, publiés par `computeAdaptivePages`. Sans elle, le débordement A4 de la Fiche
+        // Technique se diagnostiquait par déduction — trois tentatives infructueuses.
+        const probe = window.__adaptivePaginationProbe;
+        if (Array.isArray(probe) && probe.length && out[0]) out[0].paginationProbe = probe[probe.length - 1];
         return out;
     });
 }
@@ -200,6 +206,13 @@ async function auditReview(page, subject) {
                 `${pages.length}p · ${errors} err · ${all.length - errors} warn` +
                 (fills.length ? ` · remplissage ${fills.join('/')}%` : '')
             );
+            if (pages[0]?.paginationProbe) {
+                const pp = pages[0].paginationProbe;
+                console.log(`        ↳ budget ${pp.budgetPerColumn}px par colonne × ${pp.columns} col. (page ${pp.availableHeight}px × ${pp.safetyFactor})`);
+                for (const m of pp.modules) {
+                    console.log(`           ${m.id.padEnd(28)} h=${String(m.height).padStart(5)}  coût=${String(m.cost).padStart(5)}${m.fullWidth ? '  pleine largeur' : ''}`);
+                }
+            }
             if (pages[0]?.fitProbe) {
                 const f = pages[0].fitProbe;
                 console.log(`        ↳ fit: scale=${f.scale} avail=${f.avail} contenu=${f.contentBottom}`);

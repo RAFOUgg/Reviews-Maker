@@ -37,6 +37,19 @@
         return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b);
     }
 
+    /** Le texte n'est-il fait que d'emoji/pictogrammes (et d'espaces) ? */
+    function isEmojiOnly(text) {
+        const s = String(text).replace(/\s|‍|️/g, '');
+        if (!s) return false;
+        return !/[^\p{Extended_Pictographic}\p{Emoji_Component}]/u.test(s);
+    }
+
+    /** Rend une couleur analysée en `rgb()` — sérialisable et directement comparable au CSS source. */
+    function fmtColor(c) {
+        if (!c) return null;
+        return `rgb(${Math.round(c.r)}, ${Math.round(c.g)}, ${Math.round(c.b)})`;
+    }
+
     /** Ratio de contraste WCAG entre deux couleurs OPAQUES. */
     function contrastRatio(fg, bg) {
         const l1 = luminance(fg);
@@ -192,7 +205,11 @@
             }
 
             // ── E1 : contraste ──
-            if (text) {
+            // Un texte composé UNIQUEMENT d'emoji est rendu par la police couleur du système : la
+            // déclaration `color` ne l'atteint pas. Le juger revenait à rapporter le contraste d'une
+            // couleur qui n'est pas celle affichée — 75 fausses violations sur une seule fiche, qui
+            // auraient envoyé corriger une couleur sans effet possible.
+            if (text && !isEmojiOnly(text)) {
                 const fg = parseColor(cs.color);
                 const bgInfo = effectiveBackground(el);
                 if (fg && bgInfo.color && !bgInfo.gradient && fg.a > 0) {
@@ -205,8 +222,11 @@
                             // `fg`/`bg` rapportés : sans eux, corriger un contraste revient à
                             // deviner quelle déclaration de couleur est en cause parmi celles qui
                             // se ressemblent. Deux tentatives inertes le 2026-08-06 avant ajout.
+                            // `bg` doit être LISIBLE : `String({r,g,b})` donnait « [object Object] »,
+                            // c'est-à-dire une violation qu'on ne peut pas relier à une déclaration
+                            // de couleur — exactement le défaut que ce champ était censé corriger.
                             el, { ratio: +ratio.toFixed(2), required: need, text: text.slice(0, 40),
-                                fg: cs.color, bg: bgInfo.raw || String(bgInfo.color) });
+                                fg: cs.color, bg: fmtColor(bgInfo.color) });
                     }
                 }
 
@@ -214,6 +234,17 @@
                 if (ACCENT_SURFACE_ONLY.includes(cs.color.replace(/\s+/g, ' ').trim())) {
                     push('G7', 'error', 'Accent #8B5CF6 utilisé comme couleur de TEXTE (surface uniquement)', el);
                 }
+            }
+
+            // ── E4b : conteneur INTERNE qui coupe son contenu ──
+            // E4 ne regarde que la page. Un conteneur imbriqué qui défile (une zone d'édition
+            // réutilisée telle quelle dans un rendu figé) coupe son contenu ET rasterise sa barre
+            // de défilement dans le PNG, sans qu'aucune règle ne le voie — trouvé à l'œil sur un
+            // export réel le 2026-08-06, la moitié d'un pipeline de culture manquante.
+            if (el !== rootEl && el.scrollHeight > el.clientHeight + 2 && /auto|scroll|hidden|clip/.test(cs.overflowY) && rect.height > 40) {
+                push('E4b', 'error',
+                    `Conteneur coupé : contenu ${el.scrollHeight}px dans ${el.clientHeight}px (overflow-y: ${cs.overflowY})`,
+                    el, { overflow: el.scrollHeight - el.clientHeight, overflowY: cs.overflowY });
             }
 
             // ── E3 : troncature silencieuse ──
@@ -282,10 +313,20 @@
             // Composition de la page — indispensable pour DIAGNOSTIQUER un mauvais remplissage :
             // sans la liste des modules et de leurs hauteurs, un « 29 % » ne dit pas s'il s'agit
             // d'un module isolé de force, d'un bloc trop gros pour cohabiter, ou d'un reliquat.
-            stats.modules = [...rootEl.querySelectorAll('[data-module]')].map((m) => ({
-                id: m.getAttribute('data-module'),
-                height: Math.round(m.getBoundingClientRect().height),
-            }));
+            // Position ET hauteur. La seule hauteur ne dit pas dans QUELLE colonne un bloc a
+            // atterri ni jusqu'où il descend — or c'est exactement ce qu'il faut savoir pour
+            // comprendre un débordement sur une mise en page à deux colonnes (le paginateur
+            // raisonne en colonnes, il faut pouvoir confronter sa prédiction au rendu).
+            stats.modules = [...rootEl.querySelectorAll('[data-module]')].map((m) => {
+                const r = m.getBoundingClientRect();
+                return {
+                    id: m.getAttribute('data-module'),
+                    height: Math.round(r.height),
+                    top: Math.round(r.top - rootRect.top),
+                    bottom: Math.round(r.bottom - rootRect.top),
+                    left: Math.round(r.left - rootRect.left),
+                };
+            });
 
             // Remplissage réel : bas du dernier module, pas scrollHeight (qui peut inclure du vide).
             // Ici les deux grandeurs viennent de `getBoundingClientRect`, donc la mise à l'échelle
@@ -372,6 +413,6 @@
         summarize,
         // exposés pour les tests unitaires
         parseColor, luminance, contrastRatio, composite, compositeStack,
-        requiredContrast, isOnSpacingScale, charsPerLine,
+        requiredContrast, isOnSpacingScale, charsPerLine, isEmojiOnly, fmtColor,
     };
 })(typeof globalThis !== 'undefined' ? globalThis : window);

@@ -80,6 +80,86 @@ export const MODULE_META = {
 // exacte, volontairement (cf. "packing séquentiel simple" ci-dessus).
 const SECTION_HEADER_OVERHEAD = 40;
 
+// Modules rendus PLEINE LARGEUR, hors du flux en colonnes.
+//
+// Le budget d'une page est une hauteur CUMULÉE de modules : sur deux colonnes, une page en absorbe
+// le double (cf. `budget` ci-dessous). Ce raisonnement ne vaut que pour les blocs qui coulent
+// RÉELLEMENT dans les colonnes. Le masthead de `DetailedCardTemplate.jsx` est rendu au-dessus du
+// conteneur `columnCount` (`sectionFlow`), en pleine largeur : ses 1948px consomment 1948px de
+// hauteur de page dans LES DEUX colonnes à la fois, soit 3896px de budget cumulé — pas 1948.
+//
+// Mesuré le 2026-08-06 sur Fleur/dense en A4 : le packer, comptant le masthead pour sa seule
+// hauteur, le jugeait à 45 % d'un budget de 4386 et lui adjoignait « Évaluation sensorielle »
+// (672px). Rendu réel : 1948 + 672 empilés = 2684px sur une page de 2480 → 108,2 % de remplissage,
+// donc du contenu COUPÉ. C'est la régression du passage de l'A4 à deux colonnes (`2f9ce905`) :
+// jusque-là toutes les pages étaient à une colonne, le facteur valait 1 partout et l'écart ne
+// pouvait pas apparaître.
+//
+// Sans effet sur les templates à une colonne (`getTemplateColumns` renvoie 1 hors `detailedCard`) :
+// le facteur y vaut 1, le coût est inchangé.
+const FULL_WIDTH_MODULES = new Set(['masthead']);
+
+// GROUPES DE LECTURE — plan de page validé le 2026-08-07.
+//
+// Ce n'est PAS un gabarit de pages. Un gabarit fixe quelles pages existent et ce qu'elles
+// contiennent ; il a déjà été essayé deux fois ici et a produit des modules qui disparaissaient
+// (`PAGE_TEMPLATES`, cf. C12 §1). Un groupe dit seulement OÙ IL EST PRÉFÉRABLE DE COUPER : le
+// nombre de pages reste décidé par la mesure. Une frontière de groupe est un endroit naturel pour
+// changer de page ; une coupure à l'intérieur d'un groupe sépare des blocs qui se lisent ensemble.
+//
+// Le groupe d'un module se déduit de son id de base, jamais dupliqué dans un template.
+const MODULE_GROUPS = {
+    // Identité — qui est ce produit, comment il se présente, comment il note.
+    masthead: 'identity',
+    identity: 'identity',
+    heroImage: 'identity',
+    mainImage: 'identity',
+    sensoryEvaluation: 'identity',
+    sensoryRadar: 'identity',
+    // Chimie — ce que le produit contient, mesuré.
+    cannabinoidGrid: 'chemistry',
+    cannabinoidProfile: 'chemistry',
+    thcCbdMini: 'chemistry',
+    aromaticProfile: 'chemistry',
+    labData: 'chemistry',
+    // Production — d'où il vient et comment il a été fait.
+    description: 'production',
+    cultureStats: 'production',
+    pipelines: 'production',
+    pipelineDetailGrids: 'production',
+    genealogyCanvas: 'production',
+    productionChainCanvas: 'production',
+    massBalance: 'production',
+    eventLog: 'production',
+    provenance: 'production',
+    substrat: 'production',
+    // Annexe — tout ce qui complète sans porter la lecture.
+    extraData: 'appendix',
+};
+
+// Un module inconnu du plan (gisement générique, tronçon de pipeline, champ d'un futur formulaire)
+// prend le groupe du module qui le précède plutôt qu'un groupe à part : sans ça, tout nouveau
+// contenu déclencherait une coupure de page à lui seul. C'est le sens de `null` ici.
+function groupOf(id, previousGroup) {
+    const base = baseModuleId(id);
+    if (base.startsWith('pipeline:')) return 'production';
+    if (base.startsWith('gisement:')) return 'appendix';
+    return MODULE_GROUPS[base] || previousGroup || null;
+}
+
+// Une frontière de groupe ne justifie une page neuve que si la page courante est DÉJÀ bien
+// remplie. Sinon on troquerait un défaut de structure contre un défaut de remplissage — or les
+// pages trop vides sont précisément le défaut dominant du relevé actuel. En dessous de ce seuil,
+// deux groupes cohabitent : mieux vaut une page dense et mixte qu'une page pure à 30 %.
+const GROUP_BREAK_MIN_FILL = 0.62;
+
+// …et seulement si le groupe qui COMMENCE a de quoi tenir une page décente. Sans cette condition,
+// un groupe réduit à un petit bloc ouvre une page pour lui seul : mesuré le 2026-08-07, les 146px
+// de « Caractéristiques détaillées » (groupe annexe) chassaient une page entière à eux tout seuls
+// sur la Fiche Technique A4, faisant passer le document de 2 à 3 pages et le remplissage de 66,5 %
+// à 34,3/36,7 %. Une coupure de structure ne doit jamais coûter plus qu'elle ne rapporte.
+const GROUP_BREAK_MIN_PAYLOAD = 0.35;
+
 /**
  * @param {Map<string, number>} moduleHeights - id → hauteur mesurée en px (voir measureDetailedCardModules.jsx)
  * @param {string} ratio - clé de RATIO_DIMENSIONS
@@ -167,6 +247,19 @@ function resolveMeta(id) {
     return MODULE_META[baseModuleId(id)] || { label: baseModuleId(id), icon: '📄' };
 }
 
+// SONDE. Le remplissage seul ne dit jamais POURQUOI une page déborde : il faut confronter la
+// hauteur mesurée de chaque module au budget réellement appliqué. Trois diagnostics de ce chantier
+// ont échoué par déduction depuis le remplissage ; celui du débordement A4 (108,2 %) a été résolu
+// en une mesure une fois cette sonde en place. Elle n'a aucun effet sur le calcul — elle publie
+// l'état, comme `data-fit-scale` pour `FitToFill`.
+function publishProbe(entry) {
+    const g = typeof globalThis === 'undefined' ? null : globalThis;
+    if (!g) return;
+    if (!Array.isArray(g.__adaptivePaginationProbe)) g.__adaptivePaginationProbe = [];
+    g.__adaptivePaginationProbe.push(entry);
+    if (g.__adaptivePaginationProbe.length > 20) g.__adaptivePaginationProbe.shift();
+}
+
 export function computeAdaptivePages(moduleHeights, ratio, containerPadding, templateId) {
     const dims = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     // Le budget est une hauteur CUMULÉE de modules. Sur un format à deux colonnes, une page en
@@ -176,7 +269,15 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
     // `getTemplateColumns`. Utiliser `getFormatLayout(ratio).columns` ici doublait le budget
     // d'Article de Blog, qui empile pourtant sur une seule colonne.
     const columns = getTemplateColumns(templateId, ratio);
-    const budget = Math.max(200, (dims.height - containerPadding * 2) * BUDGET_SAFETY_FACTOR * columns);
+    // Budget par COLONNE, pas par page. Le modèle précédent — hauteur de page × nombre de colonnes,
+    // comparé à la somme des hauteurs — suppose que les blocs se répartissent parfaitement entre
+    // les colonnes. Ils ne s'y répartissent pas : chacun est insécable (`break-inside: avoid`), et
+    // il suffit que les tailles tombent mal pour qu'une colonne dépasse pendant que l'autre reste
+    // courte. Mesuré le 2026-08-06 en 16:9 : une page dont la somme des modules tenait dans le
+    // budget (1789 sur 1899) se rendait à 108,1 %, donc coupée. On simule désormais le remplissage
+    // colonne par colonne, comme le fait le rendu.
+    const availableHeight = dims.height - containerPadding * 2;
+    const budget = Math.max(200, availableHeight * BUDGET_SAFETY_FACTOR);
 
     const all = Array.from(moduleHeights.entries())
         .filter(([, h]) => Number.isFinite(h) && h > 4); // hauteur ~0 = module absent (pas de données)
@@ -193,6 +294,23 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
     }
     if (entries.length === 0) return [];
 
+    /** Hauteur qu'un module occupe dans SA colonne (ou en pleine largeur). */
+    const blockHeight = (id, rawHeight) => rawHeight + SECTION_HEADER_OVERHEAD;
+
+    // Groupe de lecture de chaque module, résolu UNE fois sur l'ordre de rendu (le repli sur le
+    // groupe précédent n'a de sens que dans cet ordre, pas au gré d'un packing exploratoire), puis
+    // hauteur cumulée du groupe à partir de chaque position — c'est elle qui dit si une frontière
+    // vaut une page neuve.
+    const groups = [];
+    entries.forEach(([id], i) => { groups[i] = groupOf(id, i > 0 ? groups[i - 1] : null); });
+    const groupPayload = [];
+    for (let i = entries.length - 1; i >= 0; i -= 1) {
+        const own = blockHeight(entries[i][0], entries[i][1]);
+        groupPayload[i] = (i + 1 < entries.length && groups[i + 1] === groups[i])
+            ? own + groupPayload[i + 1]
+            : own;
+    }
+
     // Coût de l'en-tête à réserver si ce module est le premier de son pipeline sur la page visée.
     const headerCostOn = (page, id) => {
         const base = baseModuleId(id);
@@ -200,33 +318,83 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         return page && page.bases.has(base) ? 0 : headerHeights.get(base);
     };
 
-    /** Packing séquentiel « premier qui rentre » sous un budget de hauteur donné. */
+    /**
+     * Packing séquentiel sous un budget de hauteur PAR COLONNE.
+     *
+     * Une page a `columns` colonnes. On remplit la colonne courante jusqu'à ce que le bloc suivant
+     * n'y tienne plus, puis on passe à la colonne suivante ; quand il n'en reste plus, on ouvre une
+     * page. C'est le comportement du flux `columnCount` avec des blocs insécables, donc le seul
+     * modèle dont on puisse attendre qu'il prédise le rendu.
+     *
+     * Un bloc PLEINE LARGEUR (masthead) est rendu au-dessus du flux : il ampute la hauteur de
+     * TOUTES les colonnes de la page.
+     */
     const pack = (cap) => {
         const pages = [];
         let current = null;
-        let currentHeight = 0;
+        let colIndex = 0;      // colonne en cours de remplissage
+        let colHeight = 0;     // hauteur déjà occupée dans cette colonne
+        let fullWidthUsed = 0; // hauteur consommée en pleine largeur sur cette page
+        let pageUsed = 0;      // hauteur totale posée sur la page, toutes colonnes confondues
+        let lastGroup = null;
 
         const startPage = (firstId) => {
             if (current) pages.push(current);
             const meta = resolveMeta(firstId);
             current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true, bases: new Set() };
-            currentHeight = 0;
+            colIndex = 0;
+            colHeight = 0;
+            fullWidthUsed = 0;
+            pageUsed = 0;
         };
 
-        for (const [id, rawHeight] of entries) {
-            const height = rawHeight + SECTION_HEADER_OVERHEAD;
+        for (let idx = 0; idx < entries.length; idx += 1) {
+            const [id, rawHeight] = entries[idx];
+            const height = blockHeight(id, rawHeight);
             const isolated = ALWAYS_ISOLATE.has(baseModuleId(id));
-            // Un module isolé démarre TOUJOURS sa propre page ; les modules suivants ne doivent pas
-            // non plus rejoindre SA page (sinon on recrée le même risque de perte pour le voisin
-            // suivant) — `current.solo` marque une page occupée par un module isolé comme close.
-            const fitsCurrent = current && !current.solo && !isolated
-                && (currentHeight + height + headerCostOn(current, id) <= cap);
-            if (!fitsCurrent) startPage(id);
+            const isFullWidth = FULL_WIDTH_MODULES.has(baseModuleId(id));
+            const group = groups[idx];
+            // Changement de groupe sur une page déjà bien remplie : on coupe ici plutôt que de
+            // laisser la coupure tomber au hasard du remplissage, quelques blocs plus loin.
+            // Seuil calé sur le budget NOMINAL de la page, jamais sur `cap` : `cap` est le budget
+            // exploratoire que la dichotomie de rééquilibrage fait varier, et l'y indexer faisait
+            // dériver les coupures de groupe à chaque itération — mesuré en A4, une page de plus et
+            // un remplissage tombé de 66,5 % à 41,8/30,6 %. Le seuil doit dire « cette page est
+            // pleine », ce qui ne dépend pas de la recherche en cours.
+            const breaksGroup = current && current.modules.length > 0
+                && lastGroup && group && group !== lastGroup
+                && pageUsed >= budget * columns * GROUP_BREAK_MIN_FILL
+                && groupPayload[idx] >= budget * columns * GROUP_BREAK_MIN_PAYLOAD;
+
+            if (isolated || !current || current.solo || breaksGroup) {
+                startPage(id);
+            } else if (isFullWidth) {
+                // Un bloc pleine largeur n'a de sens qu'en tête de page (c'est là que le rendu le
+                // place) : s'il en existe déjà du contenu, il ouvre la page suivante.
+                if (current.modules.length > 0) startPage(id);
+            } else {
+                const extra = headerCostOn(current, id);
+                let placed = colHeight + extra + height <= cap - fullWidthUsed;
+                while (!placed && colIndex + 1 < columns) {
+                    colIndex += 1;
+                    colHeight = 0;
+                    placed = extra + height <= cap - fullWidthUsed;
+                }
+                if (!placed) startPage(id);
+            }
+
             if (isolated) current.solo = true;
-            currentHeight += headerCostOn(current, id);
+            if (isFullWidth) {
+                fullWidthUsed += height;
+                pageUsed += height * columns; // ampute toutes les colonnes
+            } else {
+                const cost = headerCostOn(current, id) + height;
+                colHeight += cost;
+                pageUsed += cost;
+            }
             current.bases.add(baseModuleId(id));
             current.modules.push(id);
-            currentHeight += height;
+            lastGroup = group;
         }
         if (current) pages.push(current);
         return pages;
@@ -244,8 +412,9 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
     // lieu de saturer les premières. Recherche dichotomique bornée : la borne basse est la moyenne
     // parfaite (total / nombre de pages), qu'aucun packing ne peut battre.
     if (pages.length > 1) {
-        const total = entries.reduce((sum, [, h]) => sum + h + SECTION_HEADER_OVERHEAD, 0);
-        let lo = Math.max(200, total / pages.length);
+        // Borne basse : la moyenne parfaite par colonne, qu'aucun packing ne peut battre.
+        const total = entries.reduce((sum, [id, h]) => sum + blockHeight(id, h), 0);
+        let lo = Math.max(200, total / (pages.length * columns));
         let hi = budget;
         let best = pages;
         for (let i = 0; i < 12 && hi - lo > 8; i += 1) {
@@ -255,6 +424,25 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         }
         pages = best;
     }
+
+    publishProbe({
+        templateId, ratio, columns, containerPadding,
+        canvasHeight: dims.height,
+        availableHeight: Math.round(availableHeight),
+        budgetPerColumn: Math.round(budget),
+        safetyFactor: BUDGET_SAFETY_FACTOR,
+        modules: entries.map(([id, h]) => ({
+            id,
+            height: Math.round(h),
+            cost: Math.round(blockHeight(id, h)),
+            fullWidth: FULL_WIDTH_MODULES.has(baseModuleId(id)),
+        })),
+        headers: [...headerHeights.entries()].map(([id, h]) => ({ id, height: Math.round(h) })),
+        pages: pages.map((p) => ({
+            modules: p.modules,
+            cost: Math.round(p.modules.reduce((s, id) => s + blockHeight(id, moduleHeights.get(id) || 0), 0)),
+        })),
+    });
 
     // `bases` est un accumulateur interne au packing — un Set ne se sérialise pas en JSON (il
     // deviendrait `{}` en traversant le store de pages), on ne le laisse pas fuiter dans la sortie.

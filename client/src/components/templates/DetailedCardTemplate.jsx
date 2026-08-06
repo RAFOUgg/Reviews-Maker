@@ -244,30 +244,39 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // réalignement sur LiquidUI : elle n'existe nulle part ailleurs dans le produit (règle G4 de
     // l'audit). Une pastille d'icône reprend en revanche la grammaire des FORMULAIRES de saisie,
     // que l'utilisateur connaît déjà — et donne du repère visuel plutôt qu'un compteur.
+    const SectionHeading = ({ icon, title }) => (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: spacing.element * 2 }}>
+            {icon && (
+                <span style={{
+                    flexShrink: 0, width: 26, height: 26, borderRadius: 8,
+                    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: fontSize.small,
+                    background: colorWithOpacity(accent, 16),
+                    border: `1px solid ${colorWithOpacity(accent, 30)}`,
+                }}>{icon}</span>
+            )}
+            <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
+            <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
+        </div>
+    );
+
+    // Habillage commun d'un bloc du flux : filet de séparation et INSÉCABILITÉ. Extrait de
+    // `Section` pour pouvoir l'appliquer à un bloc qui n'a pas son propre titre — un pipeline, par
+    // exemple, qui doit être une unité de pagination à lui seul.
+    const blockStyle = {
+        padding: `${spacing.section}px 0`,
+        borderTop: `1px solid ${lineSoft}`,
+        // Insécable : en flux multi-colonnes, un bloc coupé en deux produirait un titre orphelin en
+        // bas d'une colonne et son contenu en haut de la suivante.
+        breakInside: 'avoid',
+        WebkitColumnBreakInside: 'avoid',
+    };
+
     const Section = ({ icon, title, moduleId, children }) => {
         if (moduleId && !isPageOn(moduleId)) return null;
         return (
-            <div data-module={moduleId || undefined} style={{
-                padding: `${spacing.section}px 0`,
-                borderTop: `1px solid ${lineSoft}`,
-                // Insécable : en flux multi-colonnes, une section coupée en deux produirait un
-                // titre orphelin en bas d'une colonne et son contenu en haut de la suivante.
-                breakInside: 'avoid',
-                WebkitColumnBreakInside: 'avoid',
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: spacing.element * 2 }}>
-                    {icon && (
-                        <span style={{
-                            flexShrink: 0, width: 26, height: 26, borderRadius: 8,
-                            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                            fontSize: fontSize.small,
-                            background: colorWithOpacity(accent, 16),
-                            border: `1px solid ${colorWithOpacity(accent, 30)}`,
-                        }}>{icon}</span>
-                    )}
-                    <h2 style={{ fontFamily: DISPLAY, fontSize: `${fontSize.section}px`, fontWeight: 600, letterSpacing: '0.03em', textTransform: 'uppercase', color: titleColor, flexShrink: 0, whiteSpace: 'nowrap' }}>{title}</h2>
-                    <span style={{ flex: 1, height: 1, background: `linear-gradient(90deg, ${line}, transparent)` }} />
-                </div>
+            <div data-module={moduleId || undefined} style={blockStyle}>
+                <SectionHeading icon={icon} title={title} />
                 {children}
             </div>
         );
@@ -366,13 +375,22 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // grammaire visuelle que l'utilisateur connaît déjà de la saisie.
     //
     // La liste détaillée reste disponible en basculant `pipelineDetailGrids` sur `false`.
-    const renderPipeline = (pipeline, moduleId) => {
+    // `heading` : le titre « Processus de production » est porté par le PREMIER pipeline de la page
+    // au lieu d'envelopper tous les pipelines dans une `Section` commune. Cette enveloppe était
+    // insécable (`breakInside: avoid`) : les deux pipelines formaient donc UN bloc de ~930px que le
+    // flux à deux colonnes ne pouvait pas répartir, alors que le paginateur, lui, les comptait
+    // séparément (363 + 515) et les croyait répartissables. Mesuré le 2026-08-06 en 16:9 : colonne
+    // gauche à 451px, colonne droite à 1167px sur une page qui en fait 1032 — donc du contenu coupé
+    // pendant que la moitié de la page restait vide. Chaque pipeline est maintenant sa propre unité
+    // insécable, ce que le `data-module` posé sur lui annonçait déjà.
+    const renderPipeline = (pipeline, moduleId, heading = null) => {
         if (contentModules.pipelineDetailGrids !== false) {
             const t = TIMELINE_PIPELINES.find((x) => pipeline.key?.includes(x.type))
                 || TIMELINE_PIPELINES.find((x) => reviewData[x.dataKey]);
             if (t && reviewData[t.dataKey] && reviewData[t.configKey]) {
                 return (
-                    <div key={moduleId} data-module={moduleId} style={{ marginBottom: `${spacing.element}px` }}>
+                    <div key={moduleId} data-module={moduleId} style={blockStyle}>
+                        {heading}
                         <PipelineMiniGrid
                             type={t.type} name={t.name} icon={t.icon}
                             timelineData={reviewData[t.dataKey]}
@@ -383,21 +401,26 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 );
             }
         }
-        return renderPipelineList(pipeline, moduleId);
+        return renderPipelineList(pipeline, moduleId, heading);
     };
 
-    const renderPipelineList = (pipeline, moduleId) => (
-        <PipelineTimeline
-            key={moduleId}
-            pipeline={pipeline}
-            moduleId={moduleId}
-            isPageOn={isPageOn}
-            paged={!!pageModuleIds}
-            compact={isSquare}
-            fontSize={{ text: fontSize.text, small: fontSize.small }}
-            spacing={{ element: spacing.element, gap: spacing.gap }}
-            colors={{ textPrimary, textSecondary, title: titleColor, accent, accentText, surface, line }}
-        />
+    // Variante LISTE (`pipelineDetailGrids: false`) : `PipelineTimeline` se découpe déjà lui-même
+    // en tronçons `#N` paginables, on ne l'enferme donc pas dans un bloc insécable — seul le titre
+    // de section a besoin d'un support.
+    const renderPipelineList = (pipeline, moduleId, heading = null) => (
+        <div key={moduleId}>
+            {heading}
+            <PipelineTimeline
+                pipeline={pipeline}
+                moduleId={moduleId}
+                isPageOn={isPageOn}
+                paged={!!pageModuleIds}
+                compact={isSquare}
+                fontSize={{ text: fontSize.text, small: fontSize.small }}
+                spacing={{ element: spacing.element, gap: spacing.gap }}
+                colors={{ textPrimary, textSecondary, title: titleColor, accent, accentText, surface, line }}
+            />
+        </div>
     );
 
     const renderBranding = () => {
@@ -441,7 +464,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // une taille en pixels fixe et connue (`RATIO_DIMENSIONS`), donc pas besoin de mesure au runtime.
     const canvasDims = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
     const cultureSteps = Array.isArray(reviewData.cultureTimelineData) ? reviewData.cultureTimelineData : null;
-    const chartWidth = Math.round((canvasDims.width - padding.container * 2) * (stacked ? 1 : 0.9));
+    // Largeur d'UNE colonne du flux, pas du canevas entier. Le graphique vit dans `sectionFlow`,
+    // qui coule en deux colonnes sur 16:9/4:3/A4 depuis le 2026-08-05 : calculé sur la pleine
+    // largeur, il débordait sur la colonne voisine et se superposait à la section d'à côté —
+    // constaté sur un PNG réellement exporté en 4:3 (« Caractéristiques détaillées » écrit
+    // par-dessus les courbes), invisible dans les mesures de hauteur de l'auditeur.
+    const columnWidth = (canvasDims.width - padding.container * 2 - spacing.section * (templateColumns - 1)) / templateColumns;
+    const chartWidth = Math.round(columnWidth * (stacked ? 1 : 0.9));
 
     // `overflow-hidden`, jamais `overflow-auto` (corrigé 2026-08-03, retour utilisateur sur un
     // export réel en prod) : ce canevas est déjà à hauteur fixe (`TemplateRenderer.jsx`) et la
@@ -546,12 +575,35 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </Section>
                 )}
 
-                {/* ── 02 · PROFIL CANNABINOÏDE ──
-                    Scindé en DEUX modules paginables le 2026-08-04 (audit, règle E6) : réunis, la
-                    grille et le radar mesuraient 1038px sur un canevas de 800px en 1:1 — un bloc
-                    insécable plus grand qu'une page, qui débordait à 131% quoi qu'on fasse du
-                    budget de pagination. Séparés, le packer les répartit normalement. Même
-                    principe que le découpage des pipelines en tronçons. */}
+                {/* ── EMPREINTE SENSORIELLE (radar) ──
+                    Placée JUSTE APRÈS l'évaluation sensorielle, dont elle est la synthèse
+                    graphique : plan de page validé le 2026-08-07. Elle vivait jusque-là après le
+                    profil cannabinoïde, héritage du découpage du 2026-08-04 qui l'avait extraite de
+                    ce bloc — un accident de refactor, pas une intention de lecture. Le paginateur
+                    étant séquentiel, l'ordre du JSX EST l'ordre de lecture ; c'est aussi lui qui
+                    décide quels blocs ont une chance de cohabiter sur une page. */}
+                {radarAxes.length >= 3 && (
+                    <Section title="Empreinte sensorielle" moduleId="sensoryRadar">
+                        {/* Largeur BORNÉE à la taille nominale du radar : son SVG est en
+                            `width="100%"` sur un viewBox carré, donc dans un conteneur pleine
+                            largeur il s'étire à ~700px de côté. Mesuré avant garde-fou : 823px de
+                            haut sur un canevas de 800px, soit 105% de débordement. Il était
+                            jusqu'ici bridé par sa colonne de grille — en le sortant dans son
+                            propre module, il fallait rétablir cette contrainte explicitement. */}
+                        <div style={{ display: 'flex', justifyContent: 'center' }}>
+                            <div style={{ width: isSquare ? 200 : 240, maxWidth: '100%' }}>
+                                <SensoryRadar axes={radarAxes} accentColor={accent} lineColor={line} textColor={textSecondary} size={isSquare ? 200 : 240} />
+                            </div>
+                        </div>
+                    </Section>
+                )}
+
+                {/* ── PROFIL CANNABINOÏDE ──
+                    Scindé du radar le 2026-08-04 (audit, règle E6) : réunis, la grille et le radar
+                    mesuraient 1038px sur un canevas de 800px en 1:1 — un bloc insécable plus grand
+                    qu'une page, qui débordait à 131% quoi qu'on fasse du budget de pagination.
+                    Séparés, le packer les répartit normalement. Même principe que le découpage des
+                    pipelines en tronçons. Ouvre le groupe « chimie » (cf. MODULE_GROUPS). */}
                 {cannabinoidItems.length > 0 && (
                     <Section icon="🧪" title="Profil cannabinoïde" moduleId="cannabinoidGrid">
                         <div className="grid" style={{ gridTemplateColumns: '1fr', gap: `${spacing.section}px`, alignItems: 'start' }}>
@@ -583,24 +635,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </Section>
                 )}
 
-                {/* Empreinte sensorielle — module distinct de la grille cannabinoïde (cf. ci-dessus). */}
-                {radarAxes.length >= 3 && (
-                    <Section title="Empreinte sensorielle" moduleId="sensoryRadar">
-                        {/* Largeur BORNÉE à la taille nominale du radar : son SVG est en
-                            `width="100%"` sur un viewBox carré, donc dans un conteneur pleine
-                            largeur il s'étire à ~700px de côté. Mesuré avant garde-fou : 823px de
-                            haut sur un canevas de 800px, soit 105% de débordement. Il était
-                            jusqu'ici bridé par sa colonne de grille — en le sortant dans son
-                            propre module, il fallait rétablir cette contrainte explicitement. */}
-                        <div style={{ display: 'flex', justifyContent: 'center' }}>
-                            <div style={{ width: isSquare ? 200 : 240, maxWidth: '100%' }}>
-                                <SensoryRadar axes={radarAxes} accentColor={accent} lineColor={line} textColor={textSecondary} size={isSquare ? 200 : 240} />
-                            </div>
-                        </div>
-                    </Section>
-                )}
-
-                {/* ── 03 · PROFIL AROMATIQUE ── */}
+                {/* ── PROFIL AROMATIQUE ── */}
                 {(aromas.length > 0 || secondaryAromas.length > 0 || tastes.length > 0 || terpenes.length > 0) && contentModules.aromas && (
                     <Section icon="🌸" title="Profil aromatique · terpènes" moduleId="aromaticProfile">
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.section}px` }}>
@@ -661,13 +696,22 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     Curing/Extraction/Séparation/Purification sur des pages différentes selon leur
                     volume réel (au lieu du découpage fixe par ratio d'avant ce chantier). */}
                 {(() => {
-                    const pagePipelines = visiblePipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id.startsWith(`pipeline:${p.key}#`)));
+                    // DEUX formes d'identifiant, et il faut accepter les deux. `PipelineTimeline`
+                    // (liste) découpe le pipeline en tronçons `pipeline:<key>#N` ; `PipelineMiniGrid`
+                    // (grille, le rendu PAR DÉFAUT depuis le 2026-08-05) pose un bloc unique
+                    // `pipeline:<key>`, sans `#`. Ce filtre n'acceptait que la forme à tronçons : le
+                    // packer plaçait bien le pipeline sur une page (vu dans la sonde : coût 247 et
+                    // 304px réservés), mais le rendu ne le reconnaissait plus et le supprimait —
+                    // Culture ET Curing absents de TOUTES les pages, sur tous les ratios, dès que la
+                    // pagination est active. Mesuré le 2026-08-06 : page à 46,9 % de remplissage,
+                    // amputée de 471px de contenu dont personne ne signalait la disparition.
+                    const pagePipelines = visiblePipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id === `pipeline:${p.key}` || id.startsWith(`pipeline:${p.key}#`)));
                     if (pagePipelines.length === 0) return null;
-                    return (
-                        <Section title="Processus de production">
-                            {pagePipelines.map((p) => renderPipeline(p, `pipeline:${p.key}`))}
-                        </Section>
-                    );
+                    return pagePipelines.map((p, i) => renderPipeline(
+                        p,
+                        `pipeline:${p.key}`,
+                        i === 0 ? <SectionHeading icon="⚙️" title="Processus de production" /> : null,
+                    ));
                 })()}
 
                 {/* Vues interactives — vrais canevas React Flow en lecture seule (Chantier B,
