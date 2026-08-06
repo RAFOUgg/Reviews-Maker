@@ -149,6 +149,58 @@ export async function createFixture(baseApi, type, density) {
     return id;
 }
 
+
+/**
+ * Attache une CHAÎNE DE PRODUCTION et un ARBRE GÉNÉALOGIQUE à une fixture.
+ *
+ * POURQUOI C'EST INDISPENSABLE. Sans eux, les fixtures n'exercent jamais les deux canevas — et une
+ * mesure « inchangée » ne prouve alors rien à leur sujet. C'est précisément cet angle mort qui a
+ * laissé partir en production, le 2026-08-06, une régression faisant disparaître la chaîne ET la
+ * généalogie de tous les rendus : les métriques d'export étaient identiques, puisque rien de ce
+ * qui avait disparu n'était mesuré.
+ *
+ * Ne lève jamais : l'absence de droits (accès Pro requis sur ces deux routes) ne doit pas faire
+ * échouer tout l'audit, elle doit juste laisser la fixture sans canevas.
+ */
+export async function attachCanvases(baseApi, id, type) {
+    const post = async (url, body) => {
+        try {
+            const res = await fetch(`${baseApi}${url}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify(body),
+            });
+            return res.ok ? await res.json() : null;
+        } catch { return null; }
+    };
+
+    const chain = await post('/api/production-chains/chains', { name: `ZZ-AUDIT chaîne ${type}` });
+    const chainId = chain?.id || chain?.data?.id;
+    if (chainId) {
+        // Deux nœuds reliés : un canevas à un seul nœud ne teste pas le rendu des arêtes.
+        const a = await post(`/api/production-chains/chains/${chainId}/nodes`,
+            { reviewType: type, reviewId: id, position: { x: 40, y: 60 } });
+        const b = await post(`/api/production-chains/chains/${chainId}/nodes`,
+            { reviewType: type, reviewId: id, position: { x: 320, y: 60 } });
+        const aId = a?.id || a?.data?.id, bId = b?.id || b?.data?.id;
+        if (aId && bId) {
+            await post(`/api/production-chains/chains/${chainId}/edges`, { sourceId: aId, targetId: bId });
+        }
+    }
+
+    const tree = await post('/api/genetics/trees', { name: `ZZ-AUDIT arbre ${type}` });
+    const treeId = tree?.id || tree?.data?.id;
+    if (treeId) {
+        await post(`/api/genetics/trees/${treeId}/nodes`,
+            { label: 'Parent A', position: { x: 40, y: 40 } });
+        await post(`/api/genetics/trees/${treeId}/nodes`,
+            { label: 'Parent B', position: { x: 240, y: 40 } });
+    }
+
+    return { chainId, treeId };
+}
+
 /** Supprime une fixture. Ne lève jamais — le nettoyage ne doit pas masquer le résultat d'audit. */
 export async function deleteFixture(baseApi, id) {
     try {

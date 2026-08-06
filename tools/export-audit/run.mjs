@@ -15,7 +15,7 @@ import { chromium } from 'playwright';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { createFixture, deleteFixture, DENSITIES, TYPES } from './fixtures.mjs';
+import { createFixture, deleteFixture, attachCanvases, DENSITIES, TYPES } from './fixtures.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const AUDIT_SCRIPT = resolve(__dirname, 'auditRules.js');
@@ -232,6 +232,13 @@ async function main() {
                 for (const density of densities) {
                     try {
                         const id = await createFixture(API, type, density);
+                        // Chaîne + arbre attachés dès que la review n'est pas minimale : sans eux, les deux
+
+                        // canevas ne sont JAMAIS exercés et une régression les faisant disparaître passe
+
+                        // inaperçue (arrivé en production le 2026-08-06).
+
+                        if (density !== 'minimal') await attachCanvases(API, id, type);
                         created.push(id);
                         subjects.push({ id, type, label: `${type}/${density}` });
                         console.log(`  ✔ ${type}/${density} → ${id.slice(0, 8)}`);
