@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
+import { useCanvasTooltip, affordance } from '../../export/interactive/InteractiveContext';
 
 /**
  * SensoryRadar — radar SVG générique à N axes (2026-07-30, Fiche Technique Détaillée v2,
@@ -20,6 +21,7 @@ export default function SensoryRadar({
     textColor = '#6E7A72',
     size = 260,
 }) {
+    const { bind, tooltipNode, interactive } = useCanvasTooltip();
     if (!axes || axes.length < 3) return null;
 
     const cx = size / 2;
@@ -45,6 +47,18 @@ export default function SensoryRadar({
     const dataPoints = axes.map((a, i) => pt(i, (R * Math.max(0, Math.min(10, a.value))) / 10));
     const dataPolygon = dataPoints.map((p) => p.join(',')).join(' ');
 
+    // Le libellé porte le nom de l'axe ET sa valeur, sur deux lignes.
+    //
+    // La valeur y était absente : elle n'était imprimée que dans la section "Évaluation
+    // sensorielle", un module DISTINCT que la pagination adaptative peut placer sur une autre
+    // page. Sur une page ne portant que le radar, la valeur exacte n'existait donc nulle part —
+    // et l'infobulle ajoutée ci-dessous en aurait été la seule voie d'accès, exactement ce que la
+    // contrainte dure du plan interdit (« un PNG ne se clique pas »).
+    //
+    // Sur DEUX lignes et non en suffixe sur la même ligne : la largeur du libellé est déjà au
+    // ras du viewBox (« Texture » à 12px sur un radar de 240 finit à x≈237 pour 240 de large),
+    // un suffixe « 8.5 » le ferait déborder. Une seconde ligne ne coûte que de la hauteur, dont
+    // il reste ~20px sous le libellé du bas.
     const labels = axes.map((a, i) => {
         const [x, y] = pt(i, R + 18);
         return (
@@ -58,12 +72,16 @@ export default function SensoryRadar({
                 textAnchor="middle"
                 dominantBaseline="middle"
             >
-                {a.label}
+                <tspan x={x}>{a.label}</tspan>
+                <tspan x={x} dy="1.15em" fontWeight="700" fill={accentColor}>
+                    {Number(a.value).toFixed(1)}
+                </tspan>
             </text>
         );
     });
 
     return (
+        <>
         <svg viewBox={`0 0 ${size} ${size}`} width="100%" height="100%">
             {rings}
             {spokes}
@@ -78,7 +96,28 @@ export default function SensoryRadar({
                 <circle key={i} cx={x} cy={y} r="2.6" fill={accentColor} />
             ))}
             {labels}
+            {/* Zones de survol : le point de donnée fait 2.6px de rayon — intenable à viser à la
+                souris, hors de portée au doigt. Un disque transparent de 14px porte l'interaction
+                sans rien changer au dessin. Rendu APRÈS les labels pour rester au-dessus. */}
+            {interactive && dataPoints.map(([x, y], i) => (
+                <circle
+                    key={`hit-${i}`}
+                    cx={x}
+                    cy={y}
+                    r="14"
+                    fill="transparent"
+                    style={affordance(true, { kind: 'cell' })}
+                    {...bind(
+                        <div>
+                            <div style={{ fontWeight: 700, marginBottom: 3 }}>{axes[i].label}</div>
+                            <div style={{ opacity: 0.85 }}>{Number(axes[i].value).toFixed(1)} / 10</div>
+                        </div>
+                    )}
+                />
+            ))}
         </svg>
+        {tooltipNode}
+        </>
     );
 }
 

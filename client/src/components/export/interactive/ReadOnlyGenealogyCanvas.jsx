@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
+import { LiquidModal } from '@/components/ui/LiquidUI';
+import { useIsInteractive } from './InteractiveContext';
 
 // Nœud minimal en lecture seule — pas de réutilisation de `CultivarNode.jsx` (le vrai nœud
 // d'édition), qui embarque des hooks de drag de handle/waypoint pensés pour l'édition interactive
@@ -47,6 +49,8 @@ export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, acce
     const treeId = reviewData?.geneticTreeId || reviewData?.flowerData?.geneticTreeId;
     const [tree, setTree] = useState(null);
     const [loading, setLoading] = useState(false);
+    const [detail, setDetail] = useState(null);
+    const interactive = useIsInteractive();
 
     useEffect(() => {
         if (!treeId) { setTree(null); return; }
@@ -110,12 +114,43 @@ export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, acce
                         nodesConnectable={false}
                         elementsSelectable={true}
                         zoomOnDoubleClick={false}
+                        onNodeClick={interactive ? (_, node) => setDetail(node.data) : undefined}
                     >
                         <Background color={textColor} gap={16} />
                         <Controls showInteractive={false} />
                     </ReactFlow>
                 </ReactFlowProvider>
             </div>
+
+            {/* Détail d'un cultivar. Additif : le nœud imprime déjà son nom et son type ; la
+                modale développe les caractéristiques génétiques saisies, trop nombreuses pour
+                tenir dans un nœud de 120px sans le rendre illisible dans un export figé. */}
+            <LiquidModal
+                isOpen={Boolean(detail)}
+                onClose={() => setDetail(null)}
+                size="md"
+                title={`🧬 ${detail?.label || 'Cultivar'}`}
+            >
+                {detail && (() => {
+                    const g = detail.genetics || {};
+                    const rows = Object.entries(g).filter(([, v]) => v !== undefined && v !== null && v !== '');
+                    if (rows.length === 0) {
+                        return <p className="text-white/50 text-sm">Aucune caractéristique génétique renseignée pour ce cultivar.</p>;
+                    }
+                    return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {rows.map(([k, v]) => (
+                                <div key={k} className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
+                                    <div className="text-[11px] uppercase tracking-wide text-white/40">{k}</div>
+                                    <div className="text-sm text-white font-medium break-words capitalize">
+                                        {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                })()}
+            </LiquidModal>
         </div>
     );
 }

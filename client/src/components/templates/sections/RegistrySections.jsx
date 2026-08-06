@@ -2,6 +2,7 @@ import PropTypes from 'prop-types';
 import { getFieldsByGroup, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
 import { CANNABINOIDS } from '../../../data/cannabinoids';
 import { formatDate } from '../../../utils/exportMakerHelpers';
+import { useCanvasTooltip, affordance } from '../../export/interactive/InteractiveContext';
 
 /**
  * RegistrySections — rend le "gisement" de données piloté par fieldRegistry, pour n'importe
@@ -47,29 +48,54 @@ export function getCannabinoidItems(reviewData, contentModules) {
             const num = Number(v);
             if (!Number.isFinite(num)) return null;
             const ref = CANNABINOID_BY_ID[f.ref];
-            return { key: f.key, label: ref.shortLabel, value: num, unit: f.unit || '%', color: ref.color };
+            // `refId` conservé : `key` est la clé de REGISTRE (ex. 'thcPercent'), pas l'id du
+            // référentiel — sans lui, impossible de retrouver le nom développé du cannabinoïde.
+            return { key: f.key, refId: f.ref, label: ref.shortLabel, value: num, unit: f.unit || '%', color: ref.color };
         })
         .filter(Boolean);
 }
 
 export function CannabinoidGrid({ reviewData, contentModules, colors, fontSize, spacing }) {
+    const { bind, tooltipNode, interactive } = useCanvasTooltip();
     const items = getCannabinoidItems(reviewData, contentModules);
     if (items.length === 0) return null;
 
     return (
         <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(72px, 1fr))`, gap: `${spacing.gap}px`, marginBottom: `${spacing.element}px` }}>
-            {items.map((it) => (
-                <div key={it.key} style={{
-                    background: `linear-gradient(135deg, ${it.color}22, ${it.color}0d)`,
-                    border: `1px solid ${it.color}55`,
-                    borderRadius: '10px',
-                    padding: `${spacing.gap}px`,
-                    textAlign: 'center',
-                }}>
-                    <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontWeight: 600 }}>{it.label}</div>
-                    <div style={{ fontSize: `${fontSize.text + 2}px`, color: it.color, fontWeight: 800 }}>{it.value}{it.unit}</div>
-                </div>
-            ))}
+            {items.map((it) => {
+                const ref = CANNABINOID_BY_ID[it.refId];
+                // Projection statique : la case imprime déjà le sigle ET la valeur chiffrée. Ce que
+                // l'infobulle ajoute — le nom développé, la description, les effets rapportés — est
+                // une PRÉCISION sur un sigle, jamais la donnée elle-même. Un PNG reste complet.
+                const tip = ref && (
+                    <div>
+                        <div style={{ fontWeight: 700, marginBottom: 3 }}>{ref.label}</div>
+                        <div style={{ opacity: 0.85 }}>{it.value}{it.unit}{ref.description ? ` — ${ref.description}` : ''}</div>
+                        {Array.isArray(ref.effects) && ref.effects.length > 0 && (
+                            <div style={{ marginTop: 4, opacity: 0.7, fontSize: 12 }}>{ref.effects.join(' · ')}</div>
+                        )}
+                    </div>
+                );
+                return (
+                    <div
+                        key={it.key}
+                        {...bind(tip)}
+                        tabIndex={interactive && tip ? 0 : undefined}
+                        style={{
+                            background: `linear-gradient(135deg, ${it.color}22, ${it.color}0d)`,
+                            border: `1px solid ${it.color}55`,
+                            borderRadius: '10px',
+                            padding: `${spacing.gap}px`,
+                            textAlign: 'center',
+                            ...affordance(interactive && Boolean(tip), { kind: 'cell' }),
+                        }}
+                    >
+                        <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontWeight: 600 }}>{it.label}</div>
+                        <div style={{ fontSize: `${fontSize.text + 2}px`, color: it.color, fontWeight: 800 }}>{it.value}{it.unit}</div>
+                    </div>
+                );
+            })}
+            {tooltipNode}
         </div>
     );
 }
@@ -109,6 +135,24 @@ function renderFieldValue(field, value, { colors, fontSize, spacing }) {
     // number | percent | text
     const suffix = field.unit ? ` ${field.unit}` : '';
     return <span style={{ fontSize: `${fontSize.text}px`, color: colors.textPrimary, fontWeight: 600 }}>{String(value)}{suffix}</span>;
+}
+
+/**
+ * Valeur d'un champ en texte plat, pour une infobulle.
+ * Volontairement COMPLÈTE là où la cellule peut abréger : une liste y est écrite en entier
+ * (la cellule, elle, peut la tronquer par manque de place), et l'unité est suffixée.
+ */
+function formatTooltipValue(field, value) {
+    if (field.type === 'list') {
+        const arr = Array.isArray(value) ? value : [value];
+        return arr
+            .map((item) => (typeof item === 'object' ? (item.name || item.label || item.nom || JSON.stringify(item)) : String(item)))
+            .join(', ');
+    }
+    if (field.type === 'bool') return value ? 'Oui' : 'Non';
+    if (field.type === 'date') return formatDate(value);
+    if (field.type === 'url') return String(value);
+    return `${String(value)}${field.unit ? ` ${field.unit}` : ''}`;
 }
 
 // ── Rendu spécial recette (ingrédients + étapes) ────────────────────────────────────────
@@ -154,8 +198,9 @@ function RecipeBlock({ reviewData, fontSize, colors, spacing }) {
  * @param {Function} Section - composant Section du template hôte (titre + enfants)
  */
 export function GisementSections({ reviewData, contentModules, groups, Section, colors, fontSize, spacing, groupIcons = {} }) {
+    const { bind, tooltipNode, interactive } = useCanvasTooltip();
     if (!reviewData) return null;
-    return groups.map((group) => {
+    const sections = groups.map((group) => {
         // Recette : rendu dédié
         if (group === 'recipe') {
             const on = isModuleOn(contentModules, 'ingredients') || isModuleOn(contentModules, 'etapesPreparation');
@@ -187,21 +232,45 @@ export function GisementSections({ reviewData, contentModules, groups, Section, 
         return (
             <Section key={group} title={GROUP_LABELS[group]} icon={groupIcons[group] || '📊'} moduleId={`gisement:${group}`}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: `${spacing.gap}px` }}>
-                    {rows.map(({ field, value }) => (
-                        <div key={field.key} style={{
-                            background: `${colors.accent}0f`,
-                            border: `1px solid ${colors.accent}22`,
-                            borderRadius: '8px',
-                            padding: `${spacing.gap}px`,
-                        }}>
-                            <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontWeight: 600, marginBottom: 2 }}>{field.label}</div>
-                            {renderFieldValue(field, value, { colors, fontSize, spacing })}
-                        </div>
-                    ))}
+                    {rows.map(({ field, value }) => {
+                        // Projection statique : la cellule imprime déjà son libellé et sa valeur.
+                        // L'infobulle rend lisible ce que la CELLULE peut tronquer (libellé long
+                        // dans une colonne de 140px, liste réduite à quelques pastilles) et nomme
+                        // l'unité — elle ne détient aucune donnée en propre.
+                        const tip = (
+                            <div>
+                                <div style={{ fontWeight: 700, marginBottom: 3 }}>{field.label}</div>
+                                <div style={{ opacity: 0.85 }}>{formatTooltipValue(field, value)}</div>
+                                <div style={{ marginTop: 4, opacity: 0.6, fontSize: 12 }}>{GROUP_LABELS[group] || group}</div>
+                            </div>
+                        );
+                        return (
+                            <div
+                                key={field.key}
+                                {...bind(tip)}
+                                tabIndex={interactive ? 0 : undefined}
+                                style={{
+                                    background: `${colors.accent}0f`,
+                                    border: `1px solid ${colors.accent}22`,
+                                    borderRadius: '8px',
+                                    padding: `${spacing.gap}px`,
+                                    ...affordance(interactive, { kind: 'cell' }),
+                                }}
+                            >
+                                <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, fontWeight: 600, marginBottom: 2 }}>{field.label}</div>
+                                {renderFieldValue(field, value, { colors, fontSize, spacing })}
+                            </div>
+                        );
+                    })}
                 </div>
             </Section>
         );
     });
+
+    // Le portail d'infobulle est rendu UNE seule fois, hors de la boucle : à l'intérieur, il
+    // serait instancié une fois par groupe et afficherait autant d'infobulles superposées.
+    // Le fragment n'ajoute aucun nœud DOM, donc aucune hauteur mesurée ne change.
+    return <>{sections}{tooltipNode}</>;
 }
 
 CannabinoidGrid.propTypes = {

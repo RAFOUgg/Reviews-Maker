@@ -82,7 +82,9 @@ function MiniPreview({ config, reviewData }) {
                     boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
                 }}
             >
-                <TemplateRenderer config={config} reviewData={reviewData} canvasId="export-maker-canvas-mini" />
+                {/* Aperçu miniature de la modale d'export : c'est une prévisualisation de ce que
+                    le FICHIER va contenir, donc rendue avec les mêmes réglages que la capture. */}
+                <TemplateRenderer config={config} reviewData={reviewData} canvasId="export-maker-canvas-mini" interactive={false} />
             </div>
         </div>
     );
@@ -719,7 +721,8 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                 distinct pour ne jamais entrer en collision avec celui-ci). */}
             {!hasMultiplePages && isStandalone && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
-                    <TemplateRenderer config={config} reviewData={reviewData} />
+                    {/* `interactive={false}` : cet arbre n'existe que pour être photographié. */}
+                    <TemplateRenderer config={config} reviewData={reviewData} interactive={false} />
                 </div>
             )}
             {/* Pagination : `handleExport` cherche `.export-maker-page` — sans ça il ne capture
@@ -740,6 +743,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                 activeModules={page.modules}
                                 pageModuleIds={page.adaptive ? page.modules : undefined}
                                 pageMode
+                                interactive={false}
                             />
                         </div>
                     ))}

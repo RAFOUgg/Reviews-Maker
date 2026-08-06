@@ -115,6 +115,30 @@ qu'aucune donnée n'est accessible uniquement au clic.
 
 ---
 
+## 5 bis. État livré (2026-08-06)
+
+Phases 7.1, 7.2, 7.4 livrées ; 7.3 livrée pour sa partie visible, sa partie hygiène différée ;
+7.5 exécutée. Vérifié sur PNG réellement téléchargés, jamais sur le seul DOM.
+
+| Phase | Livré | Reste |
+|---|---|---|
+| 7.1 | `InteractiveContext.jsx` : `interactive` propagé par `TemplateRenderer`, **faux** sur les arbres de capture (`ExportModal` monte les siens hors-écran) et sur l'arbre de **mesure** (`measureDetailedCardModules`) — donc la pagination est calculée sur le rendu exporté, jamais sur l'affiché. Infobulle par **portail** et non `LiquidTooltip` : son wrapper `inline-flex` aurait changé les hauteurs mesurées. Témoin : grille cannabinoïde (sigle → nom développé, description, effets) | — |
+| 7.2 | `PipelineMiniGrid` : infobulle (nom d'étape + nombre de mesures), détail au clic — panneau en ligne ≤ 6 champs, `LiquidModal` au-delà | — |
+| 7.3 | Détail au clic sur les nœuds des deux canevas en lecture seule ; `title` sur les libellés tronqués ; saut vers la review source depuis un nœud de chaîne | **Déférée** : rendre `ProductionChainCanvas`/`UnifiedGeneticsCanvas` instanciables pour supprimer les doublons `ReadOnly*`. C'est de l'hygiène interne, sans gain visible, mais elle touche les canevas d'**édition** PhenoHunt/Chaîne — refactor disproportionné à faire la veille d'un déploiement |
+| 7.4 | `SensoryRadar` : valeur imprimée sous chaque axe **et** infobulle par axe, sur une zone de survol de 14px (le point fait 2,6px). `<Tooltip>` Recharts de `CultureStatsChart` : constaté **déjà présent**, contrairement à ce que ce plan indiquait | Replis sur les listes longues : non faits — aucune liste ne s'est avérée assez longue pour le justifier sur les données réelles |
+| 7.5 | Équivalence statique **prouvée** sur export PNG réel : la modale d'une étape affiche exactement ce que le PNG imprime déjà (14 étapes × 8 mesures). Zéro infobulle capturée, zéro affordance visible dans le fichier. Pagination **inchangée** : 5 pages avant comme après (comparaison par `git stash` sur la même review) | Cibles tactiles : les cases de pipeline font 26px, pas 44px. **Non corrigé volontairement** — les agrandir change la mise en page statique donc la pagination, pour un gain nul en information (toute la donnée est déjà imprimée) |
+
+### Correction d'une hypothèse de ce plan
+
+Le radar était réputé sans valeur chiffrée « puisqu'elles sont dans la section Évaluation
+sensorielle ». Vérifié : c'est un module DISTINCT, que la pagination adaptative place volontiers
+sur une autre page. Sur une page ne portant que le radar, la valeur exacte n'existait donc nulle
+part — une infobulle en aurait été la seule voie d'accès, ce que la contrainte dure interdit.
+D'où la valeur désormais imprimée sous chaque axe, sur une **seconde ligne** : en suffixe sur la
+même ligne, le libellé débordait le viewBox (« Texture » finit déjà à x≈237 pour 240 de large).
+
+---
+
 ## 6. Hors de ce plan
 
 - Débordement d'Article de Blog 16:9 (134 %) et sévérité de la règle E6 — défauts du rendu figé,

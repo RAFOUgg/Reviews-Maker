@@ -2,6 +2,8 @@ import { useEffect, useMemo, useState } from 'react';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
 import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
+import { LiquidModal } from '@/components/ui/LiquidUI';
+import { useIsInteractive } from './InteractiveContext';
 
 const TYPE_ICONS = { flower: '🌸', hash: '🟤', concentrate: '💎', edible: '🍬' };
 
@@ -30,7 +32,9 @@ function ChainNode({ data }) {
                 même en lecture seule (même bug/fix que `ReadOnlyGenealogyCanvas.jsx`). */}
             <Handle type="target" position={Position.Left} style={{ visibility: 'hidden' }} />
             <span>{TYPE_ICONS[data.reviewType] || '📦'}</span>
-            <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.label}</span>
+            {/* `title` : le libellé est tronqué par `text-overflow: ellipsis` — sans lui, le nom
+                complet d'une étape n'est lisible nulle part sur un nœud étroit. */}
+            <span title={data.fullLabel || data.label} style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{data.label}</span>
             <Handle type="source" position={Position.Right} style={{ visibility: 'hidden' }} />
         </div>
     );
@@ -52,6 +56,8 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
     const reviewId = reviewData?.id;
     const reviewType = normalizeReviewType(reviewData?.type);
     const [chain, setChain] = useState(null);
+    const [detail, setDetail] = useState(null);
+    const interactive = useIsInteractive();
 
     useEffect(() => {
         if (!reviewId) return;
@@ -93,6 +99,12 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
                 label: n.label, reviewType: n.reviewType,
                 isCurrent: n.reviewType === reviewType && n.reviewId === reviewId,
                 accentColor, textColor,
+                // Conservé pour le détail au clic — le nœud n'affiche qu'un libellé tronqué.
+                reviewId: n.reviewId,
+                cells: Array.isArray(n.cellData) ? n.cellData : [],
+                // `title` natif : l'infobulle du nom complet fonctionne même dans le canevas
+                // React Flow, où un survol personnalisé entrerait en concurrence avec le pan.
+                fullLabel: n.label,
             },
         }));
         const edges = (chain.edges || []).map((e) => ({
@@ -130,12 +142,51 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
                         nodesConnectable={false}
                         elementsSelectable={true}
                         zoomOnDoubleClick={false}
+                        onNodeClick={interactive ? (_, node) => setDetail(node.data) : undefined}
                     >
                         <Background color={textColor} gap={16} />
                         <Controls showInteractive={false} />
                     </ReactFlow>
                 </ReactFlowProvider>
             </div>
+
+            {/* Détail d'une étape de la chaîne. Strictement ADDITIF : le canevas imprime déjà le
+                libellé, le type et les liaisons de chaque étape — la modale ne fait qu'épargner
+                le déchiffrage d'un nœud étroit et offrir le saut vers la review source. */}
+            <LiquidModal
+                isOpen={Boolean(detail)}
+                onClose={() => setDetail(null)}
+                size="md"
+                title={`${TYPE_ICONS[detail?.reviewType] || '📦'} ${detail?.fullLabel || detail?.label || ''}`.trim()}
+            >
+                {detail && (
+                    <div className="space-y-3">
+                        <div className="flex flex-wrap gap-2 text-xs">
+                            <span className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-white/70">
+                                {detail.reviewType || 'étape'}
+                            </span>
+                            {detail.isCurrent && (
+                                <span className="px-2 py-1 rounded-lg bg-purple-500/20 border border-purple-500/30 text-purple-300">
+                                    Review affichée
+                                </span>
+                            )}
+                            {detail.cells?.length > 0 && (
+                                <span className="px-2 py-1 rounded-lg bg-white/[0.06] border border-white/10 text-white/70">
+                                    {detail.cells.length} étape{detail.cells.length > 1 ? 's' : ''} documentée{detail.cells.length > 1 ? 's' : ''}
+                                </span>
+                            )}
+                        </div>
+                        {detail.reviewId && !detail.isCurrent && (
+                            <a
+                                href={`/review/${detail.reviewId}`}
+                                className="inline-flex items-center gap-2 px-3 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-medium transition-colors"
+                            >
+                                Ouvrir cette fiche →
+                            </a>
+                        )}
+                    </div>
+                )}
+            </LiquidModal>
         </div>
     );
 }

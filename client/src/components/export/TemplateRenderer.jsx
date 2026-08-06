@@ -5,6 +5,7 @@ import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
 import TraceabilityReportTemplate from '../templates/TraceabilityReportTemplate';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
+import { InteractivityProvider } from './interactive/InteractiveContext';
 
 // Mapping des templates
 const TEMPLATES = {
@@ -24,7 +25,7 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true }) {
     let TemplateComponent = TEMPLATES[config.template];
     const adaptedReviewData = buildExportReviewData(reviewData);
 
@@ -112,12 +113,18 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                 isolation: 'isolate',
             }}
         >
-            <TemplateComponent
-                config={filteredConfig}
-                reviewData={adaptedReviewData}
-                dimensions={dimensions}
-                pageMode={pageMode}
-            />
+            {/* `interactive` (phase 7.1) : vrai à l'écran, faux sur les arbres montés pour la
+                capture (ExportModal monte les siens hors-écran) et pour la mesure de pagination.
+                Les composants interactifs le lisent via `useIsInteractive()` et n'attachent alors
+                ni handler ni affordance visuelle — un PNG ne se clique pas. */}
+            <InteractivityProvider interactive={interactive}>
+                <TemplateComponent
+                    config={filteredConfig}
+                    reviewData={adaptedReviewData}
+                    dimensions={dimensions}
+                    pageMode={pageMode}
+                />
+            </InteractivityProvider>
         </div>
     );
 }
@@ -139,7 +146,9 @@ TemplateRenderer.propTypes = {
     pageMode: PropTypes.bool,
     canvasId: PropTypes.string,
     className: PropTypes.string,
-    allowOverflow: PropTypes.bool
+    allowOverflow: PropTypes.bool,
+    /** Faux sur un arbre monté pour la capture ou la mesure : aucune affordance, aucun handler. */
+    interactive: PropTypes.bool
 };
 
 

@@ -5,6 +5,7 @@ import BlogArticleTemplate from './BlogArticleTemplate';
 import SocialStoryTemplate from './SocialStoryTemplate';
 import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
+import { InteractivityProvider } from '../export/interactive/InteractiveContext';
 
 // Délai de stabilisation avant mesure — couvre le chargement de l'image principale, le premier
 // paint de Recharts (`CultureStatsChart`) et React Flow qui termine son `fitView()`.
@@ -93,7 +94,14 @@ export function measureDetailedCardModules(reviewData, config) {
             // l'aperçu Studio (mesuré) même s'ils s'affichent très bien via le bouton "Exporter"
             // autonome (qui, lui, applique déjà l'adaptateur) — bug trouvé en vérification 2026-08-02.
             const adaptedReviewData = buildExportReviewData(reviewData);
-            root.render(<TemplateComponent config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />);
+            // `interactive={false}` : cet arbre sert à MESURER les hauteurs qui pilotent la
+            // pagination. Il doit être strictement identique à l'arbre exporté, jamais à l'arbre
+            // affiché — sinon la pagination serait calculée sur un rendu qui n'est pas celui du PNG.
+            root.render(
+                <InteractivityProvider interactive={false}>
+                    <TemplateComponent config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />
+                </InteractivityProvider>
+            );
         } catch (err) {
             if (host.parentNode) host.parentNode.removeChild(host);
             reject(err);

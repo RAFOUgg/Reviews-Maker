@@ -2,6 +2,13 @@ import { useState } from 'react';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
 import { safeParse, colorWithOpacity } from '../../../utils/exportMakerHelpers';
 import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
+import { LiquidModal } from '@/components/ui/LiquidUI';
+import { useCanvasTooltip, affordance } from './InteractiveContext';
+
+// Au-delà de ce nombre de mesures, le panneau en ligne sous la grille devient un pavé qui
+// déborde la page : le détail part alors dans une modale (vocabulaire d'interaction du plan C8,
+// §3 — « modale : un détail structuré »). En deçà, le panneau en ligne reste plus direct.
+const INLINE_FIELD_LIMIT = 6;
 
 /**
  * PipelineMiniGrid - Grille interactive lecture seule d'une timeline de pipeline
@@ -14,6 +21,8 @@ import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
  */
 export default function PipelineMiniGrid({ type, name, icon, timelineData, timelineConfig, accentColor = '#a78bfa' }) {
     const [selected, setSelected] = useState(null);
+    const [modalCell, setModalCell] = useState(null);
+    const { bind, tooltipNode, interactive } = useCanvasTooltip();
 
     const config = safeParse(timelineConfig, null);
     const data = safeParse(timelineData, []);
@@ -67,11 +76,37 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                     const fields = getCellFields(cell.timestamp);
                     const hasData = fields && Object.keys(fields).length > 0;
                     const isSelected = selected === cell.timestamp;
+                    const entryCount = hasData ? Object.keys(fields).filter((k) => !['timestamp', 'date'].includes(k)).length : 0;
+                    // Infobulle : le nom complet de l'étape (la case ne porte que son numéro) et
+                    // le nombre de mesures qu'elle contient. Le détail lui-même reste accessible
+                    // sans interaction, sous la grille (`PipelineStepFields` dans les templates).
+                    const tip = (
+                        <div>
+                            <div style={{ fontWeight: 700, marginBottom: 3 }}>{cell.label}</div>
+                            <div style={{ opacity: 0.85 }}>
+                                {hasData ? `${entryCount} mesure${entryCount > 1 ? 's' : ''} enregistrée${entryCount > 1 ? 's' : ''}` : 'Étape non documentée'}
+                            </div>
+                            {hasData && (
+                                <div style={{ marginTop: 4, opacity: 0.6, fontSize: 12 }}>
+                                    {entryCount > INLINE_FIELD_LIMIT ? 'Cliquez pour le détail complet' : 'Cliquez pour le détail'}
+                                </div>
+                            )}
+                        </div>
+                    );
+                    const openCell = () => {
+                        if (!hasData) return;
+                        if (entryCount > INLINE_FIELD_LIMIT) {
+                            setModalCell(cell.timestamp);
+                        } else {
+                            setSelected(isSelected ? null : cell.timestamp);
+                        }
+                    };
                     return (
                         <button
                             key={cell.id}
                             type="button"
-                            onClick={() => setSelected(isSelected ? null : cell.timestamp)}
+                            onClick={interactive ? openCell : undefined}
+                            {...bind(tip)}
                             title={cell.label}
                             style={{
                                 // Cellules PORTANT leur numéro d'étape. Elles étaient des carrés
@@ -87,8 +122,8 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                                 color: hasData ? accentColor : colorWithOpacity(accentColor, 45),
                                 backgroundColor: colorWithOpacity(accentColor, hasData ? 55 : 15),
                                 border: isSelected ? `2px solid ${accentColor}` : `1px solid ${colorWithOpacity(accentColor, hasData ? 45 : 20)}`,
-                                cursor: hasData ? 'pointer' : 'default',
                                 padding: '0 4px',
+                                ...(interactive && hasData ? affordance(true, { kind: 'click' }) : { cursor: 'default' }),
                             }}
                         >
                             {cell.shortLabel || cell.label?.replace(/[^0-9]/g, '') || ''}
@@ -115,6 +150,41 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                     </div>
                 );
             })()}
+
+            {/* Étape dense : le détail part en modale plutôt que de pousser un pavé sous la grille,
+                qui déborderait la page. `LiquidModal` est rendue par un portail sur document.body —
+                donc hors du nœud cloné par `prepareCapture`, jamais capturée par accident. */}
+            <LiquidModal
+                isOpen={Boolean(modalCell)}
+                onClose={() => setModalCell(null)}
+                size="lg"
+                title={(() => {
+                    const cell = cells.find((c) => String(c.timestamp) === String(modalCell));
+                    return `${icon || ''} ${name} — ${cell?.label || ''}`.trim();
+                })()}
+            >
+                {(() => {
+                    if (!modalCell) return null;
+                    const fields = getCellFields(modalCell) || {};
+                    const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date'].includes(k));
+                    if (entries.length === 0) return <p className="text-white/50 text-sm">Aucune donnée pour cette étape.</p>;
+                    return (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                            {entries.map(([k, v]) => (
+                                <div key={k} className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
+                                    <div className="text-[11px] uppercase tracking-wide text-white/40">
+                                        {getFieldLabel(k) || humanizeKey(k)}
+                                    </div>
+                                    <div className="text-sm text-white font-medium break-words">
+                                        {typeof v === 'object' ? JSON.stringify(v) : String(v)}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    );
+                })()}
+            </LiquidModal>
+            {tooltipNode}
         </div>
     );
 }

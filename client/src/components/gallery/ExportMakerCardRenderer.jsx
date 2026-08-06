@@ -55,7 +55,11 @@ export default function ExportMakerCardRenderer({ reviewData, exportMakerConfig 
                     transform: `translate(-50%, -50%) scale(${scale})`,
                 }}
             >
-                <TemplateRenderer config={config} reviewData={reviewData} />
+                {/* Vignette de galerie : fortement réduite et elle-même cliquable pour ouvrir la
+                    review. Une infobulle par champ y serait du bruit et entrerait en conflit avec
+                    ce clic — l'interactivité appartient aux surfaces de lecture (/r/:id, Studio,
+                    page de détail), pas à une vignette. */}
+                <TemplateRenderer config={config} reviewData={reviewData} interactive={false} />
             </div>
         </div>
     );
