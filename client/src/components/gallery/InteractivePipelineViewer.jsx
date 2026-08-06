@@ -30,7 +30,15 @@ function parsePipelineSteps(pipeline) {
 }
 
 function getStepLabel(step, index) {
-    return step.label || step.phase || step.semaine || step.date || step.jour || step._cellKey || `Étape ${index + 1}`;
+    // `cellLabel` EN PREMIER : c'est le libellé d'affichage réellement produit par
+    // `generateTimelineCells()` — « J1 », « S3 », « 12/04 » selon l'intervalle choisi dans le
+    // formulaire. Il manquait de cette liste, si bien qu'une culture par semaines s'affichait
+    // « Étape 1, Étape 2… » au lieu de « S1, S2… » (signalé par l'utilisateur le 2026-08-06).
+    //
+    // Même oubli, même conséquence que les six précédents cas de ce repo : un nom de champ deviné
+    // au lieu d'être repris de la source. `PipelineTimeline.stepLabel` le lisait déjà, lui.
+    return step.cellLabel || step.label || step.phase || step.semaine || step.date || step.jour
+        || step._cellKey || `Étape ${index + 1}`;
 }
 
 function getMetricIcon(key) {
