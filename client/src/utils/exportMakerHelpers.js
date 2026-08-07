@@ -974,7 +974,31 @@ export function extractPipelines(reviewData) {
         if (curingPipeline && !curingPipeline.configMeta) curingPipeline.configMeta = curingConfigMeta;
     }
 
-    return pipelines;
+    // Un pipeline dont AUCUNE étape ne porte de donnée n'est pas un pipeline, c'est une trame vide.
+    // Chaque test ci-dessus ne vérifie que `arr.length > 0` : une trame créée puis jamais remplie
+    // (cas courant — on choisit la durée du curing avant de saisir quoi que ce soit) produisait donc
+    // une section entière « Curing & Maturation · 1 étape · 0/1 documentées · Pas de données ».
+    // Signalé sur capture le 2026-08-07 dans le rendu écran d'une review Hash.
+    //
+    // Filtré ICI, à la source, plutôt que dans les rendus : les trois surfaces qui affichent un
+    // pipeline (`PipelineTimeline`, `PipelineMiniGrid`, `InteractivePipelineViewer`) en héritent
+    // d'un coup, et surtout le budget de pagination cesse de réserver de la place pour du vide.
+    return pipelines.filter((p) => p.rawSteps.some(stepHasContent));
+}
+
+// Clés de STRUCTURE d'une étape : elles situent l'étape dans la trame, elles ne disent rien de ce
+// qui s'y est passé. Une étape qui n'a que celles-là est vide.
+const STEP_STRUCTURAL_KEYS = new Set(['timestamp', 'date', 'phase', 'jour', 'semaine', 'index', '_meta']);
+
+function stepHasContent(step) {
+    if (!step || typeof step !== 'object') return Boolean(step);
+    const hasValue = (v) => v !== null && v !== undefined && v !== ''
+        && !(Array.isArray(v) && v.length === 0)
+        && !(typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0);
+    // `data` est le sac de champs saisis (cf. PipelineMiniGrid.getCellFields) : c'est lui qui
+    // porte le contenu réel d'une cellule.
+    if (step.data && typeof step.data === 'object' && Object.values(step.data).some(hasValue)) return true;
+    return Object.entries(step).some(([k, v]) => k !== 'data' && !STEP_STRUCTURAL_KEYS.has(k) && hasValue(v));
 }
 
 /**

@@ -991,6 +991,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
 
     return (
         <GraphCanvasShell
+            readOnly={readOnly}
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}

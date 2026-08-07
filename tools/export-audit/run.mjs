@@ -101,7 +101,7 @@ async function auditViaExportModal(page, subjectId) {
     const trigger = page.getByRole('button', { name: /^Exporter$/ }).first();
     if (!(await trigger.count())) return null;
     await trigger.click();
-    await sleep(7000);
+    await sleep(Number(process.env.AUDIT_EXPORT_WAIT_MS || 7000));
 
     const res = await auditCurrent(page);
     return res;
@@ -251,8 +251,12 @@ async function main() {
 
                         // inaperçue (arrivé en production le 2026-08-06).
 
-                        if (density !== 'minimal') await attachCanvases(API, id, type);
                         created.push(id);
+                        if (density !== 'minimal') {
+                            const { upstreamId } = await attachCanvases(API, id, type);
+                            // Review amont de la chaîne : à nettoyer comme les autres.
+                            if (upstreamId) created.push(upstreamId);
+                        }
                         subjects.push({ id, type, label: `${type}/${density}` });
                         console.log(`  ✔ ${type}/${density} → ${id.slice(0, 8)}`);
                     } catch (e) {

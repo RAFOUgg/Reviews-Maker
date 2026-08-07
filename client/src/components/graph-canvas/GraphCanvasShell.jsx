@@ -59,6 +59,17 @@ export default function GraphCanvasShell({
     // Désactivé par défaut pour ne rien changer à UnifiedGeneticsCanvas (PhenoHunt), qui ne passe
     // pas ce prop — seule la Chaîne de production l'active (chaînes potentiellement plus denses).
     onlyRenderVisibleElements = false,
+    // RENDU FIGÉ (export, page publique, galerie) : aucun contrôle de saisie ne doit apparaître.
+    // Les boutons de zoom, la minimap et l'attribution « React Flow » sont des outils d'ÉDITION ;
+    // dans une fiche technique ils sont au mieux du bruit, au pire une signature de bibliothèque
+    // dans un document commercial — et ils partaient jusqu'ici dans le PNG exporté comme dans la
+    // page publique (constaté sur capture le 2026-08-07 : minimap et boutons +/− dans la chaîne de
+    // production d'une review Hash).
+    //
+    // Troisième occurrence de la même classe de défaut, après le curseur de zoom et le bloc
+    // « Astuce : maintenez Ctrl/Cmd » de `PipelineGridView`. C'est pourquoi elle est traitée ICI,
+    // dans le shell partagé par les deux canevas, et pas au cas par cas chez les appelants.
+    readOnly = false,
 }) {
     // ── Appui long tactile → menus contextuels ──────────────────────────────────────────────
     // Générique et partagé par les deux domaines (PhenoHunt et Chaîne de production) : le clic
@@ -228,10 +239,15 @@ export default function GraphCanvasShell({
                 // sont des nœuds différents — CultivarNode expose un handle source ET target sur
                 // chaque côté, donc un nœud peut sinon se connecter à lui-même.
                 isValidConnection={(c) => c.source !== c.target}
+                // L'attribution « React Flow » est un lien cliquable posé en bas à droite du
+                // canevas. Dans un rendu figé, c'est la signature d'une bibliothèque tierce au
+                // milieu d'un document produit. Masquée en lecture seule uniquement — elle reste
+                // affichée dans l'éditeur, où elle est due.
+                proOptions={readOnly ? { hideAttribution: true } : undefined}
             >
                 <Background color="#aaa" gap={16} />
-                <Controls />
-                <MiniMap nodeColor={minimapNodeColor} maskColor={minimapMaskColor} />
+                {!readOnly && <Controls />}
+                {!readOnly && <MiniMap nodeColor={minimapNodeColor} maskColor={minimapMaskColor} />}
                 {toolbar}
                 {sidePanel}
             </ReactFlow>

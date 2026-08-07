@@ -177,15 +177,23 @@ export async function attachCanvases(baseApi, id, type) {
 
     const chain = await post('/api/production-chains/chains', { name: `ZZ-AUDIT chaîne ${type}` });
     const chainId = chain?.id || chain?.data?.id;
+    // Review AMONT distincte. Les deux nœuds pointaient auparavant sur la MÊME review : le serveur
+    // rejette le second (400 « Invalid review reference »), `post()` avale l'erreur, et la chaîne
+    // se retrouvait avec un seul nœud. Or `ReadOnlyProductionChainCanvas` exige `nodes.length >= 2`
+    // — le canevas ne s'est donc JAMAIS rendu dans un audit, et ses modules mesuraient 16-20px.
+    // Le commit qui prétendait attacher une chaîne aux fixtures (2026-08-06) n'a en réalité rien
+    // exercé, faute d'avoir vérifié le résultat. Une chaîne réelle relie de toute façon deux
+    // produits différents (Fleur → Hash), pas une review à elle-même.
+    let upstreamId = null;
     if (chainId) {
-        // Deux nœuds reliés : un canevas à un seul nœud ne teste pas le rendu des arêtes.
+        upstreamId = await createFixture(baseApi, 'flower', 'minimal').catch(() => null);
         const a = await post(`/api/production-chains/chains/${chainId}/nodes`,
-            { reviewType: type, reviewId: id, position: { x: 40, y: 60 } });
-        const b = await post(`/api/production-chains/chains/${chainId}/nodes`,
             { reviewType: type, reviewId: id, position: { x: 320, y: 60 } });
+        const b = upstreamId && await post(`/api/production-chains/chains/${chainId}/nodes`,
+            { reviewType: 'flower', reviewId: upstreamId, position: { x: 40, y: 60 } });
         const aId = a?.id || a?.data?.id, bId = b?.id || b?.data?.id;
         if (aId && bId) {
-            await post(`/api/production-chains/chains/${chainId}/edges`, { sourceId: aId, targetId: bId });
+            await post(`/api/production-chains/chains/${chainId}/edges`, { sourceId: bId, targetId: aId });
         }
     }
 
@@ -198,7 +206,8 @@ export async function attachCanvases(baseApi, id, type) {
             { label: 'Parent B', position: { x: 240, y: 40 } });
     }
 
-    return { chainId, treeId };
+    // `upstreamId` remonte pour que l'appelant la supprime au nettoyage : c'est une vraie review.
+    return { chainId, treeId, upstreamId };
 }
 
 /** Supprime une fixture. Ne lève jamais — le nettoyage ne doit pas masquer le résultat d'audit. */

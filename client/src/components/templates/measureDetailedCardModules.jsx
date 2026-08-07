@@ -1,4 +1,5 @@
 import { createRoot } from 'react-dom/client';
+import { MemoryRouter } from 'react-router-dom';
 import DetailedCardTemplate from './DetailedCardTemplate';
 import ModernCompactTemplate from './ModernCompactTemplate';
 import BlogArticleTemplate from './BlogArticleTemplate';
@@ -99,10 +100,28 @@ export function measureDetailedCardModules(reviewData, config) {
             // `interactive={false}` : cet arbre sert à MESURER les hauteurs qui pilotent la
             // pagination. Il doit être strictement identique à l'arbre exporté, jamais à l'arbre
             // affiché — sinon la pagination serait calculée sur un rendu qui n'est pas celui du PNG.
+            // `MemoryRouter` : cet arbre est monté par `createRoot` sur un hôte DÉTACHÉ de
+            // l'application, il n'hérite donc d'AUCUN contexte React de la page — y compris le
+            // routeur. Or les canevas en lecture seule (chaîne de production, généalogie) rendent
+            // des nœuds qui appellent `useNavigate()` pour pouvoir ouvrir la review liée.
+            //
+            // Sans routeur, ce hook LÈVE (« useNavigate() may be used only in the context of a
+            // <Router> component »), toute la mesure échoue, et `useAdaptivePages` retombe
+            // silencieusement sur les gabarits statiques — qui répètent le masthead sur chaque page
+            // et débordent. Autrement dit : la pagination adaptative cessait de fonctionner pour
+            // TOUTE review portant une chaîne de production ou un arbre généalogique.
+            //
+            // Le défaut est resté invisible parce que les fixtures d'audit ne montaient jamais ces
+            // canevas : leurs deux nœuds pointaient sur la même review, le serveur refusait le
+            // second, et le canevas exige `nodes.length >= 2`. Mesure faussement verte de bout en
+            // bout. Mémoire : c'est la même famille que le `ReactFlowProvider` oublié — un arbre de
+            // mesure détaché doit reproduire TOUS les fournisseurs de contexte de l'arbre réel.
             root.render(
-                <InteractivityProvider interactive={false}>
-                    <TemplateComponent config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />
-                </InteractivityProvider>
+                <MemoryRouter>
+                    <InteractivityProvider interactive={false}>
+                        <TemplateComponent config={measureConfig} reviewData={adaptedReviewData} dimensions={dims} />
+                    </InteractivityProvider>
+                </MemoryRouter>
             );
         } catch (err) {
             if (host.parentNode) host.parentNode.removeChild(host);

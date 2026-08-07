@@ -550,6 +550,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
 
     return (
         <GraphCanvasShell
+            readOnly={readOnly}
             nodes={nodes}
             edges={edges}
             onNodesChange={onNodesChange}

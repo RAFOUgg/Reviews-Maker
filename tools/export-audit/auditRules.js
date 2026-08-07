@@ -156,6 +156,27 @@
         return { color: null, gradient: false };
     }
 
+    /**
+     * L'élément est-il un outil de SAISIE ? Distinct d'`isInteractive` (règle E12), qui mesure des
+     * cibles tactiles et accepte volontiers un lien ou une carte cliquable : ici on ne cherche que
+     * ce qui n'a aucun sens dans un document — champs de formulaire, boutons de commande, contrôles
+     * de canevas React Flow, et l'attribution de la bibliothèque.
+     */
+    function isEditingAffordance(el) {
+        const tag = el.tagName.toLowerCase();
+        if (tag === 'input' || tag === 'select' || tag === 'textarea') return true;
+        const cls = (typeof el.className === 'string' ? el.className : '') || '';
+        // Contrôles React Flow : classes stables de la bibliothèque.
+        if (/\breact-flow__(controls|minimap|attribution)\b/.test(cls)) return true;
+        if (tag === 'button') {
+            // Un bouton dont le contenu est une commande d'édition. Les boutons purement
+            // décoratifs/navigationnels d'une page publique ne sont pas visés par cette règle —
+            // elle ne s'applique qu'aux canevas d'export (`paged`).
+            return true;
+        }
+        return false;
+    }
+
     function isInteractive(el) {
         const tag = el.tagName.toLowerCase();
         if (tag === 'button' || tag === 'a' || tag === 'input' || tag === 'select') return true;
@@ -234,6 +255,17 @@
                 if (ACCENT_SURFACE_ONLY.includes(cs.color.replace(/\s+/g, ' ').trim())) {
                     push('G7', 'error', 'Accent #8B5CF6 utilisé comme couleur de TEXTE (surface uniquement)', el);
                 }
+            }
+
+            // ── E13 : affordance d'ÉDITION dans un rendu ──
+            // Un rendu figé ou public ne contient aucun outil de saisie. La règle existe parce que
+            // le défaut s'est reproduit TROIS fois avant d'être vu : curseur de zoom de la grille
+            // de pipeline, bloc « Astuce : maintenez Ctrl/Cmd », puis boutons de zoom + minimap +
+            // attribution React Flow des canevas. À chaque fois découvert à l'œil sur une capture,
+            // jamais par la mesure. Corriger la classe sans poser le garde-fou garantissait une
+            // quatrième occurrence.
+            if (paged && isEditingAffordance(el)) {
+                push('E13', 'error', `Contrôle de saisie dans un rendu : ${describe(el)}`, el);
             }
 
             // ── E4b : conteneur INTERNE qui coupe son contenu ──
