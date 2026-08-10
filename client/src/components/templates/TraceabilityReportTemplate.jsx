@@ -12,6 +12,7 @@ import {
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
+import { useDocumentSeal, formatIssuedAt } from '../../hooks/useDocumentSeal';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
@@ -119,6 +120,11 @@ function useReviewEvents(reviewData) {
  * données réelles — un rapport de traçabilité vide de contenu n'a aucune valeur probante.
  */
 export default function TraceabilityReportTemplate({ config, reviewData, dimensions }) {
+    // AVANT le retour anticipé — un hook placé après change l'ordre des hooks entre deux rendus,
+    // ce que React interdit (constaté en plantant l'export sur l'autre template).
+    const { shortHash } = useDocumentSeal(reviewData);
+    const issuedAt = formatIssuedAt();
+
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-8">
@@ -240,7 +246,12 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                         </div>
                         <div style={{ fontSize: `${fontSize.small}px` }}>
                             <div style={{ fontFamily: 'monospace', fontWeight: 700 }}>{getLotCode(reviewData.id)}</div>
+                            {/* Date d'émission + empreinte : sans elles, deux exports du même lot
+                                à trois mois d'écart sont indiscernables (cf. `useDocumentSeal`). */}
                             <div style={{ opacity: 0.6, fontSize: `${fontSize.small - 2}px` }}>Identifiant interne — non réglementaire</div>
+                            <div style={{ opacity: 0.6, fontSize: `${fontSize.small - 2}px`, fontFamily: 'monospace' }}>
+                                émis le {issuedAt}{shortHash ? ` · empreinte ${shortHash}` : ''}
+                            </div>
                         </div>
                     </div>
                 )}

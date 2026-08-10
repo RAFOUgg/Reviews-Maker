@@ -36,6 +36,7 @@ import CultureStatsChart from './sections/CultureStatsChart';
 import PipelineTimeline from './sections/PipelineTimeline';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
+import { useDocumentSeal, formatIssuedAt } from '../../hooks/useDocumentSeal';
 
 // Groupes du "gisement" rendus génériquement depuis le registre — 'lab' est retiré de cette liste
 // car ses 7 champs sont désormais assemblés explicitement dans la section 04 "Données laboratoire
@@ -93,6 +94,12 @@ const MONO = '"JetBrains Mono", "SF Mono", ui-monospace, monospace';
  * fond clair.
  */
 export default function DetailedCardTemplate({ config, reviewData, dimensions }) {
+    // AVANT tout retour anticipé : un hook appelé après un `return` conditionnel change l'ordre des
+    // hooks d'un rendu à l'autre, ce que React interdit — placé plus bas, il faisait planter le
+    // rendu (« Cannot read properties of null »), attrapé sur un export réel.
+    const { shortHash } = useDocumentSeal(reviewData);
+    const issuedAt = formatIssuedAt();
+
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
@@ -185,6 +192,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const producerName = reviewData.farm || reviewData.hashmaker || reviewData.breeder || '';
     const authorName = reviewData.ownerName || (typeof reviewData.author === 'string' ? reviewData.author : reviewData.author?.username) || 'Anonyme';
     const lotCode = reviewData.id ? getLotCode(reviewData.id) : null;
+
     const docDate = formatDate(reviewData.date || reviewData.createdAt);
 
     // ── Section 01 : familles sensorielles ────────────────────────────────────────────────
@@ -771,9 +779,16 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             <QRCodeSVG value={getLotCodeUrl(reviewData.id)} size={36} level="M" />
                         </div>
                     )}
+                    {/* Sceau du document : lot, date d'émission, empreinte. Sans la date et
+                        l'empreinte, deux exports du même lot produits à trois mois d'écart — après
+                        correction d'une valeur de labo — sont strictement indiscernables, et rien
+                        ne dit lequel fait foi. Le libellé reste volontairement modeste : l'empreinte
+                        permet de DÉTECTER une divergence, pas de prouver une antériorité (cf.
+                        `useDocumentSeal`). */}
                     <div style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, color: textSecondary }}>
                         <b style={{ color: textPrimary }}>Identifiant interne — non réglementaire.</b>
-                        {lotCode && <><br />Généré par Terpologie Export Maker · doc {lotCode}</>}
+                        {lotCode && <><br />Terpologie Export Maker · lot {lotCode} · émis le {issuedAt}</>}
+                        {shortHash && <><br />empreinte {shortHash}</>}
                     </div>
                     <div style={{ marginLeft: 'auto', fontFamily: DISPLAY, fontSize: `${fontSize.text}px`, fontWeight: 600, color: textSecondary }}>
                         TERPO<span style={{ color: accentReadable }}>LOGIE</span>
