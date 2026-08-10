@@ -121,9 +121,16 @@ function tinyPngBlob() {
     return new Blob([bytes], { type: 'image/png' });
 }
 
-/** Crée une fixture via l'API. Retourne son id. */
-export async function createFixture(baseApi, type, density) {
-    const body = buildFixture(type, density);
+/**
+ * Crée une fixture via l'API. Retourne son id.
+ *
+ * `extra` pose des champs supplémentaires à LA CRÉATION — en particulier `geneticTreeId`. C'est le
+ * seul moment où on peut le faire : `PUT /api/flower-reviews/:id` est un remplacement complet (il
+ * exige `nomCommercial` et écraserait le contenu dense de la fixture), et `GET` sur cette même
+ * route répond 403 sans session, ce qui interdit de relire la review pour la reposer entière.
+ */
+export async function createFixture(baseApi, type, density, extra = {}) {
+    const body = { ...buildFixture(type, density), ...extra };
     const fd = new FormData();
     for (const [k, v] of Object.entries(body)) fd.append(k, String(v));
     // TOUTES les densités portent une photo, y compris `minimal` (corrigé le 2026-08-05).
@@ -150,20 +157,17 @@ export async function createFixture(baseApi, type, density) {
 }
 
 
-/**
- * Attache une CHAÎNE DE PRODUCTION et un ARBRE GÉNÉALOGIQUE à une fixture.
- *
- * POURQUOI C'EST INDISPENSABLE. Sans eux, les fixtures n'exercent jamais les deux canevas — et une
- * mesure « inchangée » ne prouve alors rien à leur sujet. C'est précisément cet angle mort qui a
- * laissé partir en production, le 2026-08-06, une régression faisant disparaître la chaîne ET la
- * généalogie de tous les rendus : les métriques d'export étaient identiques, puisque rien de ce
- * qui avait disparu n'était mesuré.
- *
- * Ne lève jamais : l'absence de droits (accès Pro requis sur ces deux routes) ne doit pas faire
- * échouer tout l'audit, elle doit juste laisser la fixture sans canevas.
- */
-export async function attachCanvases(baseApi, id, type) {
-    const post = async (url, body) => {
+// Un échec de fixture doit se VOIR. Ce helper renvoyait `null` en silence, et c'est exactement ce
+// qui a laissé passer TROIS jeux de test aveugles d'affilée :
+//   • la chaîne dont le 2e nœud était rejeté (400, trouvé le 2026-08-07) ;
+//   • l'arbre dont TOUS les nœuds étaient rejetés (400 « Valid cultivar name is required » — le
+//     corps envoyait `label`, le contrat attend `cultivarName` ; trouvé le 2026-08-10) ;
+//   • l'arête de chaîne, rejetée elle aussi (400 — `sourceId`/`targetId` au lieu de
+//     `sourceNodeId`/`targetNodeId`), donc pas un seul LIEN rendu entre deux produits.
+// À chaque fois le canevas ne se montait pas, ou se montait vide, ses modules mesuraient 16-32px, et
+// aucun rapport d'audit ne pouvait le révéler. D'où le bruit assumé de ces avertissements.
+function makePost(baseApi) {
+    return async (url, body) => {
         try {
             const res = await fetch(`${baseApi}${url}`, {
                 method: 'POST',
@@ -171,9 +175,73 @@ export async function attachCanvases(baseApi, id, type) {
                 credentials: 'include',
                 body: JSON.stringify(body),
             });
-            return res.ok ? await res.json() : null;
-        } catch { return null; }
+            if (!res.ok) {
+                console.warn(`  ⚠ fixture : POST ${url} → ${res.status} ${(await res.text()).slice(0, 120)}`);
+                return null;
+            }
+            return await res.json();
+        } catch (e) {
+            console.warn(`  ⚠ fixture : POST ${url} → ${e.message}`);
+            return null;
+        }
     };
+}
+
+/**
+ * Crée un ARBRE GÉNÉALOGIQUE peuplé (2 cultivars + 1 filiation) et retourne son id.
+ *
+ * Séparé de `attachCanvases` parce qu'il doit exister AVANT la review : `geneticTreeId` ne peut se
+ * poser qu'à la création (cf. `createFixture`). Tant qu'il ne l'était pas, `ReadOnlyGenealogyCanvas`
+ * se masquait faute de lien, et le canevas de généalogie n'a JAMAIS été rendu dans un audit.
+ */
+export async function createGeneticTree(baseApi, label = 'audit') {
+    const post = makePost(baseApi);
+    const tree = await post('/api/genetics/trees', { name: `ZZ-AUDIT arbre ${label}` });
+    const treeId = tree?.id || tree?.data?.id;
+    if (!treeId) return null;
+    // `cultivarName`, PAS `label` — contrat de `validateNodeCreation` (`validateGenetics.js`).
+    // `label` est le vocabulaire des nœuds de CHAÎNE, un tout autre modèle : 9e occurrence du bug
+    // de vocabulaire deviné de ce repo, la première à ne toucher que l'outillage.
+    const p = await post(`/api/genetics/trees/${treeId}/nodes`,
+        { cultivarName: 'ZZ-AUDIT Parent A', position: { x: 40, y: 40 } });
+    const c = await post(`/api/genetics/trees/${treeId}/nodes`,
+        { cultivarName: 'ZZ-AUDIT Parent B', position: { x: 240, y: 40 } });
+    // Une filiation, pas deux nœuds posés côte à côte : sans arête, la géométrie des liaisons
+    // (handles, tracé) n'est pas exercée — c'est la moitié de ce qu'un arbre doit rendre.
+    const pId = p?.id || p?.data?.id, cId = c?.id || c?.data?.id;
+    if (pId && cId) await post(`/api/genetics/trees/${treeId}/edges`, { parentNodeId: pId, childNodeId: cId });
+    return treeId;
+}
+
+/**
+ * Porte d'entrée à utiliser PARTOUT : une fixture dont les deux canevas sont réellement exercés
+ * (arbre généalogique lié + chaîne de production reliée à une review amont distincte).
+ *
+ * Retourne `{ id, treeId, chainId, upstreamId }`. `upstreamId` est une VRAIE review : l'appelant
+ * doit la supprimer au nettoyage comme la principale.
+ */
+export async function createFixtureWithCanvases(baseApi, type, density) {
+    // L'arbre d'abord : son id doit voyager dans le corps de création de la review.
+    const treeId = type === 'flower' ? await createGeneticTree(baseApi, `${type}/${density}`) : null;
+    const id = await createFixture(baseApi, type, density, treeId ? { geneticTreeId: treeId } : {});
+    const { chainId, upstreamId } = await attachCanvases(baseApi, id, type);
+    return { id, treeId, chainId, upstreamId };
+}
+
+/**
+ * Attache une CHAÎNE DE PRODUCTION à une fixture existante.
+ *
+ * POURQUOI C'EST INDISPENSABLE. Sans elle, les fixtures n'exercent jamais le canevas — et une
+ * mesure « inchangée » ne prouve alors rien à son sujet. C'est précisément cet angle mort qui a
+ * laissé partir en production, le 2026-08-06, une régression faisant disparaître la chaîne ET la
+ * généalogie de tous les rendus : les métriques d'export étaient identiques, puisque rien de ce
+ * qui avait disparu n'était mesuré.
+ *
+ * Ne lève jamais : l'absence de droits (accès Pro requis sur cette route) ne doit pas faire échouer
+ * tout l'audit, elle doit juste laisser la fixture sans canevas.
+ */
+export async function attachCanvases(baseApi, id, type) {
+    const post = makePost(baseApi);
 
     const chain = await post('/api/production-chains/chains', { name: `ZZ-AUDIT chaîne ${type}` });
     const chainId = chain?.id || chain?.data?.id;
@@ -193,21 +261,19 @@ export async function attachCanvases(baseApi, id, type) {
             { reviewType: 'flower', reviewId: upstreamId, position: { x: 40, y: 60 } });
         const aId = a?.id || a?.data?.id, bId = b?.id || b?.data?.id;
         if (aId && bId) {
-            await post(`/api/production-chains/chains/${chainId}/edges`, { sourceId: bId, targetId: aId });
+            // `sourceNodeId`/`targetNodeId`, PAS `sourceId`/`targetId` — contrat de
+            // `validateChainEdgeCreation` (`validateProductionChain.js`), qui exige exactement UN
+            // point d'ancrage par côté (nœud XOR annotation). Le corps précédent était rejeté en 400
+            // et l'erreur avalée : la chaîne n'a jamais porté d'ARÊTE dans un audit, donc le lien
+            // entre deux produits — l'objet même de la traçabilité — n'a jamais été rendu ni mesuré,
+            // alors même que ses deux nœuds l'étaient depuis le 2026-08-07.
+            await post(`/api/production-chains/chains/${chainId}/edges`,
+                { sourceNodeId: bId, targetNodeId: aId, technique: 'Extraction à froid' });
         }
     }
 
-    const tree = await post('/api/genetics/trees', { name: `ZZ-AUDIT arbre ${type}` });
-    const treeId = tree?.id || tree?.data?.id;
-    if (treeId) {
-        await post(`/api/genetics/trees/${treeId}/nodes`,
-            { label: 'Parent A', position: { x: 40, y: 40 } });
-        await post(`/api/genetics/trees/${treeId}/nodes`,
-            { label: 'Parent B', position: { x: 240, y: 40 } });
-    }
-
     // `upstreamId` remonte pour que l'appelant la supprime au nettoyage : c'est une vraie review.
-    return { chainId, treeId, upstreamId };
+    return { chainId, upstreamId };
 }
 
 /** Supprime une fixture. Ne lève jamais — le nettoyage ne doit pas masquer le résultat d'audit. */

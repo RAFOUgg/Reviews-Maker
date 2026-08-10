@@ -202,6 +202,43 @@
     max-width: 110px;
 }
 
+/* ── RENDU FIGÉ : le nom complet doit être DANS le fichier ────────────────────────────────────
+   En édition, `.node-label` s'ellipse et le nom entier reste atteignable par l'infobulle `title`
+   et par le zoom. Un PNG n'a ni l'un ni l'autre. Mesuré sur l'export A4 de la Fiche Technique :
+   « ZZ-AUDIT Fleurs dense » demande 137px pour 110px disponibles, « ZZ-AUDIT Fleurs minimal »
+   147px — les deux noms partent tronqués dans le fichier livré. C'est exactement ce que le contrat
+   de projection statique interdit : aucune information ne doit n'exister qu'au survol.
+
+   Scopé par `.graph-canvas-readonly`, posée par `GraphCanvasShell` quand `readOnly` est vrai —
+   l'éditeur ne reçoit jamais ces règles. */
+.graph-canvas-readonly .node-label {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    max-width: 120px;
+    overflow-wrap: anywhere;
+    line-height: 1.25;
+}
+
+/* La hauteur FIXE du nœud n'existe que pour l'ÉDITION : React Flow met en cache la position de la
+   poignée Bottom mesurée au premier rendu, et un nœud qui grandit ensuite fait partir la ligne de
+   connexion d'un point qui n'est plus son bas réel (cf. `.cultivar-node.shape-rounded`). En lecture
+   seule aucune connexion ne se tire — la carte peut donc s'ajuster au libellé plutôt que le couper. */
+.graph-canvas-readonly .cultivar-node.shape-rounded {
+    height: auto;
+    min-height: 140px;
+}
+
+/* 9px suffisent dans l'éditeur, où l'on zoome à volonté. Dans un fichier figé, la taille RENDUE
+   vaut la taille déclarée × le zoom de `fitView` — et ce zoom dépend de la densité du graphe :
+   mesuré ×1,675 sur la Fiche Technique A4 (donc 15px, lisible) mais ×1,09 sur Article de Blog,
+   soit 9,8px, sous le plancher de 12px. Le pastillage de type passe donc au plancher en lecture
+   seule, où il n'y a aucun zoom pour rattraper. */
+.graph-canvas-readonly .genetics-type,
+.graph-canvas-readonly .genetics-breeder {
+    font-size: 12px;
+}
+
 .node-genetics {
     display: flex;
     flex-wrap: wrap;

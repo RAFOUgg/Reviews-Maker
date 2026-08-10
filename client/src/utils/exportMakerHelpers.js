@@ -196,6 +196,25 @@ export const SEMANTIC_SCORE_TEXT_COLORS = {
 // consultable, et l'export rastérisé n'a pas de zoom pour compenser.
 export const MIN_FONT_PX = 12;
 
+/**
+ * Attribut par lequel un bloc à chargement ASYNCHRONE déclare s'il a fini de se résoudre.
+ *
+ * Pourquoi il existe : la mesure de pagination attendait un DÉLAI FIXE, ce qui est une course par
+ * construction. `ReadOnlyProductionChainCanvas`/`ReadOnlyGenealogyCanvas` enchaînent jusqu'à deux
+ * requêtes séquentielles avant de pouvoir se rendre ; tant qu'elles n'ont pas abouti le composant
+ * rend `null`, et `computeAdaptivePages` écarte silencieusement tout module de hauteur ~0. Le délai
+ * a déjà été porté de 700ms à 1500ms (2026-08-03) sans régler la course : mesuré le 2026-08-10 sur
+ * une même review, `productionChainCanvas` valait 317px en 4:3 mais 16-32px en A4, 16:9 et Article
+ * de Blog — la chaîne de production, cœur de la traçabilité, disparaissait de la majorité des
+ * exports SANS qu'aucune règle ne le signale (une disparition ne déborde pas).
+ *
+ * Un délai plus long n'aurait fait que déplacer le seuil. On attend donc un ÉTAT, pas une durée.
+ */
+export const CANVAS_READY_ATTR = 'data-canvas-ready';
+
+/** Marqueur invisible posé tant qu'un bloc asynchrone n'a pas fini de se résoudre. */
+export const PENDING_CANVAS_PROPS = { [CANVAS_READY_ATTR]: 'false', style: { height: 0 } };
+
 /** Taille de police jamais inférieure au plancher de lisibilité. À utiliser partout où une taille
  *  est dérivée d'une autre (`small - 2`, etc.) plutôt que de réinventer un `Math.max` local. */
 export function readableFontSize(px) {

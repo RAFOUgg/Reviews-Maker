@@ -186,6 +186,61 @@
     }
 
     /**
+     * Échelle accumulée entre `rootEl` et `el` (transformations CSS des ancêtres intermédiaires).
+     *
+     * Pourquoi c'est nécessaire : `getComputedStyle().fontSize` rend la taille DÉCLARÉE, pas la
+     * taille rendue. Un canevas React Flow zoomé par `fitView` agrandit tout son contenu par un
+     * `transform: scale()` sur son viewport — mesuré sur la chaîne de production d'un export A4 :
+     * zoom 1.675, donc un libellé déclaré à 9px est rendu à 15px. Le juger à 9px contre le plancher
+     * de 12px envoie corriger une police qui est déjà au-dessus du plancher.
+     *
+     * On part de `rootEl` et non du viewport : l'échelle propre de la PAGE d'export (l'aperçu la
+     * réduit pour tenir à l'écran, alors que le PNG est rasterisé à la taille de mise en page) ne
+     * doit pas entrer dans le calcul, sinon toute la fiche passerait sous le plancher.
+     */
+    function scaleWithin(el, rootEl) {
+        let sx = 1;
+        let sy = 1;
+        let node = el;
+        while (node && node !== rootEl && node.parentElement) {
+            const t = getComputedStyle(node).transform;
+            if (t && t !== 'none') {
+                const m = t.match(/matrix\(([^)]+)\)/);
+                if (m) {
+                    const p = m[1].split(',').map(parseFloat);
+                    if (p.length >= 4 && !p.some(Number.isNaN)) { sx *= p[0]; sy *= p[3]; }
+                }
+            }
+            node = node.parentElement;
+        }
+        return { sx, sy };
+    }
+
+    /**
+     * L'élément implémente-t-il un viewport zoom/pan (React Flow et consorts) ?
+     *
+     * Un tel conteneur a, PAR CONSTRUCTION, une boîte de défilement plus grande que lui : c'est son
+     * mécanisme, pas une coupure. Mesuré sur la chaîne de production d'un export A4 :
+     * `scrollHeight` 343 pour `clientHeight` 258 — alors que les deux nœuds occupent 13→244 et
+     * tiennent donc entièrement. Les 343px sont la boîte TRANSFORMÉE du conteneur VIDE de React
+     * Flow : -88.79 + 258 × 1.675 = 343.4, au pixel près (et 1362.5 → 1363 en largeur).
+     * E4b jugée sur `scrollHeight` accusait donc une coupure inexistante.
+     */
+    function isZoomPanViewport(el) {
+        // Le viewport n'est pas un enfant DIRECT : React Flow interpose `__renderer` puis `__pane`.
+        // On cherche donc en profondeur, mais sur une signature étroite — absolument positionné,
+        // transformé, et dimensionné comme le conteneur (le motif exact d'un plan de zoom/pan). Un
+        // badge ou une carte transformée, eux, ne remplissent pas leur conteneur et ne matchent pas.
+        for (const d of el.querySelectorAll('*')) {
+            const cs = getComputedStyle(d);
+            if (cs.position !== 'absolute') continue;
+            if (!cs.transform || cs.transform === 'none') continue;
+            if (d.offsetWidth >= el.clientWidth * 0.95 && d.offsetHeight >= el.clientHeight * 0.95) return true;
+        }
+        return false;
+    }
+
+    /**
      * Audite un sous-arbre rendu.
      * @param {Element} rootEl - conteneur du rendu (une page d'export, ou la page site entière)
      * @param {Object} [opts]
@@ -217,11 +272,20 @@
             const fontSize = parseFloat(cs.fontSize) || 0;
 
             // ── E2 : taille de police effective ──
+            // « Effective » au sens propre : la taille déclarée MULTIPLIÉE par les transformations
+            // des ancêtres (cf. `scaleWithin`). Un contenu de canevas zoomé est rendu plus grand
+            // que sa déclaration ; l'inverse est vrai aussi, et c'est ce cas-là qui compte — un
+            // canevas dézoomé rend un libellé de 12px à 6px sans qu'aucune déclaration ne bouge.
             if (text) {
                 textNodes++;
-                if (fontSize < minFont) minFont = fontSize;
-                if (fontSize < 12) {
-                    push('E2', 'error', `Police à ${fontSize.toFixed(1)}px — plancher 12px`, el, { fontSize });
+                const effectiveFont = fontSize * scaleWithin(el, rootEl).sy;
+                if (effectiveFont < minFont) minFont = effectiveFont;
+                if (effectiveFont < 12) {
+                    const declared = Math.abs(effectiveFont - fontSize) > 0.5
+                        ? ` (déclarée ${fontSize.toFixed(1)}px, échelle ×${(effectiveFont / fontSize).toFixed(2)})`
+                        : '';
+                    push('E2', 'error', `Police à ${effectiveFont.toFixed(1)}px — plancher 12px${declared}`, el,
+                        { fontSize, effectiveFont: +effectiveFont.toFixed(1) });
                 }
             }
 
@@ -273,10 +337,33 @@
             // réutilisée telle quelle dans un rendu figé) coupe son contenu ET rasterise sa barre
             // de défilement dans le PNG, sans qu'aucune règle ne le voie — trouvé à l'œil sur un
             // export réel le 2026-08-06, la moitié d'un pipeline de culture manquante.
-            if (el !== rootEl && el.scrollHeight > el.clientHeight + 2 && /auto|scroll|hidden|clip/.test(cs.overflowY) && rect.height > 40) {
-                push('E4b', 'error',
-                    `Conteneur coupé : contenu ${el.scrollHeight}px dans ${el.clientHeight}px (overflow-y: ${cs.overflowY})`,
-                    el, { overflow: el.scrollHeight - el.clientHeight, overflowY: cs.overflowY });
+            if (el !== rootEl && el.scrollHeight > el.clientHeight + 2
+                && /auto|scroll|hidden|clip/.test(cs.overflowY) && rect.height > 40) {
+                if (isZoomPanViewport(el)) {
+                    // Viewport zoom/pan : `scrollHeight` ne dit rien (cf. `isZoomPanViewport`). La
+                    // question qui compte — les nœuds sortent-ils du cadre ? — se mesure alors
+                    // directement, sur les éléments PORTEURS DE TEXTE, seuls à représenter du
+                    // contenu perdu s'ils tombent hors du cadre.
+                    let worst = 0;
+                    let culprit = null;
+                    for (const inner of el.querySelectorAll('*')) {
+                        if (!ownText(inner)) continue;
+                        const r = inner.getBoundingClientRect();
+                        if (r.width === 0 && r.height === 0) continue;
+                        const out = Math.max(rect.top - r.top, r.bottom - rect.bottom,
+                            rect.left - r.left, r.right - rect.right);
+                        if (out > worst) { worst = out; culprit = inner; }
+                    }
+                    if (worst > 2) {
+                        push('E4b', 'error',
+                            `Canevas qui coupe son contenu : « ${ownText(culprit).slice(0, 30)} » déborde de ${Math.round(worst)}px`,
+                            culprit, { overflow: Math.round(worst) });
+                    }
+                } else {
+                    push('E4b', 'error',
+                        `Conteneur coupé : contenu ${el.scrollHeight}px dans ${el.clientHeight}px (overflow-y: ${cs.overflowY})`,
+                        el, { overflow: el.scrollHeight - el.clientHeight, overflowY: cs.overflowY });
+                }
             }
 
             // ── E3 : troncature silencieuse ──

@@ -173,6 +173,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
         ? (config.pageModuleIds instanceof Set ? config.pageModuleIds : new Set(config.pageModuleIds))
         : null;
     const isPageOn = (moduleId) => !pageModuleIds || pageModuleIds.has(moduleId);
+    // Cette page porte-t-elle au moins un tronçon de pipeline ? Sans pagination, oui par défaut.
+    const pageHasPipelineChunk = !pageModuleIds
+        || [...pageModuleIds].some((mid) => mid.startsWith('pipeline:'));
 
     const Section = ({ title, icon, moduleId, children }) => {
         if (moduleId && !isPageOn(moduleId)) return null;
@@ -344,8 +347,13 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 l'aperçu Studio mais MUETTE une fois figée en export statique — un rapport de
                 traçabilité en PDF/PNG ne peut pas être cliqué). Corrigé 2026-08-03 suite à un
                 retour utilisateur sur un export réel en prod. */}
-            {activeTimelines.length > 0 && (
-                <Section moduleId="pipelines" title="Processus de production" icon="📅">
+            {/* La section n'est plus un module mesuré (cf. le commentaire sur `moduleId` plus bas) :
+                elle n'est donc plus filtrée par `isPageOn` et s'afficherait, VIDE, sur les pages ne
+                portant aucun tronçon. On la conditionne à la présence d'au moins un tronçon de
+                pipeline sur la page courante — dérivable du seul préfixe, sans connaître le
+                découpage interne de `PipelineTimeline`. */}
+            {activeTimelines.length > 0 && pageHasPipelineChunk && (
+                <Section title="Processus de production" icon="📅">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.section }}>
                         {activeTimelines.map((t) => {
                             const steps = safeParse(reviewData[t.dataKey], []);
@@ -357,6 +365,21 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                                 <PipelineTimeline
                                     key={t.type}
                                     pipeline={{ key: t.type, name: t.name, icon: t.icon, rawSteps: steps }}
+                                    // `moduleId`/`isPageOn`/`paged` étaient ABSENTS, contrairement au
+                                    // patron de référence (`renderPipelineList`, DetailedCardTemplate).
+                                    // Conséquences mesurées le 2026-08-10 en A4 : les tronçons portaient
+                                    // l'id littéral `undefined#N`, ne se filtraient donc par aucune page,
+                                    // les DEUX pipelines partageaient le même en-tête `undefined#hdr`
+                                    // (coût mal imputé), et surtout ils étaient comptés DEUX FOIS — une
+                                    // fois via la `Section moduleId="pipelines"` qui les enveloppait
+                                    // (2178px), une fois via leurs propres tronçons (1477px). D'où une
+                                    // page 1 à 17,4 % (`cannabinoidGrid` seul) et une page 3 BLANCHE.
+                                    // Le `moduleId` de la Section est retiré pour cette raison : un
+                                    // module ne peut pas à la fois être mesuré et contenir des modules
+                                    // mesurés.
+                                    moduleId={`pipeline:${t.type}`}
+                                    isPageOn={isPageOn}
+                                    paged={!!pageModuleIds}
                                     compact
                                     fontSize={{ text: fontSize.text, small: fontSize.small }}
                                     spacing={{ element: spacing.section, gap: spacing.gap }}

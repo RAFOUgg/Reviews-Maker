@@ -15,7 +15,7 @@ import { chromium } from 'playwright';
 import { writeFileSync, mkdirSync } from 'fs';
 import { dirname, resolve } from 'path';
 import { fileURLToPath } from 'url';
-import { createFixture, deleteFixture, attachCanvases, DENSITIES, TYPES } from './fixtures.mjs';
+import { createFixture, createFixtureWithCanvases, deleteFixture, DENSITIES, TYPES } from './fixtures.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const AUDIT_SCRIPT = resolve(__dirname, 'auditRules.js');
@@ -244,19 +244,21 @@ async function main() {
             for (const type of types) {
                 for (const density of densities) {
                     try {
-                        const id = await createFixture(API, type, density);
-                        // Chaîne + arbre attachés dès que la review n'est pas minimale : sans eux, les deux
-
-                        // canevas ne sont JAMAIS exercés et une régression les faisant disparaître passe
-
-                        // inaperçue (arrivé en production le 2026-08-06).
-
-                        created.push(id);
-                        if (density !== 'minimal') {
-                            const { upstreamId } = await attachCanvases(API, id, type);
-                            // Review amont de la chaîne : à nettoyer comme les autres.
-                            if (upstreamId) created.push(upstreamId);
+                        // Chaîne + arbre dès que la review n'est pas minimale : sans eux, les deux
+                        // canevas ne sont JAMAIS exercés et une régression les faisant disparaître
+                        // passe inaperçue (arrivé en production le 2026-08-06). `…WithCanvases`
+                        // crée l'arbre AVANT la review, seul moment où `geneticTreeId` peut se
+                        // poser — sans quoi l'arbre existe mais n'est rattaché à rien et le canevas
+                        // de généalogie se masque (constaté le 2026-08-10 : mesuré à 16-32px).
+                        let id, upstreamId;
+                        if (density === 'minimal') {
+                            id = await createFixture(API, type, density);
+                        } else {
+                            ({ id, upstreamId } = await createFixtureWithCanvases(API, type, density));
                         }
+                        created.push(id);
+                        // Review amont de la chaîne : à nettoyer comme les autres.
+                        if (upstreamId) created.push(upstreamId);
                         subjects.push({ id, type, label: `${type}/${density}` });
                         console.log(`  ✔ ${type}/${density} → ${id.slice(0, 8)}`);
                     } catch (e) {

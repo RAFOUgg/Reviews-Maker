@@ -3,7 +3,7 @@ import ProductionChainCanvas from '../../production-chain/ProductionChainCanvas'
 import { ScopedChainStoreProvider } from '../../../store/scopedCanvasStores';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
+import { safeParse, MIN_FONT_PX, PENDING_CANVAS_PROPS } from '../../../utils/exportMakerHelpers';
 import { LiquidModal } from '@/components/ui/LiquidUI';
 import { useIsInteractive } from './InteractiveContext';
 
@@ -60,10 +60,13 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
     const [chain, setChain] = useState(null);
     const [chainId, setChainId] = useState(null);
     const [detail, setDetail] = useState(null);
+    // Le chargement est-il TERMINÉ (avec ou sans chaîne trouvée) ? Publié dans le DOM pour que la
+    // mesure de pagination sache attendre — cf. `CANVAS_READY_ATTR` plus bas.
+    const [resolved, setResolved] = useState(false);
     const interactive = useIsInteractive();
 
     useEffect(() => {
-        if (!reviewId) return;
+        if (!reviewId) { setResolved(true); return undefined; }
         let cancelled = false;
         (async () => {
             try {
@@ -84,6 +87,8 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
                 }
             } catch {
                 // pas de chaîne — vue simplement masquée
+            } finally {
+                if (!cancelled) setResolved(true);
             }
         })();
         return () => { cancelled = true; };
@@ -123,6 +128,10 @@ export default function ReadOnlyProductionChainCanvas({ reviewData, height = 320
         return { rfNodes: nodes, rfEdges: edges };
     }, [chain, accentColor, textColor, reviewType, reviewId]);
 
+    // Tant que la requête n'a pas abouti, on laisse un marqueur : c'est lui qui distingue « pas de
+    // chaîne » (rien à afficher, définitif) de « chaîne pas encore arrivée » (à attendre). Sans
+    // cette distinction, la mesure de pagination prenait la seconde pour la première.
+    if (!resolved) return <div {...PENDING_CANVAS_PROPS} />;
     if (rfNodes.length === 0) return null;
 
     return (

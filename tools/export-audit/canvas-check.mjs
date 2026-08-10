@@ -9,7 +9,7 @@
  * Usage : node tools/export-audit/canvas-check.mjs --url=… [--type=flower]
  */
 import { chromium } from 'playwright';
-import { createFixture, deleteFixture, attachCanvases } from './fixtures.mjs';
+import { createFixtureWithCanvases, deleteFixture } from './fixtures.mjs';
 
 const args = Object.fromEntries(
     process.argv.slice(2).filter((a) => a.startsWith('--')).map((a) => {
@@ -22,8 +22,8 @@ const API = args.api || 'http://localhost:3000';
 const type = args.type || 'flower';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
-const id = await createFixture(API, type, 'dense');
-const attached = await attachCanvases(API, id, type);
+const attached = await createFixtureWithCanvases(API, type, 'dense');
+const id = attached.id;
 console.log('fixture', id, '· chaîne', attached.chainId ? 'oui' : 'NON', '· arbre', attached.treeId ? 'oui' : 'NON');
 
 // L'API répond-elle pour cette review ?

@@ -3,7 +3,7 @@ import UnifiedGeneticsCanvas from '../../genetics/UnifiedGeneticsCanvas';
 import { ScopedGeneticsStoreProvider } from '../../../store/scopedCanvasStores';
 import ReactFlow, { ReactFlowProvider, Background, Controls, Handle, Position } from 'reactflow';
 import 'reactflow/dist/style.css';
-import { safeParse, MIN_FONT_PX } from '../../../utils/exportMakerHelpers';
+import { safeParse, MIN_FONT_PX, PENDING_CANVAS_PROPS } from '../../../utils/exportMakerHelpers';
 import { LiquidModal } from '@/components/ui/LiquidUI';
 import { useIsInteractive } from './InteractiveContext';
 
@@ -92,7 +92,11 @@ export default function ReadOnlyGenealogyCanvas({ reviewData, height = 320, acce
         return { rfNodes: nodes, rfEdges: edges };
     }, [tree, accentColor, textColor]);
 
-    if (!treeId || loading) return null;
+    // `loading` rendait `null`, indistinguable de « pas d'arbre » : la mesure de pagination
+    // concluait donc « bloc vide » sur un bloc simplement pas encore arrivé, et le canevas
+    // disparaissait de l'export (cf. `PENDING_CANVAS_PROPS`). On marque désormais l'attente.
+    if (treeId && loading) return <div {...PENDING_CANVAS_PROPS} />;
+    if (!treeId) return null;
     if (rfNodes.length === 0) return null;
 
     return (

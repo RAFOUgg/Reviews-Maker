@@ -5,7 +5,7 @@ import ModernCompactTemplate from './ModernCompactTemplate';
 import BlogArticleTemplate from './BlogArticleTemplate';
 import TraceabilityReportTemplate from './TraceabilityReportTemplate';
 import SocialStoryTemplate from './SocialStoryTemplate';
-import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
+import { RATIO_DIMENSIONS, CANVAS_READY_ATTR } from '../../utils/exportMakerHelpers';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { InteractivityProvider } from '../export/interactive/InteractiveContext';
 
@@ -33,6 +33,36 @@ const STABILIZE_DELAY_MS = 1500;
 function waitForFonts() {
     if (typeof document === 'undefined' || !document.fonts?.ready) return Promise.resolve();
     return document.fonts.ready.catch(() => {});
+}
+
+// Plafond d'attente des blocs asynchrones. Ce n'est PAS le délai de stabilisation : on attend un
+// ÉTAT (`CANVAS_READY_ATTR`), ce plafond n'existe que pour ne jamais bloquer indéfiniment si une
+// requête n'aboutit pas. Une mesure tardive vaut mieux qu'une mesure fausse, mais pas mieux qu'une
+// absence de mesure.
+const ASYNC_BLOCK_TIMEOUT_MS = 8000;
+
+/**
+ * Attend que plus aucun bloc ne se déclare « en cours de résolution ».
+ *
+ * Remplace la confiance en un délai fixe, qui était une course par construction : les deux canevas
+ * en lecture seule enchaînent jusqu'à deux requêtes séquentielles, et tant qu'elles n'ont pas
+ * abouti leur hauteur mesurée est nulle — donc le module est silencieusement écarté de la
+ * pagination. Mesuré le 2026-08-10 sur une même review : `productionChainCanvas` valait 317px en
+ * 4:3 mais 16-32px en A4, 16:9 et Article de Blog. Le délai avait déjà été doublé une fois sans
+ * régler la course ; l'allonger encore n'aurait fait que déplacer le seuil.
+ */
+function waitForAsyncBlocks(host) {
+    return new Promise((resolve) => {
+        const pending = () => host.querySelectorAll(`[${CANVAS_READY_ATTR}="false"]`).length;
+        if (pending() === 0) { resolve(); return; }
+        const started = Date.now();
+        const timer = setInterval(() => {
+            if (pending() === 0 || Date.now() - started > ASYNC_BLOCK_TIMEOUT_MS) {
+                clearInterval(timer);
+                resolve();
+            }
+        }, 100);
+    });
 }
 
 // Registre des composants de template mesurables (Phase C du plan de finition Export Maker,
@@ -130,7 +160,13 @@ export function measureDetailedCardModules(reviewData, config) {
         }
 
         const delay = new Promise((r) => setTimeout(r, STABILIZE_DELAY_MS));
-        Promise.all([delay, waitForFonts()]).then(() => {
+        // L'attente des blocs asynchrones vient APRÈS le délai, jamais en parallèle : `createRoot`
+        // rend de façon concurrente, donc interroger le DOM immédiatement trouve zéro marqueur
+        // simplement parce que RIEN n'est encore monté — et l'attente se résout aussitôt, sans rien
+        // avoir attendu. Mesuré : A4 passait (313px) et 16:9 échouait (20px) sur la même review, au
+        // hasard de l'ordonnancement. Le délai devient donc un PLANCHER de montage, et la
+        // disponibilité réelle le vrai critère.
+        Promise.all([delay, waitForFonts()]).then(() => waitForAsyncBlocks(host)).then(() => {
             try {
                 const heights = new Map();
                 host.querySelectorAll('[data-module]').forEach((el) => {

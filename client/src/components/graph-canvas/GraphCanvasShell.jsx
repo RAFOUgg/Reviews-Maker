@@ -10,11 +10,36 @@
  * la Chaîne de production gère des types de produits et des transformations).
  */
 
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
-import ReactFlow, { Background, Controls, MiniMap } from 'reactflow';
+import ReactFlow, { Background, Controls, MiniMap, useNodesInitialized, useReactFlow } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './graphCanvas.css';
+
+/**
+ * Recadre le graphe UNE FOIS que React Flow a réellement mesuré ses nœuds.
+ *
+ * `fitView` (prop de <ReactFlow>) s'exécute au montage, alors que les nœuds n'ont pas encore leurs
+ * dimensions DOM : le zoom est donc calculé sur des tailles par défaut. Dès que les vraies tailles
+ * sont connues (libellé qui passe à deux lignes, badges, police web chargée), les limites du graphe
+ * s'agrandissent et le contenu sort du cadre — mesuré sur Story 9:16 : le nœud « ZZ-AUDIT Fleurs
+ * dense » débordait de 16px AVANT toute modification de cette session, et de 21px une fois les
+ * libellés passés en multi-lignes. Le défaut préexistait ; le multi-lignes ne faisait que l'aggraver.
+ *
+ * Réservé au rendu FIGÉ : dans l'éditeur, recadrer après coup écraserait le zoom/pan que
+ * l'utilisateur vient de poser à la main.
+ *
+ * Composant enfant plutôt que hooks dans le shell : `useNodesInitialized`/`useReactFlow` exigent le
+ * contexte de <ReactFlow>, qui n'existe qu'à l'intérieur de celui-ci.
+ */
+function ReadOnlyRefitOnMeasure({ padding = 0.15 }) {
+    const initialized = useNodesInitialized();
+    const { fitView } = useReactFlow();
+    useEffect(() => {
+        if (initialized) fitView({ padding, duration: 0 });
+    }, [initialized, fitView, padding]);
+    return null;
+}
 
 // Durée d'appui long pour ouvrir un menu contextuel au tactile — même seuil que le pattern
 // équivalent utilisé pour la multi-sélection tactile des pipelines (PipelineDragDropView.jsx,
@@ -182,7 +207,7 @@ export default function GraphCanvasShell({
 
     return (
         <div
-            className={`graph-canvas-shell ${className}`}
+            className={`graph-canvas-shell ${readOnly ? 'graph-canvas-readonly' : ''} ${className}`}
             onClick={onCanvasClick}
             onDragOver={onDragOver}
             onDrop={onDrop}
@@ -246,6 +271,7 @@ export default function GraphCanvasShell({
                 proOptions={readOnly ? { hideAttribution: true } : undefined}
             >
                 <Background color="#aaa" gap={16} />
+                {readOnly && <ReadOnlyRefitOnMeasure />}
                 {!readOnly && <Controls />}
                 {!readOnly && <MiniMap nodeColor={minimapNodeColor} maskColor={minimapMaskColor} />}
                 {toolbar}

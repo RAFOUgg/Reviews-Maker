@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 import { mkdirSync } from 'fs';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { createFixture, deleteFixture, attachCanvases } from './fixtures.mjs';
+import { createFixtureWithCanvases, deleteFixture } from './fixtures.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const args = Object.fromEntries(
@@ -39,8 +39,7 @@ const tpl = args.template || 'detailedCard';
 const ratio = args.ratio || '4:3';
 
 mkdirSync(OUT, { recursive: true });
-const id = await createFixture(API, args.type || 'flower', args.density || 'dense');
-await attachCanvases(API, id, args.type || 'flower');
+const { id, upstreamId } = await createFixtureWithCanvases(API, args.type || 'flower', args.density || 'dense');
 console.log('fixture', id);
 
 const browser = await chromium.launch();
@@ -76,5 +75,8 @@ try {
     console.log('erreurs JS :', errs.length ? errs : 'aucune');
 } finally {
     await browser.close();
-    if (!args.keep) await deleteFixture(API, id);
+    if (!args.keep) {
+        await deleteFixture(API, id);
+        if (upstreamId) await deleteFixture(API, upstreamId);
+    }
 }
