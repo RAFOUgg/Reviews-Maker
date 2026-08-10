@@ -26,14 +26,29 @@ import { computeContentHash } from '../utils/exportSnapshot';
 export function useDocumentSeal(reviewData) {
     const [hash, setHash] = useState(null);
 
+    // PROJECTION CANONIQUE, fixée ici et nulle part ailleurs.
+    //
+    // Hacher l'objet reçu tel quel ne marche pas : la page écran part de la review de l'API, alors
+    // que l'export part d'un objet enrichi (config Export Maker, URL d'aperçu…). Mesuré par
+    // `tools/export-audit/seal-check.mjs` : deux empreintes systématiquement différentes pour le
+    // même lot — une empreinte qui ne correspond jamais est pire qu'aucune empreinte, puisqu'elle
+    // ferait croire à une divergence à chaque vérification.
+    //
+    // `id` + `updatedAt` sont présents des deux côtés (l'adaptateur recopie la review), et
+    // `updatedAt` change à chaque modification : c'est exactement la question posée au lecteur du
+    // document — « cette fiche a-t-elle changé depuis son édition ? ». Le hook impose la projection
+    // pour qu'aucun appelant ne puisse la reconstruire de travers.
+    const id = reviewData?.id ?? null;
+    const updatedAt = reviewData?.updatedAt ?? null;
+
     useEffect(() => {
-        if (!reviewData) { setHash(null); return undefined; }
+        if (!id) { setHash(null); return undefined; }
         let cancelled = false;
-        computeContentHash(reviewData)
+        computeContentHash({ id, updatedAt })
             .then((h) => { if (!cancelled) setHash(h); })
             .catch(() => { if (!cancelled) setHash(null); });
         return () => { cancelled = true; };
-    }, [reviewData]);
+    }, [id, updatedAt]);
 
     return {
         // 12 caractères : assez pour distinguer deux versions d'une même fiche à l'œil, assez court

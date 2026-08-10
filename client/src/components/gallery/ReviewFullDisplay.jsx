@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/exportMakerHelpers'
+import { getLotCode } from '../../utils/lotCode'
+import { useDocumentSeal } from '../../hooks/useDocumentSeal'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind, GitBranch, Workflow, Radar as RadarIcon, LineChart } from 'lucide-react'
 import InteractivePipelineViewer from './InteractivePipelineViewer'
@@ -133,6 +135,17 @@ function useMeasuredWidth() {
 }
 
 export default function ReviewFullDisplay({ review, config }) {
+    // Empreinte du document, calculée sur la MÊME projection que l'export.
+    //
+    // Le fichier exporté imprime une empreinte, mais rien nulle part ne permettait de la comparer :
+    // une empreinte invérifiable n'est qu'une décoration. Le QR du document pointe vers cette page —
+    // c'est donc ici, et nulle part ailleurs, qu'elle doit pouvoir se recalculer.
+    //
+    // La projection canonique est imposée par le hook (`id` + `updatedAt`) : les deux surfaces
+    // partent d'objets différents — API brute ici, objet enrichi côté export — et hacher l'objet
+    // reçu tel quel produisait deux empreintes systématiquement différentes, mesuré par
+    // `tools/export-audit/seal-check.mjs`.
+    const { shortHash: docHash } = useDocumentSeal(review)
     const [lightboxImg, setLightboxImg] = useState(null)
     const [lightboxIdx, setLightboxIdx] = useState(0)
     const tokens = useRenderTokens(config)
@@ -710,6 +723,17 @@ export default function ReviewFullDisplay({ review, config }) {
             )}
 
             {/* Lightbox */}
+            {/* Sceau vérifiable — la contrepartie à l'écran de l'empreinte imprimée. */}
+            {docHash && review?.id && (
+                <div className="mt-8 pt-4 border-t border-white/10 flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs text-white/50">
+                    <span>lot {getLotCode(review.id)}</span>
+                    <span>empreinte actuelle {docHash}</span>
+                    <span className="text-white/35 font-sans">
+                        Comparez-la à celle imprimée sur votre document : si elles diffèrent, la fiche a changé depuis son édition.
+                    </span>
+                </div>
+            )}
+
             {lightboxImg && (
                 <div
                     className="fixed inset-0 z-[9999] bg-black/90 backdrop-blur-xl flex items-center justify-center p-4"
