@@ -370,7 +370,14 @@ export default function ReviewFullDisplay({ review, config }) {
                                     </div>
                                     <span className="text-2xl font-bold" style={{ color: accent }}>{cat.value}/10</span>
                                 </div>
-                                <LiquidRating value={cat.value / 10} max={1} color="amber" />
+                                {/* Barre de lecture, pas un contrôle. `value/10, max=1` affichait
+                                    « 0.78/1 » — une valeur normalisée qui ne veut rien dire pour un
+                                    lecteur — juste sous le « 7.8/10 » déjà présent, et la pastille
+                                    du rail répétait le même score une TROISIÈME fois en pourcentage
+                                    (« 78 ») sur ce qui ressemblait à une poignée de curseur.
+                                    Unités réelles, en-tête et pastille supprimés : la note est déjà
+                                    écrite au-dessus, la barre ne fait que la donner à voir. */}
+                                <LiquidRating value={cat.value} max={10} color="amber" showValue={false} knob={false} />
                                 {cat.subDetails && cat.subDetails.length > 0 && (
                                     <div className="space-y-1 text-xs mt-3">
                                         {cat.subDetails.map(sub => (

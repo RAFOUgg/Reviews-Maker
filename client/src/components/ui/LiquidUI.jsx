@@ -596,7 +596,14 @@ export function LiquidRating({
     label,
     color = 'purple', // purple | green | cyan | amber
     showValue = true,
-    size = 'md' // sm | md | lg
+    size = 'md', // sm | md | lg
+    // La pastille flottante affiche un pourcentage SUR UN RAIL : dans une interface elle se lit
+    // comme une jauge, mais dans un DOCUMENT figé elle se lit comme la poignée d'un curseur qu'on
+    // pourrait déplacer. C'est la 4e occurrence de la classe « affordance d'éditeur dans un rendu »
+    // (après le curseur de zoom, le bloc « Astuce : Ctrl/Cmd » et les contrôles React Flow), et la
+    // première repérée par l'utilisateur sur une capture plutôt que par la mesure — la règle E13 ne
+    // s'exécutant que sur le chemin FICHIER, elle n'a jamais regardé la Vue Détaillée.
+    knob = true
 }) {
     const percentage = Math.min(100, Math.max(0, (value / max) * 100))
     const heights = { sm: 6, md: 8, lg: 10 }
@@ -618,6 +625,7 @@ export function LiquidRating({
                 />
 
                 {/* Floating knob that follows the fill */}
+                {knob && (
                 <motion.div
                     className="liquid-rating-knob"
                     initial={{ left: '0%' }}
@@ -628,6 +636,7 @@ export function LiquidRating({
                         <span className="liquid-rating-knob-value">{Math.round(percentage)}</span>
                     </div>
                 </motion.div>
+                )}
             </div>
         </div>
     )

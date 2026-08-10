@@ -142,7 +142,7 @@ function StepDetailPanel({ step, index, onClose, colors }) {
                 </div>
                 <div>
                     <h4 className="text-lg font-bold text-white">{label}</h4>
-                    <span className="text-xs text-white/40">Étape {index + 1}</span>
+                    <span className="text-xs text-white/60">Étape {index + 1}</span>
                 </div>
             </div>
 
@@ -163,18 +163,18 @@ function StepDetailPanel({ step, index, onClose, colors }) {
                             </div>
                             <div className="text-base font-bold text-white">
                                 {m.value}
-                                {m.unit && <span className="text-xs text-white/40 ml-1">{m.unit}</span>}
+                                {m.unit && <span className="text-xs text-white/60 ml-1">{m.unit}</span>}
                             </div>
                         </div>
                     ))}
                 </div>
             ) : (
-                <p className="text-sm text-white/30 italic mb-4">Aucune donnée enregistrée pour cette étape</p>
+                <p className="text-sm text-white/60 italic mb-4">Aucune donnée enregistrée pour cette étape</p>
             )}
 
             {note && (
                 <div className="bg-white/5 rounded-xl p-3 border border-white/8">
-                    <span className="text-xs text-white/40 block mb-1">💬 Note</span>
+                    <span className="text-xs text-white/60 block mb-1">💬 Note</span>
                     <p className="text-sm text-white/80 leading-relaxed">{note}</p>
                 </div>
             )}
@@ -209,7 +209,7 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                     <span className="text-2xl">{pipelineIcon || '⚗️'}</span>
                     <div>
                         <h3 className="text-lg font-bold text-white">{pipelineName || 'Pipeline'}</h3>
-                        <span className="text-xs text-white/40">{steps.length} étape{steps.length > 1 ? 's' : ''}</span>
+                        <span className="text-xs text-white/60">{steps.length} étape{steps.length > 1 ? 's' : ''}</span>
                     </div>
                 </div>
                 {/* Mini stats */}
@@ -315,7 +315,7 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                                             </span>
                                         ));
                                     })()}
-                                    <span className="text-[11px] font-semibold text-white/80" style={{ position: 'relative', zIndex: 1 }}>
+                                    <span className="text-xs font-semibold text-white/80" style={{ position: 'relative', zIndex: 1 }}>
                                         {label}
                                     </span>
                                     {/* Badge « +N » quand la cellule porte plus de 4 mesures. */}
@@ -375,20 +375,20 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                                 {metrics.length > 0 ? (
                                     <div className="flex flex-wrap gap-1.5">
                                         {metrics.slice(0, 4).map(m => (
-                                            <span key={m.key} className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md bg-white/8 text-white/60">
+                                            <span key={m.key} className="inline-flex items-center gap-1 text-xs px-1.5 py-0.5 rounded-md bg-white/8 text-white/70">
                                                 {m.Icon && <m.Icon className="w-2.5 h-2.5" />}
                                                 {m.value}{m.unit}
                                             </span>
                                         ))}
                                         {metrics.length > 4 && (
-                                            <span className="text-[10px] text-white/30">+{metrics.length - 4}</span>
+                                            <span className="text-xs text-white/55">+{metrics.length - 4}</span>
                                         )}
                                     </div>
                                 ) : (
-                                    <span className="text-[10px] text-white/25 italic">Pas de données</span>
+                                    <span className="text-xs text-white/55 italic">Pas de données</span>
                                 )}
                                 {note && (
-                                    <p className="text-[10px] text-white/30 mt-1 truncate">💬 {note}</p>
+                                    <p className="text-xs text-white/55 mt-1 truncate">💬 {note}</p>
                                 )}
                             </motion.button>
                         );

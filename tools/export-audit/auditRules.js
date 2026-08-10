@@ -162,12 +162,19 @@
      * ce qui n'a aucun sens dans un document — champs de formulaire, boutons de commande, contrôles
      * de canevas React Flow, et l'attribution de la bibliothèque.
      */
-    function isEditingAffordance(el) {
+    function isEditingAffordance(el, opts) {
         const tag = el.tagName.toLowerCase();
         if (tag === 'input' || tag === 'select' || tag === 'textarea') return true;
         const cls = (typeof el.className === 'string' ? el.className : '') || '';
         // Contrôles React Flow : classes stables de la bibliothèque.
         if (/\breact-flow__(controls|minimap|attribution)\b/.test(cls)) return true;
+        // La Vue Détaillée est DÉLIBÉRÉMENT interactive (plan C8) : on y clique une case de pipeline
+        // ou un nœud pour en révéler le détail, sous contrat que l'information révélée figure AUSSI
+        // dans le fichier exporté. Y compter chaque bouton comme un défaut reviendrait à condamner
+        // une intention de conception — mesuré : 41 « violations » qui sont toutes le mécanisme
+        // voulu. Sur cette surface, seuls les vrais champs de SAISIE et les contrôles de
+        // bibliothèque ci-dessus sont fautifs.
+        if (opts && opts.allowButtons) return false;
         if (tag === 'button') {
             // Un bouton dont le contenu est une commande d'édition. Les boutons purement
             // décoratifs/navigationnels d'une page publique ne sont pas visés par cette règle —
@@ -276,7 +283,12 @@
             // des ancêtres (cf. `scaleWithin`). Un contenu de canevas zoomé est rendu plus grand
             // que sa déclaration ; l'inverse est vrai aussi, et c'est ce cas-là qui compte — un
             // canevas dézoomé rend un libellé de 12px à 6px sans qu'aucune déclaration ne bouge.
-            if (text) {
+            // Un contenu fait UNIQUEMENT d'emoji est un pictogramme décoratif, pas du texte à lire :
+            // le plancher de lisibilité ne s'y applique pas plus que le seuil de contraste, dont E1
+            // les exclut déjà pour la même raison (75 fausses violations en 2026-08-06). Mesuré sur
+            // la Vue Détaillée : 101 des 102 « polices sous le plancher » étaient les icônes posées
+            // en coin de cellule de pipeline.
+            if (text && !isEmojiOnly(text)) {
                 textNodes++;
                 const effectiveFont = fontSize * scaleWithin(el, rootEl).sy;
                 if (effectiveFont < minFont) minFont = effectiveFont;
@@ -328,7 +340,13 @@
             // attribution React Flow des canevas. À chaque fois découvert à l'œil sur une capture,
             // jamais par la mesure. Corriger la classe sans poser le garde-fou garantissait une
             // quatrième occurrence.
-            if (paged && isEditingAffordance(el)) {
+            // `documentRender` étend la règle à la Vue Détaillée (`/r/:id`, aperçu « Écran »), qui
+            // est un DOCUMENT publié et non une page d'application — mais qui n'était couverte par
+            // aucune règle, `paged` ne valant que pour le chemin fichier. C'est très exactement ce
+            // trou qui a laissé passer la 4e occurrence : une pastille de curseur et une valeur
+            // normalisée « 0.78/1 » affichées dans la fiche, repérées par l'utilisateur sur une
+            // capture alors que toute la matrice d'audit rendait « 0 erreur ».
+            if ((paged || options.documentRender) && isEditingAffordance(el, { allowButtons: !paged })) {
                 push('E13', 'error', `Contrôle de saisie dans un rendu : ${describe(el)}`, el);
             }
 
