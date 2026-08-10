@@ -29,6 +29,7 @@ import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { getFieldRegistry, GROUP_LABELS } from '../../utils/fieldRegistry';
 import { serializeRenderToHtml, serializeMultiPageHtml, downloadHtml } from '../../utils/htmlExport';
 import { computeContentHash } from '../../utils/exportSnapshot';
+import { fitImageToPdfPage } from '../../utils/pdfLayout';
 import { incrementExportCount } from '../../hooks/useUsageStats';
 
 // Ratio dimensions must match TemplateRenderer
@@ -625,18 +626,11 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
             img.src = dataUrl;
             await img.decode();
 
-            const imgRatio = img.width / img.height;
-            const pdfRatio = pageWidth / pageHeight;
-            let imgW, imgH;
-            if (imgRatio > pdfRatio) {
-                imgW = pageWidth - 20;
-                imgH = imgW / imgRatio;
-            } else {
-                imgH = pageHeight - 20;
-                imgW = imgH * imgRatio;
-            }
-            const x = (pageWidth - imgW) / 2;
-            const y = (pageHeight - imgH) / 2;
+            // Calcul extrait dans `pdfLayout.js` et couvert par des tests : le pipeline PDF complet
+            // n'est exercé par aucun outil, et je n'ai pas réussi à le piloter de bout en bout —
+            // rendre la logique pure et testable vaut mieux qu'une conviction sur du code non couvert.
+            const fit = fitImageToPdfPage(img.width, img.height, pageWidth, pageHeight);
+            const { x, y, width: imgW, height: imgH } = fit;
 
             if (i > 0) pdf.addPage();
             pdf.addImage(dataUrl, 'PNG', x, y, imgW, imgH);
