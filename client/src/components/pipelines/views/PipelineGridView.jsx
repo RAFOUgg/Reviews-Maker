@@ -41,7 +41,10 @@ const PipelineGridView = ({
     // culture de 90 jours sans ramer, mais fatal à l'export : la capture ne verrait que les
     // premières lignes et perdrait le reste sans aucun signal. Les deux chemins partagent le même
     // `renderCell`, donc la grille de l'export est celle des formulaires, pas une imitation.
-    staticRender = false
+    staticRender = false,
+    // 'fit' (défaut, inchangé) ou 'fill' quand la grille est rendue en TRANCHES successives qui
+    // doivent partager la même trame — cf. le commentaire sur `gridTemplateColumns`.
+    fillMode = 'fit'
 }) => {
     const [hoveredCell, setHoveredCell] = useState(null);
     const [dragOverCell, setDragOverCell] = useState(null);
@@ -546,9 +549,22 @@ const PipelineGridView = ({
                         // pose `overflow-x: hidden !important` sur ce conteneur, CSS en déduit
                         // `overflow-y: auto` et une barre de défilement partait dans le PNG.
                         // `auto-fit` s'adapte seul à la largeur réelle, sans mesure ni constante.
-                        gridTemplateColumns: `repeat(auto-fit, minmax(${STATIC_CELL_MIN_PX}px, 1fr))`,
+                        // `auto-fill` quand la grille est DÉCOUPÉE en tranches paginables, `auto-fit`
+                        // sinon. La différence compte ici : `auto-fit` REPLIE les pistes vides, donc
+                        // une tranche de 3 cases dans un conteneur qui en accueille 11 verrait ses 3
+                        // cases s'étirer au tiers de la largeur — chaque tranche aurait des cases de
+                        // taille différente, et l'ensemble ne se lirait plus comme une grille unique.
+                        // `auto-fill` conserve les pistes, donc toutes les tranches partagent la même
+                        // trame et une tranche incomplète se termine par un simple vide à droite,
+                        // exactement comme la dernière rangée d'une grille ordinaire.
+                        gridTemplateColumns: `repeat(${fillMode === 'fill' ? 'auto-fill' : 'auto-fit'}, minmax(${STATIC_CELL_MIN_PX}px, 1fr))`,
                     }}>
-                        {(cellIndices || []).map((_, cellIndex) => (
+                        {/* On lit la VALEUR de `cellIndices`, plus sa position. Les appelants
+                            historiques passent un tableau identité (`cells.map((_, i) => i)`), donc
+                            rien ne change pour eux ; mais une TRANCHE ([12…23], découpage paginable)
+                            doit rendre les cases 12 à 23, pas les cases 0 à 11 comme le faisait
+                            l'index positionnel. */}
+                        {(cellIndices || []).map((cellIndex) => (
                             // `minHeight` plutôt qu'`aspectRatio: 1/1` : une case carrée impose sa
                             // hauteur depuis sa largeur et coupe donc son propre contenu dès que la
                             // colonne se resserre. Le carré reste la forme NOMINALE (la largeur

@@ -11,6 +11,26 @@ import PipelineGridView from '../../pipelines/views/PipelineGridView';
 // §3 — « modale : un détail structuré »). En deçà, le panneau en ligne reste plus direct.
 const INLINE_FIELD_LIMIT = 6;
 
+// Nombre de cases par TRANCHE paginable.
+//
+// La grille était un bloc unique insécable, et c'était la cause dominante des pages à moitié vides :
+// mesuré le 2026-08-10 sur la Fiche Technique 16:9, le budget vaut 949px par colonne alors que le
+// pipeline Culture pèse 556px et le Curing 446px — deux blocs ne peuvent donc JAMAIS partager une
+// colonne (1002 > 949). Résultat : 3988px de contenu étalés sur 4 pages là où le budget en
+// autoriserait 2,1.
+//
+// La valeur doit rester INFÉRIEURE OU ÉGALE au nombre de colonnes, sinon chaque tranche se termine
+// par une rangée partielle et le gâchis se répète autant de fois qu'il y a de tranches. Mesuré avec
+// 12 : dans une grille d'environ 10 colonnes, une tranche occupait 2 rangées dont la seconde ne
+// portait que 2 cases, et le pipeline Culture passait de 548px à 856px — l'A4 y perdait une page
+// entière. Avec 10, le total de rangées redevient celui de la grille non découpée pour toutes les
+// largeurs rencontrées (6, 10, 11 ou 12 colonnes : 5, 3, 3 et 3 rangées dans les deux cas), la
+// tranche ne coûtant alors rien de plus que la grille d'un seul tenant.
+//
+// Même principe que les tranches de 6 étapes de `PipelineTimeline`, qui gère depuis 2026-08-04 la
+// variante LISTE du même pipeline.
+const CELLS_PER_CHUNK = 10;
+
 /**
  * PipelineMiniGrid - Grille interactive lecture seule d'une timeline de pipeline
  * (culture/curing/extraction/séparation), pour affichage dans Export Maker
@@ -20,7 +40,14 @@ const INLINE_FIELD_LIMIT = 6;
  * l'éditeur PipelineDragDropView.jsx) — pas de drag-drop, juste un survol/clic
  * pour voir le détail d'une case.
  */
-export default function PipelineMiniGrid({ type, name, icon, timelineData, timelineConfig, accentColor = '#a78bfa' }) {
+export default function PipelineMiniGrid({
+    type, name, icon, timelineData, timelineConfig, accentColor = '#a78bfa',
+    // Découpage paginable — mêmes props et même contrat que `PipelineTimeline` (variante LISTE) :
+    // `moduleId` sert de préfixe aux `data-module` des tranches (`<moduleId>#N`), `isPageOn` filtre
+    // celles de la page courante. Sans `moduleId` (galerie), la grille reste un bloc unique, comme
+    // avant — ce chemin n'est pas paginé.
+    moduleId = null, isPageOn = null,
+}) {
     const [selected, setSelected] = useState(null);
     const [modalCell, setModalCell] = useState(null);
     const { bind, tooltipNode, interactive } = useCanvasTooltip();
@@ -74,22 +101,45 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
         return f && Object.keys(f).length > 0;
     }).length;
 
+    // ── Découpage en tranches paginables ────────────────────────────────────────────────────────
+    // Chaque tranche est une unité que le paginateur répartit comme n'importe quel autre module ;
+    // toutes partagent la même trame de colonnes (cf. `fillMode="fill"`), donc l'ensemble se lit
+    // comme une grille unique même réparti sur plusieurs pages.
+    const allIndices = cells.map((_, i) => i);
+    const chunks = moduleId
+        ? Array.from({ length: Math.ceil(allIndices.length / CELLS_PER_CHUNK) }, (_, n) => ({
+            id: `${moduleId}#${n}`,
+            indices: allIndices.slice(n * CELLS_PER_CHUNK, (n + 1) * CELLS_PER_CHUNK),
+        }))
+        : [{ id: null, indices: allIndices }];
+    const visibleChunks = isPageOn ? chunks.filter((c) => isPageOn(c.id)) : chunks;
+    if (visibleChunks.length === 0) return null;
+    // L'en-tête est reporté sur chaque page portant une tranche (pratique attendue d'un document
+    // paginé), avec un rappel « (suite) » à partir de la deuxième — et il porte son propre
+    // `data-module` pour que sa hauteur entre dans le budget, sans quoi elle échapperait à la mesure
+    // (même correctif que `PipelineTimeline`, où l'écart atteignait 12 points de remplissage).
+    const isContinuation = moduleId && visibleChunks[0].id !== chunks[0].id;
+
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
+            <div data-module={moduleId ? `${moduleId}#hdr` : undefined}
+                style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
                 <span>{icon}</span>
-                <span style={{ flex: 1 }}>{name}</span>
+                <span style={{ flex: 1 }}>{name}{isContinuation ? ' (suite)' : ''}</span>
                 <span style={{ fontSize: 12, opacity: 0.7 }}>{filledCount}/{cells.length} documentées</span>
             </div>
             {/* LA grille des formulaires, en lecture seule et rendu statique — plus une imitation.
                 `staticRender` court-circuite la virtualisation `react-window`, qui ne monte que les
                 lignes visibles et ferait perdre les cases hors écran à la capture PNG. */}
+            {visibleChunks.map((chunk) => (
+            <div key={chunk.id || 'all'} data-module={chunk.id || undefined}>
             <PipelineGridView
                 cells={gridCells}
                 config={config}
-                cellIndices={cells.map((_, i) => i)}
+                cellIndices={chunk.indices}
                 readonly
                 staticRender
+                fillMode={moduleId ? 'fill' : 'fit'}
                 canAddMore={false}
                 onCellClick={(index) => {
                     if (!interactive) return;
@@ -102,6 +152,8 @@ export default function PipelineMiniGrid({ type, name, icon, timelineData, timel
                     else setSelected(selected === cell.timestamp ? null : cell.timestamp);
                 }}
             />
+            </div>
+            ))}
             {selected && (() => {
                 const cell = cells.find(c => c.timestamp === selected);
                 const fields = getCellFields(selected) || {};

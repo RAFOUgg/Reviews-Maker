@@ -389,13 +389,19 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 || TIMELINE_PIPELINES.find((x) => reviewData[x.dataKey]);
             if (t && reviewData[t.dataKey] && reviewData[t.configKey]) {
                 return (
-                    <div key={moduleId} data-module={moduleId} style={blockStyle}>
+                    // PAS de `data-module` sur cette enveloppe : la grille se découpe elle-même en
+                    // tranches paginables qui portent chacune le leur. Un module ne peut pas à la
+                    // fois être mesuré ET contenir des modules mesurés — c'est exactement le double
+                    // comptage qui produisait une page blanche sur le Rapport de Traçabilité.
+                    <div key={moduleId} style={blockStyle}>
                         {heading}
                         <PipelineMiniGrid
                             type={t.type} name={t.name} icon={t.icon}
                             timelineData={reviewData[t.dataKey]}
                             timelineConfig={reviewData[t.configKey]}
                             accentColor={accent}
+                            moduleId={moduleId}
+                            isPageOn={isPageOn}
                         />
                     </div>
                 );
