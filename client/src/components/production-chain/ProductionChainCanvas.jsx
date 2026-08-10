@@ -298,6 +298,18 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 label: node.label,
                 image: node.image,
                 reviewType: node.reviewType,
+                // Code de lot — `getLotCode`, la source unique déjà utilisée par le panneau de
+                // détail de ce même canevas (plus bas dans ce fichier). Dérivé de `Review.id`, sans
+                // stockage ni migration : une review représente déjà un lot physique précis.
+                //
+                // J'avais commencé par ajouter une colonne `ChainNode.batchCode` avant de découvrir
+                // ce fichier — c'est-à-dire une deuxième table de vérité pour la même notion, très
+                // exactement ce que ce dépôt paie depuis des mois. Annulé. Le seul apport de la
+                // colonne aurait été une recherche inverse code → nœud, dont rien n'a besoin : le QR
+                // encode l'URL complète (`getLotCodeUrl` → `/r/:id`), donc il se résout déjà.
+                //
+                // Affiché uniquement en rendu figé (cf. `.node-batch`, graphCanvas.css).
+                batchCode: getLotCode(node.reviewId),
                 reviewId: node.reviewId,
                 color: node.color || '#10b981',
                 selected: store.selectedNodeId === node.id,

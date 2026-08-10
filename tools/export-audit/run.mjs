@@ -101,7 +101,14 @@ async function auditViaExportModal(page, subjectId) {
     const trigger = page.getByRole('button', { name: /^Exporter$/ }).first();
     if (!(await trigger.count())) return null;
     await trigger.click();
-    await sleep(Number(process.env.AUDIT_EXPORT_WAIT_MS || 7000));
+    // 14s, et pas 7 : la mesure de pagination attend désormais que les blocs asynchrones se
+    // résolvent (deux canevas × deux requêtes séquentielles chacun, cf. `waitForAsyncBlocks`), ce
+    // qui peut dépasser 7s. Capturer trop tôt ne donne pas un résultat approximatif, il donne un
+    // résultat FAUX : le hook rend alors le repli statique, dont les identifiants de page ne
+    // correspondent à aucun module réel du template, donc le filtre laisse TOUT passer sur CHAQUE
+    // page. Mesuré sur le Rapport de Traçabilité : 5 pages identiques à 98,6 % contre 2 pages à
+    // 80,2/76,7 % une fois la mesure terminée.
+    await sleep(Number(process.env.AUDIT_EXPORT_WAIT_MS || 14000));
 
     const res = await auditCurrent(page);
     return res;

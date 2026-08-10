@@ -58,29 +58,37 @@ opposable**. Elle doit exister en trois formes cohérentes — écran (vivant), 
 
 ---
 
-## 1. Le verrou unique : il n'y a pas d'identifiant de lot
+## 1. Le verrou : un identifiant de lot existe, mais il ne prouve rien
 
-L'étude de marché du 2026-07-09 l'avait déjà nommé, et rien n'a changé depuis : **aucun identifiant
-unique de lot / plante / tag n'existe dans `schema.prisma`** (le seul « batch » est `batchSize`, une
-quantité, pas un identifiant). Or c'est la brique de base de **tous** les systèmes examinés — tag
-RFID METRC, CPLI GS1, empreinte blockchain.
+> **Correction du 2026-08-10.** La première version de ce paragraphe affirmait qu'aucun identifiant
+> de lot n'existait, en reprenant l'étude de marché du 2026-07-09 sans la revérifier. **C'est faux
+> depuis** : `client/src/utils/lotCode.js` dérive `TRP-XXXXXXXX` de `Review.id`, et il est déjà
+> consommé par le canevas de chaîne et par le pied de page des exports. J'ai construit une seconde
+> colonne en base avant de m'en apercevoir, puis je l'ai annulée (cf. §8, Étape 1). La leçon est
+> notée là-bas : chercher l'antérieur AVANT de concevoir.
 
-**Tout le reste de ce plan en dépend.** Sans identifiant de lot :
+Le vrai manque n'est donc pas l'identifiant, c'est **ce qu'il vaut**. Le fichier le dit lui-même :
+« ce code n'a AUCUNE valeur légale/réglementaire — c'est un identifiant de confort », et le pied de
+page des exports l'affiche honnêtement comme « Identifiant interne — non réglementaire ».
 
-- pas de GS1 Digital Link, donc pas de QR conforme (§0.3) ;
-- pas de vérification de rappel au niveau du lot ;
-- pas de Digital Product Passport ;
-- pas de chaîne de garde inter-entreprises (2e écart déjà identifié : `ProductionChain` est
-  mono-utilisateur) ;
-- et donc pas de dossier crédible pour un pilote allemand.
+**Ce qui manque pour qu'il devienne opposable**, et c'est ce dont dépend le reste du plan :
 
-C'est **le** chantier fondateur, et il est modeste techniquement : le repo a déjà une convention
-d'identifiant partageable (`shareCode`, unique, déjà utilisé sur `GeneticTree`, `ProductionChain`,
-`TemplateShare`). Il s'agit de l'étendre à un `BatchId` porté par le nœud de chaîne de production,
-et de le faire remonter dans les rendus.
+- un **GS1 Digital Link** à la place d'un lien maison, seul format qui survive à une vérification de
+  rappel au niveau du lot et à un audit de place de marché (§0.3) ;
+- un **horodatage et une version figée** : un document sans date d'émission ni version de données
+  n'est pas archivable ;
+- une **empreinte d'intégrité** vérifiable depuis le QR — c'est elle qui distingue une fiche
+  technique d'une jolie image. *(Le socle existe déjà : `client/src/utils/exportSnapshot.js`,
+  `computeContentHash`.)*
+- la **chaîne de garde inter-entreprises**, aujourd'hui impossible : `ProductionChain` est
+  mono-utilisateur (2e écart identifié dès juillet, toujours ouvert).
 
-> **Ordre non négociable** : identifiant de lot → QR/DPP dans le rendu → dossier pilote. Inverser
-> cet ordre produit une démo qui ne survit pas à la première question d'un régulateur.
+Autrement dit, le chantier n'est plus « créer un identifiant » mais « **lui donner valeur de
+preuve** ». C'est moins de travail que je ne l'avais écrit, et mieux ciblé.
+
+> **Ordre non négociable** : preuve attachée à l'identifiant → QR/DPP dans le rendu → dossier
+> pilote. Inverser cet ordre produit une démo qui ne survit pas à la première question d'un
+> régulateur.
 
 ---
 
@@ -256,9 +264,50 @@ mesuré : **à traiter comme un chantier à part entière**, pas comme une case 
 
 L'ordre est contraint par les dépendances, pas par l'envie.
 
-### Étape 1 — L'identifiant de lot (fondation, tout en dépend)
-`BatchId` sur le nœud de chaîne de production, sur le modèle de `shareCode` déjà en place. Affichage
-et QR dans les rendus. *Sans lui, les étapes 2 à 4 sont impossibles.*
+### Étape 1 — L'identifiant de lot — **il existait déjà**
+
+**Erreur de ma part, corrigée le 2026-08-10.** J'ai commencé par ajouter une colonne
+`ChainNode.batchCode` (unique, indexée, migration + rattrapage de 140 nœuds) avant de découvrir
+`client/src/utils/lotCode.js` — committé de longue date, qui dérive `TRP-XXXXXXXX` de `Review.id`,
+et qui **est déjà utilisé par le panneau de détail du canevas de chaîne** (`ProductionChainCanvas.jsx`).
+
+C'était donc une deuxième table de vérité pour la même notion : exactement ce que ce dépôt paie
+depuis des mois, et que le §2 de ce document interdit explicitement. **Annulé** — schéma, migration
+et route revenus à l'état d'origine.
+
+Le seul apport réel de ma colonne aurait été une recherche inverse code → nœud, dont **rien n'a
+besoin** : le QR encode l'URL complète (`getLotCodeUrl` → `/r/:id`), donc il se résout déjà. Et le
+raisonnement du fichier existant est meilleur que le mien : une review représente déjà un lot
+physique précis, deux nœuds liés à deux reviews différentes ont donc bien deux lots distincts, et la
+chaîne de garde fonctionne sans stockage supplémentaire.
+
+**Ce qui restait vraiment à faire, et qui est livré** : le code de lot n'était visible que dans le
+panneau de détail, au clic — donc absent du document exporté. Il s'affiche désormais sur chaque nœud
+de chaîne **en rendu figé**, à la place de la pastille de type.
+
+Ce remplacement n'est pas cosmétique : une ligne de PLUS agrandit la carte, `fitView` dézoome donc
+davantage (×1,09 → ×0,91), et comme la taille rendue vaut la déclaration × le zoom, tout le texte du
+canevas passe sous le plancher de 12px d'un coup — 14 violations E2 apparues sur Article de Blog en
+ajoutant cette seule ligne. À nombre de lignes constant, le zoom ne bouge pas. Le compromis est de
+toute façon favorable : le type du produit est déjà porté par l'icône du nœud et par le document,
+alors que le lot n'apparaissait nulle part.
+
+> **Leçon, et elle vaut au-delà de ce cas** : j'ai conçu une solution à partir d'un constat d'étude
+> de marché (« aucun identifiant de lot n'existe ») sans vérifier que le constat était encore vrai.
+> Il ne l'était plus. Chercher l'antérieur AVANT de concevoir, pas après avoir migré.
+
+### Étape 1 bis — Un export pouvait partir avec une mise en page FAUSSE — corrigé
+
+Trouvé en enquêtant sur une anomalie d'audit (Traçabilité : 5 pages identiques à 98,6 % au lieu de
+2 pages à 80,2/76,7 %). `ExportModal` consommait `useAdaptivePages` mais **ignorait `isMeasuring`** —
+seul l'aperçu Studio le lisait. Le commentaire en place disait vrai (le repli statique évite un
+export *vide*) mais protégeait du mauvais danger : pendant la mesure, `getDefaultPages` produit des
+pages dont les identifiants ne correspondent à aucun module réel du template, si bien que le filtre
+par page laisse **tout** passer sur **chaque** page.
+
+Un export complet mais faux est plus trompeur qu'un export vide : il part chez le client sans que
+rien ne signale l'erreur. Le bouton d'export est désormais désactivé pendant la mesure
+(« Calcul de la mise en page... »).
 
 ### Étape 2 — Le document opposable
 GS1 Digital Link à la place du QR interne actuel ; horodatage et version figée ; chaîne de preuve du

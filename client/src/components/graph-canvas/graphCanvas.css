@@ -229,6 +229,38 @@
     min-height: 140px;
 }
 
+/* Identifiant de LOT. Masqué par défaut : dans l'éditeur, la carte a une hauteur fixe (cf.
+   `.cultivar-node.shape-rounded`) et une ligne de plus la ferait déborder, alors que le code n'y
+   sert à rien — on y manipule des étapes, pas des lots. Dans un rendu figé, c'est au contraire
+   l'information opposable : elle relie la fiche au lot physique, et c'est elle qui portera le QR
+   (cf. `export-maker-refonte/D1-plan-refonte-produit.md` §2.2). */
+.node-batch {
+    display: none;
+}
+
+/* En rendu figé, le code de lot PREND LA PLACE de la pastille de type sur les nœuds de chaîne, au
+   lieu de s'y ajouter. Raison mesurée : une ligne de plus agrandit la carte, `fitView` dézoome donc
+   davantage (×1,09 → ×0,91), et comme la taille RENDUE vaut la déclaration × le zoom, tout le texte
+   du canevas passe sous le plancher de 12px d'un coup — 14 violations E2 apparues sur Article de
+   Blog en ajoutant cette seule ligne. À nombre de lignes constant, le zoom ne bouge pas.
+   Le compromis est favorable : le type du produit est déjà porté par l'icône du nœud et par le
+   document lui-même, alors que le lot n'existe nulle part ailleurs.
+   Ciblé sur les nœuds de CHAÎNE (`react-flow__node-reviewProduct`) : sur un nœud de généalogie, la
+   même pastille porte le type et le breeder du cultivar, qui sont du contenu réel. */
+.graph-canvas-readonly .react-flow__node-reviewProduct .node-genetics {
+    display: none;
+}
+
+.graph-canvas-readonly .node-batch {
+    display: block;
+    font-family: ui-monospace, 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+    font-size: 12px;
+    letter-spacing: 0.02em;
+    color: #cbd5e1;
+    margin-top: 3px;
+    white-space: nowrap;
+}
+
 /* 9px suffisent dans l'éditeur, où l'on zoome à volonté. Dans un fichier figé, la taille RENDUE
    vaut la taille déclarée × le zoom de `fitView` — et ce zoom dépend de la densité du graphe :
    mesuré ×1,675 sur la Fiche Technique A4 (donc 15px, lisible) mais ×1,09 sur Article de Blog,

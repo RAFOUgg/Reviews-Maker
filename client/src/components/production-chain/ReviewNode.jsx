@@ -69,6 +69,12 @@ const ReviewNode = ({ data, selected }) => {
                     <div className="node-genetics">
                         <span className="genetics-type">{meta.label}</span>
                     </div>
+                    {/* Identifiant de lot — masqué en édition par la feuille de style (la carte y a
+                        une hauteur fixe), visible dans les rendus figés où il est l'information
+                        opposable : c'est lui qui relie la fiche au lot physique. */}
+                    {data.batchCode && (
+                        <div className="node-batch" title={`Lot ${data.batchCode}`}>{data.batchCode}</div>
+                    )}
                     {/* Palier 'near' uniquement : résumé de la cellule pipeline la plus récente —
                         remplace le besoin de cliquer pour voir ne serait-ce que le premier champ. */}
                     {isNear && data.latestCellSummary && (
