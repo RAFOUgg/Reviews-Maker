@@ -339,6 +339,27 @@ unitaire sans renouvellement. Licencié par **chaque producteur** — Terpologie
 GS1 Digital Link à la place du QR interne actuel ; horodatage et version figée ; chaîne de preuve du
 laboratoire mise en avant ; empreinte d'intégrité vérifiable.
 
+### Étape 3a — Le PDF occupe enfin la page — **LIVRÉ le 2026-08-10**
+
+L'export appliquait TOUJOURS une marge de 20 mm et centrait l'image, y compris quand le canevas
+avait déjà le format de la page. Cette marge s'ajoutait aux marges internes du document : la fiche
+A4 sortait réduite d'environ 7 % en hauteur et flottait dans un blanc tournant double. La marge
+reste appliquée quand les formats diffèrent (une carte 16:9 sur une feuille A4), où centrer est le
+comportement attendu.
+
+**Non vérifié de bout en bout, et il faut le dire** : le pipeline PDF complet n'est exercé par aucun
+outil du dépôt, et je n'ai pas réussi à piloter le bouton d'export de la modale (un clic mal placé
+atterrit sur l'arrière-plan et ferme la modale — échec indiscernable d'un export raté). Le calcul a
+donc été extrait dans `pdfLayout.js`, fonction pure couverte par 6 tests. `pdf-check.mjs` est prêt :
+il lit le `/MediaBox` et la matrice de placement dans le fichier livré, et fera la vérification
+réelle dès que le pilotage sera résolu.
+
+**Mesure utile au passage** : le canevas A4 fait 1754 × 2480 (~212 dpi) mais l'export applique un
+facteur 2 — les PNG mesurés font 3508 × 4960, soit **~424 dpi**. La résolution d'impression est donc
+déjà largement suffisante ; le §7 de ce document la donnait à tort comme un obstacle. Restent le
+format d'étiquette, les fonds perdus, et le CMJN — ce dernier hors de portée d'un canevas navigateur,
+donc à confier au façonnier comme c'est l'usage.
+
 ### Étape 3 — Les deux familles de rendu
 Certificat (papier/fichier) et Vitrine (écran/réseaux), au lieu de cinq templates hétérogènes.
 Inclut le format **imprimé** avec ses contraintes propres (§7).
