@@ -309,6 +309,32 @@ Un export complet mais faux est plus trompeur qu'un export vide : il part chez l
 rien ne signale l'erreur. Le bouton d'export est désormais désactivé pendant la mesure
 (« Calcul de la mise en page... »).
 
+### Étape 2a — Le document devient auto-vérifiable — **LIVRÉ le 2026-08-10**
+
+Le pied de page de la Fiche Technique et du Rapport de Traçabilité porte désormais : lot, **date
+d'émission** (ISO — un document qui circule entre pays ne peut pas se permettre l'ambiguïté 03/04)
+et **empreinte** SHA-256 tronquée. La Vue Détaillée (`/r/:id`, cible du QR) affiche l'empreinte
+actuelle et invite à la comparer.
+
+**La projection est imposée par le hook**, jamais laissée aux appelants : hacher l'objet reçu tel
+quel produisait deux empreintes systématiquement différentes (l'écran part de l'API, l'export d'un
+objet enrichi). Une empreinte qui ne correspond jamais est PIRE qu'aucune empreinte. Le hook hache
+`{id, updatedAt}`, présents des deux côtés, et dont le second change à chaque modification.
+
+**Limite assumée et écrite dans le code** : ni signature électronique ni horodatage qualifié.
+L'empreinte permet de DÉTECTER une divergence, pas de PROUVER une antériorité opposable à un tiers.
+
+`tools/export-audit/seal-check.mjs` vérifie la seule question qui donne un sens au sceau — les deux
+empreintes coïncident-elles ? Elle ne se vérifie pas à la relecture : ma première version du test
+lisait l'écran AVANT d'exporter, or « Appliquer » sauvegarde la review et modifie donc `updatedAt`
+entre les deux lectures. Le test se trompait avant le code.
+
+### Étape 2b — GS1 Digital Link — **bloqué hors du code**
+
+Exige un GTIN sous licence GS1 : 250 à 10 500 $ pour un préfixe entreprise, ou 30 $ par GTIN
+unitaire sans renouvellement. Licencié par **chaque producteur** — Terpologie ne peut pas en émettre
+à leur place. C'est une démarche commerciale à porter côté client, pas un développement.
+
 ### Étape 2 — Le document opposable
 GS1 Digital Link à la place du QR interne actuel ; horodatage et version figée ; chaîne de preuve du
 laboratoire mise en avant ; empreinte d'intégrité vérifiable.
