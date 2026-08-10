@@ -11,3 +11,18 @@ export const CANNABIS_COLORS = [
     { id: 'yellow', name: 'Jaune', hex: '#CA8A04', angle: 288 },
     { id: 'brown', name: 'Brun', hex: '#78350F', angle: 324 }
 ];
+
+/**
+ * Parties de la plante auxquelles une couleur peut être attribuée.
+ *
+ * Vivait en local dans `ColorWheelPicker.jsx` : le RENDU en avait besoin pour écrire « Violet 47 %
+ * (Tiges) » au lieu du JSON brut, et la recopier là-bas aurait créé une table concurrente de plus.
+ * Une seule définition, importée par la saisie comme par le rendu.
+ */
+export const PLANT_PARTS = [
+    { id: 'bracts', label: 'Bractées' },
+    { id: 'pistils', label: 'Pistils' },
+    { id: 'sugarLeaves', label: 'Sugar leaves' },
+    { id: 'stems', label: 'Tiges' },
+    { id: 'trichomes', label: 'Trichomes' }
+];

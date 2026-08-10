@@ -214,9 +214,35 @@ export const TEMPLATE_MODULE_PRESETS = {
 };
 
 // Templates de base avec leurs configurations
+/**
+ * DEUX FAMILLES DE RENDU, et non cinq options équivalentes.
+ *
+ * Les cinq templates répondent à deux besoins opposés — un document qu'on classe et qu'on oppose,
+ * ou une carte qu'on partage — mais l'interface les présentait à plat, comme des variantes de goût.
+ * Un utilisateur qui cherche une fiche à joindre à un lot n'a aucune raison de comparer « Story
+ * Réseau Social » à « Rapport de Traçabilité ».
+ *
+ * La famille vit ICI, à côté de la définition du template, et le sélecteur en dérive : ajouter un
+ * template sans le classer devient visible immédiatement, au lieu de créer une table parallèle à
+ * maintenir en plus (cf. les tables concurrentes que ce dépôt a déjà payées).
+ */
+export const TEMPLATE_FAMILIES = {
+    certificate: {
+        id: 'certificate',
+        label: 'Documents',
+        hint: 'À imprimer, classer, joindre à un lot — porte le code de lot et l’empreinte.',
+    },
+    showcase: {
+        id: 'showcase',
+        label: 'Vitrine',
+        hint: 'À partager — réseaux, blog, galerie.',
+    },
+};
+
 export const DEFAULT_TEMPLATES = {
     modernCompact: {
         id: 'modernCompact',
+        family: 'showcase',
         name: 'Moderne Compact',
         description: 'Design épuré et moderne, idéal pour les réseaux sociaux',
         layout: 'compact',
@@ -232,6 +258,7 @@ export const DEFAULT_TEMPLATES = {
     },
     detailedCard: {
         id: 'detailedCard',
+        family: 'certificate',
         name: 'Fiche Technique Détaillée',
         description: 'Présentation complète avec tous les détails de la review',
         layout: 'detailed',
@@ -240,6 +267,7 @@ export const DEFAULT_TEMPLATES = {
     },
     blogArticle: {
         id: 'blogArticle',
+        family: 'showcase',
         name: 'Article de Blog',
         description: 'Format long adapté aux blogs et documentation',
         layout: 'article',
@@ -248,6 +276,7 @@ export const DEFAULT_TEMPLATES = {
     },
     socialStory: {
         id: 'socialStory',
+        family: 'showcase',
         name: 'Story Social Media',
         description: 'Format vertical pour Instagram et TikTok',
         layout: 'story',
@@ -256,6 +285,7 @@ export const DEFAULT_TEMPLATES = {
     },
     traceabilityReport: {
         id: 'traceabilityReport',
+        family: 'certificate',
         name: 'Rapport de Traçabilité',
         description: 'Lot, confiance producteur/labo, bilan matière, chaîne de production et journal d\'événements',
         layout: 'traceabilityReport',

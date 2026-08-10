@@ -1,4 +1,5 @@
 import PropTypes from 'prop-types';
+import { formatListItem } from '../../../utils/formatListItem';
 import { getFieldsByGroup, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
 import { CANNABINOIDS } from '../../../data/cannabinoids';
 import { formatDate } from '../../../utils/exportMakerHelpers';
@@ -108,7 +109,7 @@ function renderFieldValue(field, value, { colors, fontSize, spacing }) {
         return (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: `${Math.max(3, spacing.gap - 2)}px` }}>
                 {arr.map((item, i) => {
-                    const label = typeof item === 'object' ? (item.name || item.label || item.nom || JSON.stringify(item)) : String(item);
+                    const label = formatListItem(item);
                     return (
                         <span key={i} style={{
                             fontSize: `${fontSize.small}px`,
@@ -145,9 +146,7 @@ function renderFieldValue(field, value, { colors, fontSize, spacing }) {
 function formatTooltipValue(field, value) {
     if (field.type === 'list') {
         const arr = Array.isArray(value) ? value : [value];
-        return arr
-            .map((item) => (typeof item === 'object' ? (item.name || item.label || item.nom || JSON.stringify(item)) : String(item)))
-            .join(', ');
+        return arr.map(formatListItem).join(', ');
     }
     if (field.type === 'bool') return value ? 'Oui' : 'Non';
     if (field.type === 'date') return formatDate(value);

@@ -1,16 +1,9 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Palette, Plus, X, Pipette } from 'lucide-react';
-import { CANNABIS_COLORS, DEFAULT_COLOR } from '../../../data/cannabisColors';
+import { CANNABIS_COLORS, DEFAULT_COLOR, PLANT_PARTS } from '../../../data/cannabisColors';
 
 // Parties possibles de la plante associables à une couleur
-const PLANT_PARTS = [
-    { id: 'bracts', label: 'Bractées' },
-    { id: 'pistils', label: 'Pistils' },
-    { id: 'sugarLeaves', label: 'Sugar leaves' },
-    { id: 'stems', label: 'Tiges' },
-    { id: 'trichomes', label: 'Trichomes' }
-];
 
 const ColorWheelPicker = ({ value = [], onChange, maxSelections = 7 }) => {
     const [hoveredColor, setHoveredColor] = useState(null);

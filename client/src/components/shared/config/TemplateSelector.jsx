@@ -5,7 +5,7 @@ import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
 import { LiquidButton, LiquidToggle } from '../../ui/LiquidUI';
 import { shouldAutoLockPagination } from '../../../utils/exportMakerHelpers';
-import { isTemplatePaginable } from '../../../store/exportMakerConstants';
+import { isTemplatePaginable, TEMPLATE_FAMILIES } from '../../../store/exportMakerConstants';
 
 // Capacité de pagination — même source que le moteur de rendu (matrice C4), plus de liste locale.
 
@@ -81,9 +81,24 @@ export default function TemplateSelector() {
                 </p>
             </div>
 
-            {/* Galerie de templates */}
-            <div className="grid grid-cols-1 gap-2">
-                {Object.values(templates).map((template) => {
+            {/* Galerie de templates, GROUPÉE PAR FAMILLE.
+                Les cinq templates répondent à deux besoins opposés — un document qu'on classe et
+                qu'on oppose, ou une carte qu'on partage. Les présenter à plat les faisait passer
+                pour des variantes de goût : quelqu'un qui cherche une fiche à joindre à un lot n'a
+                aucune raison de comparer « Story Réseau Social » à « Rapport de Traçabilité ».
+                Un template non classé apparaît quand même, en fin de liste — il doit rester
+                visible, pas disparaître parce qu'on a oublié de lui donner une famille. */}
+            {Object.values(TEMPLATE_FAMILIES).map((family) => {
+                const inFamily = Object.values(templates).filter((t) => t.family === family.id);
+                if (inFamily.length === 0) return null;
+                return (
+                <div key={family.id} className="space-y-2">
+                    <div className="flex items-baseline gap-2 pt-1">
+                        <h4 className="text-sm font-semibold text-white/85">{family.label}</h4>
+                        <p className="text-[11px] text-white/45">{family.hint}</p>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2">
+                {inFamily.map((template) => {
                     const isAllowed = allowedTemplates.includes(template.id);
                     return (
                     <motion.button
@@ -131,7 +146,22 @@ export default function TemplateSelector() {
                     </motion.button>
                     );
                 })}
-            </div>
+                    </div>
+                </div>
+                );
+            })}
+
+            {/* Templates sans famille déclarée — jamais masqués. */}
+            {(() => {
+                const known = new Set(Object.keys(TEMPLATE_FAMILIES));
+                const orphans = Object.values(templates).filter((t) => !known.has(t.family));
+                if (orphans.length === 0) return null;
+                return (
+                    <p className="text-[11px] text-amber-300/80">
+                        {orphans.length} template(s) sans famille : {orphans.map((t) => t.name).join(', ')}
+                    </p>
+                );
+            })()}
 
             {/* Sélecteur de ratio */}
             <div>
