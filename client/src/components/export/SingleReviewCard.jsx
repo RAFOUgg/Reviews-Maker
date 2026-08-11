@@ -18,7 +18,7 @@ const RATIO_DIMS = {
  * empilées). `reviewData` est déjà fetchée par l'appelant — ce composant ne fait que résoudre sa
  * config Export Maker et la mettre à l'échelle, il ne fetch rien lui-même.
  */
-export default function SingleReviewCard({ reviewData, canvasId = 'public-render-canvas' }) {
+export default function SingleReviewCard({ reviewData, canvasId = 'public-render-canvas', config: configOverride = null }) {
     const containerRef = useRef(null)
     const scaledBoxRef = useRef(null)
     const [scale, setScale] = useState(1)
@@ -27,7 +27,12 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
     // Répare au passage un exportMakerConfig sauvegardé avant l'ajout de nouvelles clés à
     // DEFAULT_CONFIG.contentModules — sinon les sections "opt-in" (cultivarsList, aromas,
     // terpenes…) disparaissent silencieusement sur une review pourtant pleine.
-    const config = resolveConfigForReview(reviewData, 'detailedCard')
+    // `configOverride` : l'aperçu ÉCRAN du Studio pilote ce rendu avec la config EN COURS D'ÉDITION,
+    // pas celle sauvegardée sur la review. Sans lui, changer de template dans le Studio ne changeait
+    // rien à l'écran — le défaut signalé par l'utilisateur (« Story Social Media » coché, une fiche
+    // détaillée affichée). Les autres appelants (`/r/:id`, page de lignée) ne passent rien et
+    // continuent de lire la config de la review.
+    const config = configOverride || resolveConfigForReview(reviewData, 'detailedCard')
     const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']
 
     // Mise à l'échelle sur la LARGEUR uniquement — la fiche est un document vivant censé défiler
@@ -85,4 +90,5 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
 SingleReviewCard.propTypes = {
     reviewData: PropTypes.object.isRequired,
     canvasId: PropTypes.string,
+    config: PropTypes.object,
 }

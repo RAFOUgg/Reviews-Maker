@@ -728,7 +728,7 @@ export default function ReviewFullDisplay({ review, config }) {
                 <div className="mt-8 pt-4 border-t border-white/10 flex flex-wrap items-center gap-x-6 gap-y-1 font-mono text-xs text-white/50">
                     <span>lot {getLotCode(review.id)}</span>
                     <span>empreinte actuelle {docHash}</span>
-                    <span className="text-white/35 font-sans">
+                    <span className="text-white/60 font-sans">
                         Comparez-la à celle imprimée sur votre document : si elles diffèrent, la fiche a changé depuis son édition.
                     </span>
                 </div>

@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import ReviewFullDisplay from '../../gallery/ReviewFullDisplay';
+import SingleReviewCard from '../../export/SingleReviewCard';
 
 /**
  * Aperçu du mode ÉCRAN d'Export Maker (C10-3) — la Vue Détaillée, telle qu'elle est servie sur
@@ -11,9 +11,15 @@ import ReviewFullDisplay from '../../gallery/ReviewFullDisplay';
  * différentes (« à quoi ressemble ma fiche en ligne ? » vs « à quoi ressemblera le fichier
  * exporté ? »), et le Studio laisse désormais basculer de l'une à l'autre.
  *
- * Aucune mise à l'échelle ici, volontairement : la Vue Détaillée est fluide, elle se recompose à
- * la largeur disponible. La borner à 1100px reproduit la largeur réelle de la page publique, pour
- * que l'aperçu ne mente pas sur la mise en page finale.
+ * OBÉIT AU TEMPLATE SÉLECTIONNÉ (2026-08-11). Cet aperçu rendait auparavant `ReviewFullDisplay`,
+ * un composant unique qui ignore `config.template` et `config.ratio` : choisir « Story Social
+ * Media » dans le Studio n'y changeait rien, on voyait toujours une fiche détaillée qui défile.
+ * Signalé par l'utilisateur, capture à l'appui — et c'était exact.
+ *
+ * Il rend désormais le MÊME composant que la page publique (`SingleReviewCard`), donc le template
+ * et le format réellement choisis. La différence avec l'onglet FICHIER reste entière et assumée :
+ * ici le document est fluide (`allowOverflow`, il défile), là il est enfermé dans un canevas à
+ * hauteur fixe et paginé pour la capture. Deux questions distinctes, un seul moteur de rendu.
  */
 export default function ScreenPreviewPane({ reviewData, config }) {
     if (!reviewData) {
@@ -27,7 +33,7 @@ export default function ScreenPreviewPane({ reviewData, config }) {
     return (
         <div className="w-full h-full overflow-y-auto bg-[#0a0a0f] p-4">
             <div className="mx-auto" style={{ maxWidth: 1100 }}>
-                <ReviewFullDisplay review={reviewData} config={config} />
+                <SingleReviewCard reviewData={reviewData} config={config} canvasId="export-maker-screen-canvas" />
             </div>
         </div>
     );
