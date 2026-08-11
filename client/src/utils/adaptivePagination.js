@@ -74,11 +74,21 @@ export const MODULE_META = {
     'pipeline:fertilizationPipeline': { label: 'Fertilisation', icon: '🌱' },
 };
 
-// Petites majorations forfaitaires : un module déplacé sur sa propre page porte son propre en-tête
-// de `Section` (filet + titre), pas mesuré individuellement car partagé visuellement quand plusieurs
-// modules cohabitent sur la même page au moment de la mesure — ordre de grandeur, pas une mesure
-// exacte, volontairement (cf. "packing séquentiel simple" ci-dessus).
-const SECTION_HEADER_OVERHEAD = 40;
+// Coût d'un module EN PLUS de sa hauteur propre : l'espace qui le sépare du bloc suivant dans la
+// même colonne.
+//
+// C'était 40px, posé comme « ordre de grandeur » au motif qu'un module déplacé sur sa propre page
+// porterait un en-tête de `Section` non mesuré. Vérifié le 2026-08-11 en confrontant, sur la même
+// review et le même template, les hauteurs prédites aux hauteurs RENDUES : elles coïncident au
+// pixel près (sensoryEvaluation 296/296, sensoryRadar 321/321, cannabinoidGrid 266/266,
+// cultureStats 301/301) — l'en-tête est donc DÉJÀ compris dans la hauteur mesurée, et la majoration
+// ne compensait rien. Les écarts verticaux réellement observés entre blocs consécutifs d'une même
+// colonne valent 0, 6, 16 ou 20px selon le format. À 40px et une quinzaine de modules, c'était
+// ~460px de hauteur fantôme facturés à chaque page — soit une page entière de gâchis tous les deux
+// écrans, et une part directe des remplissages à 52-62 %.
+//
+// Valeur retenue : la médiane haute des écarts mesurés, pas une marge de confort.
+const SECTION_HEADER_OVERHEAD = 16;
 
 // Modules rendus PLEINE LARGEUR, hors du flux en colonnes.
 //

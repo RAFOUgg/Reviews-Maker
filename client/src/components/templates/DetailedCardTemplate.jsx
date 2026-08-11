@@ -161,7 +161,14 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // coupé du contenu sur Article de Blog (budget doublé, rendu sur une seule colonne).
     const templateColumns = getTemplateColumns('detailedCard', config.ratio);
     const sectionFlow = templateColumns > 1
-        ? { columnCount: templateColumns, columnGap: `${spacing.section}px`, flex: 1, minHeight: 0 }
+        // `columnFill: 'balance'` posé explicitement — c'est déjà le comportement obtenu, on le
+        // rend seulement non implicite. Vérifié le 2026-08-11 : l'ajouter ne change AUCUN
+        // remplissage de la matrice, les deux colonnes étaient bien équilibrées (page 1 de la Fiche
+        // Technique 16:9 : 296px à gauche, 321px à droite). Ses 52,8 % ne viennent donc ni des
+        // colonnes ni du budget par module (les deux essayés et mesurés sans effet) mais du nombre
+        // de blocs que le paginateur pose sur la page — trois seulement, parce qu'il ouvre une page
+        // neuve à chaque frontière de GROUPE de lecture. C'est là qu'est le levier restant.
+        ? { columnCount: templateColumns, columnFill: 'balance', columnGap: `${spacing.section}px`, flex: 1, minHeight: 0 }
         : { display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 };
 
     // Un chip d'arôme repose sur `accent` à 12 % au-dessus du fond, pas sur le fond nu : on
