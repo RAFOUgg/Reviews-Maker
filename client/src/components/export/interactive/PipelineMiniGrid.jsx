@@ -81,7 +81,8 @@ export default function PipelineMiniGrid({
         matches.forEach(entry => {
             if (entry.data && typeof entry.data === 'object') Object.assign(fields, entry.data);
             Object.keys(entry).forEach(k => {
-                if (!['timestamp', 'date', 'label', 'phase', 'data', '_meta'].includes(k)) fields[k] = entry[k];
+                // `media`/`photos` : pièces jointes, jamais des mesures — cf. `META_KEYS` (chainCellPipelines).
+                if (!['timestamp', 'date', 'label', 'phase', 'data', '_meta', 'media', 'photos'].includes(k)) fields[k] = entry[k];
             });
         });
         return fields;
@@ -146,7 +147,7 @@ export default function PipelineMiniGrid({
                     const cell = cells[index];
                     if (!cell) return;
                     const fields = getCellFields(cell.timestamp);
-                    const count = fields ? Object.keys(fields).filter((k) => !['timestamp', 'date'].includes(k)).length : 0;
+                    const count = fields ? Object.keys(fields).filter((k) => !['timestamp', 'date', 'media', 'photos'].includes(k)).length : 0;
                     if (count === 0) return;
                     if (count > INLINE_FIELD_LIMIT) setModalCell(cell.timestamp);
                     else setSelected(selected === cell.timestamp ? null : cell.timestamp);
@@ -157,7 +158,7 @@ export default function PipelineMiniGrid({
             {selected && (() => {
                 const cell = cells.find(c => c.timestamp === selected);
                 const fields = getCellFields(selected) || {};
-                const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date'].includes(k));
+                const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date', 'media', 'photos'].includes(k));
                 return (
                     <div style={{
                         padding: '6px 10px', borderRadius: 8,
@@ -189,7 +190,7 @@ export default function PipelineMiniGrid({
                 {(() => {
                     if (!modalCell) return null;
                     const fields = getCellFields(modalCell) || {};
-                    const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date'].includes(k));
+                    const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date', 'media', 'photos'].includes(k));
                     if (entries.length === 0) return <p className="text-white/50 text-sm">Aucune donnée pour cette étape.</p>;
                     return (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

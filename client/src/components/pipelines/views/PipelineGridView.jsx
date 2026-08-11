@@ -62,6 +62,17 @@ const PipelineGridView = ({
     // ResizeObserver : calcule nombre de colonnes, taille des cellules et dimensions du grid pour virtualisation
 
     React.useEffect(() => {
+        // RENDU STATIQUE : cet observateur ne sert à RIEN ici. Ses sorties (`columns`, `cellSize`,
+        // `gridWidth`, `gridHeight`) ne sont lues que par la branche virtualisée `react-window` ; la
+        // branche statique passe par une grille CSS `auto-fit`, qui se dimensionne seule.
+        //
+        // Le laisser tourner coûtait cher, et pas seulement en calcul : ses `setState` provoquaient
+        // des re-rendus PENDANT la mesure de pagination, si bien que la même review donnait 5 pages
+        // à 91 % en rendu isolé et 2 pages à 59 % dans la matrice complète — même code, deux
+        // résultats, au gré de l'ordonnancement. Et son callback pouvait s'exécuter sur un nœud déjà
+        // détaché pendant une capture (85 erreurs « Cannot read properties of null » sur un seul
+        // rendu). La garde plus bas reste en place pour le mode ÉDITION, où l'observateur est utile.
+        if (staticRender) return;
         if (!gridRef.current || !scrollRef.current) return;
 
         const gap = 8; // gap en px, doit correspondre au gap Tailwind (gap-2 ~= 8px)
@@ -71,6 +82,12 @@ const PipelineGridView = ({
         const baseMin = config && config.intervalType === 'phases' ? 80 : 56; // base min size
 
         const ro = new ResizeObserver(() => {
+            // Le nœud peut avoir été DÉTACHÉ entre la notification et l'exécution du callback :
+            // `ResizeObserver` n'annule pas les notifications en vol, et le pipeline d'export clone
+            // puis retire des sous-arbres en permanence. Sans cette garde, chaque grille montée
+            // pendant une capture levait « Cannot read properties of null » — 85 erreurs sur un seul
+            // rendu du Rapport de Traçabilité, qui en monte plusieurs.
+            if (!scrollRef.current) return;
             const available = Math.max(120, scrollRef.current.clientWidth);
 
             // taille minimale souhaitée pour garantir au moins 4 colonnes

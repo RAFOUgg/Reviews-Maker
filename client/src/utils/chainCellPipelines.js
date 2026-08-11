@@ -80,7 +80,10 @@ const DEFAULT_PHASES_BY_PIPELINE = {
 // affichait une fiche parasite « CELLLABEL / J1 » sur les 4 templates d'export. Le défaut est
 // antérieur à la refonte du rendu des pipelines ; il passait inaperçu tant que les vraies valeurs
 // étaient répétées sur chaque étape et le noyaient.
-const META_KEYS = new Set(['timestamp', 'label', 'cellLabel', 'date', 'phase', '_meta'])
+// `media`/`photos` sont des PIÈCES JOINTES, pas des mesures : rendus comme une valeur, ils
+// s'affichaient « MEDIA [object Object] » dans la fiche — signalé par l'utilisateur sur une capture
+// du Rapport de Traçabilité. Un objet rendu en texte n'apprend rien et abîme le document.
+const META_KEYS = new Set(['timestamp', 'label', 'cellLabel', 'date', 'phase', '_meta', 'media', 'photos'])
 
 export function getPipelineDefsForReviewType(reviewType) {
     return REVIEW_TYPE_PIPELINES[reviewType] || []

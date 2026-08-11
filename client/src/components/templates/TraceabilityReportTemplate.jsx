@@ -18,7 +18,7 @@ import { evaluateChainEventRules } from '../../utils/chainEventRules';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import TemplateSection from './sections/TemplateSection';
-import PipelineTimeline from './sections/PipelineTimeline';
+import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 // Base d'icônes unique — 4e et dernière copie locale de la même table supprimée.
 import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { CannabinoidGrid, getCannabinoidItems, GisementSections } from './sections/RegistrySections';
@@ -358,6 +358,11 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 portant aucun tronçon. On la conditionne à la présence d'au moins un tronçon de
                 pipeline sur la page courante — dérivable du seul préfixe, sans connaître le
                 découpage interne de `PipelineTimeline`. */}
+            {/* LA grille des formulaires, comme partout ailleurs désormais. Ce template rendait
+                encore le pipeline en LISTE verticale : 25 lignes « conditions nominales » pour
+                une culture, là où la grille tient en trois rangées. Signalé par l'utilisateur —
+                « refonte du processus de production qui doit utiliser la pipeline du forms avec
+                le même UI design ». C'était le dernier des trois rendus de pipeline divergents. */}
             {activeTimelines.length > 0 && pageHasPipelineChunk && (
                 <Section title="Processus de production" icon="📅">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.section }}>
@@ -368,36 +373,16 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                             // ('culture'/'curing'/…), pas une clé d'extractPipelines : le repli
                             // `PIPELINE_TYPE_BY_KEY[key] || key` du composant partagé le résout.
                             return (
-                                <PipelineTimeline
+                                <PipelineMiniGrid
                                     key={t.type}
-                                    pipeline={{ key: t.type, name: t.name, icon: t.icon, rawSteps: steps }}
-                                    // `moduleId`/`isPageOn`/`paged` étaient ABSENTS, contrairement au
-                                    // patron de référence (`renderPipelineList`, DetailedCardTemplate).
-                                    // Conséquences mesurées le 2026-08-10 en A4 : les tronçons portaient
-                                    // l'id littéral `undefined#N`, ne se filtraient donc par aucune page,
-                                    // les DEUX pipelines partageaient le même en-tête `undefined#hdr`
-                                    // (coût mal imputé), et surtout ils étaient comptés DEUX FOIS — une
-                                    // fois via la `Section moduleId="pipelines"` qui les enveloppait
-                                    // (2178px), une fois via leurs propres tronçons (1477px). D'où une
-                                    // page 1 à 17,4 % (`cannabinoidGrid` seul) et une page 3 BLANCHE.
-                                    // Le `moduleId` de la Section est retiré pour cette raison : un
-                                    // module ne peut pas à la fois être mesuré et contenir des modules
-                                    // mesurés.
+                                    type={t.type}
+                                    name={t.name}
+                                    icon={t.icon}
+                                    timelineData={reviewData[t.dataKey]}
+                                    timelineConfig={reviewData[t.configKey]}
+                                    accentColor={colors.accent}
                                     moduleId={`pipeline:${t.type}`}
                                     isPageOn={isPageOn}
-                                    paged={!!pageModuleIds}
-                                    compact
-                                    fontSize={{ text: fontSize.text, small: fontSize.small }}
-                                    spacing={{ element: spacing.section, gap: spacing.gap }}
-                                    colors={{
-                                        textPrimary: colors.textPrimary,
-                                        textSecondary: colors.textSecondary,
-                                        title: colors.title,
-                                        accent: colors.accent,
-                                        accentText,
-                                        surface: colorWithOpacity(colors.accent, 6),
-                                        line: colorWithOpacity(colors.textSecondary, 20),
-                                    }}
                                 />
                             );
                         })}
