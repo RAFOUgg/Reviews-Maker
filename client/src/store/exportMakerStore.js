@@ -503,6 +503,15 @@ export const useExportMakerStore = create(
             // l'autre.
             configByTemplate: {},
 
+            // L'utilisateur a-t-il ARRÊTÉ un choix de rendu pour cette review ?
+            //
+            // Sert au parcours mobile : tant que rien n'est choisi, montrer un aperçu n'a pas de
+            // sens — on afficherait un rendu par défaut que personne n'a demandé. Une fois un
+            // template sélectionné, ou une configuration déjà enregistrée rechargée, l'aperçu
+            // devient la vue naturelle. Volontairement HORS de `config` : c'est un état de session,
+            // et `partialize` ne persiste que `presets` et `config`.
+            templateChosen: false,
+
             // Préréglages sauvegardés
             presets: [],
             activePreset: null,
@@ -545,7 +554,7 @@ export const useExportMakerStore = create(
 
                 const remembered = configByTemplate[templateId];
                 if (remembered) {
-                    return { config: remembered, configByTemplate };
+                    return { config: remembered, configByTemplate, templateChosen: true };
                 }
 
                 const templateDef = get().templates[templateId] || DEFAULT_TEMPLATES[templateId];
@@ -581,7 +590,7 @@ export const useExportMakerStore = create(
                     templateLocked: true,
                 };
 
-                return { config: freshConfig, configByTemplate: { ...configByTemplate, [templateId]: freshConfig } };
+                return { config: freshConfig, configByTemplate: { ...configByTemplate, [templateId]: freshConfig }, templateChosen: true };
             }),
 
             // Sort la config du verrou template — seul moyen de repasser `templateLocked` à false
@@ -827,6 +836,9 @@ export const useExportMakerStore = create(
                 const merged = { ...DEFAULT_CONFIG, ...config, templateLocked: config?.templateLocked ?? false };
                 return {
                     config: merged,
+                    // Une configuration déjà enregistrée sur la review VAUT choix : le parcours
+                    // mobile peut aller droit au rendu au lieu de réclamer une décision déjà prise.
+                    templateChosen: true,
                     // Nouvelle review/config chargée : la mémoire par template repart de zéro (pas de
                     // fuite entre reviews) mais se souvient déjà de CE template avec la config qu'on
                     // vient de charger, pour qu'un aller-retour immédiat vers ce même template dans la

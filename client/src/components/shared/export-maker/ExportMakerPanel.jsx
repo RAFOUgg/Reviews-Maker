@@ -259,6 +259,20 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // ici par une vraie mesure de hauteur pour `detailedCard` (voir `useAdaptivePages.js`, qui gère
     // lui-même le repli statique pendant/à défaut de mesure).
     const setPages = useExportMakerPagesStore((state) => state.setPages);
+    // PARCOURS MOBILE (demande du 2026-08-11) : sur petit écran, afficher SOIT les réglages, SOIT
+    // le rendu — jamais les deux écrasés l'un sur l'autre. Et surtout : tant qu'aucun template n'a
+    // été choisi pour cette review, l'aperçu n'a rien à montrer d'utile (ce serait un rendu par
+    // défaut que personne n'a demandé), donc le choix est un passage obligé. Si une configuration
+    // est déjà enregistrée, `applyConfig` a posé `templateChosen` et on va droit au rendu.
+    const templateChosen = useExportMakerStore((state) => state.templateChosen);
+    const [mobileView, setMobileView] = useState(null);
+    useEffect(() => {
+        // Une seule fois, quand on sait si un choix existe : ne pas réécraser la vue si
+        // l'utilisateur a basculé à la main juste après.
+        setMobileView((v) => (v === null ? (templateChosen ? 'preview' : 'config') : v));
+    }, [templateChosen]);
+    const effectiveMobileView = mobileView ?? (templateChosen ? 'preview' : 'config');
+
     const { pages: adaptivePagesResult, isAdaptive, isMeasuring } = useAdaptivePages(reviewData, config, {
         enabled: effectivePagesActive,
     });
@@ -404,10 +418,26 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                             public), le rendu fichier est le template à canevas fixe que capture
                             l'export. Sans cet interrupteur, le Studio ne montrait QUE le second,
                             alors que le premier est ce que voient les visiteurs. */}
+                        {/* Bascule RÉGLAGES / RENDU — mobile uniquement (`md:hidden`). Sur petit
+                            écran les deux panneaux se partageaient la hauteur, ce qui ne laissait
+                            ni de quoi régler ni de quoi voir. Le bouton reste désactivé tant
+                            qu'aucun template n'a été choisi : montrer un aperçu à ce moment-là
+                            afficherait un rendu par défaut que personne n'a demandé. */}
+                        {showPreview && (
+                            <button
+                                type="button"
+                                onClick={() => setMobileView(effectiveMobileView === 'config' ? 'preview' : 'config')}
+                                disabled={effectiveMobileView === 'config' && !templateChosen}
+                                title={!templateChosen ? 'Choisissez d’abord un template' : undefined}
+                                className="md:hidden px-2.5 py-1.5 mr-1 rounded-lg text-xs font-semibold bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-200 disabled:opacity-40 disabled:cursor-not-allowed"
+                            >
+                                {effectiveMobileView === 'config' ? 'Voir le rendu' : 'Réglages'}
+                            </button>
+                        )}
                         {showPreview && (
                             <div className="flex items-center rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5 mr-1">
                                 {[
-                                    { id: 'screen', label: 'Écran', title: 'Vue Détaillée — le rendu du lien public /r/:id' },
+                                    { id: 'screen', label: 'Écran', title: 'Le template choisi, fluide : il défile au lieu de se paginer' },
                                     { id: 'file', label: 'Fichier', title: 'Template à canevas fixe — ce que produit l\'export PNG/PDF' },
                                 ].map((mode) => (
                                     <button
@@ -550,12 +580,12 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                     coupant "Format d'affichage"/les onglets sans moyen de scroller
                                     visible (bug 2026-07-28). En desktop (`md:flex-row`), l'étirement
                                     flex par défaut suffit déjà, `md:h-auto` laisse faire. */}
-                                <div className="w-full md:w-96 xl:w-[28rem] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 h-[40vh] md:h-auto min-h-0">
+                                <div className={`w-full md:w-96 xl:w-[28rem] border-b md:border-b-0 md:border-r border-gray-200 dark:border-gray-800 overflow-y-auto flex-shrink-0 md:h-auto min-h-0 ${effectiveMobileView === 'config' ? 'h-full' : 'hidden'} md:block md:h-auto`}>
                                     <ConfigPane />
                                 </div>
 
                                 {/* Preview Pane - Right */}
-                                <div className="flex-1 overflow-hidden min-w-0 min-h-[300px]">
+                                <div className={`flex-1 overflow-hidden min-w-0 min-h-[300px] ${effectiveMobileView === 'preview' ? 'block' : 'hidden'} md:block`}>
                                     {previewMode === 'screen'
                                         ? <ScreenPreviewPane reviewData={normalizedReview} config={config} />
                                         : effectivePagesActive
