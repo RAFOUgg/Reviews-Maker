@@ -560,9 +560,21 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         )}
                     </div>
 
+                    {/* HAUTEUR IMPOSÉE PAR LA MISE EN PAGE, pas par la photo.
+                            `minHeight` employait `image.maxHeight` — un PLAFOND utilisé comme
+                            plancher — et l'image, posée en flux (`position: static`) avec sa
+                            proportion naturelle, s'étirait donc bien au-delà. Mesuré sur une review
+                            réelle en A4 : le masthead pesait 1964px sur une page de 2384, soit 82 %
+                            de la page pour une seule photo, là où la règle de format en prévoit
+                            20 % (496px). Une photo portrait mangeait la page, une photo paysage
+                            non : la mise en page dépendait du fichier fourni. Signalé par
+                            l'utilisateur (« mauvais placement entre mode fichier et image suivant
+                            la taille de l'image »).
+                            `height` ferme + `object-cover` : le cadre est constant, c'est la photo
+                            qui se recadre — quel que soit son format. */}
                     {contentModules.mainImage !== false && mainImage && (
-                        <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', minHeight: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
-                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ position: stacked ? 'static' : 'absolute', inset: 0 }} />
+                        <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', height: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
+                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ position: 'absolute', inset: 0 }} />
                             {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F8FAFC' : '#0b1220', 85)}, transparent 22%)` }} />}
                         </div>
                     )}
