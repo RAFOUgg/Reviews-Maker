@@ -56,13 +56,26 @@ export function getCannabinoidItems(reviewData, contentModules) {
         .filter(Boolean);
 }
 
-export function CannabinoidGrid({ reviewData, contentModules, colors, fontSize, spacing }) {
+export function CannabinoidGrid({ reviewData, contentModules, colors, fontSize, spacing, align = 'stretch' }) {
     const { bind, tooltipNode, interactive } = useCanvasTooltip();
     const items = getCannabinoidItems(reviewData, contentModules);
     if (items.length === 0) return null;
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: `repeat(auto-fill, minmax(72px, 1fr))`, gap: `${spacing.gap}px`, marginBottom: `${spacing.element}px` }}>
+        // `align='center'` : les pistes cessent de s'étirer et le groupe se centre. En `auto-fill`
+        // avec des pistes `1fr`, les pistes VIDES gardent leur largeur — quatre cannabinoïdes dans
+        // un conteneur large se calaient donc à gauche avec un vide à droite, ce que l'utilisateur
+        // a signalé sur Moderne Compact (« les taux de cannabinoïdes peuvent être centrés »).
+        // Les autres templates gardent `stretch` : sur une fiche large, une grille pleine largeur
+        // est le bon comportement, et je ne change pas ce qui n'a pas été signalé.
+        <div style={{
+            display: 'grid',
+            gridTemplateColumns: align === 'center'
+                ? `repeat(auto-fit, minmax(72px, 110px))`
+                : `repeat(auto-fill, minmax(72px, 1fr))`,
+            justifyContent: align === 'center' ? 'center' : undefined,
+            gap: `${spacing.gap}px`, marginBottom: `${spacing.element}px`,
+        }}>
             {items.map((it) => {
                 const ref = CANNABINOID_BY_ID[it.refId];
                 // Projection statique : la case imprime déjà le sigle ET la valeur chiffrée. Ce que

@@ -417,7 +417,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             {/* Profil cannabinoïde complet (THC/CBD + THCA/CBDA/CBG/CBC/CBN/THCV si renseignés) —
                 remplace les 2 cartes THC/CBD isolées par la grille déjà partagée avec Fiche Détaillée
                 (`CannabinoidGrid`, RegistrySections.jsx) plutôt que de ne montrer que 2 valeurs sur 8. */}
-            <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} />
+            <CannabinoidGrid reviewData={reviewData} contentModules={contentModules} colors={colors} fontSize={fontSize} spacing={spacing} align="center" />
             {contentModules.category && reviewData.category && (
                 <div className="flex flex-wrap justify-center" style={{ gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     {renderInfoCard('Catégorie', reviewData.category, '📂')}
