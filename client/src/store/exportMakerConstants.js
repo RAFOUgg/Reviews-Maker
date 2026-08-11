@@ -185,6 +185,12 @@ export const TEMPLATE_MODULE_PRESETS = {
             'agressiviteScore', 'dryPuffNotes', 'inhalationNotes', 'exhalationNotes',
             'dureeEffet',
             'terpenes',
+            // Sections de DOCUMENT, hors sujet sur un format glanceable — et surtout : ce sont
+            // elles qui faisaient qu'une review affichée sous « Story » ressemblait quand même à
+            // une fiche technique interminable. La Vue Détaillée conditionne ces trois blocs à ces
+            // clés exactes (`ReviewFullDisplay`), qui ne figuraient dans AUCUNE liste `disable` —
+            // choisir Story ne les retirait donc jamais. Signalé par l'utilisateur, capture à l'appui.
+            'pipelineInteractiveView', 'phenoHuntView', 'productionChainView',
         ],
     },
     // Absent avant le 2026-07-30 (asymétrie trouvée en audit) : sélectionner ce template ne

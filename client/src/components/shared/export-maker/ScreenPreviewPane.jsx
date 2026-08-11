@@ -1,5 +1,5 @@
 import PropTypes from 'prop-types';
-import SingleReviewCard from '../../export/SingleReviewCard';
+import ReviewFullDisplay from '../../gallery/ReviewFullDisplay';
 
 /**
  * Aperçu du mode ÉCRAN d'Export Maker (C10-3) — la Vue Détaillée, telle qu'elle est servie sur
@@ -11,15 +11,21 @@ import SingleReviewCard from '../../export/SingleReviewCard';
  * différentes (« à quoi ressemble ma fiche en ligne ? » vs « à quoi ressemblera le fichier
  * exporté ? »), et le Studio laisse désormais basculer de l'une à l'autre.
  *
- * OBÉIT AU TEMPLATE SÉLECTIONNÉ (2026-08-11). Cet aperçu rendait auparavant `ReviewFullDisplay`,
- * un composant unique qui ignore `config.template` et `config.ratio` : choisir « Story Social
- * Media » dans le Studio n'y changeait rien, on voyait toujours une fiche détaillée qui défile.
- * Signalé par l'utilisateur, capture à l'appui — et c'était exact.
+ * POURQUOI LA VUE DÉTAILLÉE ET NON LES TEMPLATES À CANEVAS FIXE. Décision de l'utilisateur du
+ * 2026-08-06, inscrite dans `PublicRenderPage.jsx` : « ce style de rendu doit être utilisé pour
+ * Export Maker ». Un canevas de 1920×1080 rétréci au `transform: scale` donne une IMAGE réduite —
+ * texte minuscule sur mobile au lieu de se recomposer, et rien de cliquable.
  *
- * Il rend désormais le MÊME composant que la page publique (`SingleReviewCard`), donc le template
- * et le format réellement choisis. La différence avec l'onglet FICHIER reste entière et assumée :
- * ici le document est fluide (`allowOverflow`, il défile), là il est enfermé dans un canevas à
- * hauteur fixe et paginé pour la capture. Deux questions distinctes, un seul moteur de rendu.
+ * J'ai basculé cet aperçu sur `SingleReviewCard` le 2026-08-11 pour répondre à « le rendu doit
+ * suivre le template sélectionné », et ce faisant j'ai annulé la décision ci-dessus sans le voir.
+ * Les deux demandes sont compatibles, mais pas ainsi : c'est la Vue Détaillée qui doit obéir au
+ * template, en restant fluide et cliquable. Le template pilote donc les CONTENUS (via
+ * `contentModules`, que `setTemplate` réécrit depuis `TEMPLATE_MODULE_PRESETS`), pas la mise à
+ * l'échelle d'une image.
+ *
+ * Aucune mise à l'échelle ici, volontairement : la Vue Détaillée se recompose à la largeur
+ * disponible. La borner à 1100px reproduit la largeur réelle de la page publique, pour que
+ * l'aperçu ne mente pas sur la mise en page finale.
  */
 export default function ScreenPreviewPane({ reviewData, config }) {
     if (!reviewData) {
@@ -33,7 +39,7 @@ export default function ScreenPreviewPane({ reviewData, config }) {
     return (
         <div className="w-full h-full overflow-y-auto bg-[#0a0a0f] p-4">
             <div className="mx-auto" style={{ maxWidth: 1100 }}>
-                <SingleReviewCard reviewData={reviewData} config={config} canvasId="export-maker-screen-canvas" />
+                <ReviewFullDisplay review={reviewData} config={config} />
             </div>
         </div>
     );
