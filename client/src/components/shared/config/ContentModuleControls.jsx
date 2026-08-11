@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react';
+import { isModuleOn } from '../../templates/sections/RegistrySections';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
@@ -86,7 +87,7 @@ function ModuleToggle({ field, isVisible, hasData, onToggle }) {
 
 // ── Une catégorie pliable ─────────────────────────────────────────────────────────
 function CategorySection({ category, contentModules, reviewData, onToggle, onToggleAll, expanded, onExpandToggle }) {
-    const activeCount = category.fields.filter((f) => contentModules[f.key]).length;
+    const activeCount = category.fields.filter((f) => isModuleOn(contentModules, f.key)).length;
     const totalCount = category.fields.length;
     const dataCount = reviewData ? category.fields.filter((f) => fieldHasData(reviewData, f)).length : null;
     const colorClass = CATEGORY_COLORS[category.color] || CATEGORY_COLORS.gray;
@@ -125,7 +126,7 @@ function CategorySection({ category, contentModules, reviewData, onToggle, onTog
                                     <ModuleToggle
                                         key={f.key}
                                         field={f}
-                                        isVisible={!!contentModules[f.key]}
+                                        isVisible={isModuleOn(contentModules, f.key)}
                                         hasData={reviewData ? fieldHasData(reviewData, f) : false}
                                         onToggle={() => onToggle(f.key)}
                                     />
@@ -142,6 +143,13 @@ function CategorySection({ category, contentModules, reviewData, onToggle, onTog
 // ═══════════════════════════════════════════════════════════════════════════════
 // COMPOSANT PRINCIPAL
 // ═══════════════════════════════════════════════════════════════════════════════
+// Le panneau et le RENDU doivent s'accorder sur ce que « activé » veut dire. Le rendu applique
+// `isModuleOn` (opt-out : affiché tant que la valeur n'est pas `false`) ; ce panneau testait
+// `!!contentModules[key]` (opt-in). Un champ absent de la config était donc montré DÉCOCHÉ alors
+// qu'il s'affichait — et le premier clic le passait à `true`, sans rien changer à l'écran. Il
+// fallait cliquer DEUX fois pour masquer un champ. C'est ce que l'utilisateur décrivait par « les
+// configurations du rendu ne fonctionnent pas ». On importe donc la définition du rendu au lieu
+// d'en tenir une seconde.
 export default function ContentModuleControls() {
     const config = useExportMakerStore((state) => state.config);
     const reviewData = useExportMakerStore((state) => state.reviewData);
@@ -194,7 +202,7 @@ export default function ContentModuleControls() {
     }, [searchQuery, allFields]);
 
     const contentModules = config.contentModules || {};
-    const visibleCount = allFields.filter((f) => contentModules[f.key]).length;
+    const visibleCount = allFields.filter((f) => isModuleOn(contentModules, f.key)).length;
     const totalCount = allFields.length;
     const dataCount = reviewData ? allFields.filter((f) => fieldHasData(reviewData, f)).length : null;
 
@@ -202,7 +210,7 @@ export default function ContentModuleControls() {
 
     const handleToggleAll = (category, enable) => {
         category.fields.forEach((f) => {
-            const on = !!contentModules[f.key];
+            const on = isModuleOn(contentModules, f.key);
             if (enable && !on) toggleContentModule(f.key);
             else if (!enable && on) toggleContentModule(f.key);
         });
@@ -210,7 +218,7 @@ export default function ContentModuleControls() {
 
     const setAll = (enable) => {
         allFields.forEach((f) => {
-            const on = !!contentModules[f.key];
+            const on = isModuleOn(contentModules, f.key);
             if (enable && !on) toggleContentModule(f.key);
             else if (!enable && on) toggleContentModule(f.key);
         });
@@ -253,7 +261,7 @@ export default function ContentModuleControls() {
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">{filteredFields.length} module(s)</div>
                     <div className="grid grid-cols-2 gap-2">
                         {filteredFields.map((f) => (
-                            <ModuleToggle key={f.key} field={f} isVisible={!!contentModules[f.key]} hasData={reviewData ? fieldHasData(reviewData, f) : false} onToggle={() => toggleContentModule(f.key)} />
+                            <ModuleToggle key={f.key} field={f} isVisible={isModuleOn(contentModules, f.key)} hasData={reviewData ? fieldHasData(reviewData, f) : false} onToggle={() => toggleContentModule(f.key)} />
                         ))}
                     </div>
                     {filteredFields.length === 0 && (

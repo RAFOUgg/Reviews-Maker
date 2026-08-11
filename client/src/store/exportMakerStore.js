@@ -632,7 +632,11 @@ export const useExportMakerStore = create(
                     templateLocked: false,
                     contentModules: {
                         ...state.config.contentModules,
-                        [moduleName]: !state.config.contentModules[moduleName]
+                        // Sémantique OPT-OUT, celle du rendu (`isModuleOn` : affiché tant que la
+                        // valeur n'est pas `false`). `!valeur` traitait un champ ABSENT comme
+                        // éteint et le passait à `true` — or il s'affichait déjà, donc le premier
+                        // clic ne changeait rien et il en fallait deux pour masquer.
+                        [moduleName]: state.config.contentModules[moduleName] === false
                     }
                 }
             })),
