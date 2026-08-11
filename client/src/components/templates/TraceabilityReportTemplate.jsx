@@ -9,6 +9,7 @@ import {
     isLightColor,
     ACCENT_TEXT_COLORS,
     readableFontSize,
+    TIMELINE_PIPELINES,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
@@ -38,12 +39,6 @@ const LAB_METHOD_LABELS = {
     hplc: 'HPLC', gc: 'GC', gcms: 'GC-MS', hplcms: 'HPLC-MS', other: 'Autre méthode',
 };
 
-const TIMELINE_PIPELINES = [
-    { type: 'culture', name: 'Culture', icon: '🌱', dataKey: 'cultureTimelineData', configKey: 'cultureTimelineConfig' },
-    { type: 'curing', name: 'Curing & Maturation', icon: '🔥', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
-    { type: 'extraction', name: 'Extraction', icon: '⚗️', dataKey: 'extractionTimelineData', configKey: 'extractionTimelineConfig' },
-    { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
-];
 
 function normalizeReviewType(type) {
     const t = (type || '').toLowerCase();

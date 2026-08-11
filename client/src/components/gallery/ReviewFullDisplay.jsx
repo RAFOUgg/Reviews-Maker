@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate } from '../../utils/exportMakerHelpers'
+import { extractCategoryRatings, extractExtraData, extractPipelines, extractSubstrat, formatDate, TIMELINE_PIPELINES } from '../../utils/exportMakerHelpers'
 import { getLotCode } from '../../utils/lotCode'
 import { useDocumentSeal } from '../../hooks/useDocumentSeal'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind, GitBranch, Workflow, Radar as RadarIcon, LineChart } from 'lucide-react'
-import InteractivePipelineViewer from './InteractivePipelineViewer'
+import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid'
 import { GisementSections, isModuleOn } from '../templates/sections/RegistrySections'
 import { GROUP_ICONS } from '../../utils/fieldIcons'
 import UserMention from '../shared/UserMention'
@@ -454,18 +454,27 @@ export default function ReviewFullDisplay({ review, config }) {
             {pipelines.length > 0 && isOn('pipelineInteractiveView') && (
                 <ViewSection icon={FlaskConical} title="Pipelines & Processus" glow="green">
                     <div className="space-y-6">
-                        {pipelines.map(pipeline => {
-                            // Get the raw pipeline data for interactive viewer
-                            const rawData = review[pipeline.key] || pipeline;
-                            return (
-                                <InteractivePipelineViewer
-                                    key={pipeline.key}
-                                    pipeline={rawData}
-                                    pipelineName={pipeline.name}
-                                    pipelineIcon={pipeline.icon}
+                        {/* LA grille des formulaires (`PipelineGridView` via `PipelineMiniGrid`),
+                            et non plus un troisième rendu de pipeline propre à cette page.
+                            Demande de l'utilisateur : « pour les pipelines il faut utiliser ce style
+                            de rendu (déjà utilisé dans les forms) ». C'est aussi ce que le C13 §1.2
+                            réclamait — `InteractivePipelineViewer` était la troisième
+                            implémentation de la même idée, avec sa propre typographie sous le
+                            plancher de lisibilité et ses propres contrastes. Une seule grille
+                            désormais : saisie, écran et fichier montrent la même chose. */}
+                        {TIMELINE_PIPELINES
+                            .filter((t) => review[t.dataKey] && review[t.configKey])
+                            .map((t) => (
+                                <PipelineMiniGrid
+                                    key={t.type}
+                                    type={t.type}
+                                    name={t.name}
+                                    icon={t.icon}
+                                    timelineData={review[t.dataKey]}
+                                    timelineConfig={review[t.configKey]}
+                                    accentColor={tokens.accent}
                                 />
-                            );
-                        })}
+                            ))}
                     </div>
                 </ViewSection>
             )}

@@ -320,11 +320,17 @@ export default function InteractivePipelineViewer({ pipeline, pipelineName, pipe
                                     </span>
                                     {/* Badge « +N » quand la cellule porte plus de 4 mesures. */}
                                     {extractMetrics(step).length > 4 && (
+                                        // 12px et non 9 : c'est le plancher de lisibilité que le
+                                        // projet s'impose partout ailleurs, et ce badge portait à
+                                        // lui seul les deux dernières violations de la Vue
+                                        // Détaillée (taille ET contraste, 2,95:1 en blanc sur
+                                        // orange à cette taille). La pastille grandit en
+                                        // conséquence, sinon le chiffre y serait à l'étroit.
                                         <span style={{
-                                            position: 'absolute', bottom: -4, right: -4,
-                                            fontSize: 9, fontWeight: 700, color: '#fff',
-                                            background: 'rgba(249,115,22,0.95)', borderRadius: 999,
-                                            width: 16, height: 16, display: 'flex',
+                                            position: 'absolute', bottom: -5, right: -5,
+                                            fontSize: 12, fontWeight: 700, color: '#fff',
+                                            background: 'rgba(194,65,12,0.98)', borderRadius: 999,
+                                            width: 20, height: 20, display: 'flex',
                                             alignItems: 'center', justifyContent: 'center',
                                             boxShadow: '0 1px 3px rgba(0,0,0,0.4)', zIndex: 20,
                                         }}>

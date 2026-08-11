@@ -194,6 +194,21 @@ export const SEMANTIC_SCORE_TEXT_COLORS = {
 //
 // Une fiche technique reste un document à LIRE : sous 12px, un libellé de mesure n'est plus
 // consultable, et l'export rastérisé n'a pas de zoom pour compenser.
+/**
+ * Pipelines chronologiques et leurs clés de données réelles.
+ *
+ * Source UNIQUE : cette table était recopiée à l'identique dans `DetailedCardTemplate` et
+ * `TraceabilityReportTemplate`, et la Vue Détaillée en aurait fait une troisième copie. Les clés
+ * (`cultureTimelineData`/`cultureTimelineConfig`…) sont celles réellement écrites par les
+ * formulaires — les deviner est le défaut le mieux documenté de ce dépôt.
+ */
+export const TIMELINE_PIPELINES = [
+    { type: 'culture', name: 'Culture', icon: '🌱', dataKey: 'cultureTimelineData', configKey: 'cultureTimelineConfig' },
+    { type: 'curing', name: 'Curing & Maturation', icon: '🔥', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
+    { type: 'extraction', name: 'Extraction', icon: '⚗️', dataKey: 'extractionTimelineData', configKey: 'extractionTimelineConfig' },
+    { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
+];
+
 export const MIN_FONT_PX = 12;
 
 /**

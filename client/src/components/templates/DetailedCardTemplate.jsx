@@ -21,6 +21,7 @@ import {
     RATIO_DIMENSIONS,
     MIN_FONT_PX,
     readableFontSize,
+    TIMELINE_PIPELINES,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
@@ -57,12 +58,6 @@ const LAB_METHOD_LABELS = {
     other: 'Autre méthode',
 };
 
-const TIMELINE_PIPELINES = [
-    { type: 'culture', name: 'Culture', icon: '🌱', dataKey: 'cultureTimelineData', configKey: 'cultureTimelineConfig' },
-    { type: 'curing', name: 'Curing & Maturation', icon: '🔥', dataKey: 'curingTimelineData', configKey: 'curingTimelineConfig' },
-    { type: 'extraction', name: 'Extraction', icon: '⚗️', dataKey: 'extractionTimelineData', configKey: 'extractionTimelineConfig' },
-    { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
-];
 
 // Aligné sur la pile de polices du SITE (tailwind.config.js > fontFamily.sans : -apple-system,
 // SF Pro Display…). Inter en tête est l'équivalent web fidèle de cette pile et est réellement
