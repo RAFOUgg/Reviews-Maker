@@ -143,7 +143,11 @@ export async function createFixture(baseApi, type, density, extra = {}) {
     //
     // `minimal` garde son rôle : le strict minimum RÉELLEMENT atteignable — photo + nom, sans
     // note, sans arôme, sans pipeline.
-    fd.append('images', tinyPngBlob(), 'audit-fixture.png');
+    // Une seule photo par défaut : c'est le cas courant, et c'est la baseline de la matrice.
+    // `photoCount` permet à un contrôle ciblé (sélecteur de photos, galerie) d'en demander
+    // plusieurs sans déplacer cette baseline.
+    const photoCount = Math.max(1, extra.photoCount || 1);
+    for (let n = 0; n < photoCount; n += 1) fd.append('images', tinyPngBlob(), `audit-fixture-${n}.png`);
     const res = await fetch(`${baseApi}/api/${ENDPOINT[type]}`, { method: 'POST', body: fd });
     if (!res.ok) throw new Error(`Création ${type}/${density} : HTTP ${res.status} — ${(await res.text()).slice(0, 200)}`);
     const json = await res.json();

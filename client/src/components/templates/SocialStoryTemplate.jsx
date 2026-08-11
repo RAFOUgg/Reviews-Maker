@@ -8,6 +8,7 @@ import {
     getResponsiveAdjustments,
     resolveFontStack,
     ensureReadable,
+    getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { templateSection } from '../../store/exportMakerConstants';
@@ -145,7 +146,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     // réelle, comme sur Moderne Compact. Bornes légèrement plus larges — une story est un format
     // d'affiche, la variation de taille y est attendue.
     return (
-        <FitToFill min={0.9} max={1.45}>
+        <FitToFill min={0.9} max={1.45} enabled={!config.__measuring}>
         <div style={{
             width: '100%', height: '100%',
             background: bg,
@@ -191,7 +192,10 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                             width: '100%', height: '100%',
                             objectFit: image?.objectFit || 'cover',
                             objectPosition: 'center',
-                            filter: 'brightness(0.85)',
+                            // L'assombrissement du hero est structurel (le texte se lit par-dessus) ;
+                            // le filtre choisi par l'utilisateur s'y AJOUTE au lieu de l'écraser.
+                            ...getImageRenderStyle(image),
+                            filter: ['brightness(0.85)', getImageRenderStyle(image).filter].filter(Boolean).join(' '),
                         }}
                     />
                     {/* Gradient overlay bottom */}

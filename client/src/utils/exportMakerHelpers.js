@@ -235,6 +235,31 @@ export function getSelectedImages(reviewData, config) {
     return kept.length > 0 ? kept : all;
 }
 
+/**
+ * Traduction CSS des réglages photo de l'onglet « Image & Logo » (`config.image`).
+ *
+ * Ces réglages existaient dans l'UI depuis toujours mais AUCUN template ne les lisait : le panneau
+ * proposait quatre filtres et un curseur d'opacité qui ne changeaient rien au rendu (constaté le
+ * 2026-08-11, « filtre et effet non fonctionnel »). Une seule fonction ici, appliquée sur chaque
+ * `<img>` de produit des cinq templates, pour ne pas réintroduire cinq interprétations divergentes
+ * du même réglage — le logo garde en revanche son opacité propre (`branding.opacity`).
+ */
+export const IMAGE_FILTER_CSS = {
+    none: null,
+    sepia: 'sepia(0.7)',
+    grayscale: 'grayscale(1)',
+    blur: 'blur(3px)',
+};
+
+export function getImageRenderStyle(image) {
+    const style = {};
+    const filter = IMAGE_FILTER_CSS[image?.filter];
+    if (filter) style.filter = filter;
+    const opacity = image?.opacity;
+    if (typeof opacity === 'number' && opacity < 1) style.opacity = opacity;
+    return style;
+}
+
 export const MIN_FONT_PX = 12;
 
 /**

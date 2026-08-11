@@ -398,6 +398,9 @@ const DEFAULT_CONFIG = {
         borderRadius: 12,
         filter: 'none',
         opacity: 1,
+        // Marque une config dont les réglages photo sont réellement appliqués au rendu (cf.
+        // `resolveImageConfig`) — vrai par construction sur toute config neuve.
+        imageFxLive: true,
         selectedIndex: 0,
         showGallery: false
     },
@@ -461,7 +464,25 @@ export function resolveExportMakerConfig(savedConfig) {
         templateLocked: savedConfig && Object.prototype.hasOwnProperty.call(savedConfig, 'templateLocked')
             ? savedConfig.templateLocked
             : false,
+        image: resolveImageConfig(savedConfig?.image),
     };
+}
+
+/**
+ * Réglages photo d'une config sauvegardée.
+ *
+ * `filter` et `opacity` existaient dans le panneau depuis toujours mais aucun template ne les
+ * lisait : ils étaient donc INERTES, et une valeur enregistrée n'y est pas un choix de rendu — elle
+ * n'a jamais rien changé à l'écran, personne n'a pu la valider visuellement (constaté le 2026-08-11
+ * sur une review portant `opacity: 0.2` alors que son image s'affichait pleine). Maintenant que les
+ * deux réglages agissent réellement, honorer ces valeurs héritées assombrirait ou filtrerait des
+ * fiches existantes sans que leur auteur l'ait jamais demandé. On les remet donc à neutre UNE fois,
+ * en marquant la config (`imageFxLive`) pour que tout réglage postérieur, lui, soit respecté.
+ */
+function resolveImageConfig(savedImage) {
+    const merged = { ...DEFAULT_CONFIG.image, ...(savedImage || {}) };
+    if (merged.imageFxLive) return merged;
+    return { ...merged, filter: 'none', opacity: 1, imageFxLive: true };
 }
 
 /**
@@ -914,7 +935,10 @@ export const useExportMakerStore = create(
                         ...DEFAULT_CONFIG,
                         ...(persistedState.config || {}),
                         contentModules,
-                        moduleOrder
+                        moduleOrder,
+                        // Même remise à neutre unique que `resolveExportMakerConfig` : la session
+                        // locale peut porter, elle aussi, un filtre/une opacité restés inertes.
+                        image: resolveImageConfig(persistedState.config?.image),
                     }
                 };
             }

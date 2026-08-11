@@ -18,11 +18,12 @@ const RATIO_DIMS = {
  * empilées). `reviewData` est déjà fetchée par l'appelant — ce composant ne fait que résoudre sa
  * config Export Maker et la mettre à l'échelle, il ne fetch rien lui-même.
  */
-export default function SingleReviewCard({ reviewData, canvasId = 'public-render-canvas', config: configOverride = null }) {
+export default function SingleReviewCard({ reviewData, canvasId = 'public-render-canvas', config: configOverride = null, fitHeight = false }) {
     const containerRef = useRef(null)
     const scaledBoxRef = useRef(null)
     const [scale, setScale] = useState(1)
     const [contentHeight, setContentHeight] = useState(0)
+    const [frameHeight, setFrameHeight] = useState(0)
 
     // Répare au passage un exportMakerConfig sauvegardé avant l'ajout de nouvelles clés à
     // DEFAULT_CONFIG.contentModules — sinon les sections "opt-in" (cultivarsList, aromas,
@@ -52,6 +53,41 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
         return () => observer.disconnect()
     }, [reviewData, dims.width])
 
+    // `fitHeight` — hauteur de la ZONE d'aperçu, pour caler aussi sur la hauteur.
+    //
+    // Mesuré le 2026-08-11 : en mode Écran/9:16, le canevas se rendait en 1081×1923 dans une zone
+    // d'aperçu haute de ~880px, soit 1046px de débordement à faire défiler. Sur `/r/:id` c'est le
+    // comportement voulu (un document en ligne défile), mais dans le Studio l'aperçu doit MONTRER
+    // le rendu, pas obliger à le parcourir — d'où cette option, activée par le seul aperçu.
+    useEffect(() => {
+        if (!fitHeight) return
+        const el = containerRef.current
+        if (!el) return
+        let cadre = el.parentElement
+        while (cadre && cadre !== document.body) {
+            const ov = getComputedStyle(cadre).overflowY
+            if (ov === 'auto' || ov === 'scroll') break
+            cadre = cadre.parentElement
+        }
+        if (!cadre || cadre === document.body) return
+        // `clientHeight` inclut le padding du cadre : le déduire, sinon il reste exactement autant
+        // de débordement que de padding (mesuré : 32px pour un `p-4`).
+        const dispo = () => {
+            const cs = getComputedStyle(cadre)
+            return cadre.clientHeight - parseFloat(cs.paddingTop || 0) - parseFloat(cs.paddingBottom || 0)
+        }
+        const observer = new ResizeObserver(() => setFrameHeight(dispo()))
+        observer.observe(cadre)
+        setFrameHeight(dispo())
+        return () => observer.disconnect()
+    }, [fitHeight, reviewData])
+
+    // La hauteur naturelle est celle de la boîte NON transformée (`transform` ne change pas la boîte
+    // de mise en page) : le facteur se calcule donc sans boucler sur lui-même.
+    const fitScale = (fitHeight && frameHeight && contentHeight)
+        ? Math.min(scale, frameHeight / contentHeight)
+        : scale
+
     // Mesure la hauteur RÉELLE (non affectée par `transform: scale`, qui ne change que le rendu
     // visuel, pas la boîte de mise en page) pour compenser l'espace réservé par le flux normal —
     // sans ça, sur mobile (scale ~0.2), ~80% de la page sous la fiche visible serait un vide
@@ -76,9 +112,9 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
                 ref={scaledBoxRef}
                 style={{
                     width: dims.width, height: 'auto',
-                    transform: `scale(${scale})`, transformOrigin: 'top center', flexShrink: 0,
+                    transform: `scale(${fitScale})`, transformOrigin: 'top center', flexShrink: 0,
                     borderRadius: 12, overflow: 'visible', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
-                    marginBottom: (scale < 1 && contentHeight) ? `${-(1 - scale) * contentHeight}px` : 0,
+                    marginBottom: (fitScale < 1 && contentHeight) ? `${-(1 - fitScale) * contentHeight}px` : 0,
                 }}
             >
                 <TemplateRenderer config={config} reviewData={reviewData} canvasId={canvasId} allowOverflow />
@@ -91,4 +127,5 @@ SingleReviewCard.propTypes = {
     reviewData: PropTypes.object.isRequired,
     canvasId: PropTypes.string,
     config: PropTypes.object,
+    fitHeight: PropTypes.bool,
 }

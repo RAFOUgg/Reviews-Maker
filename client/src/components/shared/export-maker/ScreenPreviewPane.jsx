@@ -40,9 +40,24 @@ export default function ScreenPreviewPane({ reviewData, config }) {
     }
 
     return (
-        <div className="w-full h-full overflow-y-auto bg-[#0a0a0f] p-4">
+        <div className="w-full h-full flex flex-col bg-[#0a0a0f]">
+            {/* Ce que ce mode est, écrit noir sur blanc. « Je n'ai pas accès aux différentes pages
+                en mode écran ? c'est normal ? » (2026-08-11) : oui, et rien ne le disait. Le
+                bandeau est HORS de la zone défilante pour ne pas rogner la hauteur sur laquelle
+                l'aperçu se met à l'échelle. */}
+            <div className="flex-shrink-0 px-4 py-2 text-[11px] leading-snug text-white/45 border-b border-white/10">
+                <span className="text-white/70 font-semibold">Mode Écran</span> — la fiche telle qu'elle
+                s'affiche en ligne : un document continu, sans pages ni marges d'impression.
+                Pagination, canevas fixe et export de fichiers se règlent dans le mode <span className="text-white/70 font-semibold">Fichier</span>.
+            </div>
+            <div className="flex-1 min-h-0 overflow-y-auto p-4">
             <div className="mx-auto" style={{ maxWidth: 1100 }}>
-                <SingleReviewCard reviewData={reviewData} config={config} canvasId="export-maker-screen-canvas" />
+                {/* `fitHeight` : l'aperçu se dézoome jusqu'à tenir dans la zone plutôt que d'obliger
+                    à faire défiler pour voir le rendu (mesuré à 1046px de débordement en 9:16 avant
+                    cette option). La page publique `/r/:id`, elle, ne le passe pas : un document en
+                    ligne DOIT défiler, l'y écraser le rendrait illisible sur mobile. */}
+                <SingleReviewCard reviewData={reviewData} config={config} canvasId="export-maker-screen-canvas" fitHeight />
+            </div>
             </div>
         </div>
     );

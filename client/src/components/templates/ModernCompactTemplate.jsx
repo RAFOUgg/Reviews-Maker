@@ -10,11 +10,13 @@ import {
     extractPipelines,
     filterVisiblePipelines,
     getResponsiveAdjustments,
+    TIMELINE_PIPELINES,
     resolveFontStack,
     readableFontSize,
     colorWithOpacity,
     getGlassTokens,
     ACCENT_TEXT_COLORS,
+    getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
@@ -27,7 +29,7 @@ import ScoreMetric from './sections/ScoreMetric';
 import ScoreBoard from './sections/ScoreBoard';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
 import { templateSection } from '../../store/exportMakerConstants';
-import PipelineTimeline from './sections/PipelineTimeline';
+import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import FitToFill from './frame/FitToFill';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — liste complète
@@ -271,7 +273,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                 <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
                                     {reviewData.images.slice(0, 2).map((img, ii) => (
                                         <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
-                                            <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                                            <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                         </div>
                                     ))}
                                 </div>
@@ -280,7 +282,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         return (
                             <div data-module="mainImage" className="flex-shrink-0 w-2/5 h-full">
                                 <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
-                                    <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                                    <img src={mainImage} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                 </div>
                             </div>
                         );
@@ -299,7 +301,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         // pas, c'est le seul moyen d'atteindre un remplissage constant quel que soit le volume de
         // données (mesuré de 53 % à 98 % selon la combinaison avant ce composant).
         return (
-            <FitToFill min={0.9} max={1.35}>
+            <FitToFill min={0.9} max={1.35} enabled={!config.__measuring}>
             <div className="flex flex-col h-full overflow-hidden" style={{ gap: `${spacing.element}px` }}>
                 {/* Image — `data-module="mainImage"` + `isPageOn()` (Phase C, correctif 2026-08-03) :
                     ce bloc n'avait jusqu'ici AUCUN id mesurable et se rendait sans condition sur
@@ -333,7 +335,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
                                 {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
-                                        <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" />
+                                        <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                     </div>
                                 ))}
                             </div>
@@ -369,7 +371,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                 ...imageFrameStyle,
                             }}
                         >
-                            <img src={mainImage} alt="" className="w-full h-full object-cover" />
+                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                         </div>
                     );
                 })()}
@@ -557,31 +559,27 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 // Culture/Curing/Extraction/Séparation sur des pages différentes selon leur volume
                 // réel, au lieu du bloc "Pipelines" monolithique d'avant ce chantier (Phase C).
                 if (!templateSection('modernCompact', 'pipelines')) return null;
-                const pagePipelines = pipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id.startsWith(`pipeline:${p.key}#`)));
-                if (pagePipelines.length === 0) return null;
+                // LA grille des formulaires, comme partout ailleurs. On repart de
+                // `TIMELINE_PIPELINES` (source unique) et non de `extractPipelines` : la grille a
+                // besoin des clés de DONNÉES et de CONFIG brutes, que l'extraction ne conserve pas.
+                const actifs = TIMELINE_PIPELINES.filter((t) => reviewData[t.dataKey] && reviewData[t.configKey]);
+                const surCettePage = actifs.filter((t) => !pageModuleIds
+                    || [...pageModuleIds].some((id) => id === `pipeline:${t.type}` || id.startsWith(`pipeline:${t.type}#`)));
+                if (surCettePage.length === 0) return null;
                 return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
-                    {pagePipelines.map((p) => (
-                        <PipelineTimeline
-                            key={p.key}
-                            pipeline={p}
-                            moduleId={`pipeline:${p.key}`}
+                    {surCettePage.map((t) => (
+                        <PipelineMiniGrid
+                            key={t.type}
+                            type={t.type}
+                            name={t.name}
+                            icon={t.icon}
+                            timelineData={reviewData[t.dataKey]}
+                            timelineConfig={reviewData[t.configKey]}
+                            accentColor={colors.accent}
+                            moduleId={`pipeline:${t.type}`}
                             isPageOn={isPageOn}
-                            paged={!!pageModuleIds}
-                            compact={isSquare}
-                            fontSize={{ text: fontSize.small, small: fontSize.small }}
-                            spacing={{ element: spacing.element, gap: spacing.gap }}
-                            colors={{
-                                textPrimary: colors.textPrimary,
-                                textSecondary: colors.textSecondary,
-                                title: colors.textPrimary,
-                                accent: colors.accent,
-                                accentText,
-                                surface: colorWithOpacity(colors.accent, 18),
-                                line: glass.border,
-                            }}
-                            glass={glass}
                         />
                     ))}
                 </div>

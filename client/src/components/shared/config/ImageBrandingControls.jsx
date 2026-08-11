@@ -100,55 +100,25 @@ export default function ImageBrandingControls() {
                     </p>
                 )}
 
-                {/* Sélecteur de photo principale */}
-                {availableImages.length > 0 && (
-                    <div>
-                        <label className="block text-xs font-medium text-white/50 mb-2 uppercase tracking-wide">
-                            Photo principale affichée
-                            {availableImages.length > 1 && (
-                                <span className="ml-1 normal-case font-normal text-white/30">({selectedIdx + 1}/{availableImages.length})</span>
-                            )}
-                        </label>
-                        {availableImages.length === 1 ? (
-                            <div className="relative w-full h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg shadow-purple-500/20">
-                                <img src={availableImages[0]} alt="Photo produit" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-purple-500/10 flex items-end justify-end p-2">
-                                    <span className="text-xs text-white/80 bg-black/40 px-2 py-0.5 rounded-full">Seule photo</span>
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="flex gap-2 flex-wrap">
-                                {availableImages.map((imgUrl, idx) => (
-                                    <motion.button
-                                        key={idx}
-                                        whileHover={{ scale: 1.06 }}
-                                        whileTap={{ scale: 0.96 }}
-                                        onClick={() => updateImage({ selectedIndex: idx })}
-                                        className={`relative rounded-xl overflow-hidden border-2 transition-all ${selectedIdx === idx ? 'border-purple-500 shadow-lg shadow-purple-500/30' : 'border-white/15 opacity-60 hover:opacity-100 hover:border-purple-400'}`}
-                                        style={{ width: '64px', height: '64px' }}
-                                    >
-                                        <img src={resolveImageUrl(imgUrl)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                                        {selectedIdx === idx && (
-                                            <div className="absolute inset-0 bg-purple-500/20 flex items-center justify-center">
-                                                <Check className="w-5 h-5 text-white drop-shadow" strokeWidth={3} />
-                                            </div>
-                                        )}
-                                        <span className="absolute bottom-0 right-0 text-[9px] font-bold text-white bg-black/50 px-1">{idx + 1}</span>
-                                    </motion.button>
-                                ))}
-                            </div>
-                        )}
+                {/* UN SEUL sélecteur de photos.
+                    Il y en avait deux, empilés et non reliés : « Photo principale affichée » (qui
+                    écrivait `selectedIndex`) et « Photos affichées » (qui écrivait `selected`) —
+                    deux grilles des mêmes vignettes, deux codes couleur, aucune indication de ce qui
+                    les distinguait. Une seule grille désormais : la vignette dit si la photo entre
+                    dans le rendu, l'étoile désigne laquelle sert de photo principale. */}
+                {availableImages.length === 1 && (
+                    <div className="relative w-full h-24 rounded-xl overflow-hidden border-2 border-purple-500 shadow-lg shadow-purple-500/20">
+                        <img src={resolveImageUrl(availableImages[0])} alt="Photo produit" className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-purple-500/10 flex items-end justify-end p-2">
+                            <span className="text-xs text-white/80 bg-black/40 px-2 py-0.5 rounded-full">Seule photo</span>
+                        </div>
                     </div>
                 )}
 
-                {/* Photos AFFICHÉES — distinct du choix de la photo principale ci-dessus. */}
                 {availableImages.length > 1 && (
                     <div className="liquid-card p-3">
-                        <div className="flex items-center justify-between mb-2">
-                            <div>
-                                <div className="text-sm font-medium text-white/90">Photos affichées</div>
-                                <div className="text-xs text-white/50">{shownCount} sur {availableImages.length} apparaissent dans le rendu</div>
-                            </div>
+                        <div className="flex items-center justify-between mb-1">
+                            <div className="text-sm font-medium text-white/90">Photos du rendu</div>
                             <button
                                 onClick={() => updateImage({ selected: [] })}
                                 className="text-xs px-2 py-1 rounded-lg bg-white/10 text-white/70 hover:text-white"
@@ -156,34 +126,65 @@ export default function ImageBrandingControls() {
                                 Toutes
                             </button>
                         </div>
+                        <div className="text-xs text-white/50 mb-3">
+                            {shownCount} sur {availableImages.length} retenues · clic pour retirer, ⭐ pour la photo principale
+                        </div>
                         <div className="flex gap-2 flex-wrap">
                             {availableImages.map((imgUrl, idx) => (
-                                <button
-                                    key={idx}
-                                    onClick={() => toggleShown(idx)}
-                                    title={isShown(idx) ? 'Retirer du rendu' : 'Afficher dans le rendu'}
-                                    className={`relative rounded-lg overflow-hidden border-2 transition-all ${isShown(idx) ? 'border-emerald-400' : 'border-white/15 opacity-35'}`}
-                                    style={{ width: '52px', height: '52px' }}
-                                >
-                                    <img src={resolveImageUrl(imgUrl)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                                    {isShown(idx) && (
-                                        <span className="absolute top-0.5 right-0.5 bg-emerald-500 rounded-full p-0.5">
-                                            <Check className="w-3 h-3 text-white" strokeWidth={3} />
-                                        </span>
-                                    )}
-                                </button>
-                                ))}
-                            </div>
-                        )}
+                                <div key={idx} className="relative">
+                                    <motion.button
+                                        whileHover={{ scale: 1.06 }}
+                                        whileTap={{ scale: 0.96 }}
+                                        onClick={() => toggleShown(idx)}
+                                        title={isShown(idx) ? 'Retirer du rendu' : 'Afficher dans le rendu'}
+                                        className={`relative block rounded-xl overflow-hidden border-2 transition-all ${isShown(idx)
+                                            ? (selectedIdx === idx ? 'border-purple-500 shadow-lg shadow-purple-500/30' : 'border-emerald-400')
+                                            : 'border-white/15 opacity-35 hover:opacity-70'}`}
+                                        style={{ width: '68px', height: '68px' }}
+                                    >
+                                        <img src={resolveImageUrl(imgUrl)} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
+                                        {isShown(idx) && selectedIdx !== idx && (
+                                            <span className="absolute bottom-0.5 right-0.5 bg-emerald-500 rounded-full p-0.5">
+                                                <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                                            </span>
+                                        )}
+                                        {selectedIdx === idx && (
+                                            <span className="absolute bottom-0 inset-x-0 text-[9px] font-bold text-white bg-purple-600/90 py-0.5">
+                                                PRINCIPALE
+                                            </span>
+                                        )}
+                                    </motion.button>
+                                    {/* Désigner la photo principale suppose de la garder dans le rendu :
+                                        l'étoile la réintègre plutôt que de produire une principale
+                                        invisible. */}
+                                    <button
+                                        onClick={() => {
+                                            const next = isShown(idx) ? null : [...(allShown ? availableImages.map((_, i) => i) : picked), idx].sort((a, b) => a - b);
+                                            updateImage(next ? { selectedIndex: idx, selected: next } : { selectedIndex: idx });
+                                        }}
+                                        title="Définir comme photo principale"
+                                        className={`absolute -top-1.5 -left-1.5 w-5 h-5 rounded-full text-[10px] leading-none flex items-center justify-center border transition-colors ${selectedIdx === idx
+                                            ? 'bg-purple-500 border-purple-300 text-white'
+                                            : 'bg-black/70 border-white/25 text-white/50 hover:text-amber-300'}`}
+                                    >
+                                        ★
+                                    </button>
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 )}
 
-                {/* Toggle galerie multi-photos */}
+                {/* Galerie : la photo principale seule, ou toutes les photos retenues ci-dessus. */}
                 {availableImages.length > 1 && (
                     <div className="liquid-card flex items-center justify-between p-3">
                         <div>
                             <div className="text-sm font-medium text-white/90">Galerie photos</div>
-                            <div className="text-xs text-white/50">Afficher toutes les {availableImages.length} photos dans le template</div>
+                            <div className="text-xs text-white/50">
+                                {config.image?.showGallery
+                                    ? `Les ${shownCount} photos retenues apparaissent dans le rendu`
+                                    : 'Seule la photo principale apparaît dans le rendu'}
+                            </div>
                         </div>
                         <LiquidToggle checked={!!config.image?.showGallery} onChange={(v) => updateImage({ showGallery: v })} size="sm" />
                     </div>

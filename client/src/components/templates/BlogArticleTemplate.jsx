@@ -15,8 +15,9 @@ import {
     resolveFontStack,
     getGlassTokens,
     ACCENT_TEXT_COLORS,
+    getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
-import { getSelectedImages } from '../../utils/exportMakerHelpers';
+import { getSelectedImages, TIMELINE_PIPELINES } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
 // (Article de Blog n'avait ni `culture` ni `overflow`).
@@ -25,7 +26,7 @@ import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
-import PipelineTimeline from './sections/PipelineTimeline';
+import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — 'culture' exclu :
 // `substratMix` (le seul champ 'culture' déjà affiché ici) a déjà sa propre section riche
@@ -215,6 +216,16 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 padding: `${padding.container}px`,
             }}
         >
+            {/* TENTATIVE MESURÉE PUIS RETIRÉE (2026-08-11) — ne pas la refaire sans lever le point
+                ci-dessous. Étirer une page paginée sous-remplie (52–62 % mesurés) avec `FitToFill`
+                répare bien A4 et 4:3 (78/80,6 % et 91/85/94 %, zéro erreur) mais CASSE le 16:9 :
+                pages rendues à 104 % et 189 %, donc contenu coupé — le pire défaut possible. La
+                cause n'est pas comprise : `FitToFill` mesure 943px de contenu là où la page en
+                porte 2052 (contrôlé par sonde DOM), et l'écart ne vient ni de l'échelle d'un ancêtre
+                ni de l'absence de révision après application — les deux ont été corrigés dans
+                `FitToFill` et n'ont rien changé au chiffre. Le sous-remplissage reste donc un
+                problème ouvert, à traiter par la composition en page (blocs qui déclarent ce qu'ils
+                peuvent absorber), pas par une mise à l'échelle globale. */}
             <motion.article
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -297,7 +308,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             <figure className="mb-10">
                                 <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr 1fr' : visibleImages.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
                                     {visibleImages.slice(0, 4).map((img, ii) => (
-                                        <img key={ii} src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
+                                        <img key={ii} src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
                                     ))}
                                 </div>
                             </figure>
@@ -309,7 +320,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 {/* Hauteur dérivée du contrat de format (FORMAT_LAYOUT) et non plus d'un 500px en dur :
                                     le même nombre valait 62 % d'un carré et 20 % d'un A4, donc deux mises en
                                     page sans rapport pour un seul template. */}
-                                <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ maxHeight: responsive.image.maxHeight, objectFit: 'cover' }} />
+                                <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ ...getImageRenderStyle(image), maxHeight: responsive.image.maxHeight, objectFit: 'cover' }} />
                             </div>
                             {reviewData.cultivar && (
                                 <figcaption style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary, marginTop: '12px', textAlign: 'center' }}>
@@ -470,34 +481,31 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     (2026-08-04) : bandeau de conditions constantes + étapes réduites à leurs
                     deltas. Ce template réimplémentait auparavant sa propre boucle, comme 3 autres. */}
                 {(() => {
-                    // Chaque pipeline porte son propre `data-module` (`pipeline:<key>`, même
-                    // vocabulaire que DetailedCardTemplate.jsx) — la pagination adaptative peut
-                    // ainsi répartir Culture/Curing/Extraction/Séparation sur des pages différentes
-                    // selon leur volume réel (Phase C).
-                    const pagePipelines = pipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id.startsWith(`pipeline:${p.key}#`)));
-                    if (pagePipelines.length === 0) return null;
+                    // LA grille des formulaires, comme partout ailleurs. Ce template rendait encore
+                    // le pipeline en LISTE verticale : 25 lignes « conditions nominales » pour une
+                    // culture. Signalé par l'utilisateur, capture à l'appui.
+                    //
+                    // On repart de `TIMELINE_PIPELINES` (source unique) et non de `extractPipelines` :
+                    // la grille a besoin des clés de DONNÉES et de CONFIG brutes
+                    // (`cultureTimelineData`/`cultureTimelineConfig`), que l'extraction ne conserve pas.
+                    const actifs = TIMELINE_PIPELINES.filter((t) => reviewData[t.dataKey] && reviewData[t.configKey]);
+                    const surCettePage = actifs.filter((t) => !pageModuleIds
+                        || [...pageModuleIds].some((id) => id === `pipeline:${t.type}` || id.startsWith(`pipeline:${t.type}#`)));
+                    if (surCettePage.length === 0) return null;
                     return (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>⚗️ Processus de Production</h2>
-                        {pagePipelines.map((p) => (
-                            <PipelineTimeline
-                                key={p.key}
-                                pipeline={p}
-                                moduleId={`pipeline:${p.key}`}
+                        {surCettePage.map((t) => (
+                            <PipelineMiniGrid
+                                key={t.type}
+                                type={t.type}
+                                name={t.name}
+                                icon={t.icon}
+                                timelineData={reviewData[t.dataKey]}
+                                timelineConfig={reviewData[t.configKey]}
+                                accentColor={colors.accent}
+                                moduleId={`pipeline:${t.type}`}
                                 isPageOn={isPageOn}
-                                paged={!!pageModuleIds}
-                                fontSize={{ text: fontSize.text + 1, small: fontSize.small }}
-                                spacing={{ element: spacing.element, gap: spacing.gap }}
-                                colors={{
-                                    textPrimary: colors.textPrimary,
-                                    textSecondary: colors.textSecondary,
-                                    title: colors.textPrimary,
-                                    accent: colors.accent,
-                                    accentText,
-                                    surface: colorWithOpacity(colors.accent, 10),
-                                    line: glass.border,
-                                }}
-                                glass={glass}
                             />
                         ))}
                     </div>

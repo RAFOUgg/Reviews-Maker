@@ -32,6 +32,8 @@ import PropTypes from 'prop-types';
  * entre deux fiches d'un même producteur. Les bornes limitent l'écart ; ce qui reste est absorbé
  * par l'image, seul élément d'une carte qui peut grandir et se recadrer sans se déformer.
  */
+const MAX_PASSES = 8;
+
 export default function FitToFill({ min = 0.9, max = 1.3, enabled = true, children }) {
     const outerRef = useRef(null);
     const innerRef = useRef(null);
@@ -39,6 +41,11 @@ export default function FitToFill({ min = 0.9, max = 1.3, enabled = true, childr
     // Miroir synchrone de l'échelle : `compute` doit lire la valeur COURANTE, pas celle capturée
     // à la création de la closure, sinon la normalisation des rectangles est fausse.
     const scaleRef = useRef(1);
+    // Garde-fous de la boucle de révision (cf. `compute`).
+    const passesRef = useRef(0);
+    const rafRef = useRef(null);
+    const [availProbe, setAvailProbe] = useState(0);
+    const [naturalProbe, setNaturalProbe] = useState(0);
 
     useLayoutEffect(() => {
         if (!enabled) { setScale(1); return undefined; }
@@ -47,7 +54,17 @@ export default function FitToFill({ min = 0.9, max = 1.3, enabled = true, childr
         if (!outer || !inner) return undefined;
 
         const compute = () => {
-            const available = outer.clientHeight;
+            // MESURER LES DEUX GRANDEURS DANS LE MÊME ESPACE — la cause du second échec.
+            //
+            // `clientHeight` rend des pixels de MISE EN PAGE ; `getBoundingClientRect()` rend des
+            // pixels ÉCRAN, donc déjà multipliés par les `transform: scale` des ANCÊTRES (l'aperçu
+            // Studio et le mode Fichier réduisent tous deux le canevas pour le faire tenir). Comparer
+            // les deux revient à diviser par l'échelle de l'aperçu : le contenu paraît d'autant plus
+            // court que l'aperçu est réduit, et l'échelle part systématiquement à sa borne haute.
+            // Mesuré le 2026-08-11 sur Article de Blog 16:9 : « contenu 943px dans 1032px » alors
+            // que la page en portait 2052 — soit un rendu à 189 %, contenu coupé. Le même piège est
+            // documenté dans la règle E4 de l'audit, qui s'y était heurtée avant.
+            const available = outer.getBoundingClientRect().height;
             if (!available) return;
             const top = inner.getBoundingClientRect().top;
             let bottom = 0;
@@ -69,18 +86,40 @@ export default function FitToFill({ min = 0.9, max = 1.3, enabled = true, childr
             // Les rectangles subissent la transformation : on ramène à l'échelle 1 pour obtenir
             // une hauteur naturelle invariante, seul moyen d'éviter une boucle.
             const natural = bottom / (scaleRef.current || 1);
+            setAvailProbe(available); setNaturalProbe(natural);
             const next = Math.min(max, Math.max(min, available / natural));
             if (Math.abs(scaleRef.current - next) > 0.005) {
                 scaleRef.current = next;
                 setScale(next);
+                // RÉVISION APRÈS APPLICATION — sans elle, l'échelle n'est calculée qu'UNE fois.
+                //
+                // `natural = bottom / scale` suppose que la hauteur du contenu varie exactement en
+                // proportion de l'échelle. C'est faux dès que le contenu se recompose : le conteneur
+                // interne est en `width: 100/scale%`, donc agrandir RÉTRÉCIT la largeur de mise en
+                // page, le texte revient à la ligne plus tôt et le contenu grandit plus vite que
+                // prévu. Le `ResizeObserver` ne rattrapait pas l'erreur : il observe deux boîtes
+                // dont les dimensions ne bougent PAS lors d'une recomposition interne (l'une est le
+                // canevas, l'autre un pourcentage de celui-ci) — il ne se déclenchait donc jamais.
+                // Mesuré le 2026-08-11 : Article de Blog 16:9 rendu à 174 % (contenu coupé), Fiche
+                // Technique 16:9 à 104 %. On repasse donc après le rendu ; la formule étant un
+                // simple correcteur proportionnel, chaque passe divise l'erreur et la boucle
+                // s'arrête d'elle-même sur la bande morte de 0,005.
+                if (passesRef.current < MAX_PASSES) {
+                    passesRef.current += 1;
+                    rafRef.current = requestAnimationFrame(compute);
+                }
             }
         };
 
+        passesRef.current = 0;
         compute();
-        const ro = new ResizeObserver(compute);
+        const ro = new ResizeObserver(() => { passesRef.current = 0; compute(); });
         ro.observe(outer);
         ro.observe(inner);
-        return () => ro.disconnect();
+        return () => {
+            ro.disconnect();
+            if (rafRef.current) cancelAnimationFrame(rafRef.current);
+        };
     }, [enabled, min, max, children]);
 
     if (!enabled) return children;
@@ -92,8 +131,11 @@ export default function FitToFill({ min = 0.9, max = 1.3, enabled = true, childr
         <div
             ref={outerRef}
             data-fit-scale={scale.toFixed(3)}
-            data-fit-avail={outerRef.current ? outerRef.current.clientHeight : 'n/a'}
-            data-fit-natural={innerRef.current ? innerRef.current.scrollHeight : 'n/a'}
+            // Sonde : les valeurs RÉELLEMENT utilisées par le calcul, pas des approximations —
+            // `scrollHeight` y figurait alors qu'il est inutilisable ici (cf. en-tête), ce qui a
+            // fait perdre du temps en diagnostic.
+            data-fit-avail={Math.round(availProbe)}
+            data-fit-natural={Math.round(naturalProbe)}
             style={{ height: '100%', width: '100%', flex: 1, minHeight: 0, overflow: 'hidden' }}
         >
             <div

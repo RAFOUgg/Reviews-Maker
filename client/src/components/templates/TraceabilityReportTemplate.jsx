@@ -10,6 +10,7 @@ import {
     ACCENT_TEXT_COLORS,
     readableFontSize,
     TIMELINE_PIPELINES,
+    getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
@@ -221,7 +222,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                     2480px. Dimensionnée sur le contrat de format, bornée pour rester une vignette —
                     un rapport de traçabilité reste un document de texte, l'image l'accompagne. */}
                 {mainImage && (
-                    <img src={mainImage} alt="" style={{ width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
+                    <img src={mainImage} alt="" style={{ ...getImageRenderStyle(config.image), width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: 12, flexShrink: 0 }} />
                 )}
                 <div style={{ flex: 1 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>

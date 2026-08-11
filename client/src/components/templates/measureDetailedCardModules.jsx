@@ -118,7 +118,12 @@ export function measureDetailedCardModules(reviewData, config) {
             root = createRoot(host);
             // `pageModuleIds: null` explicite : tout doit être visible pour être mesuré, quel que
             // soit un éventuel appel imbriqué avec une pagination déjà active sur `config`.
-            const measureConfig = { ...config, pageModuleIds: null };
+            // `__measuring` : `FitToFill` doit rester INERTE ici. Il applique un `transform: scale`
+            // au contenu, et les hauteurs lues par cette passe sortent de `getBoundingClientRect` —
+            // donc mises à l'échelle. Mesurer sous une échelle ≠ 1 fausserait tout le budget de
+            // pagination (jusqu'à 10 % avec les bornes actuelles), dans le sens qui produit des
+            // pages en débordement.
+            const measureConfig = { ...config, pageModuleIds: null, __measuring: true };
             // `buildExportReviewData` (même adaptateur que `TemplateRenderer.jsx`) — sans lui,
             // `extractPipelines()` ne trouve jamais `pipelineGlobal`/`pipelineCuring`/... (des clés
             // SYNTHÉTISÉES par l'adaptateur, absentes du `reviewData` brut) : le module pipeline

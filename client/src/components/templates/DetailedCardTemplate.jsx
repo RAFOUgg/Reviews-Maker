@@ -23,6 +23,7 @@ import {
     readableFontSize,
     getSelectedImages,
     TIMELINE_PIPELINES,
+    getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
@@ -493,6 +494,16 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // une page supplémentaire, contraire au principe "aucun rendu ne doit être scrollable".
     return (
         <div className="relative w-full h-full overflow-hidden" style={{ background: bg, fontFamily: BODY, color: textPrimary, padding: `${padding.container}px` }}>
+            {/* TENTATIVE MESURÉE PUIS RETIRÉE (2026-08-11) — ne pas la refaire sans lever le point
+                ci-dessous. Étirer une page paginée sous-remplie (52–62 % mesurés) avec `FitToFill`
+                répare bien A4 et 4:3 (78/80,6 % et 91/85/94 %, zéro erreur) mais CASSE le 16:9 :
+                pages rendues à 104 % et 189 %, donc contenu coupé — le pire défaut possible. La
+                cause n'est pas comprise : `FitToFill` mesure 943px de contenu là où la page en
+                porte 2052 (contrôlé par sonde DOM), et l'écart ne vient ni de l'échelle d'un ancêtre
+                ni de l'absence de révision après application — les deux ont été corrigés dans
+                `FitToFill` et n'ont rien changé au chiffre. Le sous-remplissage reste donc un
+                problème ouvert, à traiter par la composition en page (blocs qui déclarent ce qu'ils
+                peuvent absorber), pas par une mise à l'échelle globale. */}
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }} className="w-full h-full flex flex-col">
 
                 {/* ── MASTHEAD ── */}
@@ -578,7 +589,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             qui se recadre — quel que soit son format. */}
                     {contentModules.mainImage !== false && mainImage && (
                         <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', height: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
-                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ position: 'absolute', inset: 0 }} />
+                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0 }} />
                             {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F8FAFC' : '#0b1220', 85)}, transparent 22%)` }} />}
                         </div>
                     )}
