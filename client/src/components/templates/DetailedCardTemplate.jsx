@@ -21,6 +21,7 @@ import {
     RATIO_DIMENSIONS,
     MIN_FONT_PX,
     readableFontSize,
+    getSelectedImages,
     TIMELINE_PIPELINES,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
@@ -178,10 +179,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     const cannabinoidItems = getCannabinoidItems(reviewData, contentModules);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
+    // Photos retenues par l'utilisateur (`config.image.selected`) — jamais `reviewData.images`
+    // directement : sans ce filtre, décocher une photo n'avait aucun effet sur le rendu.
+    const visibleImages = getSelectedImages(reviewData, config);
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
     const mainImage = resolveImageUrl(
-        (Array.isArray(reviewData.images) && reviewData.images.length > 0)
-            ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+        visibleImages.length > 0
+            ? (visibleImages[selectedImgIndex] || visibleImages[0])
             : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 

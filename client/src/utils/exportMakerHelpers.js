@@ -209,6 +209,32 @@ export const TIMELINE_PIPELINES = [
     { type: 'separation', name: 'Séparation', icon: '🔬', dataKey: 'separationTimelineData', configKey: 'separationTimelineConfig' },
 ];
 
+/**
+ * Photos réellement AFFICHABLES d'une review, après le tri fait par l'utilisateur.
+ *
+ * `config.image.selected` est une liste d'INDICES retenus. Absente ou vide → toutes les photos :
+ * c'est le comportement d'avant cette fonctionnalité, et une review nouvellement ouverte ne doit
+ * pas se retrouver sans image parce que personne n'a encore rien coché.
+ *
+ * Les indices (et non les URL) parce que c'est ainsi que `config.image.selectedIndex` désigne déjà
+ * la photo principale : une seule convention pour les deux réglages.
+ *
+ * NOTE : une review ne porte que des IMAGES (`Review.images`, schema.prisma). Les vidéos existent
+ * ailleurs — sur les cellules de pipeline et les nœuds de chaîne — et ne passent pas par ici.
+ */
+export function getSelectedImages(reviewData, config) {
+    const all = Array.isArray(reviewData?.images) ? reviewData.images : [];
+    if (all.length === 0) return [];
+    const picked = config?.image?.selected;
+    if (!Array.isArray(picked) || picked.length === 0) return all;
+    const kept = picked
+        .map((i) => all[i])
+        .filter((src) => src !== undefined && src !== null && src !== '');
+    // Une sélection qui ne retient rien de valide (indices périmés après suppression d'une photo)
+    // ne doit pas vider la fiche : on retombe sur l'ensemble plutôt que sur du néant.
+    return kept.length > 0 ? kept : all;
+}
+
 export const MIN_FONT_PX = 12;
 
 /**

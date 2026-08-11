@@ -16,6 +16,7 @@ import {
     getGlassTokens,
     ACCENT_TEXT_COLORS,
 } from '../../utils/exportMakerHelpers';
+import { getSelectedImages } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
 // (Article de Blog n'avait ni `culture` ni `overflow`).
@@ -80,10 +81,13 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const substrat = extractSubstrat(reviewData.substratMix);
     const extraData = extractExtraData(reviewData.extraData, reviewData).slice(0, limits.maxInfoCards);
 
+    // Photos retenues par l'utilisateur (`config.image.selected`) — jamais `reviewData.images`
+    // directement : sans ce filtre, décocher une photo n'avait aucun effet sur le rendu.
+    const visibleImages = getSelectedImages(reviewData, config);
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
     const mainImage = resolveImageUrl(
-        (Array.isArray(reviewData.images) && reviewData.images.length > 0)
-            ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+        visibleImages.length > 0
+            ? (visibleImages[selectedImgIndex] || visibleImages[0])
             : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 
@@ -278,8 +282,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 </header>
 
                 {/* Featured Image — or gallery */}
-                {contentModules.mainImage !== false && (mainImage || (Array.isArray(reviewData.images) && reviewData.images.length > 0)) && (() => {
-                    const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                {contentModules.mainImage !== false && (mainImage || (visibleImages.length > 0)) && (() => {
+                    const showGallery = config.image?.showGallery && visibleImages.length > 1;
                     const imageFrameStyle = {
                         border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
                         boxShadow: [
@@ -291,8 +295,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     if (showGallery) {
                         return (
                             <figure className="mb-10">
-                                <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: reviewData.images.length >= 3 ? '2fr 1fr 1fr' : reviewData.images.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
-                                    {reviewData.images.slice(0, 4).map((img, ii) => (
+                                <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr 1fr' : visibleImages.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
+                                    {visibleImages.slice(0, 4).map((img, ii) => (
                                         <img key={ii} src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={{ maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
                                     ))}
                                 </div>
