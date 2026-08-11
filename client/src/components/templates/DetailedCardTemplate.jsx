@@ -32,6 +32,7 @@ import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { noteWithEmoji } from '../../utils/noteEmoji';
 import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
 import SensoryRadar from './sections/SensoryRadar';
+import ScoreBoard from './sections/ScoreBoard';
 import CultureStatsChart from './sections/CultureStatsChart';
 import PipelineTimeline from './sections/PipelineTimeline';
 import { QRCodeSVG } from 'qrcode.react';
@@ -583,6 +584,27 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 {/* ── 01 · ÉVALUATION SENSORIELLE ── */}
                 {families.length > 0 && (
                     <Section icon="👁️" title="Évaluation sensorielle" moduleId="sensoryEvaluation">
+                        {/* Synthèse en tête de section : jauge globale, point fort, point faible.
+                            Les cinq barres disaient déjà les notes, mais il fallait les comparer de
+                            tête pour savoir SUR QUOI le produit est bon ou faible — ce que le
+                            tableau de bord donne d'un coup d'œil. Dans la section existante, donc
+                            sans nouveau `data-module` : la mesure de pagination reprend simplement
+                            la hauteur du bloc, sans vocabulaire supplémentaire à déclarer.
+                            `showDial={false}` : le masthead affiche DÉJÀ la note globale en gros
+                            chiffre, et la redire ici coûtait une page entière en A4 (2 pages à
+                            80,5/80,7 % devenaient 3 à 80,5/44,3/45,7 %) pour zéro information
+                            nouvelle. Ce que le bloc apporte vraiment — point fort, point faible —
+                            tient en une ligne. */}
+                        <ScoreBoard
+                            categories={categoryRatings}
+                            overall={reviewData.rating ?? reviewData.overallRating ?? reviewData.note}
+                            colors={{ textPrimary, textSecondary }}
+                            fontSize={fontSize.small}
+                            spacing={spacing}
+                            paper={isPaperMode}
+                            compact={isSquare}
+                            showDial={false}
+                        />
                         <div className="grid" style={{ gridTemplateColumns: stacked ? '1fr' : `repeat(${families.length}, 1fr)`, gap: `${spacing.section}px` }}>
                             {families.map((f, i) => <FamilyBlock key={i} title={f.title} dot={f.dot} metrics={f.metrics} />)}
                         </div>

@@ -24,6 +24,7 @@ import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
+import ScoreBoard from './sections/ScoreBoard';
 import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
 import { templateSection } from '../../store/exportMakerConstants';
 import PipelineTimeline from './sections/PipelineTimeline';
@@ -454,6 +455,17 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 carré, qui n'a pas la hauteur (cf. TEMPLATE_SECTIONS.modernCompact.byFormat). */}
             {templateSection('modernCompact', 'sensory', config.ratio) && isPageOn('sensoryEvaluation') && contentModules.categoryRatings && (
                 <div data-module="sensoryEvaluation">
+                {/* Synthèse en tête : point fort / point faible. Sans jauge — la note globale est
+                    déjà affichée en grand plus haut, et la redire coûte de la hauteur sans rien
+                    apprendre (mesuré sur la Fiche Technique : une page entière en A4). */}
+                <ScoreBoard
+                    categories={categoryRatings}
+                    colors={colors}
+                    fontSize={fontSize.small}
+                    spacing={spacing}
+                    compact={isSquare}
+                    showDial={false}
+                />
                 {categoryRatings.length > 0 ? (
                     <div style={{ display: 'grid', gridTemplateColumns: isSquare ? '1fr' : 'repeat(2, 1fr)', gap: `${spacing.element}px`, flexShrink: 0 }}>
                         {categoryRatings.map((r, i) => (

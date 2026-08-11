@@ -15,6 +15,7 @@ import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
+import ScoreBoard from './sections/ScoreBoard';
 import { GisementSections } from './sections/RegistrySections';
 import FitToFill from './frame/FitToFill';
 
@@ -341,6 +342,20 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         background: cardBg, border: `1px solid ${cardBorder}`,
                         ...cardGlassStyle,
                     }}>
+                        {/* Point fort / point faible en tête — l'info « sur quoi ce produit est
+                            bon » n'existait nulle part, alors que c'est ce qu'on regarde en premier
+                            sur un format glanceable. Sans jauge : la note est déjà en gros au-dessus.
+                            Pas de prop `spacing` : ce template ne destructure que `fontSize` et
+                            `limits` de `getResponsiveAdjustments`, et s'y référer plantait le rendu
+                            (« spacing is not defined ») — Story 9:16 ne montait alors plus aucune
+                            page. `ScoreBoard` a un repli propre quand `spacing` manque. */}
+                        <ScoreBoard
+                            categories={categoryRatings}
+                            colors={colors}
+                            fontSize={fontSize.small}
+                            compact
+                            showDial={false}
+                        />
                         {categoryRatings.map((cat) => renderCategoryBar(cat))}
                     </div>
                 )}
