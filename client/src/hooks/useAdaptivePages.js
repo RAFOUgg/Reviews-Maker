@@ -82,10 +82,26 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
         requestIdRef.current += 1;
         const requestId = requestIdRef.current;
 
+        // NE PAS conditionner la mesure à une heuristique de densité.
+        //
+        // `shouldAutoLockPagination` devine si une review est « dense » à partir d'indices indirects
+        // (au moins 4 catégories de notes, plus de 4 arômes, plus de 5 effets, ou une timeline de
+        // pipeline). Ces indices décrivent une FLEUR. Une review Comestible n'a aucune timeline — sa
+        // recette n'en est pas une — et porte moins de catégories sensorielles : elle tombait donc
+        // sous le seuil, la mesure n'était jamais lancée, et le repli statique la rendait sur UNE
+        // page. Mesuré le 2026-08-11 (Comestible dense, Article de Blog, 16:9) : page remplie à
+        // 147 %, soit du contenu réellement coupé à l'export — et l'absence de sonde de budget dans
+        // la trace d'audit prouvait que `computeAdaptivePages` n'avait jamais été appelée.
+        //
+        // La seule grandeur qui répond à « faut-il paginer ? » est la hauteur RÉELLE du contenu face
+        // au budget de la page. On la mesure donc systématiquement sur les templates paginables (le
+        // résultat est mis en cache par review/template/ratio/typo, cf. `getCachedMeasurement`), et
+        // c'est `computeAdaptivePages` qui tranche : une seule page en sortie = rien à paginer.
+        // Deviner la densité à partir de proxys est précisément le motif d'erreur qui s'est déjà
+        // répété six fois dans Export Maker.
         const canAdapt = enabled && reviewData && config
             && ADAPTIVE_TEMPLATES.has(template)
-            && !isCustomMode
-            && shouldAutoLockPagination(reviewData, template);
+            && !isCustomMode;
         // L'état est posé APRÈS avoir déterminé si une mesure va suivre : sans ça, on annonçait
         // `isMeasuring: false` avec un repli statique pendant deux secondes, exactement le reflow
         // qu'on cherche à supprimer.

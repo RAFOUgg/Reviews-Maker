@@ -137,10 +137,14 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // Mesuré le 2026-08-10 sur le Rapport de Traçabilité : 5 pages identiques remplies à 98,6 %,
     // là où la mesure terminée en produit 2 à 80,2/76,7 %. Un export complet mais faux est plus
     // trompeur qu'un export vide — il part chez le client sans que rien ne signale l'erreur.
-    const { pages: adaptivePages, isMeasuring: isMeasuringPages } = useAdaptivePages(reviewData, config, {
-        enabled: noSessionPages && shouldAutoLockPagination(reviewData, config?.template),
+    // `enabled` ne dépend plus d'une heuristique de densité (cf. `useAdaptivePages.js`) : on mesure,
+    // et `isAdaptive` dit si la mesure a VRAIMENT conclu à plusieurs pages. Le repli statique du
+    // hook n'est donc jamais pris pour une pagination mesurée — une review légère continue de se
+    // rendre sur une page unique, une review dense est scindée quel que soit son type de produit.
+    const { pages: adaptivePages, isAdaptive: pagesAreMeasured, isMeasuring: isMeasuringPages } = useAdaptivePages(reviewData, config, {
+        enabled: noSessionPages,
     });
-    const autoPages = noSessionPages && shouldAutoLockPagination(reviewData, config?.template) ? adaptivePages : null;
+    const autoPages = (noSessionPages && pagesAreMeasured) ? adaptivePages : null;
     const pages = (sessionPagesEnabled && sessionPages.length > 1) ? sessionPages : (autoPages || []);
     const hasMultiplePages = pages.length > 1;
     const pageDims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];

@@ -250,9 +250,11 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // écran ne doit pas lire une 2e normalisation qui divergerait.
     const normalizedReview = useMemo(() => normalizeReviewData(reviewData), [reviewData]);
 
-    const effectivePagesActive = isTemplatePaginable(config.template)
-        && !paginationDisabled
-        && (pagesEnabled || shouldAutoLockPagination(reviewData, config.template));
+    // Plus d'heuristique de densité ici (voir `useAdaptivePages.js`) : elle décrivait une FLEUR
+    // (timelines, nombre d'arômes/effets) et laissait une review Comestible dense se rendre sur une
+    // seule page à 147 % — donc contenu coupé. C'est la MESURE qui tranche désormais ; ce drapeau ne
+    // dit plus que « ce template se pagine et l'utilisateur ne l'a pas désactivé ».
+    const effectivePagesActive = isTemplatePaginable(config.template) && !paginationDisabled;
 
     // Pagination adaptative (Chantier D, 2026-07-31) : cette 3e surface (aperçu live Export Maker
     // Studio) utilisait jusqu'ici `loadDefaultPages` (statique) comme les deux autres — remplacée
