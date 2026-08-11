@@ -109,6 +109,32 @@ const SECTION_HEADER_OVERHEAD = 16;
 // le facteur y vaut 1, le coût est inchangé.
 const FULL_WIDTH_MODULES = new Set(['masthead']);
 
+// BLOCS ÉLASTIQUES — ceux qui peuvent GRANDIR sans se dégrader.
+//
+// Une photo, un canevas ou un graphique occupent la place qu'on leur donne : les agrandir les rend
+// plus lisibles. Un paragraphe ou un tableau, non — les étirer ne fait qu'ajouter du vide entre les
+// lignes. C'est cette distinction qui permet de résorber l'espace vide d'une page sans toucher à la
+// typographie : le reliquat de hauteur va aux blocs qui savent l'absorber, les autres gardent leur
+// taille naturelle.
+//
+// Approche retenue APRÈS l'échec mesuré d'une mise à l'échelle globale (`FitToFill` sur les
+// templates paginés, 2026-08-11) : agrandir TOUT le contenu d'un facteur commun recompose le texte,
+// donc change sa hauteur, donc invalide le calcul qui vient de fixer ce facteur — la boucle ne
+// converge pas et des pages ont été rendues à 189 %. Ici rien ne se recompose : on ne change que la
+// hauteur de blocs dont le contenu est mis à l'échelle par nature.
+const ELASTIC_MODULES = new Set([
+    'mainImage', 'heroImage', 'masthead',
+    'genealogyCanvas', 'productionChainCanvas',
+    'cultureStats', 'sensoryRadar',
+]);
+
+// Un bloc élastique ne peut pas doubler : une photo qui prend toute la page au motif qu'il restait
+// de la place déséquilibre la fiche autant que le vide qu'on cherche à combler.
+const MAX_STRETCH_RATIO = 0.75;
+
+// Part du reliquat réellement redistribuée (cf. le calcul plus bas pour la justification chiffrée).
+const RELIQUAT_DISTRIBUE = 0.7;
+
 // GROUPES DE LECTURE — plan de page validé le 2026-08-07.
 //
 // Ce n'est PAS un gabarit de pages. Un gabarit fixe quelles pages existent et ce qu'elles
@@ -351,7 +377,7 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         const startPage = (firstId) => {
             if (current) pages.push(current);
             const meta = resolveMeta(firstId);
-            current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true, bases: new Set() };
+            current = { id: `adaptive-${pages.length}-${Date.now()}`, label: meta.label, icon: meta.icon, modules: [], adaptive: true, bases: new Set(), colOf: {}, colUsed: {}, fullWidthUsed: 0 };
             colIndex = 0;
             colHeight = 0;
             fullWidthUsed = 0;
@@ -404,6 +430,16 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
             }
             current.bases.add(baseModuleId(id));
             current.modules.push(id);
+            // Colonne d'atterrissage et occupation par colonne : c'est la place restante DANS SA
+            // colonne qui borne l'étirement d'un bloc, pas celle de la page. Sans cette distinction,
+            // un bloc de la colonne déjà la plus haute recevait une part du vide laissé par l'autre
+            // colonne et poussait la page hors de son cadre (mesuré : 100,1 % en 16:9, 108 % en 4:3).
+            if (!isFullWidth) {
+                current.colOf[id] = colIndex;
+                current.colUsed[colIndex] = (current.colUsed[colIndex] || 0) + headerCostOn(current, id) + height;
+            } else {
+                current.fullWidthUsed = (current.fullWidthUsed || 0) + height;
+            }
             lastGroup = group;
         }
         if (current) pages.push(current);
@@ -435,6 +471,49 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         pages = best;
     }
 
+    // ── RÉSORPTION DE L'ESPACE VIDE ────────────────────────────────────────────────────────────
+    // Le packing pose des blocs jusqu'à ce que le suivant ne rentre plus ; ce qui reste sous le
+    // dernier bloc de la colonne la plus haute est du vide. On le rend aux blocs élastiques de la
+    // page, proportionnellement à leur taille (un grand canevas absorbe plus qu'une petite photo),
+    // et borné par `MAX_STRETCH_RATIO`. Purement arithmétique : aucune mesure DOM, donc aucun risque
+    // de boucle de rétroaction.
+    pages.forEach((page) => {
+        const elastiques = page.modules.filter((id) => ELASTIC_MODULES.has(baseModuleId(id)));
+        if (elastiques.length === 0) return;
+        const pleineLargeur = page.fullWidthUsed || 0;
+        const capaciteColonne = budget - pleineLargeur;
+        // On ne rend qu'une PART du reliquat. La capacité se calcule en supposant les colonnes
+        // parfaitement équilibrées ; elles ne le sont pas toujours, et un bloc étiré dans la colonne
+        // déjà la plus haute pousse alors la page au-delà de son cadre. Mesuré le 2026-08-12 en
+        // distribuant 100 % : les remplissages passent bien de 52-79 % à 83-100 %, mais deux pages
+        // franchissent la limite (100,1 % en 16:9, 108 % en 4:3) — donc du contenu coupé, ce qui est
+        // pire que le vide qu'on résorbe. La part retenue garde l'essentiel du gain sans le risque.
+        const stretch = {};
+        // Une colonne à la fois : son vide ne peut profiter qu'aux blocs élastiques qu'elle porte.
+        const parColonne = {};
+        elastiques.forEach((id) => {
+            const col = page.colOf[id];
+            if (col === undefined) return; // bloc pleine largeur : il occupe déjà toute la largeur
+            (parColonne[col] = parColonne[col] || []).push(id);
+        });
+        Object.entries(parColonne).forEach(([col, ids]) => {
+            const reliquat = (capaciteColonne - (page.colUsed[col] || 0)) * RELIQUAT_DISTRIBUE;
+            if (reliquat <= 24) return; // en dessous, l'étirement ne se verrait pas
+            const baseTotale = ids.reduce((somme, id) => somme + (moduleHeights.get(id) || 0), 0);
+            if (baseTotale <= 0) return;
+            ids.forEach((id) => {
+                const base = moduleHeights.get(id) || 0;
+                const part = reliquat * (base / baseTotale);
+                const extra = Math.round(Math.min(part, base * MAX_STRETCH_RATIO));
+                // Hauteur CIBLE absolue, pas un delta : la règle CSS appliquée au rendu est un
+                // `min-height`, sans effet s'il reste sous la hauteur naturelle du bloc. Émettre le
+                // delta seul produirait une règle inerte.
+                if (extra >= 12) stretch[id] = Math.round(base + extra);
+            });
+        });
+        if (Object.keys(stretch).length > 0) page.stretch = stretch;
+    });
+
     publishProbe({
         templateId, ratio, columns, containerPadding,
         canvasHeight: dims.height,
@@ -456,5 +535,5 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
 
     // `bases` est un accumulateur interne au packing — un Set ne se sérialise pas en JSON (il
     // deviendrait `{}` en traversant le store de pages), on ne le laisse pas fuiter dans la sortie.
-    return pages.map(({ bases, ...page }) => page); // eslint-disable-line no-unused-vars
+    return pages.map(({ bases, colOf, colUsed, ...page }) => page); // eslint-disable-line no-unused-vars
 }

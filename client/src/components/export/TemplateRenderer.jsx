@@ -25,7 +25,7 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageStretch = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true }) {
     let TemplateComponent = TEMPLATES[config.template];
     const adaptedReviewData = buildExportReviewData(reviewData);
 
@@ -92,6 +92,21 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         );
     }
 
+    // ÉTIREMENT DES BLOCS ÉLASTIQUES — résorption de l'espace vide d'une page.
+    //
+    // `computeAdaptivePages` calcule, page par page, le reliquat de hauteur inoccupé et le répartit
+    // sur les blocs qui savent grandir (photo, canevas, graphiques — cf. `ELASTIC_MODULES`). On
+    // l'applique ici en CSS plutôt que dans chaque template : les blocs portent déjà leur
+    // `data-module`, une règle suffit donc à couvrir les CINQ templates sans dupliquer la logique
+    // dans chacun — et sans toucher au corps des templates, dont c'est justement l'absence de
+    // contrat commun qui a laissé 9 réglages sur 12 dériver.
+    const stretchCss = pageStretch && Object.keys(pageStretch).length > 0
+        ? Object.entries(pageStretch)
+            // Les ids contiennent `:` et `#` (`pipeline:culture#0`) — à échapper dans un sélecteur.
+            .map(([id, cible]) => `#${canvasId} [data-module="${id.replace(/"/g, '\\"')}"]{min-height:${cible}px}`)
+            .join('')
+        : '';
+
     return (
         <div
             id={canvasId}
@@ -99,6 +114,7 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             data-width={dimensions.width}
             data-height={capturedHeight}
             data-ratio={config.ratio}
+            data-stretch={stretchCss ? Object.keys(pageStretch).length : undefined}
             style={{
                 width: dimensions.width,
                 // `allowOverflow` : la page publique /r/:id est un document vivant qui défile
@@ -113,6 +129,10 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                 isolation: 'isolate',
             }}
         >
+            {/* Règle d'étirement de la page courante. Une balise `<style>` locale au canevas plutôt
+                qu'une feuille globale : deux pages montées simultanément (export multi-pages
+                hors-écran) portent chacune la sienne, sans se marcher dessus. */}
+            {stretchCss && <style>{stretchCss}</style>}
             {/* `interactive` (phase 7.1) : vrai à l'écran, faux sur les arbres montés pour la
                 capture (ExportModal monte les siens hors-écran) et pour la mesure de pagination.
                 Les composants interactifs le lisent via `useIsInteractive()` et n'attachent alors
@@ -143,6 +163,7 @@ TemplateRenderer.propTypes = {
     reviewData: PropTypes.object.isRequired,
     activeModules: PropTypes.arrayOf(PropTypes.string),
     pageModuleIds: PropTypes.arrayOf(PropTypes.string),
+    pageStretch: PropTypes.object,
     pageMode: PropTypes.bool,
     canvasId: PropTypes.string,
     className: PropTypes.string,

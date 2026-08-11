@@ -203,6 +203,7 @@ export default function PagedPreviewPane({ autoActive = false, measuring = false
                                 reviewData,
                                 activeModules: currentPage.modules,
                                 pageModuleIds: currentPage.adaptive ? currentPage.modules : undefined,
+                                pageStretch: currentPage.adaptive ? currentPage.stretch : undefined,
                                 pageMode: true,
                             })}
                         </div>

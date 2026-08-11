@@ -4,7 +4,8 @@ import { Plus } from 'lucide-react';
 import { Grid as RVGrid } from 'react-window';
 import { CULTURE_PHASES } from '../../../config/pipelinePhases';
 import './PipelineGridView.css';
-import { getFieldIcon, FIELD_ICONS } from '../../../utils/fieldIcons';
+import { getFieldIcon } from '../../../utils/fieldIcons';
+import { summarizeCellFields } from '../../../utils/chainCellPipelines';
 
 /**
  * PipelineGridView - Grille de cases style GitHub commits
@@ -25,6 +26,31 @@ import { getFieldIcon, FIELD_ICONS } from '../../../utils/fieldIcons';
 // hauteur minimale, ce qui donne une case nominalement carrée mais libre de grandir.
 const STATIC_CELL_MIN_PX = 78;
 
+// Côté minimal d'une case de PHASE. Une phase ne porte pas un jeton court (« J12 », « S3 ») mais un
+// NOM — « Début Croissance », « Maturation/Affinage ». Mesuré sur un export réel : à 78px de large,
+// ces noms se brisaient en « Débu / t / Crois / sanc / e », une colonne d'une syllabe par ligne.
+// 132px laissent le nom tenir en deux lignes et la rangée de pastilles rester horizontale.
+// L'éditeur fait le même écart (`phaseBase` 96 contre 72, `rawBaseMin` 160 contre 140) : une trame
+// à phases y a toujours eu des cases plus larges qu'une trame à jours.
+const STATIC_PHASE_CELL_MIN_PX = 132;
+
+// Nombre d'icônes de mesure affichées dans une case avant de basculer sur le compteur « +N ».
+// 4 : c'est la valeur de `CellEmojiOverlay.jsx`, le composant qui rend ces mêmes pastilles dans
+// l'éditeur de pipeline. Reprise telle quelle plutôt que rechoisie — la case de l'export doit
+// s'arrêter de compter au même endroit que celle du formulaire.
+const MAX_CELL_ICONS = 4;
+
+// Clés TECHNIQUES posées sur une entrée de timeline, à ne jamais compter comme une mesure.
+// Utilisée UNIQUEMENT dans le repli (appelant sans `pipelineType`) : dès qu'on connaît le
+// pipeline, c'est `summarizeCellFields` qui filtre, avec sa propre liste `META_KEYS` — la seule
+// qui fasse autorité. Cette liste-ci reprend celle de l'éditeur (`PipelineDragDropView.jsx`,
+// exclusion du gradient d'intensité) augmentée de `cellLabel`/`media`/`photos`, absentes là-bas
+// mais déjà identifiées ailleurs comme non-mesures.
+const FALLBACK_META_KEYS = [
+    'timestamp', 'date', 'label', 'cellLabel', 'phase', 'day', 'week', 'hours', 'seconds',
+    '_meta', 'media', 'photos', 'contents',
+];
+
 const PipelineGridView = ({
     cells = {},
     config,
@@ -44,7 +70,27 @@ const PipelineGridView = ({
     staticRender = false,
     // 'fit' (défaut, inchangé) ou 'fill' quand la grille est rendue en TRANCHES successives qui
     // doivent partager la même trame — cf. le commentaire sur `gridTemplateColumns`.
-    fillMode = 'fit'
+    fillMode = 'fit',
+    // DESCRIPTION DES CASES telle que l'éditeur la calcule — sortie de `generatePipelineCells()`,
+    // c'est-à-dire la MÊME liste d'objets que `PipelineDragDropView.jsx` rend dans le formulaire
+    // (`{ label, emoji, duration, phase, date, week, day }`).
+    //
+    // POURQUOI CE PROP EXISTE. Cette grille dérivait jusqu'ici son libellé toute seule
+    // (`getCellLabel`), à partir d'un vocabulaire qui n'existe nulle part ailleurs :
+    // `config.intervalType` valant `'phases'`/`'weeks'`/`'days'`/`'dates'`, alors que la config
+    // réellement enregistrée porte `config.type` en FRANÇAIS (`'jour'`/`'semaine'`/`'date'`/
+    // `'phases'`/`'mois'`…). Aucune branche ne matchait donc jamais : toute case retombait sur le
+    // dernier `return`, le numéro d'ordre nu. Mesuré sur un export réel le 2026-08-12 — une culture
+    // de 25 jours s'affichait « 11, 12, 13… » au lieu de « J11, J12, J13… », et un curing de phases
+    // aurait affiché les phases de CULTURE (`CULTURE_PHASES` codé en dur pour tous les pipelines).
+    // C'est la 7e occurrence documentée du même défaut sur ce dépôt : un nom de champ deviné au
+    // lieu d'être repris. La réponse est ici la même que les six fois précédentes — ne plus dériver,
+    // recevoir ce que le générateur commun a déjà produit.
+    cellsMeta = null,
+    // 'culture' | 'curing' | 'separation' | 'extraction' — permet de lire les mesures d'une case
+    // avec `summarizeCellFields()`, le lecteur canonique (libellés et unités des
+    // `*SidebarContent.js`, donc ceux du formulaire). Absent, on retombe sur un balayage de clés.
+    pipelineType = null,
 }) => {
     const [hoveredCell, setHoveredCell] = useState(null);
     const [dragOverCell, setDragOverCell] = useState(null);
@@ -232,9 +278,24 @@ const PipelineGridView = ({
 
     const debugMode = typeof window !== 'undefined' && window.location.search.includes('pipeline-debug=1');
 
+    // Largeur minimale de colonne du rendu figé. Dérivée du CONTENU (une case porte-t-elle un nom
+    // de phase ?) et non d'un drapeau de config : `config.intervalType === 'phases'` est
+    // précisément le test qui n'a jamais été vrai (cf. le prop `cellsMeta`).
+    const hasPhaseCells = Array.isArray(cellsMeta) && cellsMeta.some((c) => c && c.phase);
+    const staticMinCellPx = hasPhaseCells ? STATIC_PHASE_CELL_MIN_PX : STATIC_CELL_MIN_PX;
+
+
+    // Description de la case telle que l'éditeur l'a calculée, quand l'appelant nous la fournit.
+    const getCellMeta = (index) => (Array.isArray(cellsMeta) ? cellsMeta[index] : null) || null;
 
     // Obtenir le label d'une case selon la configuration
     const getCellLabel = (index) => {
+        // Le libellé du GÉNÉRATEUR COMMUN prime toujours : c'est celui que le formulaire affiche.
+        // Le calcul local ci-dessous n'est plus qu'un repli pour les appelants qui ne passent pas
+        // `cellsMeta` (cf. le commentaire du prop).
+        const meta = getCellMeta(index);
+        if (meta && meta.label) return meta.label;
+
         if (config.intervalType === 'phases') {
             const phase = config.customPhases?.[index] || (CULTURE_PHASES && CULTURE_PHASES.phases ? CULTURE_PHASES.phases[index] : CULTURE_PHASES?.[index]);
             return (phase && (phase.name || phase.label)) || `Phase ${index + 1}`;
@@ -262,6 +323,13 @@ const PipelineGridView = ({
 
     // Obtenir l'icône d'une phase
     const getPhaseIcon = (index) => {
+        // `generatePipelineCells()` pose déjà l'emoji de la phase sur la case (`emoji`) — même
+        // source que le formulaire. On le lit avant de retomber sur le calcul local, qui supposait
+        // en plus que TOUT pipeline à phases soit une culture.
+        const meta = getCellMeta(index);
+        if (meta && (meta.emoji || meta.phase?.emoji || meta.phase?.icon)) {
+            return meta.emoji || meta.phase.emoji || meta.phase.icon;
+        }
         if (config.intervalType === 'phases') {
             const phase = config.customPhases?.[index] || (CULTURE_PHASES && CULTURE_PHASES.phases ? CULTURE_PHASES.phases[index] : CULTURE_PHASES?.[index]);
             return (phase && (phase.icon || phase.emoji)) || '📍';
@@ -269,90 +337,129 @@ const PipelineGridView = ({
         return null;
     };
 
-    // Calculer l'intensité/densité de données d'une case (0-4)
-    const getCellIntensity = (cellData) => {
-        if (!cellData) return 0;
-
-        // Compter les données significatives (exclure timestamp, _meta)
-        let count = 0;
-
-        // Si ancien format avec contents
-        if (cellData.contents && Array.isArray(cellData.contents)) {
-            count = cellData.contents.length;
-        }
-        // Sinon, compter les propriétés non vides
-        else {
-            for (const key in cellData) {
-                if (key !== 'timestamp' && key !== '_meta' && cellData[key]) {
-                    count++;
-                }
-            }
-        }
-
-        if (count === 0) return 0;
-        if (count <= 2) return 1;
-        if (count <= 4) return 2;
-        if (count <= 6) return 3;
-        return 4;
+    /**
+     * Info SECONDAIRE d'une case — durée de phase, date ou numéro de semaine.
+     *
+     * Reprise à l'identique de l'éditeur (`PipelineDragDropView.jsx` : `cell.date || cell.week ||
+     * (cell.phase ? '(Nj)' : '')`), sur les mêmes champs, produits par le même générateur. C'est ce
+     * qui fait dire « Début Floraison / (21j) » là où l'export ne montrait qu'un numéro.
+     */
+    const getCellSubLabel = (index) => {
+        const meta = getCellMeta(index);
+        if (!meta) return '';
+        if (meta.date) return String(meta.date);
+        if (meta.week) return String(meta.week);
+        if (meta.phase) return `(${meta.duration || 7}j)`;
+        return '';
     };
 
+    /**
+     * Mesures réellement renseignées sur une case, sous forme `[{ key, label, value }]`.
+     *
+     * Avec `pipelineType`, c'est `summarizeCellFields()` qui répond — le lecteur de cellule déjà
+     * utilisé par le canevas Chaîne de production et par les templates d'export, qui résout
+     * libellés et unités depuis les `*SidebarContent.js` (les configs du formulaire). Sans lui, on
+     * balaye les clés en écartant les métadonnées connues.
+     */
+    const getCellFieldList = (cellData) => {
+        if (!cellData) return [];
+        if (pipelineType) return summarizeCellFields(pipelineType, cellData);
+
+        // Ancien format : les données étaient une liste `contents` d'items déjà décrits.
+        if (Array.isArray(cellData.contents)) {
+            return cellData.contents.map((c, i) => ({
+                key: c.key || c.type || `content-${i}`,
+                label: c.label || c.type || c.key || '',
+                value: c.value != null ? String(c.value) : '',
+                icon: c.icon,
+            }));
+        }
+
+        return Object.keys(cellData)
+            .filter((k) => !FALLBACK_META_KEYS.includes(k)
+                && cellData[k] !== null && cellData[k] !== undefined && cellData[k] !== '')
+            .map((k) => ({ key: k, label: k, value: String(cellData[k]) }));
+    };
+
+    /**
+     * Intensité de couleur d'une case (0-4).
+     *
+     * Formule de l'éditeur reprise telle quelle : `floor(min(nbDonnées / 10, 1) * 4)`. Elle
+     * différait ici (paliers 2/4/6), si bien qu'une même case ne portait pas la même couleur dans
+     * le formulaire et dans l'export.
+     */
+    const getCellIntensity = (cellData) => {
+        const count = getCellFieldList(cellData).length;
+        if (count === 0) return 0;
+        return Math.floor(Math.min(count / 10, 1) * 4);
+    };
+
+    // ÉCHELLE DE REMPLISSAGE de l'éditeur (`PipelineDragDropView.jsx` : `bg-green-500/10` →
+    // `/50`), mais FIGÉE EN COULEURS OPAQUES — c'est-à-dire ces mêmes teintes déjà composées sur le
+    // fond sombre du panneau d'édition. Le rendu est donc identique à celui du formulaire là où le
+    // formulaire existe, et il ne CHANGE PLUS selon la surface qui l'accueille.
+    //
+    // Pourquoi opaque et pas translucide. Une case à 10 % d'alpha laisse passer le fond de la page,
+    // et la Fiche Technique bascule en mode PAPIER sur le format A4 (fond crème). Mesuré sur un
+    // export A4 réel : les libellés blancs y tombaient à 2,09:1 sur un fond composé à
+    // rgb(164,184,179) — 39 violations E1, et à l'œil des « J1 » quasi invisibles sur une bande
+    // pâle. Une couleur opaque rend le contraste déterministe : le blanc y tient de 16:1 (palier
+    // bas) à 6,5:1 (palier haut), quels que soient la palette et le ratio.
+    const EDITOR_SURFACES = [
+        'rgb(18, 37, 30)', 'rgb(20, 55, 37)', 'rgb(21, 72, 44)', 'rgb(23, 90, 51)', 'rgb(25, 108, 59)',
+    ];
+    const EDITOR_EMPTY_SURFACE = 'rgb(28, 31, 35)';
+    // Les BORDURES restent translucides : elles ne portent pas de texte, donc aucune règle de
+    // contraste ne s'y applique, et elles gardent la finesse de l'éditeur.
+    const EDITOR_BORDERS = [
+        'border-green-500/40', 'border-green-500/50', 'border-green-500/60',
+        'border-green-500/70', 'border-green-500/80',
+    ];
+
+    const clampIntensity = (i) => Math.max(0, Math.min(EDITOR_SURFACES.length - 1, i));
+
     // Obtenir la couleur selon l'intensité
-    const getIntensityColor = (intensity, isSelected, isHovered, isDragOver) => {
+    const getIntensityColor = (intensity, isSelected, isHovered, isDragOver, hasData) => {
         if (isSelected) return '  ring-2 ';
         if (isDragOver) return 'bg-green-500/30 border-green-400 ring-2 ring-green-400';
         if (isHovered) return 'bg-gray-600 border-gray-400 ring-2 ring-gray-400';
-
-        if (intensity === 0) return 'bg-gray-800/30 border-gray-700/30';
-        if (intensity === 1) return 'bg-green-900/40 border-green-700/50';
-        if (intensity === 2) return 'bg-green-700/60 border-green-500/70';
-        if (intensity === 3) return 'bg-green-500/80 border-green-400/90';
-        return 'bg-green-400 border-green-300';
+        if (!hasData) return 'border-white/20';
+        return EDITOR_BORDERS[clampIntensity(intensity)];
     };
 
-    // Couleur du TEXTE de la case, dérivée de la même échelle d'intensité que son fond.
-    // Aux intensités hautes le fond devient un vert clair (green-500/80, green-400) sur lequel du
-    // texte blanc tombe à 3,5:1 — mesuré le 2026-08-06, 64 occurrences sur une seule fiche exportée.
-    // Le seuil est à 3 parce que c'est là que le fond bascule du vert sombre au vert vif :
-    // en dessous (green-900/40, green-700/60), c'est le blanc qui est lisible et l'encre sombre qui
-    // ne le serait pas. Dérivé de `intensity` et non écrit case par case, pour que fond et texte ne
-    // puissent pas diverger.
-    const getIntensityTextClass = (intensity, isSelected, isHovered, isDragOver) => (
-        (!isSelected && !isHovered && !isDragOver && intensity >= 3) ? 'text-gray-900' : 'text-white'
-    );
-
-    // Mini-icônes résumées dans la case
-    const getMiniIcons = (cellData) => {
-        if (!cellData) return [];
-
-        // Nouveau format: cellData contient directement les données (temperature, humidity, etc.)
-        // Ancien format: cellData.contents = [{type, label, value}]
-
-        // Table d'icônes locale supprimée le 2026-08-06 : c'était la CINQUIÈME de l'app pour la
-        // même chose. Elle vit désormais dans `utils/fieldIcons.js`, complétée des clés qui
-        // n'existaient qu'ici (morphologie, palissage, substrat, propagation…).
-
-        const icons = [];
-
-        // Si ancien format avec contents
-        if (cellData.contents && Array.isArray(cellData.contents)) {
-            cellData.contents.slice(0, 3).forEach(c => {
-                const icon = c.icon || FIELD_ICONS[c.type] || FIELD_ICONS[c.key] || '📍';
-                icons.push(icon);
-            });
-        }
-        // Sinon, scanner les propriétés
-        else {
-            for (const key in cellData) {
-                if (key === 'timestamp' || key === '_meta' || !cellData[key]) continue;
-                const icon = FIELD_ICONS[key];
-                if (icon && icons.length < 3) {
-                    icons.push(icon);
-                }
-            }
-        }
-
-        return icons;
+    /** Fond opaque de la case, ou `undefined` quand un état (survol, sélection) impose le sien. */
+    const getIntensitySurface = (intensity, isSelected, isHovered, isDragOver, hasData) => {
+        if (isSelected || isHovered || isDragOver) return undefined;
+        return hasData ? EDITOR_SURFACES[clampIntensity(intensity)] : EDITOR_EMPTY_SURFACE;
     };
+
+    // Couleur du TEXTE de la case.
+    //
+    // La bascule vers une encre sombre aux intensités hautes (ajoutée le 2026-08-06 : 64 textes
+    // blancs à 3,5:1) répondait à l'ancienne palette, dont les deux derniers paliers étaient des
+    // aplats de vert CLAIR (`bg-green-500/80`, `bg-green-400`). Aucun palier de l'échelle
+    // ci-dessus n'atteint ce vert-là — le plus fort, rgb(25,108,59), laisse le blanc à 6,5:1. La
+    // condition n'a donc plus d'objet, et la conserver produirait l'erreur symétrique : de l'encre
+    // sombre sur un fond sombre.
+    const getIntensityTextClass = () => 'text-white';
+
+    // PASTILLES DE MESURE de la case — les 🌡️ 💧 ⚡ du formulaire.
+    //
+    // Table d'icônes locale supprimée le 2026-08-06 : c'était la CINQUIÈME de l'app pour la
+    // même chose. Elle vit désormais dans `utils/fieldIcons.js`, complétée des clés qui
+    // n'existaient qu'ici (morphologie, palissage, substrat, propagation…).
+    //
+    // `getFieldIcon()` plutôt qu'un accès direct à `FIELD_ICONS` : un champ sans entrée dédiée
+    // retombe sur l'icône de son groupe puis sur une puce neutre, au lieu d'être silencieusement
+    // omis. L'omission était visible à l'export — une case portant quatre mesures n'en montrait
+    // que celles dont la clé figurait nommément dans la table.
+    const getMiniIcons = (cellData) => getCellFieldList(cellData)
+        .slice(0, MAX_CELL_ICONS)
+        .map((f, i) => ({
+            key: f.key || `f-${i}`,
+            icon: f.icon || getFieldIcon(f.key),
+            title: f.value ? `${f.label} : ${f.value}` : f.label,
+        }));
 
     // Handler drag over
     const handleDragOver = (e, cellIndex) => {
@@ -374,55 +481,25 @@ const PipelineGridView = ({
     };
 
     // Tooltip content
+    //
+    // La table de libellés qui vivait ici (`temperature: 'Température'`…) était une SIXIÈME copie
+    // partielle du vocabulaire des `*SidebarContent.js` : dix entrées pour ~85 champs de culture,
+    // donc l'immense majorité des mesures s'affichait sous sa clé brute. `getCellFieldList()`
+    // délègue à `summarizeCellFields()`, qui résout les libellés depuis ces mêmes configs.
     const getTooltipContent = (cellIndex, cellData) => {
         const label = getCellLabel(cellIndex);
+        const fields = getCellFieldList(cellData);
 
-        if (!cellData) {
-            return `${label} - Vide\nClic pour ajouter des données`;
+        if (fields.length === 0) {
+            return readonly || staticRender
+                ? `${label} — aucune donnée`
+                : `${label} - Vide\nClic pour ajouter des données`;
         }
 
-        // Compter les données
-        let dataCount = 0;
-        const dataLabels = [];
-
-        // Si ancien format avec contents
-        if (cellData.contents && Array.isArray(cellData.contents)) {
-            dataCount = cellData.contents.length;
-            cellData.contents.slice(0, 5).forEach(c => {
-                dataLabels.push(c.label || c.type || c.key);
-            });
-        }
-        // Sinon, lister les propriétés
-        else {
-            for (const key in cellData) {
-                if (key !== 'timestamp' && key !== '_meta' && cellData[key]) {
-                    dataCount++;
-                    if (dataLabels.length < 5) {
-                        const labelMap = {
-                            temperature: 'Température',
-                            humidity: 'Humidité',
-                            co2: 'CO₂',
-                            ventilation: 'Ventilation',
-                            lightHours: 'Éclairage',
-                            containerType: 'Contenant',
-                            packaging: 'Emballage',
-                            notes: 'Notes',
-                            ph: 'pH',
-                            curingType: 'Type de curing'
-                        };
-                        dataLabels.push(labelMap[key] || key);
-                    }
-                }
-            }
-        }
-
-        if (dataCount === 0) {
-            return `${label} - Vide\nClic pour ajouter`;
-        }
-
-        const summary = dataLabels.join(', ');
-        const more = dataCount > 5 ? `... +${dataCount - 5}` : '';
-        return `${label} - ${dataCount} donnée(s)\n${summary}${more}\nClic pour voir le détail`;
+        const summary = fields.slice(0, 5).map((f) => f.label).join(', ');
+        const more = fields.length > 5 ? `... +${fields.length - 5}` : '';
+        const action = readonly || staticRender ? '' : '\nClic pour voir le détail';
+        return `${label} - ${fields.length} donnée(s)\n${summary}${more}${action}`;
     };
 
     // Layout de la grille selon le type d'intervalle
@@ -453,6 +530,10 @@ const PipelineGridView = ({
         const isDragOver = dragOverCell === cellIndex && draggedContent;
         const miniIcons = getMiniIcons(cellData);
         const phaseIcon = getPhaseIcon(cellIndex);
+        const fieldCount = getCellFieldList(cellData).length;
+        const hasData = fieldCount > 0;
+        const subLabel = getCellSubLabel(cellIndex);
+        const textClass = getIntensityTextClass();
 
         return (
             <div style={{ ...style, padding: 4 }} key={cellIndex}>
@@ -487,35 +568,104 @@ const PipelineGridView = ({
                     onDragLeave={handleDragLeave}
                     onDrop={(e) => handleDrop(e, cellIndex)}
                     title={getTooltipContent(cellIndex, cellData)}
-                    style={{ width: '100%', height: '100%' }}
-                    className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-sm border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : 'opacity-75'}`}
+                    // `contain: layout size paint` (feuille `.pipeline-cell`) neutralisé en rendu
+                    // FIGÉ. La containment de TAILLE dimensionne la case « comme si elle n'avait
+                    // aucun contenu » : elle retombe alors sur `min-height: var(--min-cell, 96px)`
+                    // — et `--min-cell` n'est jamais publiée en rendu figé, puisque c'est le
+                    // ResizeObserver qui l'écrit et qu'il est court-circuité ici. Combinée à
+                    // l'`overflow: hidden` de la même règle, toute ligne au-delà de ces 96px est
+                    // découpée sans aucun signal. Inoffensif tant que la case n'affichait qu'un
+                    // numéro ; fatal dès qu'elle porte un nom de phase sur deux lignes. En édition
+                    // la containment reste en place : elle y sert la fluidité du défilement
+                    // virtualisé, où les cases ont de toute façon une hauteur imposée.
+                    // `minHeight: 0` neutralise le plancher de 96px de la même règle : la hauteur
+                    // du rendu figé est déjà donnée par le conteneur de case (`STATIC_CELL_MIN_PX`),
+                    // et la laisser en double faisait une carte de 96px pour ~50px de contenu.
+                    // `height: 100%` est conservé pour que toutes les cases d'une même rangée
+                    // s'alignent sur la plus haute, plutôt que de flotter à leur hauteur propre.
+                    style={{
+                        width: '100%', height: '100%',
+                        backgroundColor: getIntensitySurface(intensity, isSelected, isHovered, isDragOver, hasData),
+                        ...(staticRender ? { contain: 'layout paint', minHeight: 0 } : {}),
+                    }}
+                    // `opacity-75` retiré du mode lecture seule. Il ne signalait rien — le rendu est
+                    // ENTIÈREMENT en lecture seule, il n'y a donc aucune case « active » à côté de
+                    // laquelle se démarquer — et il délavait uniformément le libellé et les
+                    // pastilles. Il échappait en prime à la règle de contraste : `effectiveBackground`
+                    // empile les fonds translucides mais ne connaît pas l'`opacity` d'un ancêtre, si
+                    // bien que la perte de lisibilité qu'il causait n'était mesurée nulle part.
+                    className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-lg border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver, hasData)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : ''}`}
                 >
-                    {/* Top: label / phase.
-                        `max-w-[75%]` retiré : il réservait de la place à un voisin qui n'affiche
-                        rien (le `div` de métadonnées ci-dessous est vide depuis toujours). Sur les
-                        petites cases — mesuré sur le format 4:3 — cette réserve coupait les
-                        libellés à deux chiffres : « 12 » s'exportait « 1 », 18 cases atteintes sur
-                        une seule fiche. Un libellé qui MENT est pire qu'un libellé absent. */}
-                    <div className="w-full flex items-start justify-between gap-2">
-                        <div className={`text-sm font-semibold truncate ${getIntensityTextClass(intensity, isSelected, isHovered, isDragOver)}`}>{getCellLabel(cellIndex)}</div>
-                    </div>
+                    {/* CARTE DE PHASE — même contenu, dans le même ordre, que la case de l'éditeur
+                        (`PipelineDragDropView.jsx`) : emoji de phase, nom, information secondaire,
+                        puis les pastilles des mesures documentées et leur compteur « +N ».
+                        L'export n'en montrait aucun de ces éléments : un numéro d'ordre et deux ou
+                        trois icônes dans un carré vert, d'où « les pipelines ne sont pas avec la
+                        même UI graphique que dans les forms ».
 
-                    {/* Middle: icons / summary */}
-                    <div className="w-full flex-1 flex items-start pt-2">
-                        <div className="flex gap-1 flex-wrap">
-                            {miniIcons.length > 0 ? miniIcons.map((icon, idx) => (
-                                <span key={idx} className="text-xs leading-none" style={{ lineHeight: 1 }}>{icon}</span>
-                            )) : (
-                                <span className="text-xs text-gray-600 opacity-50">&nbsp;</span>
-                            )}
+                        `truncate` retiré du libellé : « Début Floraison » ne tient pas sur une
+                        ligne dans une case de ~85px, et couper un nom de phase est exactement la
+                        dégradation que ce projet a déjà retirée deux fois sur demande explicite
+                        (badges à 3-6 caractères, mode compact sans texte). La case grandit, le nom
+                        reste entier — et le retour à la ligne évite au passage la règle E3
+                        (troncature silencieuse), qu'un `truncate` sur un vrai nom déclencherait. */}
+                    <div className="w-full flex items-start gap-1">
+                        {phaseIcon && (
+                            <span className="leading-none flex-shrink-0" style={{ fontSize: 14, lineHeight: 1.2 }}>{phaseIcon}</span>
+                        )}
+                        <div
+                            className={`font-semibold ${textClass}`}
+                            // `break-word` et non `anywhere` : on ne coupe un mot que s'il ne peut
+                            // PAS tenir, au lieu de le couper dès que ça arrange le remplissage.
+                            // Avec `anywhere`, « Croissance » se rendait « Crois / sanc / e ».
+                            style={{ fontSize: 12, lineHeight: 1.2, overflowWrap: 'break-word' }}
+                        >
+                            {getCellLabel(cellIndex)}
                         </div>
                     </div>
 
-                    {/* Bottom: small footer / config indicator */}
-                    <div className="w-full flex items-center justify-between pt-2">
-                        <div className="text-xs text-gray-400">{cellData && cellData._meta ? cellData._meta.count : ''}</div>
+                    {/* Information secondaire : durée de phase « (21j) », date, ou n° de semaine.
+                        Rendue seulement si elle existe — une trame en jours n'en a pas, et une
+                        ligne vide ne ferait que grandir la case pour rien. */}
+                    {subLabel && (
+                        <div className={`${textClass}`} style={{ fontSize: 12, lineHeight: 1.2, opacity: 0.75 }}>
+                            {subLabel}
+                        </div>
+                    )}
+
+                    {/* Pastilles de mesure + compteur. Les emoji sont des pictogrammes, pas du
+                        texte : ils échappent au plancher de 12px (règle E2, qui exclut le contenu
+                        purement pictographique). Le « +N », lui, est du texte — il est donc à 12px,
+                        comme le même badge de la Vue Détaillée. */}
+                    <div className="w-full flex items-end justify-between gap-1" style={{ marginTop: 4 }}>
+                        {/* Disposition 2×2, reprise de `CellEmojiOverlay.jsx`. Ce n'est pas une
+                            préférence esthétique : une rangée horizontale de 4 emoji ne tient pas
+                            dans une case étroite, et la laisser se replier rend la hauteur du bloc
+                            dépendante du calcul de retour à la ligne. Or ce calcul DIFFÈRE entre le
+                            DOM et la rasterisation `html-to-image` — mesuré : la case annonçait
+                            `scrollHeight === clientHeight` (donc aucun débordement) alors que le PNG
+                            téléchargé montrait la 4e pastille coupée en deux. Une grille 2×2 a une
+                            hauteur déterministe, quelle que soit la largeur disponible. */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, max-content)', gap: 4 }}>
+                            {miniIcons.map((m) => (
+                                <span key={m.key} title={m.title} style={{ fontSize: 14, lineHeight: 1 }}>{m.icon}</span>
+                            ))}
+                        </div>
+                        {fieldCount > MAX_CELL_ICONS && (
+                            <span
+                                className="flex-shrink-0"
+                                title={`${fieldCount - MAX_CELL_ICONS} mesure(s) supplémentaire(s)`}
+                                style={{
+                                    fontSize: 12, fontWeight: 700, color: '#fff', lineHeight: 1,
+                                    background: 'rgba(194,65,12,0.98)', borderRadius: 999,
+                                    padding: '2px 4px',
+                                }}
+                            >
+                                +{fieldCount - MAX_CELL_ICONS}
+                            </span>
+                        )}
                         {isSelected && (
-                            <div className="w-3 h-3 rounded-full border-2 border-white"></div>
+                            <div className="w-3 h-3 rounded-full border-2 border-white flex-shrink-0"></div>
                         )}
                     </div>
                 </motion.div>
@@ -574,7 +724,7 @@ const PipelineGridView = ({
                         // `auto-fill` conserve les pistes, donc toutes les tranches partagent la même
                         // trame et une tranche incomplète se termine par un simple vide à droite,
                         // exactement comme la dernière rangée d'une grille ordinaire.
-                        gridTemplateColumns: `repeat(${fillMode === 'fill' ? 'auto-fill' : 'auto-fit'}, minmax(${STATIC_CELL_MIN_PX}px, 1fr))`,
+                        gridTemplateColumns: `repeat(${fillMode === 'fill' ? 'auto-fill' : 'auto-fit'}, minmax(${staticMinCellPx}px, 1fr))`,
                     }}>
                         {/* On lit la VALEUR de `cellIndices`, plus sa position. Les appelants
                             historiques passent un tableau identité (`cells.map((_, i) => i)`), donc

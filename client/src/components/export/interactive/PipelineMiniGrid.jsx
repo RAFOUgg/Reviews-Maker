@@ -145,6 +145,16 @@ export default function PipelineMiniGrid({
             <PipelineGridView
                 cells={gridCells}
                 config={config}
+                // Description des cases DÉJÀ calculée ici par `generatePipelineCells` — la grille
+                // la dérivait de son côté, avec un vocabulaire de config qui n'existe nulle part
+                // (`config.intervalType === 'weeks'` contre le `config.type: 'semaine'` réellement
+                // enregistré) : aucune branche ne matchait, chaque case retombait sur son numéro
+                // d'ordre. Nom, emoji et durée de phase viennent maintenant du même générateur que
+                // le formulaire, puisqu'il est ici même.
+                cellsMeta={cells}
+                // Laisse la grille résoudre libellés et unités des mesures via
+                // `summarizeCellFields()`, comme le canevas Chaîne de production et les templates.
+                pipelineType={type}
                 cellIndices={chunk.indices}
                 readonly
                 staticRender

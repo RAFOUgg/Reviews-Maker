@@ -747,6 +747,7 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                 className="export-maker-page"
                                 activeModules={page.modules}
                                 pageModuleIds={page.adaptive ? page.modules : undefined}
+                                pageStretch={page.adaptive ? page.stretch : undefined}
                                 pageMode
                                 interactive={false}
                             />
