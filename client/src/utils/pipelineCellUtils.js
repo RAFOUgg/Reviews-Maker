@@ -120,3 +120,54 @@ export function generatePipelineCells(timelineConfig, type) {
 }
 
 export default generatePipelineCells;
+
+/**
+ * Reconstitue une config de trame à partir des DONNÉES quand la config enregistrée est inutilisable.
+ *
+ * Constaté le 2026-08-11 sur une review réelle : `cultureTimelineConfig` valait `{}` (2 caractères)
+ * alors que `cultureTimelineData` en portait 3137 et 25 relevés. `generatePipelineCells({})` ne
+ * reconnaît aucun type d'intervalle, renvoie zéro case, et le pipeline Culture disparaissait
+ * ENTIÈREMENT de tous les rendus — « je vois pas les bonnes pipelines ». Perdre des données réelles
+ * parce qu'une métadonnée manque est le défaut que `getOverflowFields` avait déjà écarté ailleurs :
+ * même principe ici.
+ *
+ * On n'invente rien : chaque relevé porte déjà le vocabulaire de sa trame dans son `timestamp`
+ * (`phase-2`, `day-7`, `week-3`, `date-2026-04-01`…), écrit par l'éditeur de pipeline lui-même.
+ * On le lit, on en déduit le type et l'étendue.
+ *
+ * @returns {Object|null} une config utilisable par `generatePipelineCells`, ou null si indéterminable
+ */
+export function inferTimelineConfig(entries) {
+    if (!Array.isArray(entries) || entries.length === 0) return null;
+    const marqueurs = entries
+        .flatMap((e) => [e?.phase, e?.timestamp])
+        .filter((v) => typeof v === 'string' && v.length > 0);
+    if (marqueurs.length === 0) return null;
+
+    // Les phases d'abord : `phase-N` et `legacy-phase-N` sont les deux formes écrites par l'éditeur.
+    if (marqueurs.some((m) => /^(legacy-)?phase-\d+$/.test(m))) return { type: 'phases' };
+
+    // Comparaison de chaînes plutôt qu'une regex construite dans un gabarit : `\d` y est un
+    // échappement inconnu que JS réduit à `d`, la regex devenait `^day-(d+)$` et ne matchait
+    // jamais (défaut attrapé par le test unitaire, pas par la relecture).
+    const maxDe = (prefixe) => marqueurs.reduce((max, m) => {
+        if (!m.startsWith(`${prefixe}-`)) return max;
+        const reste = m.slice(prefixe.length + 1);
+        return /^[0-9]+$/.test(reste) ? Math.max(max, Number(reste)) : max;
+    }, 0);
+
+    const jours = maxDe('day'); if (jours) return { type: 'jour', totalDays: jours };
+    const semaines = maxDe('week'); if (semaines) return { type: 'semaine', totalWeeks: semaines };
+    const heures = maxDe('hour'); if (heures) return { type: 'heure', totalHours: heures + 1 };
+    const secondes = maxDe('sec'); if (secondes) return { type: 'seconde', totalSeconds: secondes + 1 };
+    const mois = maxDe('month'); if (mois) return { type: 'mois', totalMonths: mois };
+    const annees = maxDe('year'); if (annees) return { type: 'annee', totalYears: annees };
+
+    const dates = marqueurs
+        .map((m) => /^date-(\d{4}-\d{2}-\d{2})$/.exec(m)?.[1])
+        .filter(Boolean)
+        .sort();
+    if (dates.length > 0) return { type: 'date', start: dates[0], end: dates[dates.length - 1] };
+
+    return null;
+}

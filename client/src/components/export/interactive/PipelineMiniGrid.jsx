@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
+import { generatePipelineCells, inferTimelineConfig } from '../../../utils/pipelineCellUtils';
 import { safeParse, colorWithOpacity } from '../../../utils/exportMakerHelpers';
 import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
 import { LiquidModal } from '@/components/ui/LiquidUI';
@@ -52,12 +52,20 @@ export default function PipelineMiniGrid({
     const [modalCell, setModalCell] = useState(null);
     const { bind, tooltipNode, interactive } = useCanvasTooltip();
 
-    const config = safeParse(timelineConfig, null);
+    const savedConfig = safeParse(timelineConfig, null);
     const data = safeParse(timelineData, []);
-    if (!config || !Array.isArray(data) || data.length === 0) return null;
+    if (!Array.isArray(data) || data.length === 0) return null;
 
-    const cells = generatePipelineCells(config, type);
-    if (cells.length === 0) return null;
+    // Une config absente ou vide ne doit PAS faire disparaître des relevés réels : on reconstitue
+    // alors la trame depuis les données elles-mêmes (cf. `inferTimelineConfig`). Le repli ne
+    // s'applique que s'il ne reste rien à afficher autrement — une config valide prime toujours.
+    let config = savedConfig;
+    let cells = config ? generatePipelineCells(config, type) : [];
+    if (cells.length === 0) {
+        const deduite = inferTimelineConfig(data);
+        if (deduite) { config = { ...(savedConfig || {}), ...deduite }; cells = generatePipelineCells(config, type); }
+    }
+    if (!config || cells.length === 0) return null;
 
     // Trouve la ou les entrées réelles correspondant à une case générée par `generatePipelineCells`.
     // Bug trouvé 2026-08-02 : pour les pipelines à intervalle 'phases' (culture/curing/séparation/

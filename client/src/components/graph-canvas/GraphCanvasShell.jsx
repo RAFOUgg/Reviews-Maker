@@ -244,9 +244,20 @@ export default function GraphCanvasShell({
                 // l'ouverture du formulaire "ajouter un nœud" (UnifiedGeneticsCanvas.handleCanvasClick,
                 // basé sur event.detail === 2) — les deux se marchaient dessus.
                 zoomOnDoubleClick={false}
-                zoomOnPinch
-                panOnDrag
-                preventScrolling
+                // Un rendu N'EST PAS un éditeur. En lecture seule (fiche exportée, page publique,
+                // aperçu du Studio) le canevas doit se regarder, pas se manipuler : sans ces gardes
+                // on pouvait déplacer les nœuds, déconnecter les liaisons et faire dériver la vue
+                // d'une fiche censée être figée — « dans l'exportation je devrait pas pouvoir bouger
+                // les canvas, c'est juste l'affichage » (2026-08-11). Le zoom/pan est également
+                // neutralisé : la vue est cadrée par `fitView`, la déplacer ne peut que casser ce
+                // cadrage, y compris au moment de la capture PNG.
+                zoomOnPinch={!readOnly}
+                panOnDrag={!readOnly}
+                nodesDraggable={!readOnly}
+                nodesConnectable={!readOnly}
+                elementsSelectable={!readOnly}
+                zoomOnScroll={!readOnly}
+                preventScrolling={!readOnly}
                 // Backspace/Suppr retirait un nœud/liaison sélectionné de l'état React Flow local
                 // (via onNodesChange/onEdgesChange générique) SANS jamais appeler le store — pas de
                 // confirmation, pas de suppression serveur. Le nœud réapparaissait dès la prochaine
