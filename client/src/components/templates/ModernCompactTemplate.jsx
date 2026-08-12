@@ -272,7 +272,10 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             return (
                                 <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
                                     {reviewData.images.slice(0, 2).map((img, ii) => (
-                                        <div key={ii} className="flex-1 overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
+                                        <div key={ii} className="flex-1 overflow-hidden" style={{ /* `image.borderRadius` (le curseur « Coins arrondis ») et non `responsive.image.borderRadius`,
+   qui est une constante dérivée du RATIO (8 ou 12px) et écrasait donc silencieusement le réglage :
+   régler 40px ne changeait rien au rendu (signalé capture à l'appui le 2026-08-11). */
+                                        borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
                                             <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                         </div>
                                     ))}
@@ -281,7 +284,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         }
                         return (
                             <div data-module="mainImage" className="flex-shrink-0 w-2/5 h-full">
-                                <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, ...imageFrameStyle }}>
+                                <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
                                     <img src={mainImage} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                 </div>
                             </div>
@@ -332,7 +335,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     };
                     if (showGallery) {
                         return (
-                            <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${responsive.image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
+                            <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
                                 {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
                                         <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
@@ -367,7 +370,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                 // sa taille naturelle tant que la place existe.
                                 flex: '1 1 auto', minHeight: 0,
                                 maxHeight: responsive.image.maxHeight,
-                                borderRadius: `${responsive.image.borderRadius}px`,
+                                borderRadius: `${image.borderRadius}px`,
                                 ...imageFrameStyle,
                             }}
                         >
