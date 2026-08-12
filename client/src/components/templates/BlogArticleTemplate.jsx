@@ -17,7 +17,7 @@ import {
     ACCENT_TEXT_COLORS,
     getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
-import { getSelectedImages, TIMELINE_PIPELINES } from '../../utils/exportMakerHelpers';
+import { getSelectedImages, TIMELINE_PIPELINES, orderRenderBlocks } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
 // (Article de Blog n'avait ni `culture` ni `overflow`).
@@ -25,7 +25,8 @@ import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { noteWithEmoji } from '../../utils/noteEmoji';
 import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanvas';
 import ScoreMetric from './sections/ScoreMetric';
-import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
+import { CannabinoidGrid, GisementSection } from './sections/RegistrySections';
+import OrderedFlow from './sections/OrderedFlow';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — 'culture' exclu :
@@ -213,6 +214,8 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
             style={{
                 background: colors.background,
                 fontFamily: resolveFontStack(typography.fontFamily),
+                // Graisse du texte courant, par héritage (les titres/chiffres gardent la leur).
+                fontWeight: typography.textWeight,
                 padding: `${padding.container}px`,
             }}
         >
@@ -232,6 +235,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 transition={{ duration: 0.6 }}
                 className="max-w-4xl mx-auto"
             >
+                <OrderedFlow moduleOrder={config.moduleOrder}>
                 {/* Masthead : en-tête + image à la une + introduction, un seul `data-module`
                     (pagination adaptative, Phase C) pour rester groupés sur la première page. */}
                 {isPageOn('masthead') && <div data-module="masthead">
@@ -492,10 +496,16 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     const surCettePage = actifs.filter((t) => !pageModuleIds
                         || [...pageModuleIds].some((id) => id === `pipeline:${t.type}` || id.startsWith(`pipeline:${t.type}#`)));
                     if (surCettePage.length === 0) return null;
+                    // Même règle que sur les autres templates : les pipelines partagent un en-tête,
+                    // donc ils se déplacent en bloc, mais leur ordre interne suit `moduleOrder`.
+                    const ordonnes = orderRenderBlocks(
+                        surCettePage.map((t) => ({ id: `pipeline:${t.type}`, t })),
+                        config.moduleOrder,
+                    ).map((b) => b.t);
                     return (
                     <div style={styles.section}>
                         <h2 style={styles.sectionTitle}>⚗️ Processus de Production</h2>
-                        {surCettePage.map((t) => (
+                        {ordonnes.map((t) => (
                             <PipelineMiniGrid
                                 key={t.type}
                                 type={t.type}
@@ -515,16 +525,20 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 {/* Gisement complémentaire (récolte, usage, procédés, recette) — absent de ce
                     template jusqu'ici alors que Fiche Détaillée l'affiche déjà via le même
                     composant partagé (`GisementSections`, RegistrySections.jsx). */}
-                <GisementSections
-                    reviewData={reviewData}
-                    contentModules={contentModules}
-                    groups={GISEMENT_GROUPS}
-                    Section={Section}
-                    colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
-                    fontSize={fontSize}
-                    spacing={spacing}
-                    groupIcons={GROUP_ICONS}
-                />
+                {GISEMENT_GROUPS.map((group) => (
+                    <GisementSection
+                        key={group}
+                        group={group}
+                        moduleId={`gisement:${group}`}
+                        reviewData={reviewData}
+                        contentModules={contentModules}
+                        Section={Section}
+                        colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
+                        fontSize={fontSize}
+                        spacing={spacing}
+                        groupIcons={GROUP_ICONS}
+                    />
+                ))}
 
                 {/* Substrat */}
                 {isPageOn('substrat') && contentModules.substratMix && substrat.length > 0 && (
@@ -581,6 +595,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     </div>
                 )}
 
+                </OrderedFlow>
                 {/* Footer / Branding */}
                 {renderBranding()}
             </motion.article>

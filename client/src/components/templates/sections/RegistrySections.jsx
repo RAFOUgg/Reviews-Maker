@@ -209,10 +209,22 @@ function RecipeBlock({ reviewData, fontSize, colors, spacing }) {
  * @param {string[]} groups - groupes du registre à couvrir
  * @param {Function} Section - composant Section du template hôte (titre + enfants)
  */
-export function GisementSections({ reviewData, contentModules, groups, Section, colors, fontSize, spacing, groupIcons = {} }) {
+/**
+ * UN groupe de gisement (récolte, culture, usage, séparation, extraction, purification, recette,
+ * données supplémentaires). Rendu séparément pour que chaque gisement soit un bloc de rendu à part
+ * entière — donc mesurable, paginable ET déplaçable individuellement (`config.moduleOrder`).
+ * Renvoie `null` si le groupe n'a aucune donnée à montrer sur cette review.
+ *
+ * Chaque groupe porte sa PROPRE instance d'infobulle. Le regroupement précédent en tenait une seule
+ * pour tous, au motif que plusieurs instances afficheraient « autant d'infobulles superposées » —
+ * ce qui n'est pas le cas : `useCanvasTooltip` ne rend son portail que lorsque SA cible est
+ * survolée (`tip` non nul), les autres instances rendent `null`. Une seule infobulle est donc
+ * visible à la fois, comme avant.
+ */
+export function GisementSection({ reviewData, contentModules, group, Section, colors, fontSize, spacing, groupIcons = {} }) {
     const { bind, tooltipNode, interactive } = useCanvasTooltip();
     if (!reviewData) return null;
-    const sections = groups.map((group) => {
+    const content = (() => {
         // Recette : rendu dédié
         if (group === 'recipe') {
             const on = isModuleOn(contentModules, 'ingredients') || isModuleOn(contentModules, 'etapesPreparation');
@@ -277,12 +289,20 @@ export function GisementSections({ reviewData, contentModules, groups, Section, 
                 </div>
             </Section>
         );
-    });
+    })();
 
-    // Le portail d'infobulle est rendu UNE seule fois, hors de la boucle : à l'intérieur, il
-    // serait instancié une fois par groupe et afficherait autant d'infobulles superposées.
+    if (!content) return null;
     // Le fragment n'ajoute aucun nœud DOM, donc aucune hauteur mesurée ne change.
-    return <>{sections}{tooltipNode}</>;
+    return <>{content}{tooltipNode}</>;
+}
+
+/**
+ * Tous les gisements d'un coup, dans l'ordre de `groups`. Enveloppe fine autour de
+ * `GisementSection` — un template qui pilote l'ordre de ses blocs (`OrderedFlow`) rend plutôt les
+ * `GisementSection` un par un, pour qu'ils puissent se déplacer indépendamment les uns des autres.
+ */
+export function GisementSections({ groups, ...props }) {
+    return <>{groups.map((group) => <GisementSection key={group} group={group} {...props} />)}</>;
 }
 
 CannabinoidGrid.propTypes = {
@@ -293,15 +313,19 @@ CannabinoidGrid.propTypes = {
     spacing: PropTypes.object.isRequired,
 };
 
-GisementSections.propTypes = {
+GisementSection.propTypes = {
     reviewData: PropTypes.object,
     contentModules: PropTypes.object,
-    groups: PropTypes.arrayOf(PropTypes.string).isRequired,
+    group: PropTypes.string.isRequired,
     Section: PropTypes.elementType.isRequired,
     colors: PropTypes.object.isRequired,
     fontSize: PropTypes.object.isRequired,
     spacing: PropTypes.object.isRequired,
     groupIcons: PropTypes.object,
+};
+
+GisementSections.propTypes = {
+    groups: PropTypes.arrayOf(PropTypes.string).isRequired,
 };
 
 export default GisementSections;

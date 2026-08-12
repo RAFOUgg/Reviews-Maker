@@ -130,7 +130,44 @@ const ELASTIC_MODULES = new Set([
 
 // Un bloc élastique ne peut pas doubler : une photo qui prend toute la page au motif qu'il restait
 // de la place déséquilibre la fiche autant que le vide qu'on cherche à combler.
+//
+// Sauf que « déséquilibré » ne veut pas dire la même chose selon le bloc. Une PHOTO agrandie de
+// moitié devient une affiche, et c'est bien ce que ce plafond protège. Un CANEVAS (généalogie,
+// chaîne de production), un GRAPHIQUE ou un RADAR, eux, ne font que gagner en lisibilité : ce sont
+// des dessins vectoriels dont l'échelle est l'unité de lecture, pas une composition à respecter.
+// Les brider au même taux, c'était laisser du vide sur une page qui ne demandait qu'à être remplie
+// par le seul type de bloc qui pouvait le faire sans dommage (mesuré : Fiche 4:3 page 3 à 52,2 %,
+// dont les deux seuls blocs élastiques sont les deux canevas).
+//
+// Le vrai garde-fou anti-débordement n'est de toute façon PAS ce plafond mais la place restante
+// DANS LA COLONNE du bloc (cf. `reliquat` plus bas) — c'est cette borne-là qui a réglé les
+// débordements du 2026-08-12, pas celle-ci.
 const MAX_STRETCH_RATIO = 0.75;
+const MAX_STRETCH_BY_MODULE = {
+    genealogyCanvas: 1.6,
+    productionChainCanvas: 1.6,
+    cultureStats: 1.6,
+    sensoryRadar: 1.6,
+};
+const maxStretchFor = (id) => MAX_STRETCH_BY_MODULE[baseModuleId(id)] ?? MAX_STRETCH_RATIO;
+
+// PLAFOND ABSOLU d'un bloc étiré, en part du budget de colonne.
+//
+// La résorption se veut « purement arithmétique » : on demande `min-height: X`, on obtient X. C'est
+// vrai — jusqu'à un seuil. Mesuré le 2026-08-12 sur `hash/dense` (Fiche Technique 16:9, flux à deux
+// colonnes), en faisant varier le `min-height` d'un canevas de 297px de haut :
+//
+//     min-height demandé :   0    200    400    587    700
+//     hauteur rendue     : 297    297    400   =803=   860
+//
+// À 587 le bloc rend 803px, soit 216 de plus que demandé : passé un certain rapport à la hauteur de
+// colonne, la fragmentation multi-colonnes cesse de suivre la consigne. C'est ce décrochage qui
+// produisait le seul CONTENU COUPÉ restant des 132 combinaisons (page à 101,4 %).
+//
+// On reste donc dans le régime linéaire, vérifié à 400/949 ≈ 0,42. Ce plafond ne s'applique qu'aux
+// pages à plusieurs colonnes : à une seule colonne, la mesure suit la consigne sans décrochage
+// (c'est ce même constat qui a motivé la bascule des pages légères en une colonne).
+const MAX_ELASTIC_SHARE_MULTICOL = 0.45;
 
 // Part du reliquat réellement redistribuée (cf. le calcul plus bas pour la justification chiffrée).
 const RELIQUAT_DISTRIBUE = 0.7;
@@ -281,6 +318,44 @@ function baseModuleId(id) {
 
 function resolveMeta(id) {
     return MODULE_META[baseModuleId(id)] || { label: baseModuleId(id), icon: '📄' };
+}
+
+/** Libellé/icône d'un id de bloc, pour toute UI qui manipule ces ids (ordre des blocs, pages). */
+export function getModuleMeta(id) {
+    return resolveMeta(id);
+}
+
+/**
+ * Un id appartient-il au vocabulaire des blocs de rendu ?
+ *
+ * Sert à purger `config.moduleOrder`, qui a porté jusqu'au 2026-08-12 une liste de ~100 CLÉS DE
+ * CHAMP (`densite`, `tastes`, `thcLevel`…) — un vocabulaire sans aucun rapport avec les blocs que
+ * les templates rendent réellement, et que rien n'a jamais lu. Le laisser filtrer par recoupement
+ * serait pire que l'ignorer : `description` et `extraData` existent dans les DEUX vocabulaires, donc
+ * deux entrées héritées prendraient un rang réel et déplaceraient vraiment ces deux blocs, au nom
+ * d'un ordre que personne n'a choisi.
+ */
+export function isKnownModuleId(id) {
+    if (typeof id !== 'string' || !id) return false;
+    const base = baseModuleId(id);
+    return base.startsWith('pipeline:') || base.startsWith('gisement:') || Object.prototype.hasOwnProperty.call(MODULE_META, base);
+}
+
+/**
+ * Normalise un `moduleOrder` venu du stockage : ids inconnus retirés, doublons écartés.
+ * Retourne un tableau vide si rien de valide n'en sort — c'est-à-dire « ordre naturel du
+ * template » (cf. `orderRenderBlocks`), jamais un ordre partiel deviné.
+ */
+export function sanitizeModuleOrder(order) {
+    if (!Array.isArray(order)) return [];
+    const seen = new Set();
+    const clean = [];
+    for (const id of order) {
+        if (!isKnownModuleId(id) || seen.has(id)) continue;
+        seen.add(id);
+        clean.push(id);
+    }
+    return clean;
 }
 
 // SONDE. Le remplissage seul ne dit jamais POURQUOI une page déborde : il faut confronter la
@@ -471,6 +546,34 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         pages = best;
     }
 
+    // ── PAGE LÉGÈRE : UNE SEULE COLONNE ────────────────────────────────────────────────────────
+    //
+    // Le flux multi-colonnes ÉQUILIBRE (`column-fill: balance`) : sur une page dont le contenu ne
+    // remplit pas une colonne entière, le navigateur le coupe en deux moitiés côte à côte, et la
+    // page se rend à moitié vide par le bas. Mesuré sur la Fiche Technique 4:3, page 3 : trois blocs
+    // pour 910px de coût, une colonne en tient 1060 — donc ~455px de contenu réel sur 1152px de
+    // page, soit 52,2 %. Ce n'est pas un défaut de répartition entre PAGES (le packing est correct),
+    // c'est la mise en colonnes qui n'a plus lieu d'être.
+    //
+    // Aucun risque de débordement : on ne bascule que si tout tient déjà dans UNE colonne.
+    // Et la résorption qui suit y gagne — le vide devient un reliquat de colonne exploitable.
+    if (columns > 1) {
+        pages.forEach((page) => {
+            const coutColonnes = page.modules
+                .filter((id) => !FULL_WIDTH_MODULES.has(baseModuleId(id)))
+                .reduce((s, id) => s + blockHeight(id, moduleHeights.get(id) || 0), 0);
+            if (coutColonnes > 0 && coutColonnes <= budget - (page.fullWidthUsed || 0)) {
+                page.columns = 1;
+                // La répartition simulée par le packer n'a plus cours : tout retombe en colonne 0,
+                // et c'est cette occupation-là que la résorption doit lire.
+                page.colUsed = { 0: coutColonnes };
+                page.modules.forEach((id) => {
+                    if (!FULL_WIDTH_MODULES.has(baseModuleId(id))) page.colOf[id] = 0;
+                });
+            }
+        });
+    }
+
     // ── RÉSORPTION DE L'ESPACE VIDE ────────────────────────────────────────────────────────────
     // Le packing pose des blocs jusqu'à ce que le suivant ne rentre plus ; ce qui reste sous le
     // dernier bloc de la colonne la plus haute est du vide. On le rend aux blocs élastiques de la
@@ -480,8 +583,8 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
     pages.forEach((page) => {
         const elastiques = page.modules.filter((id) => ELASTIC_MODULES.has(baseModuleId(id)));
         if (elastiques.length === 0) return;
+        const colonnesPage = page.columns || columns;
         const pleineLargeur = page.fullWidthUsed || 0;
-        const capaciteColonne = budget - pleineLargeur;
         // On ne rend qu'une PART du reliquat. La capacité se calcule en supposant les colonnes
         // parfaitement équilibrées ; elles ne le sont pas toujours, et un bloc étiré dans la colonne
         // déjà la plus haute pousse alors la page au-delà de son cadre. Mesuré le 2026-08-12 en
@@ -491,11 +594,41 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         const stretch = {};
         // Une colonne à la fois : son vide ne peut profiter qu'aux blocs élastiques qu'elle porte.
         const parColonne = {};
+        const pleineLargeurElastiques = [];
         elastiques.forEach((id) => {
             const col = page.colOf[id];
-            if (col === undefined) return; // bloc pleine largeur : il occupe déjà toute la largeur
-            (parColonne[col] = parColonne[col] || []).push(id);
+            // Un bloc PLEINE LARGEUR n'appartient à aucune colonne : il était donc écarté ici, et
+            // sortait purement et simplement de la résorption. Sur l'Article de Blog, le masthead
+            // EST le plus gros bloc élastique de la page (782px mesurés en A4) — la page 1 restait
+            // à 61,3 % avec près de 1000px de vide qu'aucun autre bloc ne pouvait absorber. Son
+            // reliquat n'est pas celui d'une colonne mais celui de la PAGE : ce qui reste sous la
+            // colonne la plus haute.
+            if (col === undefined) pleineLargeurElastiques.push(id);
+            else (parColonne[col] = parColonne[col] || []).push(id);
         });
+
+        // ORDRE IMPORTANT : le pleine-largeur d'abord, les colonnes ensuite sur ce qu'il RESTE.
+        //
+        // Traités en parallèle, chacun calcule sa part du vide en supposant l'autre immobile, et les
+        // deux étirements s'additionnent : mesuré le 2026-08-12, deux pages passaient à 1102px de
+        // contenu dans 1080 — donc coupées, pour résorber du vide. La hauteur gagnée en haut se
+        // retranche de la capacité des colonnes, comme au rendu.
+        let extraPleineLargeur = 0;
+        if (pleineLargeurElastiques.length > 0) {
+            const colonneLaPlusHaute = Math.max(0, ...Object.values(page.colUsed || {}));
+            const reliquat = (budget - pleineLargeur - colonneLaPlusHaute) * RELIQUAT_DISTRIBUE;
+            const baseTotale = pleineLargeurElastiques.reduce((s, id) => s + (moduleHeights.get(id) || 0), 0);
+            if (reliquat > 24 && baseTotale > 0) {
+                pleineLargeurElastiques.forEach((id) => {
+                    const base = moduleHeights.get(id) || 0;
+                    const extra = Math.round(Math.min(reliquat * (base / baseTotale), base * maxStretchFor(id)));
+                    if (extra >= 12) { stretch[id] = Math.round(base + extra); extraPleineLargeur += extra; }
+                });
+            }
+        }
+        const capaciteColonne = budget - pleineLargeur - extraPleineLargeur;
+        // Voir `MAX_ELASTIC_SHARE_MULTICOL` : au-delà, la consigne n'est plus suivie.
+        const plafondBloc = colonnesPage > 1 ? capaciteColonne * MAX_ELASTIC_SHARE_MULTICOL : Infinity;
         Object.entries(parColonne).forEach(([col, ids]) => {
             const reliquat = (capaciteColonne - (page.colUsed[col] || 0)) * RELIQUAT_DISTRIBUE;
             if (reliquat <= 24) return; // en dessous, l'étirement ne se verrait pas
@@ -504,7 +637,7 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
             ids.forEach((id) => {
                 const base = moduleHeights.get(id) || 0;
                 const part = reliquat * (base / baseTotale);
-                const extra = Math.round(Math.min(part, base * MAX_STRETCH_RATIO));
+                const extra = Math.round(Math.min(part, base * maxStretchFor(id), Math.max(0, plafondBloc - base)));
                 // Hauteur CIBLE absolue, pas un delta : la règle CSS appliquée au rendu est un
                 // `min-height`, sans effet s'il reste sous la hauteur naturelle du bloc. Émettre le
                 // delta seul produirait une règle inerte.
@@ -512,6 +645,31 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
             });
         });
         if (Object.keys(stretch).length > 0) page.stretch = stretch;
+    });
+
+    // ── AÉRATION : le reliquat qu'AUCUN bloc élastique ne peut absorber ────────────────────────
+    //
+    // Une page peut n'avoir aucun bloc extensible. Mesuré sur l'Article de Blog 16:9, page 2 :
+    // notes sensorielles + cannabinoïdes + provenance + arômes, 609px sur 949 de budget — quatre
+    // blocs rigides et 340px de vide en bas de page, que la résorption élastique ne pouvait pas
+    // toucher. Le reliquat va alors dans les ESPACES ENTRE LES BLOCS : une page aérée se lit mieux
+    // qu'une page tassée en haut avec un trou dessous, et c'est la seule façon d'occuper la hauteur
+    // sans inventer du contenu ni grossir la typographie.
+    //
+    // Réservé aux pages à UNE colonne : en multi-colonnes, une marge ajoutée à chaque bloc allonge
+    // chaque colonne indépendamment et pousse la page hors cadre — le mode de défaillance qu'on
+    // passe ce chantier à éliminer.
+    pages.forEach((page) => {
+        const colonnesPage = page.columns || columns;
+        if (colonnesPage !== 1 || page.modules.length < 2) return;
+        const occupe = page.modules.reduce((somme, id) => {
+            const naturelle = blockHeight(id, moduleHeights.get(id) || 0);
+            const etiree = page.stretch && page.stretch[id] ? page.stretch[id] + SECTION_HEADER_OVERHEAD : 0;
+            return somme + Math.max(naturelle, etiree);
+        }, 0);
+        const reliquat = (budget - occupe) * RELIQUAT_DISTRIBUE;
+        if (reliquat < 60) return; // en dessous, l'aération ne se voit pas et ne change rien
+        page.gap = Math.round(reliquat / (page.modules.length - 1));
     });
 
     publishProbe({

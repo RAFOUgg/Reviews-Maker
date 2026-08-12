@@ -204,6 +204,8 @@ export default function PagedPreviewPane({ autoActive = false, measuring = false
                                 activeModules: currentPage.modules,
                                 pageModuleIds: currentPage.adaptive ? currentPage.modules : undefined,
                                 pageStretch: currentPage.adaptive ? currentPage.stretch : undefined,
+                                pageColumns: currentPage.adaptive ? currentPage.columns : undefined,
+                                pageGap: currentPage.adaptive ? currentPage.gap : undefined,
                                 pageMode: true,
                             })}
                         </div>

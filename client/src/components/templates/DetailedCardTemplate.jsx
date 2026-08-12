@@ -24,6 +24,7 @@ import {
     getSelectedImages,
     TIMELINE_PIPELINES,
     getImageRenderStyle,
+    orderRenderBlocks,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
@@ -33,7 +34,8 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { noteWithEmoji } from '../../utils/noteEmoji';
-import { getCannabinoidItems, GisementSections, isModuleOn } from './sections/RegistrySections';
+import { getCannabinoidItems, GisementSection, isModuleOn } from './sections/RegistrySections';
+import OrderedFlow from './sections/OrderedFlow';
 import SensoryRadar from './sections/SensoryRadar';
 import ScoreBoard from './sections/ScoreBoard';
 import CultureStatsChart from './sections/CultureStatsChart';
@@ -159,7 +161,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // `getTemplateColumns` et non `getFormatLayout().columns` : la même source doit servir ici et
     // dans le budget de pagination, sans quoi les deux divergent — c'est cette divergence qui a
     // coupé du contenu sur Article de Blog (budget doublé, rendu sur une seule colonne).
-    const templateColumns = getTemplateColumns('detailedCard', config.ratio);
+    // `config.pageColumns` : imposé page par page par la pagination adaptative (une page légère se
+    // rend en une colonne plutôt que d'être équilibrée en deux demi-colonnes, cf.
+    // `computeAdaptivePages`). Absent hors pagination : le format décide, comme avant.
+    const templateColumns = config.pageColumns || getTemplateColumns('detailedCard', config.ratio);
     const sectionFlow = templateColumns > 1
         // `columnFill: 'balance'` posé explicitement — c'est déjà le comportement obtenu, on le
         // rend seulement non implicite. Vérifié le 2026-08-11 : l'ajouter ne change AUCUN
@@ -409,7 +414,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     // tranches paginables qui portent chacune le leur. Un module ne peut pas à la
                     // fois être mesuré ET contenir des modules mesurés — c'est exactement le double
                     // comptage qui produisait une page blanche sur le Rapport de Traçabilité.
-                    <div key={moduleId} style={blockStyle}>
+                    <div key={moduleId} data-order-id={moduleId} style={blockStyle}>
                         {heading}
                         <PipelineMiniGrid
                             type={t.type} name={t.name} icon={t.icon}
@@ -430,7 +435,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // en tronçons `#N` paginables, on ne l'enferme donc pas dans un bloc insécable — seul le titre
     // de section a besoin d'un support.
     const renderPipelineList = (pipeline, moduleId, heading = null) => (
-        <div key={moduleId}>
+        <div key={moduleId} data-order-id={moduleId}>
             {heading}
             <PipelineTimeline
                 pipeline={pipeline}
@@ -500,7 +505,12 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // masquait silencieusement du contenu dans l'aperçu Studio au lieu de le rendre visible via
     // une page supplémentaire, contraire au principe "aucun rendu ne doit être scrollable".
     return (
-        <div className="relative w-full h-full overflow-hidden" style={{ background: bg, fontFamily: BODY, color: textPrimary, padding: `${padding.container}px` }}>
+        // `fontWeight` posé sur la RACINE plutôt que sur chaque paragraphe : le réglage « graisse du
+        // texte » n'était lu par aucun template sauf Moderne Compact. Par héritage CSS, il atteint
+        // tout le texte courant d'un coup, tandis que les nœuds qui déclarent leur propre graisse
+        // (titres, chiffres, libellés) gardent la leur — c'est-à-dire la hiérarchie typographique du
+        // template, qui n'est pas ce que ce curseur pilote.
+        <div className={`relative w-full h-full overflow-hidden${isPaperMode ? ' export-paper' : ''}`} style={{ background: bg, fontFamily: BODY, fontWeight: typography.textWeight, color: textPrimary, padding: `${padding.container}px` }}>
             {/* TENTATIVE MESURÉE PUIS RETIRÉE (2026-08-11) — ne pas la refaire sans lever le point
                 ci-dessous. Étirer une page paginée sous-remplie (52–62 % mesurés) avec `FitToFill`
                 répare bien A4 et 4:3 (78/80,6 % et 91/85/94 %, zéro erreur) mais CASSE le 16:9 :
@@ -542,7 +552,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         )}
 
                         {contentModules.title && (reviewData.title || reviewData.holderName) && (
-                            <h1 style={{ fontFamily: DISPLAY, fontWeight: 700, fontSize: `${Math.round(fontSize.title * 1.35)}px`, lineHeight: 0.98, letterSpacing: '-0.02em', color: titleColor }}>
+                            <h1 style={{ fontFamily: DISPLAY, fontWeight: typography.titleWeight, fontSize: `${Math.round(fontSize.title * 1.35)}px`, lineHeight: 0.98, letterSpacing: '-0.02em', color: titleColor }}>
                                 {reviewData.title || reviewData.holderName}
                             </h1>
                         )}
@@ -596,7 +606,36 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             qui se recadre — quel que soit son format. */}
                     {contentModules.mainImage !== false && mainImage && (
                         <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', height: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
-                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0 }} />
+                            {/* « Mode galerie » : le réglage existait dans le panneau Image & Logo
+                                mais seuls 2 templates sur 5 le lisaient — ici la photo restait
+                                unique quoi qu'on coche. Grille dans le MÊME cadre que la photo
+                                seule (mêmes dimensions, même dégradé) : la couverture ne change pas
+                                de hauteur, donc la pagination mesurée reste valable. */}
+                            {config.image?.showGallery && visibleImages.length > 1 ? (
+                                <div style={{
+                                    position: 'absolute', inset: 0, display: 'grid', gap: 2,
+                                    gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr' : '1fr 1fr',
+                                    gridTemplateRows: visibleImages.length >= 3 ? '1fr 1fr' : '1fr',
+                                }}>
+                                    {visibleImages.slice(0, 3).map((img, ii) => (
+                                        <img
+                                            key={ii}
+                                            src={resolveImageUrl(img)}
+                                            alt=""
+                                            className="w-full h-full object-cover"
+                                            style={{
+                                                ...getImageRenderStyle(image),
+                                                // La première photo occupe la colonne haute sur 2
+                                                // rangées : une grille de vignettes égales ferait
+                                                // perdre la hiérarchie « photo principale ».
+                                                ...(ii === 0 && visibleImages.length >= 3 ? { gridRow: 'span 2' } : {}),
+                                            }}
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0 }} />
+                            )}
                             {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F8FAFC' : '#0b1220', 85)}, transparent 22%)` }} />}
                         </div>
                     )}
@@ -609,6 +648,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     sections dans la largeur disponible ; `breakInside: avoid` (posé sur `Section`)
                     empêche qu'une section soit coupée entre deux colonnes. */}
                 <div style={sectionFlow}>
+                {/* L'ordre de ces blocs est celui du JSX tant que l'utilisateur n'a rien réordonné
+                    (`config.moduleOrder` vide) — le plan de lecture commenté bloc par bloc ci-dessous
+                    reste donc le défaut. Voir `OrderedFlow` pour ce qui se passe sinon. */}
+                <OrderedFlow moduleOrder={config.moduleOrder}>
 
                 {/* ── 01 · ÉVALUATION SENSORIELLE ── */}
                 {families.length > 0 && (
@@ -745,16 +788,23 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
 
                 {/* Gisement complémentaire piloté par le registre (récolte, culture, usage, procédés…) —
                     non couvert par le spec (cas simple), conservé pour ne perdre aucune donnée réelle. */}
-                <GisementSections
-                    reviewData={reviewData}
-                    contentModules={contentModules}
-                    groups={GISEMENT_GROUPS}
-                    Section={Section}
-                    colors={{ accent, textPrimary, textSecondary, title: titleColor }}
-                    fontSize={fontSize}
-                    spacing={spacing}
-                    groupIcons={GROUP_ICONS}
-                />
+                {/* Un `GisementSection` par groupe plutôt qu'un bloc unique : rendus comme enfants
+                    directs du flux, ils sont déplaçables individuellement (`OrderedFlow` lit leur
+                    `moduleId`). Regroupés, ils n'auraient formé qu'une seule masse indéplaçable. */}
+                {GISEMENT_GROUPS.map((group) => (
+                    <GisementSection
+                        key={group}
+                        group={group}
+                        moduleId={`gisement:${group}`}
+                        reviewData={reviewData}
+                        contentModules={contentModules}
+                        Section={Section}
+                        colors={{ accent, textPrimary, textSecondary, title: titleColor }}
+                        fontSize={fontSize}
+                        spacing={spacing}
+                        groupIcons={GROUP_ICONS}
+                    />
+                ))}
 
                 {/* Pipelines (production) — chaque pipeline porte son propre `data-module`
                     (`pipeline:<key>`) pour que la pagination adaptative puisse répartir Culture/
@@ -772,7 +822,15 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     // amputée de 471px de contenu dont personne ne signalait la disparition.
                     const pagePipelines = visiblePipelines.filter((p) => !pageModuleIds || [...pageModuleIds].some((id) => id === `pipeline:${p.key}` || id.startsWith(`pipeline:${p.key}#`)));
                     if (pagePipelines.length === 0) return null;
-                    return pagePipelines.map((p, i) => renderPipeline(
+                    // Trié AVANT le rendu, pas seulement par `OrderedFlow` : le titre « Processus de
+                    // production » est porté par le premier pipeline (cf. `renderPipeline`), il doit
+                    // donc revenir à celui qui sera premier dans l'ordre FINAL, pas dans l'ordre du
+                    // JSX — sinon le titre apparaîtrait au milieu de la série.
+                    const ordered = orderRenderBlocks(
+                        pagePipelines.map((p) => ({ id: `pipeline:${p.key}`, pipeline: p })),
+                        config.moduleOrder,
+                    ).map((b) => b.pipeline);
+                    return ordered.map((p, i) => renderPipeline(
                         p,
                         `pipeline:${p.key}`,
                         i === 0 ? <SectionHeading icon="⚙️" title="Processus de production" /> : null,
@@ -868,6 +926,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                         </div>
                     </div>
                 )}
+                </OrderedFlow>
                 </div>
             </motion.div>
 

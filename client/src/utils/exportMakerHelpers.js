@@ -1121,6 +1121,61 @@ export function filterVisiblePipelines(pipelines, contentModules) {
 }
 
 /**
+ * Réordonne les blocs de rendu d'un template selon `config.moduleOrder`.
+ *
+ * L'ordre du JSX EST l'ordre de lecture, et c'est aussi lui que la mesure de pagination parcourt
+ * (`measureDetailedCardModules` lit les `[data-module]` dans l'ordre du DOM, `computeAdaptivePages`
+ * empile séquentiellement). Piloter cet ordre par la config suffit donc à ce que l'aperçu, la
+ * pagination et le PNG exporté suivent tous les trois — il n'y a pas d'autre point à synchroniser.
+ *
+ * Deux propriétés délibérées :
+ *
+ * 1. **Liste vide = ordre naturel du template.** C'est le défaut. Un `moduleOrder` par défaut
+ *    codé en dur imposerait un plan de page identique aux 5 templates, alors que chacun a le sien
+ *    (cf. MODULE_GROUPS et les commentaires de placement dans `DetailedCardTemplate.jsx`) : le
+ *    réglage ne doit rien changer tant que l'utilisateur n'y a pas touché.
+ * 2. **Un bloc absent de la liste ne part PAS à la fin** : il reste collé à son prédécesseur connu.
+ *    Sans cette règle, tout bloc apparu après que l'utilisateur ait figé son ordre (un nouveau
+ *    gisement, un pipeline qui n'existait pas sur cette review) serait relégué en queue de fiche —
+ *    c'est-à-dire le mode de défaillance « le contenu se déplace tout seul » que ce module a déjà
+ *    connu sous d'autres formes.
+ *
+ * Les tronçons de pipeline (`pipeline:<key>#N`, produits par `PipelineTimeline`) héritent du rang
+ * de leur pipeline (`pipeline:<key>`) : l'utilisateur ordonne un pipeline, pas ses tranches.
+ *
+ * @param {Array<{id: string, node: *}>} blocks - blocs dans l'ordre naturel du template
+ * @param {string[]} moduleOrder - `config.moduleOrder` (ids de bloc, cf. MODULE_META)
+ * @returns {Array<{id: string, node: *}>}
+ */
+export function orderRenderBlocks(blocks, moduleOrder) {
+    const list = Array.isArray(blocks) ? blocks.filter(Boolean) : [];
+    if (!Array.isArray(moduleOrder) || moduleOrder.length === 0) return list;
+
+    const rankOf = new Map();
+    moduleOrder.forEach((id, i) => { if (!rankOf.has(id)) rankOf.set(id, i); });
+
+    let lastKnown = -1;
+    const decorated = list.map((block, i) => {
+        const id = typeof block.id === 'string' ? block.id : '';
+        const base = id.includes('#') ? id.slice(0, id.indexOf('#')) : id;
+        let rank;
+        if (rankOf.has(id)) rank = rankOf.get(id);
+        else if (rankOf.has(base)) rank = rankOf.get(base);
+        if (rank === undefined) {
+            // Écart strictement inférieur à 1 : un inconnu se glisse après son prédécesseur connu
+            // sans jamais franchir le rang suivant (les rangs connus sont des entiers).
+            rank = lastKnown + (i + 1) / (list.length + 1);
+        } else {
+            lastKnown = rank;
+        }
+        return { block, rank, i };
+    });
+
+    decorated.sort((a, b) => (a.rank - b.rank) || (a.i - b.i));
+    return decorated.map((d) => d.block);
+}
+
+/**
  * Extrait les données du substrat
  * @param {*} substratMix - Données du substrat
  * @returns {Array} Liste des composants du substrat
@@ -1295,6 +1350,38 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
     // transcription en table de ce fichier, qui donnait 0.85 au format 4:3 au lieu de 0.9).
     const scaleFactor = isSquare ? 0.7 : isA4 ? 1.0 : isPortrait ? 0.8 : 0.9;
 
+    // PLAFONDS TYPOGRAPHIQUES — dérivés de la HAUTEUR RÉELLE du canevas.
+    //
+    // `scaleFactor` est une constante par ratio : il dit qu'un carré est plus contraint qu'un A4,
+    // mais il ignore que le carré fait 800px de haut et le 16:9 1080px. Résultat, les curseurs
+    // (titre 20-72px, texte 12-32px) laissaient produire des tailles qu'aucune page ne peut tenir.
+    //
+    // Mesuré le 2026-08-12 (`tools/export-audit/typography-domain-check.mjs`), Fiche Technique 16:9,
+    // review dense :
+    //   32/16 (défaut) → 0 erreur
+    //   48/22          → aucun débordement (une page creuse, sans rapport : chantier D)
+    //   61/32          → E4b, 1125px puis 1299px de contenu dans 1080px — contenu RÉELLEMENT coupé
+    //   72/32          → page à 116,3 %, contenu coupé
+    // Le décrochage se situe donc entre 48/22 et 61/32. Les coefficients ci-dessous ramènent
+    // exactement 61/32 et 72/32 sur les tailles rendues de 48/22 — le dernier réglage mesuré sans
+    // aucun débordement.
+    //
+    // Calibrés en DEUX passes, pas au jugé : 0.045/0.020 réparaient déjà entièrement le 1:1
+    // (8 erreurs → 0) mais laissaient le 16:9 couper à 1181px dans 1080 — ils y autorisaient
+    // titre 48 / texte 21 quand 43/20 passe. D'où les valeurs actuelles, qui donnent 43/20 en 16:9.
+    //
+    // Le DÉFAUT (32/16) reste sous le plafond sur les cinq formats : ce garde-fou ne change donc
+    // rien au rendu courant, il ne borne que les réglages extrêmes. Vérifié à la matrice.
+    // A4 (99/46) et 9:16 (77/36) ne sont jamais atteints par les curseurs (20-72 / 12-32) : ces
+    // formats ont la hauteur, ils n'ont pas besoin d'être bridés — et ne coupaient rien.
+    //
+    // On BORNE plutôt que de refuser la valeur : un réglage doit rester réversible et prévisible.
+    // L'interface annonce le seuil (`TypographyControls`), elle ne le subit pas silencieusement.
+    const maxTitleFont = Math.round(dimensions.height * 0.040);
+    const maxTextFont = Math.round(dimensions.height * 0.0185);
+    const titleFont = Math.min(Math.round((baseTypography.titleSize || 32) * scaleFactor), maxTitleFont);
+    const textFont = Math.max(14, Math.min(Math.round((baseTypography.textSize || 14) * scaleFactor), maxTextFont));
+
     return {
         // Facteurs d'échelle
         scaleFactor,
@@ -1322,12 +1409,22 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
         // (ratio × sous-élément, ex. badges de pipeline) faisaient descendre le texte à 6-9px
         // effectifs sur certains ratios — illisible. `title`/`subtitle`/`section` restent scalés
         // librement (déjà nettement plus grands, la hiérarchie visuelle reste utile là).
+        // `subtitle`/`section` dérivent du titre DÉJÀ plafonné : sans ça, borner le titre laisserait
+        // les intertitres continuer à grandir et le document se déséquilibrerait au lieu de tenir.
         fontSize: {
-            title: Math.round((baseTypography.titleSize || 32) * scaleFactor),
-            subtitle: Math.round((baseTypography.titleSize || 32) * scaleFactor * 0.7),
-            section: Math.round((baseTypography.titleSize || 32) * scaleFactor * 0.55),
-            text: Math.max(14, Math.round((baseTypography.textSize || 14) * scaleFactor)),
-            small: Math.max(12, Math.round((baseTypography.textSize || 14) * scaleFactor * 0.85)),
+            title: titleFont,
+            subtitle: Math.round(titleFont * 0.7),
+            section: Math.round(titleFont * 0.55),
+            text: textFont,
+            small: Math.max(12, Math.round(textFont * 0.85)),
+        },
+
+        // Domaine tenable, exprimé dans l'unité des CURSEURS (pas en pixels rendus) : au-delà, la
+        // valeur est bornée et le curseur n'a plus d'effet. Exposé pour que l'interface le dise —
+        // un réglage qui plafonne en silence se lit comme un réglage cassé.
+        typographyLimits: {
+            maxTitleSize: Math.round(maxTitleFont / scaleFactor),
+            maxTextSize: Math.round(maxTextFont / scaleFactor),
         },
 
         // `layout` (columns / imageHeight / contentHeight) supprimé le 2026-08-04 : relevé
@@ -1388,6 +1485,7 @@ export default {
     extractExtraData,
     extractPipelines,
     filterVisiblePipelines,
+    orderRenderBlocks,
     extractSubstrat,
     RATIO_DIMENSIONS,
     calculateDimensions,

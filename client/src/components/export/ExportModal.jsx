@@ -147,6 +147,11 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     const autoPages = (noSessionPages && pagesAreMeasured) ? adaptivePages : null;
     const pages = (sessionPagesEnabled && sessionPages.length > 1) ? sessionPages : (autoPages || []);
     const hasMultiplePages = pages.length > 1;
+    // Page UNIQUE issue de la mesure : elle porte quand même son étirement, ses colonnes et son
+    // aération. Sans les transmettre au canevas simple ci-dessous, tout le travail de résorption
+    // était perdu précisément sur les rendus qui en ont le plus besoin — les reviews peu fournies,
+    // mesurées à 17-63 % de remplissage sur la matrice complète du 2026-08-12.
+    const soloPage = (!hasMultiplePages && pages.length === 1 && pages[0]?.adaptive) ? pages[0] : null;
     const pageDims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1'];
     const user = useStore((state) => state.user);
 
@@ -727,7 +732,15 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
             {!hasMultiplePages && isStandalone && (
                 <div style={{ position: 'fixed', left: '-99999px', top: 0, pointerEvents: 'none' }} aria-hidden="true">
                     {/* `interactive={false}` : cet arbre n'existe que pour être photographié. */}
-                    <TemplateRenderer config={config} reviewData={reviewData} interactive={false} />
+                    <TemplateRenderer
+                        config={config}
+                        reviewData={reviewData}
+                        interactive={false}
+                        pageStretch={soloPage?.stretch}
+                        pageColumns={soloPage?.columns}
+                        pageGap={soloPage?.gap}
+                        transparentBackground={exportOptions.pngTransparent}
+                    />
                 </div>
             )}
             {/* Pagination : `handleExport` cherche `.export-maker-page` — sans ça il ne capture
@@ -748,6 +761,9 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                 activeModules={page.modules}
                                 pageModuleIds={page.adaptive ? page.modules : undefined}
                                 pageStretch={page.adaptive ? page.stretch : undefined}
+                                pageColumns={page.adaptive ? page.columns : undefined}
+                                pageGap={page.adaptive ? page.gap : undefined}
+                                transparentBackground={exportOptions.pngTransparent}
                                 pageMode
                                 interactive={false}
                             />

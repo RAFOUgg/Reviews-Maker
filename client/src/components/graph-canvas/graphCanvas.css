@@ -1519,3 +1519,68 @@
         font-size: 14px;
     }
 }
+
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+   MODE PAPIER — un canevas dans un document imprimé, pas dans l'éditeur.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════
+   Les canevas d'export montent le VRAI canevas (`GraphCanvasShell`), donc ils héritent du fond
+   `#07070f` de l'éditeur et de ses libellés quasi blancs. Sur un A4 en mode papier — fond crème,
+   encre sombre — cela produit deux rectangles noirs au milieu du document : le dernier défaut
+   encore visible à l'œil sur un export, relevé en C14 §7 quater et confirmé le 2026-08-12 sur un
+   PNG A4 réellement téléchargé et regardé.
+
+   Corriger le seul FOND aurait rendu le texte des nœuds illisible (blanc sur crème) — c'est
+   pourquoi le point était resté ouvert. On bascule donc fond ET encre ensemble.
+
+   `.export-paper` est posée par le template quand il passe en mode papier (`isPaperMode`), donc à
+   un seul endroit : aucun composant de canevas n'a à connaître ce mode, et l'éditeur ne reçoit
+   jamais ces règles. */
+.export-paper .graph-canvas-shell,
+.export-paper .graph-canvas-shell .react-flow,
+.export-paper .graph-canvas-shell .react-flow__background {
+    background: #f8fafc;
+    background-color: #f8fafc;
+}
+
+.export-paper .graph-canvas-shell .react-flow__background pattern {
+    fill: rgba(15, 23, 42, 0.10);
+}
+
+/* Cartes de nœud : le verre sombre devient un aplat clair bordé. */
+.export-paper .cultivar-node {
+    background: rgba(15, 23, 42, 0.04);
+    backdrop-filter: none;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.12);
+}
+
+/* Encre du document (slate-900/700), pas le blanc de l'éditeur. */
+.export-paper .node-label,
+.export-paper .node-batch {
+    color: #0f172a;
+}
+
+.export-paper .genetics-type,
+.export-paper .genetics-breeder,
+.export-paper .node-generation {
+    color: #334155;
+}
+
+/* Libellés d'arête : ce sont des `<text>` SVG, donc `fill` et non `color`. */
+.export-paper .react-flow__edge-text {
+    fill: #0f172a;
+}
+
+.export-paper .react-flow__edge-textbg {
+    fill: #f8fafc;
+}
+
+/* Libellés d'arête rendus en HTML (`edgelabel-renderer`), pas en SVG : ils portent des classes
+   utilitaires pensées pour le fond sombre de l'éditeur (texte clair sur pastille sombre). Sur le
+   fond papier, le premier passage les a laissés tels quels — mesuré aussitôt : contraste 1,46:1,
+   soit une régression introduite par le mode papier lui-même. On bascule donc l'encre ET la
+   pastille, comme pour les nœuds. */
+.export-paper .react-flow__edgelabel-renderer div {
+    color: #0f172a;
+    background-color: #f8fafc;
+    border-color: rgba(15, 23, 42, 0.20);
+}

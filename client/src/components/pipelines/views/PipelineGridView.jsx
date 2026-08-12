@@ -68,6 +68,22 @@ const PipelineGridView = ({
     // premières lignes et perdrait le reste sans aucun signal. Les deux chemins partagent le même
     // `renderCell`, donc la grille de l'export est celle des formulaires, pas une imitation.
     staticRender = false,
+    // Le clic sur une case fait-il RÉELLEMENT quelque chose ?
+    //
+    // `cursor-pointer` était posé sans condition, y compris sur l'arbre monté pour la CAPTURE :
+    // 285 éléments annonçaient une cliquabilité qu'un PNG n'a pas, et l'auditeur les comptait à
+    // juste titre comme cibles tactiles hors norme (1908 avertissements E12, ~14px de haut). Une
+    // affordance doit être additive et ne jamais survivre à l'export — c'est la règle qui a déjà
+    // évité une régression de capture sur ce module. Vrai par défaut : le formulaire, lui, est
+    // toujours cliquable.
+    interactiveCells = true,
+    // MÉDIAS par index de case, canal SÉPARÉ des mesures.
+    //
+    // `cells` ne porte que des MESURES : l'appelant en exclut délibérément `media`/`photos`, qui
+    // sont des pièces jointes et non des grandeurs (cf. `getCellFields`). Les y remettre les
+    // ferait compter comme des données de cellule — dans les pastilles, dans le « N/N documentées »
+    // et dans la modale. D'où ce second canal, lu par le seul fond de case.
+    cellsMedia = {},
     // 'fit' (défaut, inchangé) ou 'fill' quand la grille est rendue en TRANCHES successives qui
     // doivent partager la même trame — cf. le commentaire sur `gridTemplateColumns`.
     fillMode = 'fit',
@@ -443,6 +459,20 @@ const PipelineGridView = ({
     // sombre sur un fond sombre.
     const getIntensityTextClass = () => 'text-white';
 
+    /** Fond photo d'une case, voile de lisibilité compris. `{}` si l'étape n'a pas de média. */
+    const mediaBackground = (index) => {
+        const media = Array.isArray(cellsMedia[index]) ? cellsMedia[index] : [];
+        // Les vidéos ne sont pas des fonds : une balise `<video>` ne se met pas en
+        // `background-image`, et un export est de toute façon une image fixe.
+        const premiere = media.find((m) => m && m.url && m.type !== 'video');
+        if (!premiere) return {};
+        return {
+            backgroundImage: `linear-gradient(rgba(2, 6, 12, 0.62), rgba(2, 6, 12, 0.80)), url("${String(premiere.url).replace(/"/g, '\\"')}")`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+        };
+    };
+
     // PASTILLES DE MESURE de la case — les 🌡️ 💧 ⚡ du formulaire.
     //
     // Table d'icônes locale supprimée le 2026-08-06 : c'était la CINQUIÈME de l'app pour la
@@ -539,6 +569,10 @@ const PipelineGridView = ({
             <div style={{ ...style, padding: 4 }} key={cellIndex}>
                 <motion.div
                     data-testid={`pipeline-cell-${cellIndex}`}
+                    // Une cellule gère elle-même son clic (détail de l'étape) : elle est donc
+                    // exclue du zoom au bloc, qui s'applique partout ailleurs dans le rendu.
+                    // Arbitrage acté : la cible la plus spécifique l'emporte.
+                    data-zoom-skip=""
                     whileHover={{ scale: config.intervalType === 'phases' ? 1.05 : 1.12, zIndex: 10 }}
                     whileTap={{ scale: 0.98 }}
                     onPointerDown={(e) => {
@@ -586,6 +620,22 @@ const PipelineGridView = ({
                     style={{
                         width: '100%', height: '100%',
                         backgroundColor: getIntensitySurface(intensity, isSelected, isHovered, isDragOver, hasData),
+                        // PHOTO D'ÉTAPE. Une image attachée à une cellule n'apparaissait dans AUCUN
+                        // export : mesuré le 2026-08-13, 39 cases rendues, 0 portant son média —
+                        // alors que le formulaire propose de l'attacher et que l'éditeur l'affiche
+                        // en fond (`PipelineCellMediaPreview`). Une donnée réelle qui n'existe que
+                        // dans le formulaire contredit le contrat de ce chantier : rien ne doit
+                        // n'exister qu'à l'écran.
+                        //
+                        // Rendue en FOND plutôt qu'en nœud ajouté : pas de nouvel élément à empiler
+                        // (un enfant positionné passerait au-dessus du libellé), pas de hauteur en
+                        // plus, donc aucun effet sur la pagination déjà mesurée. Le voile sombre
+                        // fait partie de la même pile de fonds : il s'applique forcément PAR-DESSUS
+                        // la photo, ce qui garde le libellé (toujours blanc, cf.
+                        // `getIntensityTextClass`) au-dessus du seuil de contraste quelle que soit
+                        // l'image. Première image seulement : la case fait ~80px, une galerie n'y
+                        // serait pas lisible — le détail complet reste dans la modale de cellule.
+                        ...mediaBackground(cellIndex),
                         ...(staticRender ? { contain: 'layout paint', minHeight: 0 } : {}),
                     }}
                     // `opacity-75` retiré du mode lecture seule. Il ne signalait rien — le rendu est
@@ -594,7 +644,7 @@ const PipelineGridView = ({
                     // pastilles. Il échappait en prime à la règle de contraste : `effectiveBackground`
                     // empile les fonds translucides mais ne connaît pas l'`opacity` d'un ancêtre, si
                     // bien que la perte de lisibilité qu'il causait n'était mesurée nulle part.
-                    className={`pipeline-cell relative cursor-pointer flex flex-col items-start justify-between rounded-lg border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver, hasData)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : ''}`}
+                    className={`pipeline-cell relative ${interactiveCells ? 'cursor-pointer' : ''} flex flex-col items-start justify-between rounded-lg border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver, hasData)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : ''}`}
                 >
                     {/* CARTE DE PHASE — même contenu, dans le même ordre, que la case de l'éditeur
                         (`PipelineDragDropView.jsx`) : emoji de phase, nom, information secondaire,

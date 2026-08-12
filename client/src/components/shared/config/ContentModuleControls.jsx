@@ -5,6 +5,7 @@ import { Search, X } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { getFieldRegistry, GROUPS, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
 import { LiquidButton, LiquidInput } from '../../ui/LiquidUI';
+import ModuleOrderControls from './ModuleOrderControls';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // Ce panneau pilote `config.contentModules[<clé canonique>]` — LES MÊMES clés que
@@ -293,6 +294,13 @@ export default function ContentModuleControls() {
             <div className="flex gap-2 pt-2 border-t border-white/10">
                 <LiquidButton variant="primary" className="flex-1" onClick={() => setAll(true)}>✓ Tout afficher</LiquidButton>
                 <LiquidButton variant="ghost" className="flex-1" onClick={() => setAll(false)}>✕ Tout masquer</LiquidButton>
+            </div>
+
+            {/* Ordre des blocs — après les toggles : on choisit d'abord CE QU'ON MONTRE, ensuite
+                DANS QUEL ORDRE. La liste ci-dessous ne montre d'ailleurs que les blocs réellement
+                rendus, donc déjà filtrés par les réglages ci-dessus. */}
+            <div className="pt-4 border-t border-white/10">
+                <ModuleOrderControls />
             </div>
         </div>
     );

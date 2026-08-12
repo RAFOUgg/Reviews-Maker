@@ -3,6 +3,7 @@ import { persist } from 'zustand/middleware';
 import { COLOR_PALETTES, DEFAULT_TEMPLATES, TEMPLATE_MODULE_PRESETS, TEMPLATE_DEFAULT_IDENTITY } from './exportMakerConstants';
 import { useStore } from './useStore';
 import { getAllowedTemplates } from '../hooks/useAccountFeatures';
+import { sanitizeModuleOrder } from '../utils/adaptivePagination';
 
 /**
  * Le type de compte vit dans `useStore` (session), pas dans ce store (config de rendu). On le lit
@@ -335,62 +336,19 @@ const DEFAULT_CONFIG = {
         labResults: true
     },
 
-    // Ordre des modules (pour le drag-and-drop) - TOUS les champs
-    moduleOrder: [
-        // === ESSENTIEL ===
-        'image', 'title', 'holderName', 'rating', 'category', 'type',
-
-        // === NOTES GLOBALES ===
-        'categoryRatings',
-        'categoryRatings.visual', 'categoryRatings.smell',
-        'categoryRatings.taste', 'categoryRatings.effects',
-
-        // === DÉTAILS VISUELS ===
-        'densite', 'taille', 'texture', 'couleur', 'trichome',
-        'pistil', 'collant', 'manucure', 'uniformite', 'maturite',
-        'humidite', 'conservation', 'presentation', 'bubblingLevel',
-
-        // === DÉTAILS OLFACTIFS ===
-        'aromas', 'aromasIntensity', 'complexiteAromas', 'fideliteCultivars',
-
-        // === DÉTAILS TEXTURE ===
-        'durete', 'elasticite', 'friabilite', 'collantTexture', 'granularite',
-        'homogeneite', 'residus', 'stabilitePression', 'reactiviteChaleur',
-
-        // === DÉTAILS GOÛT ===
-        'tastes', 'tastesIntensity', 'intensiteFumee', 'agressivite',
-        'cendre', 'persistanceGout', 'evolutionGout', 'retroGout',
-        'complexiteGustative',
-
-        // === DÉTAILS EFFETS ===
-        'effects', 'effectsIntensity', 'montee', 'intensiteEffet',
-        'dureeEffet', 'dureeEffetDetail', 'typeEffet',
-
-        // === IDENTITÉ ===
-        'author', 'ownerName', 'date',
-
-        // === PROVENANCE ===
-        'cultivar', 'cultivarsList', 'breeder', 'farm', 'hashmaker',
-
-        // === NIVEAUX ===
-        'thcLevel', 'cbdLevel', 'strainType', 'indicaRatio', 'parentage', 'phenotypeCode',
-
-        // === PIPELINES ===
-        'pipelineExtraction', 'pipelineSeparation', 'pipelinePurification',
-        'fertilizationPipeline', 'substratMix', 'purgevide', 'sechage',
-
-        // === TERPÈNES ===
-        'terpenes',
-
-        // === DESCRIPTION ===
-        'description',
-
-        // === STICKERS ===
-        'stickerAvis', 'stickerNote', 'stickerRank', 'stickerBadge',
-
-        // === EXTRA ===
-        'extraData', 'tags', 'certifications', 'awards', 'labResults'
-    ],
+    // ORDRE DES BLOCS DE RENDU — vocabulaire des ids `data-module` (MODULE_META,
+    // `adaptivePagination.js`), le même que lisent la mesure de pagination et les 5 templates.
+    //
+    // Ce champ a porté jusqu'au 2026-08-12 une liste de ~100 CLÉS DE CHAMP (`densite`, `tastes`,
+    // `thcLevel`…) qu'AUCUN template n'a jamais lue : un réglage entièrement mort, et un second
+    // vocabulaire concurrent de celui des blocs réellement rendus. Les configs déjà enregistrées
+    // dans ce format sont purgées (`sanitizeModuleOrder`) — cf. le commentaire d'`isKnownModuleId`
+    // sur le danger d'un filtrage par recoupement.
+    //
+    // VIDE = ordre naturel du template, et c'est le défaut : chacun des 5 templates a son propre
+    // plan de lecture (cf. MODULE_GROUPS et les commentaires de placement dans les templates), un
+    // ordre unique codé ici les écraserait tous. Se remplit quand l'utilisateur réordonne.
+    moduleOrder: [],
 
     // Image et branding
     image: {
@@ -465,6 +423,10 @@ export function resolveExportMakerConfig(savedConfig) {
             ? savedConfig.templateLocked
             : false,
         image: resolveImageConfig(savedConfig?.image),
+        // Une review enregistrée avant le 2026-08-12 porte un `moduleOrder` en clés de champ, qui
+        // n'a jamais rien piloté. Maintenant que ce champ ORDONNE VRAIMENT les blocs, l'appliquer
+        // tel quel réordonnerait des fiches existantes au nom d'un ordre que personne n'a choisi.
+        moduleOrder: sanitizeModuleOrder(savedConfig?.moduleOrder),
     };
 }
 
@@ -676,8 +638,11 @@ export const useExportMakerStore = create(
                 config: { ...state.config, templateLocked: false, contentModules: { ...state.config.contentModules, ...modules } }
             })),
 
+            // Ordre des BLOCS de rendu (ids `data-module`, cf. `DEFAULT_CONFIG.moduleOrder`).
+            // Passer une liste vide rend la main au template : c'est le « Réinitialiser » de l'UI,
+            // pas un cas dégradé.
             reorderModules: (newOrder) => set((state) => ({
-                config: { ...state.config, templateLocked: false, moduleOrder: newOrder }
+                config: { ...state.config, templateLocked: false, moduleOrder: sanitizeModuleOrder(newOrder) }
             })),
 
             updateImage: (updates) => set((state) => ({
@@ -921,9 +886,9 @@ export const useExportMakerStore = create(
                 // Car l'ancien format avait seulement 13 modules
                 const contentModules = resolveContentModules(persistedState.config?.contentModules);
 
-                const moduleOrder = (persistedState.config?.moduleOrder?.length || 0) < 70
-                    ? [...DEFAULT_CONFIG.moduleOrder]
-                    : persistedState.config.moduleOrder;
+                // Purge du vocabulaire hérité (clés de champ) — la session locale en porte une copie
+                // au même titre que les reviews enregistrées, cf. `resolveExportMakerConfig`.
+                const moduleOrder = sanitizeModuleOrder(persistedState.config?.moduleOrder);
 
                 console.warn('   Using contentModules:', Object.keys(contentModules).length, 'modules');
                 console.warn('   Using moduleOrder:', moduleOrder.length, 'items');

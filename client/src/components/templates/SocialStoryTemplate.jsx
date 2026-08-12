@@ -9,6 +9,7 @@ import {
     resolveFontStack,
     ensureReadable,
     getImageRenderStyle,
+    getSelectedImages,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { templateSection } from '../../store/exportMakerConstants';
@@ -17,7 +18,8 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import ScoreBoard from './sections/ScoreBoard';
-import { GisementSections } from './sections/RegistrySections';
+import { GisementSection } from './sections/RegistrySections';
+import OrderedFlow from './sections/OrderedFlow';
 import FitToFill from './frame/FitToFill';
 
 // Phase B du plan de finition Export Maker (2026-08-02) : contrairement aux 3 autres templates
@@ -75,9 +77,18 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     const tastes = asArray(reviewData.tastes).slice(0, limits.maxTags);
     const { filled, value: ratingValue } = formatRating(reviewData.rating || 0, 5);
 
+    // Photos retenues (`config.image.selected`) et photo principale choisie (`selectedIndex`) — ce
+    // template lisait `reviewData.images[0]` en dur, donc les deux réglages y étaient inertes.
+    //
+    // PAS de mode galerie ici, et c'est délibéré : le hero est pensé bord-à-bord (`heroImage`), une
+    // grille de vignettes y casserait l'identité « story ». Même nature de décision que la police,
+    // que la Fiche Technique ignore volontairement — une exception assumée, pas un oubli.
+    const visibleImages = getSelectedImages(reviewData, config);
+    const selectedImgIndex = config.image?.selectedIndex ?? 0;
     const mainImage = resolveImageUrl(
-        reviewData.mainImageUrl || reviewData.imageUrl ||
-        (Array.isArray(reviewData.images) && reviewData.images[0])
+        visibleImages.length > 0
+            ? (visibleImages[selectedImgIndex] || visibleImages[0])
+            : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 
     const title = reviewData.title || reviewData.holderName || reviewData.productName || reviewData.name || '';
@@ -152,6 +163,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
             background: bg,
             // Repli aligné sur la pile de polices du site (tailwind.config.js > fontFamily.sans).
             fontFamily: resolveFontStack(typography?.fontFamily),
+            // Graisse du texte courant, par héritage (les titres/chiffres gardent la leur).
+            fontWeight: typography?.textWeight,
             color: white,
             display: 'flex',
             flexDirection: 'column',
@@ -257,6 +270,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 flex: '0 0 auto', display: 'flex', flexDirection: 'column',
                 padding: `${responsive.padding.container}px`, overflow: 'hidden', gap: responsive.spacing.section,
             }}>
+                <OrderedFlow moduleOrder={config.moduleOrder}>
                 {/* Identité : titre/cultivar/farm + note — un seul `data-module` (pagination
                     adaptative, Phase C). */}
                 {isPageOn('identity') && (
@@ -266,7 +280,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     {contentModules.title && title && (
                         <h1 style={{
                             fontSize: fontSize.title,
-                            fontWeight: 800,
+                            fontWeight: typography?.titleWeight,
                             lineHeight: 1.15,
                             margin: 0,
                             color: colors.title || white,
@@ -392,10 +406,11 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         </div>
                     );
                     return (
-                        <GisementSections
+                        <GisementSection
+                            group={rel.group}
+                            moduleId={`gisement:${rel.group}`}
                             reviewData={reviewData}
                             contentModules={contentModules}
-                            groups={[rel.group]}
                             Section={Section}
                             colors={{ accent, textPrimary: white, textSecondary: whiteMuted, title: colors.title || white }}
                             fontSize={fontSize}
@@ -491,6 +506,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                         terpologie.eu
                     </span>
                 </div>
+                </OrderedFlow>
             </div>
         </div>
         </FitToFill>

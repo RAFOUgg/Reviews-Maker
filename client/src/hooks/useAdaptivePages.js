@@ -77,6 +77,10 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
     const ratio = config?.ratio;
     const isCustomMode = !!config?.isCustomMode;
     const contentModulesSignature = config?.contentModules ? JSON.stringify(config.contentModules) : '';
+    // L'ordre des blocs fait partie de la clé : le packing est SÉQUENTIEL (cf. `computeAdaptivePages`),
+    // donc deux ordres différents produisent une répartition en pages différente à hauteurs
+    // identiques. Sans cette part de clé, réordonner un bloc laissait l'ancienne pagination en cache.
+    const moduleOrderSignature = Array.isArray(config?.moduleOrder) ? config.moduleOrder.join('>') : '';
 
     useEffect(() => {
         requestIdRef.current += 1;
@@ -108,19 +112,29 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
         setState({ pages: getDefaultPages(reviewData?.type, ratio), isAdaptive: false, isMeasuring: canAdapt });
         if (!canAdapt) return;
 
-        const cacheKey = `${reviewId}|${template}|${ratio}|${contentModulesSignature}|${JSON.stringify(config.typography || {})}`;
+        const cacheKey = `${reviewId}|${template}|${ratio}|${contentModulesSignature}|${moduleOrderSignature}|${JSON.stringify(config.typography || {})}`;
         getCachedMeasurement(cacheKey, reviewData, config)
             .then((heights) => {
                 if (requestIdRef.current !== requestId) return; // une mesure plus récente a démarré entre-temps
                 const { padding } = getResponsiveAdjustments(ratio, config.typography);
                 const adaptivePages = computeAdaptivePages(heights, ratio, padding.container, template);
-                if (adaptivePages.length >= 2) {
+                // UNE page mesurée vaut mieux que le repli statique.
+                //
+                // Le seuil était `>= 2` : dès que le contenu tenait sur une seule page, tout le
+                // résultat de la mesure était JETÉ au profit du gabarit statique. Or une page
+                // adaptative ne dit pas seulement « quels modules » : elle porte aussi son
+                // étirement élastique, son nombre de colonnes et son aération (cf.
+                // `computeAdaptivePages`). Les jeter revenait à priver de toute résorption
+                // exactement les rendus qui en ont le plus besoin — ceux d'une review peu fournie.
+                // Mesuré le 2026-08-12 sur la matrice complète : Fiche Technique 4:3 à 34 %,
+                // Rapport de Traçabilité A4 à 17,7 %, une vingtaine de pages sous les 65 %.
+                //
+                // Une page mesurée VIDE reste écartée : ce serait une mesure ratée, pas un rendu.
+                if (adaptivePages.length >= 1 && adaptivePages[0]?.modules?.length > 0) {
                     setState({ pages: adaptivePages, isAdaptive: true, isMeasuring: false });
                 } else {
                     setState((prev) => ({ ...prev, isMeasuring: false }));
                 }
-                // Sinon : on garde le repli statique déjà posé plus haut (contenu trop léger pour
-                // que la mesure produise plus d'une page, ou mesure vide).
             })
             .catch(() => {
                 // Mesure échouée — le repli statique reste en place (jamais d'export vide), mais on
@@ -128,9 +142,56 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
                 if (requestIdRef.current === requestId) setState((prev) => ({ ...prev, isMeasuring: false }));
             });
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [reviewId, template, ratio, isCustomMode, contentModulesSignature, enabled]);
+    }, [reviewId, template, ratio, isCustomMode, contentModulesSignature, moduleOrderSignature, enabled]);
 
     return state;
+}
+
+/**
+ * Ids des blocs que le template rend RÉELLEMENT pour cette review, dans leur ordre courant.
+ *
+ * Source unique : la mesure hors-écran (`measureDetailedCardModules`), qui monte le template complet
+ * et relève ses `[data-module]` dans l'ordre du DOM — donc l'ordre de lecture effectif, pas une
+ * liste tenue à la main quelque part. Toute autre méthode (énumérer ce qu'un template « devrait »
+ * rendre) serait un septième vocabulaire deviné.
+ *
+ * Partage le cache de `useAdaptivePages` : appelé sur la même review/config, il ne déclenche aucune
+ * mesure supplémentaire.
+ */
+export function useTemplateModuleIds(reviewData, config, { enabled = true } = {}) {
+    const [ids, setIds] = useState([]);
+    const requestIdRef = useRef(0);
+
+    const reviewId = reviewData?.id;
+    const template = config?.template;
+    const ratio = config?.ratio;
+    const contentModulesSignature = config?.contentModules ? JSON.stringify(config.contentModules) : '';
+    const moduleOrderSignature = Array.isArray(config?.moduleOrder) ? config.moduleOrder.join('>') : '';
+
+    useEffect(() => {
+        requestIdRef.current += 1;
+        const requestId = requestIdRef.current;
+        if (!enabled || !reviewData || !config || !template) { setIds([]); return; }
+
+        // Débounce : ce hook vit dans le panneau Contenu, à côté d'une centaine d'interrupteurs.
+        // Chaque bascule change `contentModules`, donc la clé de mesure. Sur les templates non
+        // paginés (Moderne Compact, Story), aucune autre mesure ne tourne pour partager le résultat :
+        // cocher dix cases enchaînerait dix montages hors-écran d'un template complet, canevas et
+        // requêtes réseau compris. On attend que la rafale se termine.
+        const timer = setTimeout(() => {
+            const cacheKey = `${reviewId}|${template}|${ratio}|${contentModulesSignature}|${moduleOrderSignature}|${JSON.stringify(config.typography || {})}`;
+            getCachedMeasurement(cacheKey, reviewData, config)
+                .then((heights) => {
+                    if (requestIdRef.current !== requestId) return;
+                    setIds([...heights.keys()]);
+                })
+                .catch(() => { if (requestIdRef.current === requestId) setIds([]); });
+        }, 600);
+        return () => clearTimeout(timer);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [reviewId, template, ratio, contentModulesSignature, moduleOrderSignature, enabled]);
+
+    return ids;
 }
 
 export default useAdaptivePages;

@@ -11,6 +11,7 @@ import {
     readableFontSize,
     TIMELINE_PIPELINES,
     getImageRenderStyle,
+    getSelectedImages,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
@@ -22,7 +23,8 @@ import TemplateSection from './sections/TemplateSection';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 // Base d'icônes unique — 4e et dernière copie locale de la même table supprimée.
 import { GROUP_ICONS } from '../../utils/fieldIcons';
-import { CannabinoidGrid, getCannabinoidItems, GisementSections } from './sections/RegistrySections';
+import { CannabinoidGrid, getCannabinoidItems, GisementSection } from './sections/RegistrySections';
+import OrderedFlow from './sections/OrderedFlow';
 
 const BUSINESS_TYPE_LABELS = {
     farm: 'Ferme', laboratory: 'Laboratoire', extractor: 'Extracteur',
@@ -139,9 +141,15 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     // (violet-500 par défaut : 4.42:1 sur le fond de l'app, sous le seuil AA en petit texte).
     const accentText = isLightColor(colors.textPrimary) ? ACCENT_TEXT_COLORS.onDark : ACCENT_TEXT_COLORS.onPaper;
 
+    // Photos RETENUES par l'utilisateur (`config.image.selected`) et photo principale choisie
+    // (`selectedIndex`) — ce template lisait `reviewData.images[0]` en dur : décocher une photo ou
+    // en désigner une autre comme principale n'avait aucun effet ici, alors que le panneau
+    // l'annonçait. Même source que les autres templates, jamais une lecture parallèle.
+    const visibleImages = getSelectedImages(reviewData, config);
+    const selectedImgIndex = config.image?.selectedIndex ?? 0;
     const mainImage = resolveImageUrl(
-        (Array.isArray(reviewData.images) && reviewData.images.length > 0)
-            ? reviewData.images[0]
+        visibleImages.length > 0
+            ? (visibleImages[selectedImgIndex] || visibleImages[0])
             : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 
@@ -212,6 +220,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 background: colors.background,
                 padding: `${padding.container}px`,
                 fontFamily: resolveFontStack(typography.fontFamily),
+                // Graisse du texte courant, par héritage : les nœuds qui déclarent la leur (titres,
+                // libellés, chiffres) gardent la hiérarchie propre du template.
+                fontWeight: typography.textWeight,
                 color: colors.textPrimary,
                 overflow: 'visible',
             }}
@@ -221,14 +232,28 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 {/* Vignette d'identité : 96px en dur donnaient une image quasi invisible sur un A4 de
                     2480px. Dimensionnée sur le contrat de format, bornée pour rester une vignette —
                     un rapport de traçabilité reste un document de texte, l'image l'accompagne. */}
-                {mainImage && (
+                {/* Mode galerie : les vignettes s'alignent en colonne dans la MÊME largeur que la
+                    vignette unique — un rapport de traçabilité reste un document de texte, l'image
+                    l'accompagne (cf. le dimensionnement de `thumbSize`). */}
+                {mainImage && (config.image?.showGallery && visibleImages.length > 1 ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: thumbSize, flexShrink: 0 }}>
+                        {visibleImages.slice(0, 3).map((img, ii) => (
+                            <img
+                                key={ii}
+                                src={resolveImageUrl(img)}
+                                alt=""
+                                style={{ ...getImageRenderStyle(config.image), width: '100%', height: thumbSize / 2, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12 }}
+                            />
+                        ))}
+                    </div>
+                ) : (
                     <img src={mainImage} alt="" style={{ ...getImageRenderStyle(config.image), width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12, flexShrink: 0 }} />
-                )}
+                ))}
                 <div style={{ flex: 1 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
                         Rapport de traçabilité — {reviewData.type || normalizeReviewType(reviewData.type)}
                     </div>
-                    <h1 style={{ fontSize: `${fontSize.title}px`, fontWeight: 800, color: colors.title, margin: '4px 0' }}>
+                    <h1 style={{ fontSize: `${fontSize.title}px`, fontWeight: typography.titleWeight, color: colors.title, margin: '4px 0' }}>
                         {reviewData.holderName || reviewData.title || 'Sans nom'}
                     </h1>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary }}>
@@ -253,6 +278,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 )}
             </div>
 
+            {/* L'en-tête (identité + lot + QR) reste en tête du document, comme le masthead des
+                autres templates : c'est la carte d'identité du rapport, pas un bloc de contenu. */}
+            <OrderedFlow moduleOrder={config.moduleOrder}>
             {/* Confiance producteur/labo (Chantier 5) */}
             {hasTrustInfo && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: `${spacing.section}px` }}>
@@ -326,16 +354,20 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
             {/* Gisement complémentaire piloté par le registre (récolte, culture, usage, procédés,
                 recette, données complémentaires) — absent de ce template jusqu'ici alors que Fiche
                 Détaillée l'affiche déjà via le même composant partagé (`GisementSections`). */}
-            <GisementSections
-                reviewData={reviewData}
-                contentModules={config.contentModules}
-                groups={GISEMENT_GROUPS}
-                Section={Section}
-                colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
-                fontSize={fontSize}
-                spacing={spacing}
-                groupIcons={GROUP_ICONS}
-            />
+            {GISEMENT_GROUPS.map((group) => (
+                <GisementSection
+                    key={group}
+                    group={group}
+                    moduleId={`gisement:${group}`}
+                    reviewData={reviewData}
+                    contentModules={config.contentModules}
+                    Section={Section}
+                    colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
+                    fontSize={fontSize}
+                    spacing={spacing}
+                    groupIcons={GROUP_ICONS}
+                />
+            ))}
 
             {/* Chaîne de production (vue interactive existante) */}
             {isPageOn('productionChainCanvas') && <div data-module="productionChainCanvas">
@@ -422,6 +454,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                     </div>
                 </Section>
             )}
+            </OrderedFlow>
         </div>
     );
 }

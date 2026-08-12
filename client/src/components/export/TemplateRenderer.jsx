@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import PropTypes from 'prop-types';
 import ModernCompactTemplate from '../templates/ModernCompactTemplate';
 import DetailedCardTemplate from '../templates/DetailedCardTemplate';
@@ -6,6 +7,7 @@ import SocialStoryTemplate from '../templates/SocialStoryTemplate';
 import TraceabilityReportTemplate from '../templates/TraceabilityReportTemplate';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
 import { InteractivityProvider } from './interactive/InteractiveContext';
+import BlockZoomOverlay from './interactive/BlockZoomOverlay';
 
 // Mapping des templates
 const TEMPLATES = {
@@ -25,7 +27,8 @@ const RATIO_DIMENSIONS = {
     'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
 };
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageStretch = null, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageStretch = null, pageColumns = null, pageGap = null, transparentBackground = false, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true }) {
+    const canvasRef = useRef(null);
     let TemplateComponent = TEMPLATES[config.template];
     const adaptedReviewData = buildExportReviewData(reviewData);
 
@@ -57,8 +60,16 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
     // champ non nommé identiquement (title/image/rating/...), cassant l'affichage. Pour une page
     // adaptative, `contentModules` reste donc intact (les réglages utilisateur globaux) et c'est
     // `DetailedCardTemplate`'s `isPageOn()` (piloté par `pageModuleIds`) qui restreint le contenu.
+    // `pageColumns` : une page dont le contenu tient dans une seule colonne se rend en une colonne
+    // (cf. `computeAdaptivePages`) — sinon `column-fill: balance` la coupe en deux moitiés côte à
+    // côte et laisse le bas de page vide. Décidé au packing, où l'on connaît les hauteurs mesurées ;
+    // le template ne fait que l'appliquer.
+    // `pageColumns` s'applique QUE la page soit filtrée ou non : un rendu à page unique reçoit lui
+    // aussi le nombre de colonnes décidé par la mesure. Il était auparavant imbriqué dans la branche
+    // `pageModuleIds`, donc silencieusement perdu sur ce chemin-là.
+    const pageOverrides = pageColumns ? { pageColumns } : {};
     const filteredConfig = pageModuleIds
-        ? { ...config, pageModuleIds }
+        ? { ...config, pageModuleIds, ...pageOverrides }
         : (activeModules && pageMode ? {
             ...config,
             contentModules: Object.fromEntries(
@@ -66,8 +77,9 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                     key,
                     activeModules.includes(key) ? value : false
                 ])
-            )
-        } : config);
+            ),
+            ...pageOverrides,
+        } : { ...config, ...pageOverrides });
 
     // `allowOverflow` : pas de hauteur fixe à annoncer via `data-height` — `ExportModal.jsx`'s
     // `prepareCapture()` lit `dataset.height` en PRIORITÉ sur la vraie hauteur mesurée
@@ -107,14 +119,33 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             .join('')
         : '';
 
+    // AÉRATION d'une page à une colonne dont aucun bloc ne peut s'étirer (cf. `computeAdaptivePages`) :
+    // le vide part dans les intervalles plutôt qu'en bas de page. `:last-child` exclu — une marge
+    // sous le dernier bloc rallongerait la page sans rien aérer.
+    const gapCss = pageGap
+        ? `#${canvasId} [data-module]:not(:last-child){margin-bottom:${pageGap}px}`
+        : '';
+
+    // FOND TRANSPARENT (option PNG de la modale d'export). Elle passait `backgroundColor:
+    // 'transparent'` à la capture — ce qui ne décide que du fond DERRIÈRE le nœud capturé, jamais
+    // du fond que le template peint lui-même sur sa racine. Vérifié sur un PNG réellement
+    // téléchargé le 2026-08-12 : alpha 255 dans le coin, soit une option strictement inerte.
+    // On neutralise donc le fond à la source, sur la racine du template — le seul élément qui le
+    // porte. Le `<style>` vit dans le canevas, donc il est sérialisé avec lui par html-to-image.
+    const transparentCss = transparentBackground
+        ? `#${canvasId} > *{background:transparent !important}`
+        : '';
+
     return (
         <div
+            ref={canvasRef}
             id={canvasId}
             className={className || undefined}
             data-width={dimensions.width}
             data-height={capturedHeight}
             data-ratio={config.ratio}
             data-stretch={stretchCss ? Object.keys(pageStretch).length : undefined}
+            data-gap={pageGap || undefined}
             style={{
                 width: dimensions.width,
                 // `allowOverflow` : la page publique /r/:id est un document vivant qui défile
@@ -132,7 +163,7 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             {/* Règle d'étirement de la page courante. Une balise `<style>` locale au canevas plutôt
                 qu'une feuille globale : deux pages montées simultanément (export multi-pages
                 hors-écran) portent chacune la sienne, sans se marcher dessus. */}
-            {stretchCss && <style>{stretchCss}</style>}
+            {(stretchCss || gapCss || transparentCss) && <style>{stretchCss + gapCss + transparentCss}</style>}
             {/* `interactive` (phase 7.1) : vrai à l'écran, faux sur les arbres montés pour la
                 capture (ExportModal monte les siens hors-écran) et pour la mesure de pagination.
                 Les composants interactifs le lisent via `useIsInteractive()` et n'attachent alors
@@ -145,6 +176,9 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
                     pageMode={pageMode}
                 />
             </InteractivityProvider>
+            {/* Zoom au clic — additif et strictement lié à `interactive` : jamais monté sur un
+                arbre de capture ni de mesure, donc invisible pour un export. */}
+            <BlockZoomOverlay containerRef={canvasRef} enabled={interactive} />
         </div>
     );
 }
@@ -164,6 +198,12 @@ TemplateRenderer.propTypes = {
     activeModules: PropTypes.arrayOf(PropTypes.string),
     pageModuleIds: PropTypes.arrayOf(PropTypes.string),
     pageStretch: PropTypes.object,
+    /** Nombre de colonnes imposé à CETTE page (1 sur une page légère) — voir computeAdaptivePages. */
+    pageColumns: PropTypes.number,
+    /** Espace supplémentaire entre blocs, pour aérer une page qu'aucun bloc élastique ne remplit. */
+    pageGap: PropTypes.number,
+    /** Neutralise le fond peint par le template — option « fond transparent » de l'export PNG. */
+    transparentBackground: PropTypes.bool,
     pageMode: PropTypes.bool,
     canvasId: PropTypes.string,
     className: PropTypes.string,

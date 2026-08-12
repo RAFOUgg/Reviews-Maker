@@ -105,6 +105,17 @@ export default function PipelineMiniGrid({
         return acc;
     }, {});
 
+    // Médias attachés à une étape, indexés comme les cases. Séparés des mesures pour la raison
+    // dite dans `getCellFields` : une photo n'est pas une grandeur. Elle doit pourtant se voir dans
+    // le fichier — mesuré le 2026-08-13 : 39 cases exportées, 0 photo, alors que le formulaire
+    // permet de l'attacher.
+    const gridMedia = cells.reduce((acc, c, i) => {
+        const entree = data.find(d => d && (String(d.timestamp) === String(c.timestamp) || String(d.phase) === String(c.timestamp)));
+        const media = entree && Array.isArray(entree.media) ? entree.media : null;
+        if (media && media.length > 0) acc[i] = media;
+        return acc;
+    }, {});
+
     const filledCount = cells.filter(c => {
         const f = getCellFields(c.timestamp);
         return f && Object.keys(f).length > 0;
@@ -144,6 +155,7 @@ export default function PipelineMiniGrid({
             <div key={chunk.id || 'all'} data-module={chunk.id || undefined}>
             <PipelineGridView
                 cells={gridCells}
+                cellsMedia={gridMedia}
                 config={config}
                 // Description des cases DÉJÀ calculée ici par `generatePipelineCells` — la grille
                 // la dérivait de son côté, avec un vocabulaire de config qui n'existe nulle part
@@ -158,6 +170,9 @@ export default function PipelineMiniGrid({
                 cellIndices={chunk.indices}
                 readonly
                 staticRender
+                // Un PNG ne se clique pas : sur l'arbre de capture/mesure, la case ne doit annoncer
+                // aucune cliquabilité (cf. `interactiveCells`).
+                interactiveCells={interactive}
                 fillMode={moduleId ? 'fill' : 'fit'}
                 canAddMore={false}
                 onCellClick={(index) => {

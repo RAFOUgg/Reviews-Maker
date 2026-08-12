@@ -5,6 +5,7 @@ import { useDocumentSeal } from '../../hooks/useDocumentSeal'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind, GitBranch, Workflow, Radar as RadarIcon, LineChart } from 'lucide-react'
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid'
+import BlockZoomOverlay from '../export/interactive/BlockZoomOverlay'
 import { GisementSections, isModuleOn } from '../templates/sections/RegistrySections'
 import { GROUP_ICONS } from '../../utils/fieldIcons'
 import UserMention from '../shared/UserMention'
@@ -82,7 +83,10 @@ function RegistrySection({ title, icon, children }) {
 /** Section de la Vue Détaillée : carte LiquidUI, titre à l'accent de la palette configurée. */
 function ViewSection({ icon: Icon, title, glow = 'purple', children }) {
     return (
-        <LiquidCard glow={glow} padding="lg">
+        // `data-zoom-block` : rend la carte agrandissable au clic (cf. `BlockZoomOverlay`). Attribut
+        // distinct de `data-module`, réservé aux blocs mesurés des templates de fichier — les deux
+        // vocabulaires ne doivent pas se mélanger, la pagination lit le second.
+        <LiquidCard glow={glow} padding="lg" data-zoom-block={title}>
             <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
                 <Icon className="w-5 h-5" style={{ color: 'var(--vd-accent)' }} />
                 {title}
@@ -239,15 +243,23 @@ export default function ReviewFullDisplay({ review, config }) {
         (aromeSubDetail || categoryByKey.smell) && { label: 'Arôme', value: aromeSubDetail?.value ?? categoryByKey.smell?.value },
     ].filter(Boolean)
 
+    // Racine de la vue — sert de périmètre d'écoute au zoom au clic.
+    const rootRef = useRef(null)
+
     const cultureSteps = Array.isArray(review.cultureTimelineData) ? review.cultureTimelineData : null
 
     return (
         <div
+            ref={rootRef}
             className="space-y-6"
             style={{ '--vd-accent': accent, fontFamily }}
         >
+            {/* Zoom au clic : la Vue Détaillée EST le rendu écran (`/r/:id`), c'est donc ici que la
+                demande « si on clique sur un element cela zoom dessus » se joue pour l'utilisateur
+                final. Additif : aucun bloc n'est modifié, seule une superposition s'ouvre. */}
+            <BlockZoomOverlay containerRef={rootRef} enabled />
             {/* Header Section */}
-            <LiquidCard glow="purple" padding="lg">
+            <LiquidCard glow="purple" padding="lg" data-zoom-block="Identité">
                 <div className="grid md:grid-cols-2 gap-6">
                     {/* Image principale */}
                     <div className="relative aspect-square rounded-xl overflow-hidden border border-white/10">

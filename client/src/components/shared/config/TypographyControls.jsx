@@ -1,4 +1,5 @@
 import { useExportMakerStore } from '../../../store/exportMakerStore';
+import { getResponsiveAdjustments } from '../../../utils/exportMakerHelpers';
 import { LiquidSelect, LiquidButton } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
 
@@ -35,9 +36,25 @@ const FONT_WEIGHTS = [
 ];
 
 
+// Un curseur qui continue de coulisser sans plus rien changer se lit comme un réglage cassé. Le
+// plafond dépend du FORMAT (un carré de 800px de haut ne tient pas la même typographie qu'un A4 de
+// 2480px), donc il ne peut pas être écrit dans les bornes du curseur : on l'annonce ici.
+function DepassementDomaine({ valeur, maximum, quoi }) {
+    if (!maximum || valeur <= maximum) return null;
+    return (
+        <p className="text-[11px] text-amber-300/80 -mt-3 leading-snug">
+            Au-delà de {maximum} px, {quoi} n&apos;augmente plus sur ce format : le contenu sortirait
+            du cadre. Choisissez un format plus grand pour aller plus loin.
+        </p>
+    );
+}
+
 export default function TypographyControls() {
     const config = useExportMakerStore((state) => state.config);
     const updateTypography = useExportMakerStore((state) => state.updateTypography);
+
+    // Même fonction que celle qui calcule réellement le rendu — pas une seconde table de seuils.
+    const { typographyLimits } = getResponsiveAdjustments(config.ratio, config.typography);
 
     return (
         <div className="space-y-6">
@@ -70,6 +87,7 @@ export default function TypographyControls() {
                 unit="px"
                 color="purple"
             />
+            <DepassementDomaine valeur={config.typography.titleSize} maximum={typographyLimits?.maxTitleSize} quoi="le titre" />
 
             {/* Graisse du titre */}
             <div>
@@ -102,6 +120,7 @@ export default function TypographyControls() {
                 unit="px"
                 color="purple"
             />
+            <DepassementDomaine valeur={config.typography.textSize} maximum={typographyLimits?.maxTextSize} quoi="le texte" />
 
             {/* Graisse du texte */}
             <div>

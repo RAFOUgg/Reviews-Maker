@@ -32,6 +32,13 @@ const NAME_FIELD = {
 const TYPE_LABEL = { flower: 'Fleurs', hash: 'Hash', concentrate: 'Concentré', edible: 'Comestible' };
 
 /** Chronologie de N étapes à conditions quasi stables, avec quelques divergences volontaires. */
+// PNG 2×2 valide, encodé en base64. Les fixtures n'avaient jusqu'ici JAMAIS de photo — or la photo
+// est le visuel principal d'une carte (Moderne Compact, Story). Auditer la composition d'une carte
+// sans image, c'est juger une mise en page amputée de son élément dominant.
+const TINY_PNG_B64 =
+    'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP8z8Dwn4GBgYGJAQkAAB'
+    + 'EeAQchsheAAAAAAElFTkSuQmCC';
+
 function timeline(n, base, deltas = {}) {
     return Array.from({ length: n }, (_, i) => {
         const day = i + 1;
@@ -72,7 +79,25 @@ export function buildFixture(type, density) {
     if (type === 'flower') {
         const culture = timeline(long ? 25 : 6,
             { temperature: 24, humidity: 68, co2Ppm: 888, ph: 6.2 },
-            { 12: { temperature: 27 }, 19: { humidity: 55, ph: 6.0 }, 22: { note: 'Défoliation légère' } });
+            {
+                12: { temperature: 27 },
+                19: { humidity: 55, ph: 6.0 },
+                // PHOTO D'ÉTAPE — angle mort du jeu de test jusqu'au 2026-08-13 (C14 §7 quater #5).
+                //
+                // Aucune fixture n'attachait de média à une cellule de pipeline, alors que le
+                // formulaire le permet et que la case le rend. Le rendu de ce cas n'était donc
+                // JAMAIS exercé : une mesure verte ne prouvait rien à son sujet. C'est exactement
+                // l'angle mort qui, une fois fermé sur les canevas (C14 §3), avait révélé une
+                // disparition de contenu en production.
+                //
+                // Forme reprise de `PipelineCellMediaPreview` (`{ url, type?, caption? }`), pas
+                // devinée. URL en `data:` : le rendu ne dépend d'aucun fichier servi, donc la
+                // mesure ne peut pas dépendre d'une course réseau.
+                22: {
+                    note: 'Défoliation légère',
+                    media: [{ url: `data:image/png;base64,${TINY_PNG_B64}`, caption: 'Défoliation' }],
+                },
+            });
         culture.forEach((c, i) => { c.phase = i < 7 ? 'Germination' : i < 17 ? 'Croissance' : 'Floraison'; });
         body.cultureTimelineData = JSON.stringify(culture);
         body.cultureTimelineConfig = JSON.stringify({ type: 'jour', totalDays: culture.length });
@@ -108,13 +133,6 @@ export function buildFixture(type, density) {
 
     return body;
 }
-
-// PNG 2×2 valide, encodé en base64. Les fixtures n'avaient jusqu'ici JAMAIS de photo — or la photo
-// est le visuel principal d'une carte (Moderne Compact, Story). Auditer la composition d'une carte
-// sans image, c'est juger une mise en page amputée de son élément dominant.
-const TINY_PNG_B64 =
-    'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP8z8Dwn4GBgYGJAQkAAB'
-    + 'EeAQchsheAAAAAAElFTkSuQmCC';
 
 function tinyPngBlob() {
     const bytes = Buffer.from(TINY_PNG_B64, 'base64');

@@ -17,6 +17,8 @@ import {
     getGlassTokens,
     ACCENT_TEXT_COLORS,
     getImageRenderStyle,
+    getSelectedImages,
+    orderRenderBlocks,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
@@ -27,10 +29,12 @@ import ReadOnlyGenealogyCanvas from '../export/interactive/ReadOnlyGenealogyCanv
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
 import ScoreMetric from './sections/ScoreMetric';
 import ScoreBoard from './sections/ScoreBoard';
-import { CannabinoidGrid, GisementSections } from './sections/RegistrySections';
+import { CannabinoidGrid, GisementSection } from './sections/RegistrySections';
+import OrderedFlow from './sections/OrderedFlow';
 import { templateSection } from '../../store/exportMakerConstants';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import FitToFill from './frame/FitToFill';
+import { useIsInteractive } from '../export/interactive/InteractiveContext';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — liste complète
 // (comme DetailedCardTemplate.jsx) : aucun de ces groupes n'a de rendu spécifique existant dans ce
@@ -44,6 +48,10 @@ const GISEMENT_GROUPS = ['harvest', 'culture', 'usage', 'separation', 'extractio
  * Adaptatif à tous les formats (1:1, 16:9, 9:16, 4:3, A4)
  */
 export default function ModernCompactTemplate({ config, reviewData, dimensions }) {
+    // AVANT le retour anticipé : un hook appelé après changerait l'ordre des hooks d'un rendu à
+    // l'autre, ce que React interdit (le même piège est déjà consigné dans `DetailedCardTemplate`).
+    const isInteractive = useIsInteractive();
+
     if (!config || !reviewData) {
         return (
             <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-8">
@@ -84,11 +92,15 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const terpenes = asArray(reviewData.terpenes).slice(0, limits.maxTags);
     const cultivars = asArray(reviewData.cultivarsList).slice(0, limits.maxTags);
 
-    // Image principale - respect du sélecteur d'index
+    // Image principale — sur les photos RETENUES (`config.image.selected`), pas sur `reviewData.
+    // .images` brut : ce template lisait la liste complète, donc décocher une photo la laissait
+    // apparaître en mode galerie et pouvait la désigner comme photo principale. Même source que les
+    // 4 autres templates (`getSelectedImages`), jamais une seconde lecture parallèle.
+    const visibleImages = getSelectedImages(reviewData, config);
     const selectedImgIndex = config.image?.selectedIndex ?? 0;
     const mainImage = resolveImageUrl(
-        (Array.isArray(reviewData.images) && reviewData.images.length > 0)
-            ? (reviewData.images[selectedImgIndex] || reviewData.images[0])
+        visibleImages.length > 0
+            ? (visibleImages[selectedImgIndex] || visibleImages[0])
             : (reviewData.mainImageUrl || reviewData.imageUrl || null)
     );
 
@@ -97,6 +109,9 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         container: {
             background: colors.background,
             fontFamily: resolveFontStack(typography.fontFamily),
+            // Graisse du texte courant, par héritage : `styles.text` ne couvrait que les nœuds qui
+            // l'appliquent explicitement, pas le texte courant du reste de la carte.
+            fontWeight: typography.textWeight,
             padding: `${padding.container}px`,
         },
         title: {
@@ -153,7 +168,11 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         </svg>
                     ))}
                 </div>
-                <span style={{ fontSize: `${typography.titleSize - 6}px`, fontWeight: '700', color: colors.textPrimary }}>
+                {/* `fontSize.title` (déjà mis à l'échelle ET plafonné par le ratio) et non
+                    `typography.titleSize - 6`, qui lisait la valeur BRUTE du curseur : c'était la
+                    dernière lecture du repo à court-circuiter le système d'échelle partagé, donc à
+                    grossir sans limite quel que soit le format. */}
+                <span style={{ fontSize: `${Math.max(14, fontSize.title - 6)}px`, fontWeight: '700', color: colors.textPrimary }}>
                     {ratingValue.toFixed(1)}/10
                 </span>
             </div>
@@ -177,8 +196,18 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
         );
     };
 
-    // Render empty state hint — subtle placeholder when module is enabled but data is missing
-    const renderEmptyHint = (icon, text) => (
+    // Encadré « ce module est activé mais vide ».
+    //
+    // Utile dans le STUDIO : il répond à « pourquoi ce bloc n'apparaît pas ? ». Dans le fichier
+    // livré, c'est du vide étiqueté — un encadré pointillé « ⚡ Effets ressentis » sur un PNG qu'on
+    // publie ou qu'on imprime. Le rendu doit montrer ce que la review CONTIENT, pas ce qu'elle ne
+    // contient pas (C14 §7 quater #2).
+    //
+    // `interactive` distingue exactement les deux : vrai à l'écran, faux sur tout arbre monté pour
+    // la capture ou la mesure. On le laisse donc à l'écran et on le retire du fichier — et comme la
+    // MESURE utilise elle aussi `interactive: false`, la pagination compte déjà la fiche sans ces
+    // encadrés : aucun décalage entre ce qui est mesuré et ce qui est capturé.
+    const renderEmptyHint = (icon, text) => !isInteractive ? null : (
         <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: `${spacing.gap}px`,
             padding: `${padding.card * 0.6}px ${padding.card}px`,
@@ -259,7 +288,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         et un nombre de pages gonflé artificiellement (trouvé en vérification sur une
                         review réelle en prod, ratio 1:1). */}
                     {contentModules.mainImage !== false && mainImage && isPageOn('mainImage') && (() => {
-                        const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                        const showGallery = config.image?.showGallery && visibleImages.length > 1;
                         const imageFrameStyle = {
                             border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
                             boxShadow: [
@@ -271,7 +300,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         if (showGallery) {
                             return (
                                 <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
-                                    {reviewData.images.slice(0, 2).map((img, ii) => (
+                                    {visibleImages.slice(0, 2).map((img, ii) => (
                                         <div key={ii} className="flex-1 overflow-hidden" style={{ /* `image.borderRadius` (le curseur « Coins arrondis ») et non `responsive.image.borderRadius`,
    qui est une constante dérivée du RATIO (8 ou 12px) et écrasait donc silencieusement le réglage :
    régler 40px ne changeait rien au rendu (signalé capture à l'appui le 2026-08-11). */
@@ -324,7 +353,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     2026-08-03 (placeholder emoji esseulé) et rend `null`. Cette branche était la
                     dernière occurrence : pas de photo ⇒ pas de module, donc pas de page. */}
                 {contentModules.mainImage !== false && mainImage && isPageOn('mainImage') && (() => {
-                    const showGallery = config.image?.showGallery && Array.isArray(reviewData.images) && reviewData.images.length > 1;
+                    const showGallery = config.image?.showGallery && visibleImages.length > 1;
                     const imageFrameStyle = {
                         border: `1px solid ${colorWithOpacity('#ffffff', 15)}`,
                         boxShadow: [
@@ -336,7 +365,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     if (showGallery) {
                         return (
                             <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
-                                {reviewData.images.slice(0, isSquare ? 2 : 3).map((img, ii) => (
+                                {visibleImages.slice(0, isSquare ? 2 : 3).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
                                         <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                     </div>
@@ -379,8 +408,15 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     );
                 })()}
 
-                {/* Contenu — pas de justify-center pour éviter l'espace vide en bas */}
-                <div className="flex flex-col overflow-hidden" style={{ gap: `${spacing.element}px` }}>
+                {/* Contenu — pas de justify-center pour éviter l'espace vide en bas.
+                    `flexShrink: 0` : ce bloc et l'image sont deux frères d'une colonne flex, et
+                    l'image est `1 1 auto`. Sans cette ligne, le navigateur répartit le manque de
+                    place ENTRE LES DEUX au prorata de leur taille — le texte se faisait donc
+                    comprimer puis découper par son propre `overflow-hidden` (mesuré : 320px de
+                    contenu dans 292px, E4b de la matrice, présent sur Moderne Compact 1:1 depuis
+                    des mois). L'image, elle, sait rétrécir sans rien perdre (`minHeight: 0`,
+                    `object-cover`) : c'est à elle d'absorber, jamais au texte. */}
+                <div className="flex flex-col overflow-hidden" style={{ gap: `${spacing.element}px`, flexShrink: 0 }}>
                     {renderContent()}
                 </div>
             </div>
@@ -389,7 +425,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     };
 
     const renderContent = () => (
-        <>
+        <OrderedFlow moduleOrder={config.moduleOrder}>
             {/* Masthead : titre/type/note/profil cannabinoïde/catégorie/provenance/parentage — un
                 seul bloc `data-module="masthead"` (pagination adaptative, Phase C) pour rester
                 groupé sur la première page, comme la couverture de `DetailedCardTemplate.jsx`. */}
@@ -538,16 +574,22 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
             {/* Gisement complémentaire — HORS CONTRAT pour ce template (matrice C4) : Moderne
                 Compact est une carte glanceable, pas un dossier technique. Il l'affichait, et
                 comme la carte ne se pagine pas, le contenu débordait à 313 % en 1:1. */}
-            {templateSection('modernCompact', 'gisement') && <GisementSections
-                reviewData={reviewData}
-                contentModules={contentModules}
-                groups={GISEMENT_GROUPS}
-                Section={Section}
-                colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
-                fontSize={fontSize}
-                spacing={spacing}
-                groupIcons={GROUP_ICONS}
-            />}
+            {/* Un `GisementSection` par groupe (et non un bloc unique) : enfants directs du flux,
+                donc déplaçables individuellement par `OrderedFlow`. */}
+            {templateSection('modernCompact', 'gisement') && GISEMENT_GROUPS.map((group) => (
+                <GisementSection
+                    key={group}
+                    group={group}
+                    moduleId={`gisement:${group}`}
+                    reviewData={reviewData}
+                    contentModules={contentModules}
+                    Section={Section}
+                    colors={{ accent: colors.accent, textPrimary: colors.textPrimary, textSecondary: colors.textSecondary, title: colors.title }}
+                    fontSize={fontSize}
+                    spacing={spacing}
+                    groupIcons={GROUP_ICONS}
+                />
+            ))}
 
             {/* Pipelines — riche avec métriques. `pipelines` (déjà filtré par
                 `filterVisiblePipelines(extractPipelines(reviewData), contentModules)` ci-dessus,
@@ -569,10 +611,16 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                 const surCettePage = actifs.filter((t) => !pageModuleIds
                     || [...pageModuleIds].some((id) => id === `pipeline:${t.type}` || id.startsWith(`pipeline:${t.type}#`)));
                 if (surCettePage.length === 0) return null;
+                // Les pipelines partagent un en-tête commun : ils se déplacent donc en bloc dans le
+                // flux, mais leur ordre INTERNE suit `moduleOrder` comme n'importe quel autre bloc.
+                const ordonnes = orderRenderBlocks(
+                    surCettePage.map((t) => ({ id: `pipeline:${t.type}`, t })),
+                    config.moduleOrder,
+                ).map((b) => b.t);
                 return (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: `${spacing.gap}px`, flexShrink: 0 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.textSecondary, textAlign: 'center' }}>⚙️ Pipelines</div>
-                    {surCettePage.map((t) => (
+                    {ordonnes.map((t) => (
                         <PipelineMiniGrid
                             key={t.type}
                             type={t.type}
@@ -639,7 +687,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     </span>
                 )}
             </div>
-        </>
+        </OrderedFlow>
     );
 
     return (
