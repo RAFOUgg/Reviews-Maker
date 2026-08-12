@@ -60,17 +60,56 @@ export default function CultureStatsChart({ steps, pipelineType, width = 560, he
 
     if (dataKeys.length === 0) return null;
 
+    // ── UN AXE PAR ORDRE DE GRANDEUR ───────────────────────────────────────────────────────────
+    //
+    // Toutes les séries partageaient un axe Y unique. Or un pipeline de culture mélange des mesures
+    // sans commune mesure : CO₂ ~800 ppm, PPFD ~600, température ~22 °C, pH ~6, EC ~1,4. Sur une
+    // échelle commune, tout ce qui est en dessous de la centaine s'écrase en une ligne plate au ras
+    // de l'axe — le graphique affichait donc deux bandes illisibles au lieu de douze mesures
+    // (signalé le 2026-08-12, capture à l'appui).
+    //
+    // On regroupe par ORDRE DE GRANDEUR observé, pas par nom de champ : aucune liste à maintenir, et
+    // un champ ajouté demain au formulaire trouve sa place tout seul — même principe que
+    // `getOverflowFields` pour les champs non curés.
+    const maxParSerie = new Map(dataKeys.map((k) => [
+        k,
+        chartData.reduce((max, row) => (Number.isFinite(row[k]) ? Math.max(max, Math.abs(row[k])) : max), 0),
+    ]));
+    const ordreDe = (v) => (v >= 100 ? 'centaines' : v >= 10 ? 'dizaines' : 'unites');
+    const groupes = [];
+    ['centaines', 'dizaines', 'unites'].forEach((ordre) => {
+        const cles = dataKeys.filter((k) => ordreDe(maxParSerie.get(k) || 0) === ordre);
+        if (cles.length > 0) groupes.push({ ordre, cles });
+    });
+
+    // La hauteur TOTALE reste celle demandée : le budget de pagination l'a déjà mesurée, la changer
+    // ici décalerait la mise en page sans que le paginateur le sache.
+    const hauteurGroupe = Math.max(72, Math.floor(height / groupes.length));
+    let indexCouleur = 0;
+
     return (
-        <LineChart width={width} height={height} data={chartData} margin={{ top: 4, right: 8, bottom: 4, left: -12 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={lineColor} />
-            <XAxis dataKey="index" stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} />
-            <YAxis stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} />
-            <Tooltip contentStyle={{ background: '#16201B', border: `1px solid ${lineColor}`, borderRadius: 8, fontSize: MIN_FONT_PX }} labelStyle={{ color: textColor }} />
-            <Legend wrapperStyle={{ fontSize: MIN_FONT_PX, color: textColor }} />
-            {dataKeys.map((key, idx) => (
-                <Line key={key} type="monotone" dataKey={key} stroke={seriesColors[idx % seriesColors.length]} strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} isAnimationActive={false} />
-            ))}
-        </LineChart>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+            {groupes.map(({ ordre, cles }) => {
+                const couleurs = cles.map(() => seriesColors[indexCouleur++ % seriesColors.length]);
+                return (
+                    <LineChart key={ordre} width={width} height={hauteurGroupe} data={chartData}
+                        margin={{ top: 4, right: 8, bottom: 4, left: -12 }}>
+                        <CartesianGrid strokeDasharray="3 3" stroke={lineColor} />
+                        {/* L'axe des étapes n'est légendé que sous le dernier graphique : les trois
+                            partagent exactement les mêmes abscisses, le répéter mangerait de la
+                            hauteur utile pour redire la même chose. */}
+                        <XAxis dataKey="index" stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }}
+                            hide={ordre !== groupes[groupes.length - 1].ordre} />
+                        <YAxis stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} width={34} />
+                        <Tooltip contentStyle={{ background: '#16201B', border: `1px solid ${lineColor}`, borderRadius: 8, fontSize: MIN_FONT_PX }} labelStyle={{ color: textColor }} />
+                        <Legend wrapperStyle={{ fontSize: MIN_FONT_PX, color: textColor }} />
+                        {cles.map((key, idx) => (
+                            <Line key={key} type="monotone" dataKey={key} stroke={couleurs[idx]} strokeWidth={2} dot={{ r: 2.5 }} activeDot={{ r: 4 }} isAnimationActive={false} />
+                        ))}
+                    </LineChart>
+                );
+            })}
+        </div>
     );
 }
 
