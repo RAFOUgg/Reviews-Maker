@@ -63,6 +63,27 @@ export const GROUP_LABELS = {
     overflow: 'Données supplémentaires',
 };
 
+// ── FAMILLES ──────────────────────────────────────────────────────────────────────────────────
+// Dix-neuf groupes à plat, c'est une liste qu'on parcourt ; on ne s'y repère pas. Demande de
+// l'utilisateur (2026-08-13) : « dans contenus, regroupe les contenus par genre : culture, analyse,
+// notes objectives ». Les familles ne remplacent pas les groupes — elles les rangent. Un champ
+// garde son groupe (qui pilote le rendu, `GISEMENT_GROUPS`), la famille n'existe que pour la
+// navigation dans le panneau.
+export const FAMILIES = [
+    { id: 'identite', label: 'Identité', icon: '🪪', groups: ['presentation', 'general', 'genetics'] },
+    { id: 'production', label: 'Culture & production', icon: '🌱', groups: ['culture', 'harvest', 'curing', 'separation', 'extraction', 'purification', 'recipe'] },
+    { id: 'analyse', label: 'Analyse', icon: '🔬', groups: ['analytics', 'lab'] },
+    { id: 'notes', label: 'Notes sensorielles', icon: '⭐', groups: ['visual', 'smell', 'texture', 'taste', 'effects', 'usage'] },
+    { id: 'tracabilite', label: 'Traçabilité', icon: '🔗', groups: ['traceability'] },
+    // Tout ce qui n'entre nulle part ailleurs, y compris les champs détectés dynamiquement.
+    { id: 'autres', label: 'Autres données', icon: '➕', groups: ['overflow'] },
+];
+
+/** Famille d'un groupe — `autres` par défaut, pour qu'aucun groupe ne disparaisse du panneau. */
+export function getFamilyOf(group) {
+    return FAMILIES.find((f) => f.groups.includes(group))?.id || 'autres';
+}
+
 /**
  * Normalise un type de produit hétérogène (`Fleurs`, `flower`, `Hash`, `concentré`, `Comestible`…)
  * vers l'une des 4 valeurs canoniques. (review.type n'a pas de casse uniforme entre les 4 types.)

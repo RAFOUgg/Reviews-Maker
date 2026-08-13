@@ -3,7 +3,7 @@ import { isModuleOn } from '../../templates/sections/RegistrySections';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, X } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
-import { getFieldRegistry, GROUPS, GROUP_LABELS, getOverflowFields } from '../../../utils/fieldRegistry';
+import { getFieldRegistry, GROUPS, GROUP_LABELS, getOverflowFields, FAMILIES, getFamilyOf } from '../../../utils/fieldRegistry';
 import { LiquidButton, LiquidInput } from '../../ui/LiquidUI';
 import ModuleOrderControls from './ModuleOrderControls';
 
@@ -273,20 +273,47 @@ export default function ContentModuleControls() {
                     )}
                 </div>
             ) : (
-                /* Vue par catégories */
-                <div className="space-y-3">
-                    {categories.map((category) => (
-                        <CategorySection
-                            key={category.key}
-                            category={category}
-                            contentModules={contentModules}
-                            reviewData={reviewData}
-                            onToggle={toggleContentModule}
-                            onToggleAll={handleToggleAll}
-                            expanded={expandedCategories[category.key] || false}
-                            onExpandToggle={() => toggleCategory(category.key)}
-                        />
-                    ))}
+                /* Vue par FAMILLES puis catégories.
+                   Dix-neuf catégories à plat formaient une liste qu'on parcourt sans s'y repérer.
+                   La famille ne change rien au rendu — elle range le panneau. */
+                <div className="space-y-4">
+                    {FAMILIES.map((famille) => {
+                        const dedans = categories.filter((c) => getFamilyOf(c.key) === famille.id);
+                        if (dedans.length === 0) return null;
+                        const champs = dedans.flatMap((c) => c.fields);
+                        const actifs = champs.filter((f) => isModuleOn(contentModules, f.key)).length;
+                        return (
+                            <div key={famille.id}>
+                                <div className="flex items-center gap-2 mb-2 px-1">
+                                    <span className="text-sm">{famille.icon}</span>
+                                    <span className="text-xs font-bold uppercase tracking-wider text-white/45">{famille.label}</span>
+                                    <span className="text-[11px] text-white/30">{actifs}/{champs.length}</span>
+                                    <span className="flex-1 h-px bg-white/10" />
+                                    <LiquidButton
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => dedans.forEach((c) => handleToggleAll(c, actifs < champs.length))}
+                                    >
+                                        {actifs < champs.length ? 'Tout activer' : 'Tout masquer'}
+                                    </LiquidButton>
+                                </div>
+                                <div className="space-y-2">
+                                    {dedans.map((category) => (
+                                        <CategorySection
+                                            key={category.key}
+                                            category={category}
+                                            contentModules={contentModules}
+                                            reviewData={reviewData}
+                                            onToggle={toggleContentModule}
+                                            onToggleAll={handleToggleAll}
+                                            expanded={expandedCategories[category.key] || false}
+                                            onExpandToggle={() => toggleCategory(category.key)}
+                                        />
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })}
                 </div>
             )}
 
