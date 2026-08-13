@@ -35,6 +35,8 @@ const TYPE_LABEL = { flower: 'Fleurs', hash: 'Hash', concentrate: 'Concentré', 
 // PNG 2×2 valide, encodé en base64. Les fixtures n'avaient jusqu'ici JAMAIS de photo — or la photo
 // est le visuel principal d'une carte (Moderne Compact, Story). Auditer la composition d'une carte
 // sans image, c'est juger une mise en page amputée de son élément dominant.
+import { deflateSync } from 'zlib';
+
 const TINY_PNG_B64 =
     'iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAYAAABytg0kAAAAFElEQVR4nGP8z8Dwn4GBgYGJAQkAAB'
     + 'EeAQchsheAAAAAAElFTkSuQmCC';
@@ -134,9 +136,66 @@ export function buildFixture(type, density) {
     return body;
 }
 
+// IMAGE DE TEST STRUCTURÉE — 96×96 : dégradé vertical, damier, diagonale.
+//
+// Le PNG de 2×2 ci-dessus suffit à prouver qu'une image EST LÀ et qu'elle occupe sa place, mais pas
+// à JUGER une mise en page : étalé en `object-cover` sur une carte, il donne un aplat uni.
+// Constaté le 2026-08-13 en inspectant un export Moderne Compact 1:1 — la moitié de la carte était
+// un rectangle rouge que rien ne distinguait d'une image cassée. Une inspection visuelle incapable
+// de séparer « photo bien cadrée » de « aplat » ne prouve rien.
+//
+// Ce motif a un haut et un bas distincts (dégradé), une trame régulière (damier) et une diagonale :
+// un recadrage, une déformation ou une inversion se voient immédiatement.
+function encodePng(cote, lignes) {
+    const table = [];
+    for (let n = 0; n < 256; n += 1) {
+        let c = n;
+        for (let k = 0; k < 8; k += 1) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+        table[n] = c >>> 0;
+    }
+    const crc32 = (buf) => {
+        let c = 0xffffffff;
+        for (const b of buf) c = table[(c ^ b) & 0xff] ^ (c >>> 8);
+        return (c ^ 0xffffffff) >>> 0;
+    };
+    const chunk = (type, data) => {
+        const len = Buffer.alloc(4); len.writeUInt32BE(data.length);
+        const corps = Buffer.concat([Buffer.from(type, 'ascii'), data]);
+        const crc = Buffer.alloc(4); crc.writeUInt32BE(crc32(corps));
+        return Buffer.concat([len, corps, crc]);
+    };
+    const ihdr = Buffer.alloc(13);
+    ihdr.writeUInt32BE(cote, 0); ihdr.writeUInt32BE(cote, 4);
+    ihdr[8] = 8; ihdr[9] = 2; // 8 bits par canal, RVB
+    const brut = Buffer.concat(lignes.map((l) => Buffer.concat([Buffer.from([0]), l])));
+    return Buffer.concat([
+        Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+        chunk('IHDR', ihdr),
+        chunk('IDAT', deflateSync(brut)),
+        chunk('IEND', Buffer.alloc(0)),
+    ]);
+}
+
+function motifTest(cote = 96) {
+    const lignes = [];
+    for (let y = 0; y < cote; y += 1) {
+        const ligne = Buffer.alloc(cote * 3);
+        for (let x = 0; x < cote; x += 1) {
+            const damier = ((x >> 4) + (y >> 4)) % 2 === 0 ? 24 : 0;
+            const diagonale = Math.abs(x - y) < 3 ? 90 : 0;
+            ligne[x * 3] = Math.min(255, 40 + Math.round((y / cote) * 120) + damier + diagonale);
+            ligne[x * 3 + 1] = Math.min(255, 90 + Math.round((x / cote) * 110) + damier + diagonale);
+            ligne[x * 3 + 2] = Math.min(255, 60 + Math.round(((cote - y) / cote) * 80) + damier);
+        }
+        lignes.push(ligne);
+    }
+    return encodePng(cote, lignes);
+}
+
+const IMAGE_TEST = motifTest();
+
 function tinyPngBlob() {
-    const bytes = Buffer.from(TINY_PNG_B64, 'base64');
-    return new Blob([bytes], { type: 'image/png' });
+    return new Blob([IMAGE_TEST], { type: 'image/png' });
 }
 
 /**
