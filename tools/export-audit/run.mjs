@@ -85,7 +85,7 @@ async function openPanel(page) {
  * qui part au fichier. On audite donc le livrable, pas son aperçu. Le bouton « Exporter » du
  * Studio l'ouvre avec la config de session — aucune sauvegarde ni navigation nécessaire.
  */
-async function auditViaExportModal(page, subjectId) {
+async function auditViaExportModal(page, subjectId, ratio) {
     // Étape 1 — figer la config de session sur la review. Vérifié à l'exécution : ouvrir la modale
     // DEPUIS le Studio n'y monte pas les pages (seul `#export-maker-canvas` existe). Le montage
     // hors-écran des `.export-maker-page` n'a lieu que depuis la page de détail, qui lit la config
@@ -101,6 +101,12 @@ async function auditViaExportModal(page, subjectId) {
     const trigger = page.getByRole('button', { name: /^Exporter$/ }).first();
     if (!(await trigger.count())) return null;
     await trigger.click();
+    // Le format vit désormais DANS la modale : on le choisit après l'avoir ouverte, avant d'attendre
+    // la mesure de pagination (qui dépend du format).
+    await sleep(1500);
+    const rBtn = page.locator('button', { hasText: RATIO_LABELS[ratio] }).first();
+    if (!(await rBtn.count()) || await rBtn.isDisabled().catch(() => false)) return { unsupported: true };
+    await rBtn.click();
     // 14s, et pas 7 : la mesure de pagination attend désormais que les blocs asynchrones se
     // résolvent (deux canevas × deux requêtes séquentielles chacun, cf. `waitForAsyncBlocks`), ce
     // qui peut dépasser 7s. Capturer trop tôt ne donne pas un résultat approximatif, il donne un
@@ -172,10 +178,10 @@ async function setupCombo(page, { id, type }, tpl, ratio) {
     await card.click();
     await sleep(1200);
 
-    const rBtn = page.locator('button', { hasText: RATIO_LABELS[ratio] }).first();
-    if (!(await rBtn.count()) || await rBtn.isDisabled().catch(() => false)) return 'absent';
-    await rBtn.click();
-    await sleep(2500);
+    // LE FORMAT N'EST PLUS DANS LE STUDIO (2026-08-13) : l'éditeur ne montre que le rendu écran,
+    // un document continu, et le cadre du fichier se choisit dans la modale d'export. Le harnais
+    // sélectionne donc le template ici, et le format là-bas (cf. `auditViaExportModal`).
+    await sleep(1500);
     return 'ok';
 }
 
@@ -197,7 +203,10 @@ async function auditReview(page, subject) {
             }
             if (status !== 'ok') continue;
 
-            const res = await auditViaExportModal(page, id);
+            const res = await auditViaExportModal(page, id, ratio);
+            // Format non proposé par ce template (une story n'a pas d'A4) : ce n'est pas un défaut,
+            // la combinaison n'existe pas.
+            if (res && res.unsupported) continue;
             const pages = (res || []).map((r, i) => ({ page: i + 1, ...r }));
             if (!pages.length) {
                 console.log(`  ⚠ ${label} · ${TEMPLATE_LABELS[tpl]} ${ratio} : aucune page montée`);

@@ -5,8 +5,6 @@ import { useExportMakerStore, resolveExportMakerConfig } from '../../../store/ex
 import { useExportConfigSave } from '../../../hooks/useExportConfigSave';
 import { useToast } from '../../shared/ToastContainer';
 import ConfigPane from '../config/ConfigPane';
-import PreviewPane from '../preview/PreviewPane';
-import PagedPreviewPane from './PagedPreviewPane';
 import ScreenPreviewPane from './ScreenPreviewPane';
 import ExportModal from '../../export/ExportModal';
 import { useExportMakerPagesStore } from '../../../store/exportMakerPagesStore';
@@ -220,7 +218,6 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     // montrer l'une ou l'autre explicitement. « Écran » est le défaut parce que c'est le rendu que
     // voit le public (`/r/:id`, galerie) ; « Fichier » reste le seul mode où pagination, ratio et
     // calibrage ont un sens, et c'est lui que capture le bouton Exporter.
-    const [previewMode, setPreviewMode] = useState('screen');
     const modalRef = useRef(null);
     const seededConfigForReviewId = useRef(null);
     const setReviewData = useExportMakerStore((state) => state.setReviewData);
@@ -436,27 +433,13 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 {effectiveMobileView === 'config' ? 'Voir le rendu' : 'Réglages'}
                             </button>
                         )}
-                        {showPreview && (
-                            <div className="flex items-center rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5 mr-1">
-                                {[
-                                    { id: 'screen', label: 'Écran', title: 'Le template choisi, fluide : il défile au lieu de se paginer' },
-                                    { id: 'file', label: 'Fichier', title: 'Template à canevas fixe — ce que produit l\'export PNG/PDF' },
-                                ].map((mode) => (
-                                    <button
-                                        key={mode.id}
-                                        onClick={() => setPreviewMode(mode.id)}
-                                        title={mode.title}
-                                        className={`px-2.5 py-1.5 rounded-md text-xs font-semibold transition-colors ${previewMode === mode.id
-                                            ? 'bg-white dark:bg-gray-700 text-purple-600 dark:text-purple-300 shadow-sm'
-                                            : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
-                                            }`}
-                                    >
-                                        {mode.label}
-                                    </button>
-                                ))}
-                            </div>
-                        )}
-
+                        {/* Plus de bascule Écran/Fichier.
+                            Deux rendus côte à côte dans l'éditeur obligeaient à choisir un mode
+                            avant de comprendre ce qu'on regardait — et le sélecteur de format, lui,
+                            restait cliquable en mode Écran où il ne fixe que la largeur : « c'est
+                            pas au format A4 », « c'est pas en 16:9 » (2026-08-13). Décision de
+                            l'utilisateur : on édite sur le rendu ÉCRAN, et la mise en page FICHIER
+                            (format, pagination) se règle au moment d'exporter, là où elle a un sens. */}
                         {/* Bouton Publier */}
                         {onPublish && (
                             <motion.button
@@ -561,11 +544,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                {previewMode === 'screen'
-                                    ? <ScreenPreviewPane reviewData={normalizedReview} config={config} />
-                                    : effectivePagesActive
-                                        ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
-                                        : <PreviewPane />}
+                                <ScreenPreviewPane reviewData={normalizedReview} config={config} />
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT
@@ -588,11 +567,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
                                 {/* Preview Pane - Right */}
                                 <div className={`flex-1 overflow-hidden min-w-0 min-h-[300px] ${effectiveMobileView === 'preview' ? 'block' : 'hidden'} md:block`}>
-                                    {previewMode === 'screen'
-                                        ? <ScreenPreviewPane reviewData={normalizedReview} config={config} />
-                                        : effectivePagesActive
-                                            ? <PagedPreviewPane autoActive={!pagesEnabled && effectivePagesActive} measuring={isMeasuring} />
-                                            : <PreviewPane />}
+                                    <ScreenPreviewPane reviewData={normalizedReview} config={config} />
                                 </div>
                             </motion.div>
                         )}

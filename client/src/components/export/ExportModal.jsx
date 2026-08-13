@@ -23,6 +23,7 @@ import {
     ACCOUNT_TYPES
 } from '../../config/exportConfig';
 import TemplateRenderer from './TemplateRenderer';
+import RatioSelector from '../shared/config/RatioSelector';
 import WatermarkEditor from './WatermarkEditor';
 import { DEFAULT_TEMPLATES } from '../../store/exportMakerConstants';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
@@ -107,10 +108,18 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
     // `resolveExportMakerConfig` répare aussi le cas d'un `exportMakerConfig` PRÉSENT mais périmé (moins de
     // modules que le schéma courant) — sans ça, une review déjà configurée avant l'ajout de
     // nouvelles clés à DEFAULT_CONFIG.contentModules affichait un export presque vide.
-    const config = resolveExportMakerConfig(configProp || storeConfig || {
+    // FORMAT DU FICHIER, propre à cet export — déclaré AVANT `config`, qui le lit.
+    // Placé plus bas dans le fichier, il produisait « Cannot access 'ratioExport' before
+    // initialization » et la modale ne s'ouvrait plus du tout (zone morte temporelle).
+    const [ratioExport, setRatioExport] = useState(null);
+
+    const configEnregistree = resolveExportMakerConfig(configProp || storeConfig || {
         template: 'detailedCard',
         ratio: DEFAULT_TEMPLATES.detailedCard.defaultRatio,
     });
+    // Le format choisi ICI prime sur celui enregistré : tout le reste du rendu (template, palette,
+    // modules, ordre) vient de la config de la review, seul le CADRE est un choix d'export.
+    const config = ratioExport ? { ...configEnregistree, ratio: ratioExport } : configEnregistree;
 
     // Pagination (Chantier Phase 2, corrigé 2026-07-27) : `useExportMakerPagesStore` est la session
     // d'édition Export Maker en cours — jamais persistée sur la review elle-même. Le chemin
@@ -952,10 +961,28 @@ export default function ExportModal({ onClose, reviewData: reviewDataProp, confi
                                 </div>
                                 <p className="text-xs text-gray-400 mt-2">Choisissez si vous voulez exporter l'aperçu complet, le rendu (canvas) seulement, ou optimiser l'export pour les réseaux sociaux.</p>
                             </div>
+                            {/* FORMAT DU FICHIER — il vit ici, pas dans l'éditeur.
+                                L'éditeur compose la fiche telle qu'elle s'affiche en ligne (document
+                                continu) ; le cadre — carré, paysage, A4 — ne concerne que le fichier
+                                produit. Dans l'éditeur, ces boutons ne changeaient rien de visible.
+                                Décision de l'utilisateur (2026-08-13) : un seul rendu à l'édition,
+                                la mise en page fichier au moment d'exporter. */}
+                            <div>
+                                <RatioSelector
+                                    compact
+                                    value={config.ratio}
+                                    template={config.template}
+                                    onChange={setRatioExport}
+                                />
+                                <p className="text-xs text-gray-400 mt-2">
+                                    Le cadre du fichier. La répartition du contenu s&apos;y adapte
+                                    automatiquement — les blocs sont mesurés puis répartis selon la place réelle.
+                                </p>
+                            </div>
                             {/* Format selection */}
                             <div>
                                 <div className="flex items-center justify-between mb-3">
-                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Format d'export</h4>
+                                    <h4 className="text-sm font-semibold text-gray-900 dark:text-white">Type de fichier</h4>
                                     <span className="text-xs px-2 py-1 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300">
                                         {ACCOUNT_PERMISSIONS[accountType]?.name || 'Amateur'}
                                     </span>

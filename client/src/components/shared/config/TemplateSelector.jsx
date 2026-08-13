@@ -163,34 +163,14 @@ export default function TemplateSelector() {
                 );
             })()}
 
-            {/* Sélecteur de ratio */}
-            <div>
-                <h4 className="text-sm font-semibold text-white/90 mb-2">
-                    Format d'affichage
-                </h4>
-                <div className="grid grid-cols-2 gap-1.5">
-                    {ratios.map((ratio) => {
-                        const currentTemplate = templates[config.template];
-                        const isSupported = currentTemplate?.supportedRatios.includes(ratio.id);
-
-                        return (
-                            <motion.button
-                                key={ratio.id}
-                                whileHover={isSupported ? { scale: 1.01 } : {}}
-                                whileTap={isSupported ? { scale: 0.99 } : {}}
-                                onClick={() => isSupported && setRatio(ratio.id)}
-                                disabled={!isSupported}
-                                className={`p-2 rounded-lg text-xs font-medium transition-all ${config.ratio === ratio.id ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : isSupported ? 'bg-white/5 border border-white/10 text-white/70 hover:bg-white/10' : 'bg-white/[0.02] text-white/25 cursor-not-allowed'}`}
-                            >
-                                <div className="flex items-center justify-center gap-1.5">
-                                    <span className="text-sm">{ratio.icon}</span>
-                                    <span className="text-[11px]">{ratio.name}</span>
-                                </div>
-                            </motion.button>
-                        );
-                    })}
-                </div>
-            </div>
+            {/* FORMAT ET PAGINATION SONT PARTIS À L'EXPORT.
+                Ils ne concernent que le FICHIER, et cet éditeur montre le rendu ÉCRAN — un document
+                continu. Les laisser ici, c'était offrir des boutons qui ne changeaient rien de
+                visible : « c'est pas au format A4 », « c'est pas en 16:9 » (2026-08-13). */}
+            <p className="text-[11px] text-white/40 leading-snug">
+                Le format du fichier (carré, paysage, A4…) et la mise en page se choisissent au moment
+                d&apos;exporter. Ici, vous composez la fiche telle qu&apos;elle s&apos;affiche en ligne.
+            </p>
             {/* ── PAGINATION TOGGLE ── masqué pour `traceabilityReport` : ce template est toujours
                 rendu comme un document continu (shouldAutoLockPagination l'exempte explicitement,
                 2026-08-02) — le contrôle restait affiché et fonctionnel en apparence (créait une
