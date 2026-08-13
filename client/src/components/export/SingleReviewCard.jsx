@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import PropTypes from 'prop-types'
 import TemplateRenderer from './TemplateRenderer'
+import { isTemplatePaginable } from '../../store/exportMakerConstants'
 import { resolveConfigForReview } from '../../store/exportMakerStore'
 
 const RATIO_DIMS = {
@@ -35,6 +36,21 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
     // continuent de lire la config de la review.
     const config = configOverride || resolveConfigForReview(reviewData, 'detailedCard')
     const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']
+
+    // CARTE ou DOCUMENT ? Les deux ne se rendent pas de la même façon, et les confondre casse
+    // visiblement les cartes.
+    //
+    // Moderne Compact et Story sont bâtis sur un canevas FIXE : racine en `h-full`, composition
+    // calée par `FitToFill`. Rendus en hauteur libre (`allowOverflow`), leur `h-full` n'a plus de
+    // référence, la hauteur retombe sur celle du contenu — et une Story demandée en CARRÉ sort plus
+    // large que haute. Signalé par l'utilisateur, capture à l'appui : « formats carré du template
+    // social media = problème rendu horizontal pas carré ». Le fichier exporté, lui, était bien
+    // carré (canevas 800×800, PNG 1600×1600) : le défaut était propre à l'aperçu écran.
+    //
+    // La distinction n'est pas réinventée ici : `TEMPLATE_PAGINATION` la porte déjà — un template
+    // non paginable EST une carte (« ce sont des CARTES, elles ne se paginent pas »), les trois
+    // autres sont des documents qui coulent.
+    const estCarte = !isTemplatePaginable(config?.template)
 
     // Mise à l'échelle sur la LARGEUR uniquement — la fiche est un document vivant censé défiler
     // normalement, pas un export figé à ratio fixe. Caler aussi sur la hauteur du viewport forçait
@@ -111,13 +127,15 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
             <div
                 ref={scaledBoxRef}
                 style={{
-                    width: dims.width, height: 'auto',
+                    width: dims.width,
+                    // Une carte garde la hauteur EXACTE de son ratio ; un document grandit.
+                    height: estCarte ? dims.height : 'auto',
                     transform: `scale(${fitScale})`, transformOrigin: 'top center', flexShrink: 0,
                     borderRadius: 12, overflow: 'visible', boxShadow: '0 20px 60px rgba(0,0,0,0.5)',
                     marginBottom: (fitScale < 1 && contentHeight) ? `${-(1 - fitScale) * contentHeight}px` : 0,
                 }}
             >
-                <TemplateRenderer config={config} reviewData={reviewData} canvasId={canvasId} allowOverflow />
+                <TemplateRenderer config={config} reviewData={reviewData} canvasId={canvasId} allowOverflow={!estCarte} />
             </div>
         </div>
     )

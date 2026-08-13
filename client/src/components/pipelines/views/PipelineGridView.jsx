@@ -644,8 +644,22 @@ const PipelineGridView = ({
                     // pastilles. Il échappait en prime à la règle de contraste : `effectiveBackground`
                     // empile les fonds translucides mais ne connaît pas l'`opacity` d'un ancêtre, si
                     // bien que la perte de lisibilité qu'il causait n'était mesurée nulle part.
-                    className={`pipeline-cell relative ${interactiveCells ? 'cursor-pointer' : ''} flex flex-col items-start justify-between rounded-lg border transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver, hasData)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : ''}`}
+                    // `border-2` comme le formulaire (`PipelineDragDropView` : `rounded-lg border-2`) : la
+                    // grille de l'export s'en tenait à 1px, et à taille de case égale ce seul trait
+                    // suffit à faire lire deux composants différents là où il n'y en a qu'un.
+                    className={`pipeline-cell relative ${interactiveCells ? 'cursor-pointer' : ''} flex flex-col items-start justify-between rounded-lg border-2 transition-all duration-200 box-border ${getIntensityColor(intensity, isSelected, isHovered, isDragOver, hasData)} ${!readonly ? 'hover:shadow-lg hover:shadow-blue-400/50' : ''}`}
                 >
+                    {/* Compteur de médias — l'éditeur le pose dès qu'une étape en porte plusieurs.
+                        Le fond de case n'en montre qu'UN : sans ce badge, rien ne dit que l'étape
+                        en compte d'autres, et l'information n'existerait que dans le formulaire. */}
+                    {(cellsMedia[cellIndex]?.length || 0) > 1 && (
+                        <span
+                            className="absolute -top-1.5 -left-1.5 z-20 w-4 h-4 rounded-full flex items-center justify-center text-[8px] font-bold text-white shadow-lg"
+                            style={{ background: 'rgb(124, 58, 237)', border: '1px solid rgba(10,10,18,0.9)' }}
+                        >
+                            {cellsMedia[cellIndex].length}
+                        </span>
+                    )}
                     {/* CARTE DE PHASE — même contenu, dans le même ordre, que la case de l'éditeur
                         (`PipelineDragDropView.jsx`) : emoji de phase, nom, information secondaire,
                         puis les pastilles des mesures documentées et leur compteur « +N ».
