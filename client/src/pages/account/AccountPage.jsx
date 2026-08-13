@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../../store'
+import { isCategoryLayoutGallery, setCategoryLayoutGallery } from '../../components/shared/charts/CategoryCarousel'
 import { motion } from 'framer-motion'
 import {
   CreditCard,
@@ -13,7 +14,8 @@ import {
   User,
   Check,
   Settings,
-  Building2
+  Building2,
+  LayoutGrid
 } from 'lucide-react'
 import { LiquidCard, LiquidButton, LiquidInput, LiquidSelect, LiquidToggle, LiquidTabs, LiquidAvatar, LiquidBadge } from '@/components/ui/LiquidUI'
 import ProfileSection from './sections/ProfileSection'
@@ -279,6 +281,8 @@ const AccountPage = () => {
 // ============== Section Components ==============
 
 function PreferencesSection({ preferences, handlePreferenceChange, visibilityOptions, language, handleLanguageChange, t }) {
+  const [categoriesGalerie, setCategoriesGalerie] = useState(() => isCategoryLayoutGallery())
+
   return (
     <div>
       <h3 className="text-2xl font-bold mb-6 text-white">{t('account.preferences') || 'Préférences'}</h3>
@@ -318,6 +322,30 @@ function PreferencesSection({ preferences, handlePreferenceChange, visibilityOpt
             options={visibilityOptions}
           />
           <p className="text-sm text-white/40 mt-2">Choix proposé par défaut lors de la publication d'une nouvelle review.</p>
+        </LiquidCard>
+
+        {/* Affichage des sélecteurs de catégories (arômes/goûts/effets).
+            Le carrousel horizontal est le défaut sur téléphone depuis le 2026-08-14 : en grille, dix
+            à quinze catégories font cinq à huit rangées et la question sort de l'écran. Ce réglage
+            rend la galerie à qui la préfère — demandé dans la foulée du carrousel. Il vit en
+            `localStorage` (`CategoryCarousel`) et non en base : c'est un confort d'affichage propre
+            à l'appareil, pas une donnée de compte. */}
+        <LiquidCard glow="cyan" padding="md">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-cyan-500/20 flex items-center justify-center">
+                <LayoutGrid size={16} className="text-cyan-400" />
+              </div>
+              <span className="font-semibold text-white text-sm">Catégories en galerie</span>
+            </div>
+            <LiquidToggle
+              checked={categoriesGalerie}
+              onChange={(checked) => { setCategoryLayoutGallery(checked); setCategoriesGalerie(checked); }}
+            />
+          </div>
+          <p className="text-sm text-white/40">
+            Afficher les catégories d'arômes, de goûts et d'effets en grille plutôt qu'en carrousel horizontal sur téléphone.
+          </p>
         </LiquidCard>
 
         {/* Auto-save — désactive réellement l'autosave des brouillons de review. */}

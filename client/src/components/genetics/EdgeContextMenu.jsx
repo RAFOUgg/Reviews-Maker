@@ -5,10 +5,10 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, MessageSquarePlus } from 'lucide-react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 
-const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isFamily, underlyingEdges }) => {
+const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isFamily, underlyingEdges, onPinDataBubble }) => {
     const store = useGeneticsStore();
     const menuRef = useRef(null);
     // Cf. NodeContextMenu.jsx : recale le menu s'il déborde du viewport près des bords.
@@ -181,6 +181,16 @@ const EdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, isF
                         <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
                     </button>
+                    {onPinDataBubble && (
+                        <button
+                            className="context-menu-item"
+                            onClick={() => { onPinDataBubble(edgeId); onClose(); }}
+                            style={{ fontWeight: 600 }}
+                        >
+                            <MessageSquarePlus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                            Épingler les données en bulle
+                        </button>
+                    )}
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
                 </>
             )}

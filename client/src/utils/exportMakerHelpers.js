@@ -2,7 +2,7 @@
  * Export Maker Helpers - Utilitaires centralisés pour le système Export Maker
  * Ces fonctions sont partagées entre tous les templates et renderers
  */
-import { getFieldLabel } from './fieldRegistry';
+import { getFieldLabel, getClaimedSources } from './fieldRegistry';
 import { isTemplatePaginable } from '../store/exportMakerConstants';
 
 /**
@@ -742,6 +742,20 @@ export function extractExtraData(extraData, reviewData = null) {
         }
     }  // end if (reviewData)
 
+    // ── NE MONTRER QUE CE QUE RIEN D'AUTRE NE MONTRE ───────────────────────────────────────────
+    //
+    // Ce bloc affichait « DENSITÉ VISUELLE 3 · TRICHOMES 2 · MANUCURE 8 · MOISISSURE 10 » en
+    // chiffres nus, alors que l'Évaluation sensorielle rend EXACTEMENT les mêmes champs juste
+    // au-dessus, sous forme de barres notées. Deux rendus de la même donnée, dont un sans échelle :
+    // « 2 trichomes ??? », « 10 graines », « 10 d'humidité ça ne veut rien dire » (2026-08-14).
+    //
+    // La cause est la liste de champs ci-dessus, tenue à la main en parallèle du registre — le
+    // défaut récurrent de ce module (7 occurrences documentées dans CLAUDE.md). On ne la remplace
+    // pas ici, mais on la SUBORDONNE : toute clé que le registre revendique déjà est rendue par le
+    // registre, et disparaît de ce bloc. Ce qui reste est ce qu'aucune section curée ne couvre —
+    // c'est-à-dire exactement ce que « Caractéristiques détaillées » est censé être.
+    const revendiquees = getClaimedSources(reviewData?.type || reviewData?.productType || reviewData?.typeProduit);
+
     const fieldDefs = [
         // Culture
         { key: 'typeCulture', label: 'Type de culture', icon: '🌿', category: 'culture' },
@@ -837,6 +851,8 @@ export function extractExtraData(extraData, reviewData = null) {
 
     const results = fieldDefs
         .filter(({ key }) => {
+            // Revendiqué par le registre ⇒ rendu par la section curée correspondante, pas ici.
+            if (revendiquees.has(key)) return false;
             const v = merged[key];
             if (v === undefined || v === null || v === '') return false;
             // Skip complex objects and arrays — they can't be rendered as InfoCard values
@@ -1336,8 +1352,13 @@ export const FORMAT_LAYOUT = {
     // la cible typographique (45-90, règle E5). L'image occupe une part généreuse : sur une page
     // web elle sert d'accroche, et rien ne la met en concurrence avec le reste puisque le document
     // défile au lieu de tenir dans une hauteur fixe.
-    'ecran-pc':     { imageShare: 0.55, columns: 2, orientation: 'landscape' },
-    'ecran-mobile': { imageShare: 0.60, columns: 1, orientation: 'portrait' },
+    // Part d'image nettement plus basse que sur un format de fichier, et c'est voulu : un export
+    // est une image qu'on regarde d'un bloc, une page web est un document qu'on PARCOURT. Une photo
+    // qui occupe la moitié du premier écran repousse tout le contenu sous la ligne de flottaison —
+    // signalé sur capture (2026-08-14, « erreurs d'affichage avec bcp d'image pas recalibrée »).
+    // La photo reste l'accroche, elle ne prend plus la place d'un chapitre.
+    'ecran-pc':     { imageShare: 0.40, columns: 2, orientation: 'landscape' },
+    'ecran-mobile': { imageShare: 0.34, columns: 1, orientation: 'portrait' },
 };
 
 /** Contrat de mise en page d'un format. Repli sur le carré pour un ratio inconnu. */

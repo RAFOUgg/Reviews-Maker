@@ -78,7 +78,7 @@ Dial.propTypes = {
 };
 
 /** Étiquette « point fort / point faible » : icône, libellé, note, pastille de bande. */
-function Highlight({ title, cat, colors, fontSize, paper }) {
+function Highlight({ title, cat, colors, fontSize, paper, max = 10 }) {
     if (!cat) return null;
     const band = getScoreBand(cat.value);
     return (
@@ -99,7 +99,7 @@ function Highlight({ title, cat, colors, fontSize, paper }) {
                     color: colors.textSecondary, fontWeight: 500,
                     textTransform: 'uppercase', letterSpacing: '0.04em',
                 }}>{title} · </span>
-                {cat.label} {cat.value.toFixed(1)}
+                {cat.label} {cat.value.toFixed(1)}/{max}
             </span>
         </div>
     );
@@ -107,6 +107,8 @@ function Highlight({ title, cat, colors, fontSize, paper }) {
 
 Highlight.propTypes = {
     title: PropTypes.string.isRequired,
+    /** Échelle de notation, écrite à côté de la note — « 8.0 » seul ne dit pas sur combien. */
+    max: PropTypes.number,
     cat: PropTypes.object,
     colors: PropTypes.object.isRequired,
     fontSize: PropTypes.number.isRequired,
@@ -156,8 +158,8 @@ export default function ScoreBoard({
                 <Dial value={globalValue} max={max} size={dialSize} stroke={compact ? 7 : 9} colors={colors} paper={paper} />
             )}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', minWidth: 0 }}>
-                <Highlight title="Point fort" cat={best} colors={colors} fontSize={base} paper={paper} />
-                <Highlight title="Point faible" cat={worst} colors={colors} fontSize={base} paper={paper} />
+                <Highlight title="Point fort" cat={best} colors={colors} fontSize={base} paper={paper} max={max} />
+                <Highlight title="Point faible" cat={worst} colors={colors} fontSize={base} paper={paper} max={max} />
             </div>
         </div>
     );

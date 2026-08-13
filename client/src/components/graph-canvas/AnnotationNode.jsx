@@ -89,12 +89,21 @@ const AnnotationNode = ({ data }) => {
             </div>
             {data.sourceLabel && <div className="chain-annotation-source">{data.sourceLabel}</div>}
             {body.length > 0 && (
-                <div className="chain-annotation-body">
+                <div className="chain-annotation-body nowheel">
                     {body.map((line, i) => (
-                        <div key={i} className="chain-annotation-line">
-                            <span className="chain-annotation-line-label">{line.label}</span>
-                            <span className="chain-annotation-line-value">{line.value}</span>
-                        </div>
+                        // `group: true` = intertitre (nom de la cellule / section d'origine), posé
+                        // par graphDataBubble.js quand une bulle rassemble PLUSIEURS blocs de
+                        // données du même élément. Sans lui, les lignes de 16 cellules attachées
+                        // s'enchaînent sans qu'on sache laquelle documente quoi. Les bulles
+                        // historiques (une seule cellule) n'ont pas cette clé et sont inchangées.
+                        line.group ? (
+                            <div key={i} className="chain-annotation-group">{line.label}</div>
+                        ) : (
+                            <div key={i} className="chain-annotation-line">
+                                <span className="chain-annotation-line-label">{line.label}</span>
+                                <span className="chain-annotation-line-value">{line.value}</span>
+                            </div>
+                        )
                     ))}
                 </div>
             )}

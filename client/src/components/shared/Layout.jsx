@@ -22,6 +22,16 @@ export default function Layout() {
         setMobileMenuOpen(false);
     }, [location.pathname]);
 
+    // Échap ferme le menu mobile (le clic sur le fond le fait déjà)
+    useEffect(() => {
+        if (!mobileMenuOpen) return;
+        const onKeyDown = (e) => {
+            if (e.key === 'Escape') setMobileMenuOpen(false);
+        };
+        window.addEventListener('keydown', onKeyDown);
+        return () => window.removeEventListener('keydown', onKeyDown);
+    }, [mobileMenuOpen]);
+
     // Navigation items - Only public pages in navbar (user links are in profile dropdown)
     const navItems = [
         { to: '/', label: 'Accueil', icon: Home, show: true },
@@ -132,7 +142,7 @@ export default function Layout() {
                         exit={{ opacity: 0 }}
                         className="fixed inset-0 z-[150] md:hidden"
                     >
-                        {/* Backdrop */}
+                        {/* Backdrop — un clic n'importe où à côté du panneau ferme le menu */}
                         <div
                             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
                             onClick={() => setMobileMenuOpen(false)}
@@ -144,7 +154,11 @@ export default function Layout() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                            className="absolute right-0 top-0 bottom-0 w-72 bg-[#0a0a1a]/95 backdrop-blur-xl border-l border-white/10"
+                            /* La bannière RDR est fixée en haut avec un z-index supérieur (z-[10000]) :
+                               sans ce décalage de 40px, elle recouvrait l'en-tête du panneau et rendait
+                               le bouton de fermeture ✕ impossible à cliquer (même convention que la
+                               navbar, `top-[40px]`). */
+                            className="absolute right-0 top-[40px] bottom-0 w-72 max-w-[85vw] bg-[#0a0a1a]/95 backdrop-blur-xl border-l border-white/10 overflow-y-auto"
                         >
                             {/* Header */}
                             <div className="flex items-center justify-between p-4 border-b border-white/10">

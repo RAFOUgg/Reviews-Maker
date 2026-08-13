@@ -310,7 +310,13 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
             <div style={{ marginBottom: spacing.gap + 3 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 4 }}>
                     <span style={{ fontSize: `${fontSize.small}px`, color: textSecondary }}>{label}</span>
-                    <span style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, fontWeight: 600, color: textPrimary }}>{Number(value).toFixed(1)}</span>
+                    {/* « /10 » explicite : sans échelle, « Trichomes 2 » ne veut rien dire — et
+                        laissait croire à une mesure physique (« on parle en densité au mm² »)
+                        alors que c'est une note d'appréciation. La barre donne la proportion,
+                        le suffixe donne l'unité de notation. */}
+                    <span style={{ fontFamily: MONO, fontSize: `${fontSize.small}px`, fontWeight: 600, color: textPrimary }}>
+                        {Number(value).toFixed(1)}<span style={{ color: textSecondary, fontWeight: 400 }}>/10</span>
+                    </span>
                 </div>
                 <div style={{ height: 6, borderRadius: 99, background: line, overflow: 'hidden' }}>
                     <motion.div
@@ -331,7 +337,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: spacing.element, paddingBottom: spacing.gap, borderBottom: `1px solid ${lineSoft}` }}>
                     <span style={{ width: 8, height: 8, borderRadius: '50%', background: dot, flexShrink: 0 }} />
                     <span style={{ fontFamily: DISPLAY, fontSize: `${fontSize.small + 1}px`, fontWeight: 600, letterSpacing: '0.05em', textTransform: 'uppercase', color: titleColor, whiteSpace: 'nowrap' }}>{title}</span>
-                    <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small}px`, color: textSecondary }}>moy {avg.toFixed(1)}</span>
+                    <span style={{ marginLeft: 'auto', fontFamily: MONO, fontSize: `${fontSize.small}px`, color: textSecondary }}>moy {avg.toFixed(1)}/10</span>
                 </div>
                 {metrics.map((m, i) => <Metric key={i} label={m.label} value={m.value} />)}
             </div>

@@ -25,6 +25,9 @@ import { Sprout, AlertTriangle, Image as ImageIcon } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
+import useGraphMultiSelection from '../graph-canvas/useGraphMultiSelection';
+import { buildGeneticsNodeBubble, buildGeneticsEdgeBubble, bubblePositionNear } from '../../utils/graphDataBubble';
+import { useToast } from '../shared/ToastContainer';
 // Store du CONTEXTE s'il existe, singleton global sinon — l'édition ne fournit aucun
 // contexte, son comportement est donc inchangé par construction.
 import { useGeneticsCanvasStore } from '../../store/scopedCanvasStores';
@@ -73,10 +76,13 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
     const store = useGeneticsCanvasStore();
     const { fitView, screenToFlowPosition } = useReactFlow();
     const { isMobile } = useResponsiveLayout();
+    const toast = useToast();
 
     // State local pour le canvas
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    // Sélection multiple (Ctrl/⌘ + clic, rectangle Maj + glisser) — cf. useGraphMultiSelection.js
+    const { selectedIds: multiSelectedIds, onSelectionChange, applySelection, resolveActionTargets } = useGraphMultiSelection(setNodes);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane'
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
@@ -154,6 +160,56 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
         setShowMediaBubbleImport(false);
         return result;
     }, [store, screenToFlowPosition]);
+
+    // ── Épingler les données d'un élément en bulle ──────────────────────────────────────────
+    // PhenoHunt n'avait AUCUN moyen d'afficher les données d'un individu sur l'arbre : le nœud
+    // n'affiche que nom/type/breeder, tout le reste (générations, sélection, caractères
+    // techniques…) n'existait qu'à l'intérieur du formulaire d'édition. Une bulle ancrée
+    // (GenAnnotation.nodeId → trait pointillé + suit le nœud) rend cette donnée lisible sur le
+    // graphe lui-même. Contenu bâti par utils/graphDataBubble.js à partir de PHENO_NODE_SECTIONS,
+    // la config qui génère le formulaire — jamais une liste de champs retranscrite à la main.
+    const handlePinNodeDataBubble = useCallback(async (nodeIds) => {
+        if (readOnly) return;
+        const ids = Array.isArray(nodeIds) ? nodeIds : [nodeIds];
+        let created = 0;
+
+        for (const [index, id] of ids.entries()) {
+            const node = store.nodes.find(n => n.id === id);
+            if (!node) continue;
+            const bubble = buildGeneticsNodeBubble(node);
+            const result = await store.addAnnotation({
+                ...bubble,
+                nodeId: id,
+                position: bubblePositionNear(node.position, index)
+            });
+            if (!result?.error) created++;
+        }
+
+        if (created === 0) toast.error("La bulle n'a pas pu être épinglée");
+        else toast.success(`${created} bulle${created > 1 ? 's' : ''} de données épinglée${created > 1 ? 's' : ''}`);
+    }, [readOnly, store, toast]);
+
+    const handlePinEdgeDataBubble = useCallback(async (edgeId) => {
+        if (readOnly) return;
+        const edge = store.edges.find(e => e.id === edgeId);
+        if (!edge) return;
+
+        const parent = store.nodes.find(n => n.id === edge.parentNodeId);
+        const child = store.nodes.find(n => n.id === edge.childNodeId);
+        const bubble = buildGeneticsEdgeBubble(edge, {
+            parentName: parent?.cultivarName || null,
+            childName: child?.cultivarName || null,
+            relationshipLabel: RELATIONSHIP_TYPE_LABELS[edge.relationshipType] || edge.relationshipType
+        });
+
+        const result = await store.addAnnotation({
+            ...bubble,
+            edgeId,
+            position: bubblePositionNear(parent?.position || child?.position, 1)
+        });
+        if (result?.error) toast.error("La bulle n'a pas pu être épinglée");
+        else toast.success('Bulle de données épinglée');
+    }, [readOnly, store, toast]);
 
     // Synchroniser les nœuds et arêtes du store vers React Flow
     useEffect(() => {
@@ -313,9 +369,32 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             }
         }));
 
-        setNodes([...rfNodes, ...rfAnnotationNodes]);
-        setEdges([...rfEdges, ...familyEdges]);
-    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
+        // Trait de rattachement pointillé entre une bulle ancrée à un individu (`nodeId`) et cet
+        // individu — même principe que ProductionChainCanvas.annotationLinkEdges. Sans lui, une
+        // bulle de données épinglée depuis le menu contextuel flottait sans rien indiquer de ce
+        // qu'elle documente, alors que le rattachement existe bien côté serveur (GenAnnotation.nodeId).
+        const annotationLinkEdges = (store.annotations || [])
+            .map(annotation => {
+                const anchorEdge = annotation.edgeId ? store.edges.find(e => e.id === annotation.edgeId) : null;
+                const anchorNodeId = annotation.nodeId || anchorEdge?.parentNodeId || null;
+                if (!anchorNodeId) return null;
+                return {
+                    id: `annotation-link-${annotation.id}`,
+                    source: anchorNodeId,
+                    target: annotation.id,
+                    type: 'straight',
+                    selectable: false,
+                    focusable: false,
+                    style: { strokeDasharray: '4 4', stroke: 'rgba(148, 163, 184, 0.35)', strokeWidth: 1 }
+                };
+            })
+            .filter(Boolean);
+
+        // applySelection : la reconstruction ci-dessus n'emporte pas le drapeau `selected`, donc
+        // sans ça la première mutation venue effacerait la sélection multiple en cours.
+        setNodes(applySelection([...rfNodes, ...rfAnnotationNodes]));
+        setEdges([...rfEdges, ...familyEdges, ...annotationLinkEdges]);
+    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, applySelection, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {
@@ -370,16 +449,43 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
 
         const movedNodes = Array.isArray(draggedNodes) && draggedNodes.length > 0 ? draggedNodes : [node];
 
+        // Une bulle ANCRÉE à un individu (GenAnnotation.nodeId) suit le même delta que lui, sinon
+        // elle reste sur place pendant que son trait de rattachement s'étire à travers l'arbre —
+        // même correctif que ProductionChainCanvas.annotationShifts.
+        const annotationShifts = [];
+        for (const n of movedNodes) {
+            if (n.type === 'annotationCard') continue;
+            const before = store.nodes.find(sn => sn.id === n.id);
+            if (!before) continue;
+            const dx = n.position.x - (before.position?.x || 0);
+            const dy = n.position.y - (before.position?.y || 0);
+            if (dx === 0 && dy === 0) continue;
+
+            for (const annotation of store.annotations || []) {
+                if (annotation.nodeId !== n.id) continue;
+                if (annotationShifts.some(s => s.id === annotation.id)) continue;
+                annotationShifts.push({
+                    id: annotation.id,
+                    position: { x: (annotation.position?.x || 0) + dx, y: (annotation.position?.y || 0) + dy }
+                });
+            }
+        }
+
         // Les cartes épinglées (annotationCard, ex: bulle média) se déplacent comme n'importe quel
         // nœud React Flow mais persistent via updateAnnotation, pas updateNode (id d'une table
         // différente — cf. ProductionChainCanvas.jsx même pattern).
-        await Promise.all(movedNodes.map(n => n.type === 'annotationCard'
-            ? store.updateAnnotation(n.id, { position: n.position })
-            : store.updateNode(n.id, { position: n.position })));
+        await Promise.all([
+            ...movedNodes.map(n => n.type === 'annotationCard'
+                ? store.updateAnnotation(n.id, { position: n.position })
+                : store.updateNode(n.id, { position: n.position })),
+            ...annotationShifts.map(s => store.updateAnnotation(s.id, { position: s.position }))
+        ]);
 
         setNodes(nodes => nodes.map(n => {
             const moved = movedNodes.find(m => m.id === n.id);
-            return moved ? { ...n, position: moved.position } : n;
+            if (moved) return { ...n, position: moved.position };
+            const shifted = annotationShifts.find(s => s.id === n.id);
+            return shifted ? { ...n, position: shifted.position } : n;
         }));
     }, [readOnly, store, setNodes]);
 
@@ -561,6 +667,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             onNodeDragStop={handleNodeDragStop}
             onEdgeClick={handleEdgeClick}
             onEdgeContextMenu={handleEdgeContextMenu}
+            onSelectionChange={onSelectionChange}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onCanvasClick={handleCanvasClick}
@@ -569,6 +676,13 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             onDrop={handleDrop}
             minimapNodeColor={(node) => node.data?.color || '#FF6B9D'}
             toolbar={<>
+                {/* Sélection multiple : sans compteur, rien ne dit que Ctrl+clic a fait quelque
+                    chose ni que le clic droit va agir sur plusieurs éléments d'un coup. */}
+                {multiSelectedIds.length > 1 && (
+                    <Panel position="bottom-center" className="graph-selection-chip">
+                        {multiSelectedIds.length} éléments sélectionnés — clic droit pour agir sur l'ensemble
+                    </Panel>
+                )}
                 {!readOnly && (
                     <Panel position="top-left" className="canvas-toolbar">
                         <button
@@ -685,6 +799,10 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                         onClose={closeContextMenu}
                         readOnly={readOnly}
                         onRequestDelete={setDeleteConfirm}
+                        // Un clic droit SUR un élément de la sélection multiple agit sur toute la
+                        // sélection ; sur un élément hors sélection, sur lui seul.
+                        targetIds={resolveActionTargets(contextMenu.nodeId)}
+                        onPinDataBubble={handlePinNodeDataBubble}
                     />
                 )}
                 {contextMenu && contextMenuType === 'edge' && (
@@ -697,6 +815,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                         onRequestDelete={setDeleteConfirm}
                         isFamily={contextMenu.isFamily}
                         underlyingEdges={contextMenu.underlyingEdges}
+                        onPinDataBubble={handlePinEdgeDataBubble}
                     />
                 )}
                 {contextMenu && contextMenuType === 'pane' && (

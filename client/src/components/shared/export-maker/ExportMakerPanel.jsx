@@ -392,29 +392,36 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                 // moniteur ultra-large, pas à brider la taille sur un écran desktop courant.
                 style={
                     showPreview
-                        ? { inset: 0, margin: 'auto', width: 'min(1800px, 94vw)', height: 'min(980px, 92vh)' }
+                        ? { inset: 0, margin: 'auto', width: 'min(1800px, 98vw)', height: 'min(980px, 94vh)', maxWidth: '100vw' }
                         : { inset: 0, margin: 'auto', width: 'min(700px, 95vw)', height: 'fit-content', maxHeight: '92vh' }
                 }
             >
                 {/* Header - STICKY POUR TOUJOURS VISIBLE */}
-                <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md">
-                    <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg">
+                {/* `min-w-0` partout sur la chaîne : sans plancher à zéro, un enfant `flex` refuse de
+                    passer sous sa largeur de contenu et DÉBORDE au lieu de se comprimer — c'est ce
+                    qui coupait « Exporter » au bord droit sur un écran étroit (capture 2026-08-14).
+                    Le titre se tronque, les libellés de boutons s'effacent sous 640px, les icônes
+                    restent : on rétrécit, on ne rogne pas. */}
+                <div className="flex flex-wrap items-center justify-between gap-2 px-3 sm:px-4 py-3 border-b-2 border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 sticky top-0 z-10 flex-shrink-0 shadow-md min-w-0">
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center shadow-lg flex-shrink-0">
                             <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                             </svg>
                         </div>
-                        <div>
-                            <h2 className="text-lg font-bold text-gray-900 dark:text-white drop-shadow-sm">
+                        <div className="min-w-0">
+                            <h2 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white drop-shadow-sm truncate">
                                 Export Maker
                             </h2>
-                            <p className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                            {/* Le sous-titre est le premier à céder : c'est de la décoration, pas
+                                un contrôle. */}
+                            <p className="hidden sm:block text-xs font-medium text-gray-600 dark:text-gray-300 truncate">
                                 Système de rendu et d'exportation
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex flex-wrap items-center justify-end gap-1.5 min-w-0">
                         {/* Bascule ÉCRAN / FICHIER — la répartition des rôles actée en C10 : le
                             rendu écran est la Vue Détaillée (fluide, interactive, celle du lien
                             public), le rendu fichier est le template à canevas fixe que capture
@@ -449,13 +456,13 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={() => onPublish({ exportMakerPreset: activePreset || config.template, exportMakerConfig: config })}
-                                className="px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 transition-all bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50"
+                                className="px-2.5 sm:px-3 py-2 rounded-lg font-medium text-sm flex items-center gap-2 whitespace-nowrap flex-shrink-0 transition-all bg-gradient-to-r from-emerald-600 to-green-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50"
                                 title="Publier la review"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064" />
                                 </svg>
-                                <span>Publier</span>
+                                <span className="hidden sm:inline">Publier</span>
                             </motion.button>
                         )}
 
@@ -465,12 +472,12 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 whileHover={{ scale: 1.02 }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handleApplyPreset}
-                                className="px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all flex items-center gap-2 text-sm"
+                                className="px-2.5 sm:px-4 py-2 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg font-medium shadow-lg shadow-green-500/30 hover:shadow-green-500/50 transition-all flex items-center gap-2 text-sm whitespace-nowrap flex-shrink-0"
                             >
                                 <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
-                                Appliquer
+                                <span className="hidden sm:inline">Appliquer</span>
                             </motion.button>
                         )}
 
@@ -479,12 +486,12 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                             whileHover={{ scale: 1.02 }}
                             whileTap={{ scale: 0.98 }}
                             onClick={handleExport}
-                            className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm"
+                            className="px-2.5 sm:px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium shadow-lg shadow-purple-500/30 hover:shadow-purple-500/50 transition-all flex items-center gap-2 text-sm whitespace-nowrap flex-shrink-0"
                         >
                             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                             </svg>
-                            Exporter
+                            <span className="hidden sm:inline">Exporter</span>
                         </motion.button>
 
                         {/* Bouton Plein écran — API Fullscreen du navigateur + masque le panneau de

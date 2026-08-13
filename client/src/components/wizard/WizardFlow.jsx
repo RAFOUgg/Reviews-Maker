@@ -68,8 +68,19 @@ export default function WizardFlow({
                 onExitToClassic={onExitToClassic}
             />
 
+            {/* LARGEUR ET CENTRAGE VERTICAL.
+                Le mode auto posait sa question dans une colonne de 32rem collée en haut de l'écran.
+                Sur un moniteur, cela donnait une ligne de texte et un champ perdus dans un grand
+                vide ; sur téléphone, la question et sa jauge en haut et le reste blanc jusqu'au
+                pied de page (captures 2026-08-14). Deux corrections, une par symptôme :
+                  • la colonne s'élargit avec l'écran (`max-w-3xl` dès `md`) — une question de mode
+                    auto n'est pas un paragraphe d'article, elle porte souvent une jauge, des chips
+                    ou une grille de choix qui gagnent à respirer ;
+                  • le contenu se CENTRE verticalement tant qu'il tient dans la hauteur disponible
+                    (`justify-center` + `min-h-full`), et retombe en défilement normal dès qu'il
+                    dépasse. Le vide se répartit au lieu de s'accumuler sous la question. */}
             <main ref={mainRef} className="flex-1 min-h-0 overflow-y-auto px-4 py-6 pb-24">
-                <div className="max-w-lg mx-auto">
+                <div className="min-h-full flex flex-col justify-center max-w-lg md:max-w-3xl mx-auto w-full">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={question.id}
@@ -94,7 +105,7 @@ export default function WizardFlow({
             </main>
 
             <div className="fixed bottom-0 left-0 right-0 bg-gradient-to-t from-[#07070f] via-[#07070f] to-transparent border-t border-white/10 backdrop-blur-xl z-50 safe-area-inset-bottom">
-                <div className="px-4 py-2.5 max-w-lg mx-auto">
+                <div className="px-4 py-2.5 max-w-lg md:max-w-3xl mx-auto">
                     <div className="flex items-center justify-between gap-2">
                         <button
                             onClick={goPrevious}

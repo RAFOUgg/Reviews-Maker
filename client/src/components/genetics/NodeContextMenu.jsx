@@ -6,11 +6,11 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
-import { Image as ImageIcon } from 'lucide-react';
+import { Image as ImageIcon, MessageSquarePlus } from 'lucide-react';
 import useGeneticsStore from '../../store/useGeneticsStore';
 import { useToast } from '../shared/ToastContainer';
 
-const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
+const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, targetIds, onPinDataBubble }) => {
     const store = useGeneticsStore();
     const { fitView } = useReactFlow();
     const toast = useToast();
@@ -139,6 +139,15 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
         }
     };
 
+    // Épingler les données de l'individu en bulle — porte sur toute la sélection multiple si ce
+    // nœud en fait partie (`targetIds`, résolu par le canevas), sur lui seul sinon.
+    const pinTargets = Array.isArray(targetIds) && targetIds.length > 0 ? targetIds : [nodeId];
+
+    const handlePinDataBubble = () => {
+        onPinDataBubble?.(pinTargets);
+        onClose();
+    };
+
     const mediaCount = Array.isArray(node?.media) ? node.media.length : 0;
 
     const handleOpenMedia = () => {
@@ -224,6 +233,12 @@ const NodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) =
                         <ImageIcon size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Photos / Vidéos{mediaCount > 0 ? ` (${mediaCount})` : '...'}
                     </button>
+                    {onPinDataBubble && (
+                        <button className="context-menu-item" onClick={handlePinDataBubble} style={{ fontWeight: 600 }}>
+                            <MessageSquarePlus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                            Épingler les données en bulle{pinTargets.length > 1 ? ` (${pinTargets.length} éléments)` : ''}
+                        </button>
+                    )}
                     <button className="context-menu-item" onClick={handleCenterView}>
                         🎯 Centrer la vue sur ce nœud
                     </button>

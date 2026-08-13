@@ -1054,10 +1054,14 @@ const creator = (set, get) => ({
             // de la review liée à un nœud — utilisé aussi bien pour le hover d'un nœud que pour
             // celui d'une liaison (dont la review "cible" documente sa propre fabrication, même
             // convention que ChainEdgeFormModal/chainPipelineSummary.js).
+            // Renvoie l'entrée de cache résolue (et pas seulement `undefined`) : un appelant qui a
+            // besoin du résumé TOUT DE SUITE — l'épinglage d'une bulle de données depuis le menu
+            // contextuel, cf. ProductionChainCanvas.handlePinNodeDataBubble — ne peut pas relire le
+            // cache juste après l'await (le store n'a pas encore re-rendu son composant).
             ensureReviewSummary: async (reviewId, reviewType) => {
-                if (!reviewId) return;
+                if (!reviewId) return null;
                 const existing = get().reviewSummaryCache[reviewId];
-                if (existing && (existing.loading || existing.fetched)) return;
+                if (existing && (existing.loading || existing.fetched)) return existing;
 
                 set(state => ({
                     reviewSummaryCache: {
@@ -1097,6 +1101,7 @@ const creator = (set, get) => ({
                         }
                     }));
                 }
+                return get().reviewSummaryCache[reviewId];
             },
 
             // ============================================================================

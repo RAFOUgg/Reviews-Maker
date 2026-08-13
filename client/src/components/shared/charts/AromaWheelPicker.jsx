@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Search, Filter } from 'lucide-react'
 import { AROMA_CATEGORIES, AROMAS, getAromasByCategory, getSubcategories } from '../../../data/aromasWheel'
+import CategoryCarousel, { useCategoryLayout } from './CategoryCarousel'
 
 /**
  * AromaWheelPicker - Sélecteur d'arômes CATA (Check-All-That-Apply)
@@ -64,6 +65,19 @@ export default function AromaWheelPicker({
             .map(id => AROMAS.find(a => a.id === id))
             .filter(Boolean)
     }, [selectedAromas])
+
+    // Catégories normalisées pour le carrousel : mêmes données que la galerie ci-dessous, dans la
+    // forme attendue par `CategoryCarousel` (une seule définition de « catégorie » pour les deux
+    // rendus — pas deux listes à tenir d'accord).
+    const categoriesPourCarrousel = AROMA_CATEGORIES.map((c) => {
+        const dedans = getAromasByCategory(c.id);
+        return {
+            id: c.id, label: c.label, emoji: c.emoji, color: c.color,
+            __total: dedans.length,
+            selectedCount: dedans.filter((a) => selectedAromas.includes(a.id)).length,
+        };
+    });
+    const enGalerie = useCategoryLayout();
 
     return (
         <div className={`space-y-4 ${className}`}>
@@ -203,6 +217,20 @@ export default function AromaWheelPicker({
                         </div>
                     ) : (
                         // Catégories principales
+                                                <>
+                        {/* CARROUSEL par défaut sur téléphone (galerie au-delà de `sm`, ou partout
+                            si la préférence « Catégories en galerie » est active). */}
+                        {!enGalerie && (
+                            <div className="sm:hidden">
+                                <CategoryCarousel
+                                    categories={categoriesPourCarrousel}
+                                    countOf={(c) => c.__total}
+                                    unitLabel="arômes"
+                                    onSelect={setSelectedCategory}
+                                />
+                            </div>
+                        )}
+                        <div className={enGalerie ? '' : 'hidden sm:block'}>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {AROMA_CATEGORIES.map(category => {
                                 const aromasInCategory = getAromasByCategory(category.id)
@@ -240,6 +268,9 @@ export default function AromaWheelPicker({
                                 )
                             })}
                         </div>
+                        </div>
+                        </>
+
                     )}
                 </div>
             )}

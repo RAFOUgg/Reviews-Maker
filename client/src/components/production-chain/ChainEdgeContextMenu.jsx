@@ -5,7 +5,7 @@
  */
 
 import React, { useEffect, useRef, useState } from 'react';
-import { Download, Clipboard, Copy, Image as ImageIcon, Plus } from 'lucide-react';
+import { Download, Clipboard, Copy, Image as ImageIcon, Plus, MessageSquarePlus } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 
@@ -13,7 +13,7 @@ import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 // (ChainEdge.technique), ces options ne sont qu'un pré-remplissage rapide.
 const QUICK_TECHNIQUES = ['Extraction', 'Séparation', 'Curing', 'Décarboxylation', 'Infusion', 'Distillation'];
 
-const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete }) => {
+const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete, onPinDataBubble }) => {
     const store = useProductionChainStore();
     const menuRef = useRef(null);
     const [showTypeMenu, setShowTypeMenu] = useState(false);
@@ -112,6 +112,16 @@ const ChainEdgeContextMenu = ({ edgeId, x, y, onClose, readOnly, onRequestDelete
                         🔀 Inverser la direction
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    {onPinDataBubble && (
+                        <button
+                            className="context-menu-item"
+                            onClick={() => { onPinDataBubble(edgeId); onClose(); }}
+                            style={{ fontWeight: 600 }}
+                        >
+                            <MessageSquarePlus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                            Épingler les données en bulle
+                        </button>
+                    )}
                     <button className="context-menu-item" onClick={handleImportData} style={{ fontWeight: 600 }}>
                         <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Importer une donnée...

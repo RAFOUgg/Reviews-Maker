@@ -24,10 +24,22 @@ const getFirstReviewImage = (review) => {
     return first.startsWith('http') || first.startsWith('/') ? first : `/images/${first}`
 }
 
-export default function ProductAddSidebar({ existingReviewIds = [] }) {
+/**
+ * `variant` :
+ *   'sidebar' (défaut) — colonne repliable à gauche du canevas, geste = GLISSER vers le graphe.
+ *   'drawer'           — même liste, en tiroir plein écran sur téléphone (cf. ProductionChainCanvas).
+ *                        Le glisser-déposer HTML5 n'existe pas au doigt : c'est `onPickReview` qui
+ *                        ajoute le produit, d'un simple appui. La colonne, elle, disparaît sous
+ *                        640px (`hidden sm:flex`) — sans quoi elle laissait 64px au canevas sur un
+ *                        écran de téléphone (mesuré le 2026-08-14), donc zéro nœud affiché.
+ */
+export default function ProductAddSidebar({ existingReviewIds = [], variant = 'sidebar', onPickReview = null }) {
+    const isDrawer = variant === 'drawer';
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [collapsed, setCollapsed] = useState(() => localStorage.getItem(COLLAPSE_STORAGE_KEY) === '1');
+    // En tiroir, le repli n'a aucun sens (le tiroir se ferme) — et il ne doit surtout pas hériter
+    // de la préférence desktop, sinon le tiroir s'ouvrirait déjà réduit à 48px de large.
+    const [collapsed, setCollapsed] = useState(() => variant !== 'drawer' && localStorage.getItem(COLLAPSE_STORAGE_KEY) === '1');
     // Onglet "Fichiers" : parcourt photos/vidéos/PDF de TOUTES les reviews de l'utilisateur (pas
     // seulement celles déjà présentes sur ce canvas) — simple navigation, contrairement à
     // ChainDataImportModal qui attache réellement un fichier à un nœud/liaison.
@@ -35,8 +47,9 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
     const [fileTypeFilter, setFileTypeFilter] = useState('all'); // 'all' | 'photo' | 'video' | 'pdf'
 
     useEffect(() => {
+        if (isDrawer) return;
         localStorage.setItem(COLLAPSE_STORAGE_KEY, collapsed ? '1' : '0');
-    }, [collapsed]);
+    }, [collapsed, isDrawer]);
 
     useEffect(() => {
         let cancelled = false;
@@ -53,14 +66,18 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
         return () => { cancelled = true };
     }, []);
 
+    // Une seule fabrication du descripteur de produit, partagée par le glisser (desktop) et
+    // l'appui (tiroir mobile) — deux constructions parallèles du même objet, c'est exactement
+    // comme ça que les vocabulaires divergent dans ce dépôt.
+    const buildPayload = (review) => ({
+        reviewId: review.id,
+        reviewType: apiTypeToInternal(review.type),
+        label: review.holderName || review.name || 'Sans nom',
+        image: getFirstReviewImage(review)
+    });
+
     const handleDragStart = (e, review) => {
-        const reviewType = apiTypeToInternal(review.type);
-        const payload = {
-            reviewId: review.id,
-            reviewType,
-            label: review.holderName || review.name || 'Sans nom',
-            image: getFirstReviewImage(review)
-        };
+        const payload = buildPayload(review);
         e.dataTransfer.setData('application/json', JSON.stringify(payload));
         e.dataTransfer.effectAllowed = 'copy';
     };
@@ -93,7 +110,9 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
     const filteredFiles = fileTypeFilter === 'all' ? allFiles : allFiles.filter(f => f.type === fileTypeFilter);
 
     return (
-        <div className={`${collapsed ? 'w-12' : 'w-72'} flex-shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col transition-[width] duration-200`}>
+        <div className={isDrawer
+            ? 'w-full h-full bg-slate-950/95 flex flex-col overflow-hidden'
+            : `${collapsed ? 'w-12' : 'w-72'} flex-shrink-0 hidden sm:flex bg-white/5 border border-white/10 rounded-xl overflow-hidden flex-col transition-[width] duration-200`}>
             <div className={`px-3 py-3 border-b border-white/10 bg-white/5 flex items-center gap-2 ${collapsed ? 'justify-center' : 'justify-between'}`}>
                 {!collapsed && (
                     <div className="min-w-0">
@@ -101,18 +120,22 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
                             {activeTab === 'reviews' ? 'Mes fiches techniques' : 'Fichiers'}
                         </h3>
                         <p className="text-xs text-white/40 truncate">
-                            {activeTab === 'reviews' ? 'Glissez un produit dans le graphe' : 'Photos, vidéos et certificats de vos fiches'}
+                            {activeTab === 'reviews'
+                                ? (isDrawer ? 'Appuyez sur un produit pour l\'ajouter' : 'Glissez un produit dans le graphe')
+                                : 'Photos, vidéos et certificats de vos fiches'}
                         </p>
                     </div>
                 )}
-                <button
-                    type="button"
-                    onClick={() => setCollapsed(v => !v)}
-                    className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
-                    title={collapsed ? 'Afficher mes fiches techniques' : 'Réduire le panneau'}
-                >
-                    {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-                </button>
+                {!isDrawer && (
+                    <button
+                        type="button"
+                        onClick={() => setCollapsed(v => !v)}
+                        className="p-1.5 rounded-lg text-white/50 hover:text-white hover:bg-white/10 transition-colors flex-shrink-0"
+                        title={collapsed ? 'Afficher mes fiches techniques' : 'Réduire le panneau'}
+                    >
+                        {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
+                    </button>
+                )}
             </div>
 
             {!collapsed && (
@@ -164,7 +187,10 @@ export default function ProductAddSidebar({ existingReviewIds = [] }) {
                                             key={review.id}
                                             draggable
                                             onDragStart={(e) => handleDragStart(e, review)}
-                                            className="bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center gap-2.5 cursor-move hover:border-emerald-500/50 transition-all"
+                                            // Au doigt, le glisser HTML5 ne se déclenche jamais :
+                                            // l'appui est le seul geste d'ajout possible.
+                                            onClick={onPickReview ? () => onPickReview(buildPayload(review)) : undefined}
+                                            className={`bg-white/5 border border-white/10 rounded-lg p-2.5 flex items-center gap-2.5 hover:border-emerald-500/50 transition-all ${onPickReview ? 'cursor-pointer active:bg-white/10 min-h-[56px]' : 'cursor-move'}`}
                                         >
                                             <div className="w-10 h-10 bg-white/5 rounded-lg flex items-center justify-center overflow-hidden flex-shrink-0">
                                                 {getFirstReviewImage(review) ? (

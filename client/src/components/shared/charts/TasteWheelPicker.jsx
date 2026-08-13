@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Search } from 'lucide-react'
 import { TASTE_FAMILIES, getAllTasteNotes, getNotesByFamily } from '../../../data/tasteNotes'
+import CategoryCarousel, { useCategoryLayout } from './CategoryCarousel'
 
 /**
  * TasteWheelPicker - Sélecteur de notes gustatives CATA (Check-All-That-Apply)
@@ -71,6 +72,16 @@ export default function TasteWheelPicker({
             .map(id => allTastes.find(t => t.id === id))
             .filter(Boolean)
     }, [selectedTastes, allTastes])
+
+    const categoriesPourCarrousel = tasteFamilies.map((f) => {
+        const notes = f.notes || [];
+        return {
+            id: f.id, label: f.label, emoji: f.icon, color: f.color,
+            __total: notes.length,
+            selectedCount: notes.filter((n) => selectedTastes.includes(n.id)).length,
+        };
+    });
+    const enGalerie = useCategoryLayout();
 
     return (
         <div className={`space-y-4 ${className}`}>
@@ -210,6 +221,20 @@ export default function TasteWheelPicker({
                         </div>
                     ) : (
                         // Familles principales
+                                                <>
+                        {/* CARROUSEL par défaut sur téléphone (galerie au-delà de `sm`, ou partout
+                            si la préférence « Catégories en galerie » est active). */}
+                        {!enGalerie && (
+                            <div className="sm:hidden">
+                                <CategoryCarousel
+                                    categories={categoriesPourCarrousel}
+                                    countOf={(c) => c.__total}
+                                    unitLabel="goûts"
+                                    onSelect={setSelectedFamily}
+                                />
+                            </div>
+                        )}
+                        <div className={enGalerie ? '' : 'hidden sm:block'}>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                             {tasteFamilies.map(family => {
                                 const notesInFamily = family.notes || []
@@ -247,6 +272,9 @@ export default function TasteWheelPicker({
                                 )
                             })}
                         </div>
+                        </div>
+                        </>
+
                     )}
                 </div>
             )}

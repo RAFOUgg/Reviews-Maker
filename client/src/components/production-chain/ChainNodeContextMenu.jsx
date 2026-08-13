@@ -9,10 +9,10 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { useReactFlow } from 'reactflow';
 import { useNavigate } from 'react-router-dom';
-import { Download, Clipboard, Copy, Image as ImageIcon, Plus } from 'lucide-react';
+import { Download, Clipboard, Copy, Image as ImageIcon, Plus, MessageSquarePlus } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
 
-const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete }) => {
+const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete, targetIds, onPinDataBubble }) => {
     const store = useProductionChainStore();
     const { fitView } = useReactFlow();
     const navigate = useNavigate();
@@ -108,6 +108,15 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
         onClose();
     };
 
+    // Épingler les données attachées en bulle — porte sur toute la sélection multiple si ce nœud
+    // en fait partie (`targetIds`, résolu par le canevas), sur lui seul sinon.
+    const pinTargets = Array.isArray(targetIds) && targetIds.length > 0 ? targetIds : [nodeId];
+
+    const handlePinDataBubble = () => {
+        onPinDataBubble?.(pinTargets);
+        onClose();
+    };
+
     const mediaCount = Array.isArray(node?.media) ? node.media.length : 0;
 
     const handleOpenMedia = () => {
@@ -145,6 +154,12 @@ const ChainNodeContextMenu = ({ nodeId, x, y, onClose, readOnly, onRequestDelete
                         🎯 Centrer la vue sur ce nœud
                     </button>
                     <hr style={{ margin: '4px 0', border: 'none', borderTop: '1px solid #e5e7eb' }} />
+                    {onPinDataBubble && (
+                        <button className="context-menu-item" onClick={handlePinDataBubble} style={{ fontWeight: 600 }}>
+                            <MessageSquarePlus size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
+                            Épingler les données en bulle{pinTargets.length > 1 ? ` (${pinTargets.length} éléments)` : ''}
+                        </button>
+                    )}
                     <button className="context-menu-item" onClick={handleImportData} style={{ fontWeight: 600 }}>
                         <Download size={13} style={{ marginRight: 6, verticalAlign: '-2px' }} />
                         Importer une donnée...

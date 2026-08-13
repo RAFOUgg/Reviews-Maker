@@ -719,7 +719,13 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                 )}
             </AnimatePresence>
 
-            <div className="flex flex-col md:flex-row gap-4 h-[60vh] min-h-[420px] max-h-[650px] mt-6">
+            {/* HAUTEUR DU CANEVAS SUR TÉLÉPHONE.
+                En colonne, les 60vh du cadre étaient partagés entre la liste des cultivars (192px
+                fixes) et le canevas : sur un écran de 900px, l'arbre généalogique héritait d'environ
+                230px de haut — de quoi voir deux nœuds sur dix, sans pouvoir en placer un.
+                « phenohunt inutilisable » (2026-08-14). Le cadre s'allonge donc nettement en
+                colonne, et le canevas reçoit un plancher qui lui est propre (voir plus bas). */}
+            <div className="flex flex-col md:flex-row gap-4 h-auto md:h-[60vh] min-h-[420px] md:max-h-[650px] mt-6">
                 {/* SIDEBAR GAUCHE */}
                 <div className="w-full md:w-80 md:flex-shrink-0 h-48 md:h-auto bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
                     {/* Onglets Cultivars / Projets */}
@@ -884,7 +890,7 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                 </div>
 
                 {/* CANVAS PRINCIPAL */}
-                <div className="flex-1 flex flex-col border border-white/10 rounded-xl overflow-hidden bg-[#0a0a14]">
+                <div className="flex-1 flex flex-col border border-white/10 rounded-xl overflow-hidden bg-[#0a0a14] min-h-[60vh] md:min-h-0">
                     {/* Onglets des arbres */}
                     <div className="flex items-center gap-2 bg-white/5 px-4 border-b border-white/10">
                         {trees.map((tree) => (

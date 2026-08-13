@@ -113,7 +113,12 @@ export default function BlockDragOverlay({ containerRef, enabled, onReorder }) {
                     onPointerDown={(e) => { e.preventDefault(); e.stopPropagation(); setPris(survol.id); setSurvol(null); }}
                     title="Glisser pour déplacer ce bloc"
                     style={{
-                        position: 'fixed', left: survol.rect.left + 6, top: survol.rect.top + 6,
+                        // À GAUCHE du bloc quand il y a la place, dans le coin sinon. Posée dans le
+                        // coin haut-gauche, la poignée recouvrait le titre du bloc survolé (capture
+                        // 2026-08-14 : « ⠿ » par-dessus « CARACTÉRISTIQUES DÉTAILLÉES »).
+                        position: 'fixed',
+                        left: survol.rect.left > 40 ? survol.rect.left - 34 : survol.rect.left + 6,
+                        top: survol.rect.top + 6,
                         zIndex: 99998, cursor: 'grab', width: 30, height: 30, borderRadius: 8,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         background: 'rgba(139,92,246,0.92)', color: '#fff', fontSize: 15, lineHeight: 1,

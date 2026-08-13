@@ -23,6 +23,8 @@ import {
 import { toSvg } from 'html-to-image';
 import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
+import useGraphMultiSelection from '../graph-canvas/useGraphMultiSelection';
+import { buildChainNodeBubble, buildChainEdgeBubble, bubblePositionNear, pipelineSummaryBodyLines } from '../../utils/graphDataBubble';
 // Store du CONTEXTE s'il existe, singleton global sinon — voir `scopedCanvasStores.jsx`.
 // L'édition ne fournit aucun contexte, elle garde donc exactement le comportement d'avant.
 import { useChainStore } from '../../store/scopedCanvasStores';
@@ -32,6 +34,8 @@ import { evaluateChainEventRules } from '../../utils/chainEventRules';
 import { getLotCode } from '../../utils/lotCode';
 import { findNodeAtPoint, findEdgeNearPoint } from '../graph-canvas/floatingEdgeUtils';
 import { ALL_REVIEW_TYPES } from '../../utils/reviewTypeMeta';
+import useResponsiveLayout from '../../hooks/useResponsiveLayout';
+import ProductAddSidebar from './ProductAddSidebar';
 import ReviewNode from './ReviewNode';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
 import ChainEdgeComponent from './ChainEdgeComponent';
@@ -70,23 +74,9 @@ const edgeTypes = {
     transformation: ChainEdgeComponent
 };
 
-// Lignes affichées sur une carte épinglée créée depuis le résumé pipeline du panneau latéral —
-// mêmes champs que le bloc "Données trouvées sur la fiche destination" (cf. JSX plus bas et
-// ChainEdgeFormModal.jsx), pour ne jamais désynchroniser les deux affichages.
-function pipelineSummaryBodyLines(pipelineSummary) {
-    if (!pipelineSummary) return [];
-    const lines = [];
-    if (pipelineSummary.technique) lines.push({ label: 'Méthode', value: pipelineSummary.technique });
-    if (pipelineSummary.materialType) lines.push({ label: 'Matière première', value: pipelineSummary.materialType });
-    if (pipelineSummary.materialState) lines.push({ label: 'État de la matière', value: pipelineSummary.materialState });
-    if (pipelineSummary.mesh) lines.push({ label: 'Maillage', value: pipelineSummary.mesh });
-    if (pipelineSummary.dosage || pipelineSummary.dosageUnit) {
-        lines.push({ label: 'Dosage', value: `${pipelineSummary.dosage ?? '?'} ${pipelineSummary.dosageUnit || ''}`.trim() });
-    }
-    if (pipelineSummary.stepCount > 0) lines.push({ label: 'Étapes enregistrées', value: String(pipelineSummary.stepCount) });
-    if (pipelineSummary.detail) lines.push({ label: 'Détail', value: pipelineSummary.detail });
-    return lines;
-}
+// `pipelineSummaryBodyLines` (lignes du résumé pipeline affichées sur une carte épinglée) vit
+// désormais dans utils/graphDataBubble.js — le glisser-déposer depuis le panneau latéral ET
+// l'épinglage en un clic depuis le menu contextuel doivent produire exactement la même bulle.
 
 // Ligne de résumé "cellule la plus récente" affichée au palier de zoom rapproché (Lot 4) — on ne
 // garde que le premier champ rempli pour rester lisible sur une carte de 140px de large, trié par
@@ -132,9 +122,13 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const rfStoreApi = useStoreApi();
     const navigate = useNavigate();
     const toast = useToast();
+    // Téléphone (< 640px) : même seuil que PhenoHunt, pas de second point de rupture maison.
+    const { isMobile } = useResponsiveLayout();
 
     const [nodes, setNodes, onNodesChange] = useNodesState([]);
     const [edges, setEdges, onEdgesChange] = useEdgesState([]);
+    // Sélection multiple (Ctrl/⌘ + clic, rectangle Maj + glisser) — cf. useGraphMultiSelection.js
+    const { selectedIds: multiSelectedIds, onSelectionChange, applySelection, resolveActionTargets } = useGraphMultiSelection(setNodes);
     const [contextMenu, setContextMenu] = useState(null);
     const [contextMenuType, setContextMenuType] = useState(null); // 'node' | 'edge' | 'pane' | 'annotation'
     const [deleteConfirm, setDeleteConfirm] = useState(null);
@@ -396,9 +390,12 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             })
             .filter(Boolean);
 
-        setNodes([...rfProductNodes, ...rfAnnotationNodes]);
+        // applySelection : sans ça, la première mutation venue (épingler une bulle, déplacer un
+        // nœud) reconstruit ce tableau sans le drapeau `selected` et efface la sélection multiple
+        // en cours. Lit une ref, donc n'ajoute aucune dépendance à cet effet.
+        setNodes(applySelection([...rfProductNodes, ...rfAnnotationNodes]));
         setEdges([...rfEdges, ...annotationLinkEdges]);
-    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, nodeVisibility, edgeVisibility, activeMatch]);
+    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, applySelection, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, nodeVisibility, edgeVisibility, activeMatch]);
 
     // Drag & drop depuis ProductAddSidebar — un nœud référence toujours une review
     // existante, pas de création de nœud vide comme dans UnifiedGeneticsCanvas
@@ -945,6 +942,60 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         return result;
     }, [store, screenToFlowPosition]);
 
+    // ── Épingler les données d'un élément en bulle ──────────────────────────────────────────
+    // Jusqu'ici, faire apparaître une donnée sur le canevas demandait de sélectionner l'élément,
+    // de trouver la ligne dans le panneau latéral, puis de la GLISSER dessus — un geste par
+    // cellule, impossible au toucher. Ici : un clic droit, une bulle ancrée au nœud (`nodeId`,
+    // donc reliée par le trait pointillé et déplacée avec lui) contenant TOUT ce qu'il porte.
+    // Le contenu est bâti par utils/graphDataBubble.js, pas ici — même vocabulaire que la saisie.
+    const handlePinNodeDataBubble = useCallback(async (nodeIds) => {
+        if (readOnly) return;
+        const ids = Array.isArray(nodeIds) ? nodeIds : [nodeIds];
+        let created = 0;
+
+        for (const [index, id] of ids.entries()) {
+            const node = store.nodes.find(n => n.id === id);
+            if (!node) continue;
+            // Résumé de la fiche liée : attendu explicitement, sinon la toute première bulle
+            // épinglée sur un nœud jamais sélectionné sortirait sans sa ligne "Méthode/Dosage…".
+            const summary = node.reviewId ? await store.ensureReviewSummary(node.reviewId, node.reviewType) : null;
+            const bubble = buildChainNodeBubble(node, { pipelineSummary: summary?.pipelineSummary || null });
+            const result = await store.addAnnotation({
+                ...bubble,
+                nodeId: id,
+                position: bubblePositionNear(node.position, index)
+            });
+            if (!result?.error) created++;
+        }
+
+        if (created === 0) toast.error("La bulle n'a pas pu être épinglée");
+        else toast.success(`${created} bulle${created > 1 ? 's' : ''} de données épinglée${created > 1 ? 's' : ''}`);
+    }, [readOnly, store, toast]);
+
+    const handlePinEdgeDataBubble = useCallback(async (edgeId) => {
+        if (readOnly) return;
+        const edge = store.edges.find(e => e.id === edgeId);
+        if (!edge) return;
+
+        const source = resolveChainEndpoint(store, edge.sourceId ?? edge.sourceNodeId);
+        const target = resolveChainEndpoint(store, edge.targetId ?? edge.targetNodeId);
+        // Convention déjà en place partout sur ce canevas (hover, panneau, ChainEdgeFormModal) :
+        // c'est la fiche DESTINATION qui documente la fabrication décrite par la liaison.
+        const summary = target?.reviewId ? await store.ensureReviewSummary(target.reviewId, target.reviewType) : null;
+        const bubble = buildChainEdgeBubble(edge, {
+            sourceLabel: source?.label || null,
+            targetLabel: target?.label || null,
+            pipelineSummary: summary?.pipelineSummary || null
+        });
+
+        // Une bulle ancrée à une liaison se positionne à partir de son nœud source (même
+        // simplification que le trait de rattachement, cf. annotationLinkEdges plus haut).
+        const anchor = source?.position || target?.position || { x: 0, y: 0 };
+        const result = await store.addAnnotation({ ...bubble, edgeId, position: bubblePositionNear(anchor, 1) });
+        if (result?.error) toast.error("La bulle n'a pas pu être épinglée");
+        else toast.success('Bulle de données épinglée');
+    }, [readOnly, store, toast]);
+
     // Sélection multiple (ctrl+clic / shift+clic) des cellules attachées du panneau — remise à
     // zéro dès qu'on change de nœud/liaison sélectionné(e), pour ne pas garder une sélection qui
     // pointe vers les cellules d'un autre panneau.
@@ -1018,6 +1069,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             onNodeMouseLeave={handleNodeMouseLeave}
             onEdgeMouseEnter={handleEdgeMouseEnter}
             onEdgeMouseLeave={handleEdgeMouseLeave}
+            onSelectionChange={onSelectionChange}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             onlyRenderVisibleElements
@@ -1037,6 +1089,13 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
             error={store.chainError}
             onErrorReset={() => store.clearSelection()}
             toolbar={<>
+                {/* Sélection multiple : sans compteur, rien ne dit que Ctrl+clic a fait quelque
+                    chose ni que le clic droit va agir sur plusieurs éléments d'un coup. */}
+                {multiSelectedIds.length > 1 && (
+                    <Panel position="bottom-center" className="graph-selection-chip">
+                        {multiSelectedIds.length} éléments sélectionnés — clic droit pour agir sur l'ensemble
+                    </Panel>
+                )}
                 {orphanedNodeIds.length > 0 && (
                     <Panel position="top-center" className="orphan-banner">
                         <AlertTriangle size={14} />
@@ -1073,16 +1132,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 />
             </>}
             sidePanel={(selectedNode || selectedEdge) && (
-                <Panel position="top-right" className={`node-info-panel ${panelCollapsed ? 'collapsed' : ''}`}>
-                    <button
-                        type="button"
-                        className="node-info-panel-toggle"
-                        onClick={() => setPanelCollapsed(v => !v)}
-                        title={panelCollapsed ? 'Afficher le panneau' : 'Réduire le panneau'}
-                    >
-                        {panelCollapsed ? <ChevronLeft size={14} /> : <ChevronRight size={14} />}
-                    </button>
-                    {!panelCollapsed && (
+                <CanvasInfoPanel storageKey={PANEL_COLLAPSE_STORAGE_KEY}>
                     <div className="info-content">
                         {selectedNode && (
                             <>
@@ -1314,6 +1364,10 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         onClose={closeContextMenu}
                         readOnly={readOnly}
                         onRequestDelete={setDeleteConfirm}
+                        // Un clic droit SUR un élément de la sélection multiple agit sur toute la
+                        // sélection ; sur un élément hors sélection, sur lui seul.
+                        targetIds={resolveActionTargets(contextMenu.nodeId)}
+                        onPinDataBubble={handlePinNodeDataBubble}
                     />
                 )}
                 {contextMenu && contextMenuType === 'edge' && (
@@ -1324,6 +1378,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         onClose={closeContextMenu}
                         readOnly={readOnly}
                         onRequestDelete={setDeleteConfirm}
+                        onPinDataBubble={handlePinEdgeDataBubble}
                     />
                 )}
                 {contextMenu && contextMenuType === 'pane' && (

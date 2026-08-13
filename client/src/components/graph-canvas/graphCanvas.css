@@ -87,6 +87,21 @@
         inset 0 -1px 1px rgba(0, 0, 0, 0.2);
 }
 
+/* Sélection MULTIPLE (Ctrl/⌘ + clic, ou rectangle Maj + glisser) — posée par les deux canevas sur
+   le nœud React Flow lui-même (prop `className`), pas sur la carte interne : elle doit marquer
+   aussi bien un produit qu'un individu qu'une bulle épinglée, qui n'ont pas le même composant.
+   Anneau violet (accent LiquidUI) volontairement distinct de l'ambre de la sélection simple : les
+   deux coexistent (l'élément cliqué en dernier reste la sélection "courante" du panneau latéral). */
+.react-flow__node.graph-multi-selected > * {
+    outline: 2px solid rgba(139, 92, 246, 0.9);
+    outline-offset: 3px;
+    border-radius: inherit;
+}
+
+.react-flow__node.graph-multi-selected {
+    filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.35));
+}
+
 /* Filtres/recherche du canevas Chaîne de production — grisé (jamais masqué, cf. commentaire
    ProductionChainCanvas.jsx sur nodeVisibility/edgeVisibility) plutôt qu'un simple opacity inline,
    pour pouvoir aussi désactiver l'ombre/le sheen coûteux visuellement sur un nœud grisé. */
@@ -546,13 +561,64 @@
 }
 
 /* Panels */
+/* Barre d'actions : PLUS DE CONTENEUR. Le bandeau ardoise opaque (rgba(30,41,59,.9) + liseré bleu)
+   posait un rectangle plein par-dessus le graphe, alors que ses boutons n'avaient eux-mêmes AUCUN
+   style — `.toolbar-btn` n'était défini nulle part dans le CSS de l'app, d'où des libellés nus
+   flottant sur un aplat. On inverse : le panneau devient une simple rangée transparente, et ce
+   sont les boutons qui portent le verre (même recette que les cartes LiquidUI : fond blanc très
+   faible, bordure fine, flou), donc incrustés dans le canevas au lieu de le masquer. */
 .canvas-toolbar {
-    background-color: rgba(30, 41, 59, 0.9) !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    border-radius: 8px !important;
-    padding: 12px !important;
-    backdrop-filter: blur(10px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 4px !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+}
+
+.toolbar-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(226, 232, 240, 0.85);
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.09);
+    border-radius: 12px;
+    backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 2px 10px -4px rgba(0, 0, 0, 0.5);
+    cursor: pointer;
+    transition: background-color 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                color 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+                border-color 0.18s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    white-space: nowrap;
+}
+
+.toolbar-btn:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.09);
+    border-color: rgba(139, 92, 246, 0.35);
+    color: #f8fafc;
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.45;
+    cursor: default;
+}
+
+/* Compteur de sélection multiple — même verre que les boutons d'outils, posé en bas au centre
+   pour ne chevaucher ni la barre d'actions (haut-gauche), ni la recherche (haut-centre), ni le
+   panneau latéral (droite), ni les contrôles de zoom (bas-droite). */
+.graph-selection-chip {
+    padding: 6px 12px !important;
+    font-size: 11px;
+    color: rgba(226, 232, 240, 0.9);
+    background: rgba(139, 92, 246, 0.16) !important;
+    border: 1px solid rgba(139, 92, 246, 0.35) !important;
+    border-radius: 999px !important;
+    backdrop-filter: blur(18px) saturate(140%) !important;
+    box-shadow: 0 4px 18px -8px rgba(0, 0, 0, 0.6) !important;
+    pointer-events: none;
 }
 
 /* Barre de recherche/filtres du canevas Chaîne de production (ChainCanvasToolbar) — même recette
@@ -562,12 +628,15 @@
     display: flex;
     flex-direction: column;
     gap: 8px;
-    background-color: rgba(30, 41, 59, 0.9) !important;
-    border: 1px solid rgba(59, 130, 246, 0.3) !important;
-    border-radius: 8px !important;
+    /* Garde un conteneur (contrairement à .canvas-toolbar) — un champ de saisie a besoin d'un
+       fond pour rester lisible par-dessus des nœuds — mais en verre peu opaque plutôt qu'en
+       aplat ardoise : on doit continuer de voir le graphe derrière. */
+    background-color: rgba(15, 23, 42, 0.35) !important;
+    border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    border-radius: 16px !important;
     padding: 8px 12px !important;
-    backdrop-filter: blur(10px) !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+    backdrop-filter: blur(24px) saturate(150%) !important;
+    box-shadow: 0 8px 28px -10px rgba(0, 0, 0, 0.55) !important;
     max-width: min(560px, 80vw);
 }
 
@@ -1082,6 +1151,34 @@
 .chain-annotation-line-label {
     color: #94a3b8;
     flex-shrink: 0;
+}
+
+/* Intertitre d'un groupe de données dans une bulle qui en rassemble plusieurs (une cellule de
+   pipeline, une section de breeding) — cf. `group: true` dans AnnotationNode.jsx. */
+.chain-annotation-group {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    color: #fbbf24;
+    margin: 6px 0 2px;
+    padding-top: 4px;
+    border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.chain-annotation-group:first-child {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
+
+/* Une bulle peut être haute (16 cellules attachées épinglées d'un coup) : plafonnée et défilable
+   plutôt que de couvrir la moitié du canevas. La classe `nowheel` posée à côté dans
+   AnnotationNode.jsx est ce qui empêche la molette de zoomer le canevas au lieu de faire défiler
+   la bulle. */
+.chain-annotation-body {
+    max-height: 260px;
+    overflow-y: auto;
 }
 
 /* Bulle média (photo/vidéo importée directement sur le canvas) — reprend le gabarit .cultivar-node

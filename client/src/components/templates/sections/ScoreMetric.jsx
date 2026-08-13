@@ -38,8 +38,12 @@ export default function ScoreMetric({ label, value, icon, max = 10, fontSize, co
                     signalé par l'utilisateur (« agrandir les notes objectives des goûts »). Le
                     facteur reste modéré (1,35) pour ne pas déséquilibrer les cartes compactes, et
                     passe par `readableFontSize` qui garantit le plancher de lisibilité. */}
+                {/* L'échelle est ÉCRITE. Une note nue (« Trichomes 2 », « Graines 10 ») se lit comme
+                    une quantité — et fait chercher une mesure physique qui n'existe pas : ce sont
+                    des appréciations sur 10, pas une densité au mm² ni un nombre de graines. Le
+                    suffixe est en retrait pour ne pas concurrencer le chiffre. */}
                 <span style={{ fontSize: scoreFontSize, fontWeight: 700, color: valueColor, flexShrink: 0, fontVariantNumeric: 'tabular-nums', lineHeight: 1.1 }}>
-                    {numValue.toFixed(1)}
+                    {numValue.toFixed(1)}<span style={{ fontWeight: 500, opacity: 0.55, fontSize: '0.78em' }}>/{max}</span>
                 </span>
             </div>
             <div style={{ height: compact ? 4 : 5, borderRadius: 3, background: trackColor, overflow: 'hidden' }}>

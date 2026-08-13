@@ -62,6 +62,7 @@ export default function GraphCanvasShell({
     onNodeMouseLeave,
     onEdgeMouseEnter,
     onEdgeMouseLeave,
+    onSelectionChange,
     nodeTypes,
     edgeTypes,
     onCanvasClick,
@@ -232,6 +233,12 @@ export default function GraphCanvasShell({
                 onNodeMouseLeave={onNodeMouseLeave}
                 onEdgeMouseEnter={onEdgeMouseEnter}
                 onEdgeMouseLeave={onEdgeMouseLeave}
+                onSelectionChange={onSelectionChange}
+                // Sélection multiple : la touche est déclarée explicitement pour les DEUX
+                // plateformes. Le défaut de React Flow v11 est `isMacOs() ? 'Meta' : 'Control'`,
+                // donc Ctrl ne sélectionnait rien sur un Mac et ⌘ rien sur Windows — un raccourci
+                // qui dépend de l'OS de celui qui l'essaie n'est pas un raccourci.
+                multiSelectionKeyCode={['Control', 'Meta']}
                 nodeTypes={nodeTypes}
                 edgeTypes={edgeTypes}
                 onlyRenderVisibleElements={onlyRenderVisibleElements}

@@ -3,6 +3,7 @@ import PropTypes from 'prop-types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Search, ThumbsUp, ThumbsDown, Sparkles } from 'lucide-react'
 import { EFFECTS_CATEGORIES, getAllEffects } from '../../../data/effectsCategories'
+import CategoryCarousel, { useCategoryLayout } from './CategoryCarousel'
 
 /**
  * EffectsWheelPicker - Sélecteur d'effets CATA (Check-All-That-Apply)
@@ -128,6 +129,16 @@ export default function EffectsWheelPicker({
                 return { borderColor: 'rgba(59, 130, 246, 0.5)' }
         }
     }
+
+    const categoriesPourCarrousel = effectCategories.map((c) => {
+        const tous = [...(c.positive || []), ...(c.negative || []), ...(c.items || [])];
+        return {
+            id: c.id, label: c.label, emoji: c.icon, color: c.color,
+            __total: tous.length,
+            selectedCount: tous.filter((e) => selectedEffects.includes(e.id)).length,
+        };
+    });
+    const enGalerie = useCategoryLayout();
 
     return (
         <div className={`space-y-4 ${className}`}>
@@ -291,6 +302,20 @@ export default function EffectsWheelPicker({
                         </div>
                     ) : (
                         // Catégories principales
+                                                <>
+                        {/* CARROUSEL par défaut sur téléphone (galerie au-delà de `sm`, ou partout
+                            si la préférence « Catégories en galerie » est active). */}
+                        {!enGalerie && (
+                            <div className="sm:hidden">
+                                <CategoryCarousel
+                                    categories={categoriesPourCarrousel}
+                                    countOf={(c) => c.__total}
+                                    unitLabel="effets"
+                                    onSelect={setSelectedCategory}
+                                />
+                            </div>
+                        )}
+                        <div className={enGalerie ? '' : 'hidden sm:block'}>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                             {effectCategories.map(category => {
                                 const categoryId = category.id
@@ -345,6 +370,9 @@ export default function EffectsWheelPicker({
                                 )
                             })}
                         </div>
+                        </div>
+                        </>
+
                     )}
                 </div>
             )}

@@ -2568,9 +2568,14 @@ const PipelineDragDropView = ({
                 )}
 
                 {/* TIMELINE PRINCIPALE DROITE */}
-                <div className="flex-1 min-w-0 bg-white/5 rounded-xl border border-white/10 overflow-hidden flex flex-col">
+                <div className="flex-1 min-w-0 bg-white/5 rounded-xl border border-white/10 overflow-visible md:overflow-hidden flex flex-col">
                     {/* HEADER CONFIGURATION */}
-                    <div className="p-3 md:p-4 border-b border-white/10 bg-transparent flex-shrink-0 max-h-[280px] overflow-y-auto">
+                    {/* Sur téléphone, ce bloc NE SCROLLE PAS. Un cadre de 280px qui défile à
+                        l'intérieur d'une page qui défile déjà oblige à viser la bonne zone pour
+                        atteindre « Progression » ou la trame — signalé deux fois (« encore un scroll
+                        inutile dans les pipelines »). Le cadre à hauteur bornée n'a de sens que dans
+                        la modale de bureau, où la trame doit rester visible sous l'en-tête. */}
+                    <div className="p-3 md:p-4 border-b border-white/10 bg-transparent flex-shrink-0 overflow-visible md:max-h-[280px] md:overflow-y-auto">
                         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3 md:mb-3">
                             <h3 className="font-bold text-white text-base md:text-lg flex items-center gap-2 truncate">
                                 <span className="flex-shrink-0">📊</span>
@@ -2931,14 +2936,16 @@ const PipelineDragDropView = ({
                             </div>
                         </div>
                     ) : (
-                        <div className="flex-1 flex flex-col overflow-hidden">
+                        <div className="flex-1 flex flex-col overflow-visible md:overflow-hidden">
                             <p className="text-xs md:text-sm text-white/50 italic px-3 md:px-4 pt-3 md:pt-4 pb-2 md:pb-3 flex-shrink-0 line-clamp-2">
                                 💡 <span className="hidden sm:inline"><strong>Première case</strong> : Config générale </span><span className="sm:hidden"><strong>1ère case</strong>: Config </span>|
                                 <span className="hidden sm:inline"> 📊 <strong>Autres cases</strong> : Drag & drop paramètres</span><span className="sm:hidden"> 📊 Drag & drop</span>
                             </p>
 
-                            <div className="flex-1 overflow-hidden">
-                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min overflow-y-auto px-3 md:px-4 pb-3 md:pb-4 h-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
+                            {/* Même raison : la trame se déroule dans la page sur téléphone, elle ne
+                                s'enferme dans son propre ascenseur qu'à partir de `md`. */}
+                            <div className="flex-1 overflow-visible md:overflow-hidden">
+                                <div ref={gridRef} className="grid gap-1 sm:gap-2 select-none relative auto-rows-min overflow-visible md:overflow-y-auto px-3 md:px-4 pb-3 md:pb-4 h-auto md:h-full" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))' }}>
                                     {/* Visual selection frame overlay */}
                                     {selectedCells.length > 1 && !isSelecting && (() => {
                                         // Compute aggregate bounding box of selected cells using DOM measurements

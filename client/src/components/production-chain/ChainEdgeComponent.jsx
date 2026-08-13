@@ -61,7 +61,16 @@ export default function ChainEdgeComponent({
     const labelX = bendX;
     const labelY = bendY;
 
-    const label = data?.technique || 'Transformation';
+    // UNE LIAISON PEUT N'ÊTRE QU'UNE LIAISON.
+    //
+    // L'arête affichait « Transformation » par défaut dès qu'aucune technique n'était renseignée —
+    // un mot que l'utilisateur n'a jamais saisi, et qui affirme une nature de lien qui n'a pas lieu
+    // d'être : « je devrais pouvoir relier sans définir de type de liaison ? ce sont des
+    // informations conjointes c'est tout » (2026-08-14). Le champ était DÉJÀ optionnel côté
+    // enregistrement (`technique: formData.technique || null`) : seul l'affichage inventait.
+    // Sans technique, la liaison reste un simple trait — le cartouche n'apparaît que s'il a
+    // quelque chose à dire (technique, date, cellules ou médias attachés).
+    const label = data?.technique || null;
     const date = data?.date ? new Date(data.date).toLocaleDateString('fr-FR') : null;
     const dimmed = !!data?.dimmed;
     const searchActive = !!data?.searchActive;
@@ -135,12 +144,13 @@ export default function ChainEdgeComponent({
                         (data?.cellCount > 0 || data?.mediaCount > 0) && (
                             <div
                                 className={`chain-edge-dot-badge ${searchActive ? 'search-active' : ''}`}
-                                title={label}
+                                title={label || 'Liaison'}
                             />
                         )
                     ) : (
+                        (label || date || data?.cellCount > 0 || data?.mediaCount > 0 || searchActive) && (
                         <div className={`px-2 py-1 bg-slate-800/90 border rounded text-amber-300 backdrop-blur-sm hover:bg-slate-700/90 hover:border-amber-400/50 transition-all cursor-pointer text-center ${searchActive ? 'border-emerald-400 ring-2 ring-emerald-400/60' : 'border-amber-500/30'}`}>
-                            <div>{label}</div>
+                            {label && <div>{label}</div>}
                             {date && <div className="text-[10px] text-amber-400/70">{date}</div>}
                             {data?.cellCount > 0 && (
                                 <div className="flex items-center justify-center gap-1 text-[10px] text-emerald-400" title={`${data.cellCount} cellule(s) de pipeline attachée(s)`}>
@@ -160,6 +170,7 @@ export default function ChainEdgeComponent({
                                 </div>
                             )}
                         </div>
+                        )
                     )}
                 </div>
 
