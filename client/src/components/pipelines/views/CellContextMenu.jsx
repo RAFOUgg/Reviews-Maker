@@ -7,7 +7,7 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, ClipboardPaste, Trash2, Eraser, ChevronLeft, Check, X, Image as ImageIcon } from 'lucide-react';
+import { Copy, ClipboardPaste, Trash2, Eraser, ChevronLeft, Check, X, Image as ImageIcon, TrendingUp } from 'lucide-react';
 
 function CellContextMenu({
     isOpen,
@@ -22,7 +22,9 @@ function CellContextMenu({
     onCopy,
     onPaste,
     hasCopiedData,
-    onOpenMedia
+    onOpenMedia,
+    /** Ouvre l'éditeur de courbe sur toute la trame. */
+    onOpenCurve,
 }) {
     const [showFieldList, setShowFieldList] = useState(false);
     const [selectedFieldsToDelete, setSelectedFieldsToDelete] = useState([]);
@@ -189,6 +191,22 @@ function CellContextMenu({
                                     {mediaCount}
                                 </span>
                             )}
+                        </button>
+                    )}
+
+                    {/* COURBE DE VALEURS — saisir une mesure sur toute la trame, d'un geste.
+                        Renseigner une grandeur qui évolue (température, humidité, CO₂…) demandait
+                        d'ouvrir chaque cellule : sur 90 jours, personne ne le fait, et les
+                        statistiques du rendu tracent alors des lignes plates sur deux points.
+                        L'action est proposée quelle que soit la sélection : elle porte sur la
+                        TRAME, pas sur la cellule cliquée. */}
+                    {onOpenCurve && (
+                        <button
+                            onClick={() => { onOpenCurve(); onClose(); }}
+                            className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors text-white/80 hover:text-white"
+                        >
+                            <TrendingUp className="w-4 h-4 text-violet-400" />
+                            <span>Tracer une courbe de valeurs…</span>
                         </button>
                     )}
 

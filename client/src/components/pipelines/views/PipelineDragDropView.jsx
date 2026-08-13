@@ -29,6 +29,7 @@ import MediaAttachmentModal from '../../shared/MediaAttachmentModal';
 import { INTERVAL_TYPES_CONFIG, ALLOWED_INTERVALS_BY_PIPELINE, resolveIntervalKey, getOptionsForPipeline } from '../../../config/intervalTypes';
 import { useAccountFeatures } from '../../../hooks/useAccountFeatures';
 import { generatePipelineCells } from '../../../utils/pipelineCellUtils';
+import PipelineCurveModal from '../core/PipelineCurveModal';
 import { PIPELINE_STARTER_SETUPS } from '../../../config/pipelineStarterSetups';
 import { UNIT_CONVERSIONS, roundDisplay } from '../../../utils/unitConversions';
 import { usePresets } from '../../../hooks/usePresets';
@@ -1216,6 +1217,7 @@ const PipelineDragDropView = ({
 
     // Cell context menu state
     const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
+    const [curveOpen, setCurveOpen] = useState(false);
     const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
     const [mediaModalTimestamp, setMediaModalTimestamp] = useState(null); // Cellule dont la galerie photo/vidéo est ouverte
 
@@ -3061,6 +3063,7 @@ const PipelineDragDropView = ({
                                                 onMouseDown={(e) => { if (e.button === 0) startSelection(e, idx, cell.timestamp); }}
                                                 onMouseUp={(e) => { /* handled globally to compute rectangle on mouseup */ }}
                                                 ref={(el) => { cellRefs.current[cell.timestamp] = el; }}
+                                                data-cell-timestamp={cell.timestamp}
                                                 className={cellClass}
                                                 style={{ userSelect: 'none' }}
                                             >
@@ -3325,6 +3328,35 @@ const PipelineDragDropView = ({
                 />
             )}
 
+            {/* Éditeur de courbe — porte sur la TRAME entière, pas sur la cellule cliquée. */}
+            {curveOpen && (
+                <PipelineCurveModal
+                    isOpen={curveOpen}
+                    onClose={() => setCurveOpen(false)}
+                    cells={cells}
+                    sidebarContent={sidebarContent}
+                    getCellValue={(ts, champ) => (getCellData(ts) || {})[champ]}
+                    onApply={(champ, points) => {
+                        // On passe par `onDataChange`, le MÊME chemin que la saisie manuelle : la
+                        // valeur atterrit dans la même cellule, sous la même clé, et l'historique
+                        // d'annulation la voit comme n'importe quelle autre modification.
+                        const changements = points
+                            .filter((pt) => Number.isFinite(pt.valeur))
+                            .map((pt) => ({
+                                timestamp: pt.timestamp,
+                                field: champ,
+                                previousValue: (getCellData(pt.timestamp) || {})[champ],
+                            }));
+                        if (changements.length > 0) {
+                            pushAction({ type: 'curve', label: `Courbe — ${champ}`, changes: changements });
+                        }
+                        points.forEach((pt) => {
+                            if (Number.isFinite(pt.valeur)) onDataChange(pt.timestamp, champ, pt.valeur);
+                        });
+                    }}
+                />
+            )}
+
             {/* Menu contextuel cellule */}
             {cellContextMenu && (
                 <CellContextMenu
@@ -3334,6 +3366,7 @@ const PipelineDragDropView = ({
                     selectedCells={cellContextMenu?.selectedCells || []}
                     cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
                     sidebarContent={sidebarContent}
+                    onOpenCurve={() => setCurveOpen(true)}
                     onClose={() => setCellContextMenu(null)}
                     onDeleteAll={() => {
                         const targets = cellContextMenu?.selectedCells || [];

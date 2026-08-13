@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { generatePipelineCells, inferTimelineConfig } from '../../../utils/pipelineCellUtils';
 import { safeParse, colorWithOpacity } from '../../../utils/exportMakerHelpers';
 import { getFieldLabel, humanizeKey } from '../../../utils/fieldRegistry';
+import { summarizeCellFields } from '../../../utils/chainCellPipelines';
 import { LiquidModal } from '@/components/ui/LiquidUI';
 import { useCanvasTooltip, affordance } from './InteractiveContext';
 import PipelineGridView from '../../pipelines/views/PipelineGridView';
@@ -120,6 +121,22 @@ export default function PipelineMiniGrid({
         return acc;
     }, {});
 
+    // Détail d'une étape, écrit comme le formulaire l'écrit — `summarizeCellFields()` est la
+    // résolution libellé+unité déjà utilisée par le canevas Chaîne de production et par les
+    // templates. Le détail révélé au clic passait, lui, par `getFieldLabel`/`humanizeKey` : il
+    // affichait « Temperature », « Co2 ppm », « Ph » et jusqu'à « Cell label » (une clé de
+    // bookkeeping) là où le formulaire montre « Température 24 °C », « CO₂ 888 ppm », « pH 6.2 ».
+    // C'est précisément l'écart signalé — « les pipelines rendus ne sont pas les mêmes que ceux des
+    // formulaires ». Le repli sur le registre reste, pour les clés qu'aucun pipeline ne déclare.
+    const detailerEtape = (timestamp) => {
+        const fields = getCellFields(timestamp) || {};
+        const resolus = summarizeCellFields(type, fields);
+        if (resolus.length > 0) return resolus;
+        return Object.entries(fields)
+            .filter(([k]) => !['timestamp', 'date', 'label', 'cellLabel', 'media', 'photos'].includes(k))
+            .map(([k, v]) => ({ key: k, label: getFieldLabel(k) || humanizeKey(k), value: typeof v === 'object' ? JSON.stringify(v) : String(v) }));
+    };
+
     const filledCount = cells.filter(c => {
         const f = getCellFields(c.timestamp);
         return f && Object.keys(f).length > 0;
@@ -184,8 +201,7 @@ export default function PipelineMiniGrid({
                     if (!interactive) return;
                     const cell = cells[index];
                     if (!cell) return;
-                    const fields = getCellFields(cell.timestamp);
-                    const count = fields ? Object.keys(fields).filter((k) => !['timestamp', 'date', 'media', 'photos'].includes(k)).length : 0;
+                    const count = detailerEtape(cell.timestamp).length;
                     if (count === 0) return;
                     if (count > INLINE_FIELD_LIMIT) setModalCell(cell.timestamp);
                     else setSelected(selected === cell.timestamp ? null : cell.timestamp);
@@ -195,8 +211,7 @@ export default function PipelineMiniGrid({
             ))}
             {selected && (() => {
                 const cell = cells.find(c => c.timestamp === selected);
-                const fields = getCellFields(selected) || {};
-                const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date', 'media', 'photos'].includes(k));
+                const entries = detailerEtape(selected);
                 return (
                     <div style={{
                         padding: '6px 10px', borderRadius: 8,
@@ -206,8 +221,8 @@ export default function PipelineMiniGrid({
                     }}>
                         <div style={{ fontWeight: 700, marginBottom: 4 }}>{cell?.label}</div>
                         {entries.length === 0 && <div style={{ opacity: 0.6 }}>Aucune donnée pour cette étape</div>}
-                        {entries.map(([k, v]) => (
-                            <div key={k}>{getFieldLabel(k) || humanizeKey(k)} : {typeof v === 'object' ? JSON.stringify(v) : String(v)}</div>
+                        {entries.map((f) => (
+                            <div key={f.key}>{f.label} : {f.value}</div>
                         ))}
                     </div>
                 );
@@ -227,19 +242,14 @@ export default function PipelineMiniGrid({
             >
                 {(() => {
                     if (!modalCell) return null;
-                    const fields = getCellFields(modalCell) || {};
-                    const entries = Object.entries(fields).filter(([k]) => !['timestamp', 'date', 'media', 'photos'].includes(k));
+                    const entries = detailerEtape(modalCell);
                     if (entries.length === 0) return <p className="text-white/50 text-sm">Aucune donnée pour cette étape.</p>;
                     return (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {entries.map(([k, v]) => (
-                                <div key={k} className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
-                                    <div className="text-[11px] uppercase tracking-wide text-white/40">
-                                        {getFieldLabel(k) || humanizeKey(k)}
-                                    </div>
-                                    <div className="text-sm text-white font-medium break-words">
-                                        {typeof v === 'object' ? JSON.stringify(v) : String(v)}
-                                    </div>
+                            {entries.map((f) => (
+                                <div key={f.key} className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
+                                    <div className="text-[11px] uppercase tracking-wide text-white/40">{f.label}</div>
+                                    <div className="text-sm text-white font-medium break-words">{f.value}</div>
                                 </div>
                             ))}
                         </div>
