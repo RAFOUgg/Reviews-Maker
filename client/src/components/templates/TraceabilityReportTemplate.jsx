@@ -4,6 +4,7 @@ import {
     colorWithOpacity,
     formatDate,
     getResponsiveAdjustments,
+    getTemplateColumns,
     resolveFontStack,
     safeParse,
     isLightColor,
@@ -132,7 +133,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
     }
 
     const { typography, colors } = config;
-    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const responsive = getResponsiveAdjustments(config.ratio, typography, getTemplateColumns('traceabilityReport', config.ratio));
     const { fontSize, padding, spacing } = responsive;
     // Un tiers de la part d'image du format, plafonné : la vignette suit l'échelle du
     // document sans jamais devenir un hero.

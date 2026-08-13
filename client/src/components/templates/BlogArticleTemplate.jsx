@@ -12,6 +12,7 @@ import {
     extractExtraData,
     colorWithOpacity,
     getResponsiveAdjustments,
+    getTemplateColumns,
     resolveFontStack,
     getGlassTokens,
     ACCENT_TEXT_COLORS,
@@ -55,7 +56,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
     const { typography, colors, contentModules, image, branding } = config;
 
     // 🎯 Calcul des ajustements responsifs selon le ratio
-    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const responsive = getResponsiveAdjustments(config.ratio, typography, getTemplateColumns('blogArticle', config.ratio));
     const { isSquare, fontSize, padding, spacing, limits } = responsive;
     const glass = getGlassTokens(colors);
     // Variante AA de l'accent pour le TEXTE (l'accent de palette est une couleur de surface).

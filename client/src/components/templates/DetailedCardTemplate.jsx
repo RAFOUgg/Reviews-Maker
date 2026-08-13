@@ -109,7 +109,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     }
 
     const { typography, colors, contentModules, image, branding } = config;
-    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const responsive = getResponsiveAdjustments(config.ratio, typography, getTemplateColumns('detailedCard', config.ratio));
     const { isSquare, isPortrait, isA4, fontSize, padding, spacing, limits, grid } = responsive;
 
     // Pagination adaptative (Chantier D, 2026-07-31) : `config.pageModuleIds` (Set/array d'ids ou

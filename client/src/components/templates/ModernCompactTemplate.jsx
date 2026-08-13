@@ -10,6 +10,7 @@ import {
     extractPipelines,
     filterVisiblePipelines,
     getResponsiveAdjustments,
+    getTemplateColumns,
     TIMELINE_PIPELINES,
     resolveFontStack,
     readableFontSize,
@@ -63,7 +64,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     const { typography, colors, contentModules, image, branding } = config;
 
     // 🎯 Calcul des ajustements responsifs selon le ratio
-    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const responsive = getResponsiveAdjustments(config.ratio, typography, getTemplateColumns('modernCompact', config.ratio));
     const { isSquare, isPortrait, isLandscape, fontSize, padding, spacing, limits } = responsive;
     const glass = getGlassTokens(colors);
     // Variante AA de l'accent pour le TEXTE — l'accent de palette est une couleur de surface

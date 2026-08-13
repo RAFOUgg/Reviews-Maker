@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { getDefaultPages } from '../store/exportMakerPagesStore';
 import { TEMPLATE_PAGINATION } from '../store/exportMakerConstants';
-import { shouldAutoLockPagination, getResponsiveAdjustments } from '../utils/exportMakerHelpers';
+import { shouldAutoLockPagination, getResponsiveAdjustments, getTemplateColumns } from '../utils/exportMakerHelpers';
 import { computeAdaptivePages } from '../utils/adaptivePagination';
 import { measureDetailedCardModules } from '../components/templates/measureDetailedCardModules';
 
@@ -116,7 +116,8 @@ export function useAdaptivePages(reviewData, config, { enabled = true } = {}) {
         getCachedMeasurement(cacheKey, reviewData, config)
             .then((heights) => {
                 if (requestIdRef.current !== requestId) return; // une mesure plus récente a démarré entre-temps
-                const { padding } = getResponsiveAdjustments(ratio, config.typography);
+                // Mêmes colonnes que le template : la police, donc la hauteur des blocs, en dépend.
+                const { padding } = getResponsiveAdjustments(ratio, config.typography, getTemplateColumns(template, ratio));
                 const adaptivePages = computeAdaptivePages(heights, ratio, padding.container, template);
                 // UNE page mesurée vaut mieux que le repli statique.
                 //

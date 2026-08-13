@@ -1327,7 +1327,7 @@ export function getFormatLayout(ratio) {
     return FORMAT_LAYOUT[ratio] || FORMAT_LAYOUT['1:1'];
 }
 
-export function getResponsiveAdjustments(ratio, baseTypography = {}) {
+export function getResponsiveAdjustments(ratio, baseTypography = {}, colonnes = 1) {
     const dimensions = RATIO_DIMENSIONS[ratio] || RATIO_DIMENSIONS['1:1'];
     const area = dimensions.width * dimensions.height;
     const isSquare = ratio === '1:1';
@@ -1377,10 +1377,43 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
     //
     // On BORNE plutôt que de refuser la valeur : un réglage doit rester réversible et prévisible.
     // L'interface annonce le seuil (`TypographyControls`), elle ne le subit pas silencieusement.
+    // ÉCHELLE DU CANEVAS — la typographie doit être PROPORTIONNELLE, pas quasi constante.
+    //
+    // Mesuré le 2026-08-13 sur Moderne Compact, texte médian rapporté à la largeur du canevas :
+    //   carré 800px  → 12px = 15,0 ‰   (le format que l'utilisateur valide)
+    //   portrait 1080 → 12px = 11,1 ‰  (« élément illisible car trop petit »)
+    //   paysage 1920 → 12px =  6,25 ‰  (« espace vide encore trop présent »)
+    // Autrement dit : la taille de police ne bougeait presque pas (planchers à 12/14px) pendant que
+    // le canevas doublait. Or un export est une IMAGE, affichée à une taille quelconque : seule la
+    // proportion décide de la lisibilité. Un texte à 6,25 ‰ est illisible dès que l'image est
+    // réduite, et il laisse le reste de la page vide — les deux reproches ont la même cause.
+    //
+    // Référence : le carré 800×800, seule combinaison validée à l'œil — `f = 1` pour lui, donc son
+    // rendu ne bouge pas d'un pixel. L'échelle suit la LARGEUR : c'est la dimension dans laquelle la
+    // référence a été jugée, et celle qui borne l'affichage d'une image (une fiche est vue dans une
+    // colonne, un fil, une page — rarement contrainte par sa hauteur).
+    // L'échelle suit la COLONNE DE LECTURE, pas le canevas.
+    //
+    // Premier essai : mise à l'échelle sur la largeur du canevas. Le paysage atteignait bien les
+    // 15 ‰ visés — mais la matrice passait de 0 à 6 erreurs, dont 4 de CONTENU COUPÉ, toutes sur la
+    // Fiche Technique. La raison est typographique : cette fiche coule en DEUX colonnes, ses
+    // colonnes de lecture font donc moitié moins que celles d'une carte au même format. Rapporter
+    // sa police à la largeur du canevas revenait à la calibrer sur une colonne deux fois plus large
+    // que la vraie — d'où des blocs trop hauts pour leur page.
+    //
+    // La longueur de ligne est ce qui gouverne la taille d'un texte : on la prend donc pour base.
+    // La référence reste le carré validé à l'œil (800px, une colonne) — `f = 1` pour lui.
+    // Le plafond évite qu'un format très large ne produise une affiche.
+    const largeurColonne = dimensions.width / Math.max(1, colonnes);
+    const facteurCanevas = Math.min(largeurColonne / 800, 1.8);
+    const echelle = (px) => Math.round(px * facteurCanevas);
+
     const maxTitleFont = Math.round(dimensions.height * 0.040);
     const maxTextFont = Math.round(dimensions.height * 0.0185);
-    const titleFont = Math.min(Math.round((baseTypography.titleSize || 32) * scaleFactor), maxTitleFont);
-    const textFont = Math.max(14, Math.min(Math.round((baseTypography.textSize || 14) * scaleFactor), maxTextFont));
+    const titleFont = Math.min(echelle((baseTypography.titleSize || 32) * scaleFactor), maxTitleFont);
+    // Les PLANCHERS suivent l'échelle du canevas, sinon ils annulent tout : c'est `Math.max(14, …)`
+    // et `Math.max(12, …)` qui figeaient le texte à 12-14px sur TOUS les formats.
+    const textFont = Math.max(echelle(14), Math.min(echelle((baseTypography.textSize || 14) * scaleFactor), maxTextFont));
 
     return {
         // Facteurs d'échelle
@@ -1416,7 +1449,7 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}) {
             subtitle: Math.round(titleFont * 0.7),
             section: Math.round(titleFont * 0.55),
             text: textFont,
-            small: Math.max(12, Math.round(textFont * 0.85)),
+            small: Math.max(echelle(MIN_FONT_PX), Math.round(textFont * 0.85)),
         },
 
         // Domaine tenable, exprimé dans l'unité des CURSEURS (pas en pixels rendus) : au-delà, la

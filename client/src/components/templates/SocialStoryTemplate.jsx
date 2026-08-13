@@ -6,6 +6,7 @@ import {
     extractCategoryRatings,
     colorWithOpacity,
     getResponsiveAdjustments,
+    getTemplateColumns,
     resolveFontStack,
     ensureReadable,
     getImageRenderStyle,
@@ -60,7 +61,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
     // Échelle responsive partagée avec les 4 autres templates — ce template supporte plusieurs
     // ratios (1:1/16:9/9:16, cf. TemplateSelector) mais ignorait jusqu'ici entièrement le ratio
     // choisi (tailles de police et limites de densité en dur, pensées pour 9:16 uniquement).
-    const responsive = getResponsiveAdjustments(config.ratio, typography);
+    const responsive = getResponsiveAdjustments(config.ratio, typography, getTemplateColumns('socialStory', config.ratio));
     const { fontSize, limits } = responsive;
 
     // Pagination adaptative (Phase C du plan de finition Export Maker, 2026-08-03) — même contrat
