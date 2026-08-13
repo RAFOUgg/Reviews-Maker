@@ -406,7 +406,20 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // pendant que la moitié de la page restait vide. Chaque pipeline est maintenant sa propre unité
     // insécable, ce que le `data-module` posé sur lui annonçait déjà.
     const renderPipeline = (pipeline, moduleId, heading = null) => {
-        if (contentModules.pipelineDetailGrids !== false) {
+        // LA GRILLE, TOUJOURS — plus de bascule vers une variante en liste.
+        //
+        // `pipelineDetailGrids` arbitrait entre deux représentations du même pipeline : la grille
+        // (celle des formulaires) et une LISTE verticale. Éteindre le groupe « Présentation »
+        // faisait donc basculer les pipelines sur cette liste — 25 lignes « conditions nominales »
+        // et « TEMPÉRATURE JOUR 24 °C » les unes sous les autres. Signalé le 2026-08-13 : « les
+        // pipelines deviennent bizarres ».
+        //
+        // Or la parité avec le formulaire est une demande explicite et répétée de l'utilisateur :
+        // il n'y a pas deux représentations légitimes, il y en a une. Un interrupteur qui dégrade
+        // le rendu n'est pas une option, c'est un piège. La liste (`renderPipelineList`) n'est donc
+        // plus atteignable depuis ce template ; masquer le pipeline se fait par son propre
+        // interrupteur, pas en changeant son apparence.
+        if (true) {
             const t = TIMELINE_PIPELINES.find((x) => pipeline.key?.includes(x.type))
                 || TIMELINE_PIPELINES.find((x) => reviewData[x.dataKey]);
             if (t && reviewData[t.dataKey] && reviewData[t.configKey]) {
