@@ -29,8 +29,33 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
     // rien à l'écran — le défaut signalé par l'utilisateur (« Story Social Media » coché, une fiche
     // détaillée affichée). Les autres appelants (`/r/:id`, page de lignée) ne passent rien et
     // continuent de lire la config de la review.
-    const config = configOverride || resolveConfigForReview(reviewData, 'detailedCard')
-    const dims = RATIO_DIMS[config?.ratio] || RATIO_DIMS['1:1']
+    const configSource = configOverride || resolveConfigForReview(reviewData, 'detailedCard')
+
+    // ── RENDU D'ÉCRAN : FLUIDE, PAS MIS À L'ÉCHELLE ─────────────────────────────────────────────
+    // Un format de FICHIER se rend sur un canevas de taille fixe puis se rétrécit au
+    // `transform: scale` — c'est correct pour une image, dont on ne connaît pas la taille
+    // d'affichage. Pour un ÉCRAN c'est faux : rétrécir ne repositionne rien, ça produit une
+    // maquette d'ordinateur en miniature. Ici le canevas prend la largeur RÉELLEMENT disponible et
+    // c'est la mise en page qui se recompose — « auto-repositionnement responsive selon taille de
+    // l'écran » (2026-08-13).
+    //
+    // Le format d'écran (ordinateur / téléphone) est DÉDUIT de cette largeur, il n'est pas choisi :
+    // en dessous du seuil, la fiche passe en une colonne, au-dessus elle s'étale. Le sélecteur du
+    // Studio ne fait donc que contraindre la largeur du cadre — il emprunte exactement le même
+    // chemin qu'un vrai téléphone, au lieu d'un mode d'aperçu à part.
+    const surEcran = isScreenRatio(configSource?.ratio)
+    const SEUIL_TELEPHONE_PX = 760
+    const [largeurDispo, setLargeurDispo] = useState(0)
+    const ratioEcran = largeurDispo && largeurDispo < SEUIL_TELEPHONE_PX ? 'ecran-mobile' : 'ecran-pc'
+    const config = surEcran
+        // `screenWidth` : lu par `TemplateRenderer` pour la largeur du canevas. La typographie, elle,
+        // reste calibrée sur le format déduit — sur écran elle est ABSOLUE (cf.
+        // `getResponsiveAdjustments`), donc elle n'a pas à suivre le pixel près.
+        ? { ...configSource, ratio: ratioEcran, screenWidth: largeurDispo || undefined }
+        : configSource
+    const dims = surEcran
+        ? { ...RATIO_DIMS[ratioEcran], width: largeurDispo || RATIO_DIMS[ratioEcran].width }
+        : (RATIO_DIMS[configSource?.ratio] || RATIO_DIMS['1:1'])
 
     // CARTE ou DOCUMENT ? Les deux ne se rendent pas de la même façon, et les confondre casse
     // visiblement les cartes.
@@ -59,13 +84,20 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
         if (!el || !reviewData) return
         const observer = new ResizeObserver((entries) => {
             const { width } = entries[0].contentRect
-            if (width) {
-                setScale(Math.min(width / dims.width, 1))
+            if (!width) return
+            if (surEcran) {
+                // Aucune mise à l'échelle : le canevas EST large de `width`, et la mise en page s'y
+                // recompose. Arrondi à 4px pour ne pas relancer un rendu à chaque pixel de
+                // redimensionnement (et ne pas boucler, la largeur du canevas influant sur la sienne).
+                setLargeurDispo(Math.max(320, Math.round(width / 4) * 4))
+                setScale(1)
+                return
             }
+            setScale(Math.min(width / dims.width, 1))
         })
         observer.observe(el)
         return () => observer.disconnect()
-    }, [reviewData, dims.width])
+    }, [reviewData, dims.width, surEcran])
 
     // `fitHeight` — hauteur de la ZONE d'aperçu, pour caler aussi sur la hauteur.
     //

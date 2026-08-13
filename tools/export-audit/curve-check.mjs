@@ -60,24 +60,41 @@ try {
         throw new Error('aucune cellule de pipeline trouvée — la sonde ne mesure rien');
     }
 
-    await cellule.click({ button: 'right' }); await sleep(1200);
+    // SÉLECTION MULTIPLE — la portée demandée : « assigner une évolution d'une donnée au cours
+    // d'une sélection dans la trame ». On sélectionne les 5 premières étapes au Ctrl+clic, puis on
+    // ouvre le menu contextuel : l'évolution ne doit toucher QUE celles-là.
+    const tous = await p.locator('[data-cell-timestamp]').all();
+    const choisies = [];
+    for (const c of tous.slice(0, 5)) {
+        await c.click({ modifiers: ['Control'] });
+        choisies.push(await c.getAttribute('data-cell-timestamp'));
+        await sleep(120);
+    }
+    console.log(`sélection : ${choisies.join(', ')}`);
+    await tous[0].click({ button: 'right' }); await sleep(1200);
 
-    const entree = p.locator('button', { hasText: 'Tracer une courbe de valeurs' }).first();
+    const entree = p.locator('button', { hasText: 'Définir une évolution' }).first();
     if (!(await entree.count())) { console.log('KO — pas d’entrée « Tracer une courbe » dans le menu contextuel'); ko++; }
     else {
         await entree.click(); await sleep(1200);
 
-        // Choisir la température : mesure présente dans toutes les trames de culture.
-        const select = p.locator('select').last();
-        const options = await select.locator('option').allTextContents();
-        console.log(`mesures proposées : ${options.length - 1}`);
-        const temp = options.find((o) => /Température/i.test(o));
-        if (!temp) { console.log(`KO — aucune mesure « Température » proposée (${options.slice(0, 6).join(' | ')})`); ko++; }
+        // Le choix de mesure est une liste maison (le `<select>` natif s'ouvrait blanc sur blanc).
+        const modale = p.locator('[role="dialog"], .liquid-card').last();
+        const optionTemp = p.locator('button', { hasText: /Température jour/i }).first();
+        const nbMesures = await p.locator('button', { hasText: /—\s*(Climat|Environnement|Irrigation|Lumière)/ }).count();
+        console.log(`mesures proposées : ${nbMesures}`);
+        // Aucun texte ne doit être peint clair sur clair : c'est le défaut signalé.
+        const contraste = await p.evaluate(() => {
+            const b = [...document.querySelectorAll('button')].find((n) => /Température jour/i.test(n.textContent || ''));
+            if (!b) return null;
+            const cs = getComputedStyle(b);
+            return { couleur: cs.color, fond: getComputedStyle(b.parentElement).backgroundColor };
+        });
+        console.log(`contraste de la liste : ${JSON.stringify(contraste)}`);
+        if (!(await optionTemp.count())) { console.log('KO — aucune mesure « Température jour » proposée'); ko++; }
         else {
-            await select.selectOption({ label: temp }); await sleep(800);
-            // La clé réellement écrite est celle du champ choisi (`temperatureDay`, pas « température ») :
-            // on la lit plutôt que de la supposer, sinon la sonde cherche une clé qui n'existe pas.
-            champLu = await select.inputValue();
+            await optionTemp.click(); await sleep(800);
+            champLu = 'temperatureDay';
             console.log(`mesure choisie : ${champLu}`);
 
             // Dessiner : un glissé diagonal sur le tracé, comme le ferait l'utilisateur.
@@ -92,7 +109,10 @@ try {
             await p.mouse.up(); await sleep(600);
 
             const btn = p.locator('button', { hasText: /^Appliquer à/ }).first();
-            console.log(`bouton : « ${await btn.textContent()} »`);
+            const libelle = await btn.textContent();
+            console.log(`bouton : « ${libelle} »`);
+            // La portée annoncée doit être la SÉLECTION, pas la trame entière.
+            if (!/Appliquer à 5 étapes/.test(libelle)) { console.log(`KO — portée annoncée « ${libelle} » au lieu des 5 étapes sélectionnées`); ko++; }
             await btn.click(); await sleep(3000);
             const dom = await p.evaluate(() => {
                 const cs = [...document.querySelectorAll('[data-cell-timestamp]')];
@@ -122,13 +142,18 @@ try {
     const entrees = Array.isArray(donnees) ? donnees : Object.entries(donnees).map(([timestamp, v]) => ({ timestamp, ...v }));
     const avecTemp = entrees.filter((e) => Number.isFinite(Number(e[champLu])));
     const valeurs = avecTemp.map((e) => Number(e[champLu]));
-    console.log(`cellules portant une température après courbe : ${avecTemp.length}/${entrees.length || 0} (trame de ${nbCellules})`);
+    console.log(`cellules remplies : ${avecTemp.length} (sélection de ${choisies.length}, trame de ${nbCellules})`);
     console.log(`valeurs : ${valeurs.slice(0, 8).join(', ')}${valeurs.length > 8 ? ` … ${valeurs.slice(-2).join(', ')}` : ''}`);
 
-    if (avecTemp.length < nbCellules) { console.log('KO — la courbe n’a pas rempli les cellules'); ko++; }
-    // Une courbe croissante doit produire des valeurs croissantes : sans ça on a écrit une constante,
-    // donc les statistiques resteraient la ligne plate qui a motivé la demande.
-    if (valeurs.length > 4 && !(valeurs[valeurs.length - 1] > valeurs[0])) { console.log('KO — courbe plate, le tracé n’a pas été suivi'); ko++; }
+    if (avecTemp.length !== choisies.length) { console.log(`KO — ${avecTemp.length} cellules remplies pour ${choisies.length} sélectionnées`); ko++; }
+    const horsSelection = avecTemp.filter((e) => !choisies.includes(e.timestamp));
+    if (horsSelection.length) { console.log(`KO — ${horsSelection.length} cellule(s) hors sélection modifiées`); ko++; }
+    // Le tracé doit produire une VARIATION. Le sens dépend de l'orientation des axes (le temps est
+    // en ordonnée : un glissé vers le haut-droite donne des valeurs décroissantes dans le temps) —
+    // ce qui compte est qu'elles ne soient pas toutes identiques, sinon on a écrit une constante et
+    // les statistiques resteraient la ligne plate qui a motivé la demande.
+    const amplitude = Math.max(...valeurs) - Math.min(...valeurs);
+    if (valeurs.length > 3 && amplitude < 1) { console.log(`KO — courbe plate (amplitude ${amplitude}), le tracé n’a pas été suivi`); ko++; }
 } finally {
     await b.close();
     await fetch(`${API}/api/reviews/${id}`, { method: 'DELETE' }).catch(() => {});

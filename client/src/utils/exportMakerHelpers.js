@@ -1355,8 +1355,25 @@ export const FORMAT_LAYOUT = {
  */
 const MULTICOLUMN_TEMPLATES = new Set(['detailedCard']);
 
+// Sur ÉCRAN, la question n'est plus la même : il n'y a pas de page à remplir ni de budget de
+// hauteur à partager — le document défile. Le seul enjeu est d'occuper la largeur au lieu de rendre
+// une colonne étroite au milieu d'un écran large (« rend toutes les templates horizontale sur pc »).
+// Le raisonnement qui limitait le flux multi-colonnes à `detailedCard` portait sur la PAGINATION :
+// un budget de hauteur multiplié par un nombre de colonnes que le template n'utilisait pas coupait
+// du contenu (mesuré le 2026-08-06 : trois pages à 134/121/117 %). Cette question ne se pose pas
+// ici, donc la restriction ne s'y applique pas.
+//
+// `socialStory` reste en une colonne sur tous les formats : c'est LE template vertical, celui qu'on
+// exporte en 9:16 pour Instagram et TikTok. Le mettre en colonnes le priverait de la seule chose
+// qui le définit. Il occupe la largeur autrement, en s'affichant centré à sa largeur naturelle.
+const SCREEN_SINGLE_COLUMN = new Set(['socialStory']);
+
 /** Nombre de colonnes réellement utilisé par un template à un ratio donné. */
 export function getTemplateColumns(templateId, ratio) {
+    if (isScreenRatio(ratio)) {
+        if (SCREEN_SINGLE_COLUMN.has(templateId)) return 1;
+        return getFormatLayout(ratio).columns;
+    }
     if (!MULTICOLUMN_TEMPLATES.has(templateId)) return 1;
     return getFormatLayout(ratio).columns;
 }

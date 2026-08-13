@@ -236,7 +236,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                 transition={{ duration: 0.6 }}
                 className="max-w-4xl mx-auto"
             >
-                <OrderedFlow moduleOrder={config.moduleOrder}>
+                <OrderedFlow moduleOrder={config.moduleOrder} columns={getTemplateColumns('blogArticle', config.ratio)}>
                 {/* Masthead : en-tête + image à la une + introduction, un seul `data-module`
                     (pagination adaptative, Phase C) pour rester groupés sur la première page. */}
                 {isPageOn('masthead') && <div data-module="masthead">

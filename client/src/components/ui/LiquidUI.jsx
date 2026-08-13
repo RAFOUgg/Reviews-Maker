@@ -763,6 +763,12 @@ export function LiquidModal({
 
                         {/* Modal content */}
                         <motion.div
+                            // `role`/`aria-modal` : la modale n'annonçait rien aux technologies
+                            // d'assistance, et rien ne permettait non plus de la distinguer du
+                            // reste de la page en sonde. Additif, aucun effet visuel.
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label={typeof title === 'string' ? title : undefined}
                             className={`relative w-full my-auto ${sizeClasses[size]} max-h-[90vh] flex flex-col`}
                             initial={{ opacity: 0, scale: 0.9, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}

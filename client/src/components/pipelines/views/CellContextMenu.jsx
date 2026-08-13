@@ -23,7 +23,7 @@ function CellContextMenu({
     onPaste,
     hasCopiedData,
     onOpenMedia,
-    /** Ouvre l'éditeur de courbe sur toute la trame. */
+    /** Ouvre l'éditeur d'évolution sur la sélection (ou la trame entière si rien n'est sélectionné). */
     onOpenCurve,
 }) {
     const [showFieldList, setShowFieldList] = useState(false);
@@ -194,19 +194,22 @@ function CellContextMenu({
                         </button>
                     )}
 
-                    {/* COURBE DE VALEURS — saisir une mesure sur toute la trame, d'un geste.
+                    {/* ÉVOLUTION D'UNE DONNÉE — sur la SÉLECTION, ou sur la trame entière à défaut.
                         Renseigner une grandeur qui évolue (température, humidité, CO₂…) demandait
                         d'ouvrir chaque cellule : sur 90 jours, personne ne le fait, et les
-                        statistiques du rendu tracent alors des lignes plates sur deux points.
-                        L'action est proposée quelle que soit la sélection : elle porte sur la
-                        TRAME, pas sur la cellule cliquée. */}
+                        statistiques du rendu tracent alors des lignes plates sur deux points. */}
                     {onOpenCurve && (
                         <button
                             onClick={() => { onOpenCurve(); onClose(); }}
                             className="w-full px-4 py-2.5 text-left text-sm hover:bg-white/5 flex items-center gap-3 transition-colors text-white/80 hover:text-white"
                         >
                             <TrendingUp className="w-4 h-4 text-violet-400" />
-                            <span>Tracer une courbe de valeurs…</span>
+                            <span>Définir une évolution…</span>
+                            {isBulk && (
+                                <span className="ml-auto text-xs text-white/40 bg-white/10 px-2 py-0.5 rounded-full">
+                                    {selectedCells.length}
+                                </span>
+                            )}
                         </button>
                     )}
 

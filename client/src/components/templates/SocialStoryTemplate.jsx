@@ -271,7 +271,7 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                 flex: '0 0 auto', display: 'flex', flexDirection: 'column',
                 padding: `${responsive.padding.container}px`, overflow: 'hidden', gap: responsive.spacing.section,
             }}>
-                <OrderedFlow moduleOrder={config.moduleOrder}>
+                <OrderedFlow moduleOrder={config.moduleOrder} columns={getTemplateColumns('socialStory', config.ratio)}>
                 {/* Identité : titre/cultivar/farm + note — un seul `data-module` (pagination
                     adaptative, Phase C). */}
                 {isPageOn('identity') && (

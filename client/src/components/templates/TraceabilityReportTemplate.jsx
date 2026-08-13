@@ -229,8 +229,13 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 overflow: 'visible',
             }}
         >
-            {/* En-tête : identité + identifiant de lot/QR (Chantier 8) */}
-            <div style={{ display: 'flex', gap: spacing.section, marginBottom: `${spacing.section}px` }}>
+            {/* En-tête : identité + identifiant de lot/QR (Chantier 8)
+                `flexWrap` : sur un écran de téléphone (420px), les trois colonnes de cet en-tête ne
+                tiennent pas côte à côte — mesuré, le titre se retrouvait à un mot par ligne dans une
+                colonne de ~90px et le bloc QR sortait carrément du canevas. Elles passent donc à la
+                ligne. Sur les formats de fichier (1600px et plus) rien ne change : elles y tiennent
+                largement, `flex-wrap` ne se déclenche pas. */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: spacing.section, marginBottom: `${spacing.section}px` }}>
                 {/* Vignette d'identité : 96px en dur donnaient une image quasi invisible sur un A4 de
                     2480px. Dimensionnée sur le contrat de format, bornée pour rester une vignette —
                     un rapport de traçabilité reste un document de texte, l'image l'accompagne. */}
@@ -257,7 +262,9 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                 ) : (
                     <img src={mainImage} alt="" style={{ ...getImageRenderStyle(config.image), width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12, flexShrink: 0 }} />
                 ))}
-                <div style={{ flex: 1 }}>
+                {/* `minWidth` : sans plancher, la colonne de texte se laisse comprimer par ses
+                    voisines jusqu'à couper les mots. Avec, elle passe à la ligne bien avant. */}
+                <div style={{ flex: '1 1 240px', minWidth: 200 }}>
                     <div style={{ fontSize: `${fontSize.small}px`, color: colors.accent, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
                         Rapport de traçabilité — {reviewData.type || normalizeReviewType(reviewData.type)}
                     </div>
@@ -288,7 +295,7 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
 
             {/* L'en-tête (identité + lot + QR) reste en tête du document, comme le masthead des
                 autres templates : c'est la carte d'identité du rapport, pas un bloc de contenu. */}
-            <OrderedFlow moduleOrder={config.moduleOrder}>
+            <OrderedFlow moduleOrder={config.moduleOrder} columns={getTemplateColumns('traceabilityReport', config.ratio)}>
             {/* Confiance producteur/labo (Chantier 5) */}
             {hasTrustInfo && (
                 <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: `${spacing.section}px` }}>

@@ -1217,7 +1217,10 @@ const PipelineDragDropView = ({
 
     // Cell context menu state
     const [cellContextMenu, setCellContextMenu] = useState(null); // { position, timestamp, selectedCells }
-    const [curveOpen, setCurveOpen] = useState(false);
+    // Éditeur d'évolution : `null` = fermé, `'trame'` = toutes les étapes, tableau de timestamps =
+    // la sélection. On FIGE la liste à l'ouverture — la sélection peut changer pendant que la
+    // modale est ouverte, et la portée annoncée sur le bouton « Appliquer » doit rester vraie.
+    const [curveOpen, setCurveOpen] = useState(null);
     const [copiedCellData, setCopiedCellData] = useState(null); // Pour copier/coller
     const [mediaModalTimestamp, setMediaModalTimestamp] = useState(null); // Cellule dont la galerie photo/vidéo est ouverte
 
@@ -3328,12 +3331,16 @@ const PipelineDragDropView = ({
                 />
             )}
 
-            {/* Éditeur de courbe — porte sur la TRAME entière, pas sur la cellule cliquée. */}
-            {curveOpen && (
+            {/* Éditeur d'évolution — porte sur la SÉLECTION, ou sur la trame entière à défaut. */}
+            {curveOpen !== null && (
                 <PipelineCurveModal
-                    isOpen={curveOpen}
-                    onClose={() => setCurveOpen(false)}
-                    cells={cells}
+                    isOpen
+                    onClose={() => setCurveOpen(null)}
+                    // La sélection porte des `timestamp` ; l'éditeur veut les cellules complètes
+                    // (libellé compris) et DANS L'ORDRE DE LA TRAME — une sélection au lasso les
+                    // enregistre dans l'ordre où elles ont été touchées, ce qui donnerait une
+                    // évolution dans le désordre.
+                    cells={Array.isArray(curveOpen) ? cells.filter((c) => curveOpen.includes(c.timestamp)) : cells}
                     sidebarContent={sidebarContent}
                     getCellValue={(ts, champ) => (getCellData(ts) || {})[champ]}
                     onApply={(champ, points) => {
@@ -3366,7 +3373,7 @@ const PipelineDragDropView = ({
                     selectedCells={cellContextMenu?.selectedCells || []}
                     cellData={cellContextMenu?.timestamp ? getCellData(cellContextMenu.timestamp) : null}
                     sidebarContent={sidebarContent}
-                    onOpenCurve={() => setCurveOpen(true)}
+                    onOpenCurve={() => setCurveOpen(cellContextMenu?.selectedCells?.length > 1 ? [...cellContextMenu.selectedCells] : 'trame')}
                     onClose={() => setCellContextMenu(null)}
                     onDeleteAll={() => {
                         const targets = cellContextMenu?.selectedCells || [];

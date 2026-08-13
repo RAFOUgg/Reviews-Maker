@@ -6,11 +6,17 @@ import { summarizeCellFields } from '../../../utils/chainCellPipelines';
 import { LiquidModal } from '@/components/ui/LiquidUI';
 import { useCanvasTooltip, affordance } from './InteractiveContext';
 import PipelineGridView from '../../pipelines/views/PipelineGridView';
+import { resolveImageUrl } from '../../../utils/export-maker/resolveImageUrl';
 
-// Au-delà de ce nombre de mesures, le panneau en ligne sous la grille devient un pavé qui
-// déborde la page : le détail part alors dans une modale (vocabulaire d'interaction du plan C8,
-// §3 — « modale : un détail structuré »). En deçà, le panneau en ligne reste plus direct.
-const INLINE_FIELD_LIMIT = 6;
+// LE DÉTAIL D'UNE ÉTAPE PART TOUJOURS EN MODALE — plus de panneau en ligne sous la grille.
+//
+// Le panneau en ligne était réservé aux étapes peu documentées (≤ 6 mesures), la modale au reste.
+// Deux défauts, et le second est structurel : (1) il déplaçait le contenu sous lui à chaque clic,
+// donc la fiche « bougeait » pendant qu'on la consultait ; (2) sa hauteur n'entre dans aucune
+// mesure de pagination — sur un canevas à page fixe, il poussait littéralement du contenu hors de
+// la page. Une modale vit dans un portail sur `document.body` : elle ne déplace rien, et la capture
+// ne la voit jamais. Demande explicite : « les contenus doivent s'afficher en modale pop-up »
+// (2026-08-13).
 
 // Nombre de cases par TRANCHE paginable.
 //
@@ -53,7 +59,6 @@ export default function PipelineMiniGrid({
     // l'échelle claire plutôt que les verts sombres de l'éditeur.
     paper = false,
 }) {
-    const [selected, setSelected] = useState(null);
     const [modalCell, setModalCell] = useState(null);
     const { bind, tooltipNode, interactive } = useCanvasTooltip();
 
@@ -201,36 +206,17 @@ export default function PipelineMiniGrid({
                     if (!interactive) return;
                     const cell = cells[index];
                     if (!cell) return;
-                    const count = detailerEtape(cell.timestamp).length;
-                    if (count === 0) return;
-                    if (count > INLINE_FIELD_LIMIT) setModalCell(cell.timestamp);
-                    else setSelected(selected === cell.timestamp ? null : cell.timestamp);
+                    // Une étape sans donnée n'a rien à montrer : ouvrir une modale vide serait pire
+                    // que de ne rien faire.
+                    if (detailerEtape(cell.timestamp).length === 0) return;
+                    setModalCell(cell.timestamp);
                 }}
             />
             </div>
             ))}
-            {selected && (() => {
-                const cell = cells.find(c => c.timestamp === selected);
-                const entries = detailerEtape(selected);
-                return (
-                    <div style={{
-                        padding: '6px 10px', borderRadius: 8,
-                        backgroundColor: colorWithOpacity(accentColor, 10),
-                        border: `1px solid ${colorWithOpacity(accentColor, 25)}`,
-                        fontSize: 13,
-                    }}>
-                        <div style={{ fontWeight: 700, marginBottom: 4 }}>{cell?.label}</div>
-                        {entries.length === 0 && <div style={{ opacity: 0.6 }}>Aucune donnée pour cette étape</div>}
-                        {entries.map((f) => (
-                            <div key={f.key}>{f.label} : {f.value}</div>
-                        ))}
-                    </div>
-                );
-            })()}
-
-            {/* Étape dense : le détail part en modale plutôt que de pousser un pavé sous la grille,
-                qui déborderait la page. `LiquidModal` est rendue par un portail sur document.body —
-                donc hors du nœud cloné par `prepareCapture`, jamais capturée par accident. */}
+            {/* `LiquidModal` est rendue par un portail sur `document.body` — donc hors du nœud cloné
+                par `prepareCapture`, jamais capturée par accident, et sans effet sur la hauteur
+                mesurée par la pagination. */}
             <LiquidModal
                 isOpen={Boolean(modalCell)}
                 onClose={() => setModalCell(null)}
@@ -243,15 +229,43 @@ export default function PipelineMiniGrid({
                 {(() => {
                     if (!modalCell) return null;
                     const entries = detailerEtape(modalCell);
-                    if (entries.length === 0) return <p className="text-white/50 text-sm">Aucune donnée pour cette étape.</p>;
+                    // Les PHOTOS de l'étape font partie de son contenu au même titre que ses mesures.
+                    // Dans la grille elles ne tiennent qu'en fond de case, à quelques dizaines de
+                    // pixels ; c'est ici qu'on peut enfin les regarder.
+                    const index = cells.findIndex((c) => String(c.timestamp) === String(modalCell));
+                    const medias = gridMedia[index] || [];
+                    if (entries.length === 0 && medias.length === 0) {
+                        return <p className="text-white/50 text-sm">Aucune donnée pour cette étape.</p>;
+                    }
                     return (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {entries.map((f) => (
-                                <div key={f.key} className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
-                                    <div className="text-[11px] uppercase tracking-wide text-white/40">{f.label}</div>
-                                    <div className="text-sm text-white font-medium break-words">{f.value}</div>
+                        <div className="space-y-3">
+                            {entries.length > 0 && (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    {entries.map((f) => (
+                                        <div key={f.key} className="rounded-xl bg-white/[0.04] border border-white/10 px-3 py-2">
+                                            <div className="text-[11px] uppercase tracking-wide text-white/40">{f.label}</div>
+                                            <div className="text-sm text-white font-medium break-words">{f.value}</div>
+                                        </div>
+                                    ))}
                                 </div>
-                            ))}
+                            )}
+                            {medias.length > 0 && (
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                                    {medias.map((m, i) => (
+                                        <figure key={i} className="rounded-xl overflow-hidden border border-white/10 bg-black/30">
+                                            <img
+                                                src={resolveImageUrl(m?.url || m)}
+                                                alt={m?.caption || ''}
+                                                className="w-full object-cover"
+                                                style={{ aspectRatio: '4 / 3' }}
+                                            />
+                                            {m?.caption && (
+                                                <figcaption className="px-2 py-1 text-[11px] text-white/50 truncate">{m.caption}</figcaption>
+                                            )}
+                                        </figure>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     );
                 })()}

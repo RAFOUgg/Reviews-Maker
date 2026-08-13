@@ -427,7 +427,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
     };
 
     const renderContent = () => (
-        <OrderedFlow moduleOrder={config.moduleOrder}>
+        <OrderedFlow moduleOrder={config.moduleOrder} columns={getTemplateColumns('modernCompact', config.ratio)}>
             {/* Masthead : titre/type/note/profil cannabinoïde/catégorie/provenance/parentage — un
                 seul bloc `data-module="masthead"` (pagination adaptative, Phase C) pour rester
                 groupé sur la première page, comme la couverture de `DetailedCardTemplate.jsx`. */}

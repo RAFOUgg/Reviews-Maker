@@ -74,12 +74,15 @@ try {
         await p.mouse.click(cible.x, cible.y); await sleep(1500);
         const apres = await revele();
         console.log(`après clic sur « ${cible.texte} » : ${JSON.stringify(apres)}`);
-        if (!apres.modale && apres.longueurBloc <= avantClic.longueurBloc) {
-            console.log('KO — le clic sur une case ne révèle pas son détail'); ko++;
-        }
+        // Le détail doit s'ouvrir en MODALE : le panneau en ligne déplaçait le contenu sous lui et
+        // sa hauteur n'entrait dans aucune mesure de pagination. « les contenus doivent s'afficher
+        // en modale pop-up » (2026-08-13).
+        if (!apres.modale) { console.log('KO — le détail d’étape ne s’ouvre pas en modale'); ko++; }
         // Le détail doit être écrit comme le formulaire l'écrit : pas de clé brute anglicisée, pas
         // de bookkeeping (`cellLabel`). C'est l'écart de vocabulaire signalé, pas un détail cosmétique.
-        const brut = (apres.queue.match(/Co2 ppm|Cell label|Temperature|Humidity|Ph/g) || []);
+        const texteModale = await p.evaluate(() => (document.querySelector('[role="dialog"]')?.innerText || '').replace(/\s+/g, ' '));
+        console.log(`modale : ${texteModale.slice(0, 140)}`);
+        const brut = (texteModale.match(/Co2 ppm|Cell label|Temperature|Humidity|Ph/g) || []);
         if (brut.length) { console.log(`KO — clés brutes dans le détail : ${brut.join(', ')}`); ko++; }
     }
 

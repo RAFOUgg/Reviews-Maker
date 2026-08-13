@@ -54,8 +54,13 @@ export default function ScreenPreviewPane({ reviewData, config, onReorderBlocks 
         );
     }
 
-    // Le ratio de fichier enregistré sur la review n'a aucun sens ici : on lui substitue le format
-    // d'écran choisi, sans toucher à la config sauvegardée (l'export continue de lire la sienne).
+    // Le ratio de fichier enregistré sur la review n'a aucun sens ici : on lui substitue un format
+    // d'écran, sans toucher à la config sauvegardée (l'export continue de lire la sienne).
+    //
+    // Le sélecteur ne fait que CONTRAINDRE LA LARGEUR du cadre : c'est ensuite `SingleReviewCard`
+    // qui déduit de la largeur réelle s'il faut une mise en page d'ordinateur ou de téléphone, et
+    // qui recompose. On emprunte donc exactement le chemin d'un vrai appareil de cette largeur,
+    // plutôt qu'un mode d'aperçu parallèle qui pourrait mentir.
     const configEcran = { ...config, ratio: format };
     const dims = RATIO_DIMENSIONS[format];
 

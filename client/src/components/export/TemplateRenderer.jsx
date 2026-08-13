@@ -6,7 +6,7 @@ import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
 import TraceabilityReportTemplate from '../templates/TraceabilityReportTemplate';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
-import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
+import { RATIO_DIMENSIONS, isScreenRatio } from '../../utils/exportMakerHelpers';
 import { InteractivityProvider } from './interactive/InteractiveContext';
 import BlockZoomOverlay from './interactive/BlockZoomOverlay';
 import BlockDragOverlay from './interactive/BlockDragOverlay';
@@ -42,7 +42,14 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
         TemplateComponent = TEMPLATES.detailedCard;
     }
 
-    const dimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+    // `config.screenWidth` : en mode ÉCRAN, le canevas prend la largeur RÉELLEMENT disponible
+    // plutôt que la largeur nominale du format — le rendu se recompose à cette largeur au lieu
+    // d'être une maquette rétrécie (cf. `SingleReviewCard`). Sans ce prop (export fichier, mesure
+    // de pagination), rien ne change : on garde la largeur du format.
+    const baseDimensions = RATIO_DIMENSIONS[config.ratio] || RATIO_DIMENSIONS['1:1'];
+    const dimensions = (isScreenRatio(config.ratio) && Number.isFinite(config.screenWidth))
+        ? { ...baseDimensions, width: config.screenWidth }
+        : baseDimensions;
 
     // `traceabilityReport` est un rapport continu (Sections non filtrées par page, cf.
     // `shouldAutoLockPagination`) — toujours traité comme un document qui grandit avec son contenu,
