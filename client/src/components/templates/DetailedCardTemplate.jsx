@@ -896,6 +896,37 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </Section>
                 )}
 
+                {/* Debug — visible si ?debug=1 */}
+                {typeof window !== 'undefined' && window.location.search.includes('debug=1') && (
+                    <div className="mt-8 p-4 bg-black/50 rounded-xl border border-yellow-500/30">
+                        <h4 className="text-yellow-400 font-bold mb-2">🔧 Debug - Données disponibles</h4>
+                        <div className="text-xs text-gray-300 max-h-64 overflow-y-auto">
+                            <div className="grid grid-cols-2 gap-2">
+                                {Object.entries(reviewData).map(([key, value]) => {
+                                    let displayValue = value;
+                                    if (value === null || value === undefined) displayValue = '(vide)';
+                                    else if (Array.isArray(value)) displayValue = `[${value.length} items]`;
+                                    else if (typeof value === 'object') displayValue = '{...}';
+                                    else if (typeof value === 'string' && value.length > 30) displayValue = value.slice(0, 30) + '...';
+                                    return (
+                                        <div key={key} className={`p-1 rounded ${value && value !== '' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
+                                            <span className="">{key}:</span> {String(displayValue)}
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    </div>
+                )}
+                </OrderedFlow>
+                </div>
+                {/* PIED DE PAGE — hors du flux en colonnes.
+                    Il en était le dernier enfant, donc il tombait en fin de COLONNE : sur une page
+                    à deux colonnes peu chargées, le sceau et le QR se retrouvaient au milieu de la
+                    page, la moitié basse restant vide (vu sur un export 16:9 réel). Un pied
+                    appartient à la PAGE, pas à une colonne de texte. `marginTop: auto` le pousse en
+                    bas du conteneur, quelle que soit la hauteur du contenu au-dessus. */}
+                <div style={{ marginTop: 'auto', flexShrink: 0 }}>
                 {/* ── PIED ── */}
                 <div style={{
                     display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap',
@@ -923,29 +954,6 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     </div>
                 </div>
 
-                {/* Debug — visible si ?debug=1 */}
-                {typeof window !== 'undefined' && window.location.search.includes('debug=1') && (
-                    <div className="mt-8 p-4 bg-black/50 rounded-xl border border-yellow-500/30">
-                        <h4 className="text-yellow-400 font-bold mb-2">🔧 Debug - Données disponibles</h4>
-                        <div className="text-xs text-gray-300 max-h-64 overflow-y-auto">
-                            <div className="grid grid-cols-2 gap-2">
-                                {Object.entries(reviewData).map(([key, value]) => {
-                                    let displayValue = value;
-                                    if (value === null || value === undefined) displayValue = '(vide)';
-                                    else if (Array.isArray(value)) displayValue = `[${value.length} items]`;
-                                    else if (typeof value === 'object') displayValue = '{...}';
-                                    else if (typeof value === 'string' && value.length > 30) displayValue = value.slice(0, 30) + '...';
-                                    return (
-                                        <div key={key} className={`p-1 rounded ${value && value !== '' ? 'bg-green-500/20' : 'bg-red-500/20'}`}>
-                                            <span className="">{key}:</span> {String(displayValue)}
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    </div>
-                )}
-                </OrderedFlow>
                 </div>
             </motion.div>
 
