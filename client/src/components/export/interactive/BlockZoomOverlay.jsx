@@ -38,12 +38,20 @@ export default function BlockZoomOverlay({ containerRef, enabled }) {
             // la Vue Détaillée, qui est le rendu ÉCRAN réel depuis le 2026-08-06 (`/r/:id`).
             const block = event.target.closest('[data-module], [data-zoom-block]');
             if (!block || !root.contains(block)) return;
-            const rect = block.getBoundingClientRect();
-            if (rect.width < 40 || rect.height < 24) return; // rien d'exploitable à agrandir
+            // `offsetWidth/Height` et NON `getBoundingClientRect()` : le second renvoie la taille
+            // TRANSFORMÉE, et les surfaces de rendu affichent presque toujours le canevas sous un
+            // `transform: scale()` (aperçu Studio ~×0,35, vignette de galerie, page publique).
+            // Le clone, lui, se remet en page à sa taille CSS naturelle : lui donner la largeur
+            // VISUELLE l'enfermait dans une boîte trois fois trop étroite — contenu coupé à droite
+            // — avant d'être agrandi d'autant. C'est exactement le piège relevé en sondant la
+            // courbe d'étirement (une mesure prise dans l'aperçu miniature ne dit rien du rendu).
+            const largeur = block.offsetWidth;
+            const hauteur = block.offsetHeight;
+            if (largeur < 40 || hauteur < 24) return; // rien d'exploitable à agrandir
             setZoom({
                 html: block.outerHTML,
-                width: Math.round(rect.width),
-                height: Math.round(rect.height),
+                width: largeur,
+                height: hauteur,
                 label: block.getAttribute('data-module') || block.getAttribute('data-zoom-block') || 'bloc',
             });
         };
@@ -61,12 +69,17 @@ export default function BlockZoomOverlay({ containerRef, enabled }) {
 
     if (!zoom || typeof document === 'undefined') return null;
 
-    // Agrandit jusqu'à remplir la fenêtre, sans jamais RÉDUIRE : un « zoom » qui rapetisse le bloc
-    // serait absurde. Un bloc plus grand que la fenêtre reste donc à sa taille et défile.
+    // Le bloc est mis à l'échelle pour TENIR dans la fenêtre — en l'agrandissant s'il est petit,
+    // en le réduisant s'il est plus large qu'elle. Un bloc doit être vu ENTIER : la version
+    // précédente refusait de réduire (`Math.max(1, …)`), ce qui laissait un bloc large déborder du
+    // cadre et se faire couper. Le gain de lisibilité vient déjà du fait que la source est affichée
+    // réduite ; l'afficher à sa taille réelle est en soi un zoom.
+    //
+    // Plafond à ×2,5 : au-delà, une petite carte devient une affiche floue plutôt qu'un détail lisible.
     const marge = 96;
     const dispoW = Math.max(240, window.innerWidth - marge);
     const dispoH = Math.max(240, window.innerHeight - marge);
-    const echelle = Math.max(1, Math.min(dispoW / zoom.width, dispoH / zoom.height));
+    const echelle = Math.min(dispoW / zoom.width, dispoH / zoom.height, 2.5);
 
     return createPortal(
         <div

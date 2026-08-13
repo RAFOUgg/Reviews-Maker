@@ -111,3 +111,11 @@
     -webkit-backdrop-filter: blur(2px);
     transition: none !important;
 }
+/* MODE PAPIER — voir `.export-paper` (graphCanvas.css) pour le raisonnement d'ensemble.
+   Le conteneur de la grille porte `bg-gray-900/30`, un voile pensé pour détacher la grille du fond
+   SOMBRE de l'éditeur. Sur un A4 crème il devient une dalle grise sous chaque rangée de cases —
+   vu sur un export réel. Les cases, elles, gardent leur échelle de verts : elle ENCODE la densité
+   de données documentées, la repeindre changerait le sens de la grille, pas seulement son style. */
+.export-paper [data-testid="pipeline-scroll"] {
+    background-color: transparent;
+}

@@ -93,14 +93,21 @@ export default function CultureStatsChart({ steps, pipelineType, width = 560, he
                 const couleurs = cles.map(() => seriesColors[indexCouleur++ % seriesColors.length]);
                 return (
                     <LineChart key={ordre} width={width} height={hauteurGroupe} data={chartData}
-                        margin={{ top: 4, right: 8, bottom: 4, left: -12 }}>
+                        // `left: 0` et non `-12` : la marge négative décalait la zone de tracé vers
+                        // la gauche, si bien que les graduations sortaient du conteneur et se
+                        // faisaient couper — vu sur un export A4 réel, l'axe affichait « 00 » et
+                        // « 50 » pour 800 et 1500 ppm. Un axe dont on ne lit pas les valeurs ne
+                        // documente rien : les 12px regagnés sur la largeur du tracé ne les valaient pas.
+                        margin={{ top: 4, right: 8, bottom: 4, left: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke={lineColor} />
                         {/* L'axe des étapes n'est légendé que sous le dernier graphique : les trois
                             partagent exactement les mêmes abscisses, le répéter mangerait de la
                             hauteur utile pour redire la même chose. */}
                         <XAxis dataKey="index" stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }}
                             hide={ordre !== groupes[groupes.length - 1].ordre} />
-                        <YAxis stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} width={34} />
+                        {/* 44px : la place d'un nombre à quatre chiffres (« 1500 » ppm) à 12px, graduation comprise.
+                            À 34px, la valeur était rognée d'un ou deux caractères. */}
+                        <YAxis stroke={textColor} tick={{ fontSize: MIN_FONT_PX, fill: textColor }} width={44} />
                         <Tooltip contentStyle={{ background: '#16201B', border: `1px solid ${lineColor}`, borderRadius: 8, fontSize: MIN_FONT_PX }} labelStyle={{ color: textColor }} />
                         <Legend wrapperStyle={{ fontSize: MIN_FONT_PX, color: textColor }} />
                         {cles.map((key, idx) => (

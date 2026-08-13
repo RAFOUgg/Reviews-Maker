@@ -65,6 +65,49 @@ try {
         verdict('bloc de contenu trouvé', false, 'aucun [data-zoom-block]');
     }
 
+    // 1 bis. SURFACE MISE À L'ÉCHELLE — le cas qui a cassé en production.
+    //
+    // L'aperçu Studio affiche le canevas sous un `transform: scale()` (~0,35). Le zoom mesurait la
+    // taille VISUELLE (`getBoundingClientRect`) et enfermait le clone dans une boîte trois fois trop
+    // étroite : contenu coupé à droite, puis agrandi d'autant. On rejoue donc le clic sous une
+    // échelle imposée, et on vérifie que le clone garde la largeur de MISE EN PAGE de la source et
+    // tient dans la fenêtre.
+    await p.evaluate(() => {
+        const racine = document.querySelector('[data-zoom-block]')?.parentElement;
+        if (racine) { racine.style.transform = 'scale(0.35)'; racine.style.transformOrigin = 'top left'; }
+    });
+    await sleep(400);
+    const cible2 = p.locator('[data-zoom-block]').first();
+    const b2 = await cible2.boundingBox();
+    if (b2) {
+        await p.mouse.click(b2.x + 10, b2.y + b2.height - 10);
+        await sleep(700);
+        const m = await p.evaluate(() => {
+            const src = document.querySelector('[data-zoom-block]');
+            const dlg = document.querySelector('[role="dialog"][aria-label^="Vue agrandie"]');
+            const boite = dlg && dlg.firstElementChild;
+            if (!src || !boite) return null;
+            const r = boite.getBoundingClientRect();
+            return {
+                largeurSource: src.offsetWidth,
+                largeurClone: boite.offsetWidth,
+                largeurVisible: Math.round(r.width),
+                fenetre: window.innerWidth,
+            };
+        });
+        verdict('le clone garde la largeur de mise en page de la source', m && m.largeurClone === m.largeurSource,
+            m ? `source ${m.largeurSource}px · clone ${m.largeurClone}px` : 'aucune mesure');
+        verdict('la vue agrandie tient dans la fenêtre', m && m.largeurVisible <= m.fenetre,
+            m ? `${m.largeurVisible}px pour ${m.fenetre}px` : 'aucune mesure');
+        await p.keyboard.press('Escape');
+        await sleep(300);
+    }
+    await p.evaluate(() => {
+        const racine = document.querySelector('[data-zoom-block]')?.parentElement;
+        if (racine) racine.style.transform = '';
+    });
+    await sleep(300);
+
     // 2. Une CELLULE de pipeline ne déclenche pas le zoom : elle a sa propre action.
     const cellule = p.locator('[data-zoom-skip]').first();
     if (await cellule.count()) {
