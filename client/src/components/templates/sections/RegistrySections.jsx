@@ -244,6 +244,14 @@ export function GisementSection({ reviewData, contentModules, group, Section, co
 
         const fields = groupFields
             .filter((f) => f.type !== 'score') // les scores vont dans les notes par catégorie
+            // `type: 'view'` = un INTERRUPTEUR de bloc (arbre généalogique, chaîne, statistiques),
+            // pas une donnée. Ces entrées vivaient toutes dans le groupe « Présentation », que
+            // `GISEMENT_GROUPS` n'inclut pas — elles n'atteignaient donc jamais ce rendu. En les
+            // rangeant dans le groupe de leur SUJET (2026-08-13, pour qu'on les trouve là où on les
+            // cherche), elles y sont arrivées et se sont mises à s'imprimer comme des lignes de
+            // données : +2 pages sur la Fiche Technique 16:9 et une page à 20,5 % sur le Rapport de
+            // Traçabilité. Un interrupteur ne se rend pas.
+            .filter((f) => f.type !== 'view')
             .filter((f) => f.ref == null || group !== 'analytics') // cannabinoïdes gérés par CannabinoidGrid
             .filter((f) => isModuleOn(contentModules, f.key));
 

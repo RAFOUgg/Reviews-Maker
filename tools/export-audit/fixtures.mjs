@@ -74,6 +74,23 @@ export function buildFixture(type, density) {
     if (density === 'minimal') return body;
 
     Object.assign(body, { description: DESCRIPTION, ...CANNABINOIDS, ...AROMAS });
+
+    // GÉNÉTIQUE et CULTURE — deux groupes entiers du panneau Contenu (13 champs) qu'AUCUNE fixture
+    // ne remplissait. Angle mort mesuré le 2026-08-13 : éteindre ces 13 interrupteurs ne changeait
+    // rien au rendu (0 caractère de différence) — non pas parce qu'ils étaient morts, mais parce
+    // qu'il n'y avait rien à éteindre. Une fixture sans données ne peut pas prouver qu'un réglage
+    // agit ; c'est le même angle mort que les canevas (C14 §3) et les photos d'étape.
+    // Clés reprises des `sources[]` du registre, jamais devinées.
+    if (type === 'flower') {
+        Object.assign(body, {
+            varietyType: 'hybride', geneticType: 'F1', indicaPercent: 60, sativaPercent: 40,
+            // `parentage` est stocké en JSON côté serveur (liste de parents), pas en texte libre :
+            // une chaîne brute y fait échouer la création avec un 500 « is not valid JSON ».
+            parentage: JSON.stringify(['GMO', 'Wedding Cake']), phenotypeCode: 'PH-04',
+            cultureMode: 'indoor', cultureSpaceType: 'tente 120×120', cultureDuration: 95,
+            cultureSeason: 'automne', cultureStartDate: '2026-03-01', cultureEndDate: '2026-06-04',
+        });
+    }
     if (type !== 'edible') Object.assign(body, SENSORY);
 
     const long = density === 'dense';

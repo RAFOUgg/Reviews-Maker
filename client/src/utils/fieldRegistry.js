@@ -89,10 +89,19 @@ const REGISTRY = [
     { key: 'categoryRatings', label: 'Notes par catégorie', group: 'presentation', type: 'rich', sources: ['categoryRatings', 'ratings'] },
     { key: 'author', label: 'Auteur', group: 'presentation', type: 'text', sources: ['author', 'ownerName'] },
     { key: 'date', label: 'Date', group: 'presentation', type: 'date', sources: ['createdAt', 'date'] },
-    // Vues interactives (rendues par un code dédié du template ; togglables ici, opt-out par défaut)
-    { key: 'phenoHuntView', label: 'Arbre généalogique', group: 'presentation', type: 'view', sources: ['geneticTreeId', 'parentage'] },
-    { key: 'productionChainView', label: 'Chaîne de production', group: 'presentation', type: 'view', sources: ['parentFlowerReviewId', 'sourceLineage'] },
-    { key: 'pipelineInteractiveView', label: 'Statistiques de culture', group: 'presentation', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
+    // VUES INTERACTIVES — rangées dans le groupe DE LEUR SUJET, pas dans « Présentation ».
+    //
+    // Elles y étaient toutes les quatre, par commodité d'implémentation (« ce sont des vues »).
+    // Conséquence signalée le 2026-08-13, capture à l'appui : l'utilisateur éteint tout le groupe
+    // « Génétique » (0/6) et la généalogie reste affichée — son interrupteur était ailleurs, sous un
+    // nom différent. Vérifié par mesure : les interrupteurs FONCTIONNENT (éteindre les 13 champs
+    // Génétique+Culture retire bien `gisement:culture` et 159 caractères) ; c'est leur RANGEMENT qui
+    // trompait. Un réglage introuvable se lit comme un réglage cassé.
+    //
+    // Chaque vue rejoint donc le groupe que l'utilisateur ouvre quand il pense à elle.
+    { key: 'phenoHuntView', label: 'Arbre généalogique', group: 'genetics', type: 'view', sources: ['geneticTreeId', 'parentage'] },
+    { key: 'productionChainView', label: 'Chaîne de production', group: 'traceability', type: 'view', sources: ['parentFlowerReviewId', 'sourceLineage'] },
+    { key: 'pipelineInteractiveView', label: 'Statistiques de culture', group: 'culture', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
     { key: 'pipelineDetailGrids', label: 'Pipelines — vue compacte (en plus du détail complet)', group: 'presentation', type: 'view', sources: ['cultureTimelineData', 'separationTimelineData', 'extractionTimelineData', 'curingTimelineData'] },
 
     // ── GENERAL ────────────────────────────────────────────────────────────────
