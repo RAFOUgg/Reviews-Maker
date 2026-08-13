@@ -1217,7 +1217,21 @@ export const RATIO_DIMENSIONS = {
     '9:16': { width: 1080, height: 1920, label: 'Portrait (9:16)' },
     '4:3': { width: 1600, height: 1200, label: 'Standard (4:3)' },
     'A4': { width: 1754, height: 2480, label: 'A4 (Document)' },
+    // ── FORMATS D'ÉCRAN ─────────────────────────────────────────────────────────────────────────
+    // Le mode Écran n'a rien à faire des ratios de FICHIER : une fiche en ligne se lit sur un
+    // ordinateur ou sur un téléphone, pas « en 16:9 » ou « en A4 ». Ces deux entrées vivent dans la
+    // même table que les autres pour une raison précise : c'est elle qui pilote `getResponsiveAdjustments`
+    // (typographie, colonnes, marges). En les déclarant ici, le rendu se recalibre tout seul à la
+    // largeur réelle du terminal, au lieu d'être un canevas de fichier rétréci au `transform: scale`.
+    // Elles n'apparaissent PAS dans les sélecteurs de format d'export : ceux-ci lisent
+    // `template.supportedRatios` (`exportMakerConstants.js`), qui ne les liste pas.
+    'ecran-pc': { width: 1440, height: 900, label: 'Ordinateur' },
+    'ecran-mobile': { width: 420, height: 900, label: 'Téléphone' },
 };
+
+/** Les deux formats du mode Écran, dans l'ordre d'affichage. */
+export const SCREEN_RATIOS = ['ecran-pc', 'ecran-mobile'];
+export const isScreenRatio = (ratio) => SCREEN_RATIOS.includes(ratio);
 
 /**
  * Calcule les dimensions du canvas
@@ -1317,6 +1331,13 @@ export const FORMAT_LAYOUT = {
     // qui laissait ses dernières pages à moitié vides, une page absorbant deux fois moins de
     // contenu qu'elle ne le pourrait. Deux colonnes corrigent les deux à la fois.
     'A4':   { imageShare: 0.20, columns: 2, orientation: 'document' },
+    // Formats d'ÉCRAN. Un ordinateur a la largeur pour deux colonnes ; un téléphone n'en a jamais
+    // qu'une — deux colonnes sur 420px donneraient des lignes de ~25 caractères, sous la moitié de
+    // la cible typographique (45-90, règle E5). L'image occupe une part généreuse : sur une page
+    // web elle sert d'accroche, et rien ne la met en concurrence avec le reste puisque le document
+    // défile au lieu de tenir dans une hauteur fixe.
+    'ecran-pc':     { imageShare: 0.55, columns: 2, orientation: 'landscape' },
+    'ecran-mobile': { imageShare: 0.60, columns: 1, orientation: 'portrait' },
 };
 
 /** Contrat de mise en page d'un format. Repli sur le carré pour un ratio inconnu. */
@@ -1421,16 +1442,34 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}, colonnes = 
     // La longueur de ligne est ce qui gouverne la taille d'un texte : on la prend donc pour base.
     // La référence reste le carré validé à l'œil (800px, une colonne) — `f = 1` pour lui.
     // Le plafond évite qu'un format très large ne produise une affiche.
+    //
+    // ── L'ÉCRAN EST L'EXCEPTION, ET IL L'EST POUR UNE RAISON DE FOND ────────────────────────────
+    // Tout ce raisonnement proportionnel tient parce qu'un export est une IMAGE : elle sera vue à
+    // une taille inconnue, donc seul le rapport police/canevas décide de la lisibilité. Un rendu
+    // d'écran, lui, s'affiche à 1:1 en pixels CSS — c'est la taille ABSOLUE qui décide, et la
+    // proportion ne veut plus rien dire. Appliquer l'échelle sur un canevas téléphone (420px)
+    // donnerait un facteur de 0,52 et donc un corps de texte à 7px : illisible, sur le seul format
+    // où l'on est certain de la taille d'affichage. Sur les formats d'écran, la police demandée est
+    // donc la police rendue, avec un plancher absolu de lisibilité.
+    const surEcran = isScreenRatio(ratio);
     const largeurColonne = dimensions.width / Math.max(1, colonnes);
-    const facteurCanevas = Math.min(largeurColonne / 800, 1.8);
+    const facteurCanevas = surEcran ? 1 : Math.min(largeurColonne / 800, 1.8);
     const echelle = (px) => Math.round(px * facteurCanevas);
 
-    const maxTitleFont = Math.round(dimensions.height * 0.040);
-    const maxTextFont = Math.round(dimensions.height * 0.0185);
+    const maxTitleFont = surEcran
+        // Un téléphone n'a pas de hauteur de page à respecter (le document défile) : le titre est
+        // borné par la LARGEUR, sans quoi il déborderait latéralement.
+        ? Math.round(dimensions.width * 0.075)
+        : Math.round(dimensions.height * 0.040);
+    const maxTextFont = surEcran ? 18 : Math.round(dimensions.height * 0.0185);
     const titleFont = Math.min(echelle((baseTypography.titleSize || 32) * scaleFactor), maxTitleFont);
     // Les PLANCHERS suivent l'échelle du canevas, sinon ils annulent tout : c'est `Math.max(14, …)`
-    // et `Math.max(12, …)` qui figeaient le texte à 12-14px sur TOUS les formats.
-    const textFont = Math.max(echelle(14), Math.min(echelle((baseTypography.textSize || 14) * scaleFactor), maxTextFont));
+    // et `Math.max(12, …)` qui figeaient le texte à 12-14px sur TOUS les formats. Sur écran, le
+    // plancher redevient absolu : 15px, la limite basse habituelle d'un corps de texte lisible sur
+    // téléphone (en deçà, l'appareil propose lui-même de zoomer).
+    const textFont = surEcran
+        ? Math.max(15, Math.min(baseTypography.textSize || 14, maxTextFont))
+        : Math.max(echelle(14), Math.min(echelle((baseTypography.textSize || 14) * scaleFactor), maxTextFont));
 
     return {
         // Facteurs d'échelle
@@ -1517,7 +1556,10 @@ export function getResponsiveAdjustments(ratio, baseTypography = {}, colonnes = 
 
         // Grid
         grid: {
-            cols: isSquare ? 2 : isA4 ? 4 : isPortrait ? 2 : 3,
+            // Sur un écran, le nombre de colonnes vient du format d'écran lui-même : la branche
+            // « portrait » donnerait 2 colonnes à un téléphone de 420px, soit des cellules de
+            // ~190px où plus rien ne tient.
+            cols: surEcran ? getFormatLayout(ratio).columns : (isSquare ? 2 : isA4 ? 4 : isPortrait ? 2 : 3),
         },
     };
 }
@@ -1538,6 +1580,8 @@ export default {
     orderRenderBlocks,
     extractSubstrat,
     RATIO_DIMENSIONS,
+    SCREEN_RATIOS,
+    isScreenRatio,
     calculateDimensions,
     PRODUCT_TYPES,
     isFieldRelevant,

@@ -3,14 +3,9 @@ import PropTypes from 'prop-types'
 import TemplateRenderer from './TemplateRenderer'
 import { isTemplatePaginable } from '../../store/exportMakerConstants'
 import { resolveConfigForReview } from '../../store/exportMakerStore'
-
-const RATIO_DIMS = {
-    '1:1': { width: 800, height: 800 },
-    '16:9': { width: 1920, height: 1080 },
-    '9:16': { width: 1080, height: 1920 },
-    '4:3': { width: 1600, height: 1200 },
-    'A4': { width: 1754, height: 2480 },
-}
+// Table partagée : ce fichier en gardait une troisième copie littérale, donc tout format ajouté
+// ailleurs y restait inconnu (les formats d'écran, notamment).
+import { RATIO_DIMENSIONS as RATIO_DIMS, isScreenRatio } from '../../utils/exportMakerHelpers'
 
 /**
  * Rendu lecture-seule d'UNE review, à l'échelle de son conteneur — extrait de
@@ -19,7 +14,7 @@ const RATIO_DIMS = {
  * empilées). `reviewData` est déjà fetchée par l'appelant — ce composant ne fait que résoudre sa
  * config Export Maker et la mettre à l'échelle, il ne fetch rien lui-même.
  */
-export default function SingleReviewCard({ reviewData, canvasId = 'public-render-canvas', config: configOverride = null, fitHeight = false }) {
+export default function SingleReviewCard({ reviewData, canvasId = 'public-render-canvas', config: configOverride = null, fitHeight = false, onReorderBlocks = null }) {
     const containerRef = useRef(null)
     const scaledBoxRef = useRef(null)
     const [scale, setScale] = useState(1)
@@ -50,7 +45,10 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
     // La distinction n'est pas réinventée ici : `TEMPLATE_PAGINATION` la porte déjà — un template
     // non paginable EST une carte (« ce sont des CARTES, elles ne se paginent pas »), les trois
     // autres sont des documents qui coulent.
-    const estCarte = !isTemplatePaginable(config?.template)
+    // Un format d'ÉCRAN n'est jamais une carte : une fiche en ligne coule sur la hauteur qu'il lui
+    // faut, quel que soit le template. Sans cette exception, Moderne Compact et Story se seraient
+    // fait couper à 900px de haut sur un téléphone.
+    const estCarte = !isTemplatePaginable(config?.template) && !isScreenRatio(config?.ratio)
 
     // Mise à l'échelle sur la LARGEUR uniquement — la fiche est un document vivant censé défiler
     // normalement, pas un export figé à ratio fixe. Caler aussi sur la hauteur du viewport forçait
@@ -135,7 +133,7 @@ export default function SingleReviewCard({ reviewData, canvasId = 'public-render
                     marginBottom: (fitScale < 1 && contentHeight) ? `${-(1 - fitScale) * contentHeight}px` : 0,
                 }}
             >
-                <TemplateRenderer config={config} reviewData={reviewData} canvasId={canvasId} allowOverflow={!estCarte} />
+                <TemplateRenderer config={config} reviewData={reviewData} canvasId={canvasId} allowOverflow={!estCarte} onReorderBlocks={onReorderBlocks} />
             </div>
         </div>
     )
@@ -146,4 +144,6 @@ SingleReviewCard.propTypes = {
     canvasId: PropTypes.string,
     config: PropTypes.object,
     fitHeight: PropTypes.bool,
+    /** Transmis à `TemplateRenderer` : active le glisser-déposer des blocs (Studio seulement). */
+    onReorderBlocks: PropTypes.func,
 }

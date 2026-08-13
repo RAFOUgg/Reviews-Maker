@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { ArrowDown, ArrowUp, Lock, RotateCcw } from 'lucide-react';
 import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { useTemplateModuleIds } from '../../../hooks/useAdaptivePages';
-import { getModuleMeta } from '../../../utils/adaptivePagination';
+import { getModuleMeta, baseModuleId } from '../../../utils/adaptivePagination';
 import { LiquidButton } from '../../ui/LiquidUI';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -24,10 +24,7 @@ const PINNED_MODULE_IDS = new Set(['masthead', 'mainImage', 'heroImage']);
 
 // Un pipeline découpé en tronçons (`pipeline:culture#0`, `#1`…) est UNE entrée : on ordonne un
 // pipeline, pas ses tranches — le découpage est une décision de pagination, pas de mise en page.
-function baseId(id) {
-    const hash = id.indexOf('#');
-    return hash === -1 ? id : id.slice(0, hash);
-}
+const baseId = baseModuleId;
 
 export default function ModuleOrderControls() {
     const config = useExportMakerStore((state) => state.config);

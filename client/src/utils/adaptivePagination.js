@@ -311,7 +311,10 @@ const ALWAYS_ISOLATE = new Set();
 
 // Un tronçon de pipeline porte un id `<module>#<n>` (cf. PipelineTimeline.jsx) : les règles
 // d'isolement et de libellé s'appliquent au module de base, pas au numéro de tronçon.
-function baseModuleId(id) {
+// Exporté : `ModuleOrderControls` (flèches) et `BlockDragOverlay` (glisser-déposer) ordonnent tous
+// deux des MODULES, jamais des tronçons — trois copies du même découpage étaient une invitation à
+// les voir diverger.
+export function baseModuleId(id) {
     const hash = id.indexOf('#');
     return hash === -1 ? id : id.slice(0, hash);
 }

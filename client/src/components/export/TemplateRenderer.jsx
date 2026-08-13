@@ -6,8 +6,10 @@ import BlogArticleTemplate from '../templates/BlogArticleTemplate';
 import SocialStoryTemplate from '../templates/SocialStoryTemplate';
 import TraceabilityReportTemplate from '../templates/TraceabilityReportTemplate';
 import { buildExportReviewData } from '../../utils/exportDataAdapter';
+import { RATIO_DIMENSIONS } from '../../utils/exportMakerHelpers';
 import { InteractivityProvider } from './interactive/InteractiveContext';
 import BlockZoomOverlay from './interactive/BlockZoomOverlay';
+import BlockDragOverlay from './interactive/BlockDragOverlay';
 
 // Mapping des templates
 const TEMPLATES = {
@@ -18,16 +20,11 @@ const TEMPLATES = {
     traceabilityReport: TraceabilityReportTemplate
 };
 
-// Ratios et dimensions
-const RATIO_DIMENSIONS = {
-    '1:1': { width: 800, height: 800 },
-    '16:9': { width: 1920, height: 1080 },
-    '9:16': { width: 1080, height: 1920 },
-    '4:3': { width: 1600, height: 1200 },
-    'A4': { width: 1754, height: 2480 } // 210mm x 297mm at 210 DPI
-};
+// Les dimensions viennent de `exportMakerHelpers` — ce fichier en gardait une copie littérale, ce
+// qui rendait impossible d'ajouter un format sans le déclarer à deux endroits (et le projet a déjà
+// payé six fois le prix d'un vocabulaire dupliqué, cf. CLAUDE.md).
 
-export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageStretch = null, pageColumns = null, pageGap = null, transparentBackground = false, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true }) {
+export default function TemplateRenderer({ config, reviewData, activeModules = null, pageModuleIds = null, pageStretch = null, pageColumns = null, pageGap = null, transparentBackground = false, pageMode = false, canvasId = 'export-maker-canvas', className = '', allowOverflow = false, interactive = true, onReorderBlocks = null }) {
     const canvasRef = useRef(null);
     let TemplateComponent = TEMPLATES[config.template];
     const adaptedReviewData = buildExportReviewData(reviewData);
@@ -179,6 +176,10 @@ export default function TemplateRenderer({ config, reviewData, activeModules = n
             {/* Zoom au clic — additif et strictement lié à `interactive` : jamais monté sur un
                 arbre de capture ni de mesure, donc invisible pour un export. */}
             <BlockZoomOverlay containerRef={canvasRef} enabled={interactive} />
+            {/* Glisser-déposer des blocs — seulement là où un ordre PEUT être écrit, c'est-à-dire
+                quand l'appelant fournit `onReorderBlocks` (le Studio). Une page publique montre le
+                rendu, elle ne le compose pas : sans ce prop, la surcouche n'est pas montée. */}
+            <BlockDragOverlay containerRef={canvasRef} enabled={interactive && Boolean(onReorderBlocks)} onReorder={onReorderBlocks || (() => {})} />
         </div>
     );
 }
@@ -209,7 +210,9 @@ TemplateRenderer.propTypes = {
     className: PropTypes.string,
     allowOverflow: PropTypes.bool,
     /** Faux sur un arbre monté pour la capture ou la mesure : aucune affordance, aucun handler. */
-    interactive: PropTypes.bool
+    interactive: PropTypes.bool,
+    /** `(ordre: string[]) => void` — active le glisser-déposer des blocs sur le rendu. */
+    onReorderBlocks: PropTypes.func
 };
 
 

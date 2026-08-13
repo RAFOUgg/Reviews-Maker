@@ -223,6 +223,9 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
     const setReviewData = useExportMakerStore((state) => state.setReviewData);
     const applyConfig = useExportMakerStore((state) => state.applyConfig);
     const isPreviewFullscreen = useExportMakerStore((state) => state.isPreviewFullscreen);
+    // Glisser-déposer des blocs sur le rendu : écrit dans le MÊME `config.moduleOrder` que les
+    // flèches du panneau Contenu — un seul état d'ordre, deux façons de le modifier.
+    const reorderModules = useExportMakerStore((state) => state.reorderModules);
     const togglePreviewFullscreen = useExportMakerStore((state) => state.togglePreviewFullscreen);
     const setPreviewFullscreen = useExportMakerStore((state) => state.setPreviewFullscreen);
     const config = useExportMakerStore((state) => state.config);
@@ -544,7 +547,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
                                 exit={{ opacity: 0 }}
                                 className="w-full h-full"
                             >
-                                <ScreenPreviewPane reviewData={normalizedReview} config={config} />
+                                <ScreenPreviewPane reviewData={normalizedReview} config={config} onReorderBlocks={reorderModules} />
                             </motion.div>
                         ) : (
                             // MODE TEMPLATE SPLIT
@@ -567,7 +570,7 @@ export default function ExportMakerPanel({ reviewData, onClose, onPresetApplied,
 
                                 {/* Preview Pane - Right */}
                                 <div className={`flex-1 overflow-hidden min-w-0 min-h-[300px] ${effectiveMobileView === 'preview' ? 'block' : 'hidden'} md:block`}>
-                                    <ScreenPreviewPane reviewData={normalizedReview} config={config} />
+                                    <ScreenPreviewPane reviewData={normalizedReview} config={config} onReorderBlocks={reorderModules} />
                                 </div>
                             </motion.div>
                         )}
