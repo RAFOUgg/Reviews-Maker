@@ -22,6 +22,7 @@ import {
     MIN_FONT_PX,
     readableFontSize,
     getSelectedImages,
+    getGalleryImages,
     TIMELINE_PIPELINES,
     getImageRenderStyle,
     orderRenderBlocks,
@@ -613,25 +614,42 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                 seule (mêmes dimensions, même dégradé) : la couverture ne change pas
                                 de hauteur, donc la pagination mesurée reste valable. */}
                             {config.image?.showGallery && visibleImages.length > 1 ? (
+                                // Trame calée sur le nombre RÉELLEMENT posé (plafond commun), pas sur
+                                // le nombre de photos retenues : à 4, l'ancienne trame « 2fr 1fr ×
+                                // 2 rangées » n'offrait que 3 emplacements et la quatrième créait
+                                // une rangée de plus, hors du cadre.
+                                //   2 → côte à côte · 3 → une grande + deux · 4 → deux par deux
                                 <div style={{
                                     position: 'absolute', inset: 0, display: 'grid', gap: 2,
-                                    gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr' : '1fr 1fr',
-                                    gridTemplateRows: visibleImages.length >= 3 ? '1fr 1fr' : '1fr',
+                                    gridTemplateColumns: getGalleryImages(visibleImages).length === 3 ? '2fr 1fr' : '1fr 1fr',
+                                    gridTemplateRows: getGalleryImages(visibleImages).length > 2 ? '1fr 1fr' : '1fr',
                                 }}>
-                                    {visibleImages.slice(0, 3).map((img, ii) => (
-                                        <img
+                                    {/* Chaque photo dans une CASE positionnée, l'image en absolu
+                                        dedans — et non l'image posée directement en `height:100%`
+                                        dans la piste.
+                                        Mesuré : à 4 photos, les rangées `1fr` sortaient à 420px au
+                                        lieu de 212 (grille de 841px dans un cadre de 427), donc la
+                                        seconde rangée était coupée par l'`overflow:hidden`. Une
+                                        hauteur en pourcentage dans une piste `1fr` retombe sur la
+                                        taille intrinsèque de l'image, qui gonfle alors la piste
+                                        qu'elle était censée remplir. La case brise ce cycle. */}
+                                    {getGalleryImages(visibleImages).map((img, ii) => (
+                                        <div
                                             key={ii}
-                                            src={resolveImageUrl(img)}
-                                            alt=""
-                                            className="w-full h-full object-cover"
                                             style={{
-                                                ...getImageRenderStyle(image),
-                                                // La première photo occupe la colonne haute sur 2
-                                                // rangées : une grille de vignettes égales ferait
-                                                // perdre la hiérarchie « photo principale ».
-                                                ...(ii === 0 && visibleImages.length >= 3 ? { gridRow: 'span 2' } : {}),
+                                                position: 'relative', overflow: 'hidden', minHeight: 0, minWidth: 0,
+                                                // La grande photo ne s'étire que dans la trame à 3 :
+                                                // à 4, chacune occupe sa case.
+                                                ...(ii === 0 && getGalleryImages(visibleImages).length === 3 ? { gridRow: 'span 2' } : {}),
                                             }}
-                                        />
+                                        >
+                                            <img
+                                                src={resolveImageUrl(img)}
+                                                alt=""
+                                                className="object-cover"
+                                                style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+                                            />
+                                        </div>
                                     ))}
                                 </div>
                             ) : (

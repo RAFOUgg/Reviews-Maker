@@ -18,7 +18,7 @@ import {
     ACCENT_TEXT_COLORS,
     getImageRenderStyle,
 } from '../../utils/exportMakerHelpers';
-import { getSelectedImages, TIMELINE_PIPELINES, orderRenderBlocks } from '../../utils/exportMakerHelpers';
+import { getSelectedImages, getGalleryImages, TIMELINE_PIPELINES, orderRenderBlocks } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 // Base d'icônes unique — remplace trois copies locales de la même table, dont une incomplète
 // (Article de Blog n'avait ni `culture` ni `overflow`).
@@ -312,7 +312,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                         return (
                             <figure className="mb-10">
                                 <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr 1fr' : visibleImages.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
-                                    {visibleImages.slice(0, 4).map((img, ii) => (
+                                    {getGalleryImages(visibleImages).map((img, ii) => (
                                         <img key={ii} src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
                                     ))}
                                 </div>

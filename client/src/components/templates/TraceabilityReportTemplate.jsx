@@ -13,6 +13,7 @@ import {
     TIMELINE_PIPELINES,
     getImageRenderStyle,
     getSelectedImages,
+    getGalleryImages,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
@@ -237,13 +238,19 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                     vignette unique — un rapport de traçabilité reste un document de texte, l'image
                     l'accompagne (cf. le dimensionnement de `thumbSize`). */}
                 {mainImage && (config.image?.showGallery && visibleImages.length > 1 ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4, width: thumbSize, flexShrink: 0 }}>
-                        {visibleImages.slice(0, 3).map((img, ii) => (
+                    // Deux colonnes dès la 3e vignette : empilées, quatre vignettes feraient un
+                    // en-tête deux fois plus haut que la vignette unique, alors que ce rapport est
+                    // un document de texte que l'image accompagne.
+                    <div style={{
+                        display: 'grid', gap: 4, width: thumbSize, flexShrink: 0,
+                        gridTemplateColumns: getGalleryImages(visibleImages).length > 2 ? '1fr 1fr' : '1fr',
+                    }}>
+                        {getGalleryImages(visibleImages).map((img, ii) => (
                             <img
                                 key={ii}
                                 src={resolveImageUrl(img)}
                                 alt=""
-                                style={{ ...getImageRenderStyle(config.image), width: '100%', height: thumbSize / 2, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12 }}
+                                style={{ ...getImageRenderStyle(config.image), width: '100%', height: thumbSize / 2, objectFit: 'cover', borderRadius: (config.image?.borderRadius ?? 12) / 2 }}
                             />
                         ))}
                     </div>

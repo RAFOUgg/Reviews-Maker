@@ -19,6 +19,7 @@ import {
     ACCENT_TEXT_COLORS,
     getImageRenderStyle,
     getSelectedImages,
+    getGalleryImages,
     orderRenderBlocks,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
@@ -301,7 +302,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         if (showGallery) {
                             return (
                                 <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
-                                    {visibleImages.slice(0, 2).map((img, ii) => (
+                                    {getGalleryImages(visibleImages).map((img, ii) => (
                                         <div key={ii} className="flex-1 overflow-hidden" style={{ /* `image.borderRadius` (le curseur « Coins arrondis ») et non `responsive.image.borderRadius`,
    qui est une constante dérivée du RATIO (8 ou 12px) et écrasait donc silencieusement le réglage :
    régler 40px ne changeait rien au rendu (signalé capture à l'appui le 2026-08-11). */
@@ -366,7 +367,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                     if (showGallery) {
                         return (
                             <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
-                                {visibleImages.slice(0, isSquare ? 2 : 3).map((img, ii) => (
+                                {getGalleryImages(visibleImages).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
                                         <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                     </div>

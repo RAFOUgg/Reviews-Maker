@@ -5,6 +5,7 @@ import { useExportMakerStore } from '../../../store/exportMakerStore';
 import { LiquidButton, LiquidInput, LiquidToggle } from '../../ui/LiquidUI';
 import LiquidSlider from '../../ui/LiquidSlider';
 import { resolveImageUrl } from '../../../utils/export-maker/resolveImageUrl';
+import { GALLERY_MAX_IMAGES } from '../../../utils/exportMakerHelpers';
 
 const IMAGE_FILTERS = [
     { id: 'none', name: 'Aucun', preview: '🎨' },
@@ -180,9 +181,17 @@ export default function ImageBrandingControls() {
                     <div className="liquid-card flex items-center justify-between p-3">
                         <div>
                             <div className="text-sm font-medium text-white/90">Galerie photos</div>
+                            {/* Dire le PLAFOND, pas une promesse que le rendu ne tient pas.
+                                Le texte annonçait « Les N photos retenues apparaissent dans le
+                                rendu » quel que soit N, alors que les templates s'arrêtaient à 2, 3
+                                ou 4 selon celui qu'on avait choisi — donc une photo retenue pouvait
+                                n'apparaître nulle part, sans que rien ne l'explique. Le plafond est
+                                désormais commun (`GALLERY_MAX_IMAGES`) et annoncé. */}
                             <div className="text-xs text-white/50">
                                 {config.image?.showGallery
-                                    ? `Les ${shownCount} photos retenues apparaissent dans le rendu`
+                                    ? (shownCount > GALLERY_MAX_IMAGES
+                                        ? `Les ${GALLERY_MAX_IMAGES} premières des ${shownCount} photos retenues apparaissent — au-delà, les vignettes deviennent illisibles`
+                                        : `Les ${shownCount} photos retenues apparaissent dans le rendu`)
                                     : 'Seule la photo principale apparaît dans le rendu'}
                             </div>
                         </div>

@@ -222,6 +222,23 @@ export const TIMELINE_PIPELINES = [
  * NOTE : une review ne porte que des IMAGES (`Review.images`, schema.prisma). Les vidéos existent
  * ailleurs — sur les cellules de pipeline et les nœuds de chaîne — et ne passent pas par ici.
  */
+// NOMBRE DE PHOTOS EN MODE GALERIE — une seule valeur, partagée.
+//
+// Chaque template s'arrêtait à un nombre différent, choisi localement : 3 pour la Fiche Technique,
+// 2 pour Moderne Compact, 4 pour l'Article de Blog, 3 pour le Rapport de Traçabilité. Le panneau,
+// lui, annonçait « Les N photos retenues apparaissent dans le rendu » — une promesse fausse dès
+// qu'on en retenait plus que le plafond local, et invisible puisque rien ne disait le plafond.
+// Signalé le 2026-08-13 (« revoir le nombre de photo affiché »).
+//
+// 4 : au-delà, une vignette d'export descend sous la taille où l'on distingue quoi que ce soit —
+// et c'est déjà le maximum que l'éditeur de pipeline affiche simultanément (`PipelineCellMediaPreview`).
+export const GALLERY_MAX_IMAGES = 4;
+
+/** Photos à poser en mode galerie, plafond commun appliqué. */
+export function getGalleryImages(images) {
+    return (Array.isArray(images) ? images : []).slice(0, GALLERY_MAX_IMAGES);
+}
+
 export function getSelectedImages(reviewData, config) {
     const all = Array.isArray(reviewData?.images) ? reviewData.images : [];
     if (all.length === 0) return [];
