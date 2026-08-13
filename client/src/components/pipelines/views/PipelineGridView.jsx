@@ -84,6 +84,15 @@ const PipelineGridView = ({
     // ferait compter comme des données de cellule — dans les pastilles, dans le « N/N documentées »
     // et dans la modale. D'où ce second canal, lu par le seul fond de case.
     cellsMedia = {},
+    // MODE PAPIER — le rendu vit dans un document imprimé (A4), pas dans l'éditeur sombre.
+    //
+    // Les surfaces ci-dessous sont OPAQUES par décision mesurée (voir `EDITOR_SURFACES`) : une case
+    // translucide laisse passer le fond de page et, sur l'A4 crème, les libellés blancs y étaient
+    // tombés à 2,09:1 (39 violations). Mais figer la teinte de l'ÉDITEUR revient à poser des tuiles
+    // vert sombre sur une page crème — c'est ce que l'utilisateur a signalé le 2026-08-13.
+    // D'où une seconde échelle, claire, tout aussi opaque donc tout aussi déterministe : même
+    // gradation de remplissage, encre sombre au lieu de blanche.
+    paper = false,
     // 'fit' (défaut, inchangé) ou 'fill' quand la grille est rendue en TRANCHES successives qui
     // doivent partager la même trame — cf. le commentaire sur `gridTemplateColumns`.
     fillMode = 'fit',
@@ -421,6 +430,19 @@ const PipelineGridView = ({
     // rgb(164,184,179) — 39 violations E1, et à l'œil des « J1 » quasi invisibles sur une bande
     // pâle. Une couleur opaque rend le contraste déterministe : le blanc y tient de 16:1 (palier
     // bas) à 6,5:1 (palier haut), quels que soient la palette et le ratio.
+    // Échelle CLAIRE, pendant exact de l'échelle sombre : cinq paliers de la même progression de
+    // remplissage, en aplats opaques posés pour une page crème. L'encre passe en slate-900, qui y
+    // tient de 17:1 (palier bas) à 11:1 (palier haut) — l'inverse exact de l'échelle sombre.
+    const PAPER_SURFACES = [
+        'rgb(236, 250, 241)', 'rgb(214, 242, 226)', 'rgb(187, 232, 209)', 'rgb(158, 220, 190)', 'rgb(129, 207, 171)',
+    ];
+    const PAPER_EMPTY_SURFACE = 'rgb(241, 245, 249)';
+    // Bordures plus soutenues qu'en sombre : un vert à 40 % d'opacité disparaît sur un aplat clair.
+    const PAPER_BORDERS = [
+        'border-green-700/30', 'border-green-700/40', 'border-green-700/50',
+        'border-green-700/60', 'border-green-700/70',
+    ];
+
     const EDITOR_SURFACES = [
         'rgb(18, 37, 30)', 'rgb(20, 55, 37)', 'rgb(21, 72, 44)', 'rgb(23, 90, 51)', 'rgb(25, 108, 59)',
     ];
@@ -439,13 +461,14 @@ const PipelineGridView = ({
         if (isSelected) return '  ring-2 ';
         if (isDragOver) return 'bg-green-500/30 border-green-400 ring-2 ring-green-400';
         if (isHovered) return 'bg-gray-600 border-gray-400 ring-2 ring-gray-400';
-        if (!hasData) return 'border-white/20';
-        return EDITOR_BORDERS[clampIntensity(intensity)];
+        if (!hasData) return paper ? 'border-slate-300' : 'border-white/20';
+        return (paper ? PAPER_BORDERS : EDITOR_BORDERS)[clampIntensity(intensity)];
     };
 
     /** Fond opaque de la case, ou `undefined` quand un état (survol, sélection) impose le sien. */
     const getIntensitySurface = (intensity, isSelected, isHovered, isDragOver, hasData) => {
         if (isSelected || isHovered || isDragOver) return undefined;
+        if (paper) return hasData ? PAPER_SURFACES[clampIntensity(intensity)] : PAPER_EMPTY_SURFACE;
         return hasData ? EDITOR_SURFACES[clampIntensity(intensity)] : EDITOR_EMPTY_SURFACE;
     };
 
@@ -457,7 +480,13 @@ const PipelineGridView = ({
     // ci-dessus n'atteint ce vert-là — le plus fort, rgb(25,108,59), laisse le blanc à 6,5:1. La
     // condition n'a donc plus d'objet, et la conserver produirait l'erreur symétrique : de l'encre
     // sombre sur un fond sombre.
-    const getIntensityTextClass = () => 'text-white';
+    // L'encre suit la SURFACE RÉELLEMENT SOUS LE TEXTE, pas seulement le mode.
+    //
+    // En mode papier les aplats sont clairs, donc l'encre est sombre. Sauf sur une case portant une
+    // PHOTO : son fond est alors l'image sous un voile sombre (cf. `mediaBackground`), et l'encre
+    // sombre y devient illisible — constaté sur un export A4 réel dès la première passe papier.
+    // La photo impose donc sa propre règle, dans les deux modes.
+    const getIntensityTextClass = (aUnePhoto) => ((paper && !aUnePhoto) ? 'text-slate-900' : 'text-white');
 
     /** Fond photo d'une case, voile de lisibilité compris. `{}` si l'étape n'a pas de média. */
     const mediaBackground = (index) => {
@@ -467,6 +496,14 @@ const PipelineGridView = ({
         const premiere = media.find((m) => m && m.url && m.type !== 'video');
         if (!premiere) return {};
         return {
+            // Couleur de fond SOMBRE en plus de l'image, pour deux raisons qui vont ensemble :
+            //   • si l'image ne charge pas (URL périmée, capture hors ligne), la case reste sombre
+            //     et son libellé blanc lisible, au lieu de virer au blanc sur vert clair ;
+            //   • l'auditeur de contraste ne lit que `background-color` — il ne peut pas savoir
+            //     qu'une image et un voile passent par-dessus. Mesuré : sans cette couleur, il
+            //     relevait 1,35:1 sur la case à photo du mode papier, à juste titre.
+            // Le fond déclaré dit donc la vérité de ce qui est SOUS le texte.
+            backgroundColor: 'rgb(9, 14, 21)',
             backgroundImage: `linear-gradient(rgba(2, 6, 12, 0.62), rgba(2, 6, 12, 0.80)), url("${String(premiere.url).replace(/"/g, '\\"')}")`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
@@ -563,7 +600,7 @@ const PipelineGridView = ({
         const fieldCount = getCellFieldList(cellData).length;
         const hasData = fieldCount > 0;
         const subLabel = getCellSubLabel(cellIndex);
-        const textClass = getIntensityTextClass();
+        const textClass = getIntensityTextClass((cellsMedia[cellIndex]?.length || 0) > 0);
 
         return (
             <div style={{ ...style, padding: 4 }} key={cellIndex}>

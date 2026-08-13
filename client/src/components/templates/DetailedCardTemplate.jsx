@@ -423,6 +423,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             accentColor={accent}
                             moduleId={moduleId}
                             isPageOn={isPageOn}
+                            paper={isPaperMode}
                         />
                     </div>
                 );

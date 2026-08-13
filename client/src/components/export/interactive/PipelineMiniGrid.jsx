@@ -47,6 +47,10 @@ export default function PipelineMiniGrid({
     // celles de la page courante. Sans `moduleId` (galerie), la grille reste un bloc unique, comme
     // avant — ce chemin n'est pas paginé.
     moduleId = null, isPageOn = null,
+    // Le template hôte est-il en mode PAPIER (A4) ? Il est le seul à le savoir — la grille ne
+    // connaît ni le ratio ni la palette. Transmis tel quel jusqu'aux cases, qui choisissent alors
+    // l'échelle claire plutôt que les verts sombres de l'éditeur.
+    paper = false,
 }) {
     const [selected, setSelected] = useState(null);
     const [modalCell, setModalCell] = useState(null);
@@ -156,6 +160,7 @@ export default function PipelineMiniGrid({
             <PipelineGridView
                 cells={gridCells}
                 cellsMedia={gridMedia}
+                paper={paper}
                 config={config}
                 // Description des cases DÉJÀ calculée ici par `generatePipelineCells` — la grille
                 // la dérivait de son côté, avec un vocabulaire de config qui n'existe nulle part
