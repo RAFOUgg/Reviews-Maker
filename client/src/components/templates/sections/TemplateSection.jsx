@@ -2,10 +2,20 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { colorWithOpacity, getGlassTokens } from '../../../utils/exportMakerHelpers';
 
-// Se masque si `children` n'a réellement rien à montrer — couvre les deux formes rencontrées dans
-// les templates d'origine : un tableau d'expressions conditionnelles toutes fausses
-// (`[cond1 && <X/>, cond2 && <Y/>]`), ou zéro enfant du tout.
-function isEmpty(children) {
+/**
+ * `children` n'a-t-il réellement rien à montrer ? Couvre les deux formes rencontrées dans les
+ * templates : un tableau d'expressions conditionnelles toutes fausses (`[cond1 && <X/>, …]`), ou
+ * zéro enfant du tout.
+ *
+ * PORTÉE, ET SA LIMITE : ce test ne voit que les enfants DÉCLARÉS. Un enfant qui est un composant
+ * décidant lui-même de ne rien rendre (`return null`) compte ici comme présent — React ne permet
+ * pas de le savoir sans le rendre. Pour ces cas-là, le titre doit être passé AU composant (qui le
+ * rend après son propre garde-fou) ou la condition d'affichage doit venir d'un prédicat exporté par
+ * lui ; c'est le principe « le titre suit l'élément » appliqué le 2026-08-14.
+ *
+ * Exporté pour que `DetailedCardTemplate` s'en serve au lieu d'en écrire une 2e copie.
+ */
+export function isEmptyChildren(children) {
     if (!children) return true;
     if (Array.isArray(children)) return children.every((c) => !c);
     return React.Children.count(children) === 0;
@@ -24,7 +34,7 @@ export default function TemplateSection({
     fontSize, spacing, padding, colors,
     fontWeight = 600, borderWidth = 2, borderOpacity = 30, gap,
 }) {
-    if (isEmpty(children)) return null;
+    if (isEmptyChildren(children)) return null;
     const glass = getGlassTokens(colors);
     const cardPadding = padding?.card ?? spacing.element;
     // Padding vertical volontairement plus serré que l'horizontal : les pages auto-paginées

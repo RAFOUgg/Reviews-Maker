@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Beaker, Upload, File, X, CheckCircle, AlertCircle, Eye, FlaskConical } from 'lucide-react';
 import { LiquidCard, LiquidInput, LiquidDivider, LiquidButton } from '@/components/ui/LiquidUI';
+import { hasLabCertificate } from '@/utils/labCertificate';
 
 /**
  * Section Données Analytiques pour Hash/Concentrés/Fleurs
@@ -43,7 +44,10 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     const [labAccreditationStandard, setLabAccreditationStandard] = useState(data?.labAccreditationStandard || '');
     const [labAnalysisDate, setLabAnalysisDate] = useState(data?.labAnalysisDate ? String(data.labAnalysisDate).slice(0, 10) : '');
 
-    const hasCertificate = !!uploadedFile || !!existingCertUrl;
+    // Même règle que le mode automatique (`when: formDataHasLabCertificate` dans les schémas du
+    // wizard) : une seule définition de « il y a un certificat », consommée par les deux chemins
+    // de saisie. Le fichier fraîchement déposé n'est pas encore dans `data`, d'où le `||`.
+    const hasCertificate = !!uploadedFile || !!existingCertUrl || hasLabCertificate(data);
 
     // Re-sync from props when data is loaded from API (edit mode)
     const prevDataRef = React.useRef(null);
@@ -76,12 +80,12 @@ export default function AnalyticsSection({ productType, data: directData, onChan
     const isFirstRunRef = React.useRef(true);
     useEffect(() => {
         const payload = {
-            thcPercent: thc ? parseFloat(thc) : null,
-            thcaPercent: thca ? parseFloat(thca) : null,
-            cbdPercent: cbd ? parseFloat(cbd) : null,
-            cbdaPercent: cbda ? parseFloat(cbda) : null,
-            cbgPercent: cbg ? parseFloat(cbg) : null,
-            cbcPercent: cbc ? parseFloat(cbc) : null,
+            thcPercent: toDecimal(thc),
+            thcaPercent: toDecimal(thca),
+            cbdPercent: toDecimal(cbd),
+            cbdaPercent: toDecimal(cbda),
+            cbgPercent: toDecimal(cbg),
+            cbcPercent: toDecimal(cbc),
             certificateFile: uploadedFile,
             terpeneFile: terpeneFile,
             // Repropager les URLs existantes tant qu'aucun nouveau fichier n'est choisi, sinon le
@@ -162,11 +166,23 @@ export default function AnalyticsSection({ productType, data: directData, onChan
         setUploadError('');
     };
 
+    // Saisie d'un pourcentage de cannabinoïde. Le filtre acceptait le POINT seulement
+    // (`/^\d*\.?\d*$/`) : sur un clavier français, où la virgule EST le séparateur décimal, taper
+    // « 24,5 » ne produisait rien du tout — le champ est contrôlé, donc une frappe refusée est une
+    // frappe qui disparaît, sans le moindre message. Les deux séparateurs sont désormais admis,
+    // et c'est `toDecimal` ci-dessous qui normalise avant l'enregistrement.
     const handleNumberInput = (value, setter) => {
-        // Autoriser vide, nombres et décimales
-        if (value === '' || /^\d*\.?\d*$/.test(value)) {
+        if (value === '' || /^\d*[.,]?\d*$/.test(value)) {
             setter(value);
         }
+    };
+
+    // `parseFloat('24,5')` vaut 24 : sans cette normalisation, autoriser la virgule à la saisie
+    // aurait silencieusement enregistré 24 % au lieu de 24,5 % — un défaut pire que celui corrigé.
+    const toDecimal = (value) => {
+        if (value === '' || value === null || value === undefined) return null;
+        const parsed = parseFloat(String(value).replace(',', '.'));
+        return Number.isNaN(parsed) ? null : parsed;
     };
 
     const getFileIcon = (file) => {

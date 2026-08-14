@@ -142,15 +142,23 @@ try {
         }
         if (!visible) { console.log('KO — le défilement automatique n’amène pas la destination à l’écran'); ko++; }
 
-        // DESCENTE ADAPTATIVE vers la moitié HAUTE de la destination (= insertion avant elle).
-        // On relit sa position à chaque pas au lieu de viser une coordonnée relevée d'avance : le
-        // défilement automatique la déplace pendant qu'on l'approche, et une cible figée finit à
-        // côté (mesuré : trait d'insertion absent au relâchement, ordre inchangé).
-        let y = cadre.top + 20;
+        // SORTIR DE LA BANDE DE DÉFILEMENT AVANT DE VISER. Tant que le curseur y reste, la
+        // surcouche continue de faire défiler — et la destination, qui est le PREMIER bloc donc
+        // proche du bord haut, glissait encore de quelques pixels pendant la pause précédant le
+        // relâchement. Mesuré : curseur à 259, destination remontée à 261, donc dépôt dans le vide
+        // et ordre inchangé — une fois sur deux. On immobilise d'abord le contenu.
         let x = cadre.x;
+        let y = (cadre.top + cadre.bottom) / 2;
+        await p.mouse.move(x, y);
+        await sleep(500);
+
+        // DESCENTE vers la moitié HAUTE de la destination (= insertion avant elle). Le contenu est
+        // désormais immobile, on relit quand même sa position à chaque pas par sécurité.
         for (let i = 0; i < 40; i++) {
             const t = await topDe(destination);
             if (!t) break;
+            // Aussi bas que possible DANS la moitié haute : plus on s'éloigne du bord du cadre,
+            // moins on risque de rentrer dans la bande de défilement.
             const vise = t.top + 10;
             x = t.x;
             if (Math.abs(y - vise) < 6) { await p.mouse.move(x, y); break; }
@@ -158,7 +166,23 @@ try {
             await p.mouse.move(x, y);
             await sleep(60);
         }
-        await sleep(400);
+        // CONFIRMER LA VISÉE AVANT DE RELÂCHER. La destination est le premier bloc, donc proche du
+        // bord haut — c'est-à-dire dans la bande de défilement automatique, qui continue de la
+        // faire glisser de quelques pixels pendant la pause finale. Viser une coordonnée calculée
+        // ne suffit donc pas : on vérifie ce qu'il y a RÉELLEMENT sous le curseur, et on corrige.
+        for (let i = 0; i < 12; i++) {
+            const vu = await p.evaluate(({ cx, cy }) => {
+                const el = document.elementFromPoint(cx, cy)?.closest?.('[data-module]');
+                return (el?.getAttribute('data-module') || '').split('#')[0] || null;
+            }, { cx: x, cy: y });
+            if (vu === destination) break;
+            const t = await topDe(destination);
+            if (!t) break;
+            x = t.x; y = t.top + 10;
+            await p.mouse.move(x, y);
+            await sleep(120);
+        }
+        await sleep(300);
         const etat = await p.evaluate(({ mm, cx, cy }) => {
             const root = document.querySelector('#export-maker-screen-canvas');
             const sous = document.elementFromPoint(cx, cy);

@@ -219,8 +219,10 @@ export const TIMELINE_PIPELINES = [
  * Les indices (et non les URL) parce que c'est ainsi que `config.image.selectedIndex` désigne déjà
  * la photo principale : une seule convention pour les deux réglages.
  *
- * NOTE : une review ne porte que des IMAGES (`Review.images`, schema.prisma). Les vidéos existent
- * ailleurs — sur les cellules de pipeline et les nœuds de chaîne — et ne passent pas par ici.
+ * NOTE : `Review.images` peut aussi contenir une VIDÉO — le sélecteur de photos des quatre
+ * formulaires accepte `image/*,video/*` et les routes d'envoi enregistrent le fichier tel quel. Le
+ * nom du champ est donc trompeur, et cette liste partait jusqu'ici droit dans des balises `<img>`.
+ * Les templates la rendent désormais via `MediaFrame`, qui choisit image, lecteur ou vignette.
  */
 // NOMBRE DE PHOTOS EN MODE GALERIE — une seule valeur, partagée.
 //

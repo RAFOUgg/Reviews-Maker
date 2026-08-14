@@ -3,6 +3,8 @@
  * Gère tous les appels API liés aux reviews avec retry logic et error handling
  */
 
+import { useToastStore } from '../components/shared/ToastContainer'
+
 const API_BASE = '/api'
 
 /**
@@ -241,11 +243,38 @@ async function fetchAPI(url, options = {}) {
     const text = await response.text()
     if (!text) return null
 
+    let body
     try {
-        return JSON.parse(text)
+        body = JSON.parse(text)
     } catch {
         throw new APIError('Réponse inattendue du serveur', response.status, 'invalid_json')
     }
+
+    signalRejectedFiles(body)
+    return body
+}
+
+/**
+ * Un fichier au mauvais format ne fait plus échouer tout l'enregistrement d'une review (il est
+ * ignoré côté serveur, cf. `utils/uploadFormats.js`) — mais un fichier ignoré EN SILENCE serait
+ * pire que le refus qu'il remplace : l'utilisateur croirait sa photo enregistrée. Le serveur liste
+ * donc ce qu'il a écarté dans `rejectedFiles`, et on le dit ici.
+ *
+ * Placé dans `fetchAPI` plutôt que dans chaque écran d'édition : les quatre types de review et la
+ * route générique passent tous par ici, et le prochain point d'envoi en bénéficiera sans rien faire.
+ */
+function signalRejectedFiles(body) {
+    const refuses = body?.rejectedFiles
+    if (!Array.isArray(refuses) || refuses.length === 0) return
+    // Le store Zustand est lisible hors React — pas besoin que cette couche soit un composant.
+    const { addToast } = useToastStore.getState()
+    refuses.forEach(({ filename, reason }) => {
+        addToast({
+            type: 'warning',
+            duration: 9000,
+            message: `« ${filename} » n'a pas été enregistré — ${reason || 'format non pris en charge'}`,
+        })
+    })
 }
 
 /**

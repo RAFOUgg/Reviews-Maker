@@ -6,7 +6,7 @@ import { summarizeCellFields } from '../../../utils/chainCellPipelines';
 import { LiquidModal } from '@/components/ui/LiquidUI';
 import { useCanvasTooltip, affordance } from './InteractiveContext';
 import PipelineGridView from '../../pipelines/views/PipelineGridView';
-import { resolveImageUrl } from '../../../utils/export-maker/resolveImageUrl';
+import MediaFrame from './MediaFrame';
 
 // LE DÉTAIL D'UNE ÉTAPE PART TOUJOURS EN MODALE — plus de panneau en ligne sous la grille.
 //
@@ -58,6 +58,8 @@ export default function PipelineMiniGrid({
     // connaît ni le ratio ni la palette. Transmis tel quel jusqu'aux cases, qui choisissent alors
     // l'échelle claire plutôt que les verts sombres de l'éditeur.
     paper = false,
+    // Titre de section à rendre AU-DESSUS du bloc, et seulement si le bloc existe (cf. plus bas).
+    heading = null,
 }) {
     const [modalCell, setModalCell] = useState(null);
     const { bind, tooltipNode, interactive } = useCanvasTooltip();
@@ -168,6 +170,13 @@ export default function PipelineMiniGrid({
 
     return (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {/* `heading` — le titre de section du bloc, rendu ICI et pas par l'appelant.
+                Il est passé au composant précisément parce que c'est LUI qui sait s'il y a quelque
+                chose à montrer : les quatre `return null` ci-dessus (pas de données, pas de config,
+                aucune tranche visible sur cette page) laissaient sinon un titre « Processus de
+                production » seul au milieu de la fiche. « les titres devraient suivre les elements
+                pas les templates » (2026-08-14). */}
+            {heading}
             <div data-module={moduleId ? `${moduleId}#hdr` : undefined}
                 style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 14, fontWeight: 600 }}>
                 <span>{icon}</span>
@@ -253,9 +262,12 @@ export default function PipelineMiniGrid({
                                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                                     {medias.map((m, i) => (
                                         <figure key={i} className="rounded-xl overflow-hidden border border-white/10 bg-black/30">
-                                            <img
-                                                src={resolveImageUrl(m?.url || m)}
-                                                alt={m?.caption || ''}
+                                            {/* `MediaFrame` plutôt qu'un `<img>` : une vidéo d'étape
+                                                passait ici dans une balise image, donc s'affichait
+                                                cassée. C'est la seule surface où elle peut vraiment
+                                                se regarder — la case fait ~80px. */}
+                                            <MediaFrame
+                                                media={m}
                                                 className="w-full object-cover"
                                                 style={{ aspectRatio: '4 / 3' }}
                                             />

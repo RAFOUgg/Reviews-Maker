@@ -9,6 +9,8 @@ import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
+import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
+import { finalizeUploads } from '../middleware/uploads.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -30,21 +32,14 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 200 * 1024 * 1024,   // 200 Mo par fichier (photo ou vidéo)
+        fileSize: MAX_UPLOAD_BYTES,    // 200 Mo par fichier (photo ou vidéo)
         fieldSize: 50 * 1024 * 1024,
         fields: 500,
         files: 10
     },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|mp4|webm|mov|m4v/
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-        const mimetype = allowedTypes.test(file.mimetype) || file.mimetype.startsWith('video/')
-        if (extname && mimetype) {
-            cb(null, true)
-        } else {
-            cb(new Error('Only image files (jpg, png, gif, webp) and video files (mp4, webm, mov) are allowed'))
-        }
-    }
+    // Formats : `utils/uploadFormats.js` (source unique). `skipRejected` : un fichier au mauvais
+    // format est ignoré et signalé, il ne fait plus échouer l'enregistrement complet de la review.
+    fileFilter: buildFileFilter(['images', 'videos', 'docs'], { skipRejected: true })
 })
 
 
@@ -238,7 +233,7 @@ function validateEdibleReviewData(data, options = {}) {
  * POST /api/edible-reviews
  * Créer une nouvelle EdibleReview
  */
-router.post('/', requireAuth, upload.array('images', 4), requirePublishingAllowed, asyncHandler(async (req, res) => {
+router.post('/', requireAuth, upload.array('images', 4), finalizeUploads, requirePublishingAllowed, asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -344,7 +339,7 @@ router.get('/:id', asyncHandler(async (req, res) => {
 /**
  * PUT /api/edible-reviews/:id
  */
-router.put('/:id', requireAuth, upload.array('images', 4), requirePublishingAllowed, asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, upload.array('images', 4), finalizeUploads, requirePublishingAllowed, asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 

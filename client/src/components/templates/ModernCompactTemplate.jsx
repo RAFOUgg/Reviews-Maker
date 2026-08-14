@@ -37,6 +37,7 @@ import { templateSection } from '../../store/exportMakerConstants';
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import FitToFill from './frame/FitToFill';
 import { useIsInteractive } from '../export/interactive/InteractiveContext';
+import MediaFrame from '../export/interactive/MediaFrame';
 
 // Groupes du gisement (Phase B du plan de finition Export Maker, 2026-08-02) — liste complète
 // (comme DetailedCardTemplate.jsx) : aucun de ces groupes n'a de rendu spécifique existant dans ce
@@ -307,7 +308,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
    qui est une constante dérivée du RATIO (8 ou 12px) et écrasait donc silencieusement le réglage :
    régler 40px ne changeait rien au rendu (signalé capture à l'appui le 2026-08-11). */
                                         borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
-                                            <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
+                                            <MediaFrame media={img} className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                         </div>
                                     ))}
                                 </div>
@@ -316,7 +317,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                         return (
                             <div data-module="mainImage" className="flex-shrink-0 w-2/5 h-full">
                                 <div className="w-full h-full overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
-                                    <img src={mainImage} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
+                                    <MediaFrame media={mainImage} className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                 </div>
                             </div>
                         );
@@ -369,7 +370,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             <div data-module="mainImage" className="w-full flex-shrink-0 flex overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, maxHeight: responsive.image.maxHeight, gap: 3, ...imageFrameStyle }}>
                                 {getGalleryImages(visibleImages).map((img, ii) => (
                                     <div key={ii} style={{ flex: ii === 0 ? 2 : 1, overflow: 'hidden' }}>
-                                        <img src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
+                                        <MediaFrame media={img} className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                                     </div>
                                 ))}
                             </div>
@@ -405,7 +406,7 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                                 ...imageFrameStyle,
                             }}
                         >
-                            <img src={mainImage} alt="" className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
+                            <MediaFrame media={mainImage} className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
                         </div>
                     );
                 })()}

@@ -116,6 +116,23 @@ export function buildFixture(type, density) {
                     note: 'Défoliation légère',
                     media: [{ url: `data:image/png;base64,${TINY_PNG_B64}`, caption: 'Défoliation' }],
                 },
+                // VIDÉO D'ÉTAPE — deuxième angle mort du même genre, fermé le 2026-08-14.
+                //
+                // Aucune fixture ne portait de vidéo, alors que la modale d'envoi s'appelle
+                // « Photos / Vidéos » et que la route les accepte. Le rendu de ce cas n'était donc
+                // jamais exercé — et il était effectivement cassé partout : `<img>` dans la modale
+                // de détail, exclusion pure et simple du fond de case, aucune balise `<video>` dans
+                // les cinq templates.
+                //
+                // URL en `/media/…mp4` plutôt qu'en `data:` (contrairement à la photo ci-dessus) :
+                // c'est l'EXTENSION qui décide si le navigateur sait lire le fichier
+                // (`MediaFrame.isPlayableVideo`), une `data:` URL n'en a pas et basculerait la
+                // mesure sur la branche « format non lisible ». Le fichier n'a pas besoin d'exister :
+                // on mesure quelle balise est posée, pas une lecture réelle.
+                25: {
+                    note: 'Time-lapse de la journée',
+                    media: [{ url: '/media/fixture-clip.mp4', type: 'video', caption: 'Time-lapse' }],
+                },
             });
         culture.forEach((c, i) => { c.phase = i < 7 ? 'Germination' : i < 17 ? 'Croissance' : 'Floraison'; });
         body.cultureTimelineData = JSON.stringify(culture);

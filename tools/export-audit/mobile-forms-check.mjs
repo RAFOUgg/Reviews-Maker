@@ -120,10 +120,17 @@ try {
     if (await cultivar.count()) { await cultivar.click().catch(() => {}); await sleep(3500); }
     await sleep(2000);
     const canevas = await p.evaluate(() => {
-        const el = document.querySelector('.react-flow');
+        // La section ouvre d'abord une modale de choix (« Gestion de l'Arbre Généalogique ») : le
+        // `.react-flow` n'est donc pas monté tant qu'on n'a pas répondu, et exiger sa présence
+        // mesurait la modale, pas la mise en page. Ce qui se corrige ici est le CADRE du canevas —
+        // il existe dès l'affichage de la section, et c'est lui qui héritait d'environ 230px de
+        // haut. On le mesure lui, en le retrouvant par la même classe que celle posée dans
+        // `Genetiques.jsx`.
+        const el = document.querySelector('.react-flow')
+            || [...document.querySelectorAll('div')].find((n) => /min-h-\[60vh\]/.test(n.className?.toString?.() || ''));
         if (!el) return null;
         const r = el.getBoundingClientRect();
-        return { hauteur: Math.round(r.height), largeur: Math.round(r.width) };
+        return { hauteur: Math.round(r.height), largeur: Math.round(r.width), viaCadre: !document.querySelector('.react-flow') };
     });
     console.log(`phenohunt : ${canevas ? `${canevas.largeur}×${canevas.hauteur}px` : 'canevas absent'}`);
     if (!canevas) console.log('   section affichée :', (await p.evaluate(() => (document.querySelector('main')?.innerText || '').replace(/\s+/g, ' ').slice(0, 180))));

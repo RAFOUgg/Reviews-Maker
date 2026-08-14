@@ -15,6 +15,8 @@ import {
 import { getUserAccountType, ACCOUNT_TYPES } from '../services/account.js'
 import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requirePublishingAllowed, requireReviewWriteOrThrow, resolveAccess, resolveIdentityLink } from '../services/access.js'
 import { requireAuth } from '../middleware/auth.js'
+import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
+import { finalizeUploads } from '../middleware/uploads.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -36,21 +38,16 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 200 * 1024 * 1024,   // 200 Mo par fichier (photo ou vidéo)
+        fileSize: MAX_UPLOAD_BYTES,    // 200 Mo par fichier (photo ou vidéo)
         fieldSize: 100 * 1024 * 1024,  // 100 MB par champ texte (exportMakerConfig, pipeline JSON, etc.)
         fields: 1000,                   // max 1000 champs texte
         files: 10                       // max 10 fichiers
     },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|mp4|webm|mov|m4v/
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-        const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf' || file.mimetype.startsWith('video/')
-        if (extname && mimetype) {
-            cb(null, true)
-        } else {
-            cb(new Error('Only image files (jpg, png, gif, webp), video files (mp4, webm, mov) and PDF files are allowed'))
-        }
-    }
+    // Formats : `utils/uploadFormats.js` (source unique, ex-regex dupliquée dans les 5 routes).
+    // `skipRejected` : ici les fichiers accompagnent l'enregistrement d'une review complète — une
+    // seule photo au mauvais format faisait jusqu'ici échouer TOUT le POST en 400, donc perdre la
+    // saisie entière. Le fichier est désormais ignoré et signalé dans la réponse.
+    fileFilter: buildFileFilter(['images', 'videos', 'docs'], { skipRejected: true })
 })
 
 // Gestion des erreurs multer (413, field overflow, etc.)
@@ -58,8 +55,12 @@ const upload = multer({
 const handleMulterError = (err, req, res, next) => {
     if (!err) return next()
 
+    // Le libellé DÉRIVE de la limite réellement posée ci-dessus. Il annonçait « max 20 MB » alors
+    // que la limite valait 200 Mo depuis longtemps : un utilisateur dont l'envoi échouait pour une
+    // toute autre raison (format refusé) lisait un message qui l'envoyait chercher un problème de
+    // taille inexistant.
     if (err.code === 'LIMIT_FILE_SIZE') {
-        return res.status(413).json({ error: 'file_too_large', message: 'Image trop grande (max 20 MB par fichier)' })
+        return res.status(413).json({ error: 'file_too_large', message: `Fichier trop volumineux (max ${MAX_UPLOAD_LABEL} par fichier)` })
     }
     if (err.code === 'LIMIT_FIELD_VALUE') {
         return res.status(413).json({ error: 'field_too_large', message: 'Données de formulaire trop volumineuses (champ dépasse 100 MB)' })
@@ -73,10 +74,8 @@ const handleMulterError = (err, req, res, next) => {
     if (err.name === 'MulterError') {
         return res.status(400).json({ error: 'upload_error', message: err.message || 'Erreur upload' })
     }
-    // fileFilter throws a plain Error (not MulterError) for unsupported file types — return 400
-    if (err.message && err.message.includes('files are allowed')) {
-        return res.status(400).json({ error: 'invalid_file_type', message: err.message })
-    }
+    // Un format non pris en charge ne produit plus d'erreur ici : le filtre (`skipRejected`) ignore
+    // le fichier et le consigne dans `req.rejectedFiles`, remonté à l'appelant dans la réponse.
     // Non-multer error: pass to the global error handler so it's properly logged
     // and returned with the correct status code
     next(err)
@@ -628,6 +627,8 @@ router.post('/',
         { name: 'certificateFile', maxCount: 1 }, // Certificat cannabinoïdes (optionnel)
         { name: 'terpeneFile', maxCount: 1 } // Certificat profil terpénique (optionnel)
     ]),
+    // Photos iPhone (.heic) converties en JPEG avant que quoi que ce soit d'autre ne les voie.
+    finalizeUploads,
     // Après multer : `isPublic` arrive en multipart, il n'est lisible qu'une fois le corps parsé.
     requirePublishingAllowed,
     asyncHandler(async (req, res) => {
@@ -921,6 +922,7 @@ router.put('/:id',
         { name: 'certificateFile', maxCount: 1 },
         { name: 'terpeneFile', maxCount: 1 }
     ]),
+    finalizeUploads,
     requirePublishingAllowed,
     asyncHandler(async (req, res) => {
         console.log(`🔁 PUT /api/reviews/flower/${req.params.id}`)

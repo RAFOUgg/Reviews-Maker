@@ -14,6 +14,43 @@ const LINE_COLORS = ['#A78BFA', '#22D3EE', '#34D399', '#FBBF24', '#F87171'];
 const META_KEYS = new Set(['timestamp', 'label', 'date', 'phase', '_meta']);
 
 /**
+ * Séries réellement traçables d'un pipeline : lignes du graphique + noms des courbes.
+ *
+ * Extrait du corps du composant pour que sa CONDITION D'EXISTENCE soit lisible de l'extérieur.
+ * Sans ça, l'appelant ne pouvait qu'approximer (« il y a des étapes ») et affichait un titre de
+ * section « Statistiques de culture » au-dessus d'un graphique qui se masquait lui-même — un titre
+ * sans contenu, exactement ce que l'utilisateur signale le 2026-08-14 (« les titres devraient
+ * suivre les elements »). Une seule source, donc pas de règle recopiée qui puisse diverger.
+ */
+export function buildCultureSeries(steps, pipelineType) {
+    if (!Array.isArray(steps) || steps.length < 2) return { chartData: [], dataKeys: [] };
+    const chartData = steps.map((step, i) => {
+        const row = { index: i + 1 };
+        Object.keys(step || {}).forEach((k) => {
+            if (META_KEYS.has(k)) return;
+            const raw = step[k];
+            const n = typeof raw === 'number' ? raw : (typeof raw === 'string' && raw.trim() !== '' && !isNaN(Number(raw)) ? Number(raw) : NaN);
+            if (!Number.isFinite(n)) return;
+            const label = getFieldMeta(pipelineType, k)?.label || k;
+            row[label] = n;
+        });
+        return row;
+    });
+    const dataKeys = Array.from(
+        chartData.reduce((keys, row) => {
+            Object.keys(row).forEach((k) => k !== 'index' && keys.add(k));
+            return keys;
+        }, new Set())
+    );
+    return { chartData, dataKeys };
+}
+
+/** Le graphique aura-t-il quelque chose à tracer ? À interroger AVANT d'écrire un titre au-dessus. */
+export function hasCultureSeries(steps, pipelineType) {
+    return buildCultureSeries(steps, pipelineType).dataKeys.length > 0;
+}
+
+/**
  * CultureStatsChart — graphique en courbes de l'évolution des paramètres environnementaux d'un
  * pipeline (température, humidité, CO2, PPFD, pH/EC…), pour la section "Statistiques" de la Fiche
  * Technique Détaillée (Chantier A, 2026-07-30). Version présentationnelle de
@@ -38,25 +75,7 @@ export default function CultureStatsChart({ steps, pipelineType, width = 560, he
     // restent reconnaissables, les libellés redeviennent lisibles.
     const seriesColors = LINE_COLORS.map((c) => ensureReadable(c, background, 4.8));
 
-    const chartData = steps.map((step, i) => {
-        const row = { index: i + 1 };
-        Object.keys(step || {}).forEach((k) => {
-            if (META_KEYS.has(k)) return;
-            const raw = step[k];
-            const n = typeof raw === 'number' ? raw : (typeof raw === 'string' && raw.trim() !== '' && !isNaN(Number(raw)) ? Number(raw) : NaN);
-            if (!Number.isFinite(n)) return;
-            const label = getFieldMeta(pipelineType, k)?.label || k;
-            row[label] = n;
-        });
-        return row;
-    });
-
-    const dataKeys = Array.from(
-        chartData.reduce((keys, row) => {
-            Object.keys(row).forEach((k) => k !== 'index' && keys.add(k));
-            return keys;
-        }, new Set())
-    );
+    const { chartData, dataKeys } = buildCultureSeries(steps, pipelineType);
 
     if (dataKeys.length === 0) return null;
 

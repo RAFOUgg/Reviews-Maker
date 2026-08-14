@@ -488,13 +488,24 @@ const PipelineGridView = ({
     // La photo impose donc sa propre règle, dans les deux modes.
     const getIntensityTextClass = (aUnePhoto) => ((paper && !aUnePhoto) ? 'text-slate-900' : 'text-white');
 
+    /** L'étape ne porte-t-elle QUE de la vidéo (aucune photo utilisable en fond) ? */
+    const videoSeule = (index) => {
+        const media = Array.isArray(cellsMedia[index]) ? cellsMedia[index] : [];
+        if (media.length === 0) return false;
+        return !media.some((m) => m && m.url && m.type !== 'video');
+    };
+
     /** Fond photo d'une case, voile de lisibilité compris. `{}` si l'étape n'a pas de média. */
     const mediaBackground = (index) => {
         const media = Array.isArray(cellsMedia[index]) ? cellsMedia[index] : [];
         // Les vidéos ne sont pas des fonds : une balise `<video>` ne se met pas en
         // `background-image`, et un export est de toute façon une image fixe.
         const premiere = media.find((m) => m && m.url && m.type !== 'video');
-        if (!premiere) return {};
+        // Une étape qui ne porte QUE de la vidéo n'avait, elle, strictement aucun signe distinctif :
+        // rien ne disait qu'un média y était attaché, ni à l'écran ni dans le fichier exporté. Elle
+        // reçoit donc le même fond sombre que les cases à photo — ce qui garde aussi l'encre blanche
+        // de `getIntensityTextClass` cohérente — et le repère ▶ posé dans `renderCell`.
+        if (!premiere) return videoSeule(index) ? { backgroundColor: 'rgb(9, 14, 21)' } : {};
         return {
             // Couleur de fond SOMBRE en plus de l'image, pour deux raisons qui vont ensemble :
             //   • si l'image ne charge pas (URL périmée, capture hors ligne), la case reste sombre
@@ -601,6 +612,7 @@ const PipelineGridView = ({
         const hasData = fieldCount > 0;
         const subLabel = getCellSubLabel(cellIndex);
         const textClass = getIntensityTextClass((cellsMedia[cellIndex]?.length || 0) > 0);
+        const porteUneVideo = (cellsMedia[cellIndex] || []).some((m) => m && m.type === 'video');
 
         return (
             <div style={{ ...style, padding: 4 }} key={cellIndex}>
@@ -695,6 +707,19 @@ const PipelineGridView = ({
                             style={{ background: 'rgb(124, 58, 237)', border: '1px solid rgba(10,10,18,0.9)' }}
                         >
                             {cellsMedia[cellIndex].length}
+                        </span>
+                    )}
+                    {/* Repère VIDÉO. Une balise `<video>` n'est pas peinte par la rasterisation
+                        (`html-to-image`) : elle ressortirait en rectangle vide dans le PNG. Un
+                        glyphe est, lui, du texte — il survit à la capture et dit ce que le fichier
+                        ne peut pas montrer. Le film lui-même se regarde dans la modale d'étape. */}
+                    {porteUneVideo && (
+                        <span
+                            className="absolute bottom-0.5 right-0.5 z-20 px-1 rounded text-[9px] leading-[1.4] font-bold text-white"
+                            style={{ background: 'rgba(2,6,12,0.72)', border: '1px solid rgba(255,255,255,0.18)' }}
+                            title="Vidéo attachée à cette étape"
+                        >
+                            ▶
                         </span>
                     )}
                     {/* CARTE DE PHASE — même contenu, dans le même ordre, que la case de l'éditeur

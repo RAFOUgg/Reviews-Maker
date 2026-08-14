@@ -171,6 +171,9 @@ StepCard.propTypes = {
 export default function PipelineTimeline({
     pipeline, moduleId, compact = false, fontSize, spacing, colors, glass = null,
     isPageOn = null, paged = false,
+    // Titre de section rendu ICI et pas par l'appelant : c'est ce composant qui décide s'il y a
+    // quelque chose à montrer (`visibleChunks.length === 0` plus bas). Cf. `PipelineMiniGrid`.
+    heading = null,
 }) {
     const rawSteps = pipeline.rawSteps || pipeline.steps.map((s) => ({ label: s }));
     const pipelineType = PIPELINE_TYPE_BY_KEY[pipeline.key] || pipeline.key;
@@ -237,6 +240,7 @@ export default function PipelineTimeline({
 
     return (
         <div style={wrapperStyle}>
+            {heading}
             {/* En-tête du pipeline (complet, ou rappel de continuation).
                 `data-module="<moduleId>#hdr"` : cet en-tête est reporté sur CHAQUE page portant un
                 tronçon, il ne fait donc partie d'aucun tronçon mesuré. Sans id propre, sa hauteur
@@ -353,6 +357,8 @@ PipelineTimeline.propTypes = {
     isPageOn: PropTypes.func,
     /** Vrai quand une pagination est active (réservé, l'en-tête de continuation en dérive déjà). */
     paged: PropTypes.bool,
+    /** Titre de section, rendu seulement si le pipeline a réellement quelque chose à montrer. */
+    heading: PropTypes.node,
     compact: PropTypes.bool,
     fontSize: PropTypes.shape({ text: PropTypes.number, small: PropTypes.number }).isRequired,
     spacing: PropTypes.shape({ element: PropTypes.number, gap: PropTypes.number }).isRequired,

@@ -14,7 +14,16 @@ import { Image as ImageIcon, Film, FileText, Upload, X, Trash2, Loader2, Camera,
 import ReviewPhotoLibraryPicker from './ReviewPhotoLibraryPicker';
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200 Mo
-const ACCEPTED = 'image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm,video/quicktime';
+
+// `image/*,video/*` plutôt qu'une liste de types explicite.
+//
+// L'ancienne liste (`image/jpeg,…,video/quicktime`) GRISAIT dans le sélecteur natif tout fichier
+// dont le système annonçait un autre type — une photo iPhone en HEIC, une vidéo `.mkv`/`.3gp` —
+// donc l'utilisateur ne pouvait littéralement pas les choisir, sans le moindre message. C'était la
+// moitié cliente du même défaut que le filtre serveur : « certaines photos et surtout les vidéos ne
+// passent pas ». Le serveur reste seul juge du format (`utils/uploadFormats.js`) et il sait
+// désormais convertir le HEIC — l'attribut ne sert plus qu'à orienter le sélecteur.
+const ACCEPTED = 'image/*,video/*';
 
 function formatSize(bytes) {
     if (!bytes) return '';

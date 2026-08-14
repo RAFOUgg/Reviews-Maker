@@ -22,6 +22,7 @@ import ScoreBoard from './sections/ScoreBoard';
 import { GisementSection } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
 import FitToFill from './frame/FitToFill';
+import MediaFrame from '../export/interactive/MediaFrame';
 
 // Phase B du plan de finition Export Maker (2026-08-02) : contrairement aux 3 autres templates
 // (rollout complet des 8 groupes gisement), Story reste un format 9:16 très contraint verticalement,
@@ -199,9 +200,8 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     // débordait à 114 % — sur une carte, ce qui déborde est perdu.
                     flex: '1 1 38%', minHeight: 0,
                 }}>
-                    <img
-                        src={mainImage}
-                        alt=""
+                    <MediaFrame
+                        media={mainImage}
                         style={{
                             width: '100%', height: '100%',
                             objectFit: image?.objectFit || 'cover',

@@ -3,6 +3,7 @@
  * Liquid Glass UI Design System
  */
 import { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Outlet, Link, NavLink, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../../hooks/useAuth';
@@ -133,14 +134,25 @@ export default function Layout() {
                 />
             </nav>
 
-            {/* Mobile Menu Modal */}
+            {/* Mobile Menu Modal
+                Rendu dans un portail sur <body> et AU-DESSUS de toutes les autres couches fixes de
+                l'app (bannière RDR z-10000, modales LiquidModal z-9999, voile du menu profil
+                z-9998) : à z-150, n'importe laquelle de ces couches — dont le voile INVISIBLE et
+                plein écran du menu profil — se superpose au menu et avale tous les clics, la croix
+                comme le clic à côté. Le portail supprime en plus toute dépendance au contexte
+                d'empilement des parents (<div relative> racine de App.jsx). */}
+            {createPortal(
             <AnimatePresence>
                 {mobileMenuOpen && (
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="fixed inset-0 z-[150] md:hidden"
+                        /* Le menu passe désormais AU-DESSUS de la bannière RDR : on le démarre sous
+                           elle (40px, même convention que la navbar) plutôt que de la recouvrir —
+                           la bannière reste lisible et cliquable, et tout ce qui est à l'intérieur
+                           de cette zone appartient bien au menu (donc ferme au clic). */
+                        className="fixed left-0 right-0 top-[40px] bottom-0 z-[10050] md:hidden"
                     >
                         {/* Backdrop — un clic n'importe où à côté du panneau ferme le menu */}
                         <div
@@ -154,11 +166,7 @@ export default function Layout() {
                             animate={{ x: 0 }}
                             exit={{ x: '100%' }}
                             transition={{ type: 'spring', damping: 30, stiffness: 300 }}
-                            /* La bannière RDR est fixée en haut avec un z-index supérieur (z-[10000]) :
-                               sans ce décalage de 40px, elle recouvrait l'en-tête du panneau et rendait
-                               le bouton de fermeture ✕ impossible à cliquer (même convention que la
-                               navbar, `top-[40px]`). */
-                            className="absolute right-0 top-[40px] bottom-0 w-72 max-w-[85vw] bg-[#0a0a1a]/95 backdrop-blur-xl border-l border-white/10 overflow-y-auto"
+                            className="absolute right-0 top-0 bottom-0 w-72 max-w-[85vw] bg-[#0a0a1a]/95 backdrop-blur-xl border-l border-white/10 overflow-y-auto"
                         >
                             {/* Header */}
                             <div className="flex items-center justify-between p-4 border-b border-white/10">
@@ -210,7 +218,8 @@ export default function Layout() {
                         </motion.div>
                     </motion.div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence>,
+            document.body)}
 
             {/* Main Content - with top padding for RDR banner (40px) + navbar */}
             {/* Form routes (create/edit) get overflow-hidden so their internal layout controls scroll */}

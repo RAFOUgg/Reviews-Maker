@@ -12,6 +12,8 @@ import { mapToDb, mapToApi } from '../utils/fieldMapper.js'
 import { EXPORT_LIMITS } from '../middleware/permissions.js'
 import { requireAuth, optionalAuth } from '../middleware/auth.js'
 import { canModifyFor, canReadFor, companyScopeFilter, owningCompanyId, requireReviewWriteOrThrow, resolveAccess, requirePublishingAllowed } from '../services/access.js'
+import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
+import { finalizeUploads } from '../middleware/uploads.js'
 
 const router = express.Router()
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -32,21 +34,16 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 20 * 1024 * 1024,   // 20 MB par fichier
+        // Cette route générique plafonnait à 20 Mo et n'acceptait AUCUNE vidéo, alors que les quatre
+        // routes typées (flower/hash/concentrate/edible) qui reçoivent les mêmes photos de review
+        // acceptent 200 Mo et les vidéos depuis longtemps : le même fichier passait ou non selon le
+        // chemin emprunté. Aligné sur la limite et la liste partagées.
+        fileSize: MAX_UPLOAD_BYTES,
         fieldSize: 10 * 1024 * 1024,   // 10 MB par champ texte (pipeline JSON, etc.)
         fields: 100,                    // max 100 champs texte
         files: 10                       // max 10 fichiers
     },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp/
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-        const mimetype = allowedTypes.test(file.mimetype)
-        if (extname && mimetype) {
-            cb(null, true)
-        } else {
-            cb(new Error('Only image files are allowed'))
-        }
-    }
+    fileFilter: buildFileFilter(['images', 'videos'], { skipRejected: true })
 })
 
 // GET /api/reviews - Liste toutes les reviews (publiques + privées de l'user)
@@ -303,7 +300,7 @@ router.get('/:id/lineage', optionalAuth, asyncHandler(async (req, res) => {
 }))
 
 // POST /api/reviews - Créer une nouvelle review
-router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
+router.post('/', requireAuth, upload.array('images', 10), finalizeUploads, asyncHandler(async (req, res) => {
     console.log('📝 Creating review with data:', JSON.stringify(req.body, null, 2))
     console.log('📎 Files uploaded:', req.files?.length || 0)
 
@@ -427,7 +424,7 @@ router.post('/', requireAuth, upload.array('images', 10), asyncHandler(async (re
 }))
 
 // PUT /api/reviews/:id - Mettre à jour une review
-router.put('/:id', requireAuth, upload.array('images', 10), asyncHandler(async (req, res) => {
+router.put('/:id', requireAuth, upload.array('images', 10), finalizeUploads, asyncHandler(async (req, res) => {
     console.log(`🔁 PUT /api/reviews/${req.params.id} by user: ${req.user?.id || 'unknown'}`, 'body keys:', Object.keys(req.body))
 
     // Map incoming English keys to DB field names (draft mapping)
@@ -986,7 +983,7 @@ router.get('/:id/likes', optionalAuth, async (req, res) => {
 // rendant impossible toute réaction fine côté client. Les erreurs non liées à l'upload sont
 // désormais transmises au gestionnaire global, qui préserve statut et code.
 router.use((err, req, res, next) => {
-    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'file_too_large', message: 'Image trop grande (max 20 MB)' })
+    if (err?.code === 'LIMIT_FILE_SIZE') return res.status(413).json({ error: 'file_too_large', message: `Fichier trop volumineux (max ${MAX_UPLOAD_LABEL})` })
     if (err?.code === 'LIMIT_FIELD_VALUE') return res.status(413).json({ error: 'field_too_large', message: 'Données trop volumineuses (champ dépasse 10 MB)' })
     if (err?.code === 'LIMIT_UNEXPECTED_FILE') return res.status(400).json({ error: 'unexpected_file', message: 'Fichier inattendu : ' + err.field })
     if (err?.name === 'MulterError') return res.status(400).json({ error: 'upload_error', message: err.message })

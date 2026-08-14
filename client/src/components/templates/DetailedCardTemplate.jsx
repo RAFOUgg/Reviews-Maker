@@ -39,11 +39,13 @@ import { getCannabinoidItems, GisementSection, isModuleOn } from './sections/Reg
 import OrderedFlow from './sections/OrderedFlow';
 import SensoryRadar from './sections/SensoryRadar';
 import ScoreBoard from './sections/ScoreBoard';
-import CultureStatsChart from './sections/CultureStatsChart';
+import CultureStatsChart, { hasCultureSeries } from './sections/CultureStatsChart';
 import PipelineTimeline from './sections/PipelineTimeline';
+import { isEmptyChildren } from './sections/TemplateSection';
 import { QRCodeSVG } from 'qrcode.react';
 import { getLotCode, getLotCodeUrl } from '../../utils/lotCode';
 import { useDocumentSeal, formatIssuedAt } from '../../hooks/useDocumentSeal';
+import MediaFrame from '../export/interactive/MediaFrame';
 
 // Groupes du "gisement" rendus génériquement depuis le registre — 'lab' est retiré de cette liste
 // car ses 7 champs sont désormais assemblés explicitement dans la section 04 "Données laboratoire
@@ -294,8 +296,18 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
         WebkitColumnBreakInside: 'avoid',
     };
 
+    // UN TITRE N'EXISTE PAS SANS SON CONTENU. « les titres devraient suivre les elements pas les
+    // templates (si je retire le contenus associé au titre il disparait) » (2026-08-14) — constaté
+    // sur une review hash où « Processus de production » s'imprimait au-dessus du vide.
+    //
+    // Ce garde-fou attrape la forme la plus courante ici : des enfants tous conditionnels et tous
+    // faux. Il ne peut PAS voir qu'un composant enfant a décidé de ne rien rendre (React ne
+    // l'expose pas sans le rendre) — pour ces cas, le titre est passé AU composant, qui le rend
+    // après son propre garde-fou (`PipelineMiniGrid`/`PipelineTimeline`), ou la condition vient
+    // d'un prédicat qu'il exporte (`hasCultureSeries`). Trois formes, une seule règle.
     const Section = ({ icon, title, moduleId, children }) => {
         if (moduleId && !isPageOn(moduleId)) return null;
+        if (isEmptyChildren(children)) return null;
         return (
             <div data-module={moduleId || undefined} style={blockStyle}>
                 <SectionHeading icon={icon} title={title} />
@@ -435,7 +447,6 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     // fois être mesuré ET contenir des modules mesurés — c'est exactement le double
                     // comptage qui produisait une page blanche sur le Rapport de Traçabilité.
                     <div key={moduleId} data-order-id={moduleId} style={blockStyle}>
-                        {heading}
                         <PipelineMiniGrid
                             type={t.type} name={t.name} icon={t.icon}
                             timelineData={reviewData[t.dataKey]}
@@ -444,6 +455,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             moduleId={moduleId}
                             isPageOn={isPageOn}
                             paper={isPaperMode}
+                            heading={heading}
                         />
                     </div>
                 );
@@ -457,10 +469,10 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
     // de section a besoin d'un support.
     const renderPipelineList = (pipeline, moduleId, heading = null) => (
         <div key={moduleId} data-order-id={moduleId}>
-            {heading}
             <PipelineTimeline
                 pipeline={pipeline}
                 moduleId={moduleId}
+                heading={heading}
                 isPageOn={isPageOn}
                 paged={!!pageModuleIds}
                 compact={isSquare}
@@ -662,9 +674,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                                 ...(ii === 0 && getGalleryImages(visibleImages).length === 3 ? { gridRow: 'span 2' } : {}),
                                             }}
                                         >
-                                            <img
-                                                src={resolveImageUrl(img)}
-                                                alt=""
+                                            {/* `MediaFrame` : une vidéo retenue comme média de review
+                                                partait dans un `<img>` (image cassée). Rendu
+                                                strictement identique pour une photo. */}
+                                            <MediaFrame
+                                                media={img}
                                                 className="object-cover"
                                                 style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0, width: '100%', height: '100%' }}
                                             />
@@ -672,7 +686,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                                     ))}
                                 </div>
                             ) : (
-                                <img src={mainImage} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0 }} />
+                                <MediaFrame media={mainImage} className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), position: 'absolute', inset: 0 }} />
                             )}
                             {!stacked && <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${colorWithOpacity(isPaperMode ? '#F8FAFC' : '#0b1220', 85)}, transparent 22%)` }} />}
                         </div>
@@ -818,7 +832,7 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                     humidité, CO2, PPFD, pH/EC…) sur la timeline de culture. Ne s'affiche que si au
                     moins 2 étapes ont des valeurs numériques (une tendance a besoin d'≥2 points) —
                     `CultureStatsChart` se masque lui-même sinon. */}
-                {contentModules.pipelineInteractiveView !== false && cultureSteps && (
+                {contentModules.pipelineInteractiveView !== false && cultureSteps && hasCultureSeries(cultureSteps, 'culture') && (
                     <Section title="Statistiques de culture" moduleId="cultureStats">
                         <CultureStatsChart steps={cultureSteps} pipelineType="culture" width={chartWidth} height={isSquare ? 180 : 220} textColor={textSecondary} lineColor={lineSoft} background={bg} />
                     </Section>

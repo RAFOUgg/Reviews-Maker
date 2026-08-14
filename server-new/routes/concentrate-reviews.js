@@ -9,6 +9,8 @@ import { formatReview, liftExportMakerFromExtra } from '../utils/reviewFormatter
 import { validateReviewId } from '../utils/validation.js'
 import { requireAuth } from '../middleware/auth.js'
 import { requirePublishingAllowed, resolveAccess, owningCompanyId, companyScopeFilter, canModifyFor, canReadFor, resolveIdentityLink } from '../services/access.js'
+import { buildFileFilter, MAX_UPLOAD_BYTES, MAX_UPLOAD_LABEL } from '../utils/uploadFormats.js'
+import { finalizeUploads } from '../middleware/uploads.js'
 import { getUserAccountType } from '../services/account.js'
 import { canAccessSection } from '../middleware/permissions.js'
 
@@ -32,21 +34,14 @@ const storage = multer.diskStorage({
 const upload = multer({
     storage,
     limits: {
-        fileSize: 200 * 1024 * 1024,   // 200 Mo par fichier (photo ou vidéo)
+        fileSize: MAX_UPLOAD_BYTES,    // 200 Mo par fichier (photo ou vidéo)
         fieldSize: 50 * 1024 * 1024,   // 50 MB par champ texte (exportMakerConfig JSON)
         fields: 500,
         files: 10
     },
-    fileFilter: (req, file, cb) => {
-        const allowedTypes = /jpeg|jpg|png|gif|webp|pdf|mp4|webm|mov|m4v/
-        const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase())
-        const mimetype = allowedTypes.test(file.mimetype) || file.mimetype === 'application/pdf' || file.mimetype.startsWith('video/')
-        if (extname && mimetype) {
-            cb(null, true)
-        } else {
-            cb(new Error('Only image files (jpg, png, gif, webp), video files (mp4, webm, mov) and PDF files are allowed'))
-        }
-    }
+    // Formats : `utils/uploadFormats.js` (source unique). `skipRejected` : un fichier au mauvais
+    // format est ignoré et signalé, il ne fait plus échouer l'enregistrement complet de la review.
+    fileFilter: buildFileFilter(['images', 'videos', 'docs'], { skipRejected: true })
 })
 
 
@@ -454,7 +449,7 @@ router.post('/', requireAuth, upload.fields([
     { name: 'images', maxCount: 4 },
     { name: 'certificateFile', maxCount: 1 },
     { name: 'terpeneFile', maxCount: 1 }
-]), requirePublishingAllowed, asyncHandler(async (req, res) => {
+]), finalizeUploads, requirePublishingAllowed, asyncHandler(async (req, res) => {
     const userId = req.user.id
 
     let bodyData = {}
@@ -589,7 +584,7 @@ router.put('/:id', requireAuth, upload.fields([
     { name: 'images', maxCount: 4 },
     { name: 'certificateFile', maxCount: 1 },
     { name: 'terpeneFile', maxCount: 1 }
-]), requirePublishingAllowed, asyncHandler(async (req, res) => {
+]), finalizeUploads, requirePublishingAllowed, asyncHandler(async (req, res) => {
     const reviewId = req.params.id
     const userId = req.user.id
 

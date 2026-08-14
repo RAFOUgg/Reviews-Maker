@@ -27,6 +27,7 @@ import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 import { GROUP_ICONS } from '../../utils/fieldIcons';
 import { CannabinoidGrid, getCannabinoidItems, GisementSection } from './sections/RegistrySections';
 import OrderedFlow from './sections/OrderedFlow';
+import MediaFrame from '../export/interactive/MediaFrame';
 
 const BUSINESS_TYPE_LABELS = {
     farm: 'Ferme', laboratory: 'Laboratoire', extractor: 'Extracteur',
@@ -251,16 +252,15 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                         gridTemplateColumns: getGalleryImages(visibleImages).length > 2 ? '1fr 1fr' : '1fr',
                     }}>
                         {getGalleryImages(visibleImages).map((img, ii) => (
-                            <img
+                            <MediaFrame
                                 key={ii}
-                                src={resolveImageUrl(img)}
-                                alt=""
+                                media={img}
                                 style={{ ...getImageRenderStyle(config.image), width: '100%', height: thumbSize / 2, objectFit: 'cover', borderRadius: (config.image?.borderRadius ?? 12) / 2 }}
                             />
                         ))}
                     </div>
                 ) : (
-                    <img src={mainImage} alt="" style={{ ...getImageRenderStyle(config.image), width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12, flexShrink: 0 }} />
+                    <MediaFrame media={mainImage} style={{ ...getImageRenderStyle(config.image), width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12, flexShrink: 0 }} />
                 ))}
                 {/* `minWidth` : sans plancher, la colonne de texte se laisse comprimer par ses
                     voisines jusqu'à couper les mots. Avec, elle passe à la ligne bien avant. */}

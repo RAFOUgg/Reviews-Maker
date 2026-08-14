@@ -38,6 +38,7 @@ import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid';
 const GISEMENT_GROUPS = ['harvest', 'usage', 'separation', 'extraction', 'purification', 'recipe'];
 
 import ReadOnlyProductionChainCanvas from '../export/interactive/ReadOnlyProductionChainCanvas';
+import MediaFrame from '../export/interactive/MediaFrame';
 
 /**
  * BlogArticleTemplate - Template article de blog professionnel
@@ -313,7 +314,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                             <figure className="mb-10">
                                 <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr 1fr' : visibleImages.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
                                     {getGalleryImages(visibleImages).map((img, ii) => (
-                                        <img key={ii} src={resolveImageUrl(img)} alt="" className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
+                                        <MediaFrame key={ii} media={img} className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
                                     ))}
                                 </div>
                             </figure>
@@ -325,7 +326,7 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 {/* Hauteur dérivée du contrat de format (FORMAT_LAYOUT) et non plus d'un 500px en dur :
                                     le même nombre valait 62 % d'un carré et 20 % d'un A4, donc deux mises en
                                     page sans rapport pour un seul template. */}
-                                <img src={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ ...getImageRenderStyle(image), maxHeight: responsive.image.maxHeight, objectFit: 'cover' }} />
+                                <MediaFrame media={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ ...getImageRenderStyle(image), maxHeight: responsive.image.maxHeight, objectFit: 'cover' }} />
                             </div>
                             {reviewData.cultivar && (
                                 <figcaption style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary, marginTop: '12px', textAlign: 'center' }}>

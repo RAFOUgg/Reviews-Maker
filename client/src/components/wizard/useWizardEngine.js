@@ -7,8 +7,19 @@ import { SENTINEL_BY_WIDGET } from './wizardFieldTypes'
  * exactement comme le feraient les sections classiques. Ça garde l'autosave existant
  * (déclenché par le useEffect sur [formData] de chaque CreateXReview/index.jsx) intact.
  */
-export function useWizardEngine({ questions, formData, handleChange, initialIndex = 0, onIndexChange }) {
+export function useWizardEngine({ questions: allQuestions, formData, handleChange, initialIndex = 0, onIndexChange }) {
     const [currentIndex, setCurrentIndexState] = useState(initialIndex)
+
+    // Questions CONDITIONNELLES (`question.when(formData)`). Le mode auto posait jusqu'ici toutes
+    // les questions du schéma sans exception — y compris « Taux de THC (%) ? » alors que le
+    // formulaire classique verrouille ces mêmes champs tant qu'aucun certificat d'analyse n'est
+    // déposé (`AnalyticsSection`, gate `hasCertificate`). Deux règles pour la même donnée, donc un
+    // chiffre de labo saisissable sans COA dès qu'on passait par le téléphone (signalé le
+    // 2026-08-14). La règle vit dans le schéma, le moteur ne fait que la respecter.
+    const questions = useMemo(
+        () => allQuestions.filter(q => typeof q.when !== 'function' || q.when(formData)),
+        [allQuestions, formData]
+    )
 
     // Remonte chaque changement de position au parent (via onIndexChange) pour que la position
     // survive un aller-retour vers le formulaire classique (ex: handoff pipeline) — WizardFlow est

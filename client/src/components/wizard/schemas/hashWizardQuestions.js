@@ -2,6 +2,7 @@ import { AROMA_CATEGORIES } from '../../../data/aromasWheel'
 import { EFFECTS_CATEGORIES } from '../../../data/effectsCategories'
 import { EXPERIENCE_VALUES } from '../../../data/formValues'
 import { WIZARD_WIDGETS } from '../wizardFieldTypes'
+import { formDataHasLabCertificate } from '../../../utils/labCertificate'
 
 // Cf. flowerWizardQuestions.js pour la justification de cette simplification (roues CATA
 // réduites à une sélection curatée pour le mode automatique).
@@ -52,14 +53,22 @@ export function getHashWizardQuestions() {
         },
 
         {
+            id: 'analytics-coa', section: 'analytics', title: 'Analytiques',
+            label: "Avez-vous un certificat d'analyse (COA) ?",
+            hint: "Les taux de cannabinoïdes ne se saisissent qu'avec le certificat qui les atteste — même règle que le formulaire complet (AnalyticsSection). Sans certificat, les deux questions suivantes ne sont pas posées.",
+            widget: WIZARD_WIDGETS.HANDOFF, handoffTarget: 'analytics', ctaLabel: "Déposer le certificat",
+        },
+        {
             id: 'thcPercent', section: 'analytics', title: 'Analytiques', label: 'Taux de THC (%) ?',
             widget: WIZARD_WIDGETS.TEXT, inputType: 'number',
             path: { kind: 'nested', section: 'analytics', field: 'thcPercent' }, sentinel: '',
+            when: formDataHasLabCertificate,
         },
         {
             id: 'cbdPercent', section: 'analytics', title: 'Analytiques', label: 'Taux de CBD (%) ?',
             widget: WIZARD_WIDGETS.TEXT, inputType: 'number',
             path: { kind: 'nested', section: 'analytics', field: 'cbdPercent' }, sentinel: '',
+            when: formDataHasLabCertificate,
         },
 
         { id: 'couleurTransparence', section: 'visual', title: 'Visuel & Technique', label: 'Notez la couleur / transparence', widget: WIZARD_WIDGETS.SLIDER, path: { kind: 'nested', section: 'visuel', field: 'couleurTransparence' } },
