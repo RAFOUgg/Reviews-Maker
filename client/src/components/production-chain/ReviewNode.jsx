@@ -30,7 +30,7 @@ const ReviewNode = ({ data, selected }) => {
 
     return (
         <div
-            className={`cultivar-node shape-rounded ${isSelected ? 'selected' : ''} ${data.dimmed ? 'chain-node-dimmed' : ''} ${data.searchActive ? 'chain-node-search-active' : ''} chain-node-zoom-${zoomTier}`}
+            className={`cultivar-node shape-rounded ${isSelected ? 'selected' : ''} ${data.dimmed ? 'graph-node-dimmed' : ''} ${data.searchActive ? 'graph-node-search-active' : ''} chain-node-zoom-${zoomTier}`}
             style={{ '--accent-color': accentColor }}
         >
             {/* Top/Bottom ont besoin d'un id explicite comme Left/Right — sinon React Flow leur

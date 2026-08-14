@@ -131,6 +131,9 @@ export default function PairingEdge({
                     strokeDasharray: '6 4',
                     filter: selected ? 'drop-shadow(0 0 8px #f472b6)' : 'none',
                     transition: dragPos ? 'none' : 'all 200ms ease-in-out',
+                    // Écartée par les filtres/la recherche du canevas — grisée, jamais retirée
+                    // (cf. UnifiedGeneticsCanvas.edgeVisibility).
+                    opacity: data?.dimmed ? 0.18 : 1,
                 }}
             />
 

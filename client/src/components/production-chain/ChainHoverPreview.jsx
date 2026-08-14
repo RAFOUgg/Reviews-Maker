@@ -14,65 +14,58 @@
 
 import React from 'react';
 import { Layers, Image as ImageIcon, Loader2 } from 'lucide-react';
+import GraphHoverPreview from '../graph-canvas/GraphHoverPreview';
 import { TYPE_META } from '../../utils/reviewTypeMeta';
 
-const PREVIEW_WIDTH = 260;
-const PREVIEW_HEIGHT_ESTIMATE = 220;
-const CURSOR_OFFSET = 16;
-
 const ChainHoverPreview = ({ x, y, kind, title, subtitle, reviewType, technique, date, cellCount = 0, mediaCount = 0, summary }) => {
-    if (x == null || y == null) return null;
-
-    const left = Math.min(x + CURSOR_OFFSET, Math.max(8, window.innerWidth - PREVIEW_WIDTH - 8));
-    const top = Math.min(y + CURSOR_OFFSET, Math.max(8, window.innerHeight - PREVIEW_HEIGHT_ESTIMATE - 8));
     const meta = reviewType ? (TYPE_META[reviewType] || null) : null;
     const Icon = meta?.icon;
     const resolvedSubtitle = subtitle ?? (kind === 'node' && meta ? meta.label : null);
 
     return (
-        <div className="chain-hover-preview" style={{ left, top, width: PREVIEW_WIDTH }}>
-            <div className="chain-hover-preview-header">
+        <GraphHoverPreview x={x} y={y}>
+            <div className="graph-hover-preview-header">
                 {Icon && <Icon size={13} className={meta.color} />}
-                <span className="chain-hover-preview-title">{title}</span>
+                <span className="graph-hover-preview-title">{title}</span>
             </div>
-            {resolvedSubtitle && <div className="chain-hover-preview-subtitle">{resolvedSubtitle}</div>}
+            {resolvedSubtitle && <div className="graph-hover-preview-subtitle">{resolvedSubtitle}</div>}
 
             {(technique || date) && (
-                <div className="chain-hover-preview-row">
+                <div className="graph-hover-preview-row">
                     {technique && <span>{technique}</span>}
-                    {date && <span className="chain-hover-preview-date">{new Date(date).toLocaleDateString('fr-FR')}</span>}
+                    {date && <span className="graph-hover-preview-date">{new Date(date).toLocaleDateString('fr-FR')}</span>}
                 </div>
             )}
 
             {(cellCount > 0 || mediaCount > 0) && (
-                <div className="chain-hover-preview-badges">
+                <div className="graph-hover-preview-badges">
                     {cellCount > 0 && <span><Layers size={11} /> {cellCount}</span>}
                     {mediaCount > 0 && <span><ImageIcon size={11} /> {mediaCount}</span>}
                 </div>
             )}
 
             {summary?.loading && (
-                <div className="chain-hover-preview-loading"><Loader2 size={11} className="animate-spin" /> Chargement du pipeline...</div>
+                <div className="graph-hover-preview-loading"><Loader2 size={11} className="animate-spin" /> Chargement du pipeline...</div>
             )}
 
             {!summary?.loading && summary?.pipelineSummary && (
-                <div className="chain-hover-preview-pipeline">
-                    <p className="chain-hover-preview-pipeline-label">{summary.pipelineSummary.label}</p>
+                <div className="graph-hover-preview-pipeline">
+                    <p className="graph-hover-preview-pipeline-label">{summary.pipelineSummary.label}</p>
                     {summary.pipelineSummary.technique && <p>{summary.pipelineSummary.technique}</p>}
                 </div>
             )}
 
             {!summary?.loading && Array.isArray(summary?.fillSummary) && summary.fillSummary.length > 0 && (
-                <div className="chain-hover-preview-fill">
+                <div className="graph-hover-preview-fill">
                     {summary.fillSummary.map(f => (
-                        <div key={f.key} className="chain-hover-preview-fill-row">
+                        <div key={f.key} className="graph-hover-preview-fill-row">
                             <span>{f.label}</span>
                             <span>{f.filled}/{f.total}</span>
                         </div>
                     ))}
                 </div>
             )}
-        </div>
+        </GraphHoverPreview>
     );
 };
 

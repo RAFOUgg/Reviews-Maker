@@ -43,8 +43,20 @@ try {
     if (!avant || avant.length < 3) throw new Error(`pas assez de blocs pour ordonner (${JSON.stringify(avant)})`);
     console.log('ordre avant :', avant.join(' → '));
 
-    // On saisit l'AVANT-DERNIER bloc déplaçable et on le remonte au-dessus du deuxième.
-    const deplacables = avant.filter((m) => !['masthead', 'mainImage', 'heroImage'].includes(m));
+    // On saisit le DERNIER bloc déplaçable et on le remonte au-dessus du premier.
+    //
+    // Filtré sur la hauteur : les enveloppes `genealogyCanvas`/`productionChainCanvas` restent dans
+    // le DOM même quand la review n'a ni arbre ni chaîne liés (le canevas se masque, pas son
+    // conteneur), soit un bloc de 0px qu'aucun curseur ne peut survoler. Le glissement s'y mesurait
+    // donc sur un rectangle inexistant, et échouait pour une raison sans rapport avec le geste.
+    const hauteurs = await p.evaluate(() => Object.fromEntries(
+        [...document.querySelectorAll('#export-maker-screen-canvas [data-module]')].map((el) => [
+            (el.getAttribute('data-module') || '').split('#')[0],
+            el.getBoundingClientRect().height,
+        ]),
+    ));
+    const deplacables = avant.filter((m) => !['masthead', 'mainImage', 'heroImage'].includes(m) && hauteurs[m] > 8);
+    if (deplacables.length < 2) throw new Error(`pas assez de blocs visibles (${JSON.stringify(hauteurs)})`);
     const source = deplacables[deplacables.length - 1];
     const destination = deplacables[0];
     console.log(`glissement : « ${source} » au-dessus de « ${destination} »`);
@@ -71,19 +83,101 @@ try {
     });
     if (!poignee) { console.log('KO — aucune poignée de glissement au survol d’un bloc'); ko++; }
     else {
-        const dst = await boite(destination);
-        await p.mouse.move(poignee.x, poignee.y);
+        // TRAJET CONTINU, PAS DE TÉLÉPORT. Un `mouse.move` unique saute du bloc à la poignée sans
+        // émettre les positions intermédiaires — aucune main ne fait ça. C'est ce raccourci qui a
+        // laissé passer une poignée posée HORS du bloc : sortir du bloc effaçait le survol, donc la
+        // poignée, ~18px avant qu'on l'atteigne (mesuré le 2026-08-14). On refait le trajet en pas
+        // de 3px et on exige que la poignée soit encore là à l'arrivée.
+        for (let i = 1; i <= 24; i++) {
+            await p.mouse.move(src.x + ((poignee.x - src.x) * i) / 24, src.y + ((poignee.y - src.y) * i) / 24);
+            await sleep(15);
+        }
+        const encoreLa = await p.evaluate(() => !!document.querySelector('div[title="Glisser pour déplacer ce bloc"]'));
+        if (!encoreLa) { console.log('KO — la poignée disparaît avant que le curseur ne l’atteigne (inattrapable)'); ko++; }
         await p.mouse.down();
-        // Plusieurs pas : le point d'insertion se calcule au `pointermove`, un saut unique peut
-        // n'en produire aucun.
-        for (let i = 1; i <= 12; i++) {
-            await p.mouse.move(
-                poignee.x + ((dst.x - poignee.x) * i) / 12,
-                poignee.y + ((dst.top + 8 - poignee.y) * i) / 12,
-            );
-            await sleep(40);
+
+        // AMENER LA DESTINATION SOUS LE CURSEUR PAR LE GESTE, PAS PAR UN `scrollIntoView`.
+        //
+        // La version précédente faisait défiler jusqu'à la destination APRÈS avoir relevé la
+        // position de la poignée : elle pressait donc des coordonnées périmées et saisissait le
+        // bloc qui se trouvait là après défilement (mesuré : `gisement:overflow` déplacé à la place
+        // de `pipeline:cultureTimeline`). Source et destination ne tiennent pas ensemble à l'écran ;
+        // c'est au défilement automatique de bord de les rapprocher — donc on le sollicite.
+        const cadre = await p.evaluate(() => {
+            let n = document.querySelector('#export-maker-screen-canvas')?.parentElement;
+            while (n && n !== document.body) {
+                const ov = getComputedStyle(n).overflowY;
+                if ((ov === 'auto' || ov === 'scroll') && n.scrollHeight > n.clientHeight + 1) {
+                    const r = n.getBoundingClientRect();
+                    return { x: r.x + r.width / 2, top: r.top, bottom: r.bottom };
+                }
+                n = n.parentElement;
+            }
+            return null;
+        });
+        if (!cadre) throw new Error('aucun conteneur défilant autour de l’aperçu');
+
+        // Position visée : le CENTRE HORIZONTAL du bloc, pas l'axe du cadre. En mode Écran PC le
+        // rendu coule en COLONNES — viser le milieu du cadre tombe dans la colonne de droite, où le
+        // bloc cherché n'est pas (mesuré : `elementFromPoint` ne renvoyait aucun `[data-module]`
+        // alors que la destination était bien à la bonne hauteur).
+        const topDe = async (m) => {
+            const r = await p.evaluate((mm) => {
+                const el = document.querySelector(`#export-maker-screen-canvas [data-module^="${mm}"]`);
+                if (!el) return null;
+                const b = el.getBoundingClientRect();
+                return { top: b.top, x: b.x + b.width / 2 };
+            }, m);
+            return r;
+        };
+
+        // On se colle au bord haut du cadre : la surcouche doit faire défiler d'elle-même.
+        await p.mouse.move(cadre.x, cadre.top + 20);
+        let visible = false;
+        for (let i = 0; i < 60 && !visible; i++) {
+            await p.mouse.move(cadre.x, cadre.top + 20 + (i % 2)); // un vrai mouvement à chaque tour
+            await sleep(100);
+            const t = await topDe(destination);
+            visible = t !== null && t.top > cadre.top + 40 && t.top < cadre.bottom - 40;
+        }
+        if (!visible) { console.log('KO — le défilement automatique n’amène pas la destination à l’écran'); ko++; }
+
+        // DESCENTE ADAPTATIVE vers la moitié HAUTE de la destination (= insertion avant elle).
+        // On relit sa position à chaque pas au lieu de viser une coordonnée relevée d'avance : le
+        // défilement automatique la déplace pendant qu'on l'approche, et une cible figée finit à
+        // côté (mesuré : trait d'insertion absent au relâchement, ordre inchangé).
+        let y = cadre.top + 20;
+        let x = cadre.x;
+        for (let i = 0; i < 40; i++) {
+            const t = await topDe(destination);
+            if (!t) break;
+            const vise = t.top + 10;
+            x = t.x;
+            if (Math.abs(y - vise) < 6) { await p.mouse.move(x, y); break; }
+            y += Math.sign(vise - y) * Math.min(40, Math.abs(vise - y));
+            await p.mouse.move(x, y);
+            await sleep(60);
         }
         await sleep(400);
+        const etat = await p.evaluate(({ mm, cx, cy }) => {
+            const root = document.querySelector('#export-maker-screen-canvas');
+            const sous = document.elementFromPoint(cx, cy);
+            const bloc = sous?.closest?.('[data-module]');
+            const barre = [...document.body.querySelectorAll('div')].find((d) => d.style.position === 'fixed'
+                && d.style.height === '4px' && d.style.background === 'rgb(139, 92, 246)');
+            const dest = document.querySelector(`#export-maker-screen-canvas [data-module^="${mm}"]`);
+            return {
+                curseur: `${Math.round(cx)},${Math.round(cy)}`,
+                sous: sous ? sous.tagName.toLowerCase() : 'null',
+                blocSousCurseur: bloc?.getAttribute('data-module') || 'aucun',
+                dansRoot: bloc ? root.contains(bloc) : false,
+                // Le témoin « ⠿ Nom du bloc » n'existe que tant qu'un bloc est saisi.
+                glissementEnCours: !!document.body.querySelector('div[style*="position: fixed"][style*="white-space: nowrap"]'),
+                barre: barre ? Math.round(barre.getBoundingClientRect().top) : null,
+                destTop: dest ? Math.round(dest.getBoundingClientRect().top) : null,
+            };
+        }, { mm: destination, cx: x, cy: y });
+        console.log('avant relâchement :', JSON.stringify(etat));
         await p.mouse.up(); await sleep(2500);
 
         const apres = await ordre();

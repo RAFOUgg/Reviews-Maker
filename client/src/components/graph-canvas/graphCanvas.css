@@ -102,20 +102,22 @@
     filter: drop-shadow(0 0 12px rgba(139, 92, 246, 0.35));
 }
 
-/* Filtres/recherche du canevas Chaîne de production — grisé (jamais masqué, cf. commentaire
-   ProductionChainCanvas.jsx sur nodeVisibility/edgeVisibility) plutôt qu'un simple opacity inline,
-   pour pouvoir aussi désactiver l'ombre/le sheen coûteux visuellement sur un nœud grisé. */
-.cultivar-node.chain-node-dimmed {
+/* Filtres/recherche des DEUX canevas (Chaîne de production et PhenoHunt) — grisé (jamais masqué,
+   cf. commentaire ProductionChainCanvas.jsx sur nodeVisibility/edgeVisibility) plutôt qu'un simple
+   opacity inline, pour pouvoir aussi désactiver l'ombre/le sheen coûteux visuellement sur un nœud
+   grisé. Préfixe `graph-` et non `chain-` : ces règles portent déjà sur `.cultivar-node`, la classe
+   commune aux nœuds des deux domaines, et elles servent désormais réellement aux deux. */
+.cultivar-node.graph-node-dimmed {
     opacity: 0.18;
     box-shadow: none;
     pointer-events: auto; /* reste cliquable — cf. décision "griser, jamais masquer" */
 }
 
-.cultivar-node.chain-node-dimmed:hover {
+.cultivar-node.graph-node-dimmed:hover {
     transform: none;
 }
 
-.cultivar-node.chain-node-search-active {
+.cultivar-node.graph-node-search-active {
     border-color: #34d399;
     box-shadow:
         0 0 0 3px rgba(52, 211, 153, 0.45),
@@ -502,6 +504,15 @@
     background: rgba(245, 158, 11, 0.35);
 }
 
+/* La barre de filtres et la bannière de liens cassés occupent toutes deux le slot « top-center »
+   de react-flow : sans décalage elles se superposent EXACTEMENT (mêmes coordonnées absolues), la
+   bannière masquant le champ de recherche. Sélecteur de voisinage plutôt qu'une marge
+   inconditionnelle : en lecture seule la barre de filtres n'est pas rendue du tout, et la bannière
+   doit alors rester en haut. Vaut pour les deux canevas, qui ont l'un comme l'autre les deux. */
+.chain-filter-bar ~ .orphan-banner {
+    margin-top: 104px !important;
+}
+
 /* Canvas Edges */
 .react-flow__edges {
     z-index: 1;
@@ -699,6 +710,11 @@
    plutôt que la boîte flottante par défaut du <Panel position="top-right"> de react-flow (qui ne
    se dimensionne que sur son contenu) — top/right/bottom/height en !important pour l'emporter
    sur le style inline posé par react-flow selon la prop `position`. */
+/* Le CONTENU du panneau de détail est stylé via `.canvas-info-content`, pas via
+   `.node-info-panel` : sur téléphone ce contenu n'est plus dans un volet mais dans une feuille
+   modale (`.canvas-sheet`, cf. CanvasInfoPanel.jsx), et il doit y garder exactement la même
+   apparence. Les deux enveloppes portent donc cette classe, et les règles ci-dessous ne
+   concernent plus que la GÉOMÉTRIE du volet desktop. */
 .node-info-panel {
     background-color: rgba(30, 41, 59, 0.9) !important;
     border: 1px solid rgba(59, 130, 246, 0.3) !important;
@@ -747,23 +763,23 @@
     background: rgba(255, 255, 255, 0.1);
 }
 
-.node-info-panel .info-content {
+.canvas-info-content .info-content {
     color: #cbd5e1;
 }
 
-.node-info-panel .info-content h4 {
+.canvas-info-content .info-content h4 {
     color: #10b981;
     font-weight: 600;
     margin: 0 0 8px 0;
 }
 
-.node-info-panel .info-content p {
+.canvas-info-content .info-content p {
     font-size: 12px;
     color: #94a3b8;
     margin: 4px 0;
 }
 
-.node-info-panel .btn-edit {
+.canvas-info-content .btn-edit {
     width: 100%;
     padding: 8px 12px;
     margin-top: 12px;
@@ -777,43 +793,43 @@
     transition: all 0.3s ease !important;
 }
 
-.node-info-panel .btn-edit:hover {
+.canvas-info-content .btn-edit:hover {
     background-color: #059669 !important;
     box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3) !important;
 }
 
-.node-info-panel .info-pipeline {
+.canvas-info-content .info-pipeline {
     margin-top: 10px;
     padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.node-info-panel .info-pipeline[draggable="true"] {
+.canvas-info-content .info-pipeline[draggable="true"] {
     cursor: grab;
     border-radius: 6px;
     transition: background-color 0.15s ease;
 }
 
-.node-info-panel .info-pipeline[draggable="true"]:hover {
+.canvas-info-content .info-pipeline[draggable="true"]:hover {
     background: rgba(255, 255, 255, 0.04);
 }
 
-.node-info-panel .info-pipeline p {
+.canvas-info-content .info-pipeline p {
     font-size: 12px;
     color: #94a3b8;
     margin: 2px 0;
 }
 
-.node-info-panel .info-pipeline p strong {
+.canvas-info-content .info-pipeline p strong {
     color: #10b981;
 }
 
-.node-info-panel .info-fill-row {
+.canvas-info-content .info-fill-row {
     display: flex;
     justify-content: space-between;
 }
 
-.node-info-panel .info-section-label {
+.canvas-info-content .info-section-label {
     font-size: 11px;
     text-transform: uppercase;
     letter-spacing: 0.03em;
@@ -821,17 +837,17 @@
     margin: 10px 0 4px 0 !important;
 }
 
-.node-info-panel .info-cells {
+.canvas-info-content .info-cells {
     margin-top: 4px;
 }
 
-.node-info-panel .info-section-hint {
+.canvas-info-content .info-section-hint {
     font-size: 10px !important;
     color: #64748b !important;
     margin: 0 0 6px 0 !important;
 }
 
-.node-info-panel .info-cell-row {
+.canvas-info-content .info-cell-row {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
@@ -847,37 +863,37 @@
     transition: background-color 0.15s ease;
 }
 
-.node-info-panel .info-cell-row:hover {
+.canvas-info-content .info-cell-row:hover {
     background: rgba(255, 255, 255, 0.08);
 }
 
 /* Sélection multiple ctrl/shift+clic (cf. ProductionChainCanvas.handleCellClick) — même recette
    visuelle (anneau + badge) que la sélection multiple de PipelineDragDropView.jsx. */
-.node-info-panel .info-cell-row.selected {
+.canvas-info-content .info-cell-row.selected {
     background: rgba(59, 130, 246, 0.15);
     border-color: rgba(59, 130, 246, 0.6);
     box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.35);
 }
 
-.node-info-panel .info-cell-label {
+.canvas-info-content .info-cell-label {
     font-size: 12px;
     font-weight: 600;
 }
 
-.node-info-panel .info-cell-fields {
+.canvas-info-content .info-cell-fields {
     font-size: 11px;
     color: #94a3b8;
     margin-top: 2px;
 }
 
-.node-info-panel .info-media-grid {
+.canvas-info-content .info-media-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     gap: 6px;
     margin-top: 8px;
 }
 
-.node-info-panel .info-media-thumb {
+.canvas-info-content .info-media-thumb {
     aspect-ratio: 1;
     border-radius: 6px;
     overflow: hidden;
@@ -886,8 +902,8 @@
     cursor: pointer;
 }
 
-.node-info-panel .info-media-thumb img,
-.node-info-panel .info-media-thumb video {
+.canvas-info-content .info-media-thumb img,
+.canvas-info-content .info-media-thumb video {
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -896,11 +912,11 @@
 /* Journal d'événements (cf. ProductionChainCanvas.jsx panelEvents, server-new/utils/chainAuditLog.js)
    — liste chronologique en lecture seule, pas de drag/clic (contrairement à .info-cell-row) : un
    événement journalisé est un fait passé, pas une donnée à réassigner. */
-.node-info-panel .info-events {
+.canvas-info-content .info-events {
     margin-top: 4px;
 }
 
-.node-info-panel .info-event-row {
+.canvas-info-content .info-event-row {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -911,18 +927,18 @@
     margin-bottom: 3px;
 }
 
-.node-info-panel .info-event-label {
+.canvas-info-content .info-event-label {
     font-size: 12px;
     color: #cbd5e1;
 }
 
-.node-info-panel .info-event-date {
+.canvas-info-content .info-event-date {
     font-size: 10px;
     color: #64748b;
 }
 
-.node-info-panel .info-event-description,
-.node-info-panel .info-event-equipment {
+.canvas-info-content .info-event-description,
+.canvas-info-content .info-event-equipment {
     font-size: 11px;
     color: #94a3b8;
     margin-top: 1px;
@@ -930,7 +946,7 @@
 
 /* Constat dérivé du moteur de règles (cf. utils/chainEventRules.js) — jamais persisté, recalculé à
    l'affichage. Distinct visuellement de la description libre (fond ambré, pas juste du texte). */
-.node-info-panel .info-event-flag {
+.canvas-info-content .info-event-flag {
     display: inline-block;
     font-size: 10px;
     font-weight: 600;
@@ -945,26 +961,26 @@
 
 /* Événement manuel qualifié (cf. ChainEventForm.jsx) — la bordure gauche porte la gravité, même
    convention de couleur que les badges existants (ambre = avertissement, rouge = critique). */
-.node-info-panel .info-event-row.severity-warning {
+.canvas-info-content .info-event-row.severity-warning {
     border-left-color: #f59e0b;
 }
 
-.node-info-panel .info-event-row.severity-critical {
+.canvas-info-content .info-event-row.severity-critical {
     border-left-color: #ef4444;
     background: rgba(239, 68, 68, 0.06);
 }
 
-.node-info-panel .info-section-label-row {
+.canvas-info-content .info-section-label-row {
     display: flex;
     align-items: center;
     justify-content: space-between;
 }
 
-.node-info-panel .info-section-label-row .info-section-label {
+.canvas-info-content .info-section-label-row .info-section-label {
     margin: 10px 0 4px 0 !important;
 }
 
-.node-info-panel .info-event-add-btn {
+.canvas-info-content .info-event-add-btn {
     display: flex;
     align-items: center;
     gap: 3px;
@@ -978,7 +994,7 @@
     transition: background-color 0.15s ease, color 0.15s ease;
 }
 
-.node-info-panel .info-event-add-btn:hover {
+.canvas-info-content .info-event-add-btn:hover {
     background: rgba(255, 255, 255, 0.1);
     color: #e2e8f0;
 }
@@ -1227,8 +1243,10 @@
     text-overflow: ellipsis;
 }
 
-/* Chain hover preview (aperçu au survol nœud/liaison — Chaîne de production) */
-.chain-hover-preview {
+/* Aperçu au survol d'un nœud/une liaison — partagé par les DEUX canevas (Chaîne de production
+   via ChainHoverPreview, PhenoHunt via GeneticsHoverPreview), le conteneur et son placement vivant
+   dans graph-canvas/GraphHoverPreview.jsx. */
+.graph-hover-preview {
     position: fixed;
     z-index: 1000;
     pointer-events: none;
@@ -1240,33 +1258,33 @@
     box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
     color: #cbd5e1;
     font-size: 12px;
-    animation: chain-hover-preview-in 120ms ease-out;
+    animation: graph-hover-preview-in 120ms ease-out;
 }
 
-@keyframes chain-hover-preview-in {
+@keyframes graph-hover-preview-in {
     from { opacity: 0; transform: translateY(2px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
-.chain-hover-preview-header {
+.graph-hover-preview-header {
     display: flex;
     align-items: center;
     gap: 6px;
 }
 
-.chain-hover-preview-title {
+.graph-hover-preview-title {
     font-weight: 600;
     color: #f1f5f9;
     font-size: 13px;
 }
 
-.chain-hover-preview-subtitle {
+.graph-hover-preview-subtitle {
     color: #94a3b8;
     font-size: 11px;
     margin-top: 2px;
 }
 
-.chain-hover-preview-row {
+.graph-hover-preview-row {
     display: flex;
     justify-content: space-between;
     gap: 8px;
@@ -1275,11 +1293,11 @@
     font-size: 11px;
 }
 
-.chain-hover-preview-date {
+.graph-hover-preview-date {
     color: #94a3b8;
 }
 
-.chain-hover-preview-badges {
+.graph-hover-preview-badges {
     display: flex;
     gap: 10px;
     margin-top: 6px;
@@ -1287,13 +1305,13 @@
     font-size: 11px;
 }
 
-.chain-hover-preview-badges span {
+.graph-hover-preview-badges span {
     display: flex;
     align-items: center;
     gap: 3px;
 }
 
-.chain-hover-preview-loading {
+.graph-hover-preview-loading {
     display: flex;
     align-items: center;
     gap: 5px;
@@ -1302,30 +1320,30 @@
     font-size: 11px;
 }
 
-.chain-hover-preview-pipeline {
+.graph-hover-preview-pipeline {
     margin-top: 8px;
     padding-top: 8px;
     border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
-.chain-hover-preview-pipeline-label {
+.graph-hover-preview-pipeline-label {
     color: #10b981;
     font-weight: 600;
     font-size: 11px;
     margin: 0 0 2px 0;
 }
 
-.chain-hover-preview-pipeline p {
+.graph-hover-preview-pipeline p {
     margin: 0;
     font-size: 11px;
     color: #94a3b8;
 }
 
-.chain-hover-preview-fill {
+.graph-hover-preview-fill {
     margin-top: 6px;
 }
 
-.chain-hover-preview-fill-row {
+.graph-hover-preview-fill-row {
     display: flex;
     justify-content: space-between;
     font-size: 11px;
@@ -1575,6 +1593,185 @@
     transform: scale(0.96);
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════════════════════════
+   TÉLÉPHONE — le canevas EST l'écran.
+   ═══════════════════════════════════════════════════════════════════════════════════════════════
+   Rien de permanent ne doit rogner le graphe : ce qui n'est pas le graphe s'invoque et se referme.
+   Une feuille (`canvas-sheet`) se ferme ; un volet, non — c'est la différence entre consulter et
+   perdre sa place. Ces deux enveloppes sont portalées vers <body> par GraphCanvasShell, donc
+   `position: fixed` s'y comporte bien malgré le backdrop-filter des cartes qui embarquent le
+   canevas (cf. commentaire du portail dans GraphCanvasShell.jsx). */
+.canvas-drawer-backdrop,
+.canvas-sheet-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    background: rgba(3, 3, 10, 0.6);
+    backdrop-filter: blur(3px);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+/* Tiroir « Ajouter un produit » : quasi plein écran, c'est une liste qu'on parcourt. */
+.canvas-drawer {
+    height: 88vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 10, 26, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+}
+
+/* Feuille d'information/d'action : hauteur dictée par le contenu, plafonnée pour que le canevas
+   reste visible derrière — on consulte SANS perdre le graphe des yeux. */
+.canvas-sheet {
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 10, 26, 0.98);
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 20px 20px 0 0;
+    box-shadow: 0 -12px 40px -12px rgba(0, 0, 0, 0.7);
+    overflow: hidden;
+}
+
+.canvas-drawer-handle,
+.canvas-sheet-handle {
+    width: 40px;
+    height: 4px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.25);
+    margin: 10px auto 6px;
+    flex-shrink: 0;
+}
+
+.canvas-sheet-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding: 0 16px 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    flex-shrink: 0;
+}
+
+.canvas-sheet-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f1f5f9;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.canvas-sheet-body {
+    overflow-y: auto;
+    padding: 12px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    -webkit-overflow-scrolling: touch;
+}
+
+/* 44px : seuil tactile WCAG/Apple/Material, déjà la règle des menus contextuels plus bas. */
+.canvas-drawer-close,
+.canvas-sheet-close {
+    flex-shrink: 0;
+    min-height: 44px;
+    padding: 0 16px;
+    color: rgba(226, 232, 240, 0.9);
+    background: rgba(255, 255, 255, 0.06);
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.canvas-sheet-close {
+    border-top: none;
+    background: transparent;
+    padding: 0 10px;
+}
+
+/* Rangée d'actions d'une feuille « Outils » — mêmes boutons que la barre desktop, empilés. */
+.canvas-sheet-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.canvas-sheet-actions .toolbar-btn {
+    justify-content: flex-start;
+    min-height: 44px;
+    font-size: 13px;
+}
+
+/* Bascule « Sélection » — l'équivalent tactile de Ctrl+clic (cf. GraphCanvasShell.jsx). Posée
+   au-dessus des contrôles de zoom, eux-mêmes recalés en bas à droite sur téléphone. */
+.canvas-selection-toggle {
+    bottom: 84px !important;
+    right: 16px !important;
+    left: auto !important;
+    top: auto !important;
+    padding: 0 !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.canvas-selection-toggle button {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 44px;
+    padding: 0 14px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(226, 232, 240, 0.9);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    backdrop-filter: blur(18px) saturate(140%);
+    box-shadow: 0 4px 18px -8px rgba(0, 0, 0, 0.6);
+}
+
+.canvas-selection-toggle button.active {
+    color: #ede9fe;
+    background: rgba(139, 92, 246, 0.28);
+    border-color: rgba(139, 92, 246, 0.5);
+}
+
+/* Menu contextuel (appui long) en feuille sur téléphone : ancré au point de contact, il sortait de
+   l'écran près des bords — le recalage anti-débordement écrit dans chaque menu (NodeContextMenu,
+   ChainNodeContextMenu…) ne pouvait que le décaler, jamais lui donner de la place. En bas, pleine
+   largeur, il ne peut plus sortir nulle part. Les coordonnées inline posées par les menus sont
+   écrasées ici : c'est le seul endroit qui connaît la taille de l'écran. */
+@media (max-width: 639px) {
+    .context-menu {
+        left: 0 !important;
+        right: 0 !important;
+        top: auto !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 70vh;
+        overflow-y: auto;
+        border-radius: 20px 20px 0 0 !important;
+        padding-bottom: env(safe-area-inset-bottom, 0px);
+        z-index: 1450;
+    }
+
+    .context-menu button:first-child,
+    .context-menu button:last-child {
+        border-radius: 0;
+    }
+
+    /* Toute barre d'outils restée en rangée (PhenoHunt) passe à la ligne plutôt que de sortir
+       de l'écran par la droite. */
+    .canvas-toolbar > div {
+        flex-wrap: wrap;
+    }
+}
+
 /* Responsive */
 @media (max-width: 768px) {
     .canvas-toolbar {
@@ -1587,9 +1784,29 @@
         max-width: 80vw !important;
     }
 
+    /* Recalage en bas à DROITE (le bas-gauche est réservé aux FAB d'ajout). `left: auto` est la
+       correction de fond : React Flow pose ces contrôles avec un `left`, et n'ajouter qu'un
+       `right` laissait les deux bords fixés — le bloc s'étirait donc d'un bord à l'autre et
+       mesurait 340px de large sur 390px d'écran (87 %, mesuré le 2026-08-14) au lieu d'une
+       colonne compacte. Boutons à 44px : seuil tactile WCAG/Apple/Material. */
     .react-flow__controls {
+        left: auto !important;
+        right: 16px !important;
         bottom: 20px !important;
-        right: 20px !important;
+        top: auto !important;
+        display: flex !important;
+        flex-direction: column !important;
+        width: auto !important;
+    }
+
+    .react-flow__controls button {
+        width: 44px !important;
+        height: 44px !important;
+    }
+
+    .react-flow__controls button svg {
+        max-width: 18px;
+        max-height: 18px;
     }
 
     /* Poignées de connexion (.node-handle) — agrandit la zone de HIT tactile sans changer la

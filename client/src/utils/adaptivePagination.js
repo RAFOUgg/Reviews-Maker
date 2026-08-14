@@ -633,7 +633,19 @@ export function computeAdaptivePages(moduleHeights, ratio, containerPadding, tem
         // Voir `MAX_ELASTIC_SHARE_MULTICOL` : au-delà, la consigne n'est plus suivie.
         const plafondBloc = colonnesPage > 1 ? capaciteColonne * MAX_ELASTIC_SHARE_MULTICOL : Infinity;
         Object.entries(parColonne).forEach(([col, ids]) => {
-            const reliquat = (capaciteColonne - (page.colUsed[col] || 0)) * RELIQUAT_DISTRIBUE;
+            // GARDE-FOU : ne jamais étirer jusqu'au dernier pixel modélisé.
+            //
+            // Le packer ne compte que les blocs porteurs d'un `data-module`. Ce qui les entoure —
+            // en-tête d'article, marges internes du template, titres de section sans identifiant —
+            // n'entre dans aucun total, mais occupe bien de la hauteur. Tant que les pages
+            // restaient à 85-90 % de remplissage, l'écart passait inaperçu ; en resserrant le
+            // contenu (doublon « Caractéristiques détaillées » retiré le 2026-08-14), une page
+            // d'Article de Blog est montée à 95,5 % et a débordé de 8px sur 1080 — mesuré, contenu
+            // coupé. On garde donc une réserve : l'étirement ne comble que le reliquat SOUS 96 % de
+            // la capacité de colonne, le reste absorbe ce que le modèle ne voit pas.
+            const RESERVE_HORS_MODULE = 0.96;
+            const capaciteEtirable = capaciteColonne * RESERVE_HORS_MODULE;
+            const reliquat = Math.max(0, capaciteEtirable - (page.colUsed[col] || 0)) * RELIQUAT_DISTRIBUE;
             if (reliquat <= 24) return; // en dessous, l'étirement ne se verrait pas
             const baseTotale = ids.reduce((somme, id) => somme + (moduleHeights.get(id) || 0), 0);
             if (baseTotale <= 0) return;

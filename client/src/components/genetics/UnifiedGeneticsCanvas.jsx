@@ -13,7 +13,7 @@
  * - Export (JSON, SVG)
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
     useNodesState,
     useEdgesState,
@@ -21,8 +21,10 @@ import {
     useReactFlow,
     MarkerType
 } from 'reactflow';
-import { Sprout, AlertTriangle, Image as ImageIcon } from 'lucide-react';
+import { toSvg } from 'html-to-image';
+import { Sprout, AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
+import CanvasInfoPanel from '../graph-canvas/CanvasInfoPanel';
 import AnnotationNode from '../graph-canvas/AnnotationNode';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import useGraphMultiSelection from '../graph-canvas/useGraphMultiSelection';
@@ -32,6 +34,8 @@ import { useToast } from '../shared/ToastContainer';
 // contexte, son comportement est donc inchangé par construction.
 import { useGeneticsCanvasStore } from '../../store/scopedCanvasStores';
 import useResponsiveLayout from '../../hooks/useResponsiveLayout';
+import GeneticsCanvasToolbar, { SEX_FILTER_OPTIONS } from './GeneticsCanvasToolbar';
+import GeneticsHoverPreview from './GeneticsHoverPreview';
 import CultivarNode from './CultivarNode';
 import PhenoEdge from './PhenoEdge';
 import PairingEdge from './PairingEdge';
@@ -55,6 +59,25 @@ const edgeTypes = {
     pairing: PairingEdge,
     family: FamilyDropEdge
 };
+
+// `GenNode.genetics` est persisté en JSON string côté API — parsé une seule fois ici, pour les
+// nœuds comme pour les filtres (même helper que graphDataBubble.js, qui a le sien pour la même
+// raison). Sans ce parsage, CultivarNode.jsx/PairingEdge.jsx ne peuvent jamais lire type/breeder/sex.
+const parseGenetics = (node) => {
+    let genetics = node?.genetics;
+    if (typeof genetics === 'string') {
+        try { genetics = JSON.parse(genetics); } catch { genetics = {}; }
+    }
+    return genetics || {};
+};
+
+// Repli du panneau latéral droit, mémorisé entre sessions (cf. CanvasInfoPanel.jsx). Clé propre à
+// PhenoHunt : replier le panneau de la Chaîne de production ne doit pas replier celui de l'arbre.
+const PANEL_COLLAPSE_STORAGE_KEY = 'geneticsInfoPanelCollapsed';
+
+// Délai avant apparition de l'aperçu au survol — même valeur que la Chaîne de production : assez
+// court pour rester réactif, assez long pour ne pas clignoter en traversant deux nœuds voisins.
+const HOVER_PREVIEW_DELAY = 300;
 
 // Types de relation parent→enfant réels (filiation) — "sibling" et "pairing" en sont exclus :
 // un lien fraternel ne relie pas un parent à son enfant, et "pairing" relie deux parents entre eux.
@@ -88,6 +111,159 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
     const [deleteConfirm, setDeleteConfirm] = useState(null); // { type: 'node'|'edge', id, label }
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
+    const [exportingSvg, setExportingSvg] = useState(false);
+
+    // ── Recherche et filtres d'affichage ────────────────────────────────────────────────────
+    // Même modèle que ProductionChainCanvas.jsx : état de vue éphémère (jamais persisté), et on
+    // GRISE plutôt qu'on ne masque — retirer un nœud du tableau React Flow casserait toute arête
+    // qui le référence encore comme source/target, et masquer un parent ferait disparaître une
+    // filiation sans l'expliquer.
+    const [sexFilter, setSexFilter] = useState(() => new Set(SEX_FILTER_OPTIONS.map(o => o.value)));
+    const [attributeFilter, setAttributeFilter] = useState({ hasMedia: false, hasReview: false });
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeMatchIndex, setActiveMatchIndex] = useState(0);
+
+    const handleToggleSex = useCallback((value) => {
+        setSexFilter(prev => {
+            const next = new Set(prev);
+            if (next.has(value)) next.delete(value); else next.add(value);
+            return next;
+        });
+    }, []);
+
+    const handleToggleAttribute = useCallback((key) => {
+        setAttributeFilter(prev => ({ ...prev, [key]: !prev[key] }));
+    }, []);
+
+    const handleSearchChange = useCallback((value) => {
+        setSearchTerm(value);
+        setActiveMatchIndex(0);
+    }, []);
+
+    const searchActive = searchTerm.trim().length > 0;
+    const searchLower = searchTerm.trim().toLowerCase();
+
+    // Champs réellement cherchés sur un individu : son nom, son breeder et son code de phénotype —
+    // les trois seules identités textuelles qu'un sélectionneur utilise pour désigner une plante.
+    // `phenotypeCode` vient de PHENO_NODE_SECTIONS (clé historique documentée), pas d'une supposition.
+    const nodeSearchText = useCallback((node) => {
+        const genetics = parseGenetics(node);
+        return [node.cultivarName, genetics.breeder, genetics.phenotypeCode]
+            .filter(Boolean).join(' ').toLowerCase();
+    }, []);
+
+    const edgeSearchText = useCallback((edge) => {
+        const relation = RELATIONSHIP_TYPE_LABELS[edge.relationshipType] || edge.relationshipType || '';
+        return [relation, edge.pollinationMethod].filter(Boolean).join(' ').toLowerCase();
+    }, []);
+
+    const nodeVisibility = useMemo(() => {
+        const map = new Map();
+        for (const node of (store.nodes || [])) {
+            const genetics = parseGenetics(node);
+            // `sex` non renseigné = "unknown", exactement comme le rendu du nœud (CultivarNode.jsx
+            // retombe sur 'unknown' pour toute valeur absente ou inconnue).
+            const sex = SEX_FILTER_OPTIONS.some(o => o.value === genetics.sex) ? genetics.sex : 'unknown';
+            const sexOk = sexFilter.has(sex);
+            const mediaOk = !attributeFilter.hasMedia || (Array.isArray(node.media) && node.media.length > 0);
+            const reviewOk = !attributeFilter.hasReview || !!node.sourceReviewId;
+            const searchOk = !searchActive || nodeSearchText(node).includes(searchLower);
+            map.set(node.id, sexOk && mediaOk && reviewOk && searchOk);
+        }
+        return map;
+    }, [store.nodes, sexFilter, attributeFilter, searchActive, searchLower, nodeSearchText]);
+
+    // Une liaison hérite des filtres qui portent sur les INDIVIDUS (sexe, fiche liée) de ses deux
+    // extrémités — une filiation dont un parent est filtré n'a pas de sens montrée seule. Les
+    // médias et la recherche sont en revanche évalués sur la liaison elle-même, qui porte les siens.
+    const edgeVisibility = useMemo(() => {
+        const map = new Map();
+        const nodeOk = (id) => nodeVisibility.get(id) !== false;
+        for (const edge of (store.edges || [])) {
+            const endpointsOk = nodeOk(edge.parentNodeId) && nodeOk(edge.childNodeId);
+            const mediaOk = !attributeFilter.hasMedia || (Array.isArray(edge.media) && edge.media.length > 0);
+            const searchOk = !searchActive || edgeSearchText(edge).includes(searchLower);
+            map.set(edge.id, endpointsOk && mediaOk && searchOk);
+        }
+        return map;
+    }, [store.edges, nodeVisibility, attributeFilter, searchActive, searchLower, edgeSearchText]);
+
+    // Résultats ordonnés (individus puis liaisons) — permet la navigation précédent/suivant et le
+    // centrage sur le résultat actif, même comportement que la Chaîne de production.
+    const searchMatches = useMemo(() => {
+        if (!searchActive) return [];
+        const nodeMatches = (store.nodes || [])
+            .filter(n => nodeSearchText(n).includes(searchLower))
+            .map(n => ({ kind: 'node', id: n.id, fitNodeIds: [n.id] }));
+        const edgeMatches = (store.edges || [])
+            .filter(e => edgeSearchText(e).includes(searchLower))
+            .map(e => ({
+                kind: 'edge',
+                id: e.id,
+                fitNodeIds: [e.parentNodeId, e.childNodeId].filter(Boolean)
+            }));
+        return [...nodeMatches, ...edgeMatches];
+    }, [searchActive, searchLower, store.nodes, store.edges, nodeSearchText, edgeSearchText]);
+
+    const clampedMatchIndex = searchMatches.length > 0 ? activeMatchIndex % searchMatches.length : 0;
+    const activeMatch = searchMatches[clampedMatchIndex] || null;
+
+    const handleNextMatch = useCallback(() => {
+        setActiveMatchIndex(i => (searchMatches.length > 0 ? (i + 1) % searchMatches.length : 0));
+    }, [searchMatches.length]);
+
+    const handlePrevMatch = useCallback(() => {
+        setActiveMatchIndex(i => (searchMatches.length > 0 ? (i - 1 + searchMatches.length) % searchMatches.length : 0));
+    }, [searchMatches.length]);
+
+    useEffect(() => {
+        if (!activeMatch?.fitNodeIds?.length) return;
+        fitView({ nodes: activeMatch.fitNodeIds.map(id => ({ id })), duration: 400, padding: 0.3 });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [activeMatch?.id, activeMatch?.kind]);
+
+    // Recadrage manuel sur l'ensemble de l'arbre — l'équivalent du bouton « Zoom » de la Chaîne de
+    // production, qui manquait ici alors que c'est le seul moyen de se retrouver après avoir pané
+    // loin des nœuds.
+    const handleFitView = useCallback(() => {
+        fitView({ padding: 0.15, duration: 300 });
+    }, [fitView]);
+
+    const handleExportJSON = useCallback(() => {
+        const data = {
+            tree: { id: treeId, nodes: store.nodes, edges: store.edges, annotations: store.annotations },
+            exportDate: new Date().toISOString()
+        };
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `genealogy-tree-${treeId}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [treeId, store.nodes, store.edges, store.annotations]);
+
+    const handleExportSVG = useCallback(async () => {
+        setExportingSvg(true);
+        try {
+            // Recadrer AVANT de capturer : la capture porte sur `.react-flow__viewport`, dont le
+            // contenu hors cadre serait sinon coupé (même précaution que ProductionChainCanvas).
+            fitView({ padding: 0.15, duration: 0 });
+            await new Promise(resolve => setTimeout(resolve, 150));
+            const viewport = document.querySelector('.react-flow__viewport');
+            if (!viewport) throw new Error('Canvas introuvable');
+            const dataUrl = await toSvg(viewport, { backgroundColor: '#07070f' });
+            const a = document.createElement('a');
+            a.href = dataUrl;
+            a.download = `genealogy-tree-${treeId}.svg`;
+            a.click();
+        } catch (error) {
+            console.error('Export SVG error:', error);
+            toast.error("L'export SVG a échoué");
+        } finally {
+            setExportingSvg(false);
+        }
+    }, [treeId, fitView, toast]);
 
     // Persistance du point de courbure d'une liaison glissée à la main (PhenoEdge/PairingEdge).
     // pos=null réinitialise la ligne droite (double-clic sur la poignée).
@@ -222,17 +398,6 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             return;
         }
 
-        // genetics est stocké en JSON string côté API — parsé une fois ici (pour les nœuds ET
-        // les partenaires d'un couple ci-dessous), sinon CultivarNode.jsx/PairingEdge.jsx ne
-        // peuvent jamais lire genetics.type/.breeder/.sex.
-        const parseGenetics = (node) => {
-            let genetics = node?.genetics;
-            if (typeof genetics === 'string') {
-                try { genetics = JSON.parse(genetics); } catch { genetics = {}; }
-            }
-            return genetics || {};
-        };
-
         // Convertir les nœuds du store au format React Flow
         const rfNodes = store.nodes.map(node => {
             const genetics = parseGenetics(node);
@@ -246,7 +411,10 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                     notes: node.notes,
                     selected: store.selectedNodeId === node.id,
                     sourceReviewOrphaned: node.sourceReviewOrphaned,
-                    mediaCount: Array.isArray(node.media) ? node.media.length : 0
+                    mediaCount: Array.isArray(node.media) ? node.media.length : 0,
+                    // Filtres/recherche : grisé si écarté, surligné si c'est le résultat courant.
+                    dimmed: nodeVisibility.get(node.id) === false,
+                    searchActive: activeMatch?.kind === 'node' && activeMatch.id === node.id
                 },
                 position: node.position || { x: 0, y: 0 },
                 type: 'cultivar'
@@ -303,6 +471,9 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                     // id "family-…" n'existe pas en base. Le menu contextuel doit agir sur les vrais
                     // GenEdge sous-jacents, jamais sur cet id synthétique (sinon 404 au clic Supprimer).
                     isFamily: true,
+                    // Cette arête fusionne DEUX liens réels : elle ne s'efface que si les deux sont
+                    // écartés par le filtre — sinon on masquerait une filiation encore retenue.
+                    dimmed: edgeVisibility.get(e1.id) === false && edgeVisibility.get(e2.id) === false,
                     underlyingEdges: [e1, e2].map(e => ({
                         id: e.id,
                         parentName: store.nodes.find(n => n.id === e.parentNodeId)?.cultivarName || '?'
@@ -348,7 +519,8 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                         onDropChildLink: handlePairingDropOnNode,
                         partnerA,
                         partnerB,
-                        mediaCount: Array.isArray(edge.media) ? edge.media.length : 0
+                        mediaCount: Array.isArray(edge.media) ? edge.media.length : 0,
+                        dimmed: edgeVisibility.get(edge.id) === false
                     }
                 };
             });
@@ -394,7 +566,7 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
         // sans ça la première mutation venue effacerait la sélection multiple en cours.
         setNodes(applySelection([...rfNodes, ...rfAnnotationNodes]));
         setEdges([...rfEdges, ...familyEdges, ...annotationLinkEdges]);
-    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, setNodes, setEdges, applySelection, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
+    }, [store.nodes, store.edges, store.annotations, store.selectedNodeId, store.selectedEdgeId, nodeVisibility, edgeVisibility, activeMatch, setNodes, setEdges, applySelection, handleEdgeWaypointChange, handleEdgeEndpointChange, handleEdgeEndpointReconnect, handlePairingDropOnNode]);
 
     // Gestion du drag & drop depuis la bibliothèque de cultivars (sidebar)
     const handleDragOver = useCallback((event) => {
@@ -511,6 +683,67 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             targetHandle: normalizeHandleSide(connection.targetHandle, 'top')
         });
     }, [readOnly, store, normalizeHandleSide]);
+
+    // ── Aperçu au survol ────────────────────────────────────────────────────────────────────
+    // Même mécanique que ProductionChainCanvas (délai court anti-clignotement, coordonnées écran),
+    // mais sans chargement asynchrone : tout ce qu'affiche l'aperçu est DÉJÀ dans le store de
+    // l'arbre, contrairement au résumé de pipeline de la chaîne qui doit être récupéré par review.
+    const [hoverInfo, setHoverInfo] = useState(null); // { kind: 'node'|'edge', id, x, y } | null
+    const hoverTimerRef = useRef(null);
+
+    const clearHoverTimer = useCallback(() => {
+        if (hoverTimerRef.current) {
+            clearTimeout(hoverTimerRef.current);
+            hoverTimerRef.current = null;
+        }
+    }, []);
+
+    useEffect(() => clearHoverTimer, [clearHoverTimer]);
+
+    const scheduleHover = useCallback((kind, id, event) => {
+        clearHoverTimer();
+        const { clientX, clientY } = event;
+        hoverTimerRef.current = setTimeout(() => {
+            hoverTimerRef.current = null;
+            setHoverInfo({ kind, id, x: clientX, y: clientY });
+        }, HOVER_PREVIEW_DELAY);
+    }, [clearHoverTimer]);
+
+    const handleHoverLeave = useCallback(() => {
+        clearHoverTimer();
+        setHoverInfo(null);
+    }, [clearHoverTimer]);
+
+    const handleNodeMouseEnter = useCallback((event, node) => {
+        // Une carte épinglée affiche déjà son contenu en clair sur le canvas — la survoler pour
+        // afficher le même texte en plus petit n'apporterait rien.
+        if (node.type === 'annotationCard') return;
+        scheduleHover('node', node.id, event);
+    }, [scheduleHover]);
+
+    const handleEdgeMouseEnter = useCallback((event, edge) => {
+        // Les traits de rattachement d'une bulle et les arêtes "family" synthétiques n'ont pas
+        // d'existence en base : rien à résumer (cf. construction des arêtes plus haut).
+        if (edge.data?.isFamily || String(edge.id).startsWith('annotation-link-')) return;
+        scheduleHover('edge', edge.id, event);
+    }, [scheduleHover]);
+
+    // Contenu de l'aperçu — bâti par les MÊMES fonctions que les bulles épinglables, pour que
+    // survoler et épingler ne racontent jamais deux histoires différentes du même élément.
+    const hoverBubble = useMemo(() => {
+        if (!hoverInfo) return null;
+        if (hoverInfo.kind === 'node') {
+            const node = store.nodes.find(n => n.id === hoverInfo.id);
+            return node ? buildGeneticsNodeBubble(node) : null;
+        }
+        const edge = store.edges.find(e => e.id === hoverInfo.id);
+        if (!edge) return null;
+        return buildGeneticsEdgeBubble(edge, {
+            parentName: store.nodes.find(n => n.id === edge.parentNodeId)?.cultivarName || null,
+            childName: store.nodes.find(n => n.id === edge.childNodeId)?.cultivarName || null,
+            relationshipLabel: RELATIONSHIP_TYPE_LABELS[edge.relationshipType] || edge.relationshipType
+        });
+    }, [hoverInfo, store.nodes, store.edges]);
 
     // Clic sur un nœud
     const handleNodeClick = useCallback((event, node) => {
@@ -667,6 +900,10 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             onNodeDragStop={handleNodeDragStop}
             onEdgeClick={handleEdgeClick}
             onEdgeContextMenu={handleEdgeContextMenu}
+            onNodeMouseEnter={handleNodeMouseEnter}
+            onNodeMouseLeave={handleHoverLeave}
+            onEdgeMouseEnter={handleEdgeMouseEnter}
+            onEdgeMouseLeave={handleHoverLeave}
             onSelectionChange={onSelectionChange}
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
@@ -683,17 +920,24 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                         {multiSelectedIds.length} éléments sélectionnés — clic droit pour agir sur l'ensemble
                     </Panel>
                 )}
-                {!readOnly && (
-                    <Panel position="top-left" className="canvas-toolbar">
-                        <button
-                            className="toolbar-btn secondary"
-                            onClick={() => setShowMediaBubbleImport(true)}
-                            title="Importer une photo/vidéo comme bulle sur l'arbre"
-                        >
-                            <ImageIcon size={14} /> Photo/Vidéo
-                        </button>
-                    </Panel>
-                )}
+                <GeneticsCanvasToolbar
+                    readOnly={readOnly}
+                    onFitView={handleFitView}
+                    onExportJSON={handleExportJSON}
+                    onExportSVG={handleExportSVG}
+                    exportingSvg={exportingSvg}
+                    onShowMediaBubbleImport={() => setShowMediaBubbleImport(true)}
+                    sexFilter={sexFilter}
+                    onToggleSex={handleToggleSex}
+                    attributeFilter={attributeFilter}
+                    onToggleAttribute={handleToggleAttribute}
+                    searchTerm={searchTerm}
+                    onSearchChange={handleSearchChange}
+                    matchCount={searchMatches.length}
+                    activeMatchIndex={clampedMatchIndex}
+                    onNextMatch={handleNextMatch}
+                    onPrevMatch={handlePrevMatch}
+                />
                 {orphanedNodeIds.length > 0 && (
                     <Panel position="top-center" className="orphan-banner">
                         <AlertTriangle size={14} />
@@ -718,7 +962,16 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
             error={store.treeError}
             onErrorReset={() => store.clearSelection()}
             sidePanel={(selectedNode || selectedEdge) && (
-                <Panel position="top-right" className="node-info-panel">
+                <CanvasInfoPanel
+                    storageKey={PANEL_COLLAPSE_STORAGE_KEY}
+                    // Titre réel de l'élément sélectionné, pas un libellé générique : sur téléphone
+                    // c'est l'en-tête de la feuille, ET c'est son changement qui la rouvre après une
+                    // fermeture (cf. CanvasInfoPanel.jsx) — un titre constant la garderait fermée
+                    // pour toutes les sélections suivantes.
+                    title={selectedNode
+                        ? (selectedNode.cultivarName || 'Individu')
+                        : `${edgeParentNode?.cultivarName || '?'} → ${edgeChildNode?.cultivarName || '?'}`}
+                >
                     <div className="info-content">
                         {selectedNode && (
                             <>
@@ -788,7 +1041,10 @@ const UnifiedGeneticsCanvas = ({ treeId, readOnly = false, renderNodeExtra = nul
                             </>
                         )}
                     </div>
-                </Panel>
+                </CanvasInfoPanel>
+            )}
+            floatingOverlay={hoverInfo && hoverBubble && (
+                <GeneticsHoverPreview x={hoverInfo.x} y={hoverInfo.y} bubble={hoverBubble} />
             )}
             contextMenu={<>
                 {contextMenu && contextMenuType === 'node' && (

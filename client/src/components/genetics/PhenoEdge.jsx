@@ -120,6 +120,9 @@ export default function PhenoEdge({
                     strokeWidth: selected ? 2.5 : 2,
                     filter: selected ? 'drop-shadow(0 0 8px #10b981)' : 'none',
                     transition: dragPos ? 'none' : 'all 200ms ease-in-out',
+                    // Écartée par les filtres/la recherche du canevas : grisée, jamais retirée
+                    // (cf. UnifiedGeneticsCanvas.edgeVisibility). Même valeur que .graph-node-dimmed.
+                    opacity: data?.dimmed ? 0.18 : 1,
                 }}
                 markerEnd="url(#arrowhead)"
             />
@@ -137,6 +140,7 @@ export default function PhenoEdge({
                         fontSize: '12px',
                         fontWeight: '600',
                         pointerEvents: 'all',
+                        opacity: data?.dimmed ? 0.18 : 1,
                     }}
                     className="nodrag nopan"
                 >

@@ -55,6 +55,9 @@ export default function FamilyDropEdge({ target, targetX, targetY, data, selecte
                 stroke: selected ? '#a78bfa' : '#8b5cf6',
                 strokeWidth: selected ? 2.5 : 2,
                 filter: selected ? 'drop-shadow(0 0 8px #a78bfa)' : 'none',
+                // Grisée seulement si les DEUX liens réels qu'elle fusionne sont écartés par les
+                // filtres (cf. UnifiedGeneticsCanvas, construction des arêtes "family").
+                opacity: data?.dimmed ? 0.18 : 1,
             }}
             markerEnd="url(#arrowhead)"
         />

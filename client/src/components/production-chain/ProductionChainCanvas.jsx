@@ -55,7 +55,10 @@ import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
 import ConfirmModal from '../shared/ConfirmModal';
 import { useToast } from '../shared/ToastContainer';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+// Conteneur + bouton de repli du panneau latéral droit, partagé avec PhenoHunt. Le repli était
+// écrit en ligne ici ; il vit désormais dans le composant, qui porte aussi son état.
+import CanvasInfoPanel from '../graph-canvas/CanvasInfoPanel';
+import { Plus } from 'lucide-react';
 
 // Délai avant apparition du hover preview — assez court pour rester réactif, assez long pour ne
 // pas clignoter au simple passage de la souris entre deux nœuds voisins.
@@ -138,7 +141,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
     const [showEventForm, setShowEventForm] = useState(false);
-    const [panelCollapsed, setPanelCollapsed] = useState(() => localStorage.getItem(PANEL_COLLAPSE_STORAGE_KEY) === '1');
+    // Tiroir « Ajouter un produit » — seul point d'entrée d'ajout sur téléphone (cf. plus bas).
+    const [showProductDrawer, setShowProductDrawer] = useState(false);
 
     // Filtres d'affichage (type de produit + attributs) et recherche — état de vue éphémère, pas
     // une donnée persistée, cohérent avec contextMenu/hoverInfo déjà en state local plutôt qu'en
@@ -251,10 +255,6 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     // uniquement quand un glisser-clic-droit de cellule(s) est relâché sur un AUTRE produit/liaison
     // (cas où déplacer/copier/épingler sont tous les trois pertinents).
     const [cellDropMenu, setCellDropMenu] = useState(null);
-
-    useEffect(() => {
-        localStorage.setItem(PANEL_COLLAPSE_STORAGE_KEY, panelCollapsed ? '1' : '0');
-    }, [panelCollapsed]);
 
     // Persistance du point de courbure d'une liaison glissée à la main — même pattern que
     // UnifiedGeneticsCanvas.jsx (PhenoHunt).
@@ -942,6 +942,30 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         return result;
     }, [store, screenToFlowPosition]);
 
+    // ── Ajout d'un produit au doigt (tiroir mobile) ─────────────────────────────────────────
+    // Le glisser-déposer HTML5 depuis la colonne de gauche ne se déclenche JAMAIS au toucher, et
+    // cette colonne ne laissait de toute façon que 64px au canevas sur un écran de téléphone
+    // (mesuré le 2026-08-14 : zéro nœud affiché). Sur mobile elle devient donc un tiroir, et
+    // l'ajout se fait d'un appui — au centre de ce qui est visible, pas à une position arbitraire.
+    const handlePickReviewFromDrawer = useCallback(async (product) => {
+        setShowProductDrawer(false);
+        if (readOnly || !product?.reviewId || !product?.reviewType) return;
+
+        if (store.nodes.some(n => n.reviewId === product.reviewId && n.reviewType === product.reviewType)) {
+            toast.info('Ce produit est déjà dans la chaîne');
+            return;
+        }
+
+        const rect = rfStoreApi.getState().domNode?.getBoundingClientRect();
+        const center = screenToFlowPosition(rect
+            ? { x: rect.x + rect.width / 2, y: rect.y + rect.height / 2 }
+            : { x: window.innerWidth / 2, y: window.innerHeight / 2 });
+
+        const result = await store.addNode({ reviewType: product.reviewType, reviewId: product.reviewId, position: center, color: '#10b981' });
+        if (result?.error) toast.error("Le produit n'a pas pu être ajouté");
+        else if (result?.data?.id) store.selectNode(result.data.id);
+    }, [readOnly, store, toast, screenToFlowPosition, rfStoreApi]);
+
     // ── Épingler les données d'un élément en bulle ──────────────────────────────────────────
     // Jusqu'ici, faire apparaître une donnée sur le canevas demandait de sélectionner l'élément,
     // de trouver la ligne dans le panneau latéral, puis de la GLISSER dessus — un geste par
@@ -1132,7 +1156,14 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 />
             </>}
             sidePanel={(selectedNode || selectedEdge) && (
-                <CanvasInfoPanel storageKey={PANEL_COLLAPSE_STORAGE_KEY}>
+                <CanvasInfoPanel
+                    storageKey={PANEL_COLLAPSE_STORAGE_KEY}
+                    // Cf. UnifiedGeneticsCanvas : sur téléphone ce titre est l'en-tête de la feuille
+                    // et c'est son changement qui la rouvre à chaque nouvelle sélection.
+                    title={selectedNode
+                        ? (selectedNode.label || 'Produit')
+                        : `${edgeSourceNode?.label || '?'} → ${edgeTargetNode?.label || '?'}`}
+                >
                     <div className="info-content">
                         {selectedNode && (
                             <>
@@ -1317,8 +1348,7 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                             )}
                         </div>
                     </div>
-                    )}
-                </Panel>
+                </CanvasInfoPanel>
             )}
             floatingOverlay={hoverInfo && (() => {
                 if (hoverInfo.kind === 'node') {
@@ -1398,7 +1428,41 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                     />
                 )}
             </>}
+            // Sur téléphone, la colonne « Mes fiches techniques » est masquée (elle ne laissait que
+            // 64px au canevas) : ce bouton est alors le SEUL point d'entrée d'ajout d'un produit.
+            fab={isMobile && !readOnly && (
+                <button
+                    type="button"
+                    className="mobile-add-node-fab"
+                    onClick={() => setShowProductDrawer(true)}
+                    title="Ajouter un produit à la chaîne"
+                    aria-label="Ajouter un produit à la chaîne"
+                >
+                    <Plus />
+                </button>
+            )}
             modals={<>
+                {showProductDrawer && (
+                    <div className="canvas-drawer-backdrop" onClick={() => setShowProductDrawer(false)}>
+                        <div
+                            className="canvas-drawer"
+                            role="dialog"
+                            aria-modal="true"
+                            aria-label="Ajouter un produit"
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <div className="canvas-drawer-handle" />
+                            <ProductAddSidebar
+                                variant="drawer"
+                                existingReviewIds={store.nodes.map(n => n.reviewId)}
+                                onPickReview={handlePickReviewFromDrawer}
+                            />
+                            <button type="button" className="canvas-drawer-close" onClick={() => setShowProductDrawer(false)}>
+                                Fermer
+                            </button>
+                        </div>
+                    </div>
+                )}
                 {cellDropMenu && (
                     <CellDropMenu
                         x={cellDropMenu.x}

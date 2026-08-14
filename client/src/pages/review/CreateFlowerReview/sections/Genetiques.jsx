@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle, Dna } from 'lucide-react'
+import { Leaf, Info, Plus, Trash2, Edit2, FileText, FolderTree, Upload, RefreshCw, AlertCircle, Dna, ChevronLeft, ChevronRight } from 'lucide-react'
 import { ReactFlowProvider } from 'reactflow'
 import { LiquidCard, LiquidChip, LiquidButton, LiquidDivider, LiquidModal } from '@/components/ui/LiquidUI'
 import ConfirmModal from '../../../../components/shared/ConfirmModal'
@@ -9,6 +9,8 @@ import UnifiedGeneticsCanvas from '../../../../components/genetics/UnifiedGeneti
 import TreeFormModal from '../../../../components/genetics/TreeFormModal'
 import useGeneticsStore from '../../../../store/useGeneticsStore'
 import { useStore } from '../../../../store/useStore'
+
+const SIDEBAR_COLLAPSE_STORAGE_KEY = 'phenoHuntSidebarCollapsed'
 
 /**
  * Section Génétiques & PhenoHunt (Section 2)
@@ -37,6 +39,17 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
     // — remplace le menu natif du navigateur qui s'affichait faute de handler dédié.
     const [sidebarContextMenu, setSidebarContextMenu] = useState(null) // { x, y, item } | null
     const sidebarMenuRef = useRef(null)
+    // Repli de la sidebar, mémorisé entre sessions — même geste et même mémorisation que
+    // ProductAddSidebar.jsx (Chaîne de production) : cette colonne prend 320px en permanence, et
+    // sur un arbre dense c'est autant de moins pour le canevas. Qui la replie s'attend à la
+    // retrouver repliée.
+    const [sidebarCollapsed, setSidebarCollapsed] = useState(
+        () => localStorage.getItem(SIDEBAR_COLLAPSE_STORAGE_KEY) === '1'
+    )
+
+    useEffect(() => {
+        localStorage.setItem(SIDEBAR_COLLAPSE_STORAGE_KEY, sidebarCollapsed ? '1' : '0')
+    }, [sidebarCollapsed])
 
     const { user } = useStore()
     const genetics = formData.genetics || {}
@@ -726,32 +739,51 @@ export default function Genetiques({ formData, handleChange, reviewId }) {
                 « phenohunt inutilisable » (2026-08-14). Le cadre s'allonge donc nettement en
                 colonne, et le canevas reçoit un plancher qui lui est propre (voir plus bas). */}
             <div className="flex flex-col md:flex-row gap-4 h-auto md:h-[60vh] min-h-[420px] md:max-h-[650px] mt-6">
-                {/* SIDEBAR GAUCHE */}
-                <div className="w-full md:w-80 md:flex-shrink-0 h-48 md:h-auto bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col">
+                {/* SIDEBAR GAUCHE — repliable (cf. SIDEBAR_COLLAPSE_STORAGE_KEY). Repliée, elle ne
+                    garde qu'une bande de 48px portant le bouton de dépli ; en colonne (téléphone)
+                    le repli s'applique à la HAUTEUR, pas à la largeur, sinon on obtiendrait une
+                    colonne fine et haute au lieu de rendre la place au canevas. */}
+                <div className={`${sidebarCollapsed ? 'w-full md:w-12 h-12 md:h-auto' : 'w-full md:w-80 h-48 md:h-auto'} md:flex-shrink-0 bg-white/5 border border-white/10 rounded-xl overflow-hidden flex flex-col transition-[width,height] duration-200`}>
                     {/* Onglets Cultivars / Projets */}
                     <div className="flex border-b border-white/10 bg-white/5">
+                        {!sidebarCollapsed && (
+                            <>
+                                <button
+                                    onClick={() => setActiveTab('cultivars')}
+                                    className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'cultivars'
+                                        ? 'bg-purple-600 text-white border-b-2 border-purple-500'
+                                        : 'text-white/60 hover:bg-white/10'
+                                        }`}
+                                >
+                                    Cultivars
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('projets')}
+                                    className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'projets'
+                                        ? 'bg-purple-600 text-white border-b-2 border-purple-500'
+                                        : 'text-white/60 hover:bg-white/10'
+                                        }`}
+                                >
+                                    Projets
+                                </button>
+                            </>
+                        )}
                         <button
-                            onClick={() => setActiveTab('cultivars')}
-                            className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'cultivars'
-                                ? 'bg-purple-600 text-white border-b-2 border-purple-500'
-                                : 'text-white/60 hover:bg-white/10'
-                                }`}
+                            type="button"
+                            onClick={() => setSidebarCollapsed(v => !v)}
+                            className={`${sidebarCollapsed ? 'flex-1' : ''} px-3 py-3 text-white/50 hover:text-white hover:bg-white/10 transition-colors flex items-center justify-center flex-shrink-0`}
+                            // Libellé volontairement distinct de celui du panneau latéral du canevas
+                            // (« Réduire le panneau ») : les deux boutons sont visibles en même temps
+                            // à l'écran, deux infobulles identiques ne diraient pas lequel fait quoi.
+                            title={sidebarCollapsed ? 'Afficher les cultivars et projets' : 'Réduire la liste'}
+                            aria-expanded={!sidebarCollapsed}
                         >
-                            Cultivars
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('projets')}
-                            className={`flex-1 px-4 py-3 text-sm font-semibold transition-all ${activeTab === 'projets'
-                                ? 'bg-purple-600 text-white border-b-2 border-purple-500'
-                                : 'text-white/60 hover:bg-white/10'
-                                }`}
-                        >
-                            Projets
+                            {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
                         </button>
                     </div>
 
                     {/* Contenu Sidebar */}
-                    <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                    <div className={`flex-1 overflow-y-auto p-4 space-y-3 ${sidebarCollapsed ? 'hidden' : ''}`}>
                         <AnimatePresence mode="wait">
                             {activeTab === 'cultivars' && (
                                 <motion.div

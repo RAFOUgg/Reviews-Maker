@@ -132,6 +132,28 @@ try {
     // 380px : en deçà, un arbre de plus de trois nœuds ne se lit ni ne se compose au doigt.
     else if (canevas.hauteur < 380) { console.log(`KO — canevas de ${canevas.hauteur}px de haut, inutilisable`); ko++; }
 
+    // ── 4. Carrousel des catégories (arômes / goûts / effets) ───────────────────────────────────
+    for (let i = 0; i < await onglets.count(); i++) {
+        await onglets.nth(i).click().catch(() => {});
+        await sleep(1600);
+        if (await p.locator('text=/arômes|goûts|effets/').count()) break;
+    }
+    await sleep(2500);
+    const rail = await p.evaluate(() => {
+        // Le rail est le conteneur horizontalement défilant qui porte les cartes de catégorie.
+        const cands = [...document.querySelectorAll('div')].filter((n) => {
+            const cs = getComputedStyle(n);
+            return /(auto|scroll)/.test(cs.overflowX) && n.scrollWidth > n.clientWidth + 8 && n.clientHeight > 60;
+        });
+        if (!cands.length) return null;
+        const n = cands[0];
+        return { largeur: Math.round(n.clientWidth), contenu: Math.round(n.scrollWidth), cartes: n.children.length };
+    });
+    console.log(`carrousel : ${rail ? `${rail.cartes} cartes, rail ${rail.largeur}px pour ${rail.contenu}px de contenu` : 'absent'}`);
+    if (!rail) { console.log('KO — aucun rail horizontal de catégories sur téléphone'); ko++; }
+    else if (rail.cartes < 3) { console.log('KO — carrousel quasi vide'); ko++; }
+    await p.screenshot({ path: 'tools/export-audit/reports/mobile-carrousel.png' });
+
     await p.screenshot({ path: 'tools/export-audit/reports/mobile-forms.png' });
 } finally {
     await b.close();

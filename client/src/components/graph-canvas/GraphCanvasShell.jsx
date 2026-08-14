@@ -10,10 +10,13 @@
  * la Chaîne de production gère des types de produits et des transformations).
  */
 
-import React, { useCallback, useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import ReactFlow, { Background, Controls, MiniMap, useNodesInitialized, useReactFlow } from 'reactflow';
+import ReactFlow, { Background, Controls, MiniMap, Panel, useNodesInitialized, useReactFlow, useStoreApi } from 'reactflow';
+import { MousePointerClick } from 'lucide-react';
 import 'reactflow/dist/style.css';
+import useResponsiveLayout from '../../hooks/useResponsiveLayout';
+import { GraphCanvasUiContext } from './graphCanvasUi';
 import './graphCanvas.css';
 
 /**
@@ -107,6 +110,30 @@ export default function GraphCanvasShell({
     // changer pour bénéficier du tactile.
     const longPressTimerRef = useRef(null);
     const longPressFiredRef = useRef(false);
+    // Téléphone : seuil unique de l'app (< 640px), déjà celui des deux canevas.
+    const { isMobile } = useResponsiveLayout();
+
+    // ── Mode « Sélection » : l'équivalent tactile de Ctrl/⌘ + clic ──────────────────────────
+    // La sélection multiple livrée le 2026-08-14 repose sur une touche de modification, qu'un
+    // téléphone n'a pas : la fonction y était donc purement inaccessible. Plutôt que d'écrire une
+    // seconde sélection maison au doigt (deux vérités pour un même état, la faute déjà payée par
+    // les trois chemins de rendu d'export), on active le drapeau que React Flow lève lui-même
+    // quand la touche est enfoncée : chaque appui se comporte alors EXACTEMENT comme un ctrl+clic,
+    // et tout ce qui consomme la sélection (useGraphMultiSelection, actions de groupe des menus)
+    // en hérite sans une ligne de plus.
+    const rfStore = useStoreApi();
+    const [selectionMode, setSelectionMode] = useState(false);
+
+    useEffect(() => {
+        rfStore.setState({ multiSelectionActive: selectionMode });
+        return () => rfStore.setState({ multiSelectionActive: false });
+    }, [selectionMode, rfStore]);
+
+    // Quitter le téléphone (rotation, redimensionnement) ne doit pas laisser le canevas dans un
+    // mode dont le bouton d'extinction a disparu.
+    useEffect(() => {
+        if (!isMobile) setSelectionMode(false);
+    }, [isMobile]);
 
     const clearLongPressTimer = useCallback(() => {
         if (longPressTimerRef.current) {
@@ -207,6 +234,7 @@ export default function GraphCanvasShell({
     }
 
     return (
+        <GraphCanvasUiContext.Provider value={{ selectionMode }}>
         <div
             className={`graph-canvas-shell ${readOnly ? 'graph-canvas-readonly' : ''} ${className}`}
             onClick={onCanvasClick}
@@ -291,7 +319,27 @@ export default function GraphCanvasShell({
                 <Background color="#aaa" gap={16} />
                 {readOnly && <ReadOnlyRefitOnMeasure />}
                 {!readOnly && <Controls />}
-                {!readOnly && <MiniMap nodeColor={minimapNodeColor} maskColor={minimapMaskColor} />}
+                {/* Minimap masquée sur téléphone : 202×152px mesurés le 2026-08-14, soit la moitié
+                    de la largeur d'un écran de 390px et un sixième de sa hauteur, pour un graphe
+                    qu'on parcourt au doigt (pinch + pan) et non à la souris. Le rendu figé, lui,
+                    n'en a jamais eu (condition `readOnly` préexistante). */}
+                {!readOnly && !isMobile && <MiniMap nodeColor={minimapNodeColor} maskColor={minimapMaskColor} />}
+                {!readOnly && isMobile && (
+                    <Panel position="bottom-right" className="canvas-selection-toggle">
+                        <button
+                            type="button"
+                            className={selectionMode ? 'active' : ''}
+                            onClick={() => setSelectionMode(v => !v)}
+                            aria-pressed={selectionMode}
+                            title={selectionMode
+                                ? 'Terminer la sélection multiple'
+                                : 'Sélectionner plusieurs éléments (équivalent tactile de Ctrl+clic)'}
+                        >
+                            <MousePointerClick size={15} />
+                            {selectionMode ? 'Terminer' : 'Sélection'}
+                        </button>
+                    </Panel>
+                )}
                 {toolbar}
                 {sidePanel}
             </ReactFlow>
@@ -308,5 +356,6 @@ export default function GraphCanvasShell({
             {fab}
             {floatingOverlay && createPortal(floatingOverlay, document.body)}
         </div>
+        </GraphCanvasUiContext.Provider>
     );
 }

@@ -58,10 +58,14 @@ export default function ProductionChainEditorPage() {
                 <ChainFormModal chain={store.selectedChain} onClose={() => setShowRenameModal(false)} />
             )}
 
-            <div className="flex-1 flex overflow-hidden p-3 gap-3">
+            {/* p-3/gap-3 seulement à partir de `sm` : sur un téléphone, 24px de marge sur 390px de
+                large, c'est 6% du canevas perdu en bordure. La colonne de gauche, elle, se masque
+                d'elle-même sous 640px (cf. ProductAddSidebar `variant="sidebar"`) — sans quoi elle
+                ne laissait que 64px au canevas, donc aucun nœud visible (mesuré le 2026-08-14). */}
+            <div className="flex-1 flex overflow-hidden p-0 gap-0 sm:p-3 sm:gap-3">
                 <ProductAddSidebar existingReviewIds={existingReviewIds} />
 
-                <div className="flex-1 overflow-hidden rounded-xl border border-white/10">
+                <div className="flex-1 overflow-hidden sm:rounded-xl border-0 sm:border border-white/10">
                     {/* canvasLoading est aussi vrai pendant chaque mutation en arrière-plan (déplacer
                         un nœud...) — ne démonter tout le ReactFlowProvider que lors du tout premier
                         chargement, sinon chaque drag fait disparaître puis réapparaître tout le canvas

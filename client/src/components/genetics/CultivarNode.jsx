@@ -28,7 +28,7 @@ const CultivarNode = ({ data, selected }) => {
 
     return (
         <div
-            className={`cultivar-node ${shapeClass} ${isSelected ? 'selected' : ''}`}
+            className={`cultivar-node ${shapeClass} ${isSelected ? 'selected' : ''} ${data.dimmed ? 'graph-node-dimmed' : ''} ${data.searchActive ? 'graph-node-search-active' : ''}`}
             style={{ '--accent-color': accentColor }}
         >
             {/* Top/Bottom ont besoin d'un id explicite comme Left/Right — sans id, React Flow leur
