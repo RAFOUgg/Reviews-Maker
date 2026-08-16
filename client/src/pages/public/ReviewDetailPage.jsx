@@ -2,16 +2,16 @@ import React, { useEffect, useState, Suspense } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ReactFlowProvider } from 'reactflow'
 import { parseImages } from '../../utils/imageUtils'
-import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
-import ExportMakerCardRenderer from '../../components/gallery/ExportMakerCardRenderer'
+import SingleReviewCard from '../../components/export/SingleReviewCard'
+import { resolveConfigForReview } from '../../store/exportMakerStore'
 import ProductionChainCanvas from '../../components/production-chain/ProductionChainCanvas'
 import { apiTypeToInternal } from '../../utils/reviewTypeMeta'
 import { getLotCode } from '../../utils/lotCode'
 import { useStore } from '../../store/useStore'
 import { useToast } from '../../components/shared/ToastContainer'
 const ExportModal = React.lazy(() => import('../../components/export/ExportModal'))
-import { Download, ArrowLeft, Edit3, Layout, FileText, Loader2, GitBranch } from 'lucide-react'
-import { LiquidCard, LiquidButton, LiquidDivider, LiquidChip } from '../../components/ui/LiquidUI'
+import { Download, ArrowLeft, Edit3, Loader2, GitBranch } from 'lucide-react'
+import { LiquidCard, LiquidButton, LiquidDivider } from '../../components/ui/LiquidUI'
 
 
 export default function ReviewDetailPage() {
@@ -26,7 +26,6 @@ export default function ReviewDetailPage() {
     const [review, setReview] = useState(null)
     const [loading, setLoading] = useState(true)
     const [selectedImage, setSelectedImage] = useState(null)
-    const [viewMode, setViewMode] = useState('full') // 'full' or 'exportMaker'
     const [showExportModal, setShowExportModal] = useState(false)
     const [productionChains, setProductionChains] = useState([])
     const [expandedChainId, setExpandedChainId] = useState(null)
@@ -212,61 +211,23 @@ export default function ReviewDetailPage() {
                     </div>
                 )}
 
-                {/* View Mode Switcher - Only show if Export Maker config exists */}
-                {review.exportMakerConfig && (
-                    <div className="mb-6 flex gap-2">
-                        <LiquidChip
-                            active={viewMode === 'full'}
-                            onClick={() => setViewMode('full')}
-                            color="purple"
-                        >
-                            <FileText className="w-4 h-4" />
-                            <span>Vue Détaillée</span>
-                        </LiquidChip>
-                        <LiquidChip
-                            active={viewMode === 'exportMaker'}
-                            onClick={() => setViewMode('exportMaker')}
-                            color="cyan"
-                        >
-                            <Layout className="w-4 h-4" />
-                            <span>Aperçu Export Maker</span>
-                        </LiquidChip>
-                    </div>
-                )}
+                {/* UN SEUL RENDU — celui d'Export Maker, en mode Écran.
+                    « retire les vue détaillé, gardons uniquement les rendu export maker »
+                    (2026-08-16). Le sélecteur Vue Détaillée / Aperçu Export Maker a disparu avec
+                    elle : deux représentations concurrentes de la même review obligeaient à choisir
+                    laquelle fait foi, et laissaient dériver celle qu'on regardait le moins.
 
-                {/* Export Maker Interactive HTML Preview — même moteur (TemplateRenderer) que l'aperçu
-                    Export Maker, pour reproduire exactement le template/couleurs/modules choisis */}
-                {viewMode === 'exportMaker' && review.exportMakerConfig ? (
-                    <LiquidCard glow="cyan" padding="lg">
-                        <div className="h-[70vh] max-h-[800px]">
-                            <ExportMakerCardRenderer
-                                // Surface de LECTURE, pas vignette : infobulles, zoom au clic et
-                                // vrais lecteurs vidéo, comme sur /r/:id et dans le Studio.
-                                interactive
-                                exportMakerConfig={typeof review.exportMakerConfig === 'string' ? (() => {
-                                    try { return JSON.parse(review.exportMakerConfig) } catch { return review.exportMakerConfig }
-                                })() : review.exportMakerConfig}
-                                reviewData={{
-                                    ...review,
-                                    title: review.holderName,
-                                    rating: review.overallRating || review.note || 0,
-                                    imageUrl: review.mainImageUrl || (review.images && review.images.length > 0 ? review.images[0] : null),
-                                    images: review.images || [],
-                                    category: review.type,
-                                    description: review.description,
-                                    ownerName: review.ownerName || review.author?.username || 'Anonyme',
-                                    date: review.createdAt,
-                                    cultivar: review.cultivars,
-                                    breeder: review.breeder || review.hashmaker,
-                                    farm: review.farm
-                                }}
-                            />
-                        </div>
-                    </LiquidCard>
-                ) : (
-                    /* Full Review Display - Always show by default or if no Export Maker config */
-                    <ReviewFullDisplay review={review} />
-                )}
+                    `SingleReviewCard` en ratio d'écran plutôt que le canevas à ratio de FICHIER
+                    rétréci : la mise en page se recompose sur la largeur réelle (deux colonnes sur
+                    ordinateur, une sur téléphone) au lieu d'afficher une maquette 16:9 en miniature
+                    entourée de vide. Même composant et même chemin que `/r/:id`. */}
+                <LiquidCard glow="cyan" padding="lg">
+                    <SingleReviewCard
+                        reviewData={review}
+                        config={{ ...resolveConfigForReview(review), ratio: 'ecran-pc' }}
+                        canvasId="review-detail-canvas"
+                    />
+                </LiquidCard>
             </div>
 
             {/* Même moteur de rendu que l'aperçu Export Maker (TemplateRenderer/exportDataAdapter)

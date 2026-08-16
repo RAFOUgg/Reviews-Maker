@@ -326,7 +326,12 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                                 {/* Hauteur dérivée du contrat de format (FORMAT_LAYOUT) et non plus d'un 500px en dur :
                                     le même nombre valait 62 % d'un carré et 20 % d'un A4, donc deux mises en
                                     page sans rapport pour un seul template. */}
-                                <MediaFrame media={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ ...getImageRenderStyle(image), maxHeight: responsive.image.maxHeight, objectFit: 'cover' }} />
+                                {/* `objectFit` vient du réglage Cadrage (Image & Logo), il n'est plus
+                                    écrit en dur ici : posé APRÈS l'étalement de `getImageRenderStyle`,
+                                    un `cover` littéral écrasait le choix de l'auteur, et ce template
+                                    restait le seul à recadrer quand tous les autres respectaient la
+                                    consigne (mesuré le 2026-08-16). */}
+                                <MediaFrame media={mainImage} alt={reviewData.title || 'Image'} className="w-full" style={{ maxHeight: responsive.image.maxHeight, ...getImageRenderStyle(image) }} />
                             </div>
                             {reviewData.cultivar && (
                                 <figcaption style={{ fontSize: `${fontSize.text - 2}px`, color: colors.textSecondary, marginTop: '12px', textAlign: 'center' }}>

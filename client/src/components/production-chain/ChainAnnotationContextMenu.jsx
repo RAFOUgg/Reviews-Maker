@@ -12,6 +12,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Copy, ExternalLink, Unlink, Trash2 } from 'lucide-react';
 import useProductionChainStore from '../../store/useProductionChainStore';
+import { bubbleToText } from '../../utils/graphDataBubble';
 
 const ChainAnnotationContextMenu = ({ annotationId, x, y, onClose }) => {
     const store = useProductionChainStore();
@@ -50,7 +51,10 @@ const ChainAnnotationContextMenu = ({ annotationId, x, y, onClose }) => {
     const hasSourceReview = !!(annotation.sourceReviewId && annotation.sourceReviewType);
 
     const handleCopy = async () => {
-        const text = [annotation.title, ...body.map(l => `${l.label} : ${l.value}`)].join('\n');
+        // Mise en forme partagée avec `parsePastedBubble` (graphDataBubble.js) : ce texte n'est plus
+        // seulement lisible, il est RECOLLABLE en bulle — les deux sens doivent donc parler la même
+        // langue, sous peine de recréer le défaut de vocabulaire dupliqué du dépôt.
+        const text = bubbleToText({ title: annotation.title, body });
         try {
             await navigator.clipboard.writeText(text);
             setCopied(true);

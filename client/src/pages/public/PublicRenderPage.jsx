@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import ReviewFullDisplay from '../../components/gallery/ReviewFullDisplay'
+import SingleReviewCard from '../../components/export/SingleReviewCard'
 import { resolveConfigForReview } from '../../store/exportMakerStore'
 
 /**
@@ -55,19 +55,30 @@ export default function PublicRenderPage() {
                 background: '#0a0a0f', padding: 16, boxSizing: 'border-box',
             }}
         >
-            {/* RENDU ÉCRAN = la Vue Détaillée (C10). Cette page montait auparavant
-                `SingleReviewCard`, c'est-à-dire un canevas à taille FIXE (1920×1080…) rétréci au
-                `transform: scale` : une image mise à l'échelle, dont le texte devenait minuscule
-                sur mobile au lieu de se recomposer, et dont rien n'était cliquable.
+            {/* RENDU ÉCRAN = le template choisi par l'auteur, en MODE ÉCRAN.
+                « retire les vue détaillé, gardons uniquement les rendu export maker » (2026-08-16).
 
-                La Vue Détaillée est fluide, bâtie sur les composants réels de l'app, et ses
-                cellules de pipeline s'ouvrent. Décision de l'utilisateur le 2026-08-06 : « ce
-                style de rendu doit être utilisé pour Export Maker ».
+                Cette page a porté trois rendus successifs, et il faut savoir pourquoi celui-ci
+                tient. Elle montait d'abord `SingleReviewCard` sur un canevas à taille FIXE
+                (1920×1080…) rétréci au `transform: scale` — une image, dont le texte devenait
+                minuscule sur téléphone au lieu de se recomposer. C'est ce qui avait motivé la
+                bascule vers la Vue Détaillée le 2026-08-06.
+
+                Ce motif a disparu : depuis le mode Écran (2026-08-14), `SingleReviewCard` mesure la
+                largeur réellement disponible, la passe au canevas et laisse la mise en page se
+                RECOMPOSER — deux colonnes sur ordinateur, une sur téléphone. On revient donc au
+                template de l'auteur sans réintroduire le défaut qui l'avait fait abandonner, et
+                choisir un template gouverne enfin ce que voient les visiteurs.
 
                 Les 5 templates à canevas fixe restent le mode FICHIER (PNG/PDF/SVG), où la
-                pagination et le calibrage gardent tout leur sens. */}
-            <div style={{ width: '100%', maxWidth: 1100 }}>
-                <ReviewFullDisplay review={review} config={config} />
+                pagination et le calibrage gardent tout leur sens — c'est le ratio qui distingue les
+                deux, pas un second moteur de rendu. */}
+            <div style={{ width: '100%', maxWidth: 1400 }}>
+                <SingleReviewCard
+                    reviewData={review}
+                    config={{ ...config, ratio: 'ecran-pc' }}
+                    canvasId="public-render-canvas"
+                />
             </div>
             <Link
                 to={`/r/${id}/lineage`}

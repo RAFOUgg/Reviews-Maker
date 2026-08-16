@@ -36,9 +36,16 @@ import { RATIO_DIMENSIONS, SCREEN_RATIOS } from '../../../utils/exportMakerHelpe
  * laquelle le template ne change que des contenus (`contentModules`) — jamais la forme. Entre deux
  * templates aux contenus voisins, l'écran reste donc le même, et c'est ce que l'utilisateur voyait.
  *
- * Arbitrage : cet APERÇU montre le template (sinon choisir un template ne montrerait rien), tandis
- * que la PAGE PUBLIQUE `/r/:id` garde la Vue Détaillée fluide et cliquable — la décision du
- * 2026-08-06 portait sur ce que voient les visiteurs, pas sur l'aperçu de l'éditeur.
+ * Arbitrage tenu jusqu'au 2026-08-16 : cet APERÇU montrait le template, tandis que la page publique
+ * `/r/:id` gardait la Vue Détaillée. Il n'y a plus lieu de départager — la Vue Détaillée a été
+ * SUPPRIMÉE (« retire les vue détaillé, gardons uniquement les rendu export maker »), et toutes les
+ * surfaces de lecture (`/r/:id`, `/review/:id`, modale de galerie) rendent désormais le template en
+ * mode Écran, par ce même `SingleReviewCard`.
+ *
+ * Ce qui a rendu la bascule possible : l'objection de 2026-08-06 — un canevas fixe réduit au
+ * `transform: scale`, illisible sur téléphone — ne tient plus depuis le mode Écran (2026-08-14), qui
+ * mesure la largeur disponible et RECOMPOSE la mise en page au lieu de la rétrécir. Mesuré le
+ * 2026-08-16 : 8 paires de blocs côte à côte à 1600px de large, aucune à 420px, sans mise à l'échelle.
  */
 
 const ICONES = { 'ecran-pc': '🖥️', 'ecran-mobile': '📱' };

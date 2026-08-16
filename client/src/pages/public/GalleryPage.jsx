@@ -9,6 +9,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useStore } from '../../store/useStore';
 import { LiquidCard, LiquidChip, LiquidInput, LiquidButton } from '@/components/ui/LiquidUI';
 import ExportMakerCardRenderer from '../../components/gallery/ExportMakerCardRenderer';
+import SingleReviewCard from '../../components/export/SingleReviewCard';
+import { resolveConfigForReview } from '../../store/exportMakerStore';
 import ReviewCoverMedia from '../../components/gallery/ReviewCoverMedia';
 import { extractReviewCoverMedia } from '../../utils/reviewFilesAggregator';
 
@@ -293,10 +295,16 @@ export default function GalleryPage() {
                   </button>
                 </div>
 
-                <div className="h-[70vh] max-h-[700px]">
-                  <ExportMakerCardRenderer
+                {/* Aperçu en MODE ÉCRAN, comme /review/:id et /r/:id : la mise en page se
+                    recompose sur la largeur de la modale au lieu d'y montrer une maquette au ratio
+                    du fichier, rétrécie et entourée de vide. Surface de lecture, donc interactive
+                    (vrais lecteurs vidéo, zoom au clic) — la VIGNETTE de la grille, elle, reste
+                    non interactive : elle est cliquable pour ouvrir la review. */}
+                <div className="h-[70vh] max-h-[700px] overflow-y-auto">
+                  <SingleReviewCard
                     reviewData={selectedReview}
-                    exportMakerConfig={selectedReview.exportMakerConfig}
+                    config={{ ...resolveConfigForReview(selectedReview), ratio: 'ecran-pc' }}
+                    canvasId="gallery-preview-canvas"
                   />
                 </div>
               </motion.div>

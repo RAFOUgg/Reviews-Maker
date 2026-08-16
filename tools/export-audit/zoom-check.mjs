@@ -15,6 +15,9 @@ import { createFixture, deleteFixture } from './fixtures.mjs';
 
 const BASE = 'http://localhost:5173', API = 'http://localhost:3000';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+// Vocabulaire des blocs zoomables : `data-module` (templates) — `data-zoom-block` est
+// conservé dans le sélecteur pour rester valable si une surface le réintroduit.
+const BLOC = '[data-module], [data-zoom-block]';
 
 let ko = 0;
 const verdict = (nom, ok, detail) => { if (!ok) ko++; console.log(`${ok ? '✔' : '✖'} ${nom}${detail ? ' — ' + detail : ''}`); };
@@ -29,18 +32,22 @@ p.on('pageerror', (e) => console.log('JS ERR:', String(e.message).slice(0, 160))
 const overlay = () => p.locator('[role="dialog"][aria-label^="Vue agrandie"]');
 
 try {
-    // `/r/:id` (page publique) est la surface INTERACTIVE du rendu — la page de détail, elle,
-    // affiche un aperçu volontairement inerte (`ExportMakerCardRenderer`, `interactive={false}`).
+    // `/r/:id` (page publique) est la surface INTERACTIVE du rendu.
+    //
+    // Les blocs y portaient `data-zoom-block`, attribut propre aux cartes de la Vue Détaillée. Elle
+    // a été supprimée le 2026-08-16 (« gardons uniquement les rendu export maker ») : la page rend
+    // désormais le TEMPLATE, dont les blocs portent `data-module`. `BlockZoomOverlay` accepte les
+    // deux depuis toujours — c'est seulement la surface qui a changé de vocabulaire.
     await p.goto(`${BASE}/r/${id}`, { waitUntil: 'networkidle' });
     await sleep(5000);
 
-    const blocs = p.locator('[data-module], [data-zoom-block]');
+    const blocs = p.locator(BLOC);
     const n = await blocs.count();
     verdict('la page publique rend des blocs identifiés', n > 0, `${n} bloc(s)`);
     if (n === 0) throw new Error('aucun bloc à cliquer');
 
     // 1. Un bloc ORDINAIRE zoome. On vise un bloc de contenu, pas un pipeline.
-    const cible = p.locator('[data-zoom-block]').first();
+    const cible = p.locator(BLOC).first();
     if (await cible.count()) {
         // Clic à la SOURIS, pas `locator.click()` : les cartes LiquidUI animent en continu
         // (shimmer suivant le curseur), Playwright n'y obtient jamais la stabilité de boîte qu'il
@@ -62,7 +69,7 @@ try {
         await sleep(400);
         verdict('Échap referme la vue agrandie', await overlay().count() === 0);
     } else {
-        verdict('bloc de contenu trouvé', false, 'aucun [data-zoom-block]');
+        verdict('bloc de contenu trouvé', false, `aucun ${BLOC}`);
     }
 
     // 1 bis. SURFACE MISE À L'ÉCHELLE — le cas qui a cassé en production.
@@ -73,17 +80,17 @@ try {
     // échelle imposée, et on vérifie que le clone garde la largeur de MISE EN PAGE de la source et
     // tient dans la fenêtre.
     await p.evaluate(() => {
-        const racine = document.querySelector('[data-zoom-block]')?.parentElement;
+        const racine = document.querySelector('[data-module]')?.parentElement;
         if (racine) { racine.style.transform = 'scale(0.35)'; racine.style.transformOrigin = 'top left'; }
     });
     await sleep(400);
-    const cible2 = p.locator('[data-zoom-block]').first();
+    const cible2 = p.locator(BLOC).first();
     const b2 = await cible2.boundingBox();
     if (b2) {
         await p.mouse.click(b2.x + 10, b2.y + b2.height - 10);
         await sleep(700);
         const m = await p.evaluate(() => {
-            const src = document.querySelector('[data-zoom-block]');
+            const src = document.querySelector('[data-module]');
             const dlg = document.querySelector('[role="dialog"][aria-label^="Vue agrandie"]');
             const boite = dlg && dlg.firstElementChild;
             if (!src || !boite) return null;
@@ -103,7 +110,7 @@ try {
         await sleep(300);
     }
     await p.evaluate(() => {
-        const racine = document.querySelector('[data-zoom-block]')?.parentElement;
+        const racine = document.querySelector('[data-module]')?.parentElement;
         if (racine) racine.style.transform = '';
     });
     await sleep(300);

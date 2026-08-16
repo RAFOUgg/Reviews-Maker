@@ -242,6 +242,64 @@ export function buildGeneticsEdgeBubble(edge, { parentName = null, childName = n
 }
 
 /**
+ * Texte affichable d'une bulle — l'inverse exact de `parsePastedBubble` ci-dessous.
+ *
+ * Un intertitre (`group: true`) n'a PAS de valeur : le concaténer comme une ligne de données
+ * produisait « Culture — J4 : undefined » dans le presse-papiers, qui repartait tel quel dans
+ * toute bulle recréée à partir de cette copie.
+ */
+export function bubbleToText({ title, body } = {}) {
+    const lines = Array.isArray(body) ? body : []
+    return [
+        title,
+        ...lines.map(l => (l.group ? l.label : `${l.label} : ${l.value}`))
+    ].filter(l => l !== null && l !== undefined && l !== '').join('\n')
+}
+
+/**
+ * Contenu de bulle reconstruit à partir d'un texte COLLÉ — soit une bulle copiée ailleurs sur le
+ * canevas (« Copier les données »), soit n'importe quel texte venu du dehors (bulletin d'analyse,
+ * tableur, message).
+ *
+ * Conventions, choisies pour que l'aller-retour copier → coller redonne exactement la même bulle :
+ *   - la 1re ligne devient le TITRE si elle ne porte pas de séparateur ;
+ *   - « Libellé : valeur » (ou `=`, ou une tabulation — copie depuis un tableur) → une donnée ;
+ *   - une ligne seule, sans séparateur → un intertitre, comme `group: true` l'affiche déjà.
+ * Rien n'est deviné du CONTENU : aucun nom de champ n'est réinterprété, les libellés collés sont
+ * gardés tels quels.
+ */
+export function parsePastedBubble(text, { defaultTitle = 'Données collées' } = {}) {
+    const rows = String(text || '')
+        .replace(/\r\n?/g, '\n')
+        .split('\n')
+        .map(l => l.trim())
+        .filter(Boolean)
+    if (rows.length === 0) return null
+
+    // Libellé borné à 60 caractères : sans ça, une phrase entière contenant « : » se transformerait
+    // en libellé illisible occupant toute la largeur de la carte.
+    const splitLine = (line) => {
+        const tab = line.indexOf('\t')
+        if (tab > 0) return { label: line.slice(0, tab).trim(), value: line.slice(tab + 1).trim() }
+        const match = /^(.{1,60}?)\s*[:=]\s+(.+)$/.exec(line)
+        return match ? { label: match[1].trim(), value: match[2].trim() } : null
+    }
+
+    const firstSplit = splitLine(rows[0])
+    const title = firstSplit ? defaultTitle : truncate(rows[0])
+    const dataRows = firstSplit ? rows : rows.slice(1)
+
+    const body = dataRows.map(line => {
+        const split = splitLine(line)
+        return split
+            ? { label: truncate(split.label), value: truncate(split.value) }
+            : { label: truncate(line), group: true }
+    })
+
+    return { title, body: capBody(body, BUBBLE_MAX_LINES.chain) }
+}
+
+/**
  * Emplacement d'une bulle épinglée sur un élément : à sa droite, décalée si plusieurs bulles
  * sont créées d'un coup (sélection multiple) pour ne pas les empiler exactement.
  */

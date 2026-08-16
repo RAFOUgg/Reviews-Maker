@@ -24,7 +24,7 @@ import { toSvg } from 'html-to-image';
 import { AlertTriangle } from 'lucide-react';
 import GraphCanvasShell from '../graph-canvas/GraphCanvasShell';
 import useGraphMultiSelection from '../graph-canvas/useGraphMultiSelection';
-import { buildChainNodeBubble, buildChainEdgeBubble, bubblePositionNear, pipelineSummaryBodyLines } from '../../utils/graphDataBubble';
+import { buildChainNodeBubble, buildChainEdgeBubble, bubblePositionNear, pipelineSummaryBodyLines, parsePastedBubble } from '../../utils/graphDataBubble';
 // Store du CONTEXTE s'il existe, singleton global sinon — voir `scopedCanvasStores.jsx`.
 // L'édition ne fournit aucun contexte, elle garde donc exactement le comportement d'avant.
 import { useChainStore } from '../../store/scopedCanvasStores';
@@ -33,6 +33,7 @@ import { resolveChainEndpoint } from '../../utils/chainEndpoint';
 import { evaluateChainEventRules } from '../../utils/chainEventRules';
 import { getLotCode } from '../../utils/lotCode';
 import { findNodeAtPoint, findEdgeNearPoint } from '../graph-canvas/floatingEdgeUtils';
+import { computeGridArrangement } from '../../utils/gridArrange';
 import { ALL_REVIEW_TYPES } from '../../utils/reviewTypeMeta';
 import useResponsiveLayout from '../../hooks/useResponsiveLayout';
 import ProductAddSidebar from './ProductAddSidebar';
@@ -53,6 +54,7 @@ import ChainDataImportModal from './ChainDataImportModal';
 import ChainCellEditorModal from './ChainCellEditorModal';
 import MediaAttachmentModal from '../shared/MediaAttachmentModal';
 import MediaBubbleImportModal from '../graph-canvas/MediaBubbleImportModal';
+import PasteBubbleModal from '../graph-canvas/PasteBubbleModal';
 import ConfirmModal from '../shared/ConfirmModal';
 import { useToast } from '../shared/ToastContainer';
 // Conteneur + bouton de repli du panneau latéral droit, partagé avec PhenoHunt. Le repli était
@@ -140,6 +142,9 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
     const [confirmDetachAll, setConfirmDetachAll] = useState(false);
     const [showRenameModal, setShowRenameModal] = useState(false);
     const [showMediaBubbleImport, setShowMediaBubbleImport] = useState(false);
+    // Collage d'une bulle : { position, text } quand le presse-papiers n'a pas pu être lu tout seul
+    // et qu'il faut passer par la modale (cf. handlePasteBubble).
+    const [pasteBubble, setPasteBubble] = useState(null);
     const [showEventForm, setShowEventForm] = useState(false);
     // Tiroir « Ajouter un produit » — seul point d'entrée d'ajout sur téléphone (cf. plus bas).
     const [showProductDrawer, setShowProductDrawer] = useState(false);
@@ -966,6 +971,123 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
         else if (result?.data?.id) store.selectNode(result.data.id);
     }, [readOnly, store, toast, screenToFlowPosition, rfStoreApi]);
 
+    // ── Créer une bulle à partir des informations copiées ────────────────────────────────────
+    // Le contenu collé passe par `parsePastedBubble` (graphDataBubble.js), l'inverse exact de la
+    // mise en forme de « Copier les données » — copier une bulle puis la recoller redonne donc la
+    // même carte, et un texte venu du dehors (bulletin d'analyse, tableur) reste accepté tel quel.
+    const createBubbleFromParsed = useCallback(async (parsed, position) => {
+        const result = await store.addAnnotation({
+            title: parsed.title,
+            body: parsed.body,
+            // Dire d'où vient la donnée : elle a été saisie/collée à la main, elle ne provient
+            // d'aucune fiche liée — l'afficher comme telle évite de la confondre avec une bulle
+            // épinglée depuis un produit réel.
+            sourceLabel: 'Collé depuis le presse-papiers',
+            position
+        });
+        if (result?.error) toast.error("La bulle n'a pas pu être créée");
+        else toast.success('Bulle créée depuis le presse-papiers');
+        return result;
+    }, [store, toast]);
+
+    const handlePasteBubble = useCallback(async (clientX, clientY) => {
+        if (readOnly) return;
+        // La bulle apparaît LÀ où le clic droit a eu lieu, pas au centre : le point est capturé
+        // maintenant, avant toute attente (le menu est déjà fermé quand la lecture aboutit).
+        const position = screenToFlowPosition({ x: clientX, y: clientY });
+
+        // `readText()` n'existe pas partout (refusé par Firefox aux pages web, soumis à
+        // autorisation ailleurs) : on tente, et l'échec ouvre la modale de collage manuel plutôt
+        // que de laisser l'action sans effet.
+        let text = '';
+        try {
+            text = (await navigator.clipboard?.readText?.()) || '';
+        } catch {
+            text = '';
+        }
+
+        const parsed = text.trim() ? parsePastedBubble(text) : null;
+        if (!parsed) {
+            setPasteBubble({ position, text });
+            return;
+        }
+        await createBubbleFromParsed(parsed, position);
+    }, [readOnly, screenToFlowPosition, createBubbleFromParsed]);
+
+    // ── Réarranger tout le canevas sur un quadrillage carré ─────────────────────────────────
+    // Le placement lui-même vit dans utils/gridArrange.js (pas ici) : il ne dépend d'aucun store
+    // et sert donc indifféremment aux deux canevas React Flow de l'app. Ce handler ne fait que
+    // lui donner la matière (tailles RÉELLEMENT mesurées par React Flow, liens du store) puis
+    // persister ce qui a bougé.
+    const handleRearrange = useCallback(async () => {
+        if (readOnly) return;
+
+        const internals = rfStoreApi.getState().nodeInternals;
+        const sizeOf = (id) => {
+            const measured = internals.get(id);
+            return { width: measured?.width || undefined, height: measured?.height || undefined };
+        };
+
+        const items = [
+            ...(store.nodes || []).map(n => ({ id: n.id, kind: 'node', position: n.position, ...sizeOf(n.id) })),
+            ...(store.annotations || []).map(a => ({ id: a.id, kind: 'annotation', position: a.position, ...sizeOf(a.id) }))
+        ];
+        if (items.length === 0) {
+            toast.info('Rien à réarranger — le canevas est vide.');
+            return;
+        }
+
+        // Liaisons de transformation (orientées, elles donnent le sens de lecture) + rattachement
+        // d'une bulle épinglée à son élément (non orienté) : une bulle doit rester à côté de ce
+        // qu'elle documente, exactement comme le trait pointillé le montre déjà.
+        const links = [
+            ...(store.edges || []).map(e => ({
+                source: e.sourceId ?? e.sourceNodeId,
+                target: e.targetId ?? e.targetNodeId
+            })),
+            ...(store.annotations || []).map(a => {
+                const anchorEdge = a.edgeId ? store.edges.find(e => e.id === a.edgeId) : null;
+                const anchorId = a.nodeId || (anchorEdge ? (anchorEdge.sourceId ?? anchorEdge.sourceNodeId) : null);
+                return anchorId ? { source: anchorId, target: a.id, directed: false } : null;
+            }).filter(Boolean)
+        ].filter(l => l.source && l.target);
+
+        const { positions } = computeGridArrangement(items, links);
+
+        const moved = items.filter(item => {
+            const next = positions.get(item.id);
+            return next && (next.x !== item.position?.x || next.y !== item.position?.y);
+        });
+        if (moved.length === 0) {
+            toast.info('Les éléments sont déjà alignés.');
+            return;
+        }
+
+        // Affichage immédiat : le resync du store repassera par le même calcul, mais un aller-retour
+        // serveur par élément laisserait le canevas figé plusieurs secondes sans rien montrer.
+        setNodes(nds => nds.map(n => {
+            const next = positions.get(n.id);
+            return next ? { ...n, position: next } : n;
+        }));
+
+        // Un point de courbure glissé à la main est une coordonnée ABSOLUE du canevas : le garder
+        // après un réarrangement enverrait la liaison faire un détour à l'ancien emplacement.
+        const curvedEdges = (store.edges || []).filter(e => e.waypointX != null || e.waypointY != null);
+
+        const results = await Promise.all([
+            ...moved.map(item => item.kind === 'annotation'
+                ? store.updateAnnotation(item.id, { position: positions.get(item.id) })
+                : store.updateNode(item.id, { position: positions.get(item.id) })),
+            ...curvedEdges.map(e => store.updateEdge(e.id, { waypointX: null, waypointY: null }))
+        ]);
+
+        const failed = results.filter(r => r?.error).length;
+        if (failed > 0) toast.warning(`Réarrangement partiel : ${failed} élément(s) n'ont pas pu être enregistrés.`);
+        else toast.success(`${moved.length} élément${moved.length > 1 ? 's' : ''} réarrangé${moved.length > 1 ? 's' : ''}`);
+
+        fitView({ padding: 0.2, duration: 400 });
+    }, [readOnly, store, rfStoreApi, setNodes, toast, fitView]);
+
     // ── Épingler les données d'un élément en bulle ──────────────────────────────────────────
     // Jusqu'ici, faire apparaître une donnée sur le canevas demandait de sélectionner l'élément,
     // de trouver la ligne dans le panneau latéral, puis de la GLISSER dessus — un geste par
@@ -1417,6 +1539,8 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                         y={contextMenu.y}
                         onClose={closeContextMenu}
                         readOnly={readOnly}
+                        onRearrange={handleRearrange}
+                        onPasteBubble={handlePasteBubble}
                     />
                 )}
                 {contextMenu && contextMenuType === 'annotation' && !readOnly && (
@@ -1492,6 +1616,13 @@ const ProductionChainCanvas = ({ chainId, readOnly = false }) => {
                 )}
                 {showMediaBubbleImport && (
                     <MediaBubbleImportModal onImport={handleImportMediaBubble} onClose={() => setShowMediaBubbleImport(false)} />
+                )}
+                {pasteBubble && (
+                    <PasteBubbleModal
+                        initialText={pasteBubble.text}
+                        onCreate={(parsed) => createBubbleFromParsed(parsed, pasteBubble.position)}
+                        onClose={() => setPasteBubble(null)}
+                    />
                 )}
                 {store.dataImportModal && <ChainDataImportModal />}
                 {store.editingCell && <ChainCellEditorModal />}

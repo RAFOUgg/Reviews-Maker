@@ -255,12 +255,17 @@ export default function TraceabilityReportTemplate({ config, reviewData, dimensi
                             <MediaFrame
                                 key={ii}
                                 media={img}
-                                style={{ ...getImageRenderStyle(config.image), width: '100%', height: thumbSize / 2, objectFit: 'cover', borderRadius: (config.image?.borderRadius ?? 12) / 2 }}
+                                style={{ width: '100%', height: thumbSize / 2, borderRadius: (config.image?.borderRadius ?? 12) / 2, ...getImageRenderStyle(config.image) }}
                             />
                         ))}
                     </div>
                 ) : (
-                    <MediaFrame media={mainImage} style={{ ...getImageRenderStyle(config.image), width: thumbSize, height: thumbSize, objectFit: 'cover', borderRadius: config.image?.borderRadius ?? 12, flexShrink: 0 }} />
+                    /* Cadrage réglable (Image & Logo) plutôt qu'un `cover` littéral : posé APRÈS
+                       l'étalement de `getImageRenderStyle`, il écrasait le choix de l'auteur, et ce
+                       template restait l'un des deux seuls à recadrer quoi qu'on demande (mesuré le
+                       2026-08-16). La vignette reste carrée — c'est la façon d'y inscrire la photo
+                       qui suit le réglage, pas sa taille. */
+                    <MediaFrame media={mainImage} style={{ width: thumbSize, height: thumbSize, borderRadius: config.image?.borderRadius ?? 12, flexShrink: 0, ...getImageRenderStyle(config.image) }} />
                 ))}
                 {/* `minWidth` : sans plancher, la colonne de texte se laisse comprimer par ses
                     voisines jusqu'à couper les mots. Avec, elle passe à la ligne bien avant. */}
