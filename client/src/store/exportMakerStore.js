@@ -356,6 +356,15 @@ const DEFAULT_CONFIG = {
         borderRadius: 12,
         filter: 'none',
         opacity: 1,
+        // CADRAGE — 'contain' (photo entière) ou 'cover' (remplit le cadre en recadrant).
+        //
+        // Les templates recadraient TOUJOURS, sans réglage : un cadre à hauteur fixe + `object-cover`.
+        // C'est flatteur sur une macro de résine, destructeur sur les visuels que les auteurs
+        // joignent réellement — les infographies de terpènes et les planches « Goûts et effets » de
+        // la review « Lamponi Frozen » avaient leur texte coupé en haut et en bas (2026-08-16).
+        // Défaut à 'contain' : perdre du texte est irréversible pour le lecteur, une bande de fond
+        // ne l'est pas. Qui veut le plein cadre le demande.
+        fit: 'contain',
         // Marque une config dont les réglages photo sont réellement appliqués au rendu (cf.
         // `resolveImageConfig`) — vrai par construction sur toute config neuve.
         imageFxLive: true,

@@ -638,7 +638,11 @@ export default function DetailedCardTemplate({ config, reviewData, dimensions })
                             `height` ferme + `object-cover` : le cadre est constant, c'est la photo
                             qui se recadre — quel que soit son format. */}
                     {contentModules.mainImage !== false && mainImage && (
-                        <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', height: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: '#0a0f0c' }}>
+                        /* Fond du cadre : la couleur de la PALETTE, plus une valeur en dur. Elle ne
+                           se voyait pas tant que la photo remplissait tout le cadre ; avec le
+                           cadrage « Photo entière » (Image & Logo) elle borde la photo, et un
+                           charbon fixe posait une bande sombre sur le crème du mode papier. */
+                        <div style={{ flex: stacked ? 'none' : '1 1 45%', position: 'relative', height: stacked ? responsive.image.maxHeight : 'auto', overflow: 'hidden', background: bg }}>
                             {/* « Mode galerie » : le réglage existait dans le panneau Image & Logo
                                 mais seuls 2 templates sur 5 le lisaient — ici la photo restait
                                 unique quoi qu'on coche. Grille dans le MÊME cadre que la photo

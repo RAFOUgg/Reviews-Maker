@@ -276,6 +276,16 @@ export function getImageRenderStyle(image) {
     if (filter) style.filter = filter;
     const opacity = image?.opacity;
     if (typeof opacity === 'number' && opacity < 1) style.opacity = opacity;
+    // CADRAGE (cf. `DEFAULT_CONFIG.image.fit`). Posé en style EN LIGNE, donc prioritaire sur la
+    // classe utilitaire `object-cover` que les templates portent encore : le réglage gagne sans
+    // qu'il faille retirer la classe de chaque appel, et le rendu est inchangé quand le cadrage
+    // demandé EST « cover ».
+    //
+    // Les reviews DÉJÀ ENREGISTRÉES basculent aussi, et c'est voulu : `resolveImageConfig()` fusionne
+    // sur `DEFAULT_CONFIG.image`, donc une config sans `fit` hérite du défaut. C'est ce qui répare
+    // les fiches existantes dont les infographies étaient rognées, sans demander de les rouvrir une
+    // par une. Qui veut le plein cadre le repose dans Image & Logo.
+    if (image?.fit === 'contain' || image?.fit === 'cover') style.objectFit = image.fit;
     return style;
 }
 

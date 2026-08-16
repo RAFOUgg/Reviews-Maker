@@ -66,6 +66,20 @@ export default function MediaFrame({ media, className = '', style, alt = '', pos
         );
     }
 
+    // LECTURE AUTOMATIQUE, EN SOURDINE ET EN BOUCLE — « vidéo pas play automatique dans les rendu »
+    // (2026-08-16). Une fiche est une vitrine : la vidéo doit vivre d'elle-même, comme une image
+    // animée, sans réclamer un clic que personne ne devine.
+    //
+    // Les trois attributs vont ensemble, ce n'est pas un empilement de préférences :
+    //   • `muted` est EXIGÉ par les navigateurs — une vidéo sonore qui démarre seule est bloquée,
+    //     et `autoPlay` sans lui ne ferait donc rien du tout ;
+    //   • `loop` parce qu'un clip d'étape dure quelques secondes : s'arrêter sur la dernière image
+    //     redonnerait le cadre figé qu'on cherche justement à éviter ;
+    //   • `controls` reste, pour rendre la main — mettre le son, mettre en pause, passer en plein
+    //     écran. La lecture automatique n'a pas à retirer le contrôle à qui le veut.
+    //
+    // `preload="auto"` remplace `metadata` : demander la seule première image tout en réclamant la
+    // lecture immédiate est contradictoire, et retardait le démarrage.
     return (
         <video
             src={url}
@@ -73,9 +87,10 @@ export default function MediaFrame({ media, className = '', style, alt = '', pos
             style={style}
             controls
             playsInline
-            // `preload="metadata"` : la première image suffit à identifier l'étape, télécharger la
-            // vidéo entière à l'ouverture d'une fiche qui en compte plusieurs ne se justifie pas.
-            preload="metadata"
+            autoPlay
+            muted
+            loop
+            preload="auto"
         />
     );
 }

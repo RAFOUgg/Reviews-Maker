@@ -5,6 +5,11 @@ import { useDocumentSeal } from '../../hooks/useDocumentSeal'
 import { LiquidCard, LiquidDivider, LiquidRating } from '../ui/LiquidUI'
 import { Star, Calendar, User, Leaf, Factory, FlaskConical, Image as ImageIcon, MessageSquare, X, ChevronLeft, ChevronRight, Flower2, Droplets, Wind, GitBranch, Workflow, Radar as RadarIcon, LineChart } from 'lucide-react'
 import PipelineMiniGrid from '../export/interactive/PipelineMiniGrid'
+// Décide photo/vidéo au même endroit que les templates d'export (source unique : mediaFileHelpers).
+// Hors contexte de capture, `useIsInteractive()` vaut `true` par défaut : la vidéo est donc rendue
+// avec un vrai lecteur, ce que cette page veut.
+import MediaFrame from '../export/interactive/MediaFrame'
+import ReviewMediaTile from './ReviewMediaTile'
 import BlockZoomOverlay from '../export/interactive/BlockZoomOverlay'
 import { GisementSections, isModuleOn } from '../templates/sections/RegistrySections'
 import { GROUP_ICONS } from '../../utils/fieldIcons'
@@ -152,6 +157,11 @@ export default function ReviewFullDisplay({ review, config }) {
     const { shortHash: docHash } = useDocumentSeal(review)
     const [lightboxImg, setLightboxImg] = useState(null)
     const [lightboxIdx, setLightboxIdx] = useState(0)
+    // Média affiché en couverture. La couverture était figée sur `mainImageUrl` : les autres photos
+    // n'étaient atteignables qu'en descendant jusqu'à la section « Galerie », et une vidéo retenue
+    // comme média principal partait dans un `<img>` (vignette cassée) — « caroussel photo pas actif
+    // en vue détaillée » (2026-08-16).
+    const [heroIdx, setHeroIdx] = useState(0)
     const tokens = useRenderTokens(config)
     const chart = useMeasuredWidth()
     if (!review) return null
@@ -227,6 +237,15 @@ export default function ReviewFullDisplay({ review, config }) {
     const terpenes = parseArray(review.terpenes)
     const images = parseArray(review.images)
 
+    // Médias du carrousel de couverture. `mainImageUrl` d'abord quand il ne fait pas déjà partie de
+    // `images` : c'est le média que la review désigne comme principal, il ne doit pas être relégué
+    // ni perdu selon la façon dont l'API l'a résolu.
+    const heroMedia = (() => {
+        const list = images.filter(Boolean)
+        if (review.mainImageUrl && !list.includes(review.mainImageUrl)) return [review.mainImageUrl, ...list]
+        return list
+    })()
+
     // Axes du radar : mêmes 6 axes que la Fiche Technique Détaillée (`DetailedCardTemplate.jsx`),
     // dont le 6e « Arôme » dérivé d'une sous-métrique réelle de la catégorie odeur — repris tel
     // quel plutôt que recalculé autrement, pour que les deux surfaces disent la même chose.
@@ -261,14 +280,58 @@ export default function ReviewFullDisplay({ review, config }) {
             {/* Header Section */}
             <LiquidCard glow="purple" padding="lg" data-zoom-block="Identité">
                 <div className="grid md:grid-cols-2 gap-6">
-                    {/* Image principale */}
-                    <div className="relative aspect-square rounded-xl overflow-hidden border border-white/10">
-                        {review.mainImageUrl ? (
-                            <img
-                                src={review.mainImageUrl}
-                                alt={review.holderName}
-                                className="w-full h-full object-cover"
-                            />
+                    {/* Média principal — CARROUSEL sur tous les médias de la review.
+                        `MediaFrame` décide photo/vidéo (source unique, cf. mediaFileHelpers) : hors
+                        contexte de capture il rend un vrai lecteur, donc une vidéo se regarde ici au
+                        lieu d'apparaître cassée. Les flèches et les pastilles sont des `<button>`,
+                        donc déjà exclues du zoom au clic par `BlockZoomOverlay`. */}
+                    <div className="relative aspect-square rounded-xl overflow-hidden border border-white/10 group">
+                        {heroMedia.length > 0 ? (
+                            <>
+                                <MediaFrame
+                                    media={heroMedia[heroIdx % heroMedia.length]}
+                                    alt={review.holderName}
+                                    className="w-full h-full object-cover"
+                                    style={{ position: 'absolute', inset: 0 }}
+                                />
+                                {heroMedia.length > 1 && (
+                                    <>
+                                        <button
+                                            type="button"
+                                            aria-label="Média précédent"
+                                            onClick={() => setHeroIdx((i) => (i - 1 + heroMedia.length) % heroMedia.length)}
+                                            className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/55 hover:bg-black/75 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                                        >
+                                            <ChevronLeft className="w-5 h-5" />
+                                        </button>
+                                        <button
+                                            type="button"
+                                            aria-label="Média suivant"
+                                            onClick={() => setHeroIdx((i) => (i + 1) % heroMedia.length)}
+                                            className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-2 rounded-full bg-black/55 hover:bg-black/75 text-white opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity"
+                                        >
+                                            <ChevronRight className="w-5 h-5" />
+                                        </button>
+                                        {/* Pastilles : sans elles, rien ne dit combien de médias
+                                            existent ni où l'on se trouve — les flèches, masquées
+                                            hors survol, ne l'annoncent pas. */}
+                                        <div className="absolute bottom-2 left-1/2 -translate-x-1/2 z-10 flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/45">
+                                            {heroMedia.map((_, i) => (
+                                                <button
+                                                    key={i}
+                                                    type="button"
+                                                    aria-label={`Média ${i + 1} sur ${heroMedia.length}`}
+                                                    aria-current={i === heroIdx % heroMedia.length}
+                                                    onClick={() => setHeroIdx(i)}
+                                                    className={`w-1.5 h-1.5 rounded-full transition-colors ${
+                                                        i === heroIdx % heroMedia.length ? 'bg-white' : 'bg-white/40 hover:bg-white/70'
+                                                    }`}
+                                                />
+                                            ))}
+                                        </div>
+                                    </>
+                                )}
+                            </>
                         ) : (
                             <div className="w-full h-full bg-gradient-to-br from-purple-500/30 to-pink-500/30 flex items-center justify-center">
                                 <span className="text-8xl">🌿</span>
@@ -726,11 +789,14 @@ export default function ReviewFullDisplay({ review, config }) {
                                 onClick={() => { setLightboxImg(img); setLightboxIdx(idx); }}
                                 className="aspect-square rounded-xl overflow-hidden border border-white/10 group relative cursor-pointer"
                             >
-                                <img
+                                {/* Vignette, pas lecteur : le clic doit ouvrir la visionneuse, or des
+                                    contrôles de lecture le captureraient. `ReviewMediaTile` est
+                                    exactement ce compromis (badge vidéo, aucun contrôle) — le même
+                                    que les cartes de galerie. */}
+                                <ReviewMediaTile
                                     src={img}
                                     alt={`${review.holderName} - Image ${idx + 1}`}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                    loading="lazy"
                                 />
                                 <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                                     <span className="opacity-0 group-hover:opacity-100 transition-opacity text-white text-sm font-medium bg-black/50 px-3 py-1 rounded-full">

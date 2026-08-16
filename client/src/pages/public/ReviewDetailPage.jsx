@@ -240,6 +240,9 @@ export default function ReviewDetailPage() {
                     <LiquidCard glow="cyan" padding="lg">
                         <div className="h-[70vh] max-h-[800px]">
                             <ExportMakerCardRenderer
+                                // Surface de LECTURE, pas vignette : infobulles, zoom au clic et
+                                // vrais lecteurs vidéo, comme sur /r/:id et dans le Studio.
+                                interactive
                                 exportMakerConfig={typeof review.exportMakerConfig === 'string' ? (() => {
                                     try { return JSON.parse(review.exportMakerConfig) } catch { return review.exportMakerConfig }
                                 })() : review.exportMakerConfig}

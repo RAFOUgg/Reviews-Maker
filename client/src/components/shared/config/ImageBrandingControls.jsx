@@ -199,6 +199,38 @@ export default function ImageBrandingControls() {
                     </div>
                 )}
 
+                {/* CADRAGE — la photo remplit-elle le cadre, ou tient-elle dedans en entier ?
+                    Les templates recadraient toujours, sans que rien ne le dise ni ne permette de
+                    l'éviter : les infographies jointes à une review (planches de terpènes, « Goûts
+                    et effets ») y perdaient leur texte, coupé en haut et en bas. */}
+                <div className="space-y-2">
+                    <div className="text-sm font-medium text-white/90">Cadrage</div>
+                    <div className="grid grid-cols-2 gap-2">
+                        {[
+                            { id: 'contain', nom: 'Photo entière', aide: 'Rien n’est coupé' },
+                            { id: 'cover', nom: 'Remplir le cadre', aide: 'Recadre la photo' },
+                        ].map((mode) => {
+                            const actif = (config.image?.fit || 'contain') === mode.id;
+                            return (
+                                <button
+                                    key={mode.id}
+                                    type="button"
+                                    aria-pressed={actif}
+                                    onClick={() => updateImage({ fit: mode.id })}
+                                    className={`px-3 py-2 rounded-xl border text-left transition-colors ${
+                                        actif
+                                            ? 'border-violet-400/70 bg-violet-500/15 text-white'
+                                            : 'border-white/15 text-white/70 hover:bg-white/5 hover:text-white/90'
+                                    }`}
+                                >
+                                    <div className="text-xs font-medium">{mode.nom}</div>
+                                    <div className="text-[11px] text-white/45">{mode.aide}</div>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
                 {/* Coins arrondis */}
                 <LiquidSlider
                     label="Coins arrondis"

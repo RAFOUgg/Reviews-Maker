@@ -29,7 +29,7 @@ function useScaleToFit(canvasW, canvasH) {
  * pour que la galerie publique affiche exactement le template/couleurs/modules choisis
  * par l'auteur, au lieu d'un layout générique fixe.
  */
-export default function ExportMakerCardRenderer({ reviewData, exportMakerConfig }) {
+export default function ExportMakerCardRenderer({ reviewData, exportMakerConfig, interactive = false }) {
     const config = useMemo(() => ({
         ...DEFAULT_CONFIG,
         ...(exportMakerConfig || {}),
@@ -58,8 +58,13 @@ export default function ExportMakerCardRenderer({ reviewData, exportMakerConfig 
                 {/* Vignette de galerie : fortement réduite et elle-même cliquable pour ouvrir la
                     review. Une infobulle par champ y serait du bruit et entrerait en conflit avec
                     ce clic — l'interactivité appartient aux surfaces de lecture (/r/:id, Studio,
-                    page de détail), pas à une vignette. */}
-                <TemplateRenderer config={config} reviewData={reviewData} interactive={false} />
+                    page de détail), pas à une vignette.
+                    Ce raisonnement était juste mais s'appliquait trop largement : le drapeau était
+                    codé en dur, si bien que la PAGE DE DÉTAIL — que ce même commentaire range parmi
+                    les surfaces de lecture — héritait du régime vignette. Une vidéo y sortait donc
+                    en pastille « ▶ Vidéo » au lieu d'un lecteur (constaté en production le
+                    2026-08-16). Le défaut reste « vignette » ; la page de détail demande l'inverse. */}
+                <TemplateRenderer config={config} reviewData={reviewData} interactive={interactive} />
             </div>
         </div>
     );
