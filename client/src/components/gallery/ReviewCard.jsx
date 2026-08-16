@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import ReviewMediaTile from './ReviewMediaTile'
 
 export default function ReviewCard({ review }) {
     const typeColors = {
@@ -66,11 +67,11 @@ export default function ReviewCard({ review }) {
                 {/* Image */}
                 <div className="relative aspect-square rounded-xl overflow-hidden mb-4">
                     {review.mainImageUrl ? (
-                        <img
+                        // `mainImageUrl` retombe sur le premier média de la review : si celui-ci est
+                        // une vidéo, une balise `<img>` donnait une vignette cassée.
+                        <ReviewMediaTile
                             src={review.mainImageUrl}
                             alt={review.holderName}
-                            loading="lazy"
-                            decoding="async"
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                         />
                     ) : (

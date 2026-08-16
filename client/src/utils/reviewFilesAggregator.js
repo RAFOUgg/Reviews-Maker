@@ -9,10 +9,10 @@
  */
 
 import { getImageUrl } from './imageUtils';
-
-function isVideoUrl(url) {
-    return /\.(mp4|webm|mov|avi|m4v)(\?|$)/i.test(url || '');
-}
+// Détection vidéo : source unique côté client (miroir de server-new/utils/uploadFormats.js). La
+// regex locale qui vivait ici ne couvrait que `mp4|webm|mov|avi|m4v` — un `.mkv`/`.3gp`/`.ogv`
+// accepté à l'envoi était donc rangé en « photo » et fini dans une balise `<img>`.
+import { isVideoUrl } from './mediaFileHelpers';
 
 function safeParseArray(value) {
     if (!value) return [];

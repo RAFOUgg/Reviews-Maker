@@ -102,3 +102,9 @@ db/backups/
 server-new/node_modules/.bin/
 setup-dev-local.ps1
 setup-dev-local.sh
+
+# Captures produites par les sondes d'audit (tools/export-audit/*.mjs) — régénérées à chaque
+# exécution, jamais du source. `tools/export-audit/reports/` est la destination historique ;
+# `reports/` à la racine est celle qu'utilisent les sondes lancées depuis la racine du dépôt.
+reports/
+tools/export-audit/reports/

@@ -12,6 +12,7 @@ import {
     extractCategoryRatings, extractPipelines
 } from '../../utils/exportMakerHelpers';
 import InteractivePipelineViewer from './InteractivePipelineViewer';
+import ReviewMediaTile from './ReviewMediaTile';
 import { Star, ChevronDown, Eye, ImageIcon, X, ChevronLeft, ChevronRight, Leaf } from 'lucide-react';
 
 function Section({ title, icon, children, defaultOpen = true, badge }) {
@@ -213,7 +214,7 @@ export default function GalleryReviewCard({ reviewData, exportMakerConfig }) {
             {/* Image */}
             {mainImageUrl && (
                 <div className="rounded-xl overflow-hidden border border-white/10">
-                    <img src={mainImageUrl} alt={title} className="w-full aspect-video object-cover" />
+                    <ReviewMediaTile src={mainImageUrl} alt={title} className="w-full aspect-video object-cover" />
                 </div>
             )}
 

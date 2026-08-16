@@ -16,6 +16,7 @@ import { LiquidCard, LiquidButton, LiquidChip } from '@/components/ui/LiquidUI'
 import { parseImages } from '../../../utils/imageUtils'
 import { isSameReviewType, reviewEditPath } from '../../../utils/reviewTypeMeta'
 import ConfirmModal from '../../../components/shared/ConfirmModal'
+import ReviewMediaTile from '../../../components/gallery/ReviewMediaTile'
 import { AnimatePresence, motion } from 'framer-motion'
 import {
     Grid3X3, List, Calendar, Eye, EyeOff, Edit, Trash2, Copy,
@@ -58,6 +59,8 @@ const getCardImages = (review) => {
 
 // Mosaïque façon Instagram (1 pleine largeur / 2 côte à côte / 3 en L / 4+ en grille avec "+N")
 // — même pattern déjà éprouvé dans HomeReviewCard.jsx pour la galerie publique.
+// Chaque carreau passe par ReviewMediaTile : `images` peut contenir une VIDÉO (cf. la 4ᵉ photo de
+// la review « Lamponi Frozen » en production, un .mp4), qu'une balise `<img>` rendait cassée.
 const renderCardImages = (review, TypeIcon) => {
     const images = getCardImages(review)
 
@@ -71,7 +74,7 @@ const renderCardImages = (review, TypeIcon) => {
 
     if (images.length === 1) {
         return (
-            <img
+            <ReviewMediaTile
                 src={images[0]}
                 alt={review.holderName}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
@@ -83,7 +86,7 @@ const renderCardImages = (review, TypeIcon) => {
         return (
             <div className="grid grid-cols-2 gap-0.5 h-full">
                 {images.map((src, i) => (
-                    <img key={i} src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
+                    <ReviewMediaTile key={i} src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
                 ))}
             </div>
         )
@@ -94,10 +97,10 @@ const renderCardImages = (review, TypeIcon) => {
             <div className="grid grid-rows-2 gap-0.5 h-full">
                 <div className="grid grid-cols-2 gap-0.5">
                     {images.slice(0, 2).map((src, i) => (
-                        <img key={i} src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
+                        <ReviewMediaTile key={i} src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
                     ))}
                 </div>
-                <img src={images[2]} alt={`${review.holderName} 3`} className="w-full h-full object-cover" />
+                <ReviewMediaTile src={images[2]} alt={`${review.holderName} 3`} className="w-full h-full object-cover" />
             </div>
         )
     }
@@ -106,7 +109,7 @@ const renderCardImages = (review, TypeIcon) => {
         <div className="grid grid-cols-2 grid-rows-2 gap-0.5 h-full">
             {images.slice(0, 4).map((src, i) => (
                 <div key={i} className="relative overflow-hidden">
-                    <img src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
+                    <ReviewMediaTile src={src} alt={`${review.holderName} ${i + 1}`} className="w-full h-full object-cover" />
                     {i === 3 && images.length > 4 && (
                         <div className="absolute inset-0 bg-black/60 flex items-center justify-center text-white text-sm font-bold">
                             +{images.length - 4}
@@ -358,7 +361,7 @@ export default function ReviewsTab({ initialFilters = null }) {
                             {/* Image */}
                             <div className="w-14 h-14 md:w-16 md:h-16 rounded-lg bg-white/5 overflow-hidden flex-shrink-0 relative">
                                 {cardImages.length > 0 ? (
-                                    <img
+                                    <ReviewMediaTile
                                         src={cardImages[0]}
                                         alt={review.holderName}
                                         className="w-full h-full object-cover"

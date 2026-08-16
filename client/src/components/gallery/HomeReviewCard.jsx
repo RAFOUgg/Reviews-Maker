@@ -7,6 +7,7 @@
 import PropTypes from 'prop-types'
 import { useNavigate } from 'react-router-dom'
 import { parseImages } from '../../utils/imageUtils'
+import ReviewMediaTile from './ReviewMediaTile'
 
 export default function HomeReviewCard({
     review,
@@ -43,7 +44,7 @@ export default function HomeReviewCard({
                         {/* 1 image - Pleine largeur */}
                         {images.length === 1 && (
                             <div className="relative w-full h-full overflow-hidden">
-                                <img
+                                <ReviewMediaTile
                                     src={images[0]}
                                     alt={review.holderName}
                                     className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -57,7 +58,7 @@ export default function HomeReviewCard({
                             <div className="grid grid-cols-2 gap-1 h-full">
                                 {images.slice(0, 2).map((img, idx) => (
                                     <div key={idx} className="relative overflow-hidden">
-                                        <img
+                                        <ReviewMediaTile
                                             src={img}
                                             alt={`${review.holderName} ${idx + 1}`}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -74,7 +75,7 @@ export default function HomeReviewCard({
                                 <div className="grid grid-cols-2 gap-1">
                                     {images.slice(0, 2).map((img, idx) => (
                                         <div key={idx} className="relative overflow-hidden">
-                                            <img
+                                            <ReviewMediaTile
                                                 src={img}
                                                 alt={`${review.holderName} ${idx + 1}`}
                                                 className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -84,7 +85,7 @@ export default function HomeReviewCard({
                                     ))}
                                 </div>
                                 <div className="relative overflow-hidden">
-                                    <img
+                                    <ReviewMediaTile
                                         src={images[2]}
                                         alt={`${review.holderName} 3`}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
@@ -99,7 +100,7 @@ export default function HomeReviewCard({
                             <div className="grid grid-cols-2 grid-rows-2 gap-1 h-full">
                                 {images.slice(0, 4).map((img, idx) => (
                                     <div key={idx} className="relative overflow-hidden">
-                                        <img
+                                        <ReviewMediaTile
                                             src={img}
                                             alt={`${review.holderName} ${idx + 1}`}
                                             className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"

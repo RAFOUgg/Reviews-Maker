@@ -259,6 +259,21 @@ export async function createFixture(baseApi, type, density, extra = {}) {
     // plusieurs sans déplacer cette baseline.
     const photoCount = Math.max(1, extra.photoCount || 1);
     for (let n = 0; n < photoCount; n += 1) fd.append('images', tinyPngBlob(), `audit-fixture-${n}.png`);
+    // VIDÉO DE PRODUIT — `withVideo: true`. Troisième angle mort du même genre que la photo puis la
+    // vidéo D'ÉTAPE : aucune fixture ne portait de vidéo dans les médias du PRODUIT, alors que le
+    // libellé du champ dit « Photos / vidéos du produit » et que les 4 routes de review acceptent
+    // explicitement la famille `videos` (`buildFileFilter(['images','videos','docs'])`). Le cas
+    // n'était donc jamais exercé — et il était cassé sur toutes les cartes, qui rendaient chaque
+    // média dans un `<img>`. Reproduit la forme RÉELLE observée en production sur la review
+    // « Lamponi Frozen » : le fichier atterrit dans le même tableau que les photos, servi sous
+    // `/images/…mp4`.
+    //
+    // Le contenu n'a pas besoin d'être décodable : ces sondes mesurent QUELLE BALISE est posée pour
+    // ce média, pas une lecture réelle (même raison que la vidéo d'étape ci-dessus). C'est
+    // l'extension qui décide, côté serveur comme côté client.
+    if (extra.withVideo) {
+        fd.append('images', new Blob([Buffer.from('ftypisom')], { type: 'video/mp4' }), 'audit-clip.mp4');
+    }
     const res = await fetch(`${baseApi}/api/${ENDPOINT[type]}`, { method: 'POST', body: fd });
     if (!res.ok) throw new Error(`Création ${type}/${density} : HTTP ${res.status} — ${(await res.text()).slice(0, 200)}`);
     const json = await res.json();

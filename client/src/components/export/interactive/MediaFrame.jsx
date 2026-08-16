@@ -1,5 +1,6 @@
 import PropTypes from 'prop-types';
 import { resolveImageUrl } from '../../../utils/export-maker/resolveImageUrl';
+import { isPlayableVideo, isVideoMedia } from '../../../utils/mediaFileHelpers';
 import { useIsInteractive } from './InteractiveContext';
 
 /**
@@ -24,24 +25,11 @@ import { useIsInteractive } from './InteractiveContext';
  * l'écran, et rien ne doit disparaître en silence.
  */
 
-// Extensions qu'un `<video>` sait lire nativement. Les autres (mkv, avi, 3gp…) sont acceptées à
-// l'envoi — refuser un fichier fait perdre la donnée — mais aucun navigateur ne les décode : leur
-// proposer un lecteur donnerait un cadre noir sans explication, d'où le lien de téléchargement.
-const PLAYABLE = ['mp4', 'm4v', 'webm', 'ogv', 'mov'];
-
-const extensionOf = (url) => String(url || '').split('?')[0].split('.').pop().toLowerCase();
-
-export function isPlayableVideo(url) {
-    return PLAYABLE.includes(extensionOf(url));
-}
-
-/** La ressource est-elle une vidéo ? `type` fait foi quand il est renseigné, l'extension sinon. */
-export function isVideoMedia(media) {
-    if (media?.type === 'video') return true;
-    if (media?.type === 'photo') return false;
-    return [...PLAYABLE, 'mkv', 'avi', '3gp', '3g2', 'mts', 'm2ts', 'wmv', 'flv', 'mpeg', 'mpg', 'hevc']
-        .includes(extensionOf(media?.url || media));
-}
+// La liste des extensions vidéo (et de celles qu'un `<video>` sait réellement décoder) vit dans
+// `utils/mediaFileHelpers.js`, source unique côté client miroir de `server-new/utils/uploadFormats.js`.
+// Elle était recopiée ici ; les deux autres copies de l'app en divergeaient (cf. l'en-tête de ce
+// module-là). Ré-exportées pour les appelants historiques de ce fichier.
+export { isPlayableVideo, isVideoMedia };
 
 export default function MediaFrame({ media, className = '', style, alt = '', posterLabel = 'Vidéo' }) {
     const interactive = useIsInteractive();

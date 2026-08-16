@@ -15,8 +15,12 @@
  * La photo d'étape est vérifiée au passage : ce correctif ne doit pas l'avoir emportée.
  */
 import { chromium } from 'playwright';
+import { statSync, mkdirSync } from 'fs';
+import { resolve } from 'path';
 import { createFixture, deleteFixture } from './fixtures.mjs';
 
+const OUT = resolve('reports');
+mkdirSync(OUT, { recursive: true });
 const BASE = 'http://localhost:5173';
 const API = 'http://localhost:3000';
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -29,6 +33,13 @@ const b = await chromium.launch();
 const p = await b.newPage({ viewport: { width: 1800, height: 1100 } });
 p.on('pageerror', (e) => console.log('JS ERR:', String(e.message).slice(0, 160)));
 let ko = 0;
+
+const fichiers = [];
+p.on('download', async (d) => {
+    const cible = resolve(OUT, `video-media-${d.suggestedFilename()}`);
+    await d.saveAs(cible);
+    fichiers.push(cible);
+});
 
 try {
     // Même chemin que les autres sondes : `/edit/:type/:id` répond 403 sur une review créée par
@@ -85,6 +96,36 @@ try {
         else if (!modale.video) { console.log('KO — la modale d’étape ne contient aucun lecteur <video>'); ko++; }
         else if (!modale.controls) { console.log('KO — lecteur vidéo sans contrôles : rien ne permet de le lire'); ko++; }
         else console.log(`OK — modale : lecteur <video src="${modale.video}"> avec contrôles`);
+    }
+
+    // ── Export RÉEL ─────────────────────────────────────────────────────────────────────────────
+    // Le repère de case est du texte, donc rastérisable — mais c'est une déduction, et ce projet a
+    // déjà payé plusieurs fois le prix d'une vérification qui s'arrêtait au DOM vivant. On exporte
+    // pour de vrai et on lit le fichier obtenu. On vérifie AUSSI qu'aucune balise `<video>` n'a été
+    // montée sur l'arbre de capture : elle y ressortirait en rectangle vide.
+    await p.goto(`${BASE}/review/${id}`, { waitUntil: 'networkidle' });
+    await sleep(2500);
+    await p.getByRole('button', { name: /^Exporter$/ }).first().click();
+    await sleep(8000);
+
+    const captureAvecVideo = await p.evaluate(() => {
+        const canevas = [...document.querySelectorAll('.export-maker-page, #export-maker-canvas')];
+        return canevas.some((c) => c.querySelector('video') !== null);
+    });
+    if (captureAvecVideo) {
+        console.log('KO — une balise <video> est montée sur l’arbre de capture : elle sortira en rectangle vide dans le PNG');
+        ko++;
+    }
+
+    await p.getByRole('button', { name: /Exporter/ }).last().click();
+    await sleep(20000);
+
+    if (fichiers.length === 0) { console.log('KO — aucun fichier exporté'); ko++; }
+    else {
+        const octets = statSync(fichiers[0]).size;
+        console.log(`export : ${fichiers.length} fichier(s), premier = ${Math.round(octets / 1024)} Ko`);
+        // Un PNG de canevas dense pèse des centaines de Ko ; sous 10 Ko, c'est une page blanche.
+        if (octets < 10_000) { console.log('KO — fichier exporté quasi vide'); ko++; }
     }
 
     console.log(ko === 0 ? '\n== OK — la vidéo d’étape est visible et lisible' : `\n== ${ko} ÉCART(S)`);

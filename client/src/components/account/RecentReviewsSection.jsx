@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Calendar, Eye, Heart, MessageSquare, ArrowRight } from 'lucide-react'
 import { reviewsService } from '../../services/apiService'
 import LoadingSpinner from '../shared/LoadingSpinner'
+import ReviewMediaTile from '../gallery/ReviewMediaTile'
 
 /**
  * Section "Mes Reviews Récentes" - Affiche les 6 dernières reviews de l'utilisateur
@@ -101,7 +102,7 @@ export default function RecentReviewsSection({ userId }) {
                             {/* Image principale */}
                             {review.photos?.[0] ? (
                                 <div className="aspect-video bg-gray-800 relative overflow-hidden">
-                                    <img
+                                    <ReviewMediaTile
                                         src={`/api/images/${review.photos[0]}`}
                                         alt={review.nomCommercial || review.nom || 'Review'}
                                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
