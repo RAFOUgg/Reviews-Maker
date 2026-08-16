@@ -357,7 +357,22 @@ step "Mise à jour des dépendances..."
 npm install --legacy-peer-deps 2>&1 | grep -E "added|up to date|audited" | tail -2 || true
 
 # ── Sauvegarde préventive de la DB avant toute migration ──────────────────────
-DB_PATH="prisma/data/reviews-maker.db"
+#
+# Le chemin est LU DANS `.env` (DATABASE_URL), il n'est plus écrit en dur.
+#
+# Il l'était (`prisma/data/reviews-maker.db`) et ne correspondait plus à la réalité : la base vit
+# en `db/reviews.sqlite`. Le `if [ -f ]` ci-dessous était donc toujours faux, et le déploiement se
+# contentait d'un avertissement jaune avant d'appliquer les migrations — autrement dit, depuis le
+# changement de chemin, PLUS AUCUNE sauvegarde n'était prise avant un `prisma migrate deploy`
+# (dernières `.bak` datées du 2026-07-20, constaté le 2026-08-16). Un avertissement qui laisse
+# passer l'opération qu'il est censé protéger ne protège rien.
+DB_PATH=$(grep -E '^DATABASE_URL' .env 2>/dev/null | sed -E 's/.*file:([^"]*).*/\1/')
+if [ -z "$DB_PATH" ]; then
+    log_error "DATABASE_URL introuvable dans server-new/.env — impossible de sauvegarder la base avant migration"
+fi
+if [ ! -f "$DB_PATH" ]; then
+    log_error "Base introuvable à $DB_PATH (lu depuis .env) — migration annulée plutôt que jouée sans sauvegarde"
+fi
 if [ -f "$DB_PATH" ]; then
     BACKUP_PATH="${DB_PATH}.bak.$(date +%Y%m%d-%H%M%S)"
     cp "$DB_PATH" "$BACKUP_PATH"
