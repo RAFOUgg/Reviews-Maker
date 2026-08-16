@@ -184,6 +184,52 @@ try {
     expect('bulle toujours là après rechargement', reloaded.length === after.length, `${after.length} → ${reloaded.length}`);
 
     expect('aucune erreur JS', errs.length === 0, errs.join(' | '));
+
+    // ── 4. Chemin de repli : presse-papiers ILLISIBLE ───────────────────────────────────────
+    // Firefox refuse `readText()` aux pages web, et l'autorisation peut être refusée ailleurs.
+    // Contexte SANS permission de lecture : l'action doit alors ouvrir la modale de collage
+    // manuel, pas rester sans effet.
+    console.log('\nRepli sans autorisation de lecture du presse-papiers');
+    const blindContext = await browser.newContext({ viewport: { width: 1400, height: 900 } });
+    const blind = await blindContext.newPage();
+    try {
+        await blind.goto(`${BASE}/library/production-chains/${chainId}`, { waitUntil: 'networkidle' });
+        await blind.waitForSelector('.react-flow__node', { timeout: 15000 });
+        await sleep(900);
+
+        const blindSpot = await blind.evaluate(() => {
+            const pane = document.querySelector('.react-flow__pane');
+            const r = pane.getBoundingClientRect();
+            for (const fy of [0.9, 0.1, 0.5]) for (const fx of [0.08, 0.92, 0.5]) {
+                const x = r.x + r.width * fx, y = r.y + r.height * fy;
+                if (document.elementFromPoint(x, y) === pane) return { x, y };
+            }
+            return null;
+        });
+        await blind.mouse.click(blindSpot.x, blindSpot.y, { button: 'right' });
+        await blind.waitForSelector('.context-menu', { timeout: 5000 });
+        await blind.locator('.context-menu-item', { hasText: 'presse-papiers' }).first().click();
+
+        const area = blind.locator('textarea');
+        await area.waitFor({ timeout: 5000 }).catch(() => {});
+        expect('modale de collage manuel ouverte quand la lecture est refusée', await area.count() > 0);
+
+        await area.fill('ZZ-AUDIT Collage manuel\nLot d\'origine\nPoids net : 3 g');
+        await sleep(400);
+        const previewText = await blind.locator('.fixed').last().innerText().catch(() => '');
+        expect('aperçu de la bulle avant création', /Poids net/.test(previewText) && /Collage manuel/.test(previewText));
+
+        await blind.locator('button', { hasText: 'Créer la bulle' }).first().click();
+        await sleep(1800);
+
+        const manual = await blind.evaluate(() => Array.from(document.querySelectorAll('.chain-annotation-card'))
+            .map(c => c.innerText.replace(/\s+/g, ' '))
+            .find(t => /Collage manuel/.test(t)) || null);
+        expect('bulle créée depuis la saisie manuelle', !!manual, (manual || '').slice(0, 80));
+        expect('modale refermée après création', await blind.locator('textarea').count() === 0);
+    } finally {
+        await blindContext.close();
+    }
 } finally {
     await browser.close();
     await deleteFixture(API, reviewId);
