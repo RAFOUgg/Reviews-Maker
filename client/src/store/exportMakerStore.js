@@ -356,15 +356,18 @@ const DEFAULT_CONFIG = {
         borderRadius: 12,
         filter: 'none',
         opacity: 1,
-        // CADRAGE — 'contain' (photo entière) ou 'cover' (remplit le cadre en recadrant).
+        // CADRAGE — 'cover' (remplit le cadre en recadrant) ou 'contain' (photo entière).
         //
-        // Les templates recadraient TOUJOURS, sans réglage : un cadre à hauteur fixe + `object-cover`.
-        // C'est flatteur sur une macro de résine, destructeur sur les visuels que les auteurs
-        // joignent réellement — les infographies de terpènes et les planches « Goûts et effets » de
-        // la review « Lamponi Frozen » avaient leur texte coupé en haut et en bas (2026-08-16).
-        // Défaut à 'contain' : perdre du texte est irréversible pour le lecteur, une bande de fond
-        // ne l'est pas. Qui veut le plein cadre le demande.
-        fit: 'contain',
+        // Les templates recadraient TOUJOURS, sans aucun réglage ; le réglage a été ajouté le
+        // 2026-08-16 parce que les infographies jointes aux reviews (planches de terpènes, « Goûts
+        // et effets ») y perdaient leur texte, coupé en haut et en bas.
+        //
+        // Le défaut est passé de 'contain' à 'cover' le jour même, après essai sur des fiches
+        // réelles : 'contain' épargne le texte mais laisse des bandes de fond sur TOUTE photo qui
+        // n'a pas le format de son cadre, c'est-à-dire la majorité — le remède était plus visible
+        // que le mal. Le plein cadre redevient donc le défaut, et qui joint une infographie bascule
+        // sur « Photo entière ».
+        fit: 'cover',
         // Marque une config dont les réglages photo sont réellement appliqués au rendu (cf.
         // `resolveImageConfig`) — vrai par construction sur toute config neuve.
         imageFxLive: true,

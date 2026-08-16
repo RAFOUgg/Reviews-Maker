@@ -210,7 +210,7 @@ export default function ImageBrandingControls() {
                             { id: 'contain', nom: 'Photo entière', aide: 'Rien n’est coupé' },
                             { id: 'cover', nom: 'Remplir le cadre', aide: 'Recadre la photo' },
                         ].map((mode) => {
-                            const actif = (config.image?.fit || 'contain') === mode.id;
+                            const actif = (config.image?.fit || 'cover') === mode.id;
                             return (
                                 <button
                                     key={mode.id}

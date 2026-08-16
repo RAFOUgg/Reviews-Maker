@@ -11,6 +11,7 @@ import {
     ensureReadable,
     getImageRenderStyle,
     getSelectedImages,
+    isScreenRatio,
 } from '../../utils/exportMakerHelpers';
 import { resolveImageUrl } from '../../utils/export-maker/resolveImageUrl';
 import { templateSection } from '../../store/exportMakerConstants';
@@ -198,7 +199,19 @@ export default function SocialStoryTemplate({ config, reviewData }) {
                     // Ni `minHeight` ni `flex-basis` figé : le hero grandit quand le contenu est
                     // pauvre ET cède quand il est dense. Avec un plancher à 38 %, une review dense
                     // débordait à 114 % — sur une carte, ce qui déborde est perdu.
-                    flex: '1 1 38%', minHeight: 0,
+                    //
+                    // TOUT CECI SUPPOSE UNE HAUTEUR BORNÉE : `flex` répartit la hauteur DISPONIBLE.
+                    // En mode Écran il n'y en a pas — le document défile — donc le hero retombait sur
+                    // la taille naturelle de la photo et occupait toute la largeur du canevas en
+                    // hauteur (mesuré : 1184×1184 sur un écran d'ordinateur), au prix d'un recadrage
+                    // extrême. « dézoom story social media par defaut » (2026-08-16). On lui applique
+                    // alors le plafond d'image DÉJÀ prévu pour le format d'écran
+                    // (`FORMAT_LAYOUT['ecran-pc'].imageShare`, soit 40 % de 900px), au lieu d'inventer
+                    // une seconde règle : la photo reste l'accroche sans repousser le reste sous la
+                    // ligne de flottaison.
+                    ...(isScreenRatio(config.ratio)
+                        ? { flex: '0 0 auto', height: responsive.image.maxHeight }
+                        : { flex: '1 1 38%', minHeight: 0 }),
                 }}>
                     <MediaFrame
                         media={mainImage}

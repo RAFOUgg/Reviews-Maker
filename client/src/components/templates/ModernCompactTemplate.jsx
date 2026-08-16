@@ -301,14 +301,34 @@ export default function ModernCompactTemplate({ config, reviewData, dimensions }
                             ].join(', '),
                         };
                         if (showGallery) {
+                            // MOSAÏQUE À HAUTEUR DÉRIVÉE DE LA LARGEUR, et non une colonne de tuiles
+                            // `flex-1`.
+                            //
+                            // `flex-1` partage la hauteur DISPONIBLE : cela suppose un parent dont la
+                            // hauteur est bornée, ce qui était vrai tant que ce template ne vivait que
+                            // sur un canevas à taille fixe. En mode Écran la hauteur est libre, les
+                            // tuiles retombaient donc sur la taille naturelle des photos et s'empilaient
+                            // — « les photos sont trop grosses et les unes sur les autres » (2026-08-16 ;
+                            // mesuré : 4 tuiles de 430×360 dans une colonne de 38 %, soit ~1440px).
+                            //
+                            // Deux colonnes de tuiles carrées : la hauteur découle alors de la largeur
+                            // de la colonne, la même dans les deux modes, et le paginateur mesure une
+                            // valeur déterministe au lieu d'une hauteur qui dépend du parent.
                             return (
-                                <div data-module="mainImage" className="flex-shrink-0 flex flex-col" style={{ width: '38%', gap: 4 }}>
+                                <div data-module="mainImage" className="flex-shrink-0" style={{
+                                    width: '38%', display: 'grid', gap: 4,
+                                    gridTemplateColumns: getGalleryImages(visibleImages).length > 1 ? '1fr 1fr' : '1fr',
+                                    alignContent: 'start',
+                                }}>
                                     {getGalleryImages(visibleImages).map((img, ii) => (
-                                        <div key={ii} className="flex-1 overflow-hidden" style={{ /* `image.borderRadius` (le curseur « Coins arrondis ») et non `responsive.image.borderRadius`,
-   qui est une constante dérivée du RATIO (8 ou 12px) et écrasait donc silencieusement le réglage :
-   régler 40px ne changeait rien au rendu (signalé capture à l'appui le 2026-08-11). */
-                                        borderRadius: `${image.borderRadius}px`, ...imageFrameStyle }}>
-                                            <MediaFrame media={img} className="w-full h-full object-cover" style={getImageRenderStyle(image)} />
+                                        <div key={ii} className="overflow-hidden" style={{
+                                            position: 'relative', aspectRatio: '1', minWidth: 0,
+                                            /* `image.borderRadius` (le curseur « Coins arrondis ») et non `responsive.image.borderRadius`,
+                                               qui est une constante dérivée du RATIO (8 ou 12px) et écrasait donc silencieusement le
+                                               réglage : régler 40px ne changeait rien au rendu (signalé capture à l'appui le 2026-08-11). */
+                                            borderRadius: `${image.borderRadius}px`, ...imageFrameStyle,
+                                        }}>
+                                            <MediaFrame media={img} className="object-cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', ...getImageRenderStyle(image) }} />
                                         </div>
                                     ))}
                                 </div>

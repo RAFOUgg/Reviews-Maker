@@ -312,11 +312,40 @@ export default function BlogArticleTemplate({ config, reviewData, dimensions }) 
                     if (showGallery) {
                         return (
                             <figure className="mb-10">
-                                <div className="grid overflow-hidden" style={{ borderRadius: `${image.borderRadius}px`, gridTemplateColumns: visibleImages.length >= 3 ? '2fr 1fr 1fr' : visibleImages.length === 2 ? '1fr 1fr' : '1fr', gap: 4, maxHeight: responsive.image.maxHeight, ...imageFrameStyle }}>
-                                    {getGalleryImages(visibleImages).map((img, ii) => (
-                                        <MediaFrame key={ii} media={img} className="w-full h-full object-cover" style={{ ...getImageRenderStyle(image), maxHeight: ii === 0 ? responsive.image.maxHeight : `${Math.round(parseInt(responsive.image.maxHeight, 10) / 2)}px` }} />
-                                    ))}
-                                </div>
+                                {/* TRAME QUI SE REMPLIT — `2fr 1fr 1fr` décrivait UNE rangée de trois
+                                    colonnes : à 4 photos, la quatrième repassait à la ligne dans la
+                                    première colonne et laissait les deux autres VIDES, soit un grand
+                                    rectangle noir sous les vignettes (capture du 2026-08-16). Les
+                                    `maxHeight` inégaux (pleine pour la première, moitié pour les
+                                    autres) ajoutaient des tuiles de tailles sans rapport.
+
+                                    Même trame que `DetailedCardTemplate`, déjà éprouvée :
+                                      2 → côte à côte · 3 → une grande + deux · 4 → deux par deux.
+                                    Chaque photo est dans une CASE positionnée, l'image en absolu
+                                    dedans : une hauteur en pourcentage dans une piste `1fr` retombe
+                                    sinon sur la taille intrinsèque de l'image, qui gonfle alors la
+                                    piste qu'elle était censée remplir. */}
+                                {(() => {
+                                    const tuiles = getGalleryImages(visibleImages);
+                                    return (
+                                        <div className="grid overflow-hidden" style={{
+                                            borderRadius: `${image.borderRadius}px`, gap: 4,
+                                            height: responsive.image.maxHeight,
+                                            gridTemplateColumns: tuiles.length === 3 ? '2fr 1fr' : '1fr 1fr',
+                                            gridTemplateRows: tuiles.length > 2 ? '1fr 1fr' : '1fr',
+                                            ...imageFrameStyle,
+                                        }}>
+                                            {tuiles.map((img, ii) => (
+                                                <div key={ii} style={{
+                                                    position: 'relative', overflow: 'hidden', minHeight: 0, minWidth: 0,
+                                                    ...(ii === 0 && tuiles.length === 3 ? { gridRow: 'span 2' } : {}),
+                                                }}>
+                                                    <MediaFrame media={img} className="object-cover" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', ...getImageRenderStyle(image) }} />
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()}
                             </figure>
                         );
                     }
